@@ -13,6 +13,7 @@ import '../../widgets/flow_screen_widgets.dart';
 
 import '../../theme/theme_extensions.dart';
 import '../../theme/flow_diagram_presentation.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 
 enum AddSetMode { explicit, copy }
 
@@ -568,45 +569,47 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     await showDialog(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(strings.flowManageMethods),
-            content: SizedBox(
-              width: 300,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  for (var m in _methods)
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.flowManageMethods),
+              content: SizedBox(
+                width: 300,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (var m in _methods)
+                      ListTile(
+                        title: Text(
+                          m.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          _methodTypeLabel(m.type, strings),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          tooltip: strings.commonDelete,
+                          icon: const Icon(Icons.delete),
+                          onPressed: () async {
+                            final navigator = Navigator.of(ctx);
+                            await widget.target.deleteMethod(_repo, m);
+                            if (!ctx.mounted || !mounted) return;
+                            navigator.pop();
+                          },
+                        ),
+                      ),
                     ListTile(
-                      title: Text(
-                        m.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        _methodTypeLabel(m.type, strings),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: IconButton(
-                        tooltip: strings.commonDelete,
-                        icon: const Icon(Icons.delete),
-                        onPressed: () async {
-                          final navigator = Navigator.of(ctx);
-                          await widget.target.deleteMethod(_repo, m);
-                          if (!ctx.mounted || !mounted) return;
-                          navigator.pop();
-                        },
-                      ),
+                      leading: const Icon(Icons.add),
+                      title: Text(strings.flowAddNewMethod),
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        _showAddMethodDialog();
+                      },
                     ),
-                  ListTile(
-                    leading: const Icon(Icons.add),
-                    title: Text(strings.flowAddNewMethod),
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      _showAddMethodDialog();
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -632,132 +635,139 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       builder:
           (ctx) => StatefulBuilder(
             builder:
-                (ctx, setState) => AlertDialog(
-                  title: Text(strings.flowNewMethod),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TextField(
-                          controller: nameCtl,
-                          decoration: InputDecoration(
-                            labelText: strings.commonName,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButton<MethodType>(
-                          value: type,
-                          isExpanded: true,
-                          onChanged: (v) => setState(() => type = v!),
-                          items:
-                              MethodType.values
-                                  .map(
-                                    (t) => DropdownMenuItem(
-                                      value: t,
-                                      child: Text(_methodTypeLabel(t, strings)),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        if (type == MethodType.weight) ...[
-                          DropdownButton<String>(
-                            value: sign,
-                            onChanged: (v) => setState(() => sign = v!),
-                            items: const [
-                              DropdownMenuItem(value: '+', child: Text('+')),
-                              DropdownMenuItem(value: '-', child: Text('-')),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
+                (ctx, setState) => TonosDialogFrame(
+                  styleFormControls: true,
+                  child: AlertDialog(
+                    title: Text(strings.flowNewMethod),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           TextField(
-                            controller: factorCtl,
-                            keyboardType: TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
+                            controller: nameCtl,
                             decoration: InputDecoration(
-                              labelText: strings.flowFactor,
+                              labelText: strings.commonName,
                             ),
                           ),
-                        ] else if (type == MethodType.rep) ...[
-                          DropdownButton<String>(
-                            value: sign,
-                            onChanged: (v) => setState(() => sign = v!),
-                            items: const [
-                              DropdownMenuItem(value: '+', child: Text('+')),
-                              DropdownMenuItem(value: '-', child: Text('-')),
-                            ],
+                          const SizedBox(height: 12),
+                          DropdownButton<MethodType>(
+                            value: type,
+                            isExpanded: true,
+                            onChanged: (v) => setState(() => type = v!),
+                            items:
+                                MethodType.values
+                                    .map(
+                                      (t) => DropdownMenuItem(
+                                        value: t,
+                                        child: Text(
+                                          _methodTypeLabel(t, strings),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: amountCtl,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: strings.flowAmount,
+                          const SizedBox(height: 12),
+                          if (type == MethodType.weight) ...[
+                            DropdownButton<String>(
+                              value: sign,
+                              onChanged: (v) => setState(() => sign = v!),
+                              items: const [
+                                DropdownMenuItem(value: '+', child: Text('+')),
+                                DropdownMenuItem(value: '-', child: Text('-')),
+                              ],
                             ),
-                          ),
-                        ] else if (type == MethodType.addSet) ...[
-                          Row(
-                            children: [
-                              Radio<AddSetMode>(
-                                value: AddSetMode.explicit,
-                                groupValue: addMode,
-                                onChanged: (v) => setState(() => addMode = v!),
-                              ),
-                              Text(strings.flowExplicit),
-                              Radio<AddSetMode>(
-                                value: AddSetMode.copy,
-                                groupValue: addMode,
-                                onChanged: (v) => setState(() => addMode = v!),
-                              ),
-                              Text(strings.flowCopyFromSet),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (addMode == AddSetMode.explicit)
+                            const SizedBox(height: 8),
                             TextField(
-                              controller: weightCtl,
+                              controller: factorCtl,
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
                               decoration: InputDecoration(
-                                labelText: strings.flowWeight,
+                                labelText: strings.flowFactor,
                               ),
                             ),
-                          if (addMode == AddSetMode.explicit)
+                          ] else if (type == MethodType.rep) ...[
+                            DropdownButton<String>(
+                              value: sign,
+                              onChanged: (v) => setState(() => sign = v!),
+                              items: const [
+                                DropdownMenuItem(value: '+', child: Text('+')),
+                                DropdownMenuItem(value: '-', child: Text('-')),
+                              ],
+                            ),
                             const SizedBox(height: 8),
-                          if (addMode == AddSetMode.explicit)
                             TextField(
-                              controller: repsCtl,
+                              controller: amountCtl,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                                labelText: strings.flowReps,
+                                labelText: strings.flowAmount,
                               ),
                             ),
-                          if (addMode == AddSetMode.copy)
-                            TextField(
-                              controller: copyIndexCtl,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: strings.flowSetIndex,
-                              ),
+                          ] else if (type == MethodType.addSet) ...[
+                            Row(
+                              children: [
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.explicit,
+                                  groupValue: addMode,
+                                  onChanged:
+                                      (v) => setState(() => addMode = v!),
+                                ),
+                                Text(strings.flowExplicit),
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.copy,
+                                  groupValue: addMode,
+                                  onChanged:
+                                      (v) => setState(() => addMode = v!),
+                                ),
+                                Text(strings.flowCopyFromSet),
+                              ],
                             ),
-                        ] else if (type == MethodType.delSet) ...[
-                          Text(strings.flowDeleteLastSetBody),
+                            const SizedBox(height: 8),
+                            if (addMode == AddSetMode.explicit)
+                              TextField(
+                                controller: weightCtl,
+                                keyboardType: TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: strings.flowWeight,
+                                ),
+                              ),
+                            if (addMode == AddSetMode.explicit)
+                              const SizedBox(height: 8),
+                            if (addMode == AddSetMode.explicit)
+                              TextField(
+                                controller: repsCtl,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: strings.flowReps,
+                                ),
+                              ),
+                            if (addMode == AddSetMode.copy)
+                              TextField(
+                                controller: copyIndexCtl,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: strings.flowSetIndex,
+                                ),
+                              ),
+                          ] else if (type == MethodType.delSet) ...[
+                            Text(strings.flowDeleteLastSetBody),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(strings.commonCancel),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(strings.commonSave),
+                      ),
+                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(strings.commonCancel),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: Text(strings.commonSave),
-                    ),
-                  ],
                 ),
           ),
     );
@@ -1143,6 +1153,94 @@ class _FlowControlDeck extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final success = flow.success;
     final failure = flow.failure;
+    final shapes = context.shapeTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final controlSurface = surfaces.settingsInput;
+    final controlForeground =
+        neo
+            ? tonosForegroundForSurface(context, controlSurface)
+            : scheme.onSurface;
+    final controlSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, controlSurface)
+            : scheme.onSurfaceVariant;
+    final controlOutline =
+        neo ? tonosOutlineForSurface(context, controlSurface) : scheme.outline;
+
+    InputDecoration controlDecoration({
+      required String label,
+      required IconData icon,
+    }) {
+      if (!neo) {
+        return InputDecoration(labelText: label, prefixIcon: Icon(icon));
+      }
+      return InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: controlForeground),
+        filled: true,
+        fillColor: controlSurface,
+        labelStyle: TextStyle(color: controlSecondary),
+        floatingLabelStyle: TextStyle(color: controlForeground),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: shapes.settingsInput,
+          borderSide: BorderSide(
+            color: controlOutline,
+            width: shapes.outlineWidth,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: shapes.settingsInput,
+          borderSide: BorderSide(
+            color: context.semanticColors.focusRing,
+            width: shapes.focusRingWidth,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: shapes.settingsInput,
+          borderSide: BorderSide(
+            color: controlOutline,
+            width: shapes.outlineWidth,
+          ),
+        ),
+      );
+    }
+
+    TextStyle? controlTextStyle() =>
+        neo
+            ? TextStyle(color: controlForeground, fontWeight: FontWeight.w700)
+            : null;
+
+    Text menuText(String value) => Text(value, style: controlTextStyle());
+
+    ButtonStyle branchButtonStyle(Color fill) {
+      if (!neo) {
+        return FilledButton.styleFrom(
+          backgroundColor: fill,
+          foregroundColor: flow.onAction,
+        );
+      }
+      final foreground = tonosForegroundForSurface(context, fill);
+      return FilledButton.styleFrom(
+        backgroundColor: fill,
+        foregroundColor: foreground,
+        disabledBackgroundColor: fill.withValues(alpha: 0.42),
+        disabledForegroundColor: foreground.withValues(alpha: 0.72),
+        side: BorderSide(color: tonosOutlineForSurface(context, fill)),
+      );
+    }
+
+    final actionForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.dialogChoice) : null;
+    final actionBackground = neo ? surfaces.dialogChoice : null;
+    final actionDisabledForeground =
+        neo ? actionForeground!.withValues(alpha: 0.72) : null;
+    final actionDisabledBackground =
+        neo ? actionBackground!.withValues(alpha: 0.42) : null;
+    final secondaryBackground = neo ? surfaces.dialog : null;
+    final secondaryForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.dialog) : null;
+    final secondaryOutline =
+        neo ? tonosOutlineForSurface(context, surfaces.dialog) : null;
 
     return Column(
       children: [
@@ -1159,15 +1257,23 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedBranchParent
                         : null,
                 isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: strings.flowBranchFrom,
-                  prefixIcon: const Icon(Icons.account_tree_outlined),
+                style: controlTextStyle(),
+                iconEnabledColor: neo ? controlForeground : null,
+                iconDisabledColor:
+                    neo ? controlSecondary.withValues(alpha: 0.72) : null,
+                dropdownColor: neo ? controlSurface : null,
+                borderRadius: neo ? shapes.settingsInput : null,
+                decoration: controlDecoration(
+                  label: strings.flowBranchFrom,
+                  icon: Icons.account_tree_outlined,
                 ),
                 items:
                     branchable
                         .map(
-                          (name) =>
-                              DropdownMenuItem(value: name, child: Text(name)),
+                          (name) => DropdownMenuItem(
+                            value: name,
+                            child: menuText(name),
+                          ),
                         )
                         .toList(),
                 onChanged: onBranchParentChanged,
@@ -1177,10 +1283,7 @@ class _FlowControlDeck extends StatelessWidget {
                 children: [
                   Expanded(
                     child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: success,
-                        foregroundColor: flow.onAction,
-                      ),
+                      style: branchButtonStyle(success),
                       onPressed:
                           selectedBranchParent == null || existingSuccess >= 1
                               ? null
@@ -1192,10 +1295,7 @@ class _FlowControlDeck extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: failure,
-                        foregroundColor: flow.onAction,
-                      ),
+                      style: branchButtonStyle(failure),
                       onPressed:
                           selectedBranchParent == null || existingFailure >= 1
                               ? null
@@ -1223,15 +1323,23 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedMethodNode
                         : null,
                 isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: strings.flowApplyActionTo,
-                  prefixIcon: const Icon(Icons.location_on_outlined),
+                style: controlTextStyle(),
+                iconEnabledColor: neo ? controlForeground : null,
+                iconDisabledColor:
+                    neo ? controlSecondary.withValues(alpha: 0.72) : null,
+                dropdownColor: neo ? controlSurface : null,
+                borderRadius: neo ? shapes.settingsInput : null,
+                decoration: controlDecoration(
+                  label: strings.flowApplyActionTo,
+                  icon: Icons.location_on_outlined,
                 ),
                 items:
                     methodTargets
                         .map(
-                          (name) =>
-                              DropdownMenuItem(value: name, child: Text(name)),
+                          (name) => DropdownMenuItem(
+                            value: name,
+                            child: menuText(name),
+                          ),
                         )
                         .toList(),
                 onChanged: onMethodNodeChanged,
@@ -1243,9 +1351,15 @@ class _FlowControlDeck extends StatelessWidget {
                         ? selectedMethod
                         : null,
                 isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: strings.flowProgressionAction,
-                  prefixIcon: const Icon(Icons.bolt_outlined),
+                style: controlTextStyle(),
+                iconEnabledColor: neo ? controlForeground : null,
+                iconDisabledColor:
+                    neo ? controlSecondary.withValues(alpha: 0.72) : null,
+                dropdownColor: neo ? controlSurface : null,
+                borderRadius: neo ? shapes.settingsInput : null,
+                decoration: controlDecoration(
+                  label: strings.flowProgressionAction,
+                  icon: Icons.bolt_outlined,
                 ),
                 items:
                     availableMethods
@@ -1256,6 +1370,7 @@ class _FlowControlDeck extends StatelessWidget {
                               method.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                              style: controlTextStyle(),
                             ),
                           ),
                         )
@@ -1270,6 +1385,19 @@ class _FlowControlDeck extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, 40),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
+                        backgroundColor: actionBackground,
+                        foregroundColor: actionForeground,
+                        disabledBackgroundColor: actionDisabledBackground,
+                        disabledForegroundColor: actionDisabledForeground,
+                        side:
+                            neo
+                                ? BorderSide(
+                                  color: tonosOutlineForSurface(
+                                    context,
+                                    surfaces.dialogChoice,
+                                  ),
+                                )
+                                : null,
                       ),
                       onPressed: canAddMethod ? onAddMethod : null,
                       child: Text(strings.flowAddAction),
@@ -1281,6 +1409,17 @@ class _FlowControlDeck extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 40),
                         padding: const EdgeInsets.symmetric(horizontal: 6),
+                        backgroundColor: secondaryBackground,
+                        foregroundColor: secondaryForeground,
+                        disabledBackgroundColor:
+                            neo
+                                ? secondaryBackground!.withValues(alpha: 0.72)
+                                : null,
+                        disabledForegroundColor:
+                            neo
+                                ? secondaryForeground!.withValues(alpha: 0.72)
+                                : null,
+                        side: neo ? BorderSide(color: secondaryOutline!) : null,
                       ),
                       onPressed: hasAttachedMethods ? onRemoveMethod : null,
                       child: Text(strings.flowRemoveAction),
@@ -1289,16 +1428,33 @@ class _FlowControlDeck extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        foregroundColor: scheme.error,
-                        side: BorderSide(
-                          color: scheme.error.withValues(
-                            alpha: surfaces.flowErrorBorderOpacity,
-                          ),
-                        ),
-                      ),
+                      style:
+                          neo
+                              ? OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 40),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                backgroundColor: secondaryBackground,
+                                foregroundColor: flow.failure,
+                                disabledBackgroundColor: secondaryBackground!
+                                    .withValues(alpha: 0.72),
+                                disabledForegroundColor: flow.failure
+                                    .withValues(alpha: 0.72),
+                                side: BorderSide(color: flow.failure),
+                              )
+                              : OutlinedButton.styleFrom(
+                                minimumSize: const Size(0, 40),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                foregroundColor: scheme.error,
+                                side: BorderSide(
+                                  color: scheme.error.withValues(
+                                    alpha: surfaces.flowErrorBorderOpacity,
+                                  ),
+                                ),
+                              ),
                       onPressed: canDeleteNode ? onRemoveNode : null,
                       child: Text(strings.flowRemoveNode),
                     ),
@@ -1334,6 +1490,15 @@ class _FlowControlCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.flowControl)
+            : scheme.onSurface;
+    final secondaryForeground =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surfaces.flowControl)
+            : scheme.onSurfaceVariant;
 
     return Container(
       width: double.infinity,
@@ -1355,6 +1520,10 @@ class _FlowControlCard extends StatelessWidget {
         backgroundColor: color.withValues(
           alpha: surfaces.flowControlExpandedOpacity,
         ),
+        textColor: neo ? foreground : null,
+        collapsedTextColor: neo ? foreground : null,
+        iconColor: neo ? foreground : null,
+        collapsedIconColor: neo ? foreground : null,
         leading: Container(
           width: 38,
           height: 38,
@@ -1362,11 +1531,12 @@ class _FlowControlCard extends StatelessWidget {
             color: color.withValues(alpha: surfaces.flowControlIconOpacity),
             borderRadius: shapes.flowIcon,
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: neo ? foreground : color, size: 20),
         ),
         title: Text(
           title,
           style: theme.textTheme.titleSmall?.copyWith(
+            color: neo ? foreground : null,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -1375,7 +1545,7 @@ class _FlowControlCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
+            color: secondaryForeground,
           ),
         ),
         children: [child],

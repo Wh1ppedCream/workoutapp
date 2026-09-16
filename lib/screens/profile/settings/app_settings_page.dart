@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
 
 class AppSettingsPage extends StatefulWidget {
   const AppSettingsPage({super.key}); // use_super_parameters
@@ -26,31 +27,33 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       await showDialog<void>(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: Text(AppLocalizations.of(context).databaseExportTitle),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: SingleChildScrollView(child: SelectableText(jsonStr)),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: jsonStr));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          AppLocalizations.of(context).databaseCopied,
+            (ctx) => TonosDialogFrame(
+              child: AlertDialog(
+                title: Text(AppLocalizations.of(context).databaseExportTitle),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(child: SelectableText(jsonStr)),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: jsonStr));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context).databaseCopied,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Text(AppLocalizations.of(context).commonCopy),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(AppLocalizations.of(context).commonClose),
-                ),
-              ],
+                      );
+                    },
+                    child: Text(AppLocalizations.of(context).commonCopy),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(AppLocalizations.of(context).commonClose),
+                  ),
+                ],
+              ),
             ),
       );
     } catch (e) {
@@ -75,29 +78,32 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
       result = await showDialog<String?>(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: Text(AppLocalizations.of(context).databaseImportTitle),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: TextField(
-                  controller: controller,
-                  maxLines: 10,
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context).databasePasteJson,
-                    border: OutlineInputBorder(),
+            (ctx) => TonosDialogFrame(
+              styleFormControls: true,
+              child: AlertDialog(
+                title: Text(AppLocalizations.of(context).databaseImportTitle),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 10,
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context).databasePasteJson,
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(null),
+                    child: Text(AppLocalizations.of(context).commonCancel),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(ctx).pop(controller.text),
+                    child: Text(AppLocalizations.of(context).commonImport),
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(null),
-                  child: Text(AppLocalizations.of(context).commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(ctx).pop(controller.text),
-                  child: Text(AppLocalizations.of(context).commonImport),
-                ),
-              ],
             ),
       );
     } finally {

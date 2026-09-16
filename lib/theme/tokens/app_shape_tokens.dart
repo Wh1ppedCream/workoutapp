@@ -40,6 +40,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     required this.flowIcon,
     required this.card,
     required this.sheet,
+    this.swapSheet = const BorderRadius.vertical(top: Radius.circular(24)),
     required this.pill,
     required this.settingsAction,
     required this.settingsPanel,
@@ -108,6 +109,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     flowIcon: BorderRadius.all(Radius.circular(13)),
     card: BorderRadius.all(Radius.circular(16)),
     sheet: BorderRadius.all(Radius.circular(24)),
+    swapSheet: BorderRadius.vertical(top: Radius.circular(24)),
     pill: BorderRadius.all(Radius.circular(999)),
     settingsAction: BorderRadius.all(Radius.circular(15)),
     settingsPanel: BorderRadius.all(Radius.circular(22)),
@@ -176,6 +178,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   final BorderRadius flowIcon;
   final BorderRadius card;
   final BorderRadius sheet;
+  final BorderRadius swapSheet;
   final BorderRadius pill;
   final BorderRadius settingsAction;
   final BorderRadius settingsPanel;
@@ -245,6 +248,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     BorderRadius? flowIcon,
     BorderRadius? card,
     BorderRadius? sheet,
+    BorderRadius? swapSheet,
     BorderRadius? pill,
     BorderRadius? settingsAction,
     BorderRadius? settingsPanel,
@@ -319,6 +323,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
       flowIcon: flowIcon ?? this.flowIcon,
       card: card ?? this.card,
       sheet: sheet ?? this.sheet,
+      swapSheet: swapSheet ?? this.swapSheet,
       pill: pill ?? this.pill,
       settingsAction: settingsAction ?? this.settingsAction,
       settingsPanel: settingsPanel ?? this.settingsPanel,
@@ -452,6 +457,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
       flowIcon: BorderRadius.lerp(flowIcon, other.flowIcon, t)!,
       card: BorderRadius.lerp(card, other.card, t)!,
       sheet: BorderRadius.lerp(sheet, other.sheet, t)!,
+      swapSheet: BorderRadius.lerp(swapSheet, other.swapSheet, t)!,
       pill: BorderRadius.lerp(pill, other.pill, t)!,
       settingsAction:
           BorderRadius.lerp(settingsAction, other.settingsAction, t)!,

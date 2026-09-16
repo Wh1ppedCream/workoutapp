@@ -27,6 +27,8 @@ void main() {
               .map((entry) => entry['catalogId'] as String)
               .toSet();
       final names = bundle['names'] as Map<String, dynamic>;
+      expect(bundle['version'], 1);
+      expect(names.keys, unorderedEquals(locales));
 
       for (final locale in locales) {
         final localeNames = names[locale] as Map<String, dynamic>;
@@ -63,6 +65,8 @@ void main() {
             .map((entry) => entry['catalogId'] as String)
             .toSet();
     final names = bundle['names'] as Map<String, dynamic>;
+    expect(bundle['version'], 1);
+    expect(names.keys, unorderedEquals(locales));
 
     for (final locale in const ['es', 'fr', 'bn', 'zh', 'hi']) {
       final localeNames = names[locale] as Map<String, dynamic>;
@@ -72,10 +76,22 @@ void main() {
               .toSet();
       expect(localizedMuscles, containsAll(muscleIds));
       expect(localizedMuscles, hasLength(muscleIds.length));
+      expect(
+        localeNames.keys,
+        unorderedEquals({...muscleIds, ..._equipmentIds(registry)}),
+        reason: '$locale contains a missing or unknown catalog entity ID.',
+      );
       for (final id in muscleIds) {
         expect(localeNames[id], isA<String>());
         expect((localeNames[id] as String).trim(), isNotEmpty);
       }
     }
   });
+}
+
+Set<String> _equipmentIds(Map<String, dynamic> registry) {
+  return (registry['equipment'] as List<Object?>)
+      .cast<Map<String, Object?>>()
+      .map((entry) => entry['catalogId'] as String)
+      .toSet();
 }

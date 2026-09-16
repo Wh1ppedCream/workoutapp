@@ -9,6 +9,7 @@ import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../utils/weight_unit_formatter.dart';
 import '../../../utils/app_test_keys.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
@@ -183,6 +184,16 @@ class _UserInformationSettingsPageState
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final dropdownInk = usesInkRecipe ? context.cs.onPrimaryContainer : null;
+    final inputTextStyle = settingsInputTextStyle(context);
+    final dropdownStyle =
+        usesInkRecipe
+            ? Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: dropdownInk)
+            : null;
     final bodyFatOptions = <String>[
       '0-5%',
       '5-10%',
@@ -224,11 +235,14 @@ class _UserInformationSettingsPageState
           title: strings.userInfoIdentityTitle,
           subtitle: strings.userInfoIdentitySubtitle,
           accentColor: SettingsAccent.account,
+          surfaceColor: usesInkRecipe ? surfaces.settingsSection : null,
           children: [
             _FieldPadding(
               child: TextFormField(
                 key: AppTestKeys.userInformationName,
                 controller: _nameController,
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
                 decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoName,
@@ -240,6 +254,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _gender,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     genderOptions
                         .map(
@@ -266,6 +285,8 @@ class _UserInformationSettingsPageState
                 child: AbsorbPointer(
                   child: TextFormField(
                     controller: _dobController,
+                    style: inputTextStyle,
+                    cursorColor: inputTextStyle?.color,
                     decoration: settingsInputDecoration(
                       context,
                       label: strings.userInfoDateOfBirth,
@@ -282,10 +303,13 @@ class _UserInformationSettingsPageState
           title: strings.userInfoBodyMetricsTitle,
           subtitle: strings.userInfoBodyMetricsSubtitle,
           accentColor: SettingsAccent.progress,
+          surfaceColor: usesInkRecipe ? surfaces.planDuration : null,
           children: [
             _FieldPadding(
               child: TextFormField(
                 controller: _heightController,
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
                 decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoHeight,
@@ -297,6 +321,8 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: TextFormField(
                 controller: _weightController,
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
                 decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoCurrentWeight,
@@ -313,6 +339,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _bodyFatEstimate,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     bodyFatOptions
                         .map(
@@ -339,10 +370,16 @@ class _UserInformationSettingsPageState
           title: strings.userInfoActivityTitle,
           subtitle: strings.userInfoActivitySubtitle,
           accentColor: SettingsAccent.training,
+          surfaceColor: usesInkRecipe ? surfaces.flowControl : null,
           children: [
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _weightTrend,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     trendOptions
                         .map(
@@ -366,6 +403,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _activityLevel,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     activityOptions
                         .map(

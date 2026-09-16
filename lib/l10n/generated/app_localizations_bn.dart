@@ -4284,6 +4284,11 @@ class AppLocalizationsBn extends AppLocalizations {
   String get commonRemove => 'সরান';
 
   @override
+  String exerciseProgressRemoveExerciseLabel(String exerciseName) {
+    return 'প্রগ্রেস থেকে $exerciseName সরান';
+  }
+
+  @override
   String get automaticSaving => 'সংরক্ষণ করা হচ্ছে...';
 
   @override

@@ -5,6 +5,7 @@ import '../l10n/generated/app_localizations.dart';
 import 'app_theme_capabilities.dart';
 import 'app_theme_factory.dart';
 import 'app_theme_family.dart';
+import 'neo_brutalism_pilot_gallery.dart';
 import 'theme_extensions.dart';
 import 'tokens/app_effect_tokens.dart';
 import 'tokens/app_media_tokens.dart';
@@ -35,6 +36,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
   double _textScale = 1;
   bool _reducedMotion = false;
   bool _effectsEnabled = true;
+  int _previewResetToken = 0;
 
   @override
   void initState() {
@@ -68,7 +70,14 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
                           actions: [
                             IconButton(
                               tooltip: 'Close Theme Lab',
-                              onPressed: () => Navigator.maybePop(themeContext),
+                              onPressed: () {
+                                final navigator = Navigator.of(themeContext);
+                                if (navigator.canPop()) {
+                                  navigator.maybePop();
+                                } else {
+                                  navigator.pushReplacementNamed('/main');
+                                }
+                              },
                               icon: const Icon(Icons.close),
                             ),
                           ],
@@ -78,6 +87,12 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
                           children: [
                             _buildControls(themeContext),
                             const SizedBox(height: 20),
+                            if (_family == AppThemeFamily.neoBrutalism) ...[
+                              NeoBrutalismPilotGallery(
+                                resetToken: _previewResetToken,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                             _buildSection(
                               themeContext,
                               'Tonos surfaces',
@@ -234,9 +249,32 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
             value: _effectsEnabled,
             onChanged: (value) => setState(() => _effectsEnabled = value),
           ),
+          const SizedBox(height: 8),
+          TonosAction(
+            key: const ValueKey('theme-lab-reset'),
+            label: 'Reset preview',
+            variant: TonosActionVariant.outlined,
+            icon: const Icon(Icons.restart_alt),
+            onPressed: _resetPreview,
+          ),
         ],
       ),
     );
+  }
+
+  void _resetPreview() {
+    setState(() {
+      _family =
+          _families.contains(AppThemeFamily.classic)
+              ? AppThemeFamily.classic
+              : _families.first;
+      _brightness = Brightness.dark;
+      _locale = const Locale('en');
+      _textScale = 1;
+      _reducedMotion = false;
+      _effectsEnabled = true;
+      _previewResetToken++;
+    });
   }
 
   Widget _buildSurfaceGallery() {
@@ -713,12 +751,17 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
       for (final extension in base.extensions.values)
         if (extension is AppMotionTokens && _reducedMotion)
           extension.copyWith(
+            instant: extension.reduced,
             standard: extension.reduced,
             emphasized: extension.reduced,
             page: extension.reduced,
             quick: extension.reduced,
+            pageTransition: extension.reduced,
+            exerciseDetailSelection: extension.reduced,
+            reduced: extension.reduced,
             standardCurve: extension.reducedCurve,
             emphasizedCurve: extension.reducedCurve,
+            reducedCurve: extension.reducedCurve,
           )
         else if (extension is AppTutorialTokens)
           extension.copyWith(
@@ -730,6 +773,14 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
                 _reducedMotion ? Duration.zero : extension.guidedScrollDuration,
             coachDuration:
                 _reducedMotion ? Duration.zero : extension.coachDuration,
+            cardShadow:
+                _effectsEnabled
+                    ? extension.cardShadow
+                    : const BoxShadow(color: Colors.transparent),
+            coachShadow:
+                _effectsEnabled
+                    ? extension.coachShadow
+                    : const BoxShadow(color: Colors.transparent),
             effectsEnabled: _effectsEnabled,
           )
         else if (extension is AppEffectTokens && !_effectsEnabled)
@@ -738,12 +789,19 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
             dialogElevation: 0,
             sheetElevation: 0,
             exerciseDetailSheetElevation: 0,
+            swapSheetElevation: 0,
+            progressRemoveBadgeShadow: const BoxShadow(
+              color: Colors.transparent,
+            ),
             feedbackElevation: 0,
             cardShadow: extension.cardShadow.withValues(
               alpha: extension.noEffectsShadowOpacity,
             ),
             cardShadowBlur: extension.noEffectsShadowBlur,
             cardShadowOffset: Offset.zero,
+            raisedPanelShadowOffset: Offset.zero,
+            primaryActionShadowOffset: Offset.zero,
+            dialogShadowOffset: Offset.zero,
             shadowColor: extension.shadowColor.withValues(
               alpha: extension.noEffectsShadowOpacity,
             ),
@@ -759,6 +817,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
     var preview = base.copyWith(extensions: extensions);
     if (!_effectsEnabled) {
       final effects = preview.effectTokens;
+      final tooltipDecoration = preview.tooltipTheme.decoration;
       preview = preview.copyWith(
         bottomSheetTheme: preview.bottomSheetTheme.copyWith(
           elevation: effects.sheetElevation,
@@ -766,6 +825,12 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
         ),
         dialogTheme: preview.dialogTheme.copyWith(
           elevation: effects.dialogElevation,
+        ),
+        tooltipTheme: preview.tooltipTheme.copyWith(
+          decoration:
+              tooltipDecoration is BoxDecoration
+                  ? tooltipDecoration.copyWith(boxShadow: const [])
+                  : tooltipDecoration,
         ),
       );
     }
@@ -775,6 +840,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
 
 String _familyLabel(AppThemeFamily family) => switch (family) {
   AppThemeFamily.classic => 'Classic',
+  AppThemeFamily.neoBrutalism => 'Neo-Brutalism',
 };
 
 String _localeLabel(Locale locale) => locale.toLanguageTag();

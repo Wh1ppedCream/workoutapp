@@ -155,6 +155,23 @@ class ExerciseDetailSheet extends StatefulWidget {
     required this.defId,
   });
 
+  /// Presents the detail sheet with one owner for its draggable handle.
+  static Future<T?> show<T>({
+    required BuildContext context,
+    required ExerciseDefinition definition,
+    required int defId,
+  }) {
+    final neoSheet = context.surfaceDecorationTokens.sheet.outlined;
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: neoSheet ? Colors.transparent : null,
+      elevation: neoSheet ? 0 : null,
+      showDragHandle: neoSheet ? false : null,
+      builder: (_) => ExerciseDetailSheet(definition: definition, defId: defId),
+    );
+  }
+
   @override
   State<ExerciseDetailSheet> createState() => _ExerciseDetailSheetState();
 }
@@ -460,7 +477,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   Widget _buildDetailsTab(ScrollController scrollCtrl) {
     final def = widget.definition;
-    final dataVisualization = context.dataVisualizationTokens;
+    final heatmapSurface = context.surfaceTokens.mediaPlaceholder;
+    final heatmapLow = tonosHeatmapLowForSurface(context, heatmapSurface);
+    final heatmapHigh = tonosHeatmapHighForSurface(context, heatmapSurface);
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in def.bodyParts) bodyPart.name: 1.0,
     });
@@ -480,8 +499,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                   child: _buildHeatmapButton(
                     definition: def,
                     frequencyMap: heatmapFrequencyMap,
-                    lowColor: dataVisualization.heatmapLow,
-                    highColor: dataVisualization.heatmapHigh,
+                    lowColor: heatmapLow,
+                    highColor: heatmapHigh,
                     size: 220,
                     padding: 12,
                     borderRadius: context.mediaTokens.previewShape,
@@ -497,8 +516,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         : _buildHeatmapButton(
                           definition: def,
                           frequencyMap: heatmapFrequencyMap,
-                          lowColor: dataVisualization.heatmapLow,
-                          highColor: dataVisualization.heatmapHigh,
+                          lowColor: heatmapLow,
+                          highColor: heatmapHigh,
                           size: 98,
                           padding: 6,
                           borderRadius: context.mediaTokens.overlayShape,
@@ -760,7 +779,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final motion = theme.motionTokens;
     final isExpandable = onExpandedChanged != null;
     return AnimatedSize(
-      duration: motion.quick,
+      duration: appMotionDuration(context, motion.quick),
       curve: Curves.easeOutCubic,
       child: Container(
         width: double.infinity,
@@ -835,16 +854,33 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
+  Color _vividLightNeoTagColor(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl
+        .withSaturation((hsl.saturation * 1.16).clamp(0.0, 1.0).toDouble())
+        .withLightness((hsl.lightness * 0.62).clamp(0.28, 0.58).toDouble())
+        .toColor();
+  }
+
   Widget _buildDetailTag(String label, {required Color color}) {
+    final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final tagColor =
+        context.surfaceDecorationTokens.panel.outlined &&
+                theme.brightness == Brightness.light
+            ? _vividLightNeoTagColor(color)
+            : color;
+    final tagSurface = tagColor.withValues(
+      alpha: surfaces.exerciseDetailTagFillOpacity,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: surfaces.exerciseDetailTagFillOpacity),
+        color: tagSurface,
         borderRadius: shapes.exerciseDetailTag,
         border: Border.all(
-          color: color.withValues(
+          color: tagColor.withValues(
             alpha: surfaces.exerciseDetailTagBorderOpacity,
           ),
         ),
@@ -852,7 +888,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
+          color: tagColor,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -1104,6 +1140,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final selectedSurface =
+        neo ? surfaces.settingsHero : theme.colorScheme.primary;
+    final selectedForeground =
+        neo
+            ? tonosForegroundForSurface(context, selectedSurface)
+            : theme.colorScheme.onPrimary;
+    final unselectedForeground =
+        neo
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseDetailTimeframe,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     final labels = <String>[
       _strings.exerciseDetailWeek,
       _strings.exerciseDetailMonth,
@@ -1143,14 +1193,14 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                             );
                           }),
                   child: AnimatedContainer(
-                    duration: motion.exerciseDetailSelection,
+                    duration: appMotionDuration(
+                      context,
+                      motion.exerciseDetailSelection,
+                    ),
                     curve: Curves.easeOutCubic,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color:
-                          selected
-                              ? theme.colorScheme.primary
-                              : Colors.transparent,
+                      color: selected ? selectedSurface : Colors.transparent,
                       borderRadius: shapes.exerciseDetailTimeframeOption,
                     ),
                     child: Text(
@@ -1161,8 +1211,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       style: theme.textTheme.labelLarge?.copyWith(
                         color:
                             selected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
+                                ? selectedForeground
+                                : unselectedForeground,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -1552,6 +1602,22 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final recordForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
+            : scheme.onSurface;
+    final recordActionFill = scheme.secondary.withValues(
+      alpha: surfaces.exerciseDetailRecordActionFillOpacity,
+    );
+    final recordActionForeground =
+        neo
+            ? tonosForegroundForSurface(
+              context,
+              recordActionFill,
+              parentSurface: surfaces.exerciseDetailRecord,
+            )
+            : scheme.secondary;
     final strings = AppLocalizations.of(context);
     final dateLabel = LocalizedFormatters.dateTime(
       record.displayDateTime,
@@ -1586,7 +1652,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.calendar_today_outlined,
-                  color: scheme.primary,
+                  color: neo ? recordForeground : scheme.primary,
                   size: 17,
                 ),
               ),
@@ -1597,14 +1663,16 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: scheme.primary,
+                    color: neo ? recordForeground : scheme.primary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               if (record.badges.isFirstRecord) ...[
                 const SizedBox(width: 8),
-                const FirstRecordBadge(),
+                FirstRecordBadge(
+                  foregroundSurface: surfaces.exerciseDetailRecord,
+                ),
               ],
               const SizedBox(width: 10),
               Semantics(
@@ -1619,9 +1687,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(8, 5, 5, 5),
                       decoration: BoxDecoration(
-                        color: scheme.secondary.withValues(
-                          alpha: surfaces.exerciseDetailRecordActionFillOpacity,
-                        ),
+                        color: recordActionFill,
                         borderRadius: shapes.exerciseDetailRecordAction,
                       ),
                       child: Row(
@@ -1630,7 +1696,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                           Text(
                             strings.exerciseDetailSetCount(setCount),
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.secondary,
+                              color: recordActionForeground,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -1638,7 +1704,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                           Icon(
                             Icons.chevron_right_rounded,
                             size: 18,
-                            color: scheme.secondary,
+                            color: recordActionForeground,
                           ),
                         ],
                       ),
@@ -1683,6 +1749,18 @@ class _ExerciseHistorySetRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final surfaces = theme.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final recordForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
+            : scheme.onSurface;
+    final recordSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.exerciseDetailRecord,
+            )
+            : scheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1705,7 +1783,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                 maximumFractionDigits: 0,
               ),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.primary,
+                color: neo ? recordForeground : scheme.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1722,6 +1800,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
+                  color: neo ? recordForeground : null,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1738,6 +1817,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
+                  color: neo ? recordForeground : null,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1759,7 +1839,10 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                         badgeIndex++
                       ) ...[
                         if (badgeIndex > 0) const SizedBox(width: 4),
-                        WorkoutRecordBadgeChip(badge: badges[badgeIndex]),
+                        WorkoutRecordBadgeChip(
+                          badge: badges[badgeIndex],
+                          foregroundSurface: surfaces.exerciseDetailRecord,
+                        ),
                       ],
                     ],
                   ),
@@ -1781,7 +1864,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
               ),
               maxLines: 1,
               style: theme.textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: recordSecondary,
                 fontStyle: FontStyle.italic,
                 fontWeight: FontWeight.w700,
               ),
@@ -2039,8 +2122,20 @@ class _MetricsStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.exerciseDetailState)
+            : theme.colorScheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.exerciseDetailState,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -2061,11 +2156,15 @@ class _MetricsStateCard extends StatelessWidget {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                color: theme.colorScheme.primary,
+                color: neo ? cardForeground : theme.colorScheme.primary,
               ),
             )
           else
-            Icon(icon, color: theme.colorScheme.primary, size: 24),
+            Icon(
+              icon,
+              color: neo ? cardForeground : theme.colorScheme.primary,
+              size: 24,
+            ),
           const SizedBox(width: 13),
           Expanded(
             child: Column(
@@ -2074,6 +2173,7 @@ class _MetricsStateCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: neo ? cardForeground : null,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -2081,7 +2181,7 @@ class _MetricsStateCard extends StatelessWidget {
                 Text(
                   message,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: cardSecondary,
                     height: 1.35,
                   ),
                 ),
@@ -2169,6 +2269,22 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final chartForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.exerciseDetailChart)
+            : scheme.onSurfaceVariant;
+    final chartEmptyForeground =
+        neo
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseDetailChartEmpty,
+            )
+            : scheme.onSurfaceVariant;
+    final tooltipForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.exerciseDetailTooltip)
+            : scheme.onSurface;
 
     if (points.isEmpty) {
       return Container(
@@ -2181,7 +2297,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
         child: Text(
           AppLocalizations.of(context).exerciseDetailNoChartData,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
+            color: chartEmptyForeground,
           ),
         ),
       );
@@ -2235,13 +2351,13 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                 final point = points[index];
                 final textStyle =
                     theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurface,
+                      color: tooltipForeground,
                       fontSize: 9,
                       height: 1.08,
                       fontWeight: FontWeight.w800,
                     ) ??
                     TextStyle(
-                      color: scheme.onSurface,
+                      color: tooltipForeground,
                       fontSize: 9,
                       height: 1.08,
                       fontWeight: FontWeight.w800,
@@ -2298,7 +2414,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                         Localizations.localeOf(context),
                       ),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: chartForeground,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -2333,7 +2449,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
                         Localizations.localeOf(context),
                       ),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: chartForeground,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -2378,7 +2494,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
             ),
           ],
         ),
-        duration: motion.exerciseDetailSelection,
+        duration: appMotionDuration(context, motion.exerciseDetailSelection),
         curve: Curves.easeOut,
       ),
     );

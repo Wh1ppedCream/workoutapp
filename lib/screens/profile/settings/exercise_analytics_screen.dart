@@ -324,7 +324,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
               ? FloatingActionButton.extended(
                 onPressed: _isSavingCredits ? null : _savePendingCredits,
                 backgroundColor: SettingsAccent.advanced,
-                foregroundColor: Colors.white,
+                foregroundColor:
+                    context.surfaceDecorationTokens.panel.outlined
+                        ? tonosForegroundForSurface(
+                          context,
+                          SettingsAccent.advanced,
+                        )
+                        : Colors.white,
                 icon: Icon(
                   _isSavingCredits ? Icons.hourglass_top : Icons.save_outlined,
                 ),
@@ -428,19 +434,37 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final pickerSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final pickerForeground =
+        neo
+            ? tonosForegroundForSurface(context, pickerSurface)
+            : scheme.onSurface;
+    final pickerSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, pickerSurface)
+            : scheme.onSurfaceVariant;
 
     return Material(
-      color: Colors.transparent,
+      color: pickerSurface,
       child: InkWell(
         borderRadius: shapes.settingsPicker,
         onTap: _pickExercise,
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+            color: pickerSurface,
             borderRadius: shapes.settingsPicker,
             border: Border.all(
-              color: SettingsAccent.advanced.withValues(alpha: 0.42),
+              color:
+                  neo
+                      ? tonosOutlineForSurface(context, pickerSurface)
+                      : SettingsAccent.advanced.withValues(alpha: 0.42),
+              width: shapes.outlineWidth,
             ),
           ),
           child: Row(
@@ -452,9 +476,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                   color: SettingsAccent.advanced.withValues(alpha: 0.16),
                   borderRadius: shapes.settingsIcon,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.fitness_center,
-                  color: SettingsAccent.advanced,
+                  color: neo ? pickerForeground : SettingsAccent.advanced,
                   size: 21,
                 ),
               ),
@@ -467,7 +491,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     Text(
                       _strings.allocationSelectedExercise,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: pickerSecondary,
                       ),
                     ),
                     Text(
@@ -476,12 +500,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: pickerForeground,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right, color: pickerSecondary),
             ],
           ),
         ),
@@ -493,22 +518,44 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tabSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final tabForeground =
+        neo ? tonosForegroundForSurface(context, tabSurface) : scheme.onSurface;
+    final tabSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tabSurface)
+            : scheme.onSurfaceVariant;
 
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        color: tabSurface,
         borderRadius: shapes.profileTile,
+        border:
+            neo
+                ? Border.all(
+                  color: tonosOutlineForSurface(context, tabSurface),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
       child: TabBar(
         controller: _tabController,
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          color: SettingsAccent.advanced.withValues(alpha: 0.24),
+          color:
+              neo
+                  ? surfaces.dialogChoice
+                  : SettingsAccent.advanced.withValues(alpha: 0.24),
           borderRadius: shapes.settingsTabIndicator,
         ),
-        labelColor: SettingsAccent.advanced,
-        unselectedLabelColor: scheme.onSurfaceVariant,
+        labelColor: neo ? tabForeground : SettingsAccent.advanced,
+        unselectedLabelColor: tabSecondary,
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -738,22 +785,40 @@ class _MuscleCreditCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        color: cardSurface,
         borderRadius: shapes.profileTile,
         border: Border.all(
-          color: (source == ExerciseAllocationSource.personalOverride
-                  ? SettingsAccent.advanced
-                  : scheme.outlineVariant)
-              .withValues(
-                alpha:
-                    source == ExerciseAllocationSource.personalOverride
-                        ? 0.58
-                        : 0.56,
-              ),
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : (source == ExerciseAllocationSource.personalOverride
+                          ? SettingsAccent.advanced
+                          : scheme.outlineVariant)
+                      .withValues(
+                        alpha:
+                            source == ExerciseAllocationSource.personalOverride
+                                ? 0.58
+                                : 0.56,
+                      ),
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Row(
@@ -785,6 +850,7 @@ class _MuscleCreditCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
+                    color: cardForeground,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -792,7 +858,10 @@ class _MuscleCreditCard extends StatelessWidget {
                   source.localizedLabel(AppLocalizations.of(context)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color:
-                        source == ExerciseAllocationSource.personalOverride
+                        neo
+                            ? cardSecondary
+                            : source ==
+                                ExerciseAllocationSource.personalOverride
                             ? SettingsAccent.advanced
                             : scheme.onSurfaceVariant,
                   ),
@@ -809,6 +878,7 @@ class _MuscleCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
+              style: settingsInputTextStyle(context),
               decoration: settingsFieldDecoration(
                 context,
                 label: AppLocalizations.of(context).allocationCredit,
@@ -844,13 +914,29 @@ class _BodyPartCreditCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+        color: cardSurface,
         borderRadius: shapes.profileTile,
-        border: Border.all(color: _sourceColor(source).withValues(alpha: 0.48)),
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : _sourceColor(source).withValues(alpha: 0.48),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         children: [
@@ -873,6 +959,7 @@ class _BodyPartCreditCard extends StatelessWidget {
               localizedBodyPartName(context, bodyPart.name),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
+                color: cardForeground,
               ),
             ),
           ),
@@ -885,6 +972,7 @@ class _BodyPartCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
+              style: settingsInputTextStyle(context),
               decoration: settingsFieldDecoration(
                 context,
                 label: AppLocalizations.of(context).allocationCredit,

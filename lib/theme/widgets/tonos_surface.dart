@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme_extensions.dart';
+import '../tokens/app_surface_decoration_tokens.dart';
 
 /// Semantic surface recipes used by custom Tonos structures.
 enum TonosSurfaceVariant {
@@ -23,8 +24,10 @@ class TonosSurface extends StatelessWidget {
     super.key,
     required this.child,
     this.variant = TonosSurfaceVariant.panel,
+    this.color,
     this.padding = EdgeInsets.zero,
     this.margin,
+    this.borderRadius,
     this.outlined,
     this.clipBehavior,
     this.onTap,
@@ -33,8 +36,13 @@ class TonosSurface extends StatelessWidget {
 
   final Widget child;
   final TonosSurfaceVariant variant;
+  final Color? color;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
+
+  /// Overrides the variant's theme-owned radius for a specific production
+  /// composition while keeping color, outline, and depth centralized here.
+  final BorderRadiusGeometry? borderRadius;
 
   /// Overrides the variant's default outline policy when provided.
   final bool? outlined;
@@ -49,78 +57,73 @@ class TonosSurface extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final effects = context.effectTokens;
+    final decoration = context.surfaceDecorationTokens.forRole(
+      _decorationRoleForVariant(variant),
+    );
 
     final Color backgroundColor;
-    final BorderRadiusGeometry borderRadius;
-    final bool defaultOutlined;
+    final BorderRadiusGeometry resolvedBorderRadius;
     final Clip defaultClipBehavior;
-    final double elevation;
-    final BoxShadow? shadow;
 
     switch (variant) {
       case TonosSurfaceVariant.panel:
-        backgroundColor = surfaces.panel;
-        borderRadius = shapes.control;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.panel;
+        resolvedBorderRadius = borderRadius ?? shapes.control;
         defaultClipBehavior = Clip.none;
-        elevation = 0;
-        shadow = null;
       case TonosSurfaceVariant.panelRaised:
-        backgroundColor = surfaces.panelRaised;
-        borderRadius = shapes.control;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.panelRaised;
+        resolvedBorderRadius = borderRadius ?? shapes.control;
         defaultClipBehavior = Clip.none;
-        elevation = 0;
-        shadow = null;
       case TonosSurfaceVariant.card:
-        backgroundColor = surfaces.card;
-        borderRadius = shapes.card;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.card;
+        resolvedBorderRadius = borderRadius ?? shapes.card;
         defaultClipBehavior = Clip.none;
-        elevation = effects.cardElevation;
-        shadow = null;
       case TonosSurfaceVariant.compactCard:
-        backgroundColor = surfaces.card;
-        borderRadius = shapes.control;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.card;
+        resolvedBorderRadius = borderRadius ?? shapes.control;
         defaultClipBehavior = Clip.none;
-        elevation = 0;
-        shadow = BoxShadow(
-          color: effects.cardShadow,
-          blurRadius: effects.cardShadowBlur,
-          offset: effects.cardShadowOffset,
-        );
       case TonosSurfaceVariant.input:
-        backgroundColor = surfaces.input;
-        borderRadius = shapes.control;
-        defaultOutlined = true;
+        backgroundColor = color ?? surfaces.input;
+        resolvedBorderRadius = borderRadius ?? shapes.control;
         defaultClipBehavior = Clip.none;
-        elevation = 0;
-        shadow = null;
       case TonosSurfaceVariant.media:
-        backgroundColor = surfaces.media;
-        borderRadius = shapes.card;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.media;
+        resolvedBorderRadius = borderRadius ?? shapes.card;
         defaultClipBehavior = Clip.antiAlias;
-        elevation = 0;
-        shadow = null;
       case TonosSurfaceVariant.mediaPlaceholder:
-        backgroundColor = surfaces.mediaPlaceholder;
-        borderRadius = shapes.card;
-        defaultOutlined = false;
+        backgroundColor = color ?? surfaces.mediaPlaceholder;
+        resolvedBorderRadius = borderRadius ?? shapes.card;
         defaultClipBehavior = Clip.antiAlias;
-        elevation = 0;
-        shadow = null;
     }
 
+    final elevation = switch (decoration.depth) {
+      AppSurfaceDepth.materialElevation => effects.cardElevation,
+      AppSurfaceDepth.none || AppSurfaceDepth.explicitShadow => 0.0,
+    };
+    final shadowOffset = switch (variant) {
+      TonosSurfaceVariant.panelRaised => effects.raisedPanelShadowOffset,
+      _ => effects.cardShadowOffset,
+    };
+    final shadow = switch (decoration.depth) {
+      AppSurfaceDepth.explicitShadow => BoxShadow(
+        color: effects.cardShadow,
+        blurRadius: effects.cardShadowBlur,
+        offset: shadowOffset,
+      ),
+      AppSurfaceDepth.none || AppSurfaceDepth.materialElevation => null,
+    };
+    final visibleShadow =
+        shadow != null && _hasVisibleShadow(shadow) ? shadow : null;
+    final outlineColor =
+        variant == TonosSurfaceVariant.input
+            ? surfaces.neutralOutline
+            : tonosOutlineForSurface(context, backgroundColor);
+
     final shape = RoundedRectangleBorder(
-      borderRadius: borderRadius,
+      borderRadius: resolvedBorderRadius,
       side:
-          (outlined ?? defaultOutlined)
-              ? BorderSide(
-                color: surfaces.subtleOutline,
-                width: shapes.outlineWidth,
-              )
+          (outlined ?? decoration.outlined)
+              ? BorderSide(color: outlineColor, width: shapes.outlineWidth)
               : BorderSide.none,
     );
     final effectiveClipBehavior = clipBehavior ?? defaultClipBehavior;
@@ -145,11 +148,11 @@ class TonosSurface extends StatelessWidget {
         child: surface,
       );
     }
-    if (shadow != null) {
+    if (visibleShadow != null) {
       surface = DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          boxShadow: [shadow],
+          borderRadius: resolvedBorderRadius,
+          boxShadow: [visibleShadow],
         ),
         child: surface,
       );
@@ -157,4 +160,24 @@ class TonosSurface extends StatelessWidget {
 
     return Container(margin: margin, child: surface);
   }
+}
+
+AppSurfaceDecorationRole _decorationRoleForVariant(
+  TonosSurfaceVariant variant,
+) => switch (variant) {
+  TonosSurfaceVariant.panel => AppSurfaceDecorationRole.panel,
+  TonosSurfaceVariant.panelRaised => AppSurfaceDecorationRole.panelRaised,
+  TonosSurfaceVariant.card => AppSurfaceDecorationRole.card,
+  TonosSurfaceVariant.compactCard => AppSurfaceDecorationRole.compactCard,
+  TonosSurfaceVariant.input => AppSurfaceDecorationRole.input,
+  TonosSurfaceVariant.media => AppSurfaceDecorationRole.media,
+  TonosSurfaceVariant.mediaPlaceholder =>
+    AppSurfaceDecorationRole.mediaPlaceholder,
+};
+
+bool _hasVisibleShadow(BoxShadow shadow) {
+  return shadow.color.a > 0 &&
+      (shadow.blurRadius > 0 ||
+          shadow.spreadRadius != 0 ||
+          shadow.offset != Offset.zero);
 }

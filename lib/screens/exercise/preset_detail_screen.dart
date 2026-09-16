@@ -25,6 +25,8 @@ import '../../utils/tutorial_launcher.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_action_depth.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -142,19 +144,21 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final discard = await showDialog<bool>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(strings.planUnsavedChangesTitle),
-            content: Text(strings.planDiscardChangesQuestion),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(strings.planDiscard),
-              ),
-            ],
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.planUnsavedChangesTitle),
+              content: Text(strings.planDiscardChangesQuestion),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(strings.planDiscard),
+                ),
+              ],
+            ),
           ),
     );
     return discard == true;
@@ -174,11 +178,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final def = await repo.fetchDefinitionById(defId);
     if (def == null || !mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => ExerciseDetailSheet(definition: def, defId: defId),
-    );
+    ExerciseDetailSheet.show(context: context, definition: def, defId: defId);
   }
 
   Key _exerciseCardKey(WorkoutExercise exercise) {
@@ -434,6 +434,21 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     );
   }
 
+  Widget _buildPrimaryAction({
+    required Key key,
+    required VoidCallback onPressed,
+    required String label,
+  }) {
+    final button = ElevatedButton(
+      key: key,
+      onPressed: onPressed,
+      child: Text(label),
+    );
+    if (!context.surfaceDecorationTokens.panel.outlined) return button;
+
+    return tonosWithPrimaryActionDepth(context, button, enabled: true);
+  }
+
   Future<void> _showSwapExercisePicker(PresetSession preset, int index) async {
     final exercise = preset.exercises[index];
     if (exercise is! WeightExercise) return;
@@ -560,19 +575,21 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder:
-                            (ctx) => AlertDialog(
-                              title: Text(strings.planDeleteTitle),
-                              content: Text(strings.planDeleteBody),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text(strings.commonCancel),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: Text(strings.commonDelete),
-                                ),
-                              ],
+                            (ctx) => TonosDialogFrame(
+                              child: AlertDialog(
+                                title: Text(strings.planDeleteTitle),
+                                content: Text(strings.planDeleteBody),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text(strings.commonCancel),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: Text(strings.commonDelete),
+                                  ),
+                                ],
+                              ),
                             ),
                       );
                       if (confirm == true) {
@@ -859,15 +876,15 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                   key: _actionTutorialKey,
                   child:
                       _isEditing
-                          ? ElevatedButton(
+                          ? _buildPrimaryAction(
                             key: AppTestKeys.planSave,
                             onPressed: _savePlan,
-                            child: Text(strings.planSavePreset),
+                            label: strings.planSavePreset,
                           )
-                          : ElevatedButton(
+                          : _buildPrimaryAction(
                             key: AppTestKeys.planStartSession,
                             onPressed: _startPlanSession,
-                            child: Text(strings.planStartSession),
+                            label: strings.planStartSession,
                           ),
                 ),
               ),

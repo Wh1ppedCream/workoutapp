@@ -4278,6 +4278,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonRemove => '移除';
 
   @override
+  String exerciseProgressRemoveExerciseLabel(String exerciseName) {
+    return '从进度中移除$exerciseName';
+  }
+
+  @override
   String get automaticSaving => '正在保存...';
 
   @override

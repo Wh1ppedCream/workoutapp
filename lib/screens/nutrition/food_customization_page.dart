@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -638,7 +639,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     bool initiallyExpanded = true, // toggle default here
   }) {
     final theme = Theme.of(context);
-    return Card(
+    return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -959,7 +960,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   Widget _buildPortionCard() {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
+    return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -1112,7 +1113,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     final groupDefaultIndex =
         groupIsUsual ? _usualDefaultIndex : _basisDefaultIndex;
 
-    return Card(
+    return TonosThemeReadyCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: context.nutritionTokens.portionShape,

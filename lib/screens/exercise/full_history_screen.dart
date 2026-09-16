@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_formatters.dart';
 import 'session_detail_screen.dart';
@@ -65,7 +66,7 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                 strings,
                 s.duration,
               );
-              return Card(
+              return TonosThemeReadyCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme_extensions.dart';
+import '../tokens/app_surface_decoration_tokens.dart';
 
 /// A theme-driven modal-sheet surface for feature content.
 class TonosSheet extends StatelessWidget {
@@ -52,16 +53,42 @@ class TonosSheet extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final effects = context.effectTokens;
+    final decoration = context.surfaceDecorationTokens.forRole(
+      AppSurfaceDecorationRole.sheet,
+    );
     final sheetShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
         topLeft: shapes.sheet.topLeft,
         topRight: shapes.sheet.topRight,
       ),
+      side:
+          decoration.outlined
+              ? BorderSide(
+                color: tonosOutlineForSurface(
+                  context,
+                  surfaces.sheet,
+                  neutral: true,
+                ),
+                width: shapes.outlineWidth,
+              )
+              : BorderSide.none,
     );
+    final elevation = switch (decoration.depth) {
+      AppSurfaceDepth.materialElevation => effects.sheetElevation,
+      AppSurfaceDepth.none || AppSurfaceDepth.explicitShadow => 0.0,
+    };
+    final shadow = switch (decoration.depth) {
+      AppSurfaceDepth.explicitShadow => BoxShadow(
+        color: effects.cardShadow,
+        blurRadius: effects.cardShadowBlur,
+        offset: effects.raisedPanelShadowOffset,
+      ),
+      AppSurfaceDepth.none || AppSurfaceDepth.materialElevation => null,
+    };
 
-    return Material(
+    Widget sheet = Material(
       color: surfaces.sheet,
-      elevation: effects.sheetElevation,
+      elevation: elevation,
       shadowColor: effects.shadowColor,
       shape: sheetShape,
       clipBehavior: Clip.antiAlias,
@@ -106,5 +133,22 @@ class TonosSheet extends StatelessWidget {
         ),
       ),
     );
+    if (shadow != null && _hasVisibleShadow(shadow)) {
+      sheet = DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: sheetShape.borderRadius,
+          boxShadow: [shadow],
+        ),
+        child: sheet,
+      );
+    }
+    return sheet;
   }
+}
+
+bool _hasVisibleShadow(BoxShadow shadow) {
+  return shadow.color.a > 0 &&
+      (shadow.blurRadius > 0 ||
+          shadow.spreadRadius != 0 ||
+          shadow.offset != Offset.zero);
 }

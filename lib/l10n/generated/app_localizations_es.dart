@@ -4303,6 +4303,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get commonRemove => 'Quitar';
 
   @override
+  String exerciseProgressRemoveExerciseLabel(String exerciseName) {
+    return 'Quitar $exerciseName de Progreso';
+  }
+
+  @override
   String get automaticSaving => 'Guardando...';
 
   @override

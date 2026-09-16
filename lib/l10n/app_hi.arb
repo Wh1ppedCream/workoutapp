@@ -1607,6 +1607,8 @@
   "commonName": "नाम",
   "commonOkay": "ठीक है",
   "commonRemove": "हटाएँ",
+  "exerciseProgressRemoveExerciseLabel": "प्रोग्रेस से {exerciseName} हटाएँ",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "commonRename": "नाम बदलें",
   "commonReset": "रीसेट करें",
   "commonRetry": "पुनः प्रयास करें",

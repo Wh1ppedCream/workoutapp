@@ -6,6 +6,7 @@ import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/flow_diagram_presentation.dart';
+import '../theme/widgets/tonos_dialog.dart';
 
 /// Data class to track child counts, depth, and event list for each node.
 class NodeData {
@@ -159,39 +160,42 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
       final key = await showDialog<String>(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: Text(_strings.flowNewEvent),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: keyCtrl,
-                    decoration: InputDecoration(
-                      labelText: _strings.flowEventKey,
+            (ctx) => TonosDialogFrame(
+              styleFormControls: true,
+              child: AlertDialog(
+                title: Text(_strings.flowNewEvent),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: keyCtrl,
+                      decoration: InputDecoration(
+                        labelText: _strings.flowEventKey,
+                      ),
                     ),
+                    TextField(
+                      controller: labelCtrl,
+                      decoration: InputDecoration(
+                        labelText: _strings.flowEventDisplayLabel,
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(null),
+                    child: Text(_strings.commonCancel),
                   ),
-                  TextField(
-                    controller: labelCtrl,
-                    decoration: InputDecoration(
-                      labelText: _strings.flowEventDisplayLabel,
-                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      final k = keyCtrl.text.trim();
+                      if (k.isEmpty) return;
+                      Navigator.of(ctx).pop(k);
+                    },
+                    child: Text(_strings.commonAdd),
                   ),
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(null),
-                  child: Text(_strings.commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final k = keyCtrl.text.trim();
-                    if (k.isEmpty) return;
-                    Navigator.of(ctx).pop(k);
-                  },
-                  child: Text(_strings.commonAdd),
-                ),
-              ],
             ),
       );
       if (key == null || !mounted) return;

@@ -30,6 +30,12 @@ void main() {
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Compte'), findsOneWidget);
     expect(find.text('Entraînement'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Données'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Données'), findsOneWidget);
   });
 

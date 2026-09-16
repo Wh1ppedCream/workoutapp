@@ -108,7 +108,10 @@ class _NutritionDashState extends State<NutritionDash>
           children: List.generate(detailWidgets.length, (idx) {
             final selected = idx == _currentPage;
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: appMotionDuration(
+                context,
+                context.motionTokens.standard,
+              ),
               margin: EdgeInsets.symmetric(horizontal: 4 * s, vertical: 1 * s),
               width: selected ? 12 * s : 8 * s,
               height: selected ? 12 * s : 8 * s,

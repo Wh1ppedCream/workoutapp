@@ -3,10 +3,31 @@
 The automated suite is organized by the behavior it protects, rather than by
 screen name:
 
+Flutter owns the formatting of files under `lib/l10n/generated`. Regenerate
+them with `flutter gen-l10n` and check for drift directly; do not run
+`dart format` on that directory before the cleanliness check.
+
 - `test/models` verifies immutable models and manifest parsing.
 - `test/utils` verifies unit conversion, generated-weight helpers, flow
   traversal, and concurrency behavior.
 - `test/providers` verifies SharedPreferences-backed app configuration.
+- `test/theme/app_theme_tokens_test.dart` verifies complete Classic token
+  registration, focused flow/nutrition roles, and ThemeExtension behavior.
+- `test/theme/app_material_theme_test.dart` verifies the shared Material
+  baseline and its light/dark surface, sheet, dialog, divider, and FAB roles.
+- `test/theme/app_colors_compatibility_contract_test.dart` scans all production
+  code and prevents any legacy `AppColors` or `context.colors` dependency from
+  returning.
+- `test/theme/theme_style_inventory_contract_test.dart` validates the
+  report-only structural-style manifest and confirms every production style
+  candidate has an explicit classification and migration destination.
+- `test/theme/widgets/tonos_segmented_action_bar_test.dart` verifies the
+  shared shell action-bar shape, semantics, and callback behavior.
+  surface/shape recipes, value-text styling, form-decoration token
+  resolution, save-bar/status-badge recipes, callback/surface behavior, and
+  action callbacks.
+- `test/theme/widgets` verifies Tonos primitive recipes, callbacks, semantics,
+  and token-driven rendering.
 - `test/providers/durable_active_session_test.dart` covers workout-draft
   restoration and bounded save retries, including progression recovery after a
   completed session survives a storage failure.
@@ -19,7 +40,11 @@ screen name:
 - `test/db/gym_profile_equipment_query_test.dart` verifies that profile
   equipment hydration retains the stable catalog ID needed by localized UI.
 - `test/db/definition_dao_equipment_hydration_test.dart` verifies that full
-  and by-ID detailed definition loads retain stable equipment and muscle IDs.
+  and by-ID detailed definition loads retain stable equipment and muscle IDs,
+  and that immutable exercise catalog IDs resolve detailed definitions.
+- `test/db/catalog_entity_identity_migration_test.dart` verifies v62 identity
+  schema behavior and that real equipment/muscle renames become custom values
+  without stripping identity from no-op saves.
 - `test/widgets/localized_catalog_entity_name_test.dart` verifies built-in
   muscle translation, custom-name fallback, and locale switching.
 - `test/widgets` smoke-tests reusable user-interface components and their
@@ -54,7 +79,8 @@ screen name:
   `test/localization/premade_plan_arb_contract_test.dart` protects the
   parameterized derived-plan message in every supported locale.
 - `test/services/premade_plan_localizer_test.dart` verifies direct plan-ID
-  parity, fallback behavior, and localized one-hour plan descriptions.
+  parity, exact regional fallback, malformed-bundle rejection, safe fallback
+  behavior, and localized one-hour plan descriptions.
 - `integration_test` runs device-level core flows against an isolated database.
   Its core suite drives plan creation, workout start/resume/exit/completion,
   record presentation, Save as plan, profile editing, and database
@@ -67,11 +93,33 @@ Run the complete suite from the repository root:
 flutter test
 ```
 
+Generate the structural-style inventory from the repository root:
+
+```powershell
+dart run tools\theme_style_inventory.dart --check
+dart run tools\theme_style_inventory.dart --format json --output build\theme-style-inventory.json
+```
+
+The inventory is report-only while existing release-surface migration is in
+progress. CI rejects malformed inventory configuration or unassigned findings
+but does not reject the existing `pending` style candidates.
+
 Run a focused test file while developing a feature:
 
 ```powershell
 flutter test test\services\flow_executor_test.dart
 ```
+
+## Latest Neo Visual-Review Verification
+
+On 2026-09-16, the user accepted all 21 entries in the current Neo visual
+review. The final bright-field selector contrast correction was then verified
+with successful formatting of its three changed sources, clean targeted
+analysis, and 63 passing tests across `settings_tiles_test.dart`,
+`neo_refinement_regression_test.dart`, `step17_consumer_parity_test.dart`, and
+`pre_q2_route_evidence_test.dart`. This is scoped automated evidence plus
+manual visual acceptance, not a substitute for the remaining N5 route-state or
+N6 device/accessibility qualification.
 
 ## Latest deterministic localization verification
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class TutorialsSettingsPage extends StatelessWidget {
@@ -283,6 +284,7 @@ Widget _tutorialResetPill(BuildContext context, String label) {
   return SettingsAccentPill(
     label: label,
     color: Theme.of(context).colorScheme.primary,
+    parentSurface: context.surfaceTokens.settingsSection,
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     backgroundAlpha: 0.13,
     borderAlpha: 0.42,

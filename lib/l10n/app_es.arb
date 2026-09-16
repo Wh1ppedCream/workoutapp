@@ -1608,6 +1608,8 @@
   "commonName": "Nombre",
   "commonOkay": "Aceptar",
   "commonRemove": "Quitar",
+  "exerciseProgressRemoveExerciseLabel": "Quitar {exerciseName} de Progreso",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "commonRename": "Renombrar",
   "commonReset": "Restablecer",
   "commonRetry": "Reintentar",

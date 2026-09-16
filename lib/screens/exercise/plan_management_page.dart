@@ -350,8 +350,19 @@ class _PlanManagementTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final planForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.planCard) : null;
+    final planSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surfaces.planCard)
+            : colorScheme.onSurfaceVariant;
     final statusColor =
-        isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
+        isActive
+            ? colorScheme.primary
+            : neo
+            ? planForeground!
+            : colorScheme.onSurfaceVariant;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -382,6 +393,7 @@ class _PlanManagementTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
+                      color: neo ? planForeground : null,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -395,7 +407,7 @@ class _PlanManagementTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                      color: planSecondary,
                     ),
                   ),
                 ],

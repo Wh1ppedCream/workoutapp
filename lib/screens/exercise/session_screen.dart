@@ -16,6 +16,7 @@ import '../../widgets/guided_tutorial_overlay.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/workout_actions.dart';
 
 class SessionScreen extends StatefulWidget {
@@ -168,14 +169,10 @@ class _SessionScreenState extends State<SessionScreen> {
                                   defId,
                                 );
                                 if (def != null && context.mounted) {
-                                  showModalBottomSheet(
+                                  ExerciseDetailSheet.show(
                                     context: context,
-                                    isScrollControlled: true,
-                                    builder:
-                                        (_) => ExerciseDetailSheet(
-                                          definition: def,
-                                          defId: defId,
-                                        ),
+                                    definition: def,
+                                    defId: defId,
                                   );
                                 }
                               }
@@ -247,6 +244,14 @@ class _SessionScreenState extends State<SessionScreen> {
                             context: context,
                             isScrollControlled: true,
                             enableDrag: false,
+                            backgroundColor:
+                                context.surfaceDecorationTokens.sheet.outlined
+                                    ? Colors.transparent
+                                    : null,
+                            elevation:
+                                context.surfaceDecorationTokens.sheet.outlined
+                                    ? 0
+                                    : null,
                             builder:
                                 (_) => SessionCompleteSheet(sessionId: sid),
                           );

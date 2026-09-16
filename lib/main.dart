@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/active_session.dart';
@@ -34,8 +35,10 @@ import 'screens/form_posing_page.dart';
 import 'widgets/ongoing_session_fab.dart';
 import 'widgets/body_heatmap.dart';
 import 'widgets/active_session_durability_banner.dart';
+import 'widgets/tonos_bottom_navigation_bar.dart';
 
 import 'theme/app_theme_factory.dart';
+import 'theme/debug_theme_family_control.dart';
 import 'theme/theme_lab_page.dart';
 
 import 'repositories/app_repository.dart';
@@ -203,10 +206,29 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProv.mode,
-          builder:
-              (context, child) => ActiveSessionDurabilityBanner(
-                child: child ?? const SizedBox.shrink(),
+          builder: (context, child) {
+            final showDebugToolbar =
+                kDebugMode && const bool.fromEnvironment('TONOS_THEME_SWITCH');
+            final appChild = child ?? const SizedBox.shrink();
+
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Brightness.light
+                        : Brightness.dark,
+                statusBarBrightness: Theme.of(context).brightness,
               ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ActiveSessionDurabilityBanner(child: appChild),
+                  if (showDebugToolbar) const _DebugThemeToolbar(),
+                ],
+              ),
+            );
+          },
 
           home:
               !onboardingConf.initialized
@@ -221,6 +243,56 @@ class MyApp extends StatelessWidget {
             if (kDebugMode) '/__theme_lab': (_) => const ThemeLabPage(),
           },
         );
+      },
+    );
+  }
+}
+
+/// Floating development-only controls that leave the app's layout unchanged.
+class _DebugThemeToolbar extends StatelessWidget {
+  const _DebugThemeToolbar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 4,
+      right: 48,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          DebugThemeFamilyControl(),
+          SizedBox(width: 4),
+          _DebugThemeSwitch(),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebugThemeSwitch extends StatelessWidget {
+  const _DebugThemeSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Keep text-field selection and keyboard focus during a live mode change.
+    return DebugThemeActionButton(
+      icon: isDark ? Icons.light_mode : Icons.dark_mode,
+      semanticLabel: 'Debug: switch to ${isDark ? "light" : "dark"} mode',
+      onPressed: () async {
+        try {
+          await context.read<ThemeProvider>().setMode(
+            isDark ? ThemeMode.light : ThemeMode.dark,
+          );
+        } catch (error, stack) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stack,
+              library: 'debug theme switch',
+            ),
+          );
+        }
       },
     );
   }
@@ -309,7 +381,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
     ];
 
-    final bottomNavigationBar = BottomNavigationBar(
+    final bottomNavigationBar = TonosBottomNavigationBar(
       items: [
         for (final tab in tabs)
           BottomNavigationBarItem(

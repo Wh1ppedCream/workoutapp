@@ -10,6 +10,7 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/tokens/app_progress_colors.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
@@ -151,6 +152,30 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final dataVisualization = context.dataVisualizationTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shellForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.settingsHero)
+            : null;
+
+    Widget shell(Widget child) {
+      if (usesInkRecipe) {
+        return TonosSurface(
+          variant: TonosSurfaceVariant.panelRaised,
+          color: surfaces.settingsHero,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.zero,
+          borderRadius: context.shapeTokens.card,
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      }
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: child,
+      );
+    }
 
     return FutureBuilder<List<WorkoutReportSession>>(
       future: _sessionsFuture,
@@ -158,9 +183,8 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: SizedBox(
+          return shell(
+            SizedBox(
               height: 260,
               child: Center(
                 child: CircularProgressIndicator(
@@ -172,11 +196,18 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         }
 
         if (snapshot.hasError && !snapshot.hasData) {
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Padding(
+          return shell(
+            Padding(
               padding: EdgeInsets.all(16),
-              child: Text(strings.workoutReportLoadFailed),
+              child: Text(
+                strings.workoutReportLoadFailed,
+                style:
+                    usesInkRecipe
+                        ? Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: shellForeground)
+                        : null,
+              ),
             ),
           );
         }
@@ -195,9 +226,17 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
             setState(() => _selectedMetricIndex = index);
             return;
           }
+          final duration = appMotionDuration(
+            context,
+            context.motionTokens.pageTransition,
+          );
+          if (duration == Duration.zero) {
+            _pageController.jumpToPage(index);
+            return;
+          }
           _pageController.animateToPage(
             index,
-            duration: const Duration(milliseconds: 240),
+            duration: duration,
             curve: Curves.easeOutCubic,
           );
         }
@@ -281,9 +320,8 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           ),
         ];
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Padding(
+        return shell(
+          Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -292,9 +330,10 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                   strings.workoutReportTitle,
                   maxLines: 2,
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: shellForeground,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 LayoutBuilder(
@@ -302,9 +341,15 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                     final usesLocalizedLayout =
                         Localizations.localeOf(context).languageCode != 'en';
                     final useTwoRows =
-                        usesLocalizedLayout &&
-                        (constraints.maxWidth < 360 ||
-                            MediaQuery.textScalerOf(context).scale(1) > 1.15);
+                        context.surfaceDecorationTokens.panel.outlined
+                            ? MediaQuery.textScalerOf(context).scale(1) >
+                                    1.15 ||
+                                (usesLocalizedLayout &&
+                                    constraints.maxWidth < 360)
+                            : usesLocalizedLayout &&
+                                (constraints.maxWidth < 360 ||
+                                    MediaQuery.textScalerOf(context).scale(1) >
+                                        1.15);
                     if (!useTwoRows) {
                       return Row(
                         children: [
@@ -741,99 +786,139 @@ class _ReportStat extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final unselectedFill =
+        usesInkRecipe
+            ? surfaces.workoutMetricRange
+            : surfaces.workoutMetricStat;
+    final selectedFill =
+        usesInkRecipe
+            ? surfaces.exerciseProgressSelector
+            : progressColors.accent.withValues(alpha: 0.14);
+    final unselectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, unselectedFill)
+            : cs.onSurface;
+    final selectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              selectedFill,
+              parentSurface: unselectedFill,
+            )
+            : progressColors.accent;
+    final unitForeground =
+        usesInkRecipe
+            ? (selected ? selectedForeground : unselectedForeground).withValues(
+              alpha: 0.78,
+            )
+            : cs.onSurfaceVariant;
+    final unselectedBorder =
+        usesInkRecipe
+            ? tonosOutlineForSurface(context, unselectedFill)
+            : cs.outlineVariant.withValues(alpha: 0.7);
+    final selectedBorder =
+        usesInkRecipe
+            ? tonosOutlineForSurface(context, selectedFill)
+            : progressColors.accent.withValues(alpha: 0.75);
     final strings = AppLocalizations.of(context);
-    final trendColor = _trendColor(progressColors);
+    final trendColor = _trendColor(
+      progressColors,
+      useNeoDirectionalColors: usesInkRecipe,
+    );
+    final compactLayout = MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Semantics(
       button: true,
       selected: selected,
       label: strings.workoutReportMetricSemantics(label),
+      onTap: onTap,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: shapes.workoutMetricStat,
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color:
-                  selected
-                      ? progressColors.accent.withValues(alpha: 0.14)
-                      : surfaces.workoutMetricStat,
-              borderRadius: shapes.workoutMetricStat,
-              border: Border.all(
-                color:
-                    selected
-                        ? progressColors.accent.withValues(alpha: 0.75)
-                        : cs.outlineVariant.withValues(alpha: 0.7),
-              ),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: selected ? selectedFill : unselectedFill,
+            borderRadius: shapes.workoutMetricStat,
+            border: Border.all(
+              color: selected ? selectedBorder : unselectedBorder,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 2,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: selected ? progressColors.accent : cs.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                SizedBox(
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          value,
-                          maxLines: 1,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.headlineSmall?.copyWith(
-                            color:
-                                selected ? progressColors.accent : cs.onSurface,
-                            fontWeight: FontWeight.w900,
+          ),
+          child: InkWell(
+            borderRadius: shapes.workoutMetricStat,
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child:
+                  compactLayout
+                      ? _classicContent(
+                        context,
+                        selected ? selectedForeground : unselectedForeground,
+                        unitForeground,
+                        trendColor,
+                      )
+                      : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            maxLines: 2,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  selected
+                                      ? selectedForeground
+                                      : unselectedForeground,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        if (unit != null) ...[
-                          const SizedBox(width: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: Text(
-                              unit!,
-                              maxLines: 1,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.end,
+                            spacing: 4,
+                            children: [
+                              Text(
+                                value,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall?.copyWith(
+                                  color:
+                                      selected
+                                          ? selectedForeground
+                                          : unselectedForeground,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              if (unit != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 3),
+                                  child: Text(
+                                    unit!,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall?.copyWith(
+                                      color:
+                                          usesInkRecipe
+                                              ? unitForeground
+                                              : cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            trend.label,
+                            maxLines: 2,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelSmall?.copyWith(
+                              color: trendColor,
+                              height: 1.05,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 5),
-                SizedBox(
-                  width: double.infinity,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      trend.label,
-                      maxLines: 1,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: trendColor,
-                        height: 1.05,
-                        fontWeight: FontWeight.w800,
                       ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ),
@@ -841,12 +926,103 @@ class _ReportStat extends StatelessWidget {
     );
   }
 
-  Color _trendColor(AppProgressColors progressColors) {
+  Widget _classicContent(
+    BuildContext context,
+    Color foreground,
+    Color unitColor,
+    Color trendColor,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final labelStyle = textTheme.bodyMedium!.copyWith(
+      color: foreground,
+      fontWeight: FontWeight.w700,
+    );
+    final valueStyle = textTheme.headlineSmall!.copyWith(
+      color: foreground,
+      fontWeight: FontWeight.w900,
+    );
+    final trendStyle = textTheme.labelSmall!.copyWith(
+      color: trendColor,
+      height: 1.05,
+      fontWeight: FontWeight.w800,
+    );
+
+    // Equal line slots preserve Classic tile geometry while long values shrink.
+    Widget fittedLine(TextStyle style, String measurementText, Widget child) {
+      final painter = TextPainter(
+        text: TextSpan(text: measurementText, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        locale: Localizations.localeOf(context),
+      )..layout();
+      final height = painter.height;
+      painter.dispose();
+      return SizedBox(
+        width: double.infinity,
+        height: height,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: child,
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        fittedLine(
+          labelStyle,
+          label,
+          Text(label, maxLines: 1, style: labelStyle),
+        ),
+        const SizedBox(height: 4),
+        fittedLine(
+          valueStyle,
+          value,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(value, maxLines: 1, style: valueStyle),
+              if (unit != null) ...[
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: Text(
+                    unit!,
+                    maxLines: 1,
+                    style: textTheme.labelSmall?.copyWith(color: unitColor),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 5),
+        fittedLine(
+          trendStyle,
+          trend.label,
+          Text(trend.label, maxLines: 1, style: trendStyle),
+        ),
+      ],
+    );
+  }
+
+  Color _trendColor(
+    AppProgressColors progressColors, {
+    required bool useNeoDirectionalColors,
+  }) {
     switch (trend.direction) {
       case _MetricTrendDirection.up:
-        return progressColors.workoutIncrease;
+        return useNeoDirectionalColors
+            ? Colors.green.shade600
+            : progressColors.workoutIncrease;
       case _MetricTrendDirection.down:
-        return progressColors.workoutDecrease;
+        return useNeoDirectionalColors
+            ? Colors.red.shade600
+            : progressColors.workoutDecrease;
       case _MetricTrendDirection.flat:
         return progressColors.neutral;
     }
@@ -964,7 +1140,10 @@ class _InteractiveWorkoutLineChartState
             metric: widget.metric,
             interval: widget.interval,
             strings: AppLocalizations.of(context),
-            accent: progressColors.accent,
+            accent: tonosPrimarySeriesForSurface(
+              context,
+              surfaces.workoutMetricChart,
+            ),
             grid: progressColors.grid,
             labelColor: progressColors.label,
             tooltipBackground: surfaces.workoutMetricTooltip,
@@ -1066,52 +1245,173 @@ class _RangeSelector extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final selectedFill = progressColors.accent;
+    final unselectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.workoutMetricRange)
+            : context.cs.onSurface;
+    final selectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              selectedFill,
+              parentSurface: surfaces.workoutMetricRange,
+            )
+            : context.cs.onPrimary;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: surfaces.workoutMetricRange,
         borderRadius: shapes.workoutMetricRange,
+        border:
+            usesInkRecipe
+                ? Border.all(
+                  color: tonosOutlineForSurface(
+                    context,
+                    surfaces.workoutMetricRange,
+                  ),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
-      child: Row(
-        children:
-            WorkoutReportRange.values.map((range) {
-              final selected = selectedRange == range;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: InkWell(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final textScale = MediaQuery.textScalerOf(context).scale(1);
+          final compactLayout = textScale <= 1.15;
+          final columns =
+              compactLayout
+                  ? WorkoutReportRange.values.length
+                  : constraints.maxWidth < 360 || textScale > 1.15
+                  ? 3
+                  : WorkoutReportRange.values.length;
+          const gap = 4.0;
+          final itemWidth =
+              (constraints.maxWidth - (columns - 1) * gap) / columns;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (final range in WorkoutReportRange.values)
+                SizedBox(
+                  width: itemWidth,
+                  child: _RangeSelectorOption(
+                    label: _rangeLabel(range, strings),
+                    selected: selectedRange == range,
+                    selectedFill: selectedFill,
+                    selectedForeground: selectedForeground,
+                    unselectedForeground: unselectedForeground,
                     borderRadius: shapes.workoutMetricRangeOption,
                     onTap: () => onSelectRange(range),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        color:
-                            selected
-                                ? progressColors.accent
-                                : Colors.transparent,
-                        borderRadius: shapes.workoutMetricRangeOption,
-                      ),
-                      child: Text(
-                        _rangeLabel(range, strings),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(
-                          color:
-                              selected
-                                  ? context.cs.onPrimary
-                                  : context.cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    compactLayout: compactLayout,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _RangeSelectorOption extends StatelessWidget {
+  const _RangeSelectorOption({
+    required this.label,
+    required this.selected,
+    required this.selectedFill,
+    required this.selectedForeground,
+    required this.unselectedForeground,
+    required this.borderRadius,
+    required this.onTap,
+    this.compactLayout = false,
+  });
+
+  final String label;
+  final bool selected;
+  final Color selectedFill;
+  final Color selectedForeground;
+  final Color unselectedForeground;
+  final BorderRadiusGeometry borderRadius;
+  final VoidCallback onTap;
+  final bool compactLayout;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? selectedForeground : unselectedForeground;
+    if (compactLayout) {
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        onTap: onTap,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: borderRadius.resolve(Directionality.of(context)),
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: selected ? selectedFill : Colors.transparent,
+                borderRadius: borderRadius,
+              ),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      onTap: onTap,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Ink(
+              decoration: BoxDecoration(
+                color: selected ? selectedFill : Colors.transparent,
+                borderRadius: borderRadius,
+              ),
+              child: InkWell(
+                borderRadius: borderRadius.resolve(Directionality.of(context)),
+                onTap: onTap,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
                 ),
-              );
-            }).toList(),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1133,45 +1433,58 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
           color: Colors.transparent,
-          child: InkWell(
-            borderRadius: shapes.workoutMetricDetails,
-            onTap: onToggle,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: surfaces.workoutMetricDetails,
-                borderRadius: shapes.workoutMetricDetails,
-                border: Border.all(
-                  color: cs.outlineVariant.withValues(alpha: 0.55),
-                ),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: surfaces.workoutMetricDetails,
+              borderRadius: shapes.workoutMetricDetails,
+              border: Border.all(
+                color:
+                    usesInkRecipe
+                        ? tonosOutlineForSurface(
+                          context,
+                          surfaces.workoutMetricDetails,
+                          neutral: true,
+                        )
+                        : cs.outlineVariant.withValues(alpha: 0.55),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      AppLocalizations.of(
-                        context,
-                      ).workoutReportAdditionalDetails,
-                      maxLines: 2,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w800,
+            ),
+            child: InkWell(
+              borderRadius: shapes.workoutMetricDetails,
+              onTap: onToggle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppLocalizations.of(
+                          context,
+                        ).workoutReportAdditionalDetails,
+                        maxLines: 2,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    expanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: cs.onSurfaceVariant,
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Icon(
+                      expanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1184,7 +1497,7 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
           ),
           crossFadeState:
               expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-          duration: const Duration(milliseconds: 180),
+          duration: appMotionDuration(context, context.motionTokens.quick),
           firstCurve: Curves.easeOutCubic,
           secondCurve: Curves.easeOutCubic,
           sizeCurve: Curves.easeOutCubic,
@@ -1201,20 +1514,45 @@ class _ReportInsightGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: insights.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: usesLocalizedLayout ? 88 : 68,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-      ),
-      itemBuilder: (context, index) {
-        return _ReportInsightTile(insight: insights[index]);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final preservesClassicLayout =
+            context.usesClassicPresentation && textScale <= 1.15;
+        const gridSpacing = 8.0;
+        const neoMinimumTileWidth = 160.0;
+        final useTwoColumns =
+            preservesClassicLayout ||
+            (textScale <= 1.15 &&
+                !context.usesClassicPresentation &&
+                constraints.maxWidth >= neoMinimumTileWidth * 2 + gridSpacing);
+        final itemWidth =
+            useTwoColumns
+                ? (constraints.maxWidth - gridSpacing) / 2
+                : constraints.maxWidth;
+        final classicTileHeight =
+            preservesClassicLayout
+                ? (Localizations.localeOf(context).languageCode == 'en'
+                    ? 68.0
+                    : 88.0)
+                : null;
+        return Wrap(
+          key: ValueKey(
+            useTwoColumns
+                ? 'workout-report-insight-grid-two-columns'
+                : 'workout-report-insight-grid-one-column',
+          ),
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final insight in insights)
+              SizedBox(
+                width: itemWidth,
+                height: classicTileHeight,
+                child: _ReportInsightTile(insight: insight),
+              ),
+          ],
+        );
       },
     );
   }
@@ -1231,84 +1569,120 @@ class _ReportInsightTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: surfaces.workoutMetricInsight,
-        borderRadius: shapes.workoutMetricInsight,
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.55)),
-      ),
-      child: Row(
-        children: [
-          Icon(insight.icon, size: 18, color: progressColors.accent),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  insight.label,
-                  maxLines: usesLocalizedLayout ? 2 : 1,
-                  overflow:
-                      usesLocalizedLayout
-                          ? TextOverflow.visible
-                          : TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                usesLocalizedLayout
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          insight.value,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        Text(
-                          insight.detail,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    )
-                    : Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            insight.value,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            insight.detail,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                          ),
-                        ),
-                      ],
-                    ),
-              ],
+    final usesClassicPresentation = context.usesClassicPresentation;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final classicNormalScale = usesClassicPresentation && textScale <= 1.15;
+    final compactClassicTile = classicNormalScale && textScale > 1.0;
+    return Semantics(
+      container: true,
+      label: '${insight.label}, ${insight.value}, ${insight.detail}',
+      child: ExcludeSemantics(
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: compactClassicTile ? 5 : 10,
+          ),
+          decoration: BoxDecoration(
+            color: surfaces.workoutMetricInsight,
+            borderRadius: shapes.workoutMetricInsight,
+            border: Border.all(
+              color:
+                  context.surfaceDecorationTokens.panel.outlined
+                      ? tonosOutlineForSurface(
+                        context,
+                        surfaces.workoutMetricInsight,
+                      )
+                      : cs.outlineVariant.withValues(alpha: 0.55),
             ),
           ),
-        ],
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(insight.icon, size: 18, color: progressColors.accent),
+              const SizedBox(width: 9),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, _) {
+                    final useStackedValues = textScale > 1.15;
+                    return Column(
+                      key: ValueKey(
+                        useStackedValues
+                            ? 'workout-report-insight-values-stacked'
+                            : 'workout-report-insight-values-inline',
+                      ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          insight.label,
+                          maxLines: classicNormalScale ? 1 : null,
+                          overflow:
+                              classicNormalScale ? TextOverflow.ellipsis : null,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        useStackedValues
+                            ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  insight.value,
+                                  style: Theme.of(context).textTheme.titleSmall
+                                      ?.copyWith(fontWeight: FontWeight.w900),
+                                ),
+                                Text(
+                                  insight.detail,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(color: cs.onSurfaceVariant),
+                                ),
+                              ],
+                            )
+                            : Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    insight.value,
+                                    maxLines: classicNormalScale ? 1 : null,
+                                    overflow:
+                                        classicNormalScale
+                                            ? TextOverflow.ellipsis
+                                            : null,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w900),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    insight.detail,
+                                    maxLines: classicNormalScale ? 1 : null,
+                                    overflow:
+                                        classicNormalScale
+                                            ? TextOverflow.ellipsis
+                                            : null,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(color: cs.onSurfaceVariant),
+                                  ),
+                                ),
+                              ],
+                            ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1939,10 +2313,7 @@ _BestVolumeDay _bestVolumeDay(
     (best, entry) => entry.value > best.value ? entry : best,
   );
   if (best.value <= 0) {
-    return _BestVolumeDay(
-      value: '0',
-      detail: strings.workoutReportUnitLogged(weightUnit.shortLabel),
-    );
+    return _BestVolumeDay(value: '0', detail: weightUnit.shortLabel);
   }
   return _BestVolumeDay(
     value: WeightUnitFormatter.formatCompactVolumeValue(
@@ -1950,10 +2321,7 @@ _BestVolumeDay _bestVolumeDay(
       weightUnit,
       locale: locale,
     ),
-    detail: strings.workoutReportUnitOnDate(
-      weightUnit.shortLabel,
-      LocalizedFormatters.shortDate(best.key, locale),
-    ),
+    detail: weightUnit.shortLabel,
   );
 }
 

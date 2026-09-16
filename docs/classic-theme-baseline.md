@@ -1,10 +1,21 @@
 # Classic Theme Baseline
 
-Status: baseline inventory and executable Classic recipe contracts recorded. A
-dark/light manual capture pass has been supplied and reviewed on the agreed
-physical Android device. Strict matched-state evidence and golden approval
-still remain. This document is the evidence checklist for the permanent
-`Classic` theme and does not change the app's appearance.
+Current decision (2026-09-11): the user accepted the 16 supplied Q3 screenshots
+as the Classic manual baseline at font scale 1.15. This supersedes the 1.0
+capture requirement below for this accepted set. Use 1.15 for comparisons.
+Status-bar readability was corrected and phone-verified afterward. Other
+reported screenshot differences were accepted for now. These are manual
+references, not approved goldens; historical strict-parity tasks below remain
+reference guidance, not a request to retake this accepted set. See the
+[current Q3 record](theme-q3-readiness-gate.md).
+
+Current status (2026-09-14): baseline inventory and executable Classic contracts
+are recorded; the Q3 manual baseline was accepted with explicit limitations.
+The later restoration/correction pass still needs the matched comparisons below.
+Golden approval is separate; the accepted images are manual references.
+The prior description of Q3 as awaiting initial Step 2 verification is superseded
+by its accepted decision. Use the [consolidated roadmap](theme-consolidated-roadmap.md)
+for current tasks; this document owns Classic reference/evidence details.
 
 ## Purpose
 
@@ -231,6 +242,53 @@ For each surface and each brightness:
 - compare scroll position, route state, form state, and media state;
 - record every intentional difference with a reason and owner;
 - reject unexplained changes until the Classic contract is updated separately.
+
+## Neo Correction Pass: Classic-Visible Change Classification
+
+2026-09-14 user review: current Classic looks roughly the same as the older
+screenshots except Workout Report's top metric boxes. The duration wrapped and
+made its box taller; the old presentation scaled text within stable boxes.
+The correction restores single-line fitting and equal line slots at ordinary
+Classic text scales (through 1.15), retaining adaptive layout above that scale.
+Implementation and a regression test are added; user-run verification and a
+fresh screenshot of this fix are pending. This general comparison is useful
+user feedback, not a completed per-state accessibility or device matrix.
+
+This record classifies the shared changes made during the Neo correction pass.
+The responsive and accessibility behavior may be shared with Classic, while
+Neo-specific fills, borders, radii, shadows, and focus colors must remain behind
+the Neo presentation-token boundary.
+
+| Surface or component | Previous Classic behavior | Current or new Classic behavior | Classification | Reason | Automated evidence | Manual evidence status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Weekly Overview / SevenDayFocusPresentation | Classic Card shell and 198px side-by-side heatmap/details layout | The Classic Card shell and normal-size side-by-side geometry are restored through ordinary text scales; stacking is limited to genuinely large text when the allocated width cannot support the row | Intentional large-text exception only | Preserve the established dashboard composition while preventing clipped heatmap details at high accessibility scales | Direct SevenDayFocusPresentation responsive test | Pending fresh matched capture |
+| Train plan sections and action bar | Classic Cards with their established elevation, margins, and padding, plus the compact Start/Optimize bar | Active, archived, and premade plan sections use Classic Cards again; the normal-size Classic action bar remains horizontal, while Neo continues to use raised Tonos surfaces and its adaptive layout | Neo-only presentation is gated; large-text reflow remains intentional | Prevent Neo panel geometry, depth, and tall action-bar layout from leaking into Classic | Train-page theme regression coverage | Pending fresh matched capture |
+| SettingsHeroCard and action tiles | Compact horizontal Classic hero and established tile density | The normal-size Classic hero and tile density are restored; long/localized or large-text content may still reflow to remain usable | Intentional large-text exception only | Restore the familiar Profile presentation without reintroducing truncation or overflow at 200 percent text | responsive_accessibility_test.dart | Pending fresh matched capture |
+| Exercise Progress hero and selectors | Classic hero, selector height, and control layout | Normal-size Classic restores its established side-by-side hero and selector geometry; names and values may reflow only when width or accessibility scale requires it | Intentional large-text exception only | Keep localized exercise names and values readable while restoring the original default hierarchy | exercise_progress_responsive_test.dart and Exercise Progress interaction coverage | Pending fresh matched capture |
+| Workout Report | Classic metrics row, range strip, and two-column insight arrangement | Normal-size Classic restores its established compact report density; translated or large-text content can continue to grow and stack safely | Intentional large-text exception only | Preserve the original report hierarchy without clipping long values or translated copy | WorkoutMetricChartCard direct responsive test | Pending fresh matched capture |
+| Workout completion and record badges | Fixed Classic Done action, compact four-metric summary, original badge scale and legend row | Normal-size Classic restores its fixed bottom action, compact metrics, badge typography, and legend alignment; high text scale may use adaptive flow | Intentional large-text exception only | Retain familiar completion-sheet hierarchy while keeping accessible content readable | workout readability regression coverage | Pending fresh matched capture |
+| Neo borders, hard shadows, bright-surface data colors, and focus frames | Not part of Classic | Must remain gated by surface decoration and presentation tokens | Neo-only | These are Neo visual identity decisions, not shared layout behavior | Neo theme and token tests | Pending fresh matched capture |
+
+For every row above, the automated evidence is only a code-level gate. The
+manual evidence remains pending until the final correction pass has been
+captured on a fresh device with matching route, state, locale, text scale, and
+build metadata. Any Classic screenshot difference outside the intentional
+reflow rows must be recorded as a regression or an explicit pending decision;
+the baseline must not be silently rewritten to match it.
+
+Manual evidence record for this correction pass:
+
+- Reviewer: Pending fresh-device review.
+- Date: Pending fresh-device review.
+- Build or commit identifier: Pending fresh-device review.
+- Device and Android version: Pending fresh-device review.
+- Physical and logical viewport, density, and display-size setting: Pending
+  fresh-device review.
+- Locale and region: Pending fresh-device review.
+- System font scale and app text scale: Pending fresh-device review.
+- Fixture account and data state: Pending fresh-device review.
+- Keyboard, D-pad, and screen-reader setup: Pending fresh-device review.
+- Evidence filenames and check results: Pending fresh-device review.
 
 ## Current Completion State
 

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -971,7 +972,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               );
             }
             final r = recipes[i - 1];
-            return Card(
+            return TonosThemeReadyCard(
               child: ListTile(
                 title: Text(r.name),
                 subtitle: Text(AppLocalizations.of(context).foodRecentRecipe),
@@ -1338,7 +1339,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   }
 
   Widget _foodResultTile(BuildContext context, Food f) {
-    return Card(
+    return TonosThemeReadyCard(
       child: ListTile(
         title: Text(f.name),
         subtitle: FutureBuilder<_MacroPreview>(
@@ -1413,7 +1414,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       itemCount: 1,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, i) {
-        return Card(
+        return TonosThemeReadyCard(
           child: ListTile(
             title: const Text('Add New Food Item'),
             trailing: const Icon(Icons.chevron_right),

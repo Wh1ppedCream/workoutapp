@@ -98,7 +98,8 @@ class SingleBodyPartHeatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataVisualization = context.dataVisualizationTokens;
+    final heatmapBackground =
+        backgroundColor ?? theme.colorScheme.surfaceContainerHighest;
     final svgIds = bodyPartNameToSvgIds[bodyPartName] ?? const <String>[];
     final frequencyMap =
         singleBodyPartFrequencyMaps[bodyPartName] ?? const <String, double>{};
@@ -124,8 +125,12 @@ class SingleBodyPartHeatmap extends StatelessWidget {
                 )
                 : BodyHeatmap(
                   frequencyMap: frequencyMap,
-                  lowColor: lowColor ?? dataVisualization.heatmapLow,
-                  highColor: highColor ?? dataVisualization.heatmapHigh,
+                  lowColor:
+                      lowColor ??
+                      tonosHeatmapLowForSurface(context, heatmapBackground),
+                  highColor:
+                      highColor ??
+                      tonosHeatmapHighForSurface(context, heatmapBackground),
                   width: contentSize,
                   height: contentSize,
                 ),
@@ -178,6 +183,10 @@ class BodyHeatmap extends StatelessWidget {
   }
 
   static String _toRgbHex(Color color) {
+    // The SVG renderer paints opaque RGB fills; keep alpha out of the cache
+    // contract instead of silently relying on a translucent token.
+    final opaqueColor = color.withValues(alpha: 1);
+
     String channelHex(double channel) {
       return (channel * 255)
           .round()
@@ -187,9 +196,9 @@ class BodyHeatmap extends StatelessWidget {
           .padLeft(2, '0');
     }
 
-    final r = channelHex(color.r);
-    final g = channelHex(color.g);
-    final b = channelHex(color.b);
+    final r = channelHex(opaqueColor.r);
+    final g = channelHex(opaqueColor.g);
+    final b = channelHex(opaqueColor.b);
     return '#${r.padLeft(2, '0')}${g.padLeft(2, '0')}${b.padLeft(2, '0')}';
   }
 

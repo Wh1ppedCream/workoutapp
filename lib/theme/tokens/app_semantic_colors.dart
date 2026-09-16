@@ -7,6 +7,8 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     this.editingActive = Colors.green,
     this.editingInactive = Colors.grey,
     this.workoutCompleted = Colors.green,
+    this.workoutExerciseCompleted = Colors.green,
+    this.workoutSetCompleted = Colors.green,
     this.workoutAddChangeSet = Colors.blueAccent,
     this.swapCancel = Colors.redAccent,
     this.swapConfirm = Colors.green,
@@ -54,6 +56,8 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color editingActive;
   final Color editingInactive;
   final Color workoutCompleted;
+  final Color workoutExerciseCompleted;
+  final Color workoutSetCompleted;
   final Color workoutAddChangeSet;
   final Color swapCancel;
   final Color swapConfirm;
@@ -146,6 +150,8 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? editingActive,
     Color? editingInactive,
     Color? workoutCompleted,
+    Color? workoutExerciseCompleted,
+    Color? workoutSetCompleted,
     Color? workoutAddChangeSet,
     Color? swapCancel,
     Color? swapConfirm,
@@ -193,6 +199,9 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       editingActive: editingActive ?? this.editingActive,
       editingInactive: editingInactive ?? this.editingInactive,
       workoutCompleted: workoutCompleted ?? this.workoutCompleted,
+      workoutExerciseCompleted:
+          workoutExerciseCompleted ?? this.workoutExerciseCompleted,
+      workoutSetCompleted: workoutSetCompleted ?? this.workoutSetCompleted,
       workoutAddChangeSet: workoutAddChangeSet ?? this.workoutAddChangeSet,
       swapCancel: swapCancel ?? this.swapCancel,
       swapConfirm: swapConfirm ?? this.swapConfirm,
@@ -252,6 +261,14 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       editingInactive: Color.lerp(editingInactive, other.editingInactive, t)!,
       workoutCompleted:
           Color.lerp(workoutCompleted, other.workoutCompleted, t)!,
+      workoutExerciseCompleted:
+          Color.lerp(
+            workoutExerciseCompleted,
+            other.workoutExerciseCompleted,
+            t,
+          )!,
+      workoutSetCompleted:
+          Color.lerp(workoutSetCompleted, other.workoutSetCompleted, t)!,
       workoutAddChangeSet:
           Color.lerp(workoutAddChangeSet, other.workoutAddChangeSet, t)!,
       onPositive: Color.lerp(onPositive, other.onPositive, t)!,

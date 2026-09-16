@@ -195,9 +195,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                  style: settingsRankingNameTextStyle(context),
                 ),
                 rank: rank,
                 icon: Icons.fitness_center,

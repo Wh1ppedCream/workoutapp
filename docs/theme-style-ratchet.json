@@ -4,37 +4,42 @@
     {
       "path": "lib/theme/widgets/tonos_surface.dart",
       "owner": "theme-maintainers",
-      "evidence": "test/theme/widgets/tonos_surface_test.dart covers injected surface, shape and effect roles, clipping, shadows, tap behavior and semantics; the latest user-run theme suite passed 200 tests.",
+      "evidence": "test/theme/widgets/tonos_surface_test.dart covers injected surface, shape and effect roles, clipping, shadows, tap behavior and semantics; the post-fix user report supplied the exact current fingerprint set while final N2 verification is completed.",
       "approvals": [
         {
-          "fingerprint": "2c7e21fed72c6f6b4eebdc38f735de9bb4fa3a3176440ae6f47e9bf0e3431bd8",
+            "fingerprint": "1d014456af809fd58589eb2af8547fba470abce070b987176af396c2b3fbecc5",
+          "count": 2,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
+        },
+        {
+          "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
           "count": 1,
-          "reason": "Reviewed RoundedRectangleBorder recipe in the TonosSurface shape path."
+          "reason": "Reviewed current TonosSurface style scope after the N2 shared decoration-policy integration."
+        },
+        {
+          "fingerprint": "82e54ec1112760a26d610f2812a0c9b3b6dd798cfcb9c1c748099c80ac44c1f1",
+          "count": 1,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
+        },
+        {
+            "fingerprint": "843159fff7b247d827b84cbff3029017b9c96b7486f30f95d9d8dff3bc036167",
+          "count": 1,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
         },
         {
           "fingerprint": "2c7f1b1f305688e0abca3dd091fe8342ab15b65e9159b137129c3a1da7240937",
           "count": 1,
-          "reason": "Reviewed BorderSide outline recipe for the semantic input variant."
+          "reason": "Reviewed current TonosSurface style scope after the N2 shared decoration-policy integration."
         },
         {
-          "fingerprint": "56e8c522e82b8c5dcf2e29742da65fec9a1c903e24a8531377020d398d8115fa",
+          "fingerprint": "fe2ae92bea1a0d17157f55a4f56cb616ecde7299c69e292d57dd110acb190006",
           "count": 1,
-          "reason": "Reviewed BoxDecoration shadow wrapper for the compact-card variant."
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
         },
         {
-          "fingerprint": "8ef342baa03979dd6421a045f53f88c9fc23658e1c2bb3ad3ff79373efa9aad9",
+          "fingerprint": "cc60278889d6352b1d5906bb3dacd403f0ff4ea749b367019aaf692c86adbf05",
           "count": 1,
-          "reason": "Reviewed Material surface composition and effect-role usage."
-        },
-        {
-          "fingerprint": "9bdf961789555fe00416725e0c162aaf0336445979911b96ca29175c8e950cbb",
-          "count": 2,
-          "reason": "Reviewed the two Color-typed surface declarations retained by the primitive."
-        },
-        {
-          "fingerprint": "bb57f75a7b25430369f73e8fa187eca804bc4f47907be13257b6f63e7878ba9d",
-          "count": 1,
-          "reason": "Reviewed the surface's themed border and shape construction."
+          "reason": "Reviewed TonosSurface role-color override support added for the Neo proposal realignment."
         }
       ]
     }

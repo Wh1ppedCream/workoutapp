@@ -73,7 +73,9 @@ void main() {
     expect(workflow, isNot(contains('local-db')));
     expect(workflow, contains('name: Localization, analyzer, and tests'));
     expect(workflow, contains('name: Release APK'));
-    expect(workflow, contains('dart format lib/l10n/generated'));
+    expect(workflow, contains('run: flutter gen-l10n'));
+    expect(workflow, isNot(contains('dart format lib/l10n/generated')));
+    expect(workflow, contains('git status --porcelain -- lib/l10n/generated'));
     expect(workflow, contains('name: Run localization contract tests'));
     expect(
       workflow,
@@ -93,8 +95,6 @@ void main() {
     );
     expect(workflow, contains('test/widgets/workout_record_badges_test.dart'));
     expect(workflow, contains('tools/content_environment_check.dart'));
-    expect(workflow, contains('--target development'));
-    expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));
     expect(workflow, contains('tools/theme_style_inventory.dart'));
     expect(workflow, contains('tools/theme_style_ratchet.dart'));
     expect(workflow, contains('name: Report structural theme inventory'));
@@ -109,6 +109,8 @@ void main() {
       workflow,
       contains('dart run tools/theme_style_inventory.dart --check'),
     );
+    expect(workflow, contains('--target development'));
+    expect(workflow, contains('TONOS_CONTENT_ENVIRONMENT=development'));
     expect(workflow, contains('TONOS_CONTENT_ALLOW_OVERRIDES=false'));
     expect(workflow, contains('TONOS_ENABLE_EXPERIMENTAL_TABS=false'));
     expect(workflow, contains('working-directory: tools/catalog_builder'));

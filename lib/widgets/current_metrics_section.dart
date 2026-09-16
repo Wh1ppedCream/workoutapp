@@ -7,6 +7,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/nutrition/measured_items_page.dart';
+import '../theme/theme_extensions.dart';
 import '../utils/localized_formatters.dart';
 
 class _CurrentMetric {
@@ -202,7 +203,7 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                       Padding(
                         padding: const EdgeInsets.only(right: 16),
                         child: MetricItem(
-                          color: _metricColor(metric.definition.type),
+                          color: _metricColor(context, metric.definition.type),
                           label: _metricLabel(metric.definition, strings),
                           value: _formatMeasurement(
                             metric.measurement,
@@ -270,7 +271,20 @@ class _MetricsMessage extends StatelessWidget {
   }
 }
 
-Color _metricColor(MeasurementType type) {
+Color _metricColor(BuildContext context, MeasurementType type) {
+  if (context.surfaceDecorationTokens.panel.outlined) {
+    final data = context.dataVisualizationTokens;
+    return switch (type) {
+      MeasurementType.BodyWeight => data.positive,
+      MeasurementType.Height => data.secondarySeries,
+      MeasurementType.Waist || MeasurementType.Hip => data.primarySeries,
+      MeasurementType.Chest ||
+      MeasurementType.Shoulder ||
+      MeasurementType.Arm => data.tertiarySeries,
+      _ => data.neutral,
+    };
+  }
+
   return switch (type) {
     MeasurementType.BodyWeight => Colors.green,
     MeasurementType.Height => Colors.blue,

@@ -16,6 +16,7 @@ import '../../services/preset_generation_service.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../models/training_plan_models.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -598,6 +599,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }) {
     final generation = context.generationTokens;
     final selected = value == groupValue;
+    final coloredSelection =
+        selected && context.surfaceDecorationTokens.panel.outlined;
+    final selectedInk = context.cs.onPrimaryContainer;
     final shape = RoundedRectangleBorder(
       borderRadius: generation.choiceShape,
       side: BorderSide(
@@ -620,6 +624,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           value: value,
           groupValue: groupValue,
           selected: selected,
+          fillColor:
+              coloredSelection
+                  ? WidgetStatePropertyAll<Color?>(selectedInk)
+                  : null,
           onChanged: onChanged,
           dense: true,
           contentPadding: const EdgeInsets.symmetric(
@@ -631,13 +639,19 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           selectedTileColor: Colors.transparent,
           title: Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: coloredSelection ? selectedInk : null,
+            ),
           ),
           subtitle: Text(
             subtitle,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: generation.secondaryText, fontSize: 12),
+            style: TextStyle(
+              color: coloredSelection ? selectedInk : generation.secondaryText,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -730,15 +744,17 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     return showDialog<void>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.generateStarterDialogTitle),
-            content: Text(body),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(strings.commonOkay),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.generateStarterDialogTitle),
+              content: Text(body),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(strings.commonOkay),
+                ),
+              ],
+            ),
           ),
     );
   }
@@ -1076,6 +1092,13 @@ class _OnboardingPlanActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final generation = context.generationTokens;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final actionForeground =
+        neo
+            ? tonosForegroundForSurface(context, generation.actionBarSurface)
+            : null;
+    final actionDisabledForeground =
+        neo ? actionForeground!.withValues(alpha: 0.45) : null;
     return SafeArea(
       top: false,
       child: Container(
@@ -1098,6 +1121,13 @@ class _OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton.icon(
+                style:
+                    neo
+                        ? FilledButton.styleFrom(
+                          foregroundColor: actionForeground,
+                          disabledForegroundColor: actionDisabledForeground,
+                        )
+                        : null,
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
                 label: Text(strings.generateReviewPlans),

@@ -5,6 +5,10 @@ records describe their original implementation checkpoints; they are not current
 qualification claims. The latest user-run verification covers the current
 automated implementation and test changes.
 
+This ledger does not qualify later Q2 code. The current cross-prerequisite
+decision, including the passing 213-test Q2 rerun and dirty-tree identity, is recorded
+in [Q3 Theming Readiness Gate](theme-q3-readiness-gate.md).
+
 ## Evidence Already Supplied
 
 - C3-D3 review corrections: user-reported clean scoped analysis and 168 passing tests.
@@ -13,6 +17,10 @@ automated implementation and test changes.
 - The latest user-run verification passed 200 theme/configuration tests after
   the food-provider disposal, media-viewer async, scanner, log-entry, pan and
   ratchet CLI corrections. Scoped analysis also reported no issues.
+- The current 21-item Neo visual review is accepted. The final bright-field
+  selector correction passed user-run formatting, clean analysis, and 63
+  focused tests. This narrows the remaining manual work but does not close
+  nutrition, scanner, state, accessibility, or release qualification.
 - These are scoped automated results, not matched screenshots, device
   accessibility review, full application correctness, or approval of every
   production style expression.
@@ -22,7 +30,7 @@ automated implementation and test changes.
 | Item | Current state | Completion condition |
 | --- | --- | --- |
 | 1. Evidence reconciliation | Complete for the automated closeout record | Keep manual qualification separate from historical and scoped automated evidence. |
-| 2. Reachability and styling audit | Scoped implementation and caller-contract verification complete | Finish manual route review for the reachable Train2, generator, nutrition, and profile-settings paths. |
+| 2. Reachability and styling audit | Scoped implementation/caller-contract verification and current Train2/generator/Profile visual review complete | Finish nutrition reachability plus non-happy-path, device, and accessibility evidence. |
 | 3. Food behavior coverage | Automated evidence complete | Retain manual acceptance review if grouped/date behavior needs broader product qualification. |
 | 4. Scanner tests | Fake-session automated evidence complete | Perform real-device permission, camera, lifecycle, and dismissal qualification. |
 | 5. Earlier consumer evidence | Automated viewer/effects evidence complete | Perform real-media, heatmap, device, and accessibility review. |
@@ -93,9 +101,9 @@ Manual/device/Classic parity qualification remains separate.
 2. `lib/screens/exercise/preset_generation_qa.dart` is reachable from Train2.
    Its intro gradients, border alpha, summary pills, expansion section frames,
    number-field/choice states and completion chips now have recipe ownership in
-   `AppGenerationTokens`. Verify selected/unselected states and copy/lerp;
-   preserve generator inputs, onboarding result IDs, save/cancel and generation
-   behavior.
+   `AppGenerationTokens`. The current Neo visual review is accepted; preserve
+   generator inputs, onboarding result IDs, save/cancel, and generation behavior
+   through any later state/device qualification.
 3. Nutrition Log, Pantry Log and Plan Meal are retained placeholders with
    callers. Do not classify them as excluded or remove navigation without a
    product decision. Their presence is not fixed by token extraction.

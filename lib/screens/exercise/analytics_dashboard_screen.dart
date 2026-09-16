@@ -290,7 +290,7 @@ class _WeeklyOverviewHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
@@ -313,8 +313,14 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                     child: Center(
                       child: BodyHeatmap(
                         frequencyMap: data.heatmapFrequencyMap,
-                        lowColor: dataVisualization.heatmapLow,
-                        highColor: dataVisualization.heatmapHigh,
+                        lowColor: tonosHeatmapLowForSurface(
+                          context,
+                          surfaces.card,
+                        ),
+                        highColor: tonosHeatmapHighForSurface(
+                          context,
+                          surfaces.card,
+                        ),
                         width: heatmapSize,
                         height: heatmapSize,
                       ),

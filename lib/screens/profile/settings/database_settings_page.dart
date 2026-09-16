@@ -16,6 +16,7 @@ import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../utils/app_test_keys.dart';
@@ -179,25 +180,27 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     await showDialog<void>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(title),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [Text(message)],
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(title),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [Text(message)],
+                  ),
                 ),
               ),
+              actions: [
+                TextButton(
+                  key: AppTestKeys.databaseResultClose,
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(_strings.commonClose),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                key: AppTestKeys.databaseResultClose,
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(_strings.commonClose),
-              ),
-            ],
           ),
     );
   }
@@ -314,20 +317,22 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return showDialog<bool>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(_strings.databaseConfirmExportTitle),
-            content: Text(_strings.databaseConfirmExportBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(_strings.commonCancel),
-              ),
-              ElevatedButton(
-                key: AppTestKeys.databaseConfirmExport,
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(_strings.databaseContinueExport),
-              ),
-            ],
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.databaseConfirmExportTitle),
+              content: Text(_strings.databaseConfirmExportBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(_strings.commonCancel),
+                ),
+                ElevatedButton(
+                  key: AppTestKeys.databaseConfirmExport,
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(_strings.databaseContinueExport),
+                ),
+              ],
+            ),
           ),
     );
   }
@@ -339,54 +344,56 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     return showDialog<bool>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(_strings.databaseConfirmImportTitle),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_strings.databaseConfirmImportBody),
-                    if (sourceName != null) ...[
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.databaseConfirmImportTitle),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_strings.databaseConfirmImportBody),
+                      if (sourceName != null) ...[
+                        const SizedBox(height: 12),
+                        Text(_strings.databaseImportFile(sourceName)),
+                      ],
                       const SizedBox(height: 12),
-                      Text(_strings.databaseImportFile(sourceName)),
-                    ],
-                    const SizedBox(height: 12),
-                    Text(
-                      _strings.databaseImportTables(
-                        preview.importableTables.length,
-                      ),
-                    ),
-                    Text(_strings.databaseImportRows(preview.totalRows)),
-                    if (preview.schemaVersion != null)
                       Text(
-                        _strings.databaseImportSchema(preview.schemaVersion!),
+                        _strings.databaseImportTables(
+                          preview.importableTables.length,
+                        ),
                       ),
-                    if (preview.isLegacyFormat)
-                      Text(_strings.databaseImportLegacyFormat),
-                    if (preview.warnings.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Text(_strings.databaseImportWarnings),
-                      for (final warning in preview.warnings)
-                        Text('- $warning'),
+                      Text(_strings.databaseImportRows(preview.totalRows)),
+                      if (preview.schemaVersion != null)
+                        Text(
+                          _strings.databaseImportSchema(preview.schemaVersion!),
+                        ),
+                      if (preview.isLegacyFormat)
+                        Text(_strings.databaseImportLegacyFormat),
+                      if (preview.warnings.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(_strings.databaseImportWarnings),
+                        for (final warning in preview.warnings)
+                          Text('- $warning'),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(_strings.commonCancel),
+                ),
+                ElevatedButton(
+                  key: AppTestKeys.databaseConfirmImport,
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(_strings.databaseBackupAndImport),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(_strings.commonCancel),
-              ),
-              ElevatedButton(
-                key: AppTestKeys.databaseConfirmImport,
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(_strings.databaseBackupAndImport),
-              ),
-            ],
           ),
     );
   }
@@ -481,9 +488,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final result = await showDialog<String>(
       context: context,
       builder:
-          (_) => _ContentEnvironmentDialog(
-            config: config,
-            selectedEnvironmentId: selected.environment.id,
+          (_) => TonosDialogFrame(
+            child: _ContentEnvironmentDialog(
+              config: config,
+              selectedEnvironmentId: selected.environment.id,
+            ),
           ),
     );
 
@@ -512,7 +521,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
     final result = await showDialog<String>(
       context: context,
-      builder: (_) => _ManifestUrlDialog(initialUrl: currentUrl),
+      builder:
+          (_) => TonosDialogFrame(
+            child: _ManifestUrlDialog(initialUrl: currentUrl),
+          ),
     );
 
     if (result == null) return;
@@ -667,19 +679,21 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(strings.databaseClearMediaTitle),
-            content: Text(strings.databaseClearMediaBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text(strings.commonCancel),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(strings.databaseClearCache),
-              ),
-            ],
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.databaseClearMediaTitle),
+              content: Text(strings.databaseClearMediaBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: Text(strings.commonCancel),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: Text(strings.databaseClearCache),
+                ),
+              ],
+            ),
           ),
     );
     if (confirmed != true) return;
@@ -745,7 +759,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                       ? IconButton(
                         tooltip: strings.databaseChangeEnvironment,
                         icon: const Icon(Icons.swap_horiz),
-                        color: theme.colorScheme.primary,
+                        color:
+                            context.surfaceDecorationTokens.panel.outlined
+                                ? Theme.of(context).colorScheme.onSurface
+                                : theme.colorScheme.primary,
                         onPressed:
                             _contentActionRunning
                                 ? null
@@ -772,7 +789,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 trailing: IconButton(
                   tooltip: strings.databaseOverrideUrl,
                   icon: const Icon(Icons.edit),
-                  color: theme.colorScheme.primary,
+                  color:
+                      context.surfaceDecorationTokens.panel.outlined
+                          ? Theme.of(context).colorScheme.onSurface
+                          : theme.colorScheme.primary,
                   onPressed: _contentActionRunning ? null : _editManifestUrl,
                 ),
                 onTap: _contentActionRunning ? null : _editManifestUrl,

@@ -128,6 +128,65 @@ void main() {
 
   tearDown(() => db.close());
 
+  test(
+    'empty manual plans are active without replacing existing plans',
+    () async {
+      final first = await PresetTransactionDao.createPreset(
+        db,
+        name: 'Existing',
+        profileId: 2,
+        exercises: const [],
+        activate: true,
+      );
+      final second = await PresetTransactionDao.createPreset(
+        db,
+        name: 'New manual plan',
+        profileId: 2,
+        exercises: const [],
+        activate: true,
+      );
+      expect(
+        (await db.query('active_plans')).map((row) => row['preset_id']),
+        unorderedEquals([first, second]),
+      );
+      expect(await db.query('preset_exercises'), isEmpty);
+    },
+  );
+
+  test(
+    'manual names skip existing and draft names without overwriting',
+    () async {
+      await PresetTransactionDao.createPreset(
+        db,
+        name: 'New Plan 4',
+        profileId: 2,
+        exercises: const [],
+      );
+      await PresetTransactionDao.createPreset(
+        db,
+        name: 'New Plan 4 (2)',
+        profileId: 2,
+        exercises: const [],
+        isDraft: true,
+      );
+      final id = await PresetTransactionDao.createPreset(
+        db,
+        name: 'New Plan 4',
+        profileId: 2,
+        exercises: const [],
+        activate: true,
+        uniqueName: true,
+      );
+      final rows = await db.query('preset_definitions');
+      expect(rows, hasLength(3));
+      expect(
+        rows.singleWhere((row) => row['id'] == id)['name'],
+        'New Plan 4 (3)',
+      );
+      expect((await db.query('active_plans')).single['preset_id'], id);
+    },
+  );
+
   test('creates the plan graph and active membership together', () async {
     final presetId = await PresetTransactionDao.createPreset(
       db,

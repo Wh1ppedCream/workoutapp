@@ -13,6 +13,7 @@ import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
@@ -189,24 +190,14 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final strings = AppLocalizations.of(context);
     final nextUnit = await showDialog<WeightUnit>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(strings.weightUnitsTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final unit in WeightUnit.values)
-                RadioListTile<WeightUnit>(
-                  value: unit,
-                  groupValue: selectedUnit,
-                  title: Text(_weightUnitLabel(strings, unit)),
-                  subtitle: Text(unit.shortLabel),
-                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
-                ),
-            ],
+      builder:
+          (dialogContext) => TonosChoiceDialog<WeightUnit>(
+            title: strings.weightUnitsTitle,
+            values: WeightUnit.values,
+            selected: selectedUnit,
+            label: (unit) => _weightUnitLabel(strings, unit),
+            subtitle: (unit) => unit.shortLabel,
           ),
-        );
-      },
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
@@ -239,19 +230,22 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final nextLanguage = await showDialog<AppLanguagePreference>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(strings.languageTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final language in AppLanguagePreference.values)
-                RadioListTile<AppLanguagePreference>(
-                  value: language,
-                  groupValue: selectedLanguage,
-                  title: Text(_languageLabel(strings, language)),
-                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
-                ),
-            ],
+        return TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.languageTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final language in AppLanguagePreference.values)
+                  RadioListTile<AppLanguagePreference>(
+                    value: language,
+                    groupValue: selectedLanguage,
+                    title: Text(_languageLabel(strings, language)),
+                    onChanged:
+                        (value) => Navigator.of(dialogContext).pop(value),
+                  ),
+              ],
+            ),
           ),
         );
       },

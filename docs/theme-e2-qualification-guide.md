@@ -11,9 +11,12 @@ current code and record the discrepancy before changing behavior.
 - E1 has user-reported clean analysis and 184 passing scoped tests. The pasted
   analyzer command was truncated, so retain that limitation in evidence.
   Device visual and accessibility qualification remains pending.
-- E2 and the qualification work below are planned, not implemented by this
-  documentation update. Sub-batch IDs here are execution units, not new top-level
-  numbered phases. Keep Steps 12E, 18 and 19 aligned with their parent batches.
+- The Q2 implementation passed the user's 213-test rerun and clean analysis.
+  It still requires manual qualification:
+  automated results, matched Classic captures and human/device evidence remain
+  separate requirements. Sub-batch IDs here are execution units, not new
+  top-level numbered phases. Keep Steps 12E, 18 and 19 aligned with their
+  parent batches.
 - Work in E:\projects\env_test. Preserve unrelated working-tree changes.
   Do not run Dart/Flutter verification from Codex; supply exact user-run commands.
 - Classic is a compatibility target, not an opportunity to redesign. Do not
@@ -297,6 +300,12 @@ support but do not replace these. Record the tester and result or leave pending.
 or an explicit approved exception. Q2 is not qualified while silent gaps remain.
 
 ## Q3. Readiness Decision
+
+The active reconciliation record is [Q3 Theming Readiness Gate](theme-q3-readiness-gate.md).
+It records the dirty-tree identity and outstanding qualification evidence.
+The Q2 tutorial correction passed the user's 213-test rerun. Follow the
+[device walkthrough](theme-q3-device-checklist.md). Treat its prerequisite table as the current
+status source rather than promoting earlier scoped test counts.
 
 ### Q3.1 Reconcile Evidence
 

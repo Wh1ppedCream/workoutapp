@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme_extensions.dart';
+import 'tonos_action_depth.dart';
 
 /// Swap actions keep their original Material defaults and vertical padding.
 class WorkoutSwapAction extends StatelessWidget {
@@ -105,14 +106,25 @@ class WorkoutEquipmentFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final filterSurface = surfaces.planFilter;
+    final filterForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, filterSurface)
+            : null;
+    final filterSecondary =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, filterSurface)
+            : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: context.surfaceTokens.planFilter,
+        color: filterSurface,
         borderRadius: context.shapeTokens.card,
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(
-            alpha: context.surfaceTokens.swapFilterBorder,
+            alpha: surfaces.swapFilterBorder,
           ),
         ),
       ),
@@ -123,7 +135,7 @@ class WorkoutEquipmentFilter extends StatelessWidget {
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: enabled ? null : theme.colorScheme.onSurfaceVariant,
+                color: enabled ? filterForeground : filterSecondary,
               ),
             ),
           ),
@@ -209,16 +221,20 @@ class WorkoutFinishAction extends StatelessWidget {
   final bool busy;
 
   @override
-  Widget build(BuildContext context) => ElevatedButton(
-    key: buttonKey,
-    onPressed: busy ? null : onPressed,
-    child:
-        busy
-            ? const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-            : Text(label),
+  Widget build(BuildContext context) => tonosWithPrimaryActionDepth(
+    context,
+    ElevatedButton(
+      key: buttonKey,
+      onPressed: busy ? null : onPressed,
+      child:
+          busy
+              ? const SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+              : Text(label),
+    ),
+    enabled: !busy && onPressed != null,
   );
 }
 
@@ -236,11 +252,15 @@ class WorkoutDoneAction extends StatelessWidget {
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => FilledButton.icon(
-    key: buttonKey,
-    onPressed: onPressed,
-    icon: const Icon(Icons.check_rounded),
-    label: Text(label),
-    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+  Widget build(BuildContext context) => tonosWithPrimaryActionDepth(
+    context,
+    FilledButton.icon(
+      key: buttonKey,
+      onPressed: onPressed,
+      icon: const Icon(Icons.check_rounded),
+      label: Text(label),
+      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+    ),
+    enabled: onPressed != null,
   );
 }

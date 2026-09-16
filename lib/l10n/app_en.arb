@@ -1826,6 +1826,8 @@
   "drawerNewProfile": "New Profile",
   "commonAdd": "Add",
   "commonRemove": "Remove",
+  "exerciseProgressRemoveExerciseLabel": "Remove {exerciseName} from Progress",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "automaticSaving": "Saving...",
   "automaticValuesTab": "Values",
   "automaticMethodsTab": "Methods",

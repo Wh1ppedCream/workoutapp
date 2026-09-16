@@ -9,6 +9,8 @@ import 'tokens/app_motion_tokens.dart';
 import 'tokens/app_nutrition_tokens.dart';
 import 'tokens/app_semantic_colors.dart';
 import 'tokens/app_shape_tokens.dart';
+import 'tokens/app_settings_presentation_tokens.dart';
+import 'tokens/app_surface_decoration_tokens.dart';
 import 'tokens/app_surface_tokens.dart';
 import 'tokens/app_media_tokens.dart';
 import 'tokens/app_progress_colors.dart';
@@ -41,6 +43,8 @@ abstract final class ClassicThemeDefinition {
         AppTutorialTokens.classic,
         AppMediaTokens.classic,
         AppShapeTokens.classic,
+        AppSurfaceDecorationTokens.classic,
+        AppSettingsPresentationTokens.classic,
         surfaceTokens,
         AppMotionTokens.classic,
         effectTokens,
@@ -78,6 +82,8 @@ abstract final class ClassicThemeDefinition {
         AppTutorialTokens.classic,
         AppMediaTokens.classic,
         AppShapeTokens.classic,
+        AppSurfaceDecorationTokens.classic,
+        AppSettingsPresentationTokens.classic,
         surfaceTokens,
         AppMotionTokens.classic,
         effectTokens,

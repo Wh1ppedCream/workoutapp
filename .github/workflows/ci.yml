@@ -55,9 +55,6 @@ jobs:
       - name: Generate localization sources
         run: flutter gen-l10n
 
-      - name: Normalize generated localization formatting
-        run: dart format lib/l10n/generated
-
       - name: Verify generated localization sources are committed
         shell: bash
         run: |
@@ -87,6 +84,8 @@ jobs:
           tools/content_environment_check.dart
           tools/content_pipeline.dart
           tools/shared_media_pipeline.dart
+          tools/theme_style_inventory.dart
+          tools/theme_style_ratchet.dart
 
       - name: Report structural theme inventory
         run: dart run tools/theme_style_inventory.dart --check

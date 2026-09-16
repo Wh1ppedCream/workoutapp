@@ -544,6 +544,11 @@ class _FloatingHeaderButton extends StatelessWidget {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.optimizedAction)
+            : null;
     return Material(
       color: surfaces.optimizedAction,
       borderRadius: shapes.pill,
@@ -555,11 +560,12 @@ class _FloatingHeaderButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18),
+              Icon(icon, color: foreground, size: 18),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: theme.textTheme.labelLarge?.copyWith(
+                  color: foreground,
                   fontWeight: FontWeight.w800,
                 ),
               ),

@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_theme_ready.dart';
 
 /// Displays and edits a CardioExercise, including timer controls.
 class CardioCard extends StatefulWidget {
@@ -108,8 +110,14 @@ class _CardioCardState extends State<CardioCard> {
   @override
   Widget build(BuildContext context) {
     final readOnly = widget.readOnlyMode;
+    final timerColor =
+        context.surfaceDecorationTokens.panel.outlined
+            ? ((_cardioTimer?.isActive ?? false)
+                ? context.semanticColors.negative
+                : context.semanticColors.positive)
+            : ((_cardioTimer?.isActive ?? false) ? Colors.red : Colors.green);
 
-    return Card(
+    return TonosThemeReadyCard(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -249,10 +257,7 @@ class _CardioCardState extends State<CardioCard> {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          (_cardioTimer?.isActive ?? false)
-                              ? Colors.red
-                              : Colors.green,
+                      backgroundColor: timerColor,
                     ),
                     onPressed:
                         readOnly

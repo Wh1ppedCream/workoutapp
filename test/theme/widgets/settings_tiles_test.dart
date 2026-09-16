@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/widgets/tonos_action_depth.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
+import 'package:env_test/theme/tokens/app_settings_presentation_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
 
@@ -75,6 +77,7 @@ const _testSurfaces = AppSurfaceTokens(
   planActionBar: Color(0xFF3E3E3E),
   optimizedAction: Color(0xFF3F3F3F),
   subtleOutline: Color(0xFF404040),
+  neutralOutline: Color(0xFF414141),
   input: Color(0xFF505050),
   sheet: Color(0xFF606060),
   dialog: Color(0xFF707070),
@@ -121,6 +124,133 @@ const _testSurfaces = AppSurfaceTokens(
 );
 
 void main() {
+  testWidgets('hero switches between Classic gradient and solid recipe', (
+    tester,
+  ) async {
+    for (final gradient in [true, false]) {
+      await tester.pumpWidget(
+        _testApp(
+          const SettingsHeroCard(
+            key: ValueKey('hero-recipe'),
+            title: 'Appearance',
+            icon: Icons.palette,
+          ),
+          presentation: AppSettingsPresentationTokens(
+            heroUsesGradient: gradient,
+          ),
+        ),
+      );
+      final container =
+          tester
+              .widgetList<Container>(
+                find.descendant(
+                  of: find.byKey(const ValueKey('hero-recipe')),
+                  matching: find.byType(Container),
+                ),
+              )
+              .first;
+      final decoration = container.decoration! as BoxDecoration;
+      expect(decoration.gradient, gradient ? isA<LinearGradient>() : isNull);
+      expect(decoration.color, gradient ? isNull : _testSurfaces.settingsHero);
+      expect(
+        (decoration.border! as Border).top.width,
+        _testShapes.outlineWidth,
+      );
+      expect(decoration.boxShadow, isNull);
+    }
+  });
+
+  testWidgets('Neo settings use proposal labels, outlines, and depth', (
+    tester,
+  ) async {
+    final theme = AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+    await tester.pumpWidget(
+      _testApp(
+        Column(
+          children: [
+            const SettingsHeroCard(
+              key: ValueKey('neo-settings-hero'),
+              title: 'User information',
+              icon: Icons.badge_outlined,
+            ),
+            SettingsSection(
+              key: const ValueKey('neo-settings-section'),
+              title: 'Identity',
+              subtitle: 'Basic personal details.',
+              accentColor: Colors.teal,
+              children: const [SizedBox(height: 24)],
+            ),
+            SettingsSaveBar(
+              buttonKey: const ValueKey('neo-settings-save'),
+              label: 'Save changes',
+              onPressed: _noop,
+            ),
+          ],
+        ),
+        theme: theme,
+      ),
+    );
+
+    final hero = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == theme.shapeTokens.hero;
+      }),
+    );
+    final heroDecoration = hero.decoration! as BoxDecoration;
+    expect(heroDecoration.color, theme.surfaceTokens.settingsHero);
+    expect(
+      (heroDecoration.border! as Border).top.color,
+      theme.surfaceTokens.subtleOutline,
+    );
+    expect(
+      heroDecoration.boxShadow!.single.offset,
+      theme.effectTokens.raisedPanelShadowOffset,
+    );
+
+    final categoryLabel = tester.widget<Container>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! Container) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.color ==
+                theme.settingsPresentationTokens.sectionHeaderFill &&
+            decoration.borderRadius == theme.shapeTokens.compact;
+      }),
+    );
+    final categoryDecoration = categoryLabel.decoration! as BoxDecoration;
+    expect(
+      (categoryDecoration.border! as Border).top.color,
+      theme.surfaceTokens.subtleOutline,
+    );
+    final saveBar = tester.widget<Container>(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('neo-settings-save')),
+            matching: find.byType(Container),
+          )
+          .last,
+    );
+    final saveBarDecoration = saveBar.decoration! as BoxDecoration;
+    expect(
+      (saveBarDecoration.border! as Border).top.color,
+      theme.surfaceTokens.subtleOutline,
+    );
+    final buttonDepthFinder = find.descendant(
+      of: find.byKey(const ValueKey('neo-settings-save')),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Material && widget.shape is TonosActionShadowBorder,
+      ),
+    );
+    expect(buttonDepthFinder, findsOneWidget);
+    final saveDepth = tester.widget<Material>(buttonDepthFinder);
+    final saveShape = saveDepth.shape! as TonosActionShadowBorder;
+    expect(saveShape.offset, theme.effectTokens.primaryActionShadowOffset);
+  });
+
   testWidgets('save bar respects reduced motion and remains actionable', (
     tester,
   ) async {
@@ -192,6 +322,39 @@ void main() {
     expect(decoration.color, _testSurfaces.settingsSection);
     expect(decoration.border, isA<Border>());
     expect((decoration.border! as Border).top.color, isNotNull);
+  });
+
+  testWidgets('settings sections can keep category accents out of controls', (
+    tester,
+  ) async {
+    const accent = Colors.teal;
+    await tester.pumpWidget(
+      _testApp(
+        SettingsSection(
+          title: 'Training',
+          accentColor: accent,
+          children: [
+            Builder(
+              builder:
+                  (context) => Text(
+                    'primary-role',
+                    style: TextStyle(color: context.cs.primary),
+                  ),
+            ),
+          ],
+        ),
+        presentation: const AppSettingsPresentationTokens(
+          sectionUsesAccentForControls: false,
+        ),
+      ),
+    );
+
+    final sectionContext = tester.element(find.byType(SettingsSection));
+    final primary = Theme.of(sectionContext).colorScheme.primary;
+    expect(
+      tester.widget<Text>(find.text('primary-role')).style?.color,
+      primary,
+    );
   });
 
   testWidgets('expandable settings sections preserve themed expansion recipe', (
@@ -642,6 +805,12 @@ void main() {
         );
 
         expect(filled!.filled, isTrue);
+        expect(filled!.labelStyle, isNull);
+        expect(filled!.floatingLabelStyle, isNull);
+        expect(filled!.hintStyle, isNull);
+        expect(filled!.prefixIconColor, isNull);
+        expect(filled!.enabledBorder, isNull);
+        expect(filled!.focusedBorder, isNull);
         expect(filled!.fillColor, theme.surfaceTokens.settingsInput);
         expect(
           (filled!.border! as OutlineInputBorder).borderRadius,
@@ -656,6 +825,95 @@ void main() {
       }
     },
   );
+
+  testWidgets('Neo settings input values use ink on bright fields', (
+    tester,
+  ) async {
+    for (final theme in [
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      TextStyle? enabledStyle;
+      TextStyle? disabledStyle;
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (context) {
+              enabledStyle = settingsInputTextStyle(context);
+              disabledStyle = settingsInputTextStyle(context, enabled: false);
+              return TextField(
+                style: enabledStyle,
+                decoration: settingsInputDecoration(
+                  context,
+                  label: 'Name',
+                  icon: Icons.person_outline,
+                ),
+              );
+            },
+          ),
+          theme: theme,
+        ),
+      );
+
+      expect(enabledStyle?.color, const Color(0xFF161616));
+      expect(disabledStyle?.color?.a, closeTo(0.38, 0.01));
+    }
+
+    TextStyle? classicStyle;
+    await tester.pumpWidget(
+      _testApp(
+        Builder(
+          builder: (context) {
+            classicStyle = settingsInputTextStyle(context);
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+    expect(classicStyle, isNull);
+  });
+
+  testWidgets('Neo settings focus contrasts with its colored input', (
+    tester,
+  ) async {
+    for (final theme in [
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      late InputDecoration decoration;
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (context) {
+              decoration = settingsInputDecoration(
+                context,
+                label: 'Name',
+                icon: Icons.person_outline,
+              );
+              return TextField(decoration: decoration);
+            },
+          ),
+          theme: theme,
+        ),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      final focus = decoration.focusedBorder!.borderSide;
+      final ink = focus.color.computeLuminance();
+      final fill = decoration.fillColor!.computeLuminance();
+      final contrast =
+          ink > fill
+              ? (ink + 0.05) / (fill + 0.05)
+              : (fill + 0.05) / (ink + 0.05);
+      expect(contrast, greaterThanOrEqualTo(3));
+      expect(
+        focus.width,
+        greaterThan(decoration.enabledBorder!.borderSide.width),
+      );
+      expect(focus.color, theme.semanticColors.focusRing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
 
   testWidgets('shared ranking tiles preserve panel and rank input recipes', (
     tester,
@@ -846,17 +1104,24 @@ void main() {
   );
 }
 
-Widget _testApp(Widget child, {ThemeData? theme}) {
+Widget _testApp(
+  Widget child, {
+  ThemeData? theme,
+  AppSettingsPresentationTokens? presentation,
+}) {
+  final baseTheme =
+      theme ??
+      ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        extensions: const <ThemeExtension<dynamic>>[_testShapes, _testSurfaces],
+      );
   return MaterialApp(
     theme:
-        theme ??
-        ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          extensions: const <ThemeExtension<dynamic>>[
-            _testShapes,
-            _testSurfaces,
-          ],
-        ),
+        presentation == null
+            ? baseTheme
+            : baseTheme.copyWith(
+              extensions: [...baseTheme.extensions.values, presentation],
+            ),
     themeAnimationDuration: Duration.zero,
     home: Scaffold(body: child),
   );

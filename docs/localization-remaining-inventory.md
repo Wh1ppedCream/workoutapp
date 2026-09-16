@@ -5,8 +5,8 @@ Tonos. It is a source audit, implementation plan, and release gate. Update the
 checkboxes as each boundary is completed rather than maintaining a separate
 informal list.
 
-Audit snapshot: `updates/backlog` at `3283966` with localization changes
-uncommitted, reviewed on 2026-09-03.
+Audit snapshot: `updates/backlog` at localization commit `1a1c549`, followed by
+a focused correctness review on 2026-09-04.
 
 Current implementation pass: 2026-09-03. Stable Measurements/Health Trends
 copy, allocation-source labels, QuickBar labels, weight-unit names, current
@@ -309,6 +309,8 @@ details/editor, gym profiles, plan generation, and analytics.
   consumers, including filters, onboarding, profiles, editor, catalog,
   anatomy, dashboard, swap, and premade-plan preview surfaces.
 - [x] Preserve custom equipment names verbatim.
+- [x] Clear shipped identity when a user actually renames equipment, while
+  preserving identity for a no-op save.
 - [x] Keep matching, catalog seeding, plan compatibility, and media independent
  from translated names.
 - [x] Add count, key-parity, fallback, custom-name, profile-hydration, and
@@ -330,6 +332,8 @@ mapping screens, volume settings, and the exercise editor.
   anatomy browsing, catalog filters, analytics, mapping, volume settings,
   ranking, percentages, and the exercise editor.
 - [x] Preserve custom muscle names verbatim.
+- [x] Clear shipped identity when a user actually renames a muscle, while
+  preserving identity for a no-op save.
 - [x] Preserve canonical muscle names for matching, storage, exports, and
   navigation while carrying catalog IDs through all detailed DAO query paths.
 - [x] Test registry and locale parity, DAO identity hydration, fallback and
@@ -360,8 +364,8 @@ group names, the source label `Homemade`, plan names, and descriptions.
   continues to drive matching, adaptation, copying, and persistence.
 - [ ] Decide whether a copied built-in plan keeps the localized name as a
   user-editable snapshot or keeps a built-in identity until the user renames it.
-- [x] Test plan-bundle parity, resolver fallback, generated one-hour inheritance,
-  and localized page grouping/card data.
+- [x] Test plan-bundle parity, regional and coherent fallback behavior, malformed
+  bundle rejection, and generated one-hour inheritance.
 - [ ] Add page-level tests for grouping, copying, duplicate-name handling, and
   locale switching.
 
@@ -369,7 +373,7 @@ group names, the source label `Homemade`, plan names, and descriptions.
 
 Source: `assets/stretches.json` (137 built-in entries)
 
-- [ ] Add stable IDs for all stretch entries.
+- [x] Add stable IDs for all stretch entries.
 - [ ] Translate all 137 names and descriptions.
 - [ ] Resolve referenced body parts through the existing body-part localizer.
 - [ ] Preserve custom stretches and user notes verbatim.

@@ -11,6 +11,7 @@ import '../services/catalog_entity_localizer.dart';
 import '../services/safe_failure.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/localized_body_part_name.dart';
 import '../widgets/body_heatmap.dart';
 import '../widgets/exercise_media_thumbnail.dart';
@@ -284,45 +285,78 @@ class _ExerciseCatalogCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final panelForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressSelector,
+            )
+            : theme.colorScheme.onSurface;
+    final panelSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.exerciseProgressSelector,
+            )
+            : theme.colorScheme.onSurfaceVariant;
+    final content = Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CatalogCardHeader(
+            icon: Icons.fitness_center,
+            title: strings.catalogExerciseTitle,
+            iconBackground: usesInkRecipe ? surfaces.settingsHero : null,
+            iconForeground:
+                usesInkRecipe
+                    ? tonosForegroundForSurface(context, surfaces.settingsHero)
+                    : null,
+            titleForeground: panelForeground,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            strings.catalogMostUsedExercises,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: panelForeground,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (exercises.isEmpty)
+            Text(
+              strings.catalogNoExerciseHistory,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: panelSecondaryForeground,
+              ),
+            )
+          else
+            Column(
+              children: [
+                for (final exercise in exercises)
+                  _ExerciseUsageBar(summary: exercise),
+              ],
+            ),
+        ],
+      ),
+    );
+
+    if (usesInkRecipe) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: surfaces.exerciseProgressSelector,
+        padding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        onTap: onTap,
+        child: content,
+      );
+    }
+
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _CatalogCardHeader(
-                icon: Icons.fitness_center,
-                title: strings.catalogExerciseTitle,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                strings.catalogMostUsedExercises,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (exercises.isEmpty)
-                Text(
-                  strings.catalogNoExerciseHistory,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                )
-              else
-                Column(
-                  children: [
-                    for (final exercise in exercises)
-                      _ExerciseUsageBar(summary: exercise),
-                  ],
-                ),
-            ],
-          ),
-        ),
-      ),
+      child: InkWell(onTap: onTap, child: content),
     );
   }
 }
@@ -344,62 +378,101 @@ class _TargetAnatomyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _CatalogCardHeader(
-              icon: Icons.bubble_chart_outlined,
-              title: strings.catalogTargetAnatomyTitle,
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final panelColor = usesInkRecipe ? surfaces.settingsHero : surfaces.card;
+    final panelForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, panelColor)
+            : theme.colorScheme.onSurface;
+    final content = Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _CatalogCardHeader(
+            icon: Icons.bubble_chart_outlined,
+            title: strings.catalogTargetAnatomyTitle,
+            iconBackground:
+                usesInkRecipe ? surfaces.exerciseProgressSelector : null,
+            iconForeground:
+                usesInkRecipe
+                    ? tonosForegroundForSurface(
+                      context,
+                      surfaces.exerciseProgressSelector,
+                    )
+                    : null,
+            titleForeground: panelForeground,
+          ),
+          const SizedBox(height: 16),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _FocusSummaryPane(
+                    title: strings.catalogBodyparts,
+                    icon: Icons.accessibility_new,
+                    items: bodyParts,
+                    emptyText: strings.catalogNoBodypartHistory,
+                    onTap: onBodyPartsTap,
+                    localizeBuiltInBodyPartNames: true,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                VerticalDivider(
+                  width: usesInkRecipe ? 2 : 1,
+                  thickness: usesInkRecipe ? 2 : 1,
+                  color:
+                      usesInkRecipe
+                          ? tonosOutlineForSurface(context, panelColor)
+                          : theme.colorScheme.outlineVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FocusSummaryPane(
+                    title: strings.catalogMuscles,
+                    icon: Icons.fitness_center,
+                    items: muscles,
+                    emptyText: strings.catalogNoMuscleHistory,
+                    onTap: onMusclesTap,
+                    localizeBuiltInBodyPartNames: false,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            IntrinsicHeight(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _FocusSummaryPane(
-                      title: strings.catalogBodyparts,
-                      icon: Icons.accessibility_new,
-                      items: bodyParts,
-                      emptyText: strings.catalogNoBodypartHistory,
-                      onTap: onBodyPartsTap,
-                      localizeBuiltInBodyPartNames: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  VerticalDivider(
-                    width: 1,
-                    color: theme.colorScheme.outlineVariant,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _FocusSummaryPane(
-                      title: strings.catalogMuscles,
-                      icon: Icons.fitness_center,
-                      items: muscles,
-                      emptyText: strings.catalogNoMuscleHistory,
-                      onTap: onMusclesTap,
-                      localizeBuiltInBodyPartNames: false,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    if (usesInkRecipe) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: panelColor,
+        padding: EdgeInsets.zero,
+        clipBehavior: Clip.antiAlias,
+        child: content,
+      );
+    }
+
+    return Card(clipBehavior: Clip.antiAlias, child: content);
   }
 }
 
 class _CatalogCardHeader extends StatelessWidget {
   final IconData icon;
   final String title;
+  final Color? iconBackground;
+  final Color? iconForeground;
+  final Color? titleForeground;
 
-  const _CatalogCardHeader({required this.icon, required this.title});
+  const _CatalogCardHeader({
+    required this.icon,
+    required this.title,
+    this.iconBackground,
+    this.iconForeground,
+    this.titleForeground,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -407,14 +480,18 @@ class _CatalogCardHeader extends StatelessWidget {
     return Row(
       children: [
         CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(icon, color: theme.colorScheme.onPrimaryContainer),
+          backgroundColor: iconBackground ?? theme.colorScheme.primaryContainer,
+          child: Icon(
+            icon,
+            color: iconForeground ?? theme.colorScheme.onPrimaryContainer,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             title,
             style: theme.textTheme.titleLarge?.copyWith(
+              color: titleForeground,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -433,6 +510,19 @@ class _ExerciseUsageBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final rowColor =
+        usesInkRecipe ? surfaces.catalogSelection : surfaces.catalogUsage;
+    final rowForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, rowColor)
+            : theme.colorScheme.onSurface;
+    final rowSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, rowColor)
+            : theme.colorScheme.onSurfaceVariant;
+    final effects = context.effectTokens;
     final strings = AppLocalizations.of(context);
     final equipment = summary.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
@@ -448,9 +538,26 @@ class _ExerciseUsageBar extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
-        color: surfaces.catalogUsage,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: surfaces.catalogOutline),
+        color: rowColor,
+        borderRadius:
+            usesInkRecipe ? shapes.compact : BorderRadius.circular(14),
+        border: Border.all(
+          color:
+              usesInkRecipe
+                  ? tonosOutlineForSurface(context, rowColor)
+                  : surfaces.catalogOutline,
+          width: usesInkRecipe ? shapes.outlineWidth : 1,
+        ),
+        boxShadow:
+            usesInkRecipe
+                ? [
+                  BoxShadow(
+                    color: effects.cardShadow,
+                    blurRadius: 0,
+                    offset: effects.cardShadowOffset,
+                  ),
+                ]
+                : null,
       ),
       child: Row(
         children: [
@@ -461,9 +568,10 @@ class _ExerciseUsageBar extends StatelessWidget {
               children: [
                 LocalizedExerciseName(
                   definition: summary.definition,
-                  maxLines: 1,
+                  maxLines: usesInkRecipe ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
+                    color: rowForeground,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -479,7 +587,7 @@ class _ExerciseUsageBar extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: rowSecondaryForeground,
                         ),
                       ),
                 ),
@@ -490,9 +598,10 @@ class _ExerciseUsageBar extends StatelessWidget {
           ExerciseMediaThumbnail(
             definition: summary.definition,
             size: 52,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius:
+                usesInkRecipe ? shapes.compact : BorderRadius.circular(12),
             padding: EdgeInsets.zero,
-            framed: false,
+            framed: usesInkRecipe,
           ),
         ],
       ),
@@ -521,8 +630,32 @@ class _FocusSummaryPane extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final shapes = context.shapeTokens;
+    final iconColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsHero,
+            )
+            : theme.colorScheme.primary;
+    final radius = usesInkRecipe ? shapes.compact : BorderRadius.circular(16);
+    final paneForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsHero,
+            )
+            : theme.colorScheme.onSurface;
+    final paneSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsHero,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: radius,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -531,7 +664,7 @@ class _FocusSummaryPane extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 18, color: theme.colorScheme.primary),
+                Icon(icon, size: 18, color: iconColor),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -541,7 +674,10 @@ class _FocusSummaryPane extends StatelessWidget {
                     style: (isSpanish
                             ? theme.textTheme.titleSmall
                             : theme.textTheme.titleMedium)
-                        ?.copyWith(fontWeight: FontWeight.w800),
+                        ?.copyWith(
+                          color: paneForeground,
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                 ),
               ],
@@ -551,7 +687,7 @@ class _FocusSummaryPane extends StatelessWidget {
               Text(
                 emptyText,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: paneSecondaryForeground,
                 ),
               )
             else
@@ -581,6 +717,21 @@ class _FocusUsageRow extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final nameForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsHero,
+            )
+            : theme.colorScheme.onSurface;
+    final setUnitColor =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsHero,
+            )
+            : theme.colorScheme.primary;
     final displayName =
         localizeBuiltInBodyPartNames
             ? localizedBodyPartName(context, summary.name)
@@ -589,15 +740,19 @@ class _FocusUsageRow extends StatelessWidget {
         summary.entity == null
             ? Text(
               displayName,
-              maxLines: 1,
+              maxLines: usesInkRecipe ? 2 : 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: nameForeground,
+              ),
             )
             : LocalizedCatalogEntityName(
               entity: summary.entity!,
-              maxLines: 1,
+              maxLines: usesInkRecipe ? 2 : 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: nameForeground,
+              ),
             );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -617,7 +772,7 @@ class _FocusUsageRow extends StatelessWidget {
           Text(
             strings.catalogSetUnits(summary.units.round()),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
+              color: setUnitColor,
               fontWeight: FontWeight.w800,
             ),
           ),

@@ -9,6 +9,12 @@ enum AppThemeFamily {
   classic(
     code: 'classic',
     supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},
+  ),
+
+  /// The development-only Neo-Brutalism appearance.
+  neoBrutalism(
+    code: 'neo_brutalism',
+    supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},
   );
 
   const AppThemeFamily({

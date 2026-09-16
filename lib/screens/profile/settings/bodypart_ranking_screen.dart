@@ -190,9 +190,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
                   part.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                  style: settingsRankingNameTextStyle(context),
                 ),
                 rank: rank,
                 icon: Icons.accessibility_new,

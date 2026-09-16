@@ -11,6 +11,7 @@ import '../providers/nutrition_profile.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_dialog.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/dashboard_sections.dart';
 import '../widgets/exercise_progress_section.dart';
@@ -316,29 +317,31 @@ class _DashboardPageState extends State<DashboardPage> {
     await showDialog(
       context: context,
       builder:
-          (_) => AlertDialog(
-            title: Text(strings.dashboardShowHiddenSections),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  for (final id in hiddenIds)
-                    ListTile(
-                      leading: Icon(
-                        dashboardSectionDetails(strings, id).icon,
-                        color: dashboardSectionDetails(strings, id).color,
+          (_) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.dashboardShowHiddenSections),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final id in hiddenIds)
+                      ListTile(
+                        leading: Icon(
+                          dashboardSectionDetails(strings, id).icon,
+                          color: dashboardSectionDetails(strings, id).color,
+                        ),
+                        title: Text(dashboardSectionDetails(strings, id).title),
+                        subtitle: Text(
+                          dashboardSectionDetails(strings, id).description,
+                        ),
+                        onTap: () {
+                          context.read<DashboardConfig>().toggleVisibility(id);
+                          Navigator.of(context).pop();
+                        },
                       ),
-                      title: Text(dashboardSectionDetails(strings, id).title),
-                      subtitle: Text(
-                        dashboardSectionDetails(strings, id).description,
-                      ),
-                      onTap: () {
-                        context.read<DashboardConfig>().toggleVisibility(id);
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
+const _supportedTranslationLocales = {'es', 'fr', 'bn', 'zh', 'hi'};
+
 void main() {
   test(
     'localized exercise content has valid catalog IDs and guidance sections',
@@ -26,9 +28,16 @@ void main() {
       expect(bundle['version'], 1);
       final locales = bundle['locales'] as Map<String, dynamic>;
       final coverage = bundle['coverage'] as Map<String, dynamic>;
+      expect(locales.keys, unorderedEquals(_supportedTranslationLocales));
+      expect(coverage.keys, unorderedEquals(_supportedTranslationLocales));
       for (final locale in locales.entries) {
         expect(locale.key, matches(RegExp(r'^[a-z]{2,3}(?:_[A-Z]{2})?$')));
         final entries = locale.value as Map<String, dynamic>;
+        expect(
+          entries.keys,
+          unorderedEquals(catalogIds),
+          reason: '${locale.key} guidance must cover the complete catalog.',
+        );
         for (final entry in entries.entries) {
           expect(catalogIds, contains(entry.key));
           final content = entry.value as Map<String, dynamic>;
@@ -54,8 +63,8 @@ void main() {
       final names = bundle['names'] as Map<String, dynamic>;
       final nameCoverage = bundle['nameCoverage'] as Map<String, dynamic>;
       expect(names, isNotEmpty);
-      expect(names.keys, unorderedEquals(locales.keys));
-      expect(names.keys, unorderedEquals(nameCoverage.keys));
+      expect(names.keys, unorderedEquals(_supportedTranslationLocales));
+      expect(nameCoverage.keys, unorderedEquals(_supportedTranslationLocales));
       for (final locale in names.entries) {
         expect(locales, contains(locale.key));
         final entries = locale.value as Map<String, dynamic>;

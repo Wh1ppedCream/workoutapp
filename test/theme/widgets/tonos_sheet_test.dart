@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
+import 'package:env_test/theme/tokens/app_surface_decoration_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_sheet.dart';
 
@@ -73,6 +74,7 @@ const _testSurfaces = AppSurfaceTokens(
   planActionBar: Color(0xFF3E3E3E),
   optimizedAction: Color(0xFF3F3F3F),
   subtleOutline: Color(0xFF404040),
+  neutralOutline: Color(0xFF414141),
   input: Color(0xFF505050),
   sheet: Color(0xFF606060),
   dialog: Color(0xFF707070),
@@ -135,6 +137,17 @@ const _testEffects = AppEffectTokens(
   noEffectsBackdropBlurSigma: 0,
 );
 
+const _testDecorations = AppSurfaceDecorationTokens(
+  panel: AppSurfaceDecoration.flat,
+  panelRaised: AppSurfaceDecoration.flat,
+  card: AppSurfaceDecoration.flat,
+  compactCard: AppSurfaceDecoration.flat,
+  input: AppSurfaceDecoration.outlinedOnly,
+  sheet: AppSurfaceDecoration(depth: AppSurfaceDepth.materialElevation),
+  media: AppSurfaceDecoration.flat,
+  mediaPlaceholder: AppSurfaceDecoration.flat,
+);
+
 void main() {
   testWidgets('resolves sheet surface and close behavior from theme tokens', (
     tester,
@@ -177,16 +190,115 @@ void main() {
     await tester.tap(find.byTooltip('Close details'));
     expect(closed, isTrue);
   });
+
+  testWidgets('renders an injected sheet outline and hard shadow', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSheet(
+          key: ValueKey('outlined-sheet'),
+          child: Text('Outlined sheet'),
+        ),
+        decorations: _testDecorations.copyWith(
+          sheet: AppSurfaceDecoration.outlinedCompactShadow,
+        ),
+        effects: _testEffects.copyWith(cardShadowBlur: 0),
+      ),
+    );
+
+    final material = tester.widget<Material>(
+      find.byWidgetPredicate(
+        (widget) => widget is Material && widget.color == _testSurfaces.sheet,
+      ),
+    );
+    final shape = material.shape! as RoundedRectangleBorder;
+    expect(shape.side.color, _testSurfaces.neutralOutline);
+    expect(shape.side.width, _testShapes.outlineWidth);
+    expect(material.elevation, 0);
+
+    final decorated = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey('outlined-sheet')),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is DecoratedBox &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration as BoxDecoration).boxShadow?.length == 1,
+        ),
+      ),
+    );
+    final decoration = decorated.decoration as BoxDecoration;
+    expect(decoration.boxShadow, hasLength(1));
+    expect(decoration.boxShadow!.single.blurRadius, 0);
+    expect(decoration.boxShadow!.single.color, _testEffects.cardShadow);
+    expect(
+      decoration.boxShadow!.single.offset,
+      _testEffects.raisedPanelShadowOffset,
+    );
+  });
+
+  testWidgets('sheet effects-off preserves outline and clipping', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSheet(
+          key: ValueKey('effects-off-sheet'),
+          child: Text('Content'),
+        ),
+        decorations: _testDecorations.copyWith(
+          sheet: AppSurfaceDecoration.outlinedCompactShadow,
+        ),
+        effects: _testEffects.copyWith(
+          cardShadow: Colors.transparent,
+          cardShadowBlur: 0,
+          cardShadowOffset: Offset.zero,
+        ),
+      ),
+    );
+    final scope = find.byKey(const ValueKey('effects-off-sheet'));
+    expect(
+      find.descendant(
+        of: scope,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is DecoratedBox &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration as BoxDecoration).boxShadow != null,
+        ),
+      ),
+      findsNothing,
+    );
+    final material = tester.widget<Material>(
+      find.descendant(
+        of: scope,
+        matching: find.byWidgetPredicate(
+          (widget) => widget is Material && widget.color == _testSurfaces.sheet,
+        ),
+      ),
+    );
+    expect(material.elevation, 0);
+    expect(material.clipBehavior, Clip.antiAlias);
+    final shape = material.shape! as RoundedRectangleBorder;
+    expect(shape.side.color, _testSurfaces.neutralOutline);
+    expect(shape.side.width, _testShapes.outlineWidth);
+  });
 }
 
-Widget _testApp(Widget child) {
+Widget _testApp(
+  Widget child, {
+  AppEffectTokens effects = _testEffects,
+  AppSurfaceDecorationTokens decorations = _testDecorations,
+}) {
   return MaterialApp(
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      extensions: const <ThemeExtension<dynamic>>[
+      extensions: <ThemeExtension<dynamic>>[
         _testShapes,
         _testSurfaces,
-        _testEffects,
+        effects,
+        decorations,
       ],
     ),
     home: Scaffold(body: child),

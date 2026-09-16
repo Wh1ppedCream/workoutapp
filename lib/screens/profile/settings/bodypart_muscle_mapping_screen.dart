@@ -204,17 +204,38 @@ class _BodyPartMuscleMappingScreenState
               child: DropdownButtonFormField<BodyPart>(
                 isExpanded: true,
                 value: _selectedBodyPart,
+                dropdownColor: settingsDropdownMenuColor(context),
+                style: settingsInputTextStyle(context),
+                iconEnabledColor: settingsInputForeground(context),
+                iconDisabledColor: settingsInputForeground(
+                  context,
+                )?.withValues(alpha: 0.38),
                 decoration: settingsFieldDecoration(
                   context,
                   label: strings.mappingBodyPart,
                 ),
+                selectedItemBuilder:
+                    (_) =>
+                        _bodyParts
+                            .map(
+                              (bodyPart) => settingsDropdownTriggerLabel(
+                                context,
+                                Text(
+                                  localizedBodyPartName(context, bodyPart.name),
+                                ),
+                              ),
+                            )
+                            .toList(),
                 items:
                     _bodyParts
                         .map(
                           (bodyPart) => DropdownMenuItem(
                             value: bodyPart,
-                            child: Text(
-                              localizedBodyPartName(context, bodyPart.name),
+                            child: settingsDropdownMenuLabel(
+                              context,
+                              Text(
+                                localizedBodyPartName(context, bodyPart.name),
+                              ),
                             ),
                           ),
                         )

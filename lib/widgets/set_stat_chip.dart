@@ -20,6 +20,11 @@ class SetStatChip extends StatelessWidget {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.metricChip)
+            : theme.colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -34,7 +39,9 @@ class SetStatChip extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: neo ? foreground : null,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -44,7 +51,9 @@ class SetStatChip extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: neo ? foreground : null,
+                  ),
                 ),
               ),
               if (onEdit != null) ...[

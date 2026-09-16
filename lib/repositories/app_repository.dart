@@ -1128,6 +1128,7 @@ class AppRepository {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool uniqueName = false,
     bool isDraft = false,
   }) => _dbHelper.createPresetAtomic(
     name: name,
@@ -1135,6 +1136,7 @@ class AppRepository {
     exercises: exercises,
     autoSettings: autoSettings,
     activate: activate,
+    uniqueName: uniqueName,
     isDraft: isDraft,
   );
 

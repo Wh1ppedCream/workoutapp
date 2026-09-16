@@ -4303,6 +4303,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get commonRemove => 'Retirer';
 
   @override
+  String exerciseProgressRemoveExerciseLabel(String exerciseName) {
+    return 'Supprimer $exerciseName de la progression';
+  }
+
+  @override
   String get automaticSaving => 'Enregistrement...';
 
   @override
@@ -10661,6 +10666,11 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get commonRemove => 'Retirer';
+
+  @override
+  String exerciseProgressRemoveExerciseLabel(String exerciseName) {
+    return 'Supprimer $exerciseName de la progression';
+  }
 
   @override
   String get automaticSaving => 'Enregistrement...';

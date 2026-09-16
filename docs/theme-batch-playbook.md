@@ -1,5 +1,205 @@
 # Theming Batch Playbook
 
+## Current Status And Ownership (2026-09-16)
+
+The [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) is the current
+task/status checklist. This playbook preserves batch scopes and historical
+evidence. Q3 supersedes older pending labels for its accepted scope; later
+refinements still need affected-route verification. Do not restart completed
+batches solely from an older status paragraph below.
+
+Neo N1/N2 are complete, N3 implementation and automatable coverage are
+complete, and original N4 development checks were accepted. The current
+21-item Neo visual review is user-accepted as good for now, including the
+specialized Profile/settings routes. Exhaustive current route-state disposition,
+broader ratchet enrollment, and N6 closure remain. The latest focused user run
+for the selector contrast correction completed formatting, clean analysis, and
+63 passing tests; it does not replace earlier broader suites or establish a
+complete device pass.
+
+Automatable completion pass (2026-09-15): the Neo pilot gallery now covers the
+second workout fixture, selected navigation, dialog cancellation, live reduced
+motion, a large-text stacked WeightCard set editor, and narrow/2.0x mounting.
+The theme-ready Classic fallback and Neo surface ownership have a focused test,
+and pre_q2 route evidence records the secondary consumer boundaries.
+scripts/verify_neo_refinement.ps1 is the user-run entry point for this expanded
+scope. Visual/device/accessibility review remains intentionally separate.
+
+12A/N5 visual-review closure (2026-09-16): the consolidated roadmap records
+the accepted 21-item Neo visual review and its Profile/settings route ledger.
+The reachable Language and Workout Exit preference dialogs pass through
+`TonosDialogFrame`; Classic keeps its prior result and appearance because the
+frame is inert outside the outlined Neo surface recipe. Database, Flow Methods,
+and Exercise Editor dialog entry points use the same boundary. The final
+bright-field dropdown correction is user-verified with formatting, clean
+analysis, and 63 focused tests. The remaining settings work is non-happy-path,
+reachability, accessibility, and device evidence, not another ordinary visual
+route review.
+
+Theme-ready secondary-surface extension (2026-09-15): evolving non-default
+exercise-definition, history, cardio, stretch, measurement, trend, food
+customization, and food-logging consumers now have a shared compatibility
+boundary. `TonosThemeReadyCard` keeps the original Classic `Card` path and
+uses a semantic Neo `TonosSurface` path; focused Neo accents use existing
+semantic or data-visualization roles. This is an interim presentation boundary,
+not full Neo route implementation or N5/N6 qualification. The user supplied
+clean post-fix analysis for `current_metrics_section.dart` and 32 focused
+tests passed; broader route and device evidence remains pending.
+
+## First Alternate Family
+
+Step 13 now targets Neo-Brutalism first. Follow the detailed
+[N1-N6 implementation plan](theme-neo-brutalism-plan.md). The agreed Q3 gate
+permits development. N2 shared capabilities are complete and automated-
+verified; the N3 family/recipe implementation has passed scoped automated
+verification and its Theme Lab smoke review is accepted. The current reviewed
+pilot and screen refinements are accepted for now. The full rendered,
+accessibility, and device qualification matrix remains pending. Visual recipes
+remain starting recipes for any unreviewed route.
+Expressive is a later candidate.
+
+N1 is complete: the user approved the revision 5 HTML proposal board after
+visual revisions. N2 is now complete and automated-verified
+batch. The plan records
+the four pilot owners, confirmed shared-component gaps, locked starting recipe,
+font decision, eight pilot view proposals and the bounded N2 input list. N2 is
+the first runtime batch; N1 did not register or expose Neo-Brutalism.
+
+## N2 Implementation Record (2026-09-11)
+
+N2 added reusable, Classic-compatible shared capabilities without registering
+Neo-Brutalism or changing feature behavior. `AppSurfaceDecorationTokens` now
+owns typed outline/depth policies for Tonos surfaces and sheets; Classic keeps
+input-only outlines, compact-card explicit shadows, card/sheet effect-token
+depth, and the previous flat roles. `TonosSurface` and `TonosSheet` retain
+Material, InkWell, clipping, semantics, callbacks and close behavior, while
+effects-off removes visible explicit shadows and leaves outlines intact.
+
+`AppSettingsPresentationTokens` now owns settings hero gradient/solid choice,
+hero hard-depth policy, category-control primary inheritance, repeated border
+alpha values, icon fills and save-bar border alpha. Classic values match the
+prior implementation, and settings borders use the existing outline-width
+shape role. Focused tests cover registration, fallback, copy/lerp, rendered
+injected borders/shadows, override precedence, effects-off behavior and
+settings category inheritance.
+
+Status: complete and automated-verified. N3's family, factory, Theme Lab
+preview and recipes are scoped-verified; N3's rendered preview review remains
+pending. N4 owns route adoption and device pilot review.
+
+The first user-run N2 verification on 2026-09-11 found two compile-time
+`num`-to-`double` elevation errors, one unused test import and one generic
+extension-list construction error. Those source and test issues were fixed.
+The final user-run verification then reported clean analysis, 218 passing tests,
+clean diff-check apart from existing line-ending warnings, and matching ratchet
+report and enforcement output. The protected manifest now records the reviewed
+current fingerprints. N2 is complete; Neo visual approval and device
+qualification remain N3/N4 work.
+
+User verification commands for this batch:
+
+```powershell
+Set-Location E:\projects\env_test
+dart format lib\theme\tokens\app_surface_decoration_tokens.dart lib\theme\tokens\app_settings_presentation_tokens.dart lib\theme\theme_extensions.dart lib\theme\classic_theme.dart lib\theme\widgets\tonos_surface.dart lib\theme\widgets\tonos_sheet.dart lib\widgets\settings_tiles.dart test\theme\app_surface_decoration_tokens_test.dart test\theme\app_theme_tokens_test.dart test\theme\widgets\tonos_surface_test.dart test\theme\widgets\tonos_sheet_test.dart test\theme\widgets\settings_tiles_test.dart
+dart analyze lib\main.dart lib\theme lib\widgets\settings_tiles.dart test\theme\app_surface_decoration_tokens_test.dart test\theme\app_theme_tokens_test.dart test\theme\widgets\tonos_surface_test.dart test\theme\widgets\tonos_sheet_test.dart test\theme\widgets\settings_tiles_test.dart
+flutter test test\theme\app_surface_decoration_tokens_test.dart test\theme\app_theme_tokens_test.dart test\theme\widgets\tonos_surface_test.dart test\theme\widgets\tonos_sheet_test.dart test\theme\widgets\settings_tiles_test.dart test\theme test\providers\app_configuration_test.dart
+git diff --check
+dart run tools\theme_style_ratchet.dart docs\theme-style-ratchet.json --report
+```
+
+The formatter may report unchanged files; that is expected. Analyzer/test
+success plus matching ratchet report and enforcement output is the completed
+automated N2 gate. For future edits to the protected
+`lib/theme/widgets/tonos_surface.dart`, run the report and review it before
+changing the manifest; do not auto-approve a new fingerprint or count.
+
+## N3 Implementation Record (2026-09-11)
+
+Current review status: corrective contrast, disabled-action and test changes
+passed 230 user-run theme/provider tests. The paste reports no analyzer issues
+but omits the analyzer command. The 228-test result below is historical. The
+four development-only pilot compositions are now implemented, and the focused
+pilot test plus the combined theme/provider run have since passed 9 and 233
+tests respectively. N3 remains scoped-verified, not manually accepted or
+release-qualified.
+
+Execution contract: [N3-R1 through N3-R8](theme-neo-brutalism-plan.md#n3-implementation-specification-and-evidence)
+defines fixture architecture, exact approved color/foreground pairs, per-role
+borders and shadow offsets, all four compositions, interaction requirements,
+shared ownership and evidence gates. The implementation now supplies those
+previews; pass the new automated gate before requesting the eight light/dark
+pilot captures. Real-route persistence remains N4 work.
+
+N3 registered the development-only Neo-Brutalism family, added cached light and
+dark factory definitions, supplied the complete Material and app-extension
+recipe, and exposed the family in Theme Lab without changing stored user
+preferences or release availability. Theme Lab effects-off handling removes
+the Neo tooltip shadow while retaining its border and surface styling.
+
+Status: scoped-verified from user-run output; Theme Lab smoke review accepted.
+Formatting made no changes,
+analysis reported no issues, the requested theme/provider suite passed all 228
+tests, and `git diff --check` reported only existing LF/CRLF conversion
+warnings. The first test attempt exposed and then led to fixes for an
+unsupported Finder guard and unsettled/incorrectly scoped Theme Lab assertions.
+
+The user then manually smoke-tested Theme Lab on-device: Neo was selectable,
+light and dark previews rendered, effects could be enabled and disabled, and
+the Tonos surface gallery remained readable in all four shown
+brightness/effects combinations. The newly implemented N3 pilot gallery's
+focused user-run automated verification now passes; manual rendered review of
+the eight documented pilot states in light and dark modes, including
+effects-off and reduced-motion states, remains open. This record does not approve a public
+selector, route migration, or release enrollment; those remain later N4 and
+release-qualification decisions.
+
+## N4 Implementation Record (2026-09-11)
+
+The code portion of N4 and its real-route functional acceptance are complete
+for the current development scope. A debug-only DebugThemeFamilyControl now sits
+beside the existing debug light/dark switch when
+kDebugMode && TONOS_THEME_SWITCH is enabled. It uses the provider's
+capability-filtered family list and cycles through it with a direct button,
+then awaits ThemeProvider.setFamily; it does not create a second preference
+mechanism or require a root Overlay. It is hidden when experimental families
+are disabled and is absent from release builds.
+
+Focused tests cover the enabled Neo selection, persisted neo_brutalism code,
+return to Classic, root-builder placement without an Overlay exception, and
+unavailable-family hiding. The user confirmed the real Train, active-workout,
+User Information and Weight Units routes, local state preservation, restart
+and disabled-family fallback, both brightness modes, and 1.15 and 2.0 text
+scales. N4 is functionally accepted for development; it is not release
+qualified.
+
+The initial device run exposed an Overlay assertion from the first popup and
+tooltip implementation. The control was changed to a direct family-cycle
+button, and the user confirmed the corrected debug build works as intended.
+The route and state matrix is now recorded as passed. The user noted that the
+rendered Neo-Brutalism appearance differs from the original proposal, so exact
+visual parity remains a design follow-up and is not silently marked complete.
+
+The 2026-09-11 proposal-realignment checkpoint begins that follow-up at the
+shared recipe and visible route-owner layers. Neo now keeps saturated role
+colors in dark mode, uses black ink on colored surfaces, separates cyan plan
+fills from preserved identity rails, and applies proposal-style hard outlines
+and zero-blur offset shadows to Train, weekly overview, active plans, workout
+completion rows, settings sections, and Weight Units choices. The weekly
+heatmap, plan thumbnails, exercise thumbnails, navigation semantics, state
+persistence, and Classic theme remain unchanged in ownership. This checkpoint
+also gives Optimize its purple secondary-action surface, gives the selected
+bottom tab a purple cue, keeps the overview heatmap/progress ink readable on
+yellow, and moves the debug-only controls into the status-bar area so they do
+not cover the selector. GenericBar uses a uniform rounded outline with an
+interior identity rail, avoiding Flutter runtime border assertions. This
+checkpoint now also separates dark-canvas warm-paper text from near-black
+structural edge ink: colored-panel outlines, dividers and selector rails use
+`#161616`, while dark-mode hard shadows remain `#000000`. Neutral controls,
+sheet handles and data indicators retain contrasting colors. The 2026-09-12
+follow-up is implemented and awaits user-run analysis, tests and phone review. This
+checkpoint still needs the user's light/dark 1.15 screenshot review and
+does not close the N5 route sweep or release qualification.
+
 ## Current Pre-Q2 Status
 
 [Pre-Q2 Closeout Ledger](theme-pre-q2-closeout.md) is the current status summary.
@@ -755,8 +955,9 @@ manual accessibility checks are recorded where automation cannot establish them.
 
 ### E2. Remaining Reachable Features And Settings Residue
 
-Status: initial migration passed 181 user-run scoped tests. E2 closeout
-and route qualification remain open. Follow the detailed [E2 execution guide](theme-e2-qualification-guide.md#e2-remaining-reachable-features).
+Status: initial migration passed 181 user-run scoped tests, and the current
+21-item Neo visual review is accepted. E2 closeout and full route qualification
+remain open. Follow the detailed [E2 execution guide](theme-e2-qualification-guide.md#e2-remaining-reachable-features).
 Execute E2.1 route/residue ledger, E2.2 nutrition slices, E2.3 settings residue,
 then E2.4 closeout. Each slice requires independent evidence; do not combine
 the entire nutrition/settings tree into an unverified replacement pass.
@@ -776,6 +977,27 @@ permission to rewrite every screen. Nutrition chart/category meaning belongs
 in its domain tokens. Include hidden-tab routes reachable by buttons or links.
 Exit: each route is qualified or explicitly gated/deferred, with a narrow reason;
 12A residue and all catch-all inventory findings have a disposition.
+
+#### Theme-Ready Compatibility Extension (2026-09-15)
+
+Status: implemented as a bounded compatibility step; targeted post-fix
+verification is clean, while full route/device qualification remains pending.
+
+The extension covers:
+
+- exercise definition headers and metadata, exercise-definition info tiles, and
+  full exercise-history cards;
+- cardio timer cards and stretch add-action cards;
+- current measurement metric colors;
+- nutrition bar foregrounds, generic trend placeholders/series, food
+  customization cards, and food-logging cards;
+- the shared `TonosThemeReadyCard` boundary that preserves Classic `Card`
+  behavior and resolves Neo `TonosSurface` presentation.
+
+No navigation, persistence, query, unit, repository, or product-flow behavior
+changed. Do not mark these routes fully Neo-complete from wrapper adoption
+alone; final route-specific recipes belong after the evolving product areas
+stabilize.
 
 ## Qualification Batches
 
@@ -805,10 +1027,38 @@ no whole-repository legacy-debt blockade, and explicit exceptions.
 
 ### Q2. Switching, Typography, Effects And Accessibility (Steps 2, 17, 18)
 
-Status: qualification pending. Existing tests are a starting point, not proof
-that this matrix is complete. Follow [Q2 runtime and evidence details](theme-e2-qualification-guide.md#q2-runtime-and-accessibility-qualification).
-Include newly added media/progress/tutorial extensions, in-place state preservation,
-all visual durations/effects, and the documented manual checks.
+Status: scoped-verified. The user reported unchanged formatting, clean analysis,
+213 passing scoped tests, and diff-check with line-ending warnings only.
+Manual/device evidence remains required for qualification.
+Follow [Q2 runtime and evidence details](theme-e2-qualification-guide.md#q2-runtime-and-accessibility-qualification).
+
+Completed in this pass:
+
+- Added a complete-extension replacement matrix covering each registered
+  extension, including media, progress and tutorial extensions, while preserving
+  all other extensions.
+- Added a reduced-motion resolver and applied it to the remaining visual
+  durations, including chart page navigation with a zero-duration jump path.
+- Added tutorial reflow coverage for English at text scales 1.0, 1.3, 1.6 and
+  2.0 on a narrow viewport, and removed the locale-only large-text assumption.
+- Moved the tutorial focus-glow recipe, progress-remove-badge shadow and
+  swap-sheet geometry/elevation into theme-owned roles; effects-off now omits
+  optional shadows rather than merely drawing transparent shadows.
+- Added Theme Lab assertions for every motion role and the newly covered
+  effects-off roles.
+
+Still required before Q2 can be called qualified:
+
+- Automated rerun complete: 213 scoped tests passed. Revalidate after relevant edits.
+- Matched Classic light/dark captures against the approved baseline.
+- Human checks for TalkBack traversal and announcements, keyboard focus and
+  selection, screen-reader dismissal, constrained-height/keyboard layouts, and
+  physical-device motion/scroll performance.
+- Physical camera/permission checks for scanner-owned platform behavior where
+  applicable.
+
+Include newly added media/progress/tutorial extensions, in-place state
+preservation, all visual durations/effects, and the documented manual checks.
 
 Targets: lib/theme/theme_lab_page.dart, app_theme_factory.dart,
 app_theme_capabilities.dart, lib/providers/theme_provider.dart, lib/main.dart,
@@ -825,10 +1075,15 @@ checks are not silently marked passed by widget tests.
 
 ### Q3. Readiness Decision (Step 19)
 
-Status: not ready for a decision until prior evidence is reconciled. Follow
-[Q3 gate and handoff details](theme-e2-qualification-guide.md#q3-readiness-decision).
-Record a specific blocker or approved exception for every unresolved item;
-neither documentation completion nor a test count grants Step 13 readiness.
+Status: complete for agreed scope (2026-09-11); clean analysis, 226 passing
+tests and manual-plan phone confirmation recorded. The current
+[Q3 readiness gate](theme-q3-readiness-gate.md) reconciles the dirty working
+tree, prerequisite evidence, and exact blockers. The Q2 corrective patch passed
+the user's 213-test rerun and clean analysis. Subsequent device results and
+accepted limitations and passing final verification are recorded in the gate.
+Its commands are retained for future relevant changes. Record a specific blocker or
+approved exception for every unresolved item; neither documentation completion
+nor a test count grants Step 13 readiness.
 
 Targets: docs/theme-design-plan.md, classic-theme-baseline.md, inventory and the
 batch ledger. Reconcile Steps 2, 3, 12A-E, 17 and 18 with the actual tree and

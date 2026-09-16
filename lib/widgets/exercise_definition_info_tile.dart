@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../theme/widgets/tonos_theme_ready.dart';
 import 'exercise_detail_sheet.dart';
 import 'localized_exercise_name.dart';
 
@@ -18,7 +19,7 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    return Card(
+    return TonosThemeReadyCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         isThreeLine: true,
@@ -40,12 +41,10 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
   }
 
   void _showDetails(BuildContext context) {
-    showModalBottomSheet(
+    ExerciseDetailSheet.show(
       context: context,
-      isScrollControlled: true,
-      builder:
-          (_) =>
-              ExerciseDetailSheet(definition: definition, defId: definition.id),
+      definition: definition,
+      defId: definition.id,
     );
   }
 }

@@ -10,6 +10,7 @@ import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../services/active_plan_store.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
 import 'identity_color_palettes.dart';
@@ -281,6 +282,33 @@ class _PresetsLoadedState extends State<PresetsLoaded>
               widget.emptyMessage == PresetsLoaded.defaultEmptyMessage
                   ? strings.presetsNoPlans
                   : widget.emptyMessage;
+          if (context.surfaceDecorationTokens.panel.outlined &&
+              widget.excludedPresetIds != null) {
+            final surfaces = context.surfaceTokens;
+            final foreground = tonosForegroundForSurface(
+              context,
+              surfaces.card,
+            );
+            return TonosSurface(
+              variant: TonosSurfaceVariant.compactCard,
+              color: surfaces.card,
+              margin: EdgeInsets.symmetric(
+                horizontal: 4 * widget.scale,
+                vertical: 4 * widget.scale,
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: 12 * widget.scale,
+                vertical: 12 * widget.scale,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.archive_outlined, color: foreground),
+                  SizedBox(width: 8 * widget.scale),
+                  Expanded(child: Text(emptyMessage)),
+                ],
+              ),
+            );
+          }
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
             child: Text(emptyMessage),

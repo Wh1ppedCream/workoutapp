@@ -46,6 +46,10 @@ class DashboardHero extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final heroForeground =
+        context.surfaceDecorationTokens.panel.outlined
+            ? tonosForegroundForSurface(context, surfaces.dashboardHero)
+            : null;
     const accent = Color(0xFF64B5F6);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
@@ -87,6 +91,7 @@ class DashboardHero extends StatelessWidget {
                         : AppLocalizations.of(context).dashboardTitle,
                     maxLines: 1,
                     style: theme.textTheme.headlineSmall?.copyWith(
+                      color: heroForeground,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -788,7 +793,14 @@ class DashboardPlanToolsCard extends StatelessWidget {
         nextNumber == 1
             ? strings.dashboardNewPlanFirst
             : strings.dashboardNewPlan(nextNumber);
-    final presetId = await repo.createPreset(name, profileId: profileId);
+    await ActivePlanStore(repository: repo).load(profileId);
+    final presetId = await repo.createPresetAtomic(
+      name: name,
+      profileId: profileId,
+      exercises: const [],
+      activate: true,
+      uniqueName: true,
+    );
     if (!context.mounted) return;
     await _openPlanEditor(context, presetId);
   }
@@ -1142,6 +1154,18 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final usageForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.dashboardUsage)
+            : theme.colorScheme.onSurface;
+    final usageSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.dashboardUsage,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     final equipment = usage.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -1169,6 +1193,7 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
+                    color: neo ? usageForeground : null,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -1186,7 +1211,7 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                          color: usageSecondary,
                         ),
                       ),
                 ),

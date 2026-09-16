@@ -11,6 +11,7 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../utils/localized_body_part_name.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
@@ -416,19 +417,21 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final result = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(_strings.exerciseEditorDiscardTitle),
-            content: Text(_strings.exerciseEditorDiscardBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(_strings.exerciseEditorKeepEditing),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(_strings.exerciseEditorDiscard),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorDiscardTitle),
+              content: Text(_strings.exerciseEditorDiscardBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(_strings.exerciseEditorKeepEditing),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(_strings.exerciseEditorDiscard),
+                ),
+              ],
+            ),
           ),
     );
     return result ?? false;
@@ -453,45 +456,47 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final result = await showDialog<Set<int>>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(_strings.exerciseEditorAddBodyparts),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: StatefulBuilder(
-                builder: (ctx2, setState2) {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: available.length,
-                    itemBuilder: (_, i) {
-                      final bp = available[i];
-                      final checked = selectedIds.contains(bp.id);
-                      return CheckboxListTile(
-                        title: Text(localizedBodyPartName(context, bp.name)),
-                        value: checked,
-                        onChanged:
-                            (on) => setState2(() {
-                              if (on == true) {
-                                selectedIds.add(bp.id);
-                              } else {
-                                selectedIds.remove(bp.id);
-                              }
-                            }),
-                      );
-                    },
-                  );
-                },
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorAddBodyparts),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: StatefulBuilder(
+                  builder: (ctx2, setState2) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: available.length,
+                      itemBuilder: (_, i) {
+                        final bp = available[i];
+                        final checked = selectedIds.contains(bp.id);
+                        return CheckboxListTile(
+                          title: Text(localizedBodyPartName(context, bp.name)),
+                          value: checked,
+                          onChanged:
+                              (on) => setState2(() {
+                                if (on == true) {
+                                  selectedIds.add(bp.id);
+                                } else {
+                                  selectedIds.remove(bp.id);
+                                }
+                              }),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(_strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
+                  child: Text(_strings.commonAdd),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(_strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                child: Text(_strings.commonAdd),
-              ),
-            ],
           ),
     );
 
@@ -524,52 +529,54 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final result = await showDialog<Set<int>>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(_strings.exerciseEditorAddMuscles),
-            content: SizedBox(
-              width: double.maxFinite,
-              // need StatefulBuilder to update the checkboxes
-              child: StatefulBuilder(
-                builder: (ctx2, setDialogState) {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: available.length,
-                    itemBuilder: (ctx3, i) {
-                      final m = available[i];
-                      final checked = selectedIds.contains(m.id);
-                      return CheckboxListTile(
-                        title: LocalizedCatalogEntityName(
-                          entity: CatalogEntityDisplayName(
-                            catalogId: m.catalogId,
-                            canonicalName: m.name,
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorAddMuscles),
+              content: SizedBox(
+                width: double.maxFinite,
+                // need StatefulBuilder to update the checkboxes
+                child: StatefulBuilder(
+                  builder: (ctx2, setDialogState) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: available.length,
+                      itemBuilder: (ctx3, i) {
+                        final m = available[i];
+                        final checked = selectedIds.contains(m.id);
+                        return CheckboxListTile(
+                          title: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: m.catalogId,
+                              canonicalName: m.name,
+                            ),
                           ),
-                        ),
-                        value: checked,
-                        onChanged: (on) {
-                          setDialogState(() {
-                            if (on == true) {
-                              selectedIds.add(m.id);
-                            } else {
-                              selectedIds.remove(m.id);
-                            }
-                          });
-                        },
-                      );
-                    },
-                  );
-                },
+                          value: checked,
+                          onChanged: (on) {
+                            setDialogState(() {
+                              if (on == true) {
+                                selectedIds.add(m.id);
+                              } else {
+                                selectedIds.remove(m.id);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
+              actions: [
+                TextButton(
+                  child: Text(_strings.commonCancel),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+                TextButton(
+                  child: Text(_strings.commonAdd),
+                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                child: Text(_strings.commonCancel),
-                onPressed: () => Navigator.of(ctx).pop(),
-              ),
-              TextButton(
-                child: Text(_strings.commonAdd),
-                onPressed: () => Navigator.of(ctx).pop(selectedIds),
-              ),
-            ],
           ),
     );
 
@@ -601,50 +608,52 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final result = await showDialog<Set<int>>(
       context: context,
       builder:
-          (ctx) => AlertDialog(
-            title: Text(_strings.exerciseEditorAddEquipment),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: StatefulBuilder(
-                builder: (ctx2, setState2) {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: available.length,
-                    itemBuilder: (_, i) {
-                      final eq = available[i];
-                      final checked = selectedIds.contains(eq.id);
-                      return CheckboxListTile(
-                        title: LocalizedCatalogEntityName(
-                          entity: CatalogEntityDisplayName(
-                            catalogId: eq.catalogId,
-                            canonicalName: eq.name,
+          (ctx) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorAddEquipment),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: StatefulBuilder(
+                  builder: (ctx2, setState2) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: available.length,
+                      itemBuilder: (_, i) {
+                        final eq = available[i];
+                        final checked = selectedIds.contains(eq.id);
+                        return CheckboxListTile(
+                          title: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: eq.catalogId,
+                              canonicalName: eq.name,
+                            ),
                           ),
-                        ),
-                        value: checked,
-                        onChanged:
-                            (on) => setState2(() {
-                              if (on == true) {
-                                selectedIds.add(eq.id);
-                              } else {
-                                selectedIds.remove(eq.id);
-                              }
-                            }),
-                      );
-                    },
-                  );
-                },
+                          value: checked,
+                          onChanged:
+                              (on) => setState2(() {
+                                if (on == true) {
+                                  selectedIds.add(eq.id);
+                                } else {
+                                  selectedIds.remove(eq.id);
+                                }
+                              }),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(_strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
+                  child: Text(_strings.commonAdd),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(_strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                child: Text(_strings.commonAdd),
-              ),
-            ],
           ),
     );
 
@@ -738,7 +747,21 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   }
 
   Widget _buildEditor() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tabSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final tabForeground =
+        neo ? tonosForegroundForSurface(context, tabSurface) : scheme.onSurface;
+    final tabSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tabSurface)
+            : scheme.onSurfaceVariant;
     return ListView(
       padding: const EdgeInsets.only(bottom: 112),
       children: [
@@ -746,10 +769,15 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.34),
+            color: tabSurface,
             borderRadius: shapes.profileTile,
+            border:
+                neo
+                    ? Border.all(
+                      color: tonosOutlineForSurface(context, tabSurface),
+                      width: shapes.outlineWidth,
+                    )
+                    : null,
           ),
           child: TabBar(
             controller: _tabController,
@@ -757,12 +785,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.tab,
             indicator: BoxDecoration(
-              color: SettingsAccent.advanced.withValues(alpha: 0.20),
+              color:
+                  neo
+                      ? surfaces.dialogChoice
+                      : SettingsAccent.advanced.withValues(alpha: 0.20),
               borderRadius: shapes.settingsTabIndicator,
             ),
-            labelColor: SettingsAccent.advanced,
-            unselectedLabelColor:
-                Theme.of(context).colorScheme.onSurfaceVariant,
+            labelColor: neo ? tabForeground : SettingsAccent.advanced,
+            unselectedLabelColor: tabSecondary,
             tabs: [
               Tab(text: _strings.exerciseEditorMuscles),
               Tab(text: _strings.exerciseEditorBodyparts),
@@ -827,81 +857,84 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               final mediaQuery = MediaQuery.of(context);
               final usableHeight =
                   mediaQuery.size.height - mediaQuery.viewInsets.bottom;
-              return AlertDialog(
-                title: Text(_strings.exerciseEditorCreateCustomTitle),
-                content: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_strings.exerciseEditorCreateCustomBody),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          textCapitalization: TextCapitalization.words,
-                          autofocus: true,
-                          decoration: InputDecoration(
-                            labelText: _strings.exerciseEditorExerciseName,
-                          ),
-                          onChanged: (value) => exerciseName = value,
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<int>(
-                          value: selectedEquipmentId,
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: _strings.exerciseEditorEquipment,
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 0,
-                              child: Text(
-                                _strings.exerciseEditorNoEquipmentChoice,
-                              ),
+              return TonosDialogFrame(
+                styleFormControls: true,
+                child: AlertDialog(
+                  title: Text(_strings.exerciseEditorCreateCustomTitle),
+                  content: ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_strings.exerciseEditorCreateCustomBody),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            textCapitalization: TextCapitalization.words,
+                            autofocus: true,
+                            decoration: InputDecoration(
+                              labelText: _strings.exerciseEditorExerciseName,
                             ),
-                            ..._allEquipment.map(
-                              (equipment) => DropdownMenuItem(
-                                value: equipment.id,
-                                child: LocalizedCatalogEntityName(
-                                  entity: CatalogEntityDisplayName(
-                                    catalogId: equipment.catalogId,
-                                    canonicalName: equipment.name,
+                            onChanged: (value) => exerciseName = value,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<int>(
+                            value: selectedEquipmentId,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: _strings.exerciseEditorEquipment,
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text(
+                                  _strings.exerciseEditorNoEquipmentChoice,
+                                ),
+                              ),
+                              ..._allEquipment.map(
+                                (equipment) => DropdownMenuItem(
+                                  value: equipment.id,
+                                  child: LocalizedCatalogEntityName(
+                                    entity: CatalogEntityDisplayName(
+                                      catalogId: equipment.catalogId,
+                                      canonicalName: equipment.name,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                          onChanged:
-                              (value) => setDialogState(
-                                () => selectedEquipmentId = value ?? 0,
-                              ),
-                        ),
-                      ],
+                            ],
+                            onChanged:
+                                (value) => setDialogState(
+                                  () => selectedEquipmentId = value ?? 0,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(_strings.commonCancel),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        final name = exerciseName.trim();
+                        if (name.isEmpty) return;
+                        Navigator.of(context).pop(
+                          _CustomExerciseDraft(
+                            name: name,
+                            primaryEquipmentId:
+                                selectedEquipmentId == 0
+                                    ? null
+                                    : selectedEquipmentId,
+                          ),
+                        );
+                      },
+                      child: Text(_strings.healthCreate),
+                    ),
+                  ],
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(_strings.commonCancel),
-                  ),
-                  FilledButton(
-                    onPressed: () {
-                      final name = exerciseName.trim();
-                      if (name.isEmpty) return;
-                      Navigator.of(context).pop(
-                        _CustomExerciseDraft(
-                          name: name,
-                          primaryEquipmentId:
-                              selectedEquipmentId == 0
-                                  ? null
-                                  : selectedEquipmentId,
-                        ),
-                      );
-                    },
-                    child: Text(_strings.healthCreate),
-                  ),
-                ],
               );
             },
           ),
@@ -1009,6 +1042,16 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final headerSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final headerForeground =
+        neo
+            ? tonosForegroundForSurface(context, headerSurface)
+            : scheme.onSurface;
     final selected = _selectedDef!;
 
     return Padding(
@@ -1020,10 +1063,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+              color: headerSurface,
               borderRadius: shapes.profileTile,
               border: Border.all(
-                color: SettingsAccent.advanced.withValues(alpha: 0.42),
+                color:
+                    neo
+                        ? tonosOutlineForSurface(context, headerSurface)
+                        : SettingsAccent.advanced.withValues(alpha: 0.42),
+                width: shapes.outlineWidth,
               ),
             ),
             child:
@@ -1035,6 +1082,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                           child: TextField(
                             controller: _nameController,
                             textCapitalization: TextCapitalization.words,
+                            style: settingsInputTextStyle(context),
                             decoration: settingsFieldDecoration(
                               context,
                               label: _strings.exerciseEditorExerciseName,
@@ -1049,6 +1097,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                           child: TextField(
                             controller: _ratingController,
                             keyboardType: TextInputType.number,
+                            style: settingsInputTextStyle(context),
                             decoration: settingsFieldDecoration(
                               context,
                               label: _strings.exerciseEditorRating,
@@ -1069,6 +1118,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w900,
+                              color: headerForeground,
                             ),
                           ),
                         ),
@@ -1079,15 +1129,21 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                             vertical: 7,
                           ),
                           decoration: BoxDecoration(
-                            color: SettingsAccent.advanced.withValues(
-                              alpha: 0.16,
-                            ),
+                            color:
+                                neo
+                                    ? surfaces.dialogChoice
+                                    : SettingsAccent.advanced.withValues(
+                                      alpha: 0.16,
+                                    ),
                             borderRadius: shapes.control,
                           ),
                           child: Text(
                             '${selected.rating}/100',
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: SettingsAccent.advanced,
+                              color:
+                                  neo
+                                      ? headerForeground
+                                      : SettingsAccent.advanced,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -1106,8 +1162,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   }) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surface =
+        neo
+            ? context.surfaceTokens.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final foreground =
+        neo ? tonosForegroundForSurface(context, surface) : scheme.onSurface;
+    final secondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surface)
+            : scheme.onSurfaceVariant;
     return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
+      color: surface,
       borderRadius: shapes.settingsPanel,
       child: InkWell(
         borderRadius: shapes.settingsPanel,
@@ -1134,6 +1201,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w900,
+                        color: foreground,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1141,14 +1209,14 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       _isEditing
                           ? 'Save or cancel definition changes first.'
                           : body,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: secondary),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right, color: secondary),
             ],
           ),
         ),
@@ -1176,19 +1244,21 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final shouldRemove = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(_strings.exerciseEditorRemoveItemTitle(itemType)),
-            content: Text(_strings.exerciseEditorRemoveItemBody(itemName)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(_strings.exerciseEditorKeep),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(_strings.commonRemove),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorRemoveItemTitle(itemType)),
+              content: Text(_strings.exerciseEditorRemoveItemBody(itemName)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(_strings.exerciseEditorKeep),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(_strings.commonRemove),
+                ),
+              ],
+            ),
           ),
     );
     return shouldRemove ?? false;
@@ -1496,29 +1566,31 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder:
-                            (_) => AlertDialog(
-                              title: Text(
-                                _strings.exerciseEditorRemoveItemTitle(
-                                  _strings.exerciseEditorBodypartItem,
+                            (_) => TonosDialogFrame(
+                              child: AlertDialog(
+                                title: Text(
+                                  _strings.exerciseEditorRemoveItemTitle(
+                                    _strings.exerciseEditorBodypartItem,
+                                  ),
                                 ),
+                                content: Text(
+                                  _strings.exerciseEditorRemoveItemBody(
+                                    displayName,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.of(context).pop(false),
+                                    child: Text(_strings.commonCancel),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.of(context).pop(true),
+                                    child: Text(_strings.commonRemove),
+                                  ),
+                                ],
                               ),
-                              content: Text(
-                                _strings.exerciseEditorRemoveItemBody(
-                                  displayName,
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.of(context).pop(false),
-                                  child: Text(_strings.commonCancel),
-                                ),
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.of(context).pop(true),
-                                  child: Text(_strings.commonRemove),
-                                ),
-                              ],
                             ),
                       );
                       if (confirm != true) return;
@@ -1705,97 +1777,100 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx2, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                initial == null
-                    ? _strings.exerciseEditorAddMedia
-                    : _strings.exerciseEditorEditMedia,
+            return TonosDialogFrame(
+              styleFormControls: true,
+              child: AlertDialog(
+                title: Text(
+                  initial == null
+                      ? _strings.exerciseEditorAddMedia
+                      : _strings.exerciseEditorEditMedia,
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: mediaType,
+                        items: [
+                          DropdownMenuItem(
+                            value: 'image',
+                            child: Text(_strings.exerciseEditorMediaImage),
+                          ),
+                          DropdownMenuItem(
+                            value: 'video',
+                            child: Text(_strings.exerciseEditorMediaVideo),
+                          ),
+                          DropdownMenuItem(
+                            value: 'link',
+                            child: Text(_strings.exerciseEditorMediaLink),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setDialogState(() => mediaType = value);
+                        },
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorMediaType,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: titleValue,
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorMediaTitle,
+                          hintText: _strings.exerciseEditorMediaTitleHint,
+                        ),
+                        onChanged: (value) => titleValue = value,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: remoteUrlValue,
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorMediaRemoteUrl,
+                          hintText: 'https://...',
+                        ),
+                        onChanged: (value) => remoteUrlValue = value,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: thumbnailUrlValue,
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorMediaThumbnailUrl,
+                          hintText: _strings.exerciseEditorMediaThumbnailHint,
+                        ),
+                        onChanged: (value) => thumbnailUrlValue = value,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(_strings.commonCancel),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      final remoteUrl = _trimToNull(remoteUrlValue);
+                      if (remoteUrl == null) return;
+                      Navigator.of(ctx).pop(
+                        ExerciseMediaItem(
+                          id: initial?.id,
+                          exerciseDefId:
+                              initial?.exerciseDefId ?? _selectedDef?.id ?? -1,
+                          mediaType: mediaType,
+                          remoteUrl: remoteUrl,
+                          thumbnailUrl: _trimToNull(thumbnailUrlValue),
+                          localCachePath: initial?.localCachePath,
+                          localThumbnailPath: initial?.localThumbnailPath,
+                          title: _trimToNull(titleValue),
+                          sortOrder: initial?.sortOrder ?? _mediaItems.length,
+                        ),
+                      );
+                    },
+                    child: Text(_strings.commonSave),
+                  ),
+                ],
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: mediaType,
-                      items: [
-                        DropdownMenuItem(
-                          value: 'image',
-                          child: Text(_strings.exerciseEditorMediaImage),
-                        ),
-                        DropdownMenuItem(
-                          value: 'video',
-                          child: Text(_strings.exerciseEditorMediaVideo),
-                        ),
-                        DropdownMenuItem(
-                          value: 'link',
-                          child: Text(_strings.exerciseEditorMediaLink),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setDialogState(() => mediaType = value);
-                      },
-                      decoration: InputDecoration(
-                        labelText: _strings.exerciseEditorMediaType,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: titleValue,
-                      decoration: InputDecoration(
-                        labelText: _strings.exerciseEditorMediaTitle,
-                        hintText: _strings.exerciseEditorMediaTitleHint,
-                      ),
-                      onChanged: (value) => titleValue = value,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: remoteUrlValue,
-                      decoration: InputDecoration(
-                        labelText: _strings.exerciseEditorMediaRemoteUrl,
-                        hintText: 'https://...',
-                      ),
-                      onChanged: (value) => remoteUrlValue = value,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: thumbnailUrlValue,
-                      decoration: InputDecoration(
-                        labelText: _strings.exerciseEditorMediaThumbnailUrl,
-                        hintText: _strings.exerciseEditorMediaThumbnailHint,
-                      ),
-                      onChanged: (value) => thumbnailUrlValue = value,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(_strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final remoteUrl = _trimToNull(remoteUrlValue);
-                    if (remoteUrl == null) return;
-                    Navigator.of(ctx).pop(
-                      ExerciseMediaItem(
-                        id: initial?.id,
-                        exerciseDefId:
-                            initial?.exerciseDefId ?? _selectedDef?.id ?? -1,
-                        mediaType: mediaType,
-                        remoteUrl: remoteUrl,
-                        thumbnailUrl: _trimToNull(thumbnailUrlValue),
-                        localCachePath: initial?.localCachePath,
-                        localThumbnailPath: initial?.localThumbnailPath,
-                        title: _trimToNull(titleValue),
-                        sortOrder: initial?.sortOrder ?? _mediaItems.length,
-                      ),
-                    );
-                  },
-                  child: Text(_strings.commonSave),
-                ),
-              ],
             );
           },
         );

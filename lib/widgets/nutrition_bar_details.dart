@@ -124,6 +124,10 @@ class NutritionBarDetails extends StatelessWidget {
       builder: (ctx, constraints) {
         final fullWidth = constraints.maxWidth;
         final filledWidth = fullWidth * factor;
+        final foreground =
+            context.surfaceDecorationTokens.panel.outlined
+                ? tonosForegroundForSurface(context, color)
+                : Colors.white;
 
         return Stack(
           alignment: Alignment.center,
@@ -160,7 +164,7 @@ class NutritionBarDetails extends StatelessWidget {
                   Text(
                     '$consumed',
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Colors.white,
+                      color: foreground,
                       fontSize: 16 * scale,
                     ),
                   ),
@@ -169,7 +173,7 @@ class NutritionBarDetails extends StatelessWidget {
                   Text(
                     '$target kcal',
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Colors.white,
+                      color: foreground,
                       fontSize: 16 * scale,
                     ),
                   ),
@@ -178,7 +182,7 @@ class NutritionBarDetails extends StatelessWidget {
                   Text(
                     '$remaining',
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                      color: Colors.white,
+                      color: foreground,
                       fontSize: 16 * scale,
                     ),
                   ),
@@ -203,6 +207,10 @@ class NutritionBarDetails extends StatelessWidget {
   }) {
     final trackColor = color.withValues(alpha: 0.3);
     final remaining = target - consumed;
+    final foreground =
+        context.surfaceDecorationTokens.panel.outlined
+            ? tonosForegroundForSurface(context, color)
+            : Colors.white;
 
     return Column(
       children: [
@@ -244,7 +252,7 @@ class NutritionBarDetails extends StatelessWidget {
                 child: Text(
                   '$remaining',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Colors.white,
+                    color: foreground,
                     fontSize: 12 * scale,
                   ),
                 ),
@@ -256,7 +264,7 @@ class NutritionBarDetails extends StatelessWidget {
                 child: Text(
                   '$consumed',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: Colors.white,
+                    color: foreground,
                     fontSize: 12 * scale,
                   ),
                 ),

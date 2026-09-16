@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
+import 'package:env_test/theme/tokens/app_surface_decoration_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 
@@ -73,6 +74,7 @@ const _testSurfaces = AppSurfaceTokens(
   planActionBar: Color(0xFF3E3E3E),
   optimizedAction: Color(0xFF3F3F3F),
   subtleOutline: Color(0xFF404040),
+  neutralOutline: Color(0xFF414141),
   input: Color(0xFF505050),
   sheet: Color(0xFF606060),
   dialog: Color(0xFF707070),
@@ -135,6 +137,17 @@ const _testEffects = AppEffectTokens(
   noEffectsBackdropBlurSigma: 0,
 );
 
+const _testDecorations = AppSurfaceDecorationTokens(
+  panel: AppSurfaceDecoration.flat,
+  panelRaised: AppSurfaceDecoration.flat,
+  card: AppSurfaceDecoration(depth: AppSurfaceDepth.materialElevation),
+  compactCard: AppSurfaceDecoration.compactShadow,
+  input: AppSurfaceDecoration.outlinedOnly,
+  sheet: AppSurfaceDecoration(depth: AppSurfaceDepth.materialElevation),
+  media: AppSurfaceDecoration.flat,
+  mediaPlaceholder: AppSurfaceDecoration.flat,
+);
+
 void main() {
   testWidgets('resolves a card from surface and shape tokens', (tester) async {
     await tester.pumpWidget(
@@ -156,6 +169,94 @@ void main() {
     );
     expect(material.elevation, 0);
     expect(material.clipBehavior, Clip.none);
+  });
+
+  testWidgets('renders an injected outline and explicit shadow policy', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSurface(
+          key: ValueKey('outlined-panel'),
+          variant: TonosSurfaceVariant.panel,
+          child: Text('Outlined panel'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panel: AppSurfaceDecoration.outlinedCompactShadow,
+        ),
+      ),
+    );
+
+    final material = _materialFor(tester, 'outlined-panel');
+    final shape = material.shape! as RoundedRectangleBorder;
+    expect(shape.side.color, _testSurfaces.neutralOutline);
+    expect(shape.side.width, _testShapes.outlineWidth);
+    expect(material.elevation, 0);
+
+    final decorated = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('outlined-panel')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    final decoration = decorated.decoration as BoxDecoration;
+    expect(decoration.boxShadow, hasLength(1));
+    expect(
+      decoration.boxShadow!.single.blurRadius,
+      _testEffects.cardShadowBlur,
+    );
+  });
+
+  testWidgets('explicit outlined false still suppresses a default outline', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSurface(
+          key: ValueKey('flat-panel'),
+          variant: TonosSurfaceVariant.panel,
+          outlined: false,
+          child: Text('Flat panel'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panel: AppSurfaceDecoration.outlinedOnly,
+        ),
+      ),
+    );
+
+    final material = _materialFor(tester, 'flat-panel');
+    final shape = material.shape! as RoundedRectangleBorder;
+    expect(shape.side, BorderSide.none);
+  });
+
+  testWidgets('effects-off removes an injected explicit shadow', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSurface(
+          key: ValueKey('effects-off-panel'),
+          variant: TonosSurfaceVariant.panel,
+          child: Text('Effects off'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panel: AppSurfaceDecoration.outlinedCompactShadow,
+        ),
+        effects: _testEffects.copyWith(
+          cardShadow: Colors.transparent,
+          cardShadowBlur: 0,
+          cardShadowOffset: Offset.zero,
+        ),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('effects-off-panel')),
+        matching: find.byType(DecoratedBox),
+      ),
+      findsNothing,
+    );
   });
 
   testWidgets('adds the semantic input outline and media clipping', (
@@ -184,7 +285,7 @@ void main() {
     final inputShape = input.shape! as RoundedRectangleBorder;
     expect(input.color, _testSurfaces.input);
     expect(inputShape.borderRadius, _testShapes.control);
-    expect(inputShape.side.color, _testSurfaces.subtleOutline);
+    expect(inputShape.side.color, _testSurfaces.neutralOutline);
     expect(inputShape.side.width, _testShapes.outlineWidth);
 
     final media = _materialFor(tester, 'media');
@@ -227,6 +328,35 @@ void main() {
     expect(shadow.offset, _testEffects.cardShadowOffset);
   });
 
+  testWidgets('uses the raised-panel shadow role for panelRaised', (
+    tester,
+  ) async {
+    const raisedOffset = Offset(4, 4);
+    await tester.pumpWidget(
+      _testApp(
+        const TonosSurface(
+          key: ValueKey('raised-panel'),
+          variant: TonosSurfaceVariant.panelRaised,
+          child: Text('Raised panel'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panelRaised: AppSurfaceDecoration.outlinedCompactShadow,
+        ),
+        effects: _testEffects.copyWith(raisedPanelShadowOffset: raisedOffset),
+      ),
+    );
+
+    final decorated = tester.widget<DecoratedBox>(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('raised-panel')),
+        matching: find.byType(DecoratedBox),
+      ),
+    );
+    final decoration = decorated.decoration as BoxDecoration;
+    expect(decoration.boxShadow, hasLength(1));
+    expect(decoration.boxShadow!.single.offset, raisedOffset);
+  });
+
   testWidgets('preserves tap behavior without exposing raw styling', (
     tester,
   ) async {
@@ -254,14 +384,19 @@ void main() {
   });
 }
 
-Widget _testApp(Widget child) {
+Widget _testApp(
+  Widget child, {
+  AppEffectTokens effects = _testEffects,
+  AppSurfaceDecorationTokens decorations = _testDecorations,
+}) {
   return MaterialApp(
     theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      extensions: const <ThemeExtension<dynamic>>[
+      extensions: <ThemeExtension<dynamic>>[
         _testShapes,
         _testSurfaces,
-        _testEffects,
+        effects,
+        decorations,
       ],
     ),
     home: Scaffold(body: child),

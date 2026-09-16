@@ -15,6 +15,7 @@ import '../../services/catalog_entity_localizer.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_formatters.dart';
@@ -411,19 +412,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailDeleteTitle),
-            content: Text(strings.workoutDetailDeleteBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(strings.commonDelete),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.workoutDetailDeleteTitle),
+              content: Text(strings.workoutDetailDeleteBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(strings.commonDelete),
+                ),
+              ],
+            ),
           ),
     );
     if (confirm != true) return;
@@ -535,30 +538,34 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final name = await showDialog<String>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailSaveAsPlan),
-            content: TextFormField(
-              key: AppTestKeys.workoutPlanName,
-              initialValue: defaultName,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: strings.workoutDetailPlanName,
+          (context) => TonosDialogFrame(
+            styleFormControls: true,
+            child: AlertDialog(
+              title: Text(strings.workoutDetailSaveAsPlan),
+              content: TextFormField(
+                key: AppTestKeys.workoutPlanName,
+                initialValue: defaultName,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: strings.workoutDetailPlanName,
+                ),
+                textInputAction: TextInputAction.done,
+                onChanged: (value) => planName = value,
+                onFieldSubmitted:
+                    (value) => Navigator.pop(context, value.trim()),
               ),
-              textInputAction: TextInputAction.done,
-              onChanged: (value) => planName = value,
-              onFieldSubmitted: (value) => Navigator.pop(context, value.trim()),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(strings.commonCancel),
+                ),
+                FilledButton(
+                  key: AppTestKeys.workoutPlanSave,
+                  onPressed: () => Navigator.pop(context, planName.trim()),
+                  child: Text(strings.commonSave),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(strings.commonCancel),
-              ),
-              FilledButton(
-                key: AppTestKeys.workoutPlanSave,
-                onPressed: () => Navigator.pop(context, planName.trim()),
-                child: Text(strings.commonSave),
-              ),
-            ],
           ),
     );
     if (name == null || name.trim().isEmpty) return;
@@ -642,10 +649,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final definition = await _repo.fetchDefinitionById(defId);
     if (!mounted || definition == null) return;
 
-    await showModalBottomSheet(
+    await ExerciseDetailSheet.show(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => ExerciseDetailSheet(definition: definition, defId: defId),
+      definition: definition,
+      defId: defId,
     );
   }
 
@@ -655,19 +662,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final discard = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailUnsavedTitle),
-            content: Text(strings.workoutDetailUnsavedBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(strings.workoutDetailDiscard),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.workoutDetailUnsavedTitle),
+              content: Text(strings.workoutDetailUnsavedBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(strings.workoutDetailDiscard),
+                ),
+              ],
+            ),
           ),
     );
     return discard == true;
@@ -915,7 +924,7 @@ class _SessionSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final durationText = formatCompletedWorkoutDuration(
       AppLocalizations.of(context),
@@ -999,8 +1008,14 @@ class _SessionSummaryCard extends StatelessWidget {
                     child: Center(
                       child: BodyHeatmap(
                         frequencyMap: summary.frequencyMap,
-                        lowColor: dataVisualization.heatmapLow,
-                        highColor: dataVisualization.heatmapHigh,
+                        lowColor: tonosHeatmapLowForSurface(
+                          context,
+                          surfaces.card,
+                        ),
+                        highColor: tonosHeatmapHighForSurface(
+                          context,
+                          surfaces.card,
+                        ),
                         width: heatmapSize,
                         height: heatmapSize,
                       ),
@@ -1040,6 +1055,18 @@ class _SummaryMetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final valueForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.sessionSummary)
+            : null;
+    final labelForeground =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.sessionSummary,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -1054,7 +1081,7 @@ class _SummaryMetricTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.primary,
+              color: valueForeground ?? theme.colorScheme.primary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1062,9 +1089,7 @@ class _SummaryMetricTile extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: labelForeground),
           ),
         ],
       ),

@@ -15,6 +15,19 @@ The latest user-run theme/configuration suite passed 200 tests and analysis
 reported no issues; manual qualification remains separate from inventory
 classification.
 
+The 2026-09-15 theme-ready compatibility extension is recorded separately from
+full route migration. TonosThemeReadyCard is a migrated theme-system primitive,
+while its exercise-definition, history, cardio, stretch, measurement, trend,
+and nutrition consumers remain reportable until their complete route scopes and
+final Neo recipes are reviewed. This batch does not change the report-only
+manifest or enroll those consumers in the ratchet.
+
+The [Q3 readiness gate](theme-q3-readiness-gate.md) is the current
+cross-prerequisite record. The Q2 tutorial correction passed 213 scoped tests
+and clean analysis. Readiness remains blocked while reachable-route/manual
+qualification remains open. Inventory classification and ratchet enrollment do
+not convert those items into qualified evidence.
+
 ## C3-D3 Review Correction (2026-09-09)
 
 C3-D3 follow-up: user-run analysis was clean and all 168 scoped tests passed.
@@ -247,6 +260,13 @@ The report makes the following distinctions immediately:
   was deliberately not converted into a second history flow. D1 source and
   token contracts are added; formatting, analysis, tests, device review, and
   full-release qualification remain pending.
+- The secondary-surface compatibility extension now gives evolving
+  non-default exercise-definition, history, cardio, stretch, measurement,
+  trend, food-customization, and food-logging consumers an explicit
+  Classic-Card/Neo-TonosSurface boundary. Semantic and data-visualization
+  roles own the Neo-specific accents. These consumers remain pending for full
+  route migration, final Neo recipes, and device qualification; wrapper
+  adoption alone is not a migrated inventory claim.
 - All other screen/widget candidates remain reportable through pending
   release-surface or catch-all rules.
 

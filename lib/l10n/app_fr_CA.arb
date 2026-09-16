@@ -391,6 +391,8 @@
   "commonExport": "Exporter",
   "commonAdd": "Ajouter",
   "commonRemove": "Retirer",
+  "exerciseProgressRemoveExerciseLabel": "Supprimer {exerciseName} de la progression",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "trainTutorialSpacesTitle": "Entraînement comporte deux espaces",
   "trainTutorialSpacesBody": "Aperçu garde vos commandes d'entraînement prêtes à utiliser à portée de main. Plans vous permet de parcourir, générer et gérer vos plans enregistrés.",
   "trainTutorialWeeklyTitle": "Aperçu hebdomadaire",

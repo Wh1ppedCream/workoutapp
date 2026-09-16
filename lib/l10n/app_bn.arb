@@ -2555,6 +2555,8 @@
   "barcodeTorchUnavailable": "এই ডিভাইসে টর্চ উপলভ্য নয়",
   "commonAdd": "যোগ করুন",
   "commonRemove": "সরান",
+  "exerciseProgressRemoveExerciseLabel": "প্রগ্রেস থেকে {exerciseName} সরান",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "exerciseProgressNoRecordings": "এখনও কোনো রেকর্ডিং নেই",
   "flowAddEvent": "+ ইভেন্ট",
   "flowAddFailure": "+ ব্যর্থতা",

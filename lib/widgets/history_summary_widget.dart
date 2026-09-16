@@ -216,6 +216,17 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   child: Row(
                     children: List.generate(tabLabels.length, (i) {
                       final isSelected = i == _selectedIndex;
+                      final tabForeground =
+                          context.surfaceDecorationTokens.panel.outlined
+                              ? tonosForegroundForSurface(
+                                context,
+                                isSelected
+                                    ? theme.colorScheme.primary
+                                    : surfaces.historyPeriodSelector,
+                              )
+                              : isSelected
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant;
                       return Expanded(
                         child: GestureDetector(
                           onTap: () {
@@ -236,10 +247,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                             child: Text(
                               tabLabels[i],
                               style: TextStyle(
-                                color:
-                                    isSelected
-                                        ? theme.colorScheme.onPrimary
-                                        : theme.colorScheme.onSurfaceVariant,
+                                color: tabForeground,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -272,6 +280,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
 
   Widget _buildLoadedTab(int index, WeightUnit weightUnit) {
     final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final data = _tabData[index];
     if (data == null) {
       return Center(
@@ -298,8 +307,8 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
               child: Center(
                 child: BodyHeatmap(
                   frequencyMap: freqMap,
-                  lowColor: dataVisualization.heatmapLow,
-                  highColor: dataVisualization.heatmapHigh,
+                  lowColor: tonosHeatmapLowForSurface(context, surfaces.card),
+                  highColor: tonosHeatmapHighForSurface(context, surfaces.card),
                   width: heatmapSize,
                   height: heatmapSize,
                 ),

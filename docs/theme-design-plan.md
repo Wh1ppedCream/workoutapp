@@ -1,12 +1,42 @@
 # Scalable Theme Design Plan
 
-## Current Pre-Q2 Status
+## Current Status (2026-09-16)
+
+Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) as the
+current Step 1-19 checklist. This document retains architecture and original
+requirements; historical batch descriptions below are evidence for their dates.
+
+Q3 readiness and original N4 real-route checks were accepted. Neo light/dark,
+development selection, shared previews, subsequent refinements, and the
+repository-side pilot/compatibility qualification are implemented. The user
+has now accepted the current 21-item Neo visual review. The final focused
+selector-contrast verification passed formatting, clean analysis, and 63 tests.
+Complete route-state/reachability disposition, current-code device
+qualification, and matched Classic evidence remain. Steps 14-16 remain future
+delivery work.
+
+The 2026-09-15 theme-ready compatibility extension now gives evolving
+non-default exercise-definition, history, cardio, stretch, measurement, trend,
+and nutrition consumers an explicit Classic/Neo presentation boundary. This
+reduces unowned structural styling without claiming final Neo route design:
+the shared wrapper keeps the original Classic `Card` recipe and resolves a
+semantic `TonosSurface` for Neo. Final product-specific geometry, state
+coverage, and device qualification remain deferred until those areas stabilize.
+
+## Historical Pre-Q2 Status
 
 Read [Pre-Q2 Closeout Ledger](theme-pre-q2-closeout.md) for the current seven-item
 follow-up status and verification evidence. It supersedes historical pending-test
 labels below. The latest user run passed 200 scoped theme/configuration tests;
 manual, device,
 accessibility, visual-parity, and release qualification remain separate gates.
+
+The active [Q3 readiness gate](theme-q3-readiness-gate.md) reconciles those
+historical results with the current dirty Q2 implementation. Its decision is
+complete for the agreed Q3 scope as of 2026-09-11: clean analysis, 226 passing
+tests, and explicit manual-plan confirmation. The gate records the accepted
+1.15 baseline and limitations. Historical pending labels below describe earlier
+work; the Q3 gate controls current readiness for Step 13 development.
 
 ## Upcoming Execution Detail
 
@@ -615,9 +645,10 @@ Use the current style concentrations to organize the work:
   trends, charts, heatmaps, history, and analytics.
 - **Creation and setup:** migrate onboarding, exercise editor, plan generation,
   profile settings, and maintenance tools.
-- **Deferred products:** migrate nutrition, cardio, stretch, and experimental
-  surfaces when their product designs stabilize, while ensuring release themes
-  never navigate into an unthemed active surface.
+- **Evolving products:** give nutrition, cardio, stretch, and experimental
+  surfaces a narrow theme-ready compatibility boundary when needed, then apply
+  their full Neo recipes after the product designs stabilize. Release themes
+  must never navigate into an unthemed active surface.
 
 During migration, replace direct application colors, fixed visual styles, and
 duplicated shapes with semantic tokens or shared primitives. Keep legitimate
@@ -755,21 +786,22 @@ gates inserted before alternate-family implementation.
 
 | Phase | Scope | Status | Detailed steps |
 | --- | --- | --- | --- |
-| 0 | Classic evidence and style inventory | In progress | 1-3 |
-| 1 | Classic factory extraction | Implemented; parity approval pending | 4 |
-| 2 | Selection, startup, and availability | In progress; write ordering remains | 5-6, 17 |
+| 0 | Classic evidence and style inventory | Baseline accepted; current comparisons and broader classification remain | 1-3 |
+| 1 | Classic factory extraction | Implemented; recheck affected parity after refinements | 4 |
+| 2 | Selection, startup, and availability | Implemented; original Q3 behavior accepted | 5-6, 17 |
 | 3 | Focused token model and bridge retirement | Foundation complete; slice-driven extensions remain | 7-8 |
 | 4 | Material boundary, Tonos primitives, Theme Lab | Implemented; compatibility and usage audit remains | 9-11, 17-18 |
-| 5 | Release-reachable surface migrations | In progress | 12 |
-| 9 | Close review findings and protect rendered Classic behavior | Required; not complete | 17 |
-| 10 | Enforce migrated boundaries and qualify shared behavior | Required; not complete | 18 |
-| 11 | Approve alternate-theme readiness | Not started | 19 |
-| 6 | Implement Expressive in development | Blocked by Phase 11 | 13 |
+| 5 | Release-reachable surface migrations | Q3 scope accepted; exhaustive current ledger remains | 12 |
+| 9 | Close review findings and protect rendered Classic behavior | Original Q3 accepted; refinement closure remains | 17 |
+| 10 | Enforce migrated boundaries and qualify shared behavior | Scoped verification accepted; broader enrollment remains | 18 |
+| 11 | Approve alternate-theme readiness | Complete for agreed Q3 scope | 19 |
+| 6 | Implement Neo-Brutalism in development | Implemented pilots; final review and route sweep remain | 13 |
 | 7 | Selector and release qualification | Not started | 14-15 |
 | 8 | Later theme families | Not started | 16 |
 
-Execution order is 0-5 as needed, then 9, 10, 11, 6, 7, 8. Phase 9 fixes
-should be the next implementation batch, before expanding Phase 5 migrations.
+Initial execution order was 0-5 as needed, then 9, 10, 11, 6, 7, 8. Phase 11
+has passed for agreed scope. Continue current refinement qualification and
+route coverage using the consolidated roadmap before Phases 7 and 8.
 The unusual numbering preserves references from earlier work; always use the
 step ID when filing an individual task.
 
@@ -873,7 +905,7 @@ Completion evidence:
 - the document and tests describe Classic as permanent;
 - no alternate theme work is needed to render Classic.
 
-### Step 2: Capture the current visual and behavioral baseline (in progress)
+### Step 2: Capture the current visual and behavioral baseline (original accepted; current comparisons remain)
 
 1. Select stable, release-accessible reference surfaces: root navigation,
    appearance settings, Train, active workout, exercise catalog, exercise
@@ -935,7 +967,7 @@ The first two outcomes are represented by explicit hotspot rules and
 allowlisted data/media rules; the inventory is intentionally still report-only
 until the Step 12 release-surface migrations are complete.
 
-### Step 4: Extract Classic from `main.dart` (implemented; parity gate pending)
+### Step 4: Extract Classic from `main.dart` (implemented; affected parity rechecks remain)
 
 1. Create the initial theme folder and `themes/classic_theme.dart`.
 2. Move the exact existing light and dark `ThemeData` construction out of
@@ -966,7 +998,7 @@ light/dark instances, brightness, and the complete focused extension set.
 Physical screenshot parity remains part of the review evidence, not a reason
 to duplicate the theme definitions.
 
-### Step 5: Add stable selection and preference migration (in progress)
+### Step 5: Add stable selection and preference migration (implemented; original Q3 accepted)
 
 1. Add `AppThemeFamily` with explicit stable codes, beginning with `classic`.
 2. Add immutable `AppThemeSelection` containing family and `ThemeMode`.
@@ -1022,10 +1054,10 @@ Completion evidence:
 - disabling an experimental family leaves the app usable.
 
 This step is implemented by `lib/theme/app_theme_capabilities.dart` and the
-provider integration. The current enum contains only Classic, so the normal
-available-family list remains intentionally one item; future family enum
-values will inherit the same release gate before they can be shown by a Theme
-Lab or selector.
+provider integration. Classic and Neo-Brutalism are registered. Neo remains
+development-only behind the experimental policy; release builds retain Classic
+fallback and deny experimental enrollment. Future families must use this same
+policy before appearing in Theme Lab or a selector.
 
 ### Step 7: Introduce focused design tokens (foundation complete)
 
@@ -1153,7 +1185,7 @@ callbacks, semantics, and layout constraints without accepting raw visual
 values. Widget contracts cover Classic token resolution, light/dark behavior,
 callbacks, semantics, and the shared effect/surface recipes.
 
-### Step 11: Build the development-only Theme Lab (implemented; coverage expands)
+### Step 11: Build the development-only Theme Lab (implemented; current review accepted)
 
 1. Add a gallery that renders all standard Material components, Tonos
    primitives, data colors, typography roles, and interaction states.
@@ -1183,9 +1215,11 @@ large values. Locale changes are scoped to the gallery through
 be opened with the debug-only `TONOS_THEME_LAB=true` compile-time flag or the
 `/__theme_lab` route; neither entry exists in release mode, and the page itself
 renders an empty fallback if referenced from a release build. The gallery
-currently exercises Classic only; alternate family design and release approval
-remain future work. Its widget contract scrolls through the lazy sections and
-checks each review area after it is mounted.
+exercises Classic and development-enabled Neo, including the Neo pilot gallery.
+Shared production presentation, fixtures, representative media, and reset have
+been added. The current Theme Lab and shared-pilot visual review is accepted.
+Device-specific stress, accessibility, and release approval remain separate.
+Widget coverage checks mounted lazy sections and pilot behavior.
 
 ### Step 12: Migrate release surfaces in vertical slices (in progress)
 
@@ -1196,9 +1230,9 @@ checks each review area after it is mounted.
 4. Migrate dashboard, progress, measurements, charts, and health surfaces.
 5. Migrate onboarding, exercise editing, plan generation, maintenance, and
    remaining profile settings.
-6. Handle nutrition, cardio, stretch, and experimental areas when their product
-   layouts stabilize, unless a surface is reachable in release and therefore
-   must be themed earlier.
+6. Handle nutrition, cardio, stretch, and experimental areas with a theme-ready
+   compatibility boundary when they are reachable, then complete their
+   route-specific Neo designs after the product layouts stabilize.
 7. For every slice, replace only presentation ownership. Do not mix in workout,
    persistence, navigation, or catalog behavior changes.
 8. Verify Classic parity, semantics, locales, and large text before marking a
@@ -1210,7 +1244,18 @@ Completion evidence:
 - repository checks prevent new structural hardcoding in migrated areas;
 - unfinished features cannot expose a partially themed screen in release.
 
-### Step 13: Design Material 3 Expressive (blocked until Step 19)
+### Step 13: Finish Neo-Brutalism (N1/N2 complete; current visual review accepted)
+
+The user selected Neo-Brutalism first on 2026-09-11 and approved N1 revision 5.
+N2 capabilities and the N3 registered family/Theme Lab implementation are
+automated-verified. Original N4 real-route acceptance and the current 21-item
+Neo visual review are recorded. Subsequent refinements need affected-surface
+checks; N5 route-state/reachability and N6 qualification remain. Follow the
+[consolidated checklist](theme-consolidated-roadmap.md) for current tasks and
+the [Neo specification](theme-neo-brutalism-plan.md) for visual recipes.
+The agreed Q3 gate has passed. The
+Expressive-specific checklist below is historical guidance for a later family,
+not the current implementation order.
 
 1. Define the intended Tonos personality and where expression helps core tasks.
 2. Design Expressive light and dark together rather than deriving one at the
@@ -1313,9 +1358,11 @@ The baseline for visual comparisons is the pre-extraction recipe plus explicitly
 approved deviations, including the readable light anatomy correction. Never
 update an expected value merely to make a changed implementation pass.
 
-### Step 17: Close the review findings and add consumer parity evidence (in progress)
+### Step 17: Close the review findings and add consumer parity evidence (visual review accepted; state evidence in progress)
 
-The following matrix records the original review assessment. Read it together
+The following matrix records the original review assessment. The current
+21-item Neo visual review is accepted; remaining work is state, device,
+accessibility, and parity evidence. Read it together
 with the implementation status below and the playbook's current-status section;
 its repair wording is historical, not a fresh list of unimplemented defects.
 
@@ -1873,6 +1920,15 @@ Trace `onboarding_flow.dart`, `guided_tutorial_overlay.dart`, exercise editing,
 automatic/premade plan flows, maintenance pages, nutrition, and any cardio,
 stretch, form, or experimental entry points that actually exist.
 
+The current compatibility extension covers the non-default exercise-definition,
+full-history, cardio, stretch, current-measurement, generic-trend,
+food-customization, and food-logging consumers with a shared Classic/Neo
+surface boundary. This is an interim theme-ready step: do not treat wrapper
+adoption as final Neo implementation, product completion, or route
+qualification. Revisit these consumers for route-specific Neo geometry,
+loading/empty/error states, accessibility and device evidence after their
+feature designs stabilize.
+
 Extract repeated sections/fields/actions and local themes. Treat tutorial
 spotlight/scrim effects as an explicit recipe with a readable fallback and
 preserved focus/dismissal behavior. Confirm development-only QA pages cannot
@@ -1979,7 +2035,7 @@ Exit: scope-specific migration checks work, representative real consumers
 respond to injected recipes, and outstanding device/manual checks are recorded
 with an owner and explicit disposition.
 
-### Step 19: Approve readiness to start alternate-theme implementation (not started)
+### Step 19: Approve readiness to start alternate-theme implementation (complete for agreed Q3 scope)
 
 Create a dated readiness record in the theming documentation with links to
 evidence. Every item must be satisfied or carry a specific approved exception;
@@ -2014,32 +2070,30 @@ drive unapproved changes to Classic.
 | Step | Status | Next required outcome |
 | --- | --- | --- |
 | 1 | Complete | Maintain permanent Classic contract |
-| 2 | In progress | Reproducible references and reviewed deviations |
+| 2 | Original baseline accepted | Finish post-refinement matched comparisons |
 | 3 | In progress | Complete classification and evidence for migrated scope |
-| 4 | Implemented | Close parity evidence through Steps 17-19 |
-| 5 | Implemented; qualification ongoing | Preserve tested ordered writes, retry and lifetime handling; finish cross-route evidence |
-| 6 | Complete for current Classic-only enum | Extend denial tests when another family is added |
+| 4 | Implemented | Recheck affected Classic parity through Steps 2/17 |
+| 5 | Implemented; original Q3 accepted | Preserve ordered writes, retry and lifetime handling; revalidate relevant changes |
+| 6 | Complete for Classic/development Neo | Maintain experimental release denial |
 | 7 | Foundation complete | Add only migration-justified roles and adoption checks |
 | 8 | Complete | Keep zero production AppColors consumers |
 | 9 | Foundation implemented | Preserve framework defaults; audit local overrides |
 | 10 | Implemented; adoption ongoing | Preserve variants and complete release consumers |
-| 11 | Implemented; coverage ongoing | Exercise real recipes and production fallbacks |
-| 12 | In progress | Finish batches 12A-12E |
-| 17 | In progress | Close review findings and consumer parity gaps |
-| 18 | Not complete | Enforce migrated boundaries and qualify shared behavior |
-| 19 | Not started | Record readiness approval |
-| 13 | Blocked by Step 19 | Implement Expressive in development |
+| 11 | Implemented; automatable coverage and current visual review accepted | Revalidate only affected pilots and record N6 device evidence |
+| 12 | Current 21-item Neo visual review accepted; boundary contract added | Finish exhaustive state/reachability ledger with N5 |
+| 17 | Original Q3 and current visual review accepted | Close remaining state/device and affected parity gaps |
+| 18 | Scoped work accepted; expansion remaining | Enroll qualified scopes and revalidate changed behavior |
+| 19 | Complete for agreed scope | Manual results accepted; 226 tests passed |
+| 13 | N1/N2 complete; N3 automation complete; N4 and current visual review accepted | Finish N5 state/reachability and N6 qualification |
 | 14 | Not started | Approved, localized family selector |
 | 15 | Not started | Full alternate-family release qualification |
 | 16 | Not started | Later families through the same architecture |
 
-Next batch: continue the bounded 12B active-workout slices, then work through
-12C-12E using the same procedure and tighten Step 18 checks as each scope
-qualifies.
-Finish remaining Step 2 and Step 17 visual/device evidence and Step 19 before
-implementing Step 13.
+Next action: follow the consolidated roadmap's current comparison, route-sweep,
+and qualification tasks. N3 pilot implementation and repository-side
+automation are already present.
 
-Concrete execution order: use batches B1-B6 in
+Historical migration execution order: use batches B1-B6 in
 [Theming Batch Playbook](theme-batch-playbook.md), then C1-C3, D1-D3, E1-E2,
 and Q1-Q3. These are subdivisions of existing phases, not new theme families or
 permission to mark a whole file migrated. B1, B2, B3, B4, B5, and B6 are

@@ -375,8 +375,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Material(
-          elevation: 12,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          elevation: context.effectTokens.swapSheetElevation,
+          borderRadius: context.shapeTokens.swapSheet,
           clipBehavior: Clip.antiAlias,
           child: FutureBuilder<_SwapExerciseData>(
             future: _dataFuture,
@@ -634,7 +634,7 @@ class _ExerciseSwapBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
 
     return Card(
       child: Padding(
@@ -706,8 +706,14 @@ class _ExerciseSwapBox extends StatelessWidget {
                   child: Center(
                     child: BodyHeatmap(
                       frequencyMap: entry.frequencyMap,
-                      lowColor: dataVisualization.heatmapLow,
-                      highColor: dataVisualization.heatmapHigh,
+                      lowColor: tonosHeatmapLowForSurface(
+                        context,
+                        surfaces.card,
+                      ),
+                      highColor: tonosHeatmapHighForSurface(
+                        context,
+                        surfaces.card,
+                      ),
                       width: heatmapSize,
                       height: heatmapSize,
                     ),

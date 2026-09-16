@@ -47,8 +47,18 @@ class LookupDao {
     Database db,
     String table,
     int id,
-    String name,
-  ) {
+    String name, {
+    bool clearCatalogIdentity = false,
+  }) {
+    if (clearCatalogIdentity) {
+      return db.rawUpdate(
+        'UPDATE $table '
+        'SET name = ?, '
+        'catalog_id = CASE WHEN name = ? THEN catalog_id ELSE NULL END '
+        'WHERE id = ?',
+        [name, name, id],
+      );
+    }
     return db.update(table, {'name': name}, where: 'id = ?', whereArgs: [id]);
   }
 
@@ -475,7 +485,7 @@ class LookupDao {
   ///
   /// Returns number of rows affected.
   static Future<int> updateEquipment(Database db, int id, String name) {
-    return _updateNamed(db, 'equipment', id, name);
+    return _updateNamed(db, 'equipment', id, name, clearCatalogIdentity: true);
   }
 
   /// Deletes an equipment lookup entry by ID.
@@ -547,7 +557,7 @@ class LookupDao {
   ///
   /// Returns number of rows affected.
   static Future<int> updateMuscle(Database db, int id, String name) {
-    return _updateNamed(db, 'muscles', id, name);
+    return _updateNamed(db, 'muscles', id, name, clearCatalogIdentity: true);
   }
 
   /// Deletes a muscle lookup entry by ID.

@@ -13,6 +13,8 @@ import 'package:env_test/theme/tokens/app_motion_tokens.dart';
 import 'package:env_test/theme/tokens/app_nutrition_tokens.dart';
 import 'package:env_test/theme/tokens/app_semantic_colors.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
+import 'package:env_test/theme/tokens/app_settings_presentation_tokens.dart';
+import 'package:env_test/theme/tokens/app_surface_decoration_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
 
 void main() {
@@ -167,17 +169,31 @@ void main() {
       trainSource,
       contains('ProfileIdentityPalette.currentProfileAvatar'),
     );
-    expect(trainSource, contains('surfaces.trainTabSurfaceOpacity'));
     expect(trainSource, contains('surfaces.splitWorkoutDividerOpacity'));
     expect(trainSource, isNot(contains('Colors.lightGreen')));
     expect(trainSource, isNot(contains('Colors.green.shade700')));
     expect(trainSource, isNot(contains('color: Colors.purple')));
 
+    final trainTabsSource =
+        File('lib/widgets/tonos_train_tabs.dart').readAsStringSync();
+    expect(trainTabsSource, contains('surfaces.trainTabSurfaceOpacity'));
+    expect(
+      trainTabsSource,
+      contains("key: const ValueKey('tonos-train-tabs-frame')"),
+    );
+    expect(trainTabsSource, contains('width: shapes.outlineWidth'));
+
+    expect(trainSource, contains('variant: TonosSurfaceVariant.panelRaised'));
+    expect(trainSource, contains('TonosActionVariant.primary'));
+
     final weightCardSource =
         File('lib/widgets/weight_card.dart').readAsStringSync();
     expect(weightCardSource, contains('semantic.workoutCompleted'));
+    expect(weightCardSource, contains('semantic.workoutExerciseCompleted'));
+    expect(weightCardSource, contains('semantic.workoutSetCompleted'));
     expect(weightCardSource, contains('surfaces.workoutCardCompleteFill'));
     expect(weightCardSource, contains('surfaces.workoutSetCompleteFill'));
+    expect(weightCardSource, contains('effects.completedSetShadowOffset'));
     expect(weightCardSource, contains('surfaces.workoutChangeSetOutline'));
     expect(weightCardSource, contains('shapes.control'));
     expect(weightCardSource, contains('context.shapeTokens.mediaThumbnail'));
@@ -185,32 +201,23 @@ void main() {
 
     final completionSource =
         File('lib/widgets/session_complete_sheet.dart').readAsStringSync();
+    expect(completionSource, contains('class WorkoutCompletionPresentation'));
+    expect(completionSource, contains('WorkoutCompletionExerciseCard('));
     expect(completionSource, contains('semantic.completionAccent'));
     expect(completionSource, contains('dataVisualization.sessionExercises'));
     expect(completionSource, contains('dataVisualization.sessionSets'));
     expect(completionSource, contains('dataVisualization.sessionDuration'));
     expect(completionSource, contains('dataVisualization.sessionVolume'));
     expect(completionSource, contains('shapes.workoutSection'));
-    expect(
-      completionSource,
-      contains('context.surfaceTokens.completionMetricFill'),
-    );
-    expect(
-      completionSource,
-      contains('context.surfaceTokens.completionMetricBorder'),
-    );
-    expect(
-      completionSource,
-      contains('context.surfaceTokens.completionSetFill'),
-    );
-    expect(
-      completionSource,
-      contains('context.surfaceTokens.completionExerciseFill'),
-    );
-    expect(
-      completionSource,
-      contains('context.surfaceTokens.completionExerciseBorder'),
-    );
+    expect(completionSource, contains('surfaces.completionMetricFill'));
+    expect(completionSource, contains('surfaces.completionMetricBorder'));
+    expect(completionSource, contains('surfaces.completionSetFill'));
+    expect(completionSource, contains('surfaces.completionExerciseFill'));
+    expect(completionSource, contains('surfaces.completionExerciseBorder'));
+
+    final pilotSource =
+        File('lib/theme/neo_brutalism_pilot_gallery.dart').readAsStringSync();
+    expect(pilotSource, contains('WorkoutCompletionPresentation('));
 
     final optimizedSource =
         File(
@@ -335,14 +342,14 @@ void main() {
     final presetInfoSource =
         File('lib/widgets/preset_info_card.dart').readAsStringSync();
     expect(presetInfoSource, contains('shapes.metric'));
-    expect(presetInfoSource, contains('dataVisualization.heatmapLow'));
+    expect(presetInfoSource, contains('tonosHeatmapLowForSurface'));
     expect(presetInfoSource, contains('surfaces.card'));
     expect(presetInfoSource, contains('semantic.strongContent'));
 
     final presetBarSource =
         File('lib/widgets/preset_bar.dart').readAsStringSync();
     expect(presetBarSource, contains('WorkoutThumbnailFrame'));
-    expect(presetBarSource, contains('dataVisualization.heatmapLow'));
+    expect(presetBarSource, contains('tonosHeatmapLowForSurface'));
 
     final swapSource =
         File('lib/widgets/swap_exercise_sheet.dart').readAsStringSync();
@@ -418,8 +425,8 @@ void main() {
       'lib/screens/exercise/session_detail_screen.dart',
     );
     expect(detailSource, contains('semantic.editingActive'));
-    expect(detailSource, contains('dataVisualization.heatmapLow'));
-    expect(detailSource, contains('dataVisualization.heatmapHigh'));
+    expect(detailSource, contains('tonosHeatmapLowForSurface'));
+    expect(detailSource, contains('tonosHeatmapHighForSurface'));
     expect(detailSource, contains('surfaces.sessionSummary'));
     expect(detailSource, contains('shapes.metric'));
     expect(detailSource, contains('context.shapeTokens.mediaThumbnail'));
@@ -585,6 +592,7 @@ void main() {
       recordBadge: BorderRadius.circular(45),
       recordBadgeCompact: BorderRadius.circular(46),
       sheet: BorderRadius.circular(46),
+      swapSheet: BorderRadius.vertical(top: Radius.circular(47)),
       pill: BorderRadius.circular(48),
       settingsAction: BorderRadius.circular(50),
       settingsPanel: BorderRadius.circular(52),
@@ -667,6 +675,16 @@ void main() {
       BorderRadius.lerp(base.sheet, BorderRadius.circular(46), 0.5),
     );
     expect(target.copyWith().sheet, target.sheet);
+    expect(target.swapSheet, BorderRadius.vertical(top: Radius.circular(47)));
+    expect(
+      midpoint.swapSheet,
+      BorderRadius.lerp(
+        base.swapSheet,
+        BorderRadius.vertical(top: Radius.circular(47)),
+        0.5,
+      ),
+    );
+    expect(target.copyWith().swapSheet, target.swapSheet);
     expect(target.pill, BorderRadius.circular(48));
     expect(
       midpoint.pill,
@@ -810,6 +828,11 @@ void main() {
     expect(semanticCopy.ongoingSessionAction, semantic.ongoingSessionAction);
     expect(semanticCopy.ongoingSessionExit, semantic.ongoingSessionExit);
     expect(semanticCopy.workoutCompleted, semantic.workoutCompleted);
+    expect(
+      semanticCopy.workoutExerciseCompleted,
+      semantic.workoutExerciseCompleted,
+    );
+    expect(semanticCopy.workoutSetCompleted, semantic.workoutSetCompleted);
     expect(semanticCopy.workoutAddChangeSet, semantic.workoutAddChangeSet);
     expect(semanticCopy.swapCancel, semantic.swapCancel);
     expect(semanticCopy.swapConfirm, semantic.swapConfirm);
@@ -835,6 +858,7 @@ void main() {
     expect(shapeCopy.flowIcon, AppShapeTokens.classic.flowIcon);
     expect(shapeCopy.card, AppShapeTokens.classic.card);
     expect(shapeCopy.sheet, AppShapeTokens.classic.sheet);
+    expect(shapeCopy.swapSheet, AppShapeTokens.classic.swapSheet);
     expect(shapeCopy.pill, AppShapeTokens.classic.pill);
     expect(shapeCopy.settingsAction, AppShapeTokens.classic.settingsAction);
     expect(shapeCopy.settingsPanel, AppShapeTokens.classic.settingsPanel);
@@ -930,6 +954,7 @@ void main() {
     expect(motionCopy.emphasized, AppMotionTokens.classic.emphasized);
     expect(motionCopy.page, AppMotionTokens.classic.page);
     expect(motionCopy.quick, AppMotionTokens.classic.quick);
+    expect(motionCopy.pageTransition, AppMotionTokens.classic.pageTransition);
     expect(motionCopy.reduced, AppMotionTokens.classic.reduced);
     expect(motionCopy.standardCurve, AppMotionTokens.classic.standardCurve);
     expect(motionCopy.emphasizedCurve, AppMotionTokens.classic.emphasizedCurve);
@@ -944,10 +969,28 @@ void main() {
       effectsCopy.exerciseDetailSheetElevation,
       effects.exerciseDetailSheetElevation,
     );
+    expect(effectsCopy.swapSheetElevation, effects.swapSheetElevation);
+    expect(
+      effectsCopy.progressRemoveBadgeShadow,
+      effects.progressRemoveBadgeShadow,
+    );
     expect(effectsCopy.feedbackElevation, effects.feedbackElevation);
     expect(effectsCopy.cardShadow, effects.cardShadow);
     expect(effectsCopy.cardShadowBlur, effects.cardShadowBlur);
     expect(effectsCopy.cardShadowOffset, effects.cardShadowOffset);
+    expect(
+      effectsCopy.completedSetShadowOffset,
+      effects.completedSetShadowOffset,
+    );
+    expect(
+      effectsCopy.raisedPanelShadowOffset,
+      effects.raisedPanelShadowOffset,
+    );
+    expect(
+      effectsCopy.primaryActionShadowOffset,
+      effects.primaryActionShadowOffset,
+    );
+    expect(effectsCopy.dialogShadowOffset, effects.dialogShadowOffset);
     expect(effectsCopy.shadowColor, effects.shadowColor);
     expect(effectsCopy.shadowOpacity, effects.shadowOpacity);
     expect(effectsCopy.shadowBlur, effects.shadowBlur);
@@ -1152,6 +1195,7 @@ void main() {
     );
     expect(motion.standard, isNotNull);
     expect(motion.quick, isNotNull);
+    expect(motion.pageTransition, isNotNull);
     expect(motion.reduced, Duration.zero);
 
     final effects = classicLight.effectTokens.lerp(
@@ -1162,7 +1206,12 @@ void main() {
     expect(effects.cardShadow, isNotNull);
     expect(effects.cardShadowBlur, isNotNull);
     expect(effects.cardShadowOffset, isNotNull);
+    expect(effects.raisedPanelShadowOffset, isNotNull);
+    expect(effects.primaryActionShadowOffset, isNotNull);
+    expect(effects.dialogShadowOffset, isNotNull);
     expect(effects.exerciseDetailSheetElevation, 12);
+    expect(effects.swapSheetElevation, 12);
+    expect(effects.progressRemoveBadgeShadow, isNotNull);
     expect(effects.noEffectsBackdropBlurSigma, 0);
 
     final data = classicLight.dataVisualizationTokens.lerp(
@@ -1229,6 +1278,11 @@ void _expectCompleteTokenSet(ThemeData theme) {
   expect(theme.semanticColors, isA<AppSemanticColors>());
   expect(theme.shapeTokens, isA<AppShapeTokens>());
   expect(theme.surfaceTokens, isA<AppSurfaceTokens>());
+  expect(theme.surfaceDecorationTokens, isA<AppSurfaceDecorationTokens>());
+  expect(
+    theme.settingsPresentationTokens,
+    isA<AppSettingsPresentationTokens>(),
+  );
   expect(theme.motionTokens, isA<AppMotionTokens>());
   expect(theme.effectTokens, isA<AppEffectTokens>());
   expect(theme.dataVisualizationTokens, isA<AppDataVisualizationTokens>());

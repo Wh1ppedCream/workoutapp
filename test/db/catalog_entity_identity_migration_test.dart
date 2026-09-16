@@ -1,3 +1,4 @@
+import 'package:env_test/db/lookup_dao.dart';
 import 'package:env_test/db/schema.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -46,4 +47,60 @@ void main() {
       );
     },
   );
+
+  test('renaming a shipped lookup row turns it into a custom value', () async {
+    final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
+    addTearDown(db.close);
+
+    await Schema.createV1(db);
+    await Schema.migrateV3(db);
+    await Schema.migrateV62(db);
+    final equipmentId = await db.insert('equipment', {
+      'name': 'Barbell',
+      'catalog_id': 'tonos.equipment.0005',
+    });
+    final muscleId = await db.insert('muscles', {
+      'name': 'Biceps Brachii',
+      'catalog_id': 'tonos.muscle.0006',
+    });
+
+    await LookupDao.updateEquipment(db, equipmentId, 'Barbell');
+    expect(
+      (await db.query(
+        'equipment',
+        where: 'id = ?',
+        whereArgs: [equipmentId],
+      )).single['catalog_id'],
+      'tonos.equipment.0005',
+    );
+    await LookupDao.updateMuscle(db, muscleId, 'Biceps Brachii');
+    expect(
+      (await db.query(
+        'muscles',
+        where: 'id = ?',
+        whereArgs: [muscleId],
+      )).single['catalog_id'],
+      'tonos.muscle.0006',
+    );
+
+    await LookupDao.updateEquipment(db, equipmentId, 'Custom Bar');
+    await LookupDao.updateMuscle(db, muscleId, 'Custom Arm Muscle');
+
+    expect(
+      (await db.query(
+        'equipment',
+        where: 'id = ?',
+        whereArgs: [equipmentId],
+      )).single['catalog_id'],
+      isNull,
+    );
+    expect(
+      (await db.query(
+        'muscles',
+        where: 'id = ?',
+        whereArgs: [muscleId],
+      )).single['catalog_id'],
+      isNull,
+    );
+  });
 }

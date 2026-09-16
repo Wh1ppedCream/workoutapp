@@ -52,6 +52,10 @@ void main() {
       measuringScrim: const Color(0xFF123456),
       confirmationScrim: const Color(0xFF123456),
       coachScrim: const Color(0xFF123456),
+      focusShadowOpacity: 0.12,
+      focusShadowBlur: 7,
+      focusShadowSpread: 3,
+      focusShadowOffset: const Offset(1, 2),
       cardShadow: const BoxShadow(color: Colors.red, blurRadius: 4),
       coachShadow: const BoxShadow(color: Colors.red, blurRadius: 4),
       pageDuration: const Duration(milliseconds: 10),
@@ -147,6 +151,21 @@ void main() {
     expect(
       midpoint.coachScrim,
       Color.lerp(base.coachScrim, target.coachScrim, 0.5),
+    );
+    expect(target.focusShadowOpacity, 0.12);
+    expect(base.copyWith().focusShadowOpacity, base.focusShadowOpacity);
+    expect(midpoint.focusShadowOpacity, closeTo(0.24, 1e-9));
+    expect(target.focusShadowBlur, 7);
+    expect(base.copyWith().focusShadowBlur, base.focusShadowBlur);
+    expect(midpoint.focusShadowBlur, 14.5);
+    expect(target.focusShadowSpread, 3);
+    expect(base.copyWith().focusShadowSpread, base.focusShadowSpread);
+    expect(midpoint.focusShadowSpread, 2.5);
+    expect(target.focusShadowOffset, const Offset(1, 2));
+    expect(base.copyWith().focusShadowOffset, base.focusShadowOffset);
+    expect(
+      midpoint.focusShadowOffset,
+      Offset.lerp(base.focusShadowOffset, target.focusShadowOffset, 0.5),
     );
     expect(
       target.cardShadow,
@@ -260,12 +279,70 @@ void main() {
       expect(tokens.coachShape, BorderRadius.circular(20));
       expect(tokens.scrim, const Color(0xAD000000));
       expect(tokens.coachScrim, const Color.fromRGBO(0, 0, 0, 0.42));
+      expect(tokens.focusShadowOpacity, 0.36);
+      expect(tokens.focusShadowBlur, 22);
+      expect(tokens.focusShadowSpread, 2);
+      expect(tokens.focusShadowOffset, Offset.zero);
       expect(tokens.guidedScrollDuration, const Duration(milliseconds: 260));
       expect(tokens.coachDuration, const Duration(milliseconds: 220));
       expect(tokens.effectsEnabled, isTrue);
       expect(tokens.cardShadow.blurRadius, 28);
       expect(tokens.coachShadow.offset, const Offset(0, 10));
     }
+  });
+
+  testWidgets('guided focus shadow follows tutorial effect tokens', (
+    tester,
+  ) async {
+    final key = GlobalKey();
+    const focusShape = BorderRadius.all(Radius.circular(13));
+    final tokens = AppTutorialTokens.classic.copyWith(
+      focusShape: focusShape,
+      focusShadowOpacity: 0.12,
+      focusShadowBlur: 7,
+      focusShadowSpread: 3,
+      focusShadowOffset: const Offset(1, 2),
+    );
+    await tester.pumpWidget(
+      _host(
+        Stack(
+          children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(key: key, width: 100, height: 50),
+            ),
+            GuidedTutorialOverlay(
+              onFinished: (_) {},
+              steps: [
+                GuidedTutorialStep(
+                  targetKey: key,
+                  title: 'Focus',
+                  body: 'Focus effect',
+                ),
+              ],
+            ),
+          ],
+        ),
+        tokens: tokens,
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final primary = ClassicThemeDefinition.light().colorScheme.primary;
+    final focus = tester.widget<DecoratedBox>(
+      find.byWidgetPredicate((widget) {
+        if (widget is! DecoratedBox) return false;
+        final decoration = widget.decoration;
+        return decoration is BoxDecoration &&
+            decoration.borderRadius == focusShape &&
+            decoration.boxShadow?.isNotEmpty == true;
+      }),
+    );
+    final shadow = (focus.decoration as BoxDecoration).boxShadow!.single;
+    expect(shadow.color, primary.withValues(alpha: 0.12));
+    expect(shadow.blurRadius, 7);
+    expect(shadow.spreadRadius, 3);
+    expect(shadow.offset, const Offset(1, 2));
   });
 
   testWidgets('guided progression and completion work with effects disabled', (

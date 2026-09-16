@@ -13,14 +13,33 @@ class PresetTransactionDao {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool uniqueName = false,
     bool isDraft = false,
   }) {
     if (activate && isDraft) {
       throw ArgumentError('A draft plan cannot be active.');
     }
     return db.transaction((txn) async {
+      var resolvedName = name;
+      if (uniqueName) {
+        // Allocate inside the transaction, including names held by drafts.
+        var suffix = 2;
+        while ((await txn.query(
+          'preset_definitions',
+          columns: ['id'],
+          where:
+              profileId == null
+                  ? 'name = ? AND profile_id IS NULL'
+                  : 'name = ? AND profile_id = ?',
+          whereArgs:
+              profileId == null ? [resolvedName] : [resolvedName, profileId],
+          limit: 1,
+        )).isNotEmpty) {
+          resolvedName = '$name (${suffix++})';
+        }
+      }
       final values = <String, Object?>{
-        'name': name,
+        'name': resolvedName,
         'is_draft': isDraft ? 1 : 0,
       };
       if (profileId != null) values['profile_id'] = profileId;

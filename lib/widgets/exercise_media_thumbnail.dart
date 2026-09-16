@@ -37,6 +37,41 @@ class ExerciseMediaThumbnail extends StatefulWidget {
   State<ExerciseMediaThumbnail> createState() => _ExerciseMediaThumbnailState();
 }
 
+/// Shared media framing used by cached thumbnails and fixture previews.
+class ExerciseMediaFrame extends StatelessWidget {
+  const ExerciseMediaFrame({
+    super.key,
+    required this.child,
+    this.size = 56,
+    this.borderRadius = const BorderRadius.all(Radius.circular(14)),
+    this.padding = const EdgeInsets.all(4),
+    this.framed = true,
+  });
+
+  final Widget child;
+  final double size;
+  final BorderRadius borderRadius;
+  final EdgeInsets padding;
+  final bool framed;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaces = context.surfaceTokens;
+    return Container(
+      width: size,
+      height: size,
+      padding: padding,
+      decoration: BoxDecoration(
+        color: framed ? surfaces.mediaPlaceholder : null,
+        borderRadius: borderRadius,
+        border: framed ? Border.all(color: surfaces.mediaOutline) : null,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+}
+
 class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
   AppRepository get _repo => context.read<AppRepository>();
   late Future<_ThumbnailData?> _thumbnailFuture;
@@ -158,17 +193,11 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   @override
   Widget build(BuildContext context) {
-    final surfaces = context.surfaceTokens;
-    final child = Container(
-      width: widget.size,
-      height: widget.size,
+    final child = ExerciseMediaFrame(
+      size: widget.size,
       padding: widget.padding,
-      decoration: BoxDecoration(
-        color: widget.framed ? surfaces.mediaPlaceholder : null,
-        borderRadius: widget.borderRadius,
-        border: widget.framed ? Border.all(color: surfaces.mediaOutline) : null,
-      ),
-      clipBehavior: Clip.antiAlias,
+      borderRadius: widget.borderRadius,
+      framed: widget.framed,
       child: FutureBuilder<_ThumbnailData?>(
         future: _thumbnailFuture,
         builder: (context, snapshot) {
@@ -211,7 +240,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
 
   Widget _buildHeatmapFallback(BuildContext context) {
     final theme = Theme.of(context);
-    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in widget.definition.bodyParts) bodyPart.name: 1.0,
     });
@@ -227,8 +256,8 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
     final heatmapSize = widget.size - widget.padding.horizontal;
     return BodyHeatmap(
       frequencyMap: heatmapFrequencyMap,
-      lowColor: dataVisualization.heatmapLow,
-      highColor: dataVisualization.heatmapHigh,
+      lowColor: tonosHeatmapLowForSurface(context, surfaces.mediaPlaceholder),
+      highColor: tonosHeatmapHighForSurface(context, surfaces.mediaPlaceholder),
       width: heatmapSize,
       height: heatmapSize,
     );

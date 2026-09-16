@@ -16,6 +16,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/preset_generation_service.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
@@ -30,6 +31,7 @@ import 'preset_generation_qa.dart';
 import '../../widgets/history_content.dart';
 
 import 'exercise_catalog_page.dart';
+import '../../services/active_plan_store.dart';
 import 'muscle_filter_page.dart';
 import '../profile/settings/gym_exercise_settings_page.dart';
 
@@ -184,101 +186,104 @@ class _Train2PageState extends State<Train2Page> {
       builder:
           (dialogContext) => StatefulBuilder(
             builder: (dialogContext, setDialogState) {
-              return AlertDialog(
-                title: Text(strings.trainOptimizedSettingsTitle),
-                content: SizedBox(
-                  width: double.maxFinite,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(strings.trainOptimizedSettingsBudgetBody),
-                        const SizedBox(height: 4),
-                        Text(
-                          strings.trainOptimizedSettingsFocusBody,
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          initialValue: draftMinutes,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) => draftMinutes = value,
-                          decoration: InputDecoration(
-                            labelText: strings.trainWorkoutDuration,
-                            suffixText: strings.trainMinutesShort,
-                            border: OutlineInputBorder(),
+              return TonosDialogFrame(
+                styleFormControls: true,
+                child: AlertDialog(
+                  title: Text(strings.trainOptimizedSettingsTitle),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(strings.trainOptimizedSettingsBudgetBody),
+                          const SizedBox(height: 4),
+                          Text(
+                            strings.trainOptimizedSettingsFocusBody,
+                            style: TextStyle(fontSize: 12),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          initialValue: draftMaxSets,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) => draftMaxSets = value,
-                          decoration: InputDecoration(
-                            labelText: strings.trainSetsPerExercise,
-                            suffixText: strings.trainSetsShort,
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            initialValue: draftMinutes,
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) => draftMinutes = value,
+                            decoration: InputDecoration(
+                              labelText: strings.trainWorkoutDuration,
+                              suffixText: strings.trainMinutesShort,
+                              border: OutlineInputBorder(),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          strings.trainBodypartFocus,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          strings.trainBodypartFocusHelp,
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        BodypartFocusChips(
-                          bodyParts: bodyParts,
-                          preferredBodypartIds: draftPreferred,
-                          blacklistedBodypartIds: draftBlacklisted,
-                          emptyText: strings.trainBodypartsLoadFailed,
-                          onChanged:
-                              (selection) => setDialogState(() {
-                                draftPreferred
-                                  ..clear()
-                                  ..addAll(selection.preferredBodypartIds);
-                                draftBlacklisted
-                                  ..clear()
-                                  ..addAll(selection.blacklistedBodypartIds);
-                              }),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            initialValue: draftMaxSets,
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) => draftMaxSets = value,
+                            decoration: InputDecoration(
+                              labelText: strings.trainSetsPerExercise,
+                              suffixText: strings.trainSetsShort,
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            strings.trainBodypartFocus,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            strings.trainBodypartFocusHelp,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          BodypartFocusChips(
+                            bodyParts: bodyParts,
+                            preferredBodypartIds: draftPreferred,
+                            blacklistedBodypartIds: draftBlacklisted,
+                            emptyText: strings.trainBodypartsLoadFailed,
+                            onChanged:
+                                (selection) => setDialogState(() {
+                                  draftPreferred
+                                    ..clear()
+                                    ..addAll(selection.preferredBodypartIds);
+                                  draftBlacklisted
+                                    ..clear()
+                                    ..addAll(selection.blacklistedBodypartIds);
+                                }),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(strings.commonCancel),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        final minutes = int.tryParse(draftMinutes.trim());
+                        final maxSets = int.tryParse(draftMaxSets.trim());
+                        if (minutes == null ||
+                            minutes <= 0 ||
+                            maxSets == null ||
+                            maxSets < SessionSpec.defaultMinSetsPerExercise ||
+                            maxSets > SessionSpec.maxAllowedSetsPerExercise) {
+                          return;
+                        }
+                        Navigator.of(dialogContext).pop(
+                          _OptimizedWorkoutSettingsResult(
+                            minutes: minutes,
+                            maxSets: maxSets,
+                            preferredBodypartIds: {...draftPreferred},
+                            blacklistedBodypartIds: {...draftBlacklisted},
+                          ),
+                        );
+                      },
+                      child: Text(strings.commonSave),
+                    ),
+                  ],
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text(strings.commonCancel),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      final minutes = int.tryParse(draftMinutes.trim());
-                      final maxSets = int.tryParse(draftMaxSets.trim());
-                      if (minutes == null ||
-                          minutes <= 0 ||
-                          maxSets == null ||
-                          maxSets < SessionSpec.defaultMinSetsPerExercise ||
-                          maxSets > SessionSpec.maxAllowedSetsPerExercise) {
-                        return;
-                      }
-                      Navigator.of(dialogContext).pop(
-                        _OptimizedWorkoutSettingsResult(
-                          minutes: minutes,
-                          maxSets: maxSets,
-                          preferredBodypartIds: {...draftPreferred},
-                          blacklistedBodypartIds: {...draftBlacklisted},
-                        ),
-                      );
-                    },
-                    child: Text(strings.commonSave),
-                  ),
-                ],
               );
             },
           ),
@@ -339,15 +344,17 @@ class _Train2PageState extends State<Train2Page> {
     return showDialog<void>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: Text(AppLocalizations.of(context).trainRestTitle),
-            content: Text(AppLocalizations.of(context).trainRestBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(AppLocalizations.of(context).commonOkay),
-              ),
-            ],
+          (dialogContext) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(AppLocalizations.of(context).trainRestTitle),
+              content: Text(AppLocalizations.of(context).trainRestBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(AppLocalizations.of(context).commonOkay),
+                ),
+              ],
+            ),
           ),
     );
   }
@@ -700,7 +707,15 @@ class _Train2PageState extends State<Train2Page> {
                 nextNum == 1
                     ? strings.trainNewPlanFirst
                     : strings.trainNewPlan(nextNum);
-            final newId = await _repo.createPreset(name, profileId: profileId);
+            await ActivePlanStore(repository: _repo).load(profileId);
+            final newId = await _repo.createPresetAtomic(
+              name: name,
+              profileId: profileId,
+              exercises: const [],
+              activate: true,
+              uniqueName: true,
+            );
+            if (!mounted) return;
             _openPreset(newId, edit: true);
             if (!mounted) return;
             setState(() => _presetsRefreshToken++);
@@ -737,7 +752,10 @@ class _Train2PageState extends State<Train2Page> {
                       minWidth: 32,
                       minHeight: 32,
                     ),
-                    color: semantic.trainOptimizedAction,
+                    color: tonosForegroundForSurface(
+                      context,
+                      semantic.trainOptimizedAction,
+                    ),
                     onPressed: _openOptimizedWorkoutSettings,
                   ),
         ),

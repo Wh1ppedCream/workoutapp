@@ -4329,6 +4329,7 @@ class DatabaseHelper {
     required List<WorkoutExerciseWrite> exercises,
     PresetAutoSettingsWrite? autoSettings,
     bool activate = false,
+    bool uniqueName = false,
     bool isDraft = false,
   }) async {
     final db = await database;
@@ -4339,6 +4340,7 @@ class DatabaseHelper {
       exercises: exercises,
       autoSettings: autoSettings,
       activate: activate,
+      uniqueName: uniqueName,
       isDraft: isDraft,
     );
   }

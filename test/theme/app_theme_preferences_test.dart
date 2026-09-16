@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/providers/theme_provider.dart';
+import 'package:env_test/theme/app_theme_capabilities.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_preferences.dart';
 import 'package:env_test/theme/app_theme_selection.dart';
@@ -89,6 +90,26 @@ void main() {
       expect(provider.loaded, isTrue);
       expect(provider.mode, ThemeMode.light);
       expect(provider.family, AppThemeFamily.classic);
+    });
+
+    test('round trips Neo-Brutalism through the provider boundary', () async {
+      SharedPreferences.setMockInitialValues({});
+      final provider = ThemeProvider(
+        capabilities: const AppThemeCapabilities(
+          experimentalThemesEnabled: true,
+          isReleaseMode: false,
+        ),
+      );
+
+      await provider.ready;
+      await provider.setFamily(AppThemeFamily.neoBrutalism);
+
+      expect(provider.family, AppThemeFamily.neoBrutalism);
+      final preferences = await SharedPreferences.getInstance();
+      expect(
+        preferences.getString(AppThemePreferences.themeFamilyKey),
+        'neo_brutalism',
+      );
     });
 
     test('falls back when the preference store cannot be read', () async {

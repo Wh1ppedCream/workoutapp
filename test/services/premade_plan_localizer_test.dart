@@ -42,6 +42,37 @@ void main() {
     expect(resolved.description, plan.description);
   });
 
+  test('prefers an exact regional translation before base language', () async {
+    final localizer = PremadePlanLocalizer(
+      loader:
+          () async => jsonEncode({
+            'version': 1,
+            'plans': {
+              'fr': {
+                plan.catalogId: {
+                  'sourceName': 'Créé par Tonos',
+                  'groupName': 'Corps entier',
+                  'name': 'Corps entier',
+                  'description': 'Description française.',
+                },
+              },
+              'fr_CA': {
+                plan.catalogId: {
+                  'sourceName': 'Créé par Tonos',
+                  'groupName': 'Corps entier',
+                  'name': 'Entraînement complet',
+                  'description': 'Description canadienne.',
+                },
+              },
+            },
+          }),
+    );
+
+    final resolved = await localizer.resolve(plan, const Locale('fr', 'CA'));
+    expect(resolved.name, 'Entraînement complet');
+    expect(resolved.description, 'Description canadienne.');
+  });
+
   test('inherits localized content for generated one-hour plans', () async {
     final oneHour = PremadeTrainingPlan(
       id: '${plan.id}_one_hour',
@@ -108,6 +139,61 @@ void main() {
     },
   );
 
+  test(
+    'uses one coherent fallback for a one-hour plan without a builder',
+    () async {
+      final oneHour = PremadeTrainingPlan(
+        id: '${plan.id}_one_hour',
+        sourceName: plan.sourceName,
+        planGroupName: plan.planGroupName,
+        name: plan.name,
+        description: 'Canonical one-hour fallback.',
+        exercises: plan.exercises,
+        durationMinutes: 60,
+      );
+      final localizer = PremadePlanLocalizer(
+        loader:
+            () async => jsonEncode({
+              'version': 1,
+              'plans': {
+                'es': {
+                  plan.catalogId: {
+                    'sourceName': 'Hecho en casa',
+                    'groupName': 'Cuerpo completo',
+                    'name': 'Cuerpo completo',
+                    'description': 'Sesión completa.',
+                  },
+                },
+              },
+            }),
+      );
+
+      final resolved = await localizer.resolve(oneHour, const Locale('es'));
+      expect(resolved.sourceName, oneHour.sourceName);
+      expect(resolved.groupName, oneHour.planGroupName);
+      expect(resolved.name, oneHour.name);
+      expect(resolved.description, 'Canonical one-hour fallback.');
+    },
+  );
+
+  test('rejects malformed locale and plan objects', () async {
+    final malformedLocale = PremadePlanLocalizer(
+      loader: () async => '{"version":1,"plans":{"es":[]}}',
+    );
+    await expectLater(
+      malformedLocale.resolve(plan, const Locale('es')),
+      throwsFormatException,
+    );
+
+    final malformedPlan = PremadePlanLocalizer(
+      loader: () async => '{"version":1,"plans":{"es":{"invalid-plan":[]}}}',
+    );
+    await expectLater(
+      malformedPlan.resolve(plan, const Locale('es')),
+      throwsFormatException,
+    );
+  });
+
   test('ships every direct built-in plan in every supported locale', () async {
     final decoded =
         jsonDecode(
@@ -117,6 +203,10 @@ void main() {
             )
             as Map<String, dynamic>;
     final plansByLocale = Map<String, dynamic>.from(decoded['plans'] as Map);
+    expect(
+      plansByLocale.keys,
+      unorderedEquals(const ['es', 'fr', 'bn', 'zh', 'hi']),
+    );
     final directPlans = premadeTrainingPlans
         .where((candidate) => !candidate.id.endsWith('_one_hour'))
         .toList(growable: false);

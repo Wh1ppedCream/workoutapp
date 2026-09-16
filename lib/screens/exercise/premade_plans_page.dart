@@ -777,6 +777,11 @@ class OnboardingPlanActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final actionForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.planActionBar) : null;
+    final actionDisabledForeground =
+        neo ? actionForeground!.withValues(alpha: 0.45) : null;
     return SafeArea(
       top: false,
       child: Container(
@@ -805,6 +810,13 @@ class OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton.icon(
+                style:
+                    neo
+                        ? FilledButton.styleFrom(
+                          foregroundColor: actionForeground,
+                          disabledForegroundColor: actionDisabledForeground,
+                        )
+                        : null,
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
                 label: Text(strings.premadeReviewPlans),
@@ -928,6 +940,13 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final filterForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.planFilter) : null;
+    final filterSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surfaces.planFilter)
+            : scheme.onSurfaceVariant;
     final subtitle =
         !enabled
             ? strings.premadeEquipmentSelectProfile
@@ -947,7 +966,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
         child: Row(
           children: [
-            Icon(Icons.tune, color: scheme.primary),
+            Icon(Icons.tune, color: neo ? filterForeground : scheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -956,6 +975,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
                   Text(
                     strings.swapFilterProfileEquipment,
                     style: theme.textTheme.titleSmall?.copyWith(
+                      color: neo ? filterForeground : null,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -963,7 +983,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                      color: filterSecondary,
                     ),
                   ),
                 ],
@@ -1049,13 +1069,16 @@ class _PremadeDurationSwitch extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final shapes = context.shapeTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final durationForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.planDuration) : null;
     final isTwoHour = durationMinutes == 120;
     final activeStyle = theme.textTheme.labelLarge?.copyWith(
-      color: theme.colorScheme.primary,
+      color: neo ? durationForeground : theme.colorScheme.primary,
       fontWeight: FontWeight.w800,
     );
     final inactiveStyle = theme.textTheme.labelLarge?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
+      color: neo ? durationForeground : theme.colorScheme.onSurfaceVariant,
       fontWeight: FontWeight.w700,
     );
 
@@ -1233,6 +1256,13 @@ class _PremadePlanGroupTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final planCount = plans.length;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final groupForeground =
+        neo ? tonosForegroundForSurface(context, surfaces.planGroup) : null;
+    final groupSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surfaces.planGroup)
+            : theme.colorScheme.onSurfaceVariant;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       color: surfaces.planGroup,
@@ -1241,9 +1271,12 @@ class _PremadePlanGroupTile extends StatelessWidget {
         initiallyExpanded: false,
         tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        iconColor: groupForeground,
+        collapsedIconColor: groupForeground,
         title: Text(
           groupName,
           style: theme.textTheme.titleMedium?.copyWith(
+            color: neo ? groupForeground : null,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -1251,9 +1284,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
           planCount == 0
               ? strings.premadeNoTemplates
               : strings.premadePlansCount(planCount),
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.labelMedium?.copyWith(color: groupSecondary),
         ),
         children: [
           if (plans.isEmpty)
@@ -1264,7 +1295,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
                 child: Text(
                   strings.premadeTemplatesLater,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: groupSecondary,
                   ),
                 ),
               ),
@@ -1458,7 +1489,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                   _isExpanded
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
-              duration: motion.quick,
+              duration: appMotionDuration(context, motion.quick),
               firstCurve: Curves.easeOutCubic,
               secondCurve: Curves.easeOutCubic,
               sizeCurve: Curves.easeOutCubic,

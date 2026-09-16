@@ -67,24 +67,25 @@ class PremadePlanLocalizer {
       return fallback;
     }
     final bundle = await (_bundle ??= _load());
-    final localized = bundle[locale.languageCode];
-    final direct = localized?[plan.catalogId];
-    if (direct != null) return direct;
-    if (plan.id.endsWith(suffix)) {
-      final baseId = plan.id.substring(0, plan.id.length - suffix.length);
-      final base = localized?['tonos.plan.$baseId'];
-      if (base != null) {
-        return LocalizedPremadePlan(
-          sourceName: base.sourceName,
-          groupName: base.groupName,
-          name: base.name,
-          description:
-              oneHourDescriptionBuilder?.call(
-                oneHourDurationLabel ?? '1',
-                base.name,
-              ) ??
-              '1-hour version of ${base.name} using the main movements from the full template.',
-        );
+    for (final localeKey in _localeKeys(locale)) {
+      final localized = bundle[localeKey];
+      final direct = localized?[plan.catalogId];
+      if (direct != null) return direct;
+      if (plan.id.endsWith(suffix)) {
+        final baseId = plan.id.substring(0, plan.id.length - suffix.length);
+        final base = localized?['tonos.plan.$baseId'];
+        if (base != null) {
+          if (oneHourDescriptionBuilder == null) return fallback;
+          return LocalizedPremadePlan(
+            sourceName: base.sourceName,
+            groupName: base.groupName,
+            name: base.name,
+            description: oneHourDescriptionBuilder(
+              oneHourDurationLabel ?? '1',
+              base.name,
+            ),
+          );
+        }
       }
     }
     return fallback;
@@ -103,10 +104,17 @@ class PremadePlanLocalizer {
       if (!_localePattern.hasMatch(locale)) {
         throw FormatException('Invalid premade-plan locale "$locale".');
       }
-      if (localeEntry.value is! Map) continue;
+      if (localeEntry.value is! Map) {
+        throw FormatException(
+          'Premade-plan locale "$locale" must contain an object.',
+        );
+      }
       final plans = <String, LocalizedPremadePlan>{};
       for (final planEntry in (localeEntry.value as Map).entries) {
-        if (planEntry.value is! Map) continue;
+        final planId = planEntry.key.toString();
+        if (!_planIdPattern.hasMatch(planId) || planEntry.value is! Map) {
+          throw FormatException('Invalid localized premade plan "$planId".');
+        }
         final value = planEntry.value as Map;
         final source = value['sourceName']?.toString().trim();
         final group = value['groupName']?.toString().trim();
@@ -120,11 +128,9 @@ class PremadePlanLocalizer {
             group.isEmpty ||
             name.isEmpty ||
             description.isEmpty) {
-          throw FormatException(
-            'Incomplete localized plan "${planEntry.key}".',
-          );
+          throw FormatException('Incomplete localized plan "$planId".');
         }
-        plans[planEntry.key.toString()] = LocalizedPremadePlan(
+        plans[planId] = LocalizedPremadePlan(
           sourceName: source,
           groupName: group,
           name: name,
@@ -136,5 +142,14 @@ class PremadePlanLocalizer {
     return result;
   }
 
+  static Iterable<String> _localeKeys(Locale locale) sync* {
+    final countryCode = locale.countryCode;
+    if (countryCode != null && countryCode.isNotEmpty) {
+      yield '${locale.languageCode}_$countryCode';
+    }
+    yield locale.languageCode;
+  }
+
+  static final _planIdPattern = RegExp(r'^tonos\.plan\.[a-z0-9_]+$');
   static final _localePattern = RegExp(r'^[a-z]{2,3}(?:_[A-Z]{2})?$');
 }

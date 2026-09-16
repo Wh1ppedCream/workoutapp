@@ -382,6 +382,7 @@ class _BoundaryTab<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final dropdownIconColor = settingsInputForeground(context);
     final boundaryLabels = [
       strings.volumeMaintenance,
       strings.volumeMinEffective,
@@ -402,15 +403,32 @@ class _BoundaryTab<T> extends StatelessWidget {
               child: DropdownButtonFormField<T>(
                 isExpanded: true,
                 value: selected,
+                dropdownColor: settingsDropdownMenuColor(context),
+                style: settingsInputTextStyle(context),
+                iconEnabledColor: dropdownIconColor,
+                iconDisabledColor: dropdownIconColor?.withValues(alpha: 0.38),
                 decoration: settingsFieldDecoration(context, label: title),
+                selectedItemBuilder:
+                    (_) =>
+                        items
+                            .map(
+                              (item) => settingsDropdownTriggerLabel(
+                                context,
+                                itemLabelFor?.call(context, item) ??
+                                    Text(itemName(item)),
+                              ),
+                            )
+                            .toList(),
                 items:
                     items
                         .map(
                           (item) => DropdownMenuItem(
                             value: item,
-                            child:
-                                itemLabelFor?.call(context, item) ??
-                                Text(itemName(item)),
+                            child: settingsDropdownMenuLabel(
+                              context,
+                              itemLabelFor?.call(context, item) ??
+                                  Text(itemName(item)),
+                            ),
                           ),
                         )
                         .toList(),

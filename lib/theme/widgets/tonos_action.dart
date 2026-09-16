@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme_extensions.dart';
+import 'tonos_action_depth.dart';
 
 /// Semantic Material action recipes used by Tonos feature surfaces.
 enum TonosActionVariant { primary, tonal, outlined, destructive, text }
@@ -54,6 +55,13 @@ class TonosAction extends StatelessWidget {
     if (expand) {
       action = SizedBox(width: double.infinity, child: action);
     }
+    action = tonosWithPrimaryActionDepth(
+      context,
+      action,
+      enabled:
+          variant == TonosActionVariant.primary &&
+          (onPressed != null || onLongPress != null),
+    );
     if (tooltip != null) {
       action = Tooltip(message: tooltip!, child: action);
     }

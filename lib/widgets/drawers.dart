@@ -233,7 +233,7 @@ class ProfileTile extends StatelessWidget {
             : scheme.surfaceContainerHighest.withValues(alpha: 0.36);
 
     return AnimatedContainer(
-      duration: motion.quick,
+      duration: appMotionDuration(context, motion.quick),
       margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         color: tileColor,

@@ -82,15 +82,39 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shellForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressSelector,
+            )
+            : null;
+
+    Widget shell(Widget child) {
+      if (usesInkRecipe) {
+        return TonosSurface(
+          variant: TonosSurfaceVariant.panelRaised,
+          color: surfaces.exerciseProgressSelector,
+          margin: widget.margin,
+          padding: EdgeInsets.zero,
+          borderRadius: context.shapeTokens.card,
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      }
+      return Card(margin: widget.margin, child: child);
+    }
+
     return FutureBuilder<List<WorkoutReportSession>>(
       future: _sessionsFuture,
       initialData: _lastSessions,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return Card(
-            margin: widget.margin,
-            child: SizedBox(
+          return shell(
+            SizedBox(
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -98,12 +122,17 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         }
 
         if (snapshot.hasError && !snapshot.hasData) {
-          return Card(
-            margin: widget.margin,
-            child: Padding(
+          return shell(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
                 AppLocalizations.of(context).logbookCalendarLoadFailed,
+                style:
+                    usesInkRecipe
+                        ? Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: shellForeground)
+                        : null,
               ),
             ),
           );
@@ -121,60 +150,63 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         final selectedRange = _selectedPeriodRange();
         final maxSessionsPerDay = _maxSessionsPerDayCache;
 
-        return Card(
-          margin: widget.margin,
-          child: Padding(
+        return shell(
+          Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _CalendarModeTabs(selectedMode: _mode, onChanged: _selectMode),
                 const SizedBox(height: 14),
-                _CalendarModeBody(
-                  mode: _mode,
-                  visibleMonth: _visibleMonth,
-                  visibleThreeMonthEnd: _visibleThreeMonthEnd,
-                  selectedDay: _selectedDay,
-                  selectedWeekStart: _selectedWeekStart,
-                  selectedMonth: _selectedMonth,
-                  visibleYear: _visibleYear,
-                  selectedYear: _selectedYear,
-                  sessionsByDay: sessionsByDay,
-                  maxSessionsPerDay: maxSessionsPerDay,
-                  onPreviousMonth:
-                      () => _showMonth(
-                        DateTime(_visibleMonth.year, _visibleMonth.month - 1),
-                      ),
-                  onNextMonth:
-                      () => _showMonth(
-                        DateTime(_visibleMonth.year, _visibleMonth.month + 1),
-                      ),
-                  onPreviousThreeMonths:
-                      () => _showThreeMonthBlock(
-                        DateTime(
-                          _visibleThreeMonthEnd.year,
-                          _visibleThreeMonthEnd.month - 3,
+                _buildCalendarModeSurface(
+                  context,
+                  _CalendarModeBody(
+                    mode: _mode,
+                    visibleMonth: _visibleMonth,
+                    visibleThreeMonthEnd: _visibleThreeMonthEnd,
+                    selectedDay: _selectedDay,
+                    selectedWeekStart: _selectedWeekStart,
+                    selectedMonth: _selectedMonth,
+                    visibleYear: _visibleYear,
+                    selectedYear: _selectedYear,
+                    sessionsByDay: sessionsByDay,
+                    maxSessionsPerDay: maxSessionsPerDay,
+                    onPreviousMonth:
+                        () => _showMonth(
+                          DateTime(_visibleMonth.year, _visibleMonth.month - 1),
                         ),
-                      ),
-                  onNextThreeMonths:
-                      () => _showThreeMonthBlock(
-                        DateTime(
-                          _visibleThreeMonthEnd.year,
-                          _visibleThreeMonthEnd.month + 3,
+                    onNextMonth:
+                        () => _showMonth(
+                          DateTime(_visibleMonth.year, _visibleMonth.month + 1),
                         ),
-                      ),
-                  onPreviousYear: () => _showYear(_visibleYear - 1),
-                  onNextYear: () => _showYear(_visibleYear + 1),
-                  onSelectDay: (day) => setState(() => _selectedDay = day),
-                  onSelectWeek:
-                      (weekStart) =>
-                          setState(() => _selectedWeekStart = weekStart),
-                  onSelectMonth:
-                      (month) => setState(() {
-                        _selectedMonth = month;
-                        _visibleYear = month.year;
-                      }),
-                  onSelectYear: (year) => setState(() => _selectedYear = year),
+                    onPreviousThreeMonths:
+                        () => _showThreeMonthBlock(
+                          DateTime(
+                            _visibleThreeMonthEnd.year,
+                            _visibleThreeMonthEnd.month - 3,
+                          ),
+                        ),
+                    onNextThreeMonths:
+                        () => _showThreeMonthBlock(
+                          DateTime(
+                            _visibleThreeMonthEnd.year,
+                            _visibleThreeMonthEnd.month + 3,
+                          ),
+                        ),
+                    onPreviousYear: () => _showYear(_visibleYear - 1),
+                    onNextYear: () => _showYear(_visibleYear + 1),
+                    onSelectDay: (day) => setState(() => _selectedDay = day),
+                    onSelectWeek:
+                        (weekStart) =>
+                            setState(() => _selectedWeekStart = weekStart),
+                    onSelectMonth:
+                        (month) => setState(() {
+                          _selectedMonth = month;
+                          _visibleYear = month.year;
+                        }),
+                    onSelectYear:
+                        (year) => setState(() => _selectedYear = year),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _SelectedPeriodHeatmapSummary(
@@ -200,6 +232,18 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCalendarModeSurface(BuildContext context, Widget child) {
+    if (!context.surfaceDecorationTokens.panel.outlined) return child;
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.panel,
+      color: context.surfaceTokens.card,
+      padding: const EdgeInsets.all(10),
+      borderRadius: context.shapeTokens.compact,
+      child: child,
     );
   }
 
@@ -466,23 +510,69 @@ class _CalendarModeTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final selectedFill =
+        usesInkRecipe ? surfaces.settingsHero : context.cs.primary;
+    final unselectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.calendarModeSelector)
+            : context.cs.onSurface;
+    final selectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, selectedFill)
+            : context.cs.onPrimary;
+    final railRadius = usesInkRecipe ? shapes.control : shapes.pill;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: surfaces.calendarModeSelector,
-        borderRadius: shapes.pill,
+        borderRadius: railRadius,
+        border:
+            usesInkRecipe
+                ? Border.all(
+                  color: tonosOutlineForSurface(
+                    context,
+                    surfaces.calendarModeSelector,
+                  ),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
       child: Row(
         children: [
-          _buildButton(context, _CalendarRangeMode.month, 'M'),
-          _buildButton(context, _CalendarRangeMode.threeMonth, '3M'),
-          _buildButton(context, _CalendarRangeMode.year, isSpanish ? 'A' : 'Y'),
+          _buildButton(
+            context,
+            _CalendarRangeMode.month,
+            'M',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
+          _buildButton(
+            context,
+            _CalendarRangeMode.threeMonth,
+            '3M',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
+          _buildButton(
+            context,
+            _CalendarRangeMode.year,
+            isSpanish ? 'A' : 'Y',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
           _buildButton(
             context,
             _CalendarRangeMode.fourYear,
             isSpanish ? '4A' : '4Y',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
           ),
         ],
       ),
@@ -492,28 +582,47 @@ class _CalendarModeTabs extends StatelessWidget {
   Widget _buildButton(
     BuildContext context,
     _CalendarRangeMode mode,
-    String label,
-  ) {
+    String label, {
+    required Color selectedFill,
+    required Color selectedForeground,
+    required Color unselectedForeground,
+  }) {
     final isSelected = selectedMode == mode;
     final shapes = context.shapeTokens;
     return Expanded(
       child: InkWell(
-        borderRadius: shapes.pill,
+        borderRadius:
+            context.surfaceDecorationTokens.panel.outlined
+                ? shapes.control
+                : shapes.pill,
         onTap: () => onChanged(mode),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: appMotionDuration(
+            context,
+            context.motionTokens.exerciseDetailSelection,
+          ),
           padding: const EdgeInsets.symmetric(vertical: 9),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? context.cs.primary : Colors.transparent,
-            borderRadius: shapes.pill,
+            color: isSelected ? selectedFill : Colors.transparent,
+            borderRadius:
+                context.surfaceDecorationTokens.panel.outlined
+                    ? shapes.control
+                    : shapes.pill,
+            border:
+                context.surfaceDecorationTokens.panel.outlined && isSelected
+                    ? Border.all(
+                      color: tonosOutlineForSurface(context, selectedFill),
+                      width: shapes.outlineWidth,
+                    )
+                    : null,
           ),
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: isSelected ? context.cs.onPrimary : context.cs.onSurface,
+              color: isSelected ? selectedForeground : unselectedForeground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -946,18 +1055,33 @@ class _PeriodCircleButton extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionCount == 0
             ? 0.0
             : (sessionCount / maxSessionCount).clamp(0.0, 1.0).toDouble();
+    final selectedFill = usesInkRecipe ? surfaces.settingsHero : cs.primary;
+    final activityFill =
+        usesInkRecipe
+            ? Color.lerp(
+              surfaces.calendarDayEmpty,
+              surfaces.catalogSelection,
+              0.45 + intensity * 0.55,
+            )!
+            : cs.primary.withValues(alpha: 0.22 + intensity * 0.48);
     final backgroundColor =
         isSelected
-            ? cs.primary
+            ? selectedFill
             : hasWorkout
-            ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
+            ? activityFill
             : surfaces.calendarDayEmpty;
-    final foregroundColor = isSelected ? cs.onPrimary : cs.onSurface;
+    final foregroundColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, backgroundColor)
+            : isSelected
+            ? cs.onPrimary
+            : cs.onSurface;
 
     return Semantics(
       button: true,
@@ -970,11 +1094,18 @@ class _PeriodCircleButton extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: appMotionDuration(context, context.motionTokens.quick),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 shape: BoxShape.circle,
+                border:
+                    usesInkRecipe && isSelected
+                        ? Border.all(
+                          color: tonosOutlineForSurface(context, selectedFill),
+                          width: shapes.outlineWidth,
+                        )
+                        : null,
               ),
               child: Text(
                 label,
@@ -993,7 +1124,7 @@ class _PeriodCircleButton extends StatelessWidget {
               _WorkoutCountBadge(
                 count: sessionCount,
                 compact: compact,
-                foregroundColor: isSelected ? cs.primary : cs.onPrimary,
+                foregroundColor: isSelected ? selectedFill : cs.onPrimary,
                 backgroundColor: isSelected ? cs.onPrimary : cs.primary,
               ),
           ],
@@ -1166,21 +1297,32 @@ class _CalendarDayButton extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionsPerDay == 0
             ? 0.0
             : (sessionCount / maxSessionsPerDay).clamp(0.0, 1.0).toDouble();
-    final baseColor =
-        hasWorkout
-            ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
-            : surfaces.calendarDayEmpty;
-    final backgroundColor = isSelected ? cs.primary : baseColor;
-    final foregroundColor =
+    final selectedFill = usesInkRecipe ? surfaces.settingsHero : cs.primary;
+    final activityFill =
+        usesInkRecipe
+            ? Color.lerp(
+              surfaces.calendarDayEmpty,
+              surfaces.catalogSelection,
+              0.45 + intensity * 0.55,
+            )!
+            : cs.primary.withValues(alpha: 0.22 + intensity * 0.48);
+    final backgroundColor =
         isSelected
-            ? cs.onPrimary
+            ? selectedFill
+            : hasWorkout
+            ? activityFill
+            : surfaces.calendarDayEmpty;
+    final foregroundColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, backgroundColor)
             : isCurrentMonth
-            ? cs.onSurface
+            ? (isSelected ? cs.onPrimary : cs.onSurface)
             : cs.onSurfaceVariant.withValues(alpha: 0.45);
 
     return Semantics(
@@ -1194,13 +1336,19 @@ class _CalendarDayButton extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: appMotionDuration(context, context.motionTokens.quick),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 shape: BoxShape.circle,
                 border:
-                    DateUtils.isSameDay(day, DateTime.now()) && !isSelected
+                    usesInkRecipe && isSelected
+                        ? Border.all(
+                          color: tonosOutlineForSurface(context, selectedFill),
+                          width: shapes.outlineWidth,
+                        )
+                        : DateUtils.isSameDay(day, DateTime.now()) &&
+                            !isSelected
                         ? Border.all(color: cs.primary, width: 1.4)
                         : null,
               ),
@@ -1306,7 +1454,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final dataVisualization = context.dataVisualizationTokens;
+            final surfaces = context.surfaceTokens;
             final maxWidth = constraints.maxWidth;
             final gap = maxWidth < 330 ? 10.0 : 16.0;
             final heatmapBox = (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
@@ -1331,13 +1479,22 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                                 height: 28,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: dataVisualization.heatmapHigh,
+                                  color: tonosHeatmapHighForSurface(
+                                    context,
+                                    surfaces.card,
+                                  ),
                                 ),
                               )
                               : BodyHeatmap(
                                 frequencyMap: frequencyMap,
-                                lowColor: dataVisualization.heatmapLow,
-                                highColor: dataVisualization.heatmapHigh,
+                                lowColor: tonosHeatmapLowForSurface(
+                                  context,
+                                  surfaces.card,
+                                ),
+                                highColor: tonosHeatmapHighForSurface(
+                                  context,
+                                  surfaces.card,
+                                ),
                                 width: heatmapSize,
                                 height: heatmapSize,
                               ),
@@ -1411,8 +1568,24 @@ class _CalendarMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final semantic = context.semanticColors;
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final metricSurface =
+        usesInkRecipe ? surfaces.workoutMetricRange : surfaces.card;
+    final valueColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, metricSurface)
+            : semantic.strongContent;
+    final labelColor =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, metricSurface)
+            : semantic.mutedContent;
     return TonosSurface(
-      variant: TonosSurfaceVariant.compactCard,
+      variant:
+          usesInkRecipe
+              ? TonosSurfaceVariant.panel
+              : TonosSurfaceVariant.compactCard,
+      color: usesInkRecipe ? metricSurface : null,
       padding: EdgeInsets.symmetric(
         vertical: compact ? 8 : 12,
         horizontal: compact ? 12 : 16,
@@ -1430,7 +1603,7 @@ class _CalendarMetricCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: compact ? 13 : 14,
                 fontWeight: FontWeight.bold,
-                color: semantic.strongContent,
+                color: valueColor,
               ),
             ),
           ),
@@ -1439,10 +1612,7 @@ class _CalendarMetricCard extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: compact ? 9 : 10,
-              color: semantic.mutedContent,
-            ),
+            style: TextStyle(fontSize: compact ? 9 : 10, color: labelColor),
           ),
         ],
       ),
@@ -1467,12 +1637,25 @@ class _SelectedPeriodSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    return Container(
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final periodSurface =
+        usesInkRecipe
+            ? surfaces.catalogSelection
+            : surfaces.historySelectedPeriod;
+    final foreground = tonosForegroundForSurface(context, periodSurface);
+    final titleForeground =
+        usesInkRecipe ? foreground : theme.colorScheme.onSurface;
+    final subtitleForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, periodSurface)
+            : theme.colorScheme.onSurfaceVariant;
+    final content = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: surfaces.historySelectedPeriod,
+        color: periodSurface,
         borderRadius: shapes.historySelectedPeriod,
       ),
       child: Column(
@@ -1489,7 +1672,8 @@ class _SelectedPeriodSummary extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: titleForeground,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1498,8 +1682,8 @@ class _SelectedPeriodSummary extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.cs.onSurfaceVariant,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: subtitleForeground,
                       ),
                     ),
                   ],
@@ -1507,6 +1691,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
               ),
               IconButton(
                 tooltip: AppLocalizations.of(context).logbookViewAllSessions,
+                color: titleForeground,
                 icon: const Icon(Icons.fullscreen),
                 onPressed: onOpenFullHistory,
               ),
@@ -1532,6 +1717,20 @@ class _SelectedPeriodSummary extends StatelessWidget {
           ],
         ],
       ),
+    );
+    if (!usesInkRecipe) return content;
+    return Theme(
+      data: theme.copyWith(
+        colorScheme: theme.colorScheme.copyWith(
+          onSurface: titleForeground,
+          onSurfaceVariant: subtitleForeground,
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: foreground,
+          displayColor: foreground,
+        ),
+      ),
+      child: content,
     );
   }
 }

@@ -734,6 +734,8 @@
   "commonImport": "导入",
   "commonName": "名称",
   "commonRemove": "移除",
+  "exerciseProgressRemoveExerciseLabel": "从进度中移除{exerciseName}",
+  "@exerciseProgressRemoveExerciseLabel": {"placeholders": {"exerciseName": {"type": "String"}}},
   "commonRename": "重命名",
   "commonReset": "重置",
   "commonRetry": "重试",

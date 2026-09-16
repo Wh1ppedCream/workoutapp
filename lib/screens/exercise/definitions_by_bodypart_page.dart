@@ -10,6 +10,7 @@ import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
 import '../../utils/localized_body_part_name.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -19,6 +20,7 @@ import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/recommended_sets_editor_dialog.dart';
 import '../../widgets/set_stat_chip.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'definitions_by_muscle_page.dart';
 
 /// Bodypart detail page for the exercise focus library.
@@ -253,7 +255,7 @@ class _BodyPartHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Card(
+          TonosThemeReadyCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -483,7 +485,10 @@ class _ExerciseMetadata extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.green.shade600,
+                color:
+                    context.surfaceDecorationTokens.panel.outlined
+                        ? context.semanticColors.positive
+                        : Colors.green.shade600,
                 fontWeight: FontWeight.w500,
               ),
             )
@@ -495,7 +500,10 @@ class _ExerciseMetadata extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.green.shade600,
+                      color:
+                          context.surfaceDecorationTokens.panel.outlined
+                              ? context.semanticColors.positive
+                              : Colors.green.shade600,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

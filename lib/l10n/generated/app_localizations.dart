@@ -7910,6 +7910,12 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get commonRemove;
 
+  /// No description provided for @exerciseProgressRemoveExerciseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {exerciseName} from Progress'**
+  String exerciseProgressRemoveExerciseLabel(String exerciseName);
+
   /// No description provided for @automaticSaving.
   ///
   /// In en, this message translates to:

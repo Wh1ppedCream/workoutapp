@@ -20,6 +20,10 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     this.measuringScrim = const Color(0x66000000),
     this.confirmationScrim = const Color(0xB3000000),
     this.coachScrim = const Color.fromRGBO(0, 0, 0, 0.42),
+    this.focusShadowOpacity = 0.36,
+    this.focusShadowBlur = 22,
+    this.focusShadowSpread = 2,
+    this.focusShadowOffset = Offset.zero,
     this.cardShadow = const BoxShadow(
       color: Color.fromRGBO(0, 0, 0, 0.28),
       blurRadius: 28,
@@ -53,6 +57,10 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
   final Color measuringScrim;
   final Color confirmationScrim;
   final Color coachScrim;
+  final double focusShadowOpacity;
+  final double focusShadowBlur;
+  final double focusShadowSpread;
+  final Offset focusShadowOffset;
   final BoxShadow cardShadow;
   final BoxShadow coachShadow;
   final Duration pageDuration;
@@ -78,6 +86,10 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     Color? measuringScrim,
     Color? confirmationScrim,
     Color? coachScrim,
+    double? focusShadowOpacity,
+    double? focusShadowBlur,
+    double? focusShadowSpread,
+    Offset? focusShadowOffset,
     BoxShadow? cardShadow,
     BoxShadow? coachShadow,
     Duration? pageDuration,
@@ -101,6 +113,10 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     measuringScrim: measuringScrim ?? this.measuringScrim,
     confirmationScrim: confirmationScrim ?? this.confirmationScrim,
     coachScrim: coachScrim ?? this.coachScrim,
+    focusShadowOpacity: focusShadowOpacity ?? this.focusShadowOpacity,
+    focusShadowBlur: focusShadowBlur ?? this.focusShadowBlur,
+    focusShadowSpread: focusShadowSpread ?? this.focusShadowSpread,
+    focusShadowOffset: focusShadowOffset ?? this.focusShadowOffset,
     cardShadow: cardShadow ?? this.cardShadow,
     coachShadow: coachShadow ?? this.coachShadow,
     pageDuration: pageDuration ?? this.pageDuration,
@@ -131,6 +147,15 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
       confirmationScrim:
           Color.lerp(confirmationScrim, other.confirmationScrim, t)!,
       coachScrim: Color.lerp(coachScrim, other.coachScrim, t)!,
+      focusShadowOpacity:
+          focusShadowOpacity +
+          (other.focusShadowOpacity - focusShadowOpacity) * t,
+      focusShadowBlur:
+          focusShadowBlur + (other.focusShadowBlur - focusShadowBlur) * t,
+      focusShadowSpread:
+          focusShadowSpread + (other.focusShadowSpread - focusShadowSpread) * t,
+      focusShadowOffset:
+          Offset.lerp(focusShadowOffset, other.focusShadowOffset, t)!,
       cardShadow: BoxShadow.lerp(cardShadow, other.cardShadow, t)!,
       coachShadow: BoxShadow.lerp(coachShadow, other.coachShadow, t)!,
       pageDuration: Duration(

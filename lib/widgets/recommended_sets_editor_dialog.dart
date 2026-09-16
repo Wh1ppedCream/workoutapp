@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../theme/widgets/tonos_dialog.dart';
 
 class RecommendedSetsEditButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -41,10 +42,13 @@ Future<VolumeBoundaries?> showRecommendedSetsEditorDialog(
   return showDialog<VolumeBoundaries>(
     context: context,
     builder:
-        (_) => _RecommendedSetsEditorDialog(
-          targetName: targetName,
-          targetId: targetId,
-          currentBounds: currentBounds,
+        (_) => TonosDialogFrame(
+          styleFormControls: true,
+          child: _RecommendedSetsEditorDialog(
+            targetName: targetName,
+            targetId: targetId,
+            currentBounds: currentBounds,
+          ),
         ),
   );
 }

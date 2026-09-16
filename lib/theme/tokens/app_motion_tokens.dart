@@ -9,6 +9,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
     required this.emphasized,
     required this.page,
     required this.quick,
+    this.pageTransition = const Duration(milliseconds: 240),
     this.exerciseDetailSelection = const Duration(milliseconds: 160),
     required this.reduced,
     required this.standardCurve,
@@ -22,6 +23,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
     emphasized: Duration(milliseconds: 300),
     page: Duration(milliseconds: 300),
     quick: Duration(milliseconds: 180),
+    pageTransition: Duration(milliseconds: 240),
     exerciseDetailSelection: Duration(milliseconds: 160),
     reduced: Duration.zero,
     standardCurve: Curves.easeInOut,
@@ -34,6 +36,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
   final Duration emphasized;
   final Duration page;
   final Duration quick;
+  final Duration pageTransition;
   final Duration exerciseDetailSelection;
   final Duration reduced;
   final Curve standardCurve;
@@ -47,6 +50,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
     Duration? emphasized,
     Duration? page,
     Duration? quick,
+    Duration? pageTransition,
     Duration? exerciseDetailSelection,
     Duration? reduced,
     Curve? standardCurve,
@@ -59,6 +63,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
       emphasized: emphasized ?? this.emphasized,
       page: page ?? this.page,
       quick: quick ?? this.quick,
+      pageTransition: pageTransition ?? this.pageTransition,
       exerciseDetailSelection:
           exerciseDetailSelection ?? this.exerciseDetailSelection,
       reduced: reduced ?? this.reduced,
@@ -82,6 +87,7 @@ class AppMotionTokens extends ThemeExtension<AppMotionTokens> {
       emphasized: _lerpDuration(emphasized, other.emphasized, t),
       page: _lerpDuration(page, other.page, t),
       quick: _lerpDuration(quick, other.quick, t),
+      pageTransition: _lerpDuration(pageTransition, other.pageTransition, t),
       exerciseDetailSelection: _lerpDuration(
         exerciseDetailSelection,
         other.exerciseDetailSelection,

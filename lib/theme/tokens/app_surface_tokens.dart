@@ -25,6 +25,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     this.recordBadgeBorder = 0.62,
     this.workoutCardCompleteFill = 24 / 255,
     this.workoutSetCompleteFill = 76 / 255,
+    this.useSemanticWorkoutCardFill = false,
     this.workoutChangeSetOutline = Colors.grey,
     this.exerciseDetailCardBorderOpacity = 0.32,
     this.exerciseDetailHandleOpacity = 0.55,
@@ -67,6 +68,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     required this.planActionBar,
     required this.optimizedAction,
     required this.subtleOutline,
+    required this.neutralOutline,
     required this.input,
     required this.sheet,
     required this.dialog,
@@ -133,6 +135,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       planActionBar: scheme.surface.withValues(alpha: 0.96),
       optimizedAction: scheme.surfaceContainerHighest.withValues(alpha: 0.92),
       subtleOutline: scheme.outlineVariant,
+      neutralOutline: scheme.outlineVariant,
       input: scheme.surfaceContainerHighest.withValues(alpha: 0.48),
       sheet: isDark ? const Color(0xFF303030) : Colors.white,
       dialog: isDark ? const Color(0xFF202020) : Colors.white,
@@ -229,6 +232,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
   final double recordBadgeBorder;
   final double workoutCardCompleteFill;
   final double workoutSetCompleteFill;
+  final bool useSemanticWorkoutCardFill;
   final Color workoutChangeSetOutline;
   final double exerciseDetailCardBorderOpacity;
   final double exerciseDetailHandleOpacity;
@@ -269,6 +273,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
   final Color planActionBar;
   final Color optimizedAction;
   final Color subtleOutline;
+  final Color neutralOutline;
   final Color input;
   final Color sheet;
   final Color dialog;
@@ -335,6 +340,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     double? recordBadgeBorder,
     double? workoutCardCompleteFill,
     double? workoutSetCompleteFill,
+    bool? useSemanticWorkoutCardFill,
     Color? workoutChangeSetOutline,
     double? exerciseDetailCardBorderOpacity,
     double? exerciseDetailHandleOpacity,
@@ -377,6 +383,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     Color? planActionBar,
     Color? optimizedAction,
     Color? subtleOutline,
+    Color? neutralOutline,
     Color? input,
     Color? sheet,
     Color? dialog,
@@ -454,6 +461,8 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
           workoutCardCompleteFill ?? this.workoutCardCompleteFill,
       workoutSetCompleteFill:
           workoutSetCompleteFill ?? this.workoutSetCompleteFill,
+      useSemanticWorkoutCardFill:
+          useSemanticWorkoutCardFill ?? this.useSemanticWorkoutCardFill,
       workoutChangeSetOutline:
           workoutChangeSetOutline ?? this.workoutChangeSetOutline,
       exerciseDetailCardBorderOpacity:
@@ -534,6 +543,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       planActionBar: planActionBar ?? this.planActionBar,
       optimizedAction: optimizedAction ?? this.optimizedAction,
       subtleOutline: subtleOutline ?? this.subtleOutline,
+      neutralOutline: neutralOutline ?? this.neutralOutline,
       input: input ?? this.input,
       sheet: sheet ?? this.sheet,
       dialog: dialog ?? this.dialog,
@@ -650,6 +660,10 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       workoutSetCompleteFill:
           workoutSetCompleteFill +
           (other.workoutSetCompleteFill - workoutSetCompleteFill) * t,
+      useSemanticWorkoutCardFill:
+          t < 0.5
+              ? useSemanticWorkoutCardFill
+              : other.useSemanticWorkoutCardFill,
       workoutChangeSetOutline:
           Color.lerp(
             workoutChangeSetOutline,
@@ -789,6 +803,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       planActionBar: Color.lerp(planActionBar, other.planActionBar, t)!,
       optimizedAction: Color.lerp(optimizedAction, other.optimizedAction, t)!,
       subtleOutline: Color.lerp(subtleOutline, other.subtleOutline, t)!,
+      neutralOutline: Color.lerp(neutralOutline, other.neutralOutline, t)!,
       input: Color.lerp(input, other.input, t)!,
       sheet: Color.lerp(sheet, other.sheet, t)!,
       dialog: Color.lerp(dialog, other.dialog, t)!,

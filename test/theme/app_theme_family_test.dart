@@ -20,8 +20,22 @@ void main() {
       expect(AppThemeFamily.classic.supports(Brightness.dark), isTrue);
     });
 
-    test('parses only stable family codes', () {
+    test('declares Neo-Brutalism with light and dark support', () {
+      expect(AppThemeFamily.neoBrutalism.code, 'neo_brutalism');
+      expect(AppThemeFamily.neoBrutalism.supportedBrightnesses, <Brightness>{
+        Brightness.light,
+        Brightness.dark,
+      });
+      expect(AppThemeFamily.neoBrutalism.supports(Brightness.light), isTrue);
+      expect(AppThemeFamily.neoBrutalism.supports(Brightness.dark), isTrue);
+    });
+
+    test('parses stable family codes', () {
       expect(AppThemeFamily.fromCode('classic'), AppThemeFamily.classic);
+      expect(
+        AppThemeFamily.fromCode('neo_brutalism'),
+        AppThemeFamily.neoBrutalism,
+      );
       expect(AppThemeFamily.fromCode('Classic'), isNull);
       expect(AppThemeFamily.fromCode(null), isNull);
     });

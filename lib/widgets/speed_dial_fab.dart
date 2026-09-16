@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/measured_items_page.dart';
+import '../theme/theme_extensions.dart';
 
 /// A toggleable FAB that expands into food and measurement actions.
 ///
@@ -72,7 +73,10 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             onPressed: _toggle,
             child: AnimatedRotation(
               turns: _open ? 0.125 : 0,
-              duration: const Duration(milliseconds: 200),
+              duration: appMotionDuration(
+                context,
+                context.motionTokens.standard,
+              ),
               child: const Icon(Icons.add),
             ),
           ),

@@ -13,10 +13,13 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/shared_entity_media_thumbnail.dart';
+import '../../widgets/settings_tiles.dart';
 
 /// Profile edits returned to onboarding before the real profile is created.
 class GymProfileDraft {
@@ -265,36 +268,40 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     final action = await showDialog<_UnsavedGymProfileAction>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: Text(
-              AppLocalizations.of(context).gymProfileSaveChangesTitle,
+          (dialogContext) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(
+                AppLocalizations.of(context).gymProfileSaveChangesTitle,
+              ),
+              content: Text(
+                AppLocalizations.of(context).gymProfileSaveChangesBody,
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(_UnsavedGymProfileAction.keepEditing),
+                  child: Text(
+                    AppLocalizations.of(context).gymProfileKeepEditing,
+                  ),
+                ),
+                TextButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(_UnsavedGymProfileAction.discard),
+                  child: Text(AppLocalizations.of(context).gymProfileDiscard),
+                ),
+                FilledButton(
+                  onPressed:
+                      () => Navigator.of(
+                        dialogContext,
+                      ).pop(_UnsavedGymProfileAction.save),
+                  child: Text(AppLocalizations.of(context).commonSave),
+                ),
+              ],
             ),
-            content: Text(
-              AppLocalizations.of(context).gymProfileSaveChangesBody,
-            ),
-            actions: [
-              TextButton(
-                onPressed:
-                    () => Navigator.of(
-                      dialogContext,
-                    ).pop(_UnsavedGymProfileAction.keepEditing),
-                child: Text(AppLocalizations.of(context).gymProfileKeepEditing),
-              ),
-              TextButton(
-                onPressed:
-                    () => Navigator.of(
-                      dialogContext,
-                    ).pop(_UnsavedGymProfileAction.discard),
-                child: Text(AppLocalizations.of(context).gymProfileDiscard),
-              ),
-              FilledButton(
-                onPressed:
-                    () => Navigator.of(
-                      dialogContext,
-                    ).pop(_UnsavedGymProfileAction.save),
-                child: Text(AppLocalizations.of(context).commonSave),
-              ),
-            ],
           ),
     );
 
@@ -508,14 +515,34 @@ class _ProfileSetupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.42);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
+    final cardOutline =
+        neo
+            ? tonosOutlineForSurface(context, cardSurface)
+            : scheme.outlineVariant.withValues(alpha: 0.55);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(24),
+        color: cardSurface,
+        borderRadius: neo ? shapes.settingsPanel : BorderRadius.circular(24),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
+          color: cardOutline,
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Column(
@@ -527,12 +554,15 @@ class _ProfileSetupCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.75),
+                  color:
+                      neo
+                          ? surfaces.dialogChoice
+                          : scheme.primaryContainer.withValues(alpha: 0.75),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.fitness_center,
-                  color: scheme.onPrimaryContainer,
+                  color: neo ? cardForeground : scheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 12),
@@ -544,6 +574,7 @@ class _ProfileSetupCard extends StatelessWidget {
                       strings.gymProfileSpace,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
+                        color: neo ? cardForeground : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -555,7 +586,7 @@ class _ProfileSetupCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: cardSecondary,
                       ),
                     ),
                   ],
@@ -569,15 +600,23 @@ class _ProfileSetupCard extends StatelessWidget {
             child: TextFormField(
               controller: controller,
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: strings.gymProfileName,
-                hintText: strings.gymProfileNameHint,
-                filled: true,
-                fillColor: scheme.surface.withValues(alpha: 0.45),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
+              decoration:
+                  neo
+                      ? settingsFieldDecoration(
+                        context,
+                        label: strings.gymProfileName,
+                        hint: strings.gymProfileNameHint,
+                      )
+                      : InputDecoration(
+                        labelText: strings.gymProfileName,
+                        hintText: strings.gymProfileNameHint,
+                        filled: true,
+                        fillColor: scheme.surface.withValues(alpha: 0.45),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+              style: settingsInputTextStyle(context),
               validator:
                   (value) =>
                       value == null || value.trim().isEmpty
@@ -600,19 +639,68 @@ class _EquipmentSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final fieldSurface =
+        neo
+            ? surfaces.settingsInput
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.48);
+    final fieldForeground =
+        neo
+            ? tonosForegroundForSurface(context, fieldSurface)
+            : scheme.onSurface;
+    final fieldOutline =
+        neo
+            ? tonosOutlineForSurface(context, fieldSurface)
+            : Colors.transparent;
+    final fieldShape =
+        neo
+            ? shapes.settingsPicker
+            : const BorderRadius.all(Radius.circular(999));
 
     return TextField(
       controller: controller,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.filter_list),
+        prefixIcon: Icon(
+          Icons.filter_list,
+          color: neo ? fieldForeground : null,
+        ),
         hintText: strings.gymProfileFilterEquipment,
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.48),
+        fillColor: fieldSurface,
+        hintStyle:
+            neo
+                ? TextStyle(color: fieldForeground.withValues(alpha: 0.62))
+                : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(999),
-          borderSide: BorderSide.none,
+          borderRadius: fieldShape,
+          borderSide:
+              neo
+                  ? BorderSide(color: fieldOutline, width: shapes.outlineWidth)
+                  : BorderSide.none,
         ),
+        enabledBorder:
+            neo
+                ? OutlineInputBorder(
+                  borderRadius: fieldShape,
+                  borderSide: BorderSide(
+                    color: fieldOutline,
+                    width: shapes.outlineWidth,
+                  ),
+                )
+                : null,
+        focusedBorder:
+            neo
+                ? OutlineInputBorder(
+                  borderRadius: fieldShape,
+                  borderSide: BorderSide(
+                    color: context.semanticColors.focusRing,
+                    width: shapes.focusRingWidth,
+                  ),
+                )
+                : null,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -692,6 +780,25 @@ class _EquipmentCategorySection extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final sectionSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.28);
+    final sectionForeground =
+        neo
+            ? tonosForegroundForSurface(context, sectionSurface)
+            : scheme.onSurface;
+    final sectionSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, sectionSurface)
+            : scheme.onSurfaceVariant;
+    final sectionOutline =
+        neo
+            ? tonosOutlineForSurface(context, sectionSurface)
+            : scheme.outlineVariant.withValues(alpha: 0.55);
     final selectedCount =
         group.items
             .where((item) => selectedEquipmentIds.contains(item.id))
@@ -701,10 +808,11 @@ class _EquipmentCategorySection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
-        borderRadius: BorderRadius.circular(22),
+        color: sectionSurface,
+        borderRadius: neo ? shapes.settingsPanel : BorderRadius.circular(22),
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
+          color: sectionOutline,
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Column(
@@ -720,7 +828,7 @@ class _EquipmentCategorySection extends StatelessWidget {
                     children: [
                       Icon(
                         group.category.icon,
-                        color: scheme.primary,
+                        color: neo ? sectionForeground : scheme.primary,
                         size: 22,
                       ),
                       const SizedBox(width: 10),
@@ -731,12 +839,13 @@ class _EquipmentCategorySection extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w900,
+                            color: neo ? sectionForeground : null,
                           ),
                         ),
                       ),
                       Icon(
                         isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: scheme.onSurfaceVariant,
+                        color: sectionSecondary,
                       ),
                     ],
                   ),
@@ -752,12 +861,18 @@ class _EquipmentCategorySection extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
+                            color: sectionSecondary,
                           ),
                         ),
                       ),
                       TextButton(
                         onPressed: onToggleCategory,
+                        style:
+                            neo
+                                ? TextButton.styleFrom(
+                                  foregroundColor: sectionForeground,
+                                )
+                                : null,
                         child: Text(
                           allSelected
                               ? strings.gymProfileClear
@@ -774,7 +889,7 @@ class _EquipmentCategorySection extends StatelessWidget {
             firstChild: const SizedBox(width: double.infinity),
             secondChild: Column(
               children: [
-                Divider(height: 1, color: scheme.outlineVariant),
+                Divider(height: 1, color: sectionOutline),
                 ...group.items.map((item) {
                   final selected = selectedEquipmentIds.contains(item.id);
                   return _EquipmentTile(
@@ -790,7 +905,7 @@ class _EquipmentCategorySection extends StatelessWidget {
                 isExpanded
                     ? CrossFadeState.showSecond
                     : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 180),
+            duration: appMotionDuration(context, context.motionTokens.quick),
           ),
         ],
       ),
@@ -814,6 +929,17 @@ class _EquipmentTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final tileSurface = neo ? surfaces.dialogChoice : scheme.surface;
+    final tileForeground =
+        neo
+            ? tonosForegroundForSurface(context, tileSurface)
+            : scheme.onSurface;
+    final tileSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tileSurface)
+            : scheme.onSurfaceVariant;
 
     return InkWell(
       onTap: () => onChanged(!selected),
@@ -830,16 +956,33 @@ class _EquipmentTile extends StatelessWidget {
               imageScale: 1.13,
               backgroundColor:
                   selected
-                      ? scheme.primary.withValues(alpha: 0.18)
-                      : scheme.surface.withValues(alpha: 0.34),
+                      ? (neo
+                          ? surfaces.settingsInput
+                          : scheme.primary.withValues(alpha: 0.18))
+                      : (neo
+                          ? surfaces.settingsSection
+                          : scheme.surface.withValues(alpha: 0.34)),
               borderColor:
                   selected
-                      ? scheme.primary.withValues(alpha: 0.6)
-                      : scheme.outlineVariant.withValues(alpha: 0.34),
+                      ? (neo
+                          ? tonosOutlineForSurface(
+                            context,
+                            surfaces.settingsInput,
+                          )
+                          : scheme.primary.withValues(alpha: 0.6))
+                      : (neo
+                          ? tonosOutlineForSurface(
+                            context,
+                            surfaces.settingsSection,
+                          )
+                          : scheme.outlineVariant.withValues(alpha: 0.34)),
               fallbackBuilder:
                   (context, contentSize) => Icon(
                     _equipmentIconFor(item.name),
-                    color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                    color:
+                        selected
+                            ? (neo ? tileForeground : scheme.primary)
+                            : tileSecondary,
                     size: contentSize * 0.6,
                   ),
             ),
@@ -857,6 +1000,7 @@ class _EquipmentTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w800,
+                      color: neo ? tileForeground : null,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -865,13 +1009,19 @@ class _EquipmentTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                      color: tileSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            Checkbox(value: selected, onChanged: onChanged),
+            Checkbox(
+              value: selected,
+              onChanged: onChanged,
+              fillColor:
+                  neo ? WidgetStatePropertyAll<Color?>(tileForeground) : null,
+              checkColor: neo ? surfaces.dialogChoice : null,
+            ),
           ],
         ),
       ),
@@ -896,12 +1046,27 @@ class _SaveProfileBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.96),
-        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+        color:
+            neo
+                ? surfaces.settingsSaveBar
+                : scheme.surface.withValues(alpha: 0.96),
+        border: Border(
+          top: BorderSide(
+            color:
+                neo
+                    ? tonosOutlineForSurface(context, surfaces.settingsSaveBar)
+                    : scheme.outlineVariant,
+            width: neo ? shapes.outlineWidth : 1,
+          ),
+        ),
+        borderRadius: neo ? shapes.actionBar : BorderRadius.zero,
       ),
       child: Row(
         children: [
@@ -937,21 +1102,47 @@ class _EmptyEquipmentSearch extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final emptySurface =
+        neo
+            ? surfaces.panel
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.32);
+    final emptyForeground =
+        neo
+            ? tonosForegroundForSurface(context, emptySurface)
+            : scheme.onSurface;
+    final emptySecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, emptySurface)
+            : scheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.32),
+        color: emptySurface,
         borderRadius: BorderRadius.circular(20),
+        border:
+            neo
+                ? Border.all(
+                  color: tonosOutlineForSurface(context, emptySurface),
+                  width: context.shapeTokens.outlineWidth,
+                )
+                : null,
       ),
       child: Row(
         children: [
-          Icon(Icons.search_off, color: scheme.onSurfaceVariant),
+          Icon(Icons.search_off, color: emptySecondary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               strings.gymProfileNoEquipmentMatch(query),
-              style: theme.textTheme.bodyMedium,
+              style:
+                  neo
+                      ? theme.textTheme.bodyMedium?.copyWith(
+                        color: emptyForeground,
+                      )
+                      : theme.textTheme.bodyMedium,
             ),
           ),
         ],

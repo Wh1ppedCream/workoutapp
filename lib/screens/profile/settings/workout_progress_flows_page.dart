@@ -311,45 +311,82 @@ class _FlowScopeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: .28);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .28),
+        color: cardSurface,
         borderRadius: shapes.settingsPanel,
-        border: Border.all(color: color.withValues(alpha: .52)),
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : color.withValues(alpha: .52),
+          width: shapes.outlineWidth,
+        ),
       ),
-      child: ExpansionTile(
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-        childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        collapsedBackgroundColor: color.withValues(alpha: .08),
-        backgroundColor: color.withValues(alpha: .04),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: .17),
-            borderRadius: shapes.settingsScopeIcon,
+      child: Theme(
+        data:
+            neo
+                ? theme.copyWith(
+                  colorScheme: scheme.copyWith(
+                    surface: cardSurface,
+                    onSurface: cardForeground,
+                    onSurfaceVariant: cardSecondary,
+                  ),
+                  textTheme: theme.textTheme.apply(
+                    bodyColor: cardForeground,
+                    displayColor: cardForeground,
+                  ),
+                  iconTheme: theme.iconTheme.copyWith(color: cardForeground),
+                )
+                : theme,
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          collapsedBackgroundColor:
+              neo ? cardSurface : color.withValues(alpha: .08),
+          backgroundColor: neo ? cardSurface : color.withValues(alpha: .04),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .17),
+              borderRadius: shapes.settingsScopeIcon,
+            ),
+            child: Icon(icon, color: neo ? cardForeground : color, size: 22),
           ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w900,
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: neo ? cardForeground : null,
+            ),
           ),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
+          subtitle: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
           ),
+          children: [child],
         ),
-        children: [child],
       ),
     );
   }
@@ -443,8 +480,19 @@ class _FlowEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tileSurface = neo ? surfaces.dialogChoice : null;
+    final tileForeground =
+        neo && tileSurface != null
+            ? tonosForegroundForSurface(context, tileSurface)
+            : scheme.onSurface;
+    final tileSecondary =
+        neo && tileSurface != null
+            ? tonosSecondaryForegroundForSurface(context, tileSurface)
+            : scheme.onSurfaceVariant;
     return Material(
-      color: color.withValues(alpha: .06),
+      color: neo ? tileSurface! : color.withValues(alpha: .06),
       borderRadius: shapes.card,
       child: InkWell(
         borderRadius: shapes.card,
@@ -453,7 +501,13 @@ class _FlowEntryTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
             borderRadius: shapes.card,
-            border: Border.all(color: color.withValues(alpha: .34)),
+            border: Border.all(
+              color:
+                  neo
+                      ? tonosOutlineForSurface(context, tileSurface!)
+                      : color.withValues(alpha: .34),
+              width: neo ? shapes.outlineWidth : 1,
+            ),
           ),
           child: Row(
             children: [
@@ -464,7 +518,11 @@ class _FlowEntryTile extends StatelessWidget {
                   color: color.withValues(alpha: .16),
                   borderRadius: shapes.control,
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(
+                  icon,
+                  color: neo ? tileForeground : color,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -477,6 +535,7 @@ class _FlowEntryTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: neo ? tileForeground : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -484,15 +543,19 @@ class _FlowEntryTile extends StatelessWidget {
                       summary.label(AppLocalizations.of(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: tileSecondary),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios, size: 16, color: color),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: neo ? tileForeground : color,
+              ),
             ],
           ),
         ),
@@ -549,23 +612,43 @@ class _EmptyFlowsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final emptySurface = neo ? surfaces.panel : null;
+    final foreground =
+        neo && emptySurface != null
+            ? tonosForegroundForSurface(context, emptySurface)
+            : scheme.onSurfaceVariant;
+    final secondary =
+        neo && emptySurface != null
+            ? tonosSecondaryForegroundForSurface(context, emptySurface)
+            : scheme.onSurfaceVariant;
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .24),
+        color:
+            neo
+                ? emptySurface
+                : scheme.surfaceContainerHighest.withValues(alpha: .24),
         borderRadius: shapes.card,
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: .5)),
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, emptySurface!)
+                  : scheme.outlineVariant.withValues(alpha: .5),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+          Icon(Icons.info_outline, color: foreground),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ).textTheme.bodySmall?.copyWith(color: secondary),
             ),
           ),
         ],
