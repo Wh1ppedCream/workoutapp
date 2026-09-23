@@ -71,6 +71,61 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final mode in <ThemeMode>[ThemeMode.light, ThemeMode.dark]) {
+    testWidgets('release selector switches and restores Neo in ${mode.name}', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'guided_tutorial_completed.ui_appearance_settings_v1': true,
+        AppThemePreferences.themeModeKey: mode.name,
+      });
+      const capabilities = AppThemeCapabilities(
+        experimentalThemesEnabled: false,
+        isReleaseMode: true,
+        neoReleaseEnabled: true,
+      );
+      final provider = ThemeProvider(capabilities: capabilities);
+      final harness = _AppearanceHarness(provider);
+      addTearDown(harness.dispose);
+      await harness.pump(tester);
+      expect(provider.family, AppThemeFamily.classic);
+
+      Future<void> choose(AppThemeFamily family) async {
+        await tester.tap(find.byKey(AppTestKeys.uiAppearanceThemeFamily));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(AppTestKeys.uiAppearanceThemeFamilyOption(family.code)),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await choose(AppThemeFamily.neoBrutalism);
+      expect(provider.family, AppThemeFamily.neoBrutalism);
+      expect(provider.mode, mode);
+      expect(
+        Theme.of(
+          tester.element(find.byType(UIAppearanceSettingsPage)),
+        ).brightness,
+        mode == ThemeMode.light ? Brightness.light : Brightness.dark,
+      );
+
+      final restarted = await ThemeProvider.load(capabilities: capabilities);
+      addTearDown(restarted.dispose);
+      expect(restarted.family, AppThemeFamily.neoBrutalism);
+      expect(restarted.mode, mode);
+
+      await choose(AppThemeFamily.classic);
+      expect(provider.family, AppThemeFamily.classic);
+      expect(provider.mode, mode);
+      final preferences = await SharedPreferences.getInstance();
+      expect(
+        preferences.getString(AppThemePreferences.themeFamilyKey),
+        AppThemeFamily.classic.code,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'keeps the previous family and offers retry after a failed save',
     (tester) async {
@@ -112,7 +167,7 @@ void main() {
     },
   );
 
-  testWidgets('hides the selector when the build exposes only Classic', (
+  testWidgets('hides the selector when a release build exposes only Classic', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
@@ -121,7 +176,7 @@ void main() {
     final themeProvider = ThemeProvider(
       capabilities: const AppThemeCapabilities(
         experimentalThemesEnabled: false,
-        isReleaseMode: false,
+        isReleaseMode: true,
       ),
     );
     final harness = _AppearanceHarness(themeProvider);
@@ -214,6 +269,16 @@ void main() {
         preferences.getString(AppThemePreferences.themeFamilyKey),
         AppThemeFamily.neoBrutalism.code,
       );
+      final reenabled = await ThemeProvider.load(
+        capabilities: const AppThemeCapabilities(
+          experimentalThemesEnabled: false,
+          isReleaseMode: true,
+          neoReleaseEnabled: true,
+        ),
+      );
+      addTearDown(reenabled.dispose);
+      expect(reenabled.family, AppThemeFamily.neoBrutalism);
+      expect(reenabled.mode, ThemeMode.light);
     },
   );
 

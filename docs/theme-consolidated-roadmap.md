@@ -1,6 +1,6 @@
 # Consolidated Theming Roadmap
 
-Updated: 2026-09-22.
+Updated: 2026-09-23.
 
 This is the current status and execution checklist for Tonos theming. Start
 here when selecting work or checking completion. Original Steps 1-19 are
@@ -55,7 +55,7 @@ issue lists remain review history, not additional active milestone lists.
 | 3 | Inventory/classification | Inventory and scoped ratchet implemented; broader qualification partial |
 | 4 | Classic extraction | Implemented and accepted for Q3; recheck affected parity after refinements |
 | 5 | Selection/preferences | Implemented; original persistence/switching accepted; revalidate relevant changes |
-| 6 | Availability policy | Complete for Classic and development-only Neo |
+| 6 | Availability policy | Internal Neo release opt-in and Android internal candidate accepted; source-commit association remains |
 | 7 | Focused tokens | Foundation complete; adoption follows route work |
 | 8 | AppColors retirement | Complete |
 | 9 | Material ownership | Foundation implemented; local override audit remains |
@@ -63,8 +63,8 @@ issue lists remain review history, not additional active milestone lists.
 | 11 | Theme Lab | Classic/Neo pilot implementation and automatable coverage complete; current visual review and current development device/stress qualification accepted |
 | 12 | Surface migration | Current 21-item Neo visual route review and current route/state/device qualification accepted; route ledger remains the source of truth |
 | 13 | Neo-Brutalism | N1/N2 complete, N3 implementation/automatable coverage complete, N4 and the current 21-item visual review accepted; current N5 route-state and N6 development qualification accepted |
-| 14 | Public selector | Implemented, automated-verified, and included in the current human/device qualification; Neo remains non-release eligible |
-| 15 | Release qualification | Not started as a release approval milestone |
+| 14 | Public selector | Implemented and accepted; Neo is selectable in the accepted Android internal candidate, with Classic as default |
+| 15 | Release qualification | Android internal/closed candidate accepted; associate tested source with a commit before closeout; open/Play release is out of scope |
 | 16 | Later families | Not started |
 | 17 | Review closure/parity | Original Q3, the current 21-item Neo visual review, and the current affected state/parity checks accepted; later changes require focused rechecks |
 | 18 | Enforcement/qualification | Current scoped work and development qualification accepted; broader per-file evidence and ratchet enrollment remain intentionally limited |
@@ -375,14 +375,18 @@ a separate preference-schema decision, not an unfinished prerequisite here.
 
 ### Step 6. Maintain Availability And Release Gating
 
-Status: complete for Classic and development-only Neo.
+Status: development policy and internal Android opt-in qualification accepted.
+The tested-source commit/hash association remains open under Step 15.
 
 Completed: Neo registration, central capability filtering, experimental opt-in,
-release denial, and fallback. Older Classic-only enum descriptions are obsolete.
+default release denial/fallback, explicit release opt-in for the internal
+candidate, and the selector/persistence checks required for that candidate.
+The user accepted the signed Android internal/closed candidate and all six
+focused device checks on 2026-09-23.
 
-Remaining tasks: source controls from the capability policy and retain release
-denial tests. Public enrollment is decided in Steps 14-15, not by adding an enum
-or enabling a debug flag.
+Remaining: commit the exact tested working-tree source and associate its commit
+with the candidate APK hash before closing Step 15. Open testing and the Play
+Store remain separate decisions.
 
 Exit: unfinished families cannot leak into release selection.
 
@@ -549,9 +553,9 @@ human/device input required for E2.4 closeout accounting.
 This confirmation is user-reported qualification evidence, not a new terminal
 run or a signed release result. Preserve the existing device/build identity
 records where applicable, and record any later defect as a focused recheck.
-Neo remains development-only until Step 15 receives an explicit release
-decision; the confirmation does not enroll additional style-ratchet files or
-resolve the product decisions for retained placeholder routes.
+The user accepted the signed Step 15 Android internal candidate and all six
+focused device checks on 2026-09-23; source-commit/hash association remains pending. The earlier confirmation does not enroll additional
+style-ratchet files or resolve wider-release treatment of retained placeholders.
 
 #### Current 12A/N5 Working Ledger (2026-09-16)
 
@@ -718,8 +722,8 @@ Implementation record (2026-09-16):
   failed-save retry, Classic-only hiding, restart, downgrade fallback and all
   bundled locales. The user's current development qualification supplies the
   corresponding human/device evidence.
-- No release capability was changed: Neo is still unavailable in release
-  builds and when experimental themes are disabled.
+- Step 14 did not change release capabilities. The later Step 15 opt-in now
+  permits Neo in explicitly enabled internal release candidates.
 
 Implementation and current development qualification exit: met in source,
 focused coverage, user-run automated verification, and the user's consolidated
@@ -729,15 +733,18 @@ Debug buttons do not count as the public selector.
 
 ### Step 15. Qualify Themes For Release
 
-Status: release approval milestone not started; reuse applicable prior evidence.
+Status: Android internal/closed candidate accepted; signed-artifact checks and
+all six focused device checks passed. Source-commit association remains before
+Step 15 closeout; wider distribution remains a separate decision.
 
-Preflight snapshot (2026-09-22; planning only, not a release candidate):
+Candidate built 2026-09-22; accepted 2026-09-23; source-commit association pending:
 
-- User-provided checkout snapshot: branch `updates/backlog`, HEAD
-  `d9b4d111761f050462079e0059063a681ab5b6ae`, with uncommitted and untracked
-  changes. The user intends the current app/theme and exercise-thumbnail work
-  for the candidate, subject to resolving explicit blockers below. The exact
-  candidate commit/source set is not frozen yet.
+- Source baseline: `55b0222` on `updates/backlog`, committed and pushed after
+  verification of the development media and debug APK. The release opt-in
+  changes are a subsequent working-tree patch; all checks below have passed.
+  Commit the exact tested patch and record the source commit with the APK hash
+  before Step 15 closeout. `incoming/` and
+  `tmp/` are excluded from the candidate.
 - Platform decision (user, 2026-09-22): Android is the current target for
   internal and closed testing, not open testing or a Play Store release. iOS
   and web are future targets; Windows, Linux, and macOS remain out of scope.
@@ -748,22 +755,24 @@ Preflight snapshot (2026-09-22; planning only, not a release candidate):
   potentially following later. Do not describe it as native-speaker signoff.
 - Family decision (user, 2026-09-22): the Android release target is Classic
   plus Neo, with Classic remaining the default and Neo selectable in both
-  light and dark modes. This is the intended scope to qualify, not the final
-  release approval.
-- `AppThemeCapabilities` currently makes Classic available in release mode
-  and keeps Neo unavailable there. Changing that gate requires the Step 15
-  completed release qualification and explicit release approval, not just a
-  successful development qualification. Internal Neo testing should use a
-  non-release build with experimental themes enabled; a release-mode APK still
-  falls back to Classic even when that flag is set.
+  light and dark modes. This scope is accepted for Android internal/closed
+  testing only, not open testing or a Play Store release.
+- The user authorized implementing Neo release eligibility for internal testing.
+  `TONOS_ENABLE_NEO_RELEASE=true` now opts a release build into Classic and
+  Neo. Classic remains the default. The experimental-theme flag only controls
+  non-release builds. A missing/false release opt-in retains Classic fallback;
+  malformed values are rejected. Internal CI and the candidate script explicitly
+  enable Neo; the production release workflow retains its default Classic policy.
 - User-reported toolchain: Flutter 3.29.3 and Dart 3.7.2. The repository
-  version is `1.0.1+5`; confirm the source, built APK, and installed Android
-  version before distributing an internal candidate. Play Console version-code
+  debug baseline was verified as `1.0.1+5`; the new internal release candidate
+  uses `1.0.1+6`. Confirm the signed APK and installed version before accepting
+  the candidate. Play Console version-code
   checks and protected release signing are later Play Store gates; never place
   signing secrets in the repository or terminal transcript.
 - Exercise media for internal testing can use the existing development manifest
-  v15 with 253/300 thumbnails (84.3%); validate its current remote assets and
-  keep the 47 missing entries on the heatmap fallback. No production-bucket
+  v15 with 253/300 thumbnails (84.3%). The user-supplied remote check passed for
+  all 253 assets and confirmed a zero-difference canonical manifest. Keep the
+  47 missing entries on the heatmap fallback. No production-bucket
   promotion is required for this internal/closed test. Production is still
   documented at v5/62 assets and uses a temporary `r2.dev` URL. Before any
   production-targeted Android release with the new thumbnails, promote and
@@ -771,7 +780,30 @@ Preflight snapshot (2026-09-22; planning only, not a release candidate):
   [production content setup](content-production-setup.md) and the
   [cloud-content roadmap](cloud-content-roadmap.md).
 
-Required tasks:
+Internal candidate closeout:
+
+1. Run `scripts/verify_neo_release.ps1`: focused policy/selector/persistence/
+   renderer/workflow tests, real compile-time flag cases, signed release build,
+   signature/manifest inspection, and an APK SHA-256 evidence record. The APK
+   uses `com.tonos.internal` so it can coexist with a debug-signed install.
+2. Install the APK and complete the focused release checklist in
+   [Testing Tonos](testing.md#neo-internal-android-release-candidate). Reuse
+   previously accepted N5/N6, locale, route, and visual evidence for unchanged
+   surfaces; no repeat of the 21-item development checklist is required.
+3. The user accepted this signed internal candidate on 2026-09-23; all six
+   device checks passed, as recorded in [Testing Tonos](testing.md#neo-internal-android-release-candidate). The
+   installed APK is `com.tonos.internal` `1.0.1+6`, SHA-256
+   `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. It was
+   built from working-tree changes based on `55b0222071645392e1c66d5e01c5f8b3eaf10f11`;
+   commit the exact tested source and associate that commit with this APK hash
+   before closing Step 15.
+
+The 47 heatmap fallbacks, owner-accepted translations, and retained placeholder
+routes remain the existing internal-test limitations. Experimental navigation
+tabs stay release-gated. Native-speaker review and production content promotion
+remain outside this internal candidate's closeout.
+
+Broader release qualification reference:
 
 1. Identify candidate/source state, SDK/build configuration, supported platforms,
    locales, and proposed eligible families.
@@ -785,11 +817,12 @@ Required tasks:
    downgrades, eligibility, and fallback.
 6. Check scrolling/transitions, reduced motion, effects disabled, and actual
    performance concerns on supported hardware.
-7. Record release blockers, accepted limitations, and the explicit user release
-   decision before changing enrollment or publishing.
+7. Record release blockers, accepted limitations, and the explicit user decision
+   before approving wider distribution.
 
-Exit: identified candidate and eligible families have explicit release approval.
-Earlier development test counts alone do not provide that approval.
+Internal exit: the identified signed candidate and both families have explicit
+user acceptance for Android internal/closed testing. This does not approve open
+testing or a Play Store launch.
 
 ### Step 16. Add Later Families
 

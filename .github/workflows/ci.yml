@@ -125,6 +125,19 @@ jobs:
       - name: Run unit and widget tests
         run: flutter test
 
+      - name: Verify Neo internal release opt-in
+        run: >-
+          flutter test test/theme/app_theme_compile_time_test.dart
+          --dart-define=TONOS_ENABLE_NEO_RELEASE=true
+          --dart-define=TONOS_EXPECT_NEO_RELEASE=true
+          --dart-define=TONOS_ENABLE_EXPERIMENTAL_THEMES=false
+
+      - name: Reject malformed Neo release opt-in
+        run: >-
+          flutter test test/theme/app_theme_compile_time_test.dart
+          --dart-define=TONOS_ENABLE_NEO_RELEASE=invalid
+          --dart-define=TONOS_EXPECT_INVALID_NEO_RELEASE=true
+
       - name: Run diagnostics relay schema tests
         run: node --test services/diagnostics_relay/test/*.test.mjs
 
@@ -178,8 +191,12 @@ jobs:
           EOF
 
       - name: Build release APK
+        env:
+          TONOS_ANDROID_INTERNAL_BUILD: "true"
         run: >-
           flutter build apk --release
+          --dart-define=TONOS_ENABLE_NEO_RELEASE=true
+          --dart-define=TONOS_ENABLE_EXPERIMENTAL_THEMES=false
           --dart-define=TONOS_CONTENT_ENVIRONMENT=development
           --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
           --dart-define=TONOS_ENABLE_EXPERIMENTAL_TABS=false

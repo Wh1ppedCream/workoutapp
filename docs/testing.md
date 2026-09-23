@@ -211,6 +211,128 @@ flutter test integration_test\core_flows_test.dart `
   --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
 ```
 
+## Neo internal Android release candidate
+
+The 2026-09-22 candidate adds `TONOS_ENABLE_NEO_RELEASE=true` and uses
+`1.0.1+6`. It targets Android internal/closed testing with the already verified
+development media manifest v15 (253 thumbnails and 47 heatmap fallbacks).
+Classic remains the initial family; both Neo brightness modes are selectable.
+The internal APK uses the separate `com.tonos.internal` application ID and
+`Tonos (Internal)` launcher label so it installs alongside a differently
+signed `com.tonos` app without replacing or erasing its data.
+The user authorized implementing the opt-in and accepted the signed internal
+candidate on 2026-09-23 after confirming all six focused device checks below.
+Existing visual, N5/N6, route, and locale acceptance applies to unchanged
+surfaces. This acceptance is limited to the identified Android internal/closed
+candidate and is not approval for open testing or a Play Store release.
+
+### Build and automated evidence
+
+Run this in PowerShell and paste the complete result:
+
+```powershell
+Set-Location E:\projects\env_test
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_neo_release.ps1 -BuildOnly
+```
+
+The script formats/analyzes the changed Dart files, exercises the family policy,
+settings selector, persistence, Classic restoration, renderer and workflow
+contracts, and verifies actual compiled enabled/disabled/invalid flag values.
+The theme-policy tests and analysis passed in the previous run. `-BuildOnly`
+reuses that result, restarts idle Gradle daemons so the internal package setting
+is read by a fresh daemon, and builds a signed release APK with a separate
+internal application ID and:
+
+- `TONOS_ENABLE_NEO_RELEASE=true`
+- `TONOS_ENABLE_EXPERIMENTAL_THEMES=false`
+- `TONOS_ENABLE_EXPERIMENTAL_TABS=false`
+- `TONOS_CONTENT_ENVIRONMENT=development`
+- `TONOS_CONTENT_ALLOW_OVERRIDES=false`
+- Gradle environment `TONOS_ANDROID_INTERNAL_BUILD=true`
+
+The script verifies the APK signature, internal package/label/version,
+non-debuggable status, and Internet permission. It records the base commit,
+working-tree status, flags, APK SHA-256, and device status at build time in
+`build/content/neo_internal_release_candidate.json`. Unit/widget tests inject
+release policy; only the resulting APK provides actual Android release-mode
+evidence. No upload, installation, uninstall, or Play Store publication occurs.
+
+Local `android/key.properties` exists at preparation time. The build must use
+the established release key. If signing fails, supply only the error message;
+do not paste passwords, signing configuration contents, or keystore files.
+
+### Install and identify
+
+Install the candidate beside the existing app. The distinct internal ID keeps
+the existing `com.tonos` package and its data intact. Re-running this install
+updates only the internal candidate, signed with the same established release
+key:
+
+```powershell
+Set-Location E:\projects\env_test
+& 'E:\Android\Sdk\platform-tools\adb.exe' devices
+& 'E:\Android\Sdk\platform-tools\adb.exe' install -r 'build\app\outputs\flutter-apk\app-release.apk'
+if ($LASTEXITCODE -ne 0) { throw 'Internal candidate install failed. Keep the existing app and paste the error.' }
+& 'E:\Android\Sdk\platform-tools\adb.exe' shell dumpsys package com.tonos.internal |
+  Select-String 'versionCode=|versionName=' | Select-Object -First 2
+& 'E:\Android\Sdk\platform-tools\adb.exe' shell getprop ro.product.model
+& 'E:\Android\Sdk\platform-tools\adb.exe' shell getprop ro.build.version.release
+& 'E:\Android\Sdk\platform-tools\adb.exe' shell getprop ro.build.version.sdk
+```
+
+Expected installed version: `1.0.1`, code `6`. With multiple connected
+devices, add `-s DEVICE_SERIAL` immediately after each adb executable.
+If installation fails, stop and report the error. The original `com.tonos` app
+should remain installed and usable; do not uninstall it.
+
+### Focused signed-device acceptance
+
+1. [x] Open **Tonos (Internal)**. On a fresh test installation, Classic is the
+   default. On an update of the internal app, the saved eligible family/mode
+   should return. Confirm no debug banner or floating debug theme toolbar, no
+   blank startup, and that the original app and its data remain intact.
+2. [x] Open Profile > UI & Appearance > Theme family. Select Neo-Brutalism through
+   this normal settings control. Turn the Dark mode switch off for Light and
+   on for Dark. Confirm both render, the selected family radio state is correct,
+   and no restart is required. This screen currently exposes a Dark mode switch,
+   not a System-mode selector.
+3. [x] With Neo selected, force-stop Tonos through Android App info, then reopen it.
+   Confirm family and mode persist. Switch back to Classic, repeat the restart,
+   and confirm Classic persists too. Select Neo again and enable airplane mode:
+   family/mode switching must work without a network connection.
+4. [x] Restore connectivity and open Catalog > Exercise Catalog. Inspect a known
+   thumbnail entry (for example External Rotation - Dumbbell) and its expanded
+   anatomy heatmap. Inspect Cuban Rotation or another uncovered entry's
+   fallback. Check visible target highlights in Neo dark/light, image loading,
+   and the same routes after returning to Classic. A heatmap for an exercise
+   among the 47 missing thumbnails is expected.
+5. [x] In Train, start a short test session, edit a set, and complete it. Confirm the
+   completion sheet works and the result is visible in Logbook. Scroll the
+   catalog and switch families several times: report crashes, hangs, new
+   clipping, or noticeably worse switching/scrolling than the accepted build.
+6. [x] Return to UI & Appearance with large Android font size and TalkBack enabled.
+   Open the family dialog, confirm options and selected state are announced,
+   choose each family, close the dialog, and verify controls remain reachable.
+   Restore your normal accessibility settings afterward.
+
+These are checks of the signed artifact and the changed eligibility path; the
+previous 21-item visual review does not need to be repeated. Keep existing
+placeholder routes/navigation gating and owner-accepted translations as the
+documented internal limitations.
+
+User confirmation received on 2026-09-23: all six focused device checks passed
+with no failures reported. The accepted APK is `com.tonos.internal`, version
+`1.0.1+6`, SHA-256
+`549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. The build
+was based on source commit `55b0222071645392e1c66d5e01c5f8b3eaf10f11` with
+additional working-tree changes. Commit the exact tested source and associate
+that commit with the APK hash before closing the internal Step 15 gate. The
+user-supplied install output reported successful v1/v2 signature checks and
+installation alongside the original app. Any source change after acceptance
+requires a fresh APK and affected checks.
+Open testing, Play Store launch, and production-content promotion remain later
+decisions.
+
 ## Release networking verification
 
 Flutter Driver does not support release mode on Android. Verify release cloud

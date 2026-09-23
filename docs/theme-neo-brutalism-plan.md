@@ -1,13 +1,17 @@
 # Neo-Brutalism: First Alternate Theme
 
-Current status (2026-09-22): N1/N2 complete; N3 family and pilot preview
+Current status (2026-09-23): N1/N2 complete; N3 family and pilot preview
 implementation plus automatable coverage are complete; original N4 real-route
 development acceptance is complete.
 The reviewed current screen batch is accepted for now. Later refinements require
 affected-surface rechecks. The user has now confirmed the current development
 qualification for the rendered route states, N5 state matrix, and N6 device/
 accessibility checks. The route inventory and disposition are closed; release
-qualification remains a separate Step 15 gate.
+qualification remains a separate Step 15 gate. The user authorized an
+internal Android release candidate using `TONOS_ENABLE_NEO_RELEASE=true` and
+accepted the signed `1.0.1+6` candidate on 2026-09-23 after all six focused device checks
+passed. Source-commit association remains before Step 15 closeout. See
+`scripts/verify_neo_release.ps1` and the current roadmap candidate record.
 
 Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) for current
 tasks and completion criteria. This document owns visual specifications and
@@ -1465,8 +1469,10 @@ preserving brightness, failed-save retry, Classic-only hiding, restart,
 downgrade fallback, and all bundled locale resources. User-run automated
 verification is recorded above. The user has now confirmed the consolidated
 human visual/accessibility batch and N6 device checks for the current working
-tree. Neo remains development-only until Step 15 explicitly qualifies it for
-release.
+tree. The subsequent Step 15 internal release opt-in is implemented; its
+automated checks and signed-device acceptance passed for the `1.0.1+6` internal
+candidate. Associate the tested working-tree source with a commit before
+closing Step 15.
 
 ### N5. Current Visual Review And Route-State Qualification
 

@@ -5,6 +5,9 @@ import 'app_theme_family.dart';
 const String _compileTimeExperimentalThemes = String.fromEnvironment(
   'TONOS_ENABLE_EXPERIMENTAL_THEMES',
 );
+const String _compileTimeNeoRelease = String.fromEnvironment(
+  'TONOS_ENABLE_NEO_RELEASE',
+);
 
 class AppThemeCapabilitiesException implements Exception {
   const AppThemeCapabilitiesException(this.message);
@@ -17,16 +20,18 @@ class AppThemeCapabilitiesException implements Exception {
 
 /// Controls which theme families may be selected by the current build.
 ///
-/// Classic is always available. Other families are development-only until
-/// they have complete definitions and a release approval.
+/// Classic is always available. Internal Neo release candidates require an
+/// explicit build opt-in, separate from the development theme switch.
 class AppThemeCapabilities {
   const AppThemeCapabilities({
     required this.experimentalThemesEnabled,
     required this.isReleaseMode,
+    this.neoReleaseEnabled = false,
   });
 
   final bool experimentalThemesEnabled;
   final bool isReleaseMode;
+  final bool neoReleaseEnabled;
 
   factory AppThemeCapabilities.fromCompileTime({
     bool? releaseMode,
@@ -36,20 +41,28 @@ class AppThemeCapabilities {
     final effectiveDebugMode = debugMode ?? kDebugMode;
 
     return AppThemeCapabilities(
-      experimentalThemesEnabled: _parseExperimentalThemesSetting(
+      experimentalThemesEnabled: _parseBooleanSetting(
+        'TONOS_ENABLE_EXPERIMENTAL_THEMES',
         _compileTimeExperimentalThemes,
         fallback: effectiveDebugMode,
       ),
       isReleaseMode: effectiveReleaseMode,
+      neoReleaseEnabled: _parseBooleanSetting(
+        'TONOS_ENABLE_NEO_RELEASE',
+        _compileTimeNeoRelease,
+        fallback: false,
+      ),
     );
   }
 
   /// Returns true only when the family may be selected in this build.
-  bool isAvailable(AppThemeFamily family) =>
-      family == AppThemeFamily.classic ||
-      (!isReleaseMode && experimentalThemesEnabled);
+  bool isAvailable(AppThemeFamily family) => switch (family) {
+    AppThemeFamily.classic => true,
+    AppThemeFamily.neoBrutalism =>
+      isReleaseMode ? neoReleaseEnabled : experimentalThemesEnabled,
+  };
 
-  /// Provides the family list that a development Theme Lab may display.
+  /// Provides the eligible families for settings and Theme Lab.
   List<AppThemeFamily> get availableFamilies =>
       List.unmodifiable(AppThemeFamily.values.where(isAvailable));
 
@@ -63,7 +76,8 @@ class AppThemeCapabilities {
     return family != null && isAvailable(family);
   }
 
-  static bool _parseExperimentalThemesSetting(
+  static bool _parseBooleanSetting(
+    String name,
     String value, {
     required bool fallback,
   }) {
@@ -75,9 +89,7 @@ class AppThemeCapabilities {
       case 'false':
         return false;
       default:
-        throw const AppThemeCapabilitiesException(
-          'TONOS_ENABLE_EXPERIMENTAL_THEMES must be true or false.',
-        );
+        throw AppThemeCapabilitiesException('$name must be true or false.');
     }
   }
 }

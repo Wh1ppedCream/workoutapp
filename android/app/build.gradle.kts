@@ -23,6 +23,20 @@ fun keystoreProperty(name: String): String =
     keystoreProperties.getProperty(name)
         ?: throw GradleException("Missing $name in android/key.properties")
 
+val internalBuildSetting = System.getenv("TONOS_ANDROID_INTERNAL_BUILD")
+val isInternalBuild = when {
+    internalBuildSetting.isNullOrBlank() -> false
+    internalBuildSetting.equals("true", ignoreCase = true) -> true
+    internalBuildSetting.equals("false", ignoreCase = true) -> false
+    else -> throw GradleException(
+        "TONOS_ANDROID_INTERNAL_BUILD must be true or false.",
+    )
+}
+val candidateApplicationId =
+    if (isInternalBuild) "com.tonos.internal" else "com.tonos"
+val applicationLabel =
+    if (isInternalBuild) "Tonos (Internal)" else "Tonos - Health and Fitness"
+
 android {
     namespace = "com.tonos"
     compileSdk = flutter.compileSdkVersion
@@ -38,7 +52,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tonos"
+        applicationId = candidateApplicationId
+        manifestPlaceholders["appLabel"] = applicationLabel
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

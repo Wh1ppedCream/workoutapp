@@ -11,7 +11,7 @@ enum AppThemeFamily {
     supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},
   ),
 
-  /// The development-only Neo-Brutalism appearance.
+  /// Neo-Brutalism, available when the build's theme policy permits it.
   neoBrutalism(
     code: 'neo_brutalism',
     supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},

@@ -1,6 +1,6 @@
 # Scalable Theme Design Plan
 
-## Current Status (2026-09-22)
+## Current Status (2026-09-23)
 
 Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) as the
 current Step 1-19 checklist. This document retains architecture and original
@@ -14,13 +14,14 @@ the consolidated human/device/N6 checklist for the current working tree. This
 records development qualification for the current routes, states,
 accessibility, and affected Classic-parity scope; it is not release approval.
 Step 14 is implemented, automated-verified, and included in that acceptance.
-Neo remains development-only until Step 15 receives an explicit release
-decision. Remaining work includes Step 15, release treatment for retained
+The Step 15 signed Android internal candidate and all six focused device
+checks were accepted on 2026-09-23. Its tested-source commit/hash association
+remains the final internal closeout task. Wider-release treatment for retained
 placeholders, final product-specific Neo recipes where still needed, broader
-per-file ratchet evidence, and native-speaker review. For the planned Android
-release, the user accepts the current translations for all supported locales
-without native-speaker review; that is an accepted limitation, not a completed
-linguistic signoff.
+per-file ratchet evidence, and native-speaker review remain separate. For the
+planned Android release, the user accepts the current translations for all
+supported locales without native-speaker review; that remains an accepted
+limitation, not a completed linguistic signoff.
 
 The 2026-09-15 theme-ready compatibility extension now gives evolving
 non-default exercise-definition, history, cardio, stretch, measurement, trend,
@@ -1066,10 +1067,11 @@ Completion evidence:
 - disabling an experimental family leaves the app usable.
 
 This step is implemented by `lib/theme/app_theme_capabilities.dart` and the
-provider integration. Classic and Neo-Brutalism are registered. Neo remains
-development-only behind the experimental policy; release builds retain Classic
-fallback and deny experimental enrollment. Future families must use this same
-policy before appearing in Theme Lab or a selector.
+provider integration. Classic and Neo-Brutalism are registered. Neo development
+selection uses the experimental policy; internal release candidates require
+the separate `TONOS_ENABLE_NEO_RELEASE=true` opt-in. Default release builds
+retain Classic fallback. Future families require explicit policy implementation
+before appearing in Theme Lab or a selector.
 
 ### Step 7: Introduce focused design tokens (foundation complete)
 
@@ -1325,15 +1327,30 @@ previous value after a failed write, and offers localized retry guidance.
 `test/theme/theme_family_selector_test.dart` covers selection, restart,
 downgrade, unavailable values, failed writes and bundled locale copy. User-run
 automated verification and the user's current human visual, accessibility,
-and N6 device acceptance are recorded above. Neo remains development-only
-pending the separate Step 15 release decision.
+and N6 device acceptance are recorded above. The Step 15 Android internal
+candidate is accepted; only its tested-source commit/hash association remains.
 
 The first expanded verifier rerun also exposed a 129 px right RenderFlex
 overflow in the Neo food editor at 320x640/2x text in both brightness modes.
 The bottom extended-action row now wraps on narrow layouts; the subsequent
 focused and expanded reruns passed.
 
-### Step 15: Qualify themes for release (not started)
+### Step 15: Qualify themes for release (Android internal candidate accepted; commit association pending)
+
+The user accepted the signed Android internal/closed candidate on 2026-09-23;
+all six focused device checks passed. The candidate uses application ID
+`com.tonos.internal`, version `1.0.1+6`, and SHA-256
+`549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. Neo is
+enabled through `TONOS_ENABLE_NEO_RELEASE=true`; Classic remains the default.
+The APK source tree was based on `55b0222071645392e1c66d5e01c5f8b3eaf10f11`
+with working-tree changes. Commit the exact tested source and associate that
+commit with the APK hash before closing the internal Step 15 gate. This is not
+approval for open testing or a Play Store release. See the [current candidate
+record](theme-consolidated-roadmap.md#step-15-qualify-themes-for-release) and
+[execution checklist](testing.md#neo-internal-android-release-candidate).
+Accepted development evidence is reused for unchanged surfaces.
+
+#### Broader release qualification (later open/Play release; not an internal-candidate blocker)
 
 1. Run preference, factory, token, contrast, primitive, release-surface,
    localization, golden, integration, and release-policy tests.
@@ -2117,7 +2134,7 @@ drive unapproved changes to Classic.
 | 3 | In progress | Complete classification and evidence for migrated scope |
 | 4 | Implemented | Recheck affected Classic parity through Steps 2/17 |
 | 5 | Implemented; original Q3 accepted | Preserve ordered writes, retry and lifetime handling; revalidate relevant changes |
-| 6 | Complete for Classic/development Neo | Maintain experimental release denial |
+| 6 | Internal Neo opt-in and candidate checks accepted | Preserve explicit opt-in/default Classic; wider release remains separate |
 | 7 | Foundation complete | Add only migration-justified roles and adoption checks |
 | 8 | Complete | Keep zero production AppColors consumers |
 | 9 | Foundation implemented | Preserve framework defaults; audit local overrides |
@@ -2128,15 +2145,16 @@ drive unapproved changes to Classic.
 | 18 | Current scoped work accepted; broader enrollment remains deliberately limited | Enroll only individually evidenced and qualified files |
 | 19 | Complete for agreed scope | Manual results accepted; 226 tests passed |
 | 13 | N1-N6 development scope accepted; route ledger closed | Requalify only affected scope after changes |
-| 14 | Implemented, automated-verified, and included in current development acceptance | Step 15 release gate remains separate |
-| 15 | Not started | Full alternate-family release qualification |
+| 14 | Implemented and accepted; available in the Android internal candidate | Public/open release approval remains separate |
+| 15 | Android internal/closed candidate accepted | Commit tested source and associate it with the APK SHA-256 before closeout |
 | 16 | Not started | Later families through the same architecture |
 
-Next action: prepare Step 15's release-candidate scope and decision record.
-Development human/device qualification is accepted for the current tree;
-release-specific automated output, candidate identity, localization signoff,
-and the explicit release decision remain. Keep broader ratchet enrollment
-evidence-driven rather than treating it as a blanket completion requirement.
+Next action: commit the exact tested candidate source and associate that commit
+with the APK hash to close internal Step 15. Development/device qualification,
+automated checks, and signed-APK acceptance are recorded. Wider release approval,
+production content promotion, and other previously documented product decisions
+remain separate. Keep broader ratchet enrollment evidence-driven rather than
+treating it as a blanket completion requirement.
 
 Historical migration execution order: use batches B1-B6 in
 [Theming Batch Playbook](theme-batch-playbook.md), then C1-C3, D1-D3, E1-E2,

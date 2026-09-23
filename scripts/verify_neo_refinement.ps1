@@ -111,6 +111,7 @@ $reviewTests = @(
     'test/theme/neo_brutalism_theme_test.dart'
     'test/theme/app_theme_tokens_test.dart'
     'test/theme/app_theme_capabilities_test.dart'
+    'test/theme/app_theme_compile_time_test.dart'
     'test/theme/app_theme_family_test.dart'
     'test/theme/app_theme_preferences_test.dart'
     'test/theme/debug_theme_family_control_test.dart'
@@ -163,6 +164,10 @@ dart analyze @reviewSources @reviewTests
 if ($LASTEXITCODE -ne 0) { throw 'Analysis failed. Paste the output before proceeding.' }
 flutter test test/theme
 if ($LASTEXITCODE -ne 0) { throw 'Theme tests failed. Paste the output before proceeding.' }
+flutter test test/theme/app_theme_compile_time_test.dart --dart-define=TONOS_ENABLE_NEO_RELEASE=true --dart-define=TONOS_EXPECT_NEO_RELEASE=true --dart-define=TONOS_ENABLE_EXPERIMENTAL_THEMES=false
+if ($LASTEXITCODE -ne 0) { throw 'Neo release opt-in test failed. Paste the output before proceeding.' }
+flutter test test/theme/app_theme_compile_time_test.dart --dart-define=TONOS_ENABLE_NEO_RELEASE=invalid --dart-define=TONOS_EXPECT_INVALID_NEO_RELEASE=true
+if ($LASTEXITCODE -ne 0) { throw 'Invalid Neo release flag test failed. Paste the output before proceeding.' }
 flutter test test/widgets/responsive_accessibility_test.dart
 if ($LASTEXITCODE -ne 0) { throw 'Responsive accessibility tests failed. Paste the output before proceeding.' }
 flutter test @boundaryTests

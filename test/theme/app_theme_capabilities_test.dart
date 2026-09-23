@@ -61,7 +61,7 @@ void main() {
       );
     });
 
-    test('release mode blocks Neo-Brutalism even when enabled', () {
+    test('experimental switch alone cannot enable Neo in release mode', () {
       const capabilities = AppThemeCapabilities(
         experimentalThemesEnabled: true,
         isReleaseMode: true,
@@ -71,13 +71,32 @@ void main() {
       expect(capabilities.isCodeAvailable('neo_brutalism'), isFalse);
     });
 
-    test('compile-time policy fails closed for release mode', () {
-      final capabilities = AppThemeCapabilities.fromCompileTime(
-        releaseMode: true,
-        debugMode: true,
+    test('explicit Neo release opt-in exposes both families', () {
+      const capabilities = AppThemeCapabilities(
+        experimentalThemesEnabled: false,
+        isReleaseMode: true,
+        neoReleaseEnabled: true,
       );
 
-      expect(capabilities.isReleaseMode, isTrue);
+      expect(capabilities.availableFamilies, <AppThemeFamily>[
+        AppThemeFamily.classic,
+        AppThemeFamily.neoBrutalism,
+      ]);
+      expect(capabilities.isCodeAvailable('neo_brutalism'), isTrue);
+      expect(
+        capabilities.resolve(AppThemeFamily.neoBrutalism),
+        AppThemeFamily.neoBrutalism,
+      );
+      expect(capabilities.isCodeAvailable('expressive'), isFalse);
+    });
+
+    test('release opt-in does not bypass disabled development themes', () {
+      const capabilities = AppThemeCapabilities(
+        experimentalThemesEnabled: false,
+        isReleaseMode: false,
+        neoReleaseEnabled: true,
+      );
+
       expect(capabilities.availableFamilies, <AppThemeFamily>[
         AppThemeFamily.classic,
       ]);
