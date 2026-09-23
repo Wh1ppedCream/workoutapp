@@ -542,6 +542,8 @@ class _TutorialCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tutorialAccent =
+        context.tutorialTokens.accentForeground ?? scheme.primary;
     final useStackedHeader = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final leadingIcon = Container(
       width: 42,
@@ -550,7 +552,7 @@ class _TutorialCardContent extends StatelessWidget {
         color: scheme.primary.withValues(alpha: 0.18),
         borderRadius: context.tutorialTokens.iconShape,
       ),
-      child: Icon(step.icon, color: scheme.primary),
+      child: Icon(step.icon, color: tutorialAccent),
     );
     final title = Text(
       step.title,
@@ -559,7 +561,7 @@ class _TutorialCardContent extends StatelessWidget {
     final progress = Text(
       '$stepNumber/$totalSteps',
       style: theme.textTheme.labelLarge?.copyWith(
-        color: scheme.primary,
+        color: tutorialAccent,
         fontWeight: FontWeight.w900,
       ),
     );

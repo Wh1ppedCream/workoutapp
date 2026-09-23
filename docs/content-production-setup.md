@@ -36,11 +36,12 @@ https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_man
 
 The production bucket was seeded for pipeline validation, but it is not yet an
 approved release source. The canonical development source is manifest version
-10 with 154 of 310 exercises covered (49.7%) across batches 001 through 008.
-Production was last audited at version 5 with 62 assets. Recalculate the exact
-promotion delta from the current manifests before release instead of relying on
-the older 65-asset estimate. Promote the complete canonical asset set and
-manifest before approving production content for distribution.
+15 with 253 of 300 exercises covered (84.3%) across batches 001 through 013;
+the latest batches are in development only. Production was last audited at
+version 5 with 62 assets. Recalculate the exact promotion delta from the
+current manifests before release instead of relying on the older 65-asset
+estimate. Promote the complete canonical asset set and manifest before
+approving production content for distribution.
 
 ## Build Contract
 

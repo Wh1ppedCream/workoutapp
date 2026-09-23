@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-22.
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -17,8 +17,8 @@ content-target tests and release APK builds. Experimental navigation is now
 explicitly excluded from release artifacts while remaining available to
 development builds for future product work. Stable
 exercise-catalog identities and standardized safe
-error recovery are implemented, and development media manifest version 10
-contains 154 of 301 exercise thumbnails (51.2%). Production media and the
+error recovery are implemented, and development media manifest version 15
+contains 253 of 300 exercise thumbnails (84.3%); 47 remain uncovered. Production media and the
 diagnostics relay remain intentionally disabled. Production was last audited at
 62 thumbnails and must be re-audited before promotion. Catalog revision 7,
 its concise instruction format, premade-plan, alias-migration, media-source,
@@ -31,7 +31,8 @@ the generated API. Native-speaker review and final signed-device localization
 review remain open. The scalable multi-theme foundation is now implemented
 through Steps 8-11 in `theme-design-plan.md`: focused tokens, the shared
 Material baseline, Tonos primitives, and the development-only Theme Lab are
-available while Classic remains the only selectable family. Step 12 has now
+available while Classic remains the only release-eligible family; Neo is
+selectable only in eligible development builds. Step 12 has now
 started with the application-shell/shared-action and shared-settings-building-
 block slices, including the first UI Appearance, User Information, and
 bottom-tab editor recipes, the Profile deferred-feature badge, and the primary
@@ -39,9 +40,10 @@ Train page's Overview/Plans segmented control and split workout-bar geometry,
 elevation, and action typography, plus the active-workout timer, completion
 sheet geometry/typography, and saved-session summary/set surface recipes; the
 shared drawer navigation, persistent session action, and durability feedback
-surface are now token-backed; the user-facing family picker, the remaining
-release-surface migrations, and alternate-family qualification remain future
-work. The Step 3
+surface are now token-backed; the user-facing family picker is implemented and
+its selector, theme, responsive, and style-ratchet checks have user-run passing
+evidence. Remaining release-surface migrations and alternate-family
+qualification remain future work. The Step 3
 structural-style inventory is now mechanically checked in report-only mode;
 existing pending candidates remain intentionally visible until their owning
 release-surface migrations.
@@ -101,8 +103,8 @@ product-specific recipes and qualification remain in the theming roadmap.
    job, privacy documentation, and regression tests are present. Distributed
    builds remain relay-disabled unless a future release explicitly supplies an
    approved relay URL.
-8. Production media readiness is audited. Development manifest version 10 has
-   154 assets; production version 5 has 62. Production has no custom domain,
+8. Production media readiness is audited. Development manifest version 15 has
+   253 assets; production version 5 has 62. Production has no custom domain,
    and its promotion scope must be recalculated against the latest development
    manifest before it becomes the app default.
 9. Fabricated health data is removed from selectable UI. Current Metrics now
@@ -232,9 +234,10 @@ product-specific recipes and qualification remain in the theming roadmap.
    Preserve the current appearance as the default Classic theme, retain the
    independently persisted theme-family preference, and maintain the semantic
    color, typography, shape, elevation, motion, accessibility, and component
-   tokens already implemented. Finish the reachable-route ledger, full Neo
-   recipes for stabilized products, development qualification, and later
-   release-selector/release gates. Follow the theming documents and do not
+   tokens already implemented. Maintain the closed reachable-route ledger,
+   finish full Neo recipes for stabilized products, non-happy-path development
+   qualification, and later release-selector/release gates. Follow the
+   theming documents and do not
    change workout behavior, navigation logic, or user data.
 
 2. **Retire the alternative Train hub.**
@@ -369,7 +372,7 @@ product-specific recipes and qualification remain in the theming roadmap.
     with strength training and cover migrations, localization, and devices.
 
 23. **Continue exercise and anatomy media.**
-   Development covers 154 of 301 exercise thumbnails. Continue reviewed
+   Development covers 253 of 300 exercise thumbnails. Continue reviewed
     batches and establish one licensed, accessible, versioned illustration or
     heatmap direction for equipment, bodypart, and muscle media.
 
@@ -427,7 +430,7 @@ product-specific recipes and qualification remain in the theming roadmap.
 
 33. **Make content status documentation generated or mechanically verified.**
     Historical production audit/changelog entries retain v9/127/65 figures while the
-    development source is v10/154. Generate coverage and promotion scope from
+    development source is v15/253. Generate coverage and promotion scope from
     canonical manifests so roadmap, setup, changelog, and release reports cannot
     silently disagree.
 

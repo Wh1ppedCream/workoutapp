@@ -210,6 +210,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get uiAppearanceSubtitle => 'Contrôlez l’apparence de Tonos et le fonctionnement des onglets de navigation.';
 
   @override
+  String get themeFamilyTitle => 'Famille de thème';
+
+  @override
+  String get themeFamilySubtitle => 'Choisissez la famille visuelle indépendamment du mode clair ou sombre.';
+
+  @override
+  String get themeFamilyClassic => 'Classique';
+
+  @override
+  String get themeFamilyClassicDescription => 'L’apparence familière de Tonos.';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'Néo-brutalisme';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'Couleurs vives, contours à l’encre et ombres nettes.';
+
+  @override
   String get displaySettingsTitle => 'Affichage';
 
   @override
@@ -6579,6 +6597,24 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get uiAppearanceSubtitle => 'Contrôlez l’apparence de Tonos et le comportement des onglets inférieurs.';
+
+  @override
+  String get themeFamilyTitle => 'Famille de thème';
+
+  @override
+  String get themeFamilySubtitle => 'Choisissez la famille visuelle indépendamment du mode clair ou sombre.';
+
+  @override
+  String get themeFamilyClassic => 'Classique';
+
+  @override
+  String get themeFamilyClassicDescription => 'L’apparence familière de Tonos.';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'Néo-brutalisme';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'Couleurs vives, contours à l’encre et ombres nettes.';
 
   @override
   String get displaySettingsTitle => 'Affichage';

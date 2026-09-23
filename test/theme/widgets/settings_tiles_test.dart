@@ -430,6 +430,55 @@ void main() {
     expect(valueText.style?.fontWeight, FontWeight.w900);
   });
 
+  testWidgets('shared settings value text wraps at large text scale', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: const SettingsValueText(value: 'Simplified Chinese language'),
+        ),
+      ),
+    );
+
+    final valueText = tester.widget<Text>(
+      find.text('Simplified Chinese language'),
+    );
+    expect(valueText.maxLines, 2);
+    expect(valueText.overflow, TextOverflow.ellipsis);
+    expect(valueText.softWrap, isTrue);
+  });
+
+  testWidgets('settings action tiles use a bounded layout for large text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      _testApp(
+        MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: const SettingsActionTile(
+            icon: Icons.palette_outlined,
+            title: 'Theme family',
+            subtitle: 'Choose the visual family used throughout the app.',
+            trailing: SettingsValueText(value: 'Neo-Brutalism'),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(ListTile), findsNothing);
+    expect(find.text('Theme family'), findsOneWidget);
+    expect(
+      find.text('Choose the visual family used throughout the app.'),
+      findsOneWidget,
+    );
+    expect(find.text('Neo-Brutalism'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('shared settings status badges resolve surface recipes', (
     tester,
   ) async {

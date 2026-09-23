@@ -328,6 +328,45 @@ void main() {
     expect(shadow.offset, _testEffects.cardShadowOffset);
   });
 
+  testWidgets(
+    'preserves custom rounded geometry while applying card outline and shadow',
+    (tester) async {
+      const customShape = RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(4)),
+      );
+      await tester.pumpWidget(
+        _testApp(
+          const TonosSurface(
+            key: ValueKey('custom-card'),
+            variant: TonosSurfaceVariant.card,
+            shape: customShape,
+            child: Text('Custom card'),
+          ),
+          decorations: _testDecorations.copyWith(
+            panel: AppSurfaceDecoration.outlinedCompactShadow,
+            card: AppSurfaceDecoration.outlinedCompactShadow,
+          ),
+        ),
+      );
+
+      final material = _materialFor(tester, 'custom-card');
+      final materialShape = material.shape! as RoundedRectangleBorder;
+      expect(materialShape.borderRadius, customShape.borderRadius);
+      expect(materialShape.side.color, _testSurfaces.neutralOutline);
+      expect(materialShape.side.width, _testShapes.outlineWidth);
+
+      final decorated = tester.widget<DecoratedBox>(
+        find.descendant(
+          of: find.byKey(const ValueKey<String>('custom-card')),
+          matching: find.byType(DecoratedBox),
+        ),
+      );
+      final decoration = decorated.decoration as BoxDecoration;
+      expect(decoration.borderRadius, customShape.borderRadius);
+      expect(decoration.boxShadow, hasLength(1));
+    },
+  );
+
   testWidgets('uses the raised-panel shadow role for panelRaised', (
     tester,
   ) async {

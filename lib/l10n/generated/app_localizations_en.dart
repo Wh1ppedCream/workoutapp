@@ -210,6 +210,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uiAppearanceSubtitle => 'Control the way Tonos looks and how the bottom tabs behave.';
 
   @override
+  String get themeFamilyTitle => 'Theme family';
+
+  @override
+  String get themeFamilySubtitle => 'Choose the visual family independently of light or dark mode.';
+
+  @override
+  String get themeFamilyClassic => 'Classic';
+
+  @override
+  String get themeFamilyClassicDescription => 'The familiar Tonos appearance.';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'Neo-Brutalism';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'Bold colors, ink outlines, and hard shadows.';
+
+  @override
   String get displaySettingsTitle => 'Display';
 
   @override

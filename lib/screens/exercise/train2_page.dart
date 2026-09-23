@@ -592,6 +592,7 @@ class _Train2PageState extends State<Train2Page> {
 
           appBar: AppBar(
             leading: IconButton(
+              tooltip: strings.trainMenuTitle,
               icon: const Icon(Icons.menu),
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
@@ -633,6 +634,7 @@ class _Train2PageState extends State<Train2Page> {
             centerTitle: true,
             actions: [
               IconButton(
+                tooltip: strings.drawerGymProfiles,
                 icon: CircleAvatar(
                   backgroundColor: semantic.trainProfileAvatar,
                   child: Text(

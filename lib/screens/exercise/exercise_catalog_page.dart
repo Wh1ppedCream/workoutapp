@@ -913,7 +913,11 @@ class _ExerciseCatalogBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        _ExerciseInfoMediaButton(definition: definition, onTap: onHeatmapTap),
+        _ExerciseInfoMediaButton(
+          definition: definition,
+          onTap: onHeatmapTap,
+          heatmapSurface: foregroundSurface,
+        ),
       ],
     );
   }
@@ -922,10 +926,12 @@ class _ExerciseCatalogBar extends StatelessWidget {
 class _ExerciseInfoMediaButton extends StatelessWidget {
   final ExerciseDefinition definition;
   final VoidCallback onTap;
+  final Color? heatmapSurface;
 
   const _ExerciseInfoMediaButton({
     required this.definition,
     required this.onTap,
+    this.heatmapSurface,
   });
 
   @override
@@ -939,6 +945,7 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         padding: EdgeInsets.zero,
         framed: false,
+        heatmapSurface: heatmapSurface,
         onTap: onTap,
       ),
     );

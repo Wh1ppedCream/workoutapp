@@ -231,6 +231,7 @@ abstract final class NeoBrutalismThemeDefinition {
       heroShape: sheetRadius,
       cardShadow: hardShadow,
       coachShadow: hardShadow,
+      accentForeground: isDark ? yellow : const Color(0xFF7A5200),
     );
     final mediaTokens = AppMediaTokens(
       editorAddSurface: secondarySurface,

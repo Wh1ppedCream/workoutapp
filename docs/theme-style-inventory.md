@@ -11,9 +11,24 @@ for route disposition, narrow exceptions, stable finding identity, duplicate
 handling, scanner fixtures and CI acceptance criteria. The inventory artifact
 remains report-only; the separate ratchet manifest is the only enforcement
 baseline and does not reclassify the broader debt.
-The latest user-run theme/configuration suite passed 200 tests and analysis
-reported no issues; manual qualification remains separate from inventory
-classification.
+The latest supplied corrected-scope verification (2026-09-22) formatted 135
+files with 0 changes and passed clean analysis, 321 theme/configuration tests,
+6 responsive tests, 46 route-boundary tests, and enforce-mode ratchet. The
+user's 2026-09-17 confirmation accepts current-tree development human/device/N6
+qualification; it does not change inventory classification or qualify a public
+release. Older pending labels below describe earlier checkpoints and are
+superseded for the current working tree by the consolidated roadmap and Q3 gate.
+
+Post-review non-human implementation pass (2026-09-17; verified again by the
+2026-09-22 corrected-scope user run): the
+route ledger now has exact row/path/caller checks, and dedicated source
+contracts cover N5 state owners plus nested settings residue. Focused behavior
+and parity tests cover nutrition failure/rollback, stable log-entry ordering,
+food-editor validation/layout, health delta contrast, large-text settings
+values, Classic/Neo compatibility-boundary ownership, and custom rounded
+surface outline/shadow geometry. The existing
+report-only inventory remains unchanged, and no additional production file
+was enrolled in the ratchet.
 
 The 2026-09-15 theme-ready compatibility extension is recorded separately from
 full route migration. TonosThemeReadyCard is a migrated theme-system primitive,
@@ -23,10 +38,11 @@ final Neo recipes are reviewed. This batch does not change the report-only
 manifest or enroll those consumers in the ratchet.
 
 The [Q3 readiness gate](theme-q3-readiness-gate.md) is the current
-cross-prerequisite record. The Q2 tutorial correction passed 213 scoped tests
-and clean analysis. Readiness remains blocked while reachable-route/manual
-qualification remains open. Inventory classification and ratchet enrollment do
-not convert those items into qualified evidence.
+cross-prerequisite record. Current development qualification is accepted.
+Step 15 release qualification, native-speaker localization signoff, selected
+product/design decisions, and evidence for any additional ratchet enrollment
+remain distinct work. Inventory classification and ratchet enrollment do not
+replace that evidence.
 
 ## C3-D3 Review Correction (2026-09-09)
 
@@ -84,9 +100,10 @@ Latest scoped user verification: B6 passed with a clean scoped analyzer and
 141 focused tests. B1, B2, B3, B4, and B5 are also scoped-verified. C1 is
 scoped-verified with clean analysis and 148 focused tests; Step 12B remains in
 progress.
-C2 is implemented-awaiting-verification for the exercise-detail form guide,
-metrics, records, chart, selector, and sheet-shell recipes. Its zoom, image,
-scrim, heatmap, and media-overlay decisions remain assigned to C3.
+C2 is automated-verified in the expanded 2026-09-17 user run for the
+exercise-detail form guide, metrics, records, chart, selector, and sheet-shell
+recipes. Its zoom, image, scrim, heatmap, and media-overlay decisions remain
+assigned to C3, with rendered state and device qualification still pending.
 Swap actions, filter, match badge and marker now have shared recipes. B1 is now
 scoped-verified for the preset thumbnail frame and swap secondary copy opacity,
 with clean analysis and 134 scoped tests. This does not change
@@ -125,8 +142,9 @@ series retains data-visualization ownership and neutral text stays inherited.
 Compact/full-page layout, metric identity, units,
 entry editing/deletion, refresh/session invalidation, and settings navigation
 remain behavior-owned by their existing callers. The report-only manifest is
-unchanged. Focused source/token tests were added; user-run verification and
-rendered empty/populated/edit-state evidence remain pending.
+unchanged. Focused source/token tests are covered by the expanded user run;
+rendered empty/populated/edit-state evidence and device qualification remain
+pending.
 
 The structural-style inventory is the mechanical starting point for Step 3 of
 the theme plan. It detects style-bearing Dart expressions, records their

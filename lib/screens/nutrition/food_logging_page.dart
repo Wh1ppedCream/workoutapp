@@ -937,6 +937,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   Widget _buildPrePlanned(BuildContext context) {
     final p = context.watch<NutritionProfile>();
+    final strings = AppLocalizations.of(context);
 
     return FutureBuilder<List<Recipe>>(
       future: p.recentRecipes(limit: 20),
@@ -977,7 +978,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                 title: Text(r.name),
                 subtitle: Text(AppLocalizations.of(context).foodRecentRecipe),
                 trailing: IconButton(
-                  tooltip: 'Log 1× now',
+                  tooltip: strings.foodAddOne,
                   icon: const Icon(Icons.playlist_add_check),
                   onPressed: () async {
                     final messenger = ScaffoldMessenger.of(context);
@@ -1339,6 +1340,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   }
 
   Widget _foodResultTile(BuildContext context, Food f) {
+    final strings = AppLocalizations.of(context);
     return TonosThemeReadyCard(
       child: ListTile(
         title: Text(f.name),
@@ -1359,7 +1361,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               selector: (_, p) => p.isFavorite(f.id!),
               builder:
                   (ctx, isFav, _) => IconButton(
-                    tooltip: isFav ? 'Unfavorite' : 'Favorite',
+                    tooltip:
+                        isFav ? strings.foodUnfavorite : strings.foodFavorite,
                     icon: Icon(isFav ? Icons.star : Icons.star_border),
                     color:
                         isFav
@@ -1372,21 +1375,21 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   ),
             ),
             IconButton(
-              tooltip: 'Customize food',
+              tooltip: strings.foodCustomize,
               icon: const Icon(Icons.settings),
               color: context.nutritionTokens.mutedAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openCustomizeFood(f),
             ),
             IconButton(
-              tooltip: 'Edit & add',
+              tooltip: strings.foodEditAndAdd,
               icon: const Icon(Icons.edit),
               color: context.nutritionTokens.favoriteAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openAddSheet(context, f),
             ),
             IconButton(
-              tooltip: 'Add 1',
+              tooltip: strings.foodAddOne,
               icon: const Icon(Icons.add_circle),
               color: context.nutritionTokens.addFoodAction,
               visualDensity: VisualDensity.compact,

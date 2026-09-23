@@ -22,6 +22,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
   final EdgeInsets padding;
   final VoidCallback? onTap;
   final bool framed;
+  final Color? heatmapSurface;
 
   const ExerciseMediaThumbnail({
     super.key,
@@ -31,6 +32,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
     this.padding = const EdgeInsets.all(4),
     this.onTap,
     this.framed = true,
+    this.heatmapSurface,
   });
 
   @override
@@ -241,6 +243,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
   Widget _buildHeatmapFallback(BuildContext context) {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
+    final heatmapSurface = widget.heatmapSurface ?? surfaces.mediaPlaceholder;
     final heatmapFrequencyMap = bodyPartFrequencyMapFromNames({
       for (final bodyPart in widget.definition.bodyParts) bodyPart.name: 1.0,
     });
@@ -256,8 +259,8 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
     final heatmapSize = widget.size - widget.padding.horizontal;
     return BodyHeatmap(
       frequencyMap: heatmapFrequencyMap,
-      lowColor: tonosHeatmapLowForSurface(context, surfaces.mediaPlaceholder),
-      highColor: tonosHeatmapHighForSurface(context, surfaces.mediaPlaceholder),
+      lowColor: tonosHeatmapLowForSurface(context, heatmapSurface),
+      highColor: tonosHeatmapHighForSurface(context, heatmapSurface),
       width: heatmapSize,
       height: heatmapSize,
     );

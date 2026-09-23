@@ -404,6 +404,42 @@ abstract class AppLocalizations {
   /// **'Control the way Tonos looks and how the bottom tabs behave.'**
   String get uiAppearanceSubtitle;
 
+  /// No description provided for @themeFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme family'**
+  String get themeFamilyTitle;
+
+  /// No description provided for @themeFamilySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the visual family independently of light or dark mode.'**
+  String get themeFamilySubtitle;
+
+  /// No description provided for @themeFamilyClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get themeFamilyClassic;
+
+  /// No description provided for @themeFamilyClassicDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The familiar Tonos appearance.'**
+  String get themeFamilyClassicDescription;
+
+  /// No description provided for @themeFamilyNeoBrutalism.
+  ///
+  /// In en, this message translates to:
+  /// **'Neo-Brutalism'**
+  String get themeFamilyNeoBrutalism;
+
+  /// No description provided for @themeFamilyNeoBrutalismDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold colors, ink outlines, and hard shadows.'**
+  String get themeFamilyNeoBrutalismDescription;
+
   /// No description provided for @displaySettingsTitle.
   ///
   /// In en, this message translates to:

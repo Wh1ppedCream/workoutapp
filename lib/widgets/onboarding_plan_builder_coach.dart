@@ -299,6 +299,8 @@ class _InteractiveTutorialCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final tutorialAccent =
+        context.tutorialTokens.accentForeground ?? scheme.primary;
 
     return Material(
       color: Colors.transparent,
@@ -323,7 +325,7 @@ class _InteractiveTutorialCard extends StatelessWidget {
                 color: scheme.primary.withValues(alpha: 0.18),
                 borderRadius: context.tutorialTokens.coachIconShape,
               ),
-              child: Icon(step.icon, color: scheme.primary, size: 20),
+              child: Icon(step.icon, color: tutorialAccent, size: 20),
             ),
             const SizedBox(width: 10),
             Expanded(

@@ -1,9 +1,24 @@
 # Theme Style Ratchet
 
-Status: one exact production scope is enrolled and CI enforcement is enabled for
-that scope. The latest user run passed analysis and 200 theme/configuration
-tests, including the nonempty CLI fixture. This is scoped protection, not full
-repository styling qualification.
+Status: one exact production scope is enrolled and CI enforcement is enabled
+for that scope. The latest supplied corrected-scope run (2026-09-22) reported
+135 files formatted with 0 changes, clean analysis, 321 theme tests, 6
+responsive tests, 46 route-boundary tests, and passing enforce-mode ratchet.
+This is scoped protection, not full repository styling qualification.
+
+Step 14's new Appearance selector is intentionally not enrolled here even
+though its route/device qualification is now user-accepted. The protected
+scope remains unchanged: the manifest records additional approvals for current
+TonosSurface fingerprints, but no new production file is enrolled merely
+because the selector is implemented or manually qualified.
+
+The 2026-09-17 implementation pass adds optional shape/elevation forwarding
+through the already protected TonosSurface boundary and preserves the
+ratchet-recognized style statements. The post-review shape regression fix and
+contract-test changes were covered by the corrected-scope verifier run on
+2026-09-22 and passed. No new production file was enrolled. Do not
+automatically regenerate approvals or treat the new compatibility test as a
+substitute for per-file review.
 
 ## Eligibility Decision
 
@@ -87,6 +102,9 @@ do not work around limitations with broad approvals. Inspect existing CI and
 workflow contract tests before adding the job. Never regenerate approvals in CI.
 
 Q1's scoped automated completion is recorded: user-run results, one justified
-production scope and the CI rollout are present. Additional production scopes,
-interpolation parser support, and manual/device qualification remain open. This
-does not satisfy Q2/Q3 or qualify pending E2 routes.
+production scope and the CI rollout are present. Additional production scopes
+still require per-file evidence, and interpolation parser support remains
+deferred. Current development human/device qualification is accepted in the
+Q3 gate; this ratchet neither replaces that qualification nor approves a
+public release. The single enrolled scope does not imply repository-wide style
+coverage.

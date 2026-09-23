@@ -185,6 +185,24 @@ class AppLocalizationsBn extends AppLocalizations {
   String get uiAppearanceSubtitle => 'Tonos-এর চেহারা এবং নিচের ট্যাবগুলোর আচরণ নিয়ন্ত্রণ করুন।';
 
   @override
+  String get themeFamilyTitle => 'থিমের ধরন';
+
+  @override
+  String get themeFamilySubtitle => 'লাইট বা ডার্ক মোড থেকে আলাদাভাবে ভিজ্যুয়াল থিমের ধরন বেছে নিন।';
+
+  @override
+  String get themeFamilyClassic => 'ক্লাসিক';
+
+  @override
+  String get themeFamilyClassicDescription => 'Tonos-এর পরিচিত চেহারা।';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'নিও-ব্রুটালিজম';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'উজ্জ্বল রং, গাঢ় আউটলাইন এবং কঠিন ছায়া।';
+
+  @override
   String get displaySettingsTitle => 'প্রদর্শন';
 
   @override

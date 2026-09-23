@@ -185,6 +185,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uiAppearanceSubtitle => '控制 Tonos 的外观以及底部标签栏的行为。';
 
   @override
+  String get themeFamilyTitle => '主题系列';
+
+  @override
+  String get themeFamilySubtitle => '独立于浅色或深色模式选择视觉主题系列。';
+
+  @override
+  String get themeFamilyClassic => '经典';
+
+  @override
+  String get themeFamilyClassicDescription => 'Tonos 的熟悉外观。';
+
+  @override
+  String get themeFamilyNeoBrutalism => '新野兽主义';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => '鲜明色彩、墨线轮廓和硬朗阴影。';
+
+  @override
   String get displaySettingsTitle => '显示';
 
   @override

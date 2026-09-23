@@ -44,6 +44,8 @@ class TonosThemeReadyCard extends StatelessWidget {
       color: color,
       margin: margin,
       clipBehavior: clipBehavior,
+      shape: shape,
+      elevation: elevation,
       child: child,
     );
   }

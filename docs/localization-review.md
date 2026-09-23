@@ -11,6 +11,16 @@ Native-speaker sign-off is pending for every supported non-English locale.
 Record the reviewer, date, build version, and disposition below before calling a
 locale release-ready.
 
+## Planned Android Release Owner Acceptance (2026-09-22)
+
+The product owner confirms all seven current locales remain supported and
+accepts the current translations for the planned Android release without
+native-speaker review. This is an explicit acceptance of the outstanding
+linguistic-review limitation for that release scope; it is not native-speaker
+signoff and does not mark the per-locale rows below complete. Native-speaker
+review may be performed later. Record the fixed candidate version and final
+release disposition when the Android candidate is chosen.
+
 ## Latest automated evidence
 
 On 2026-09-03, all seven ARB resources contained the 1,933 canonical message

@@ -2112,13 +2112,13 @@ String? _measurementNote(Measurement entry) {
 }
 
 Color? _deltaColor(BuildContext context, double? delta) {
-  final progressColors = context.progressColors;
   if (delta == null || delta.abs() < 0.001) {
     return Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7);
   }
+  final surface = _healthTrendCardSurface(context);
   return delta > 0
-      ? progressColors.healthIncrease
-      : progressColors.healthDecrease;
+      ? tonosHealthIncreaseForSurface(context, surface)
+      : tonosHealthDecreaseForSurface(context, surface);
 }
 
 String _cleanNumber(double value) {

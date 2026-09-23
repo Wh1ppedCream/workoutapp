@@ -1,6 +1,6 @@
 # Scalable Theme Design Plan
 
-## Current Status (2026-09-16)
+## Current Status (2026-09-22)
 
 Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) as the
 current Step 1-19 checklist. This document retains architecture and original
@@ -9,11 +9,18 @@ requirements; historical batch descriptions below are evidence for their dates.
 Q3 readiness and original N4 real-route checks were accepted. Neo light/dark,
 development selection, shared previews, subsequent refinements, and the
 repository-side pilot/compatibility qualification are implemented. The user
-has now accepted the current 21-item Neo visual review. The final focused
-selector-contrast verification passed formatting, clean analysis, and 63 tests.
-Complete route-state/reachability disposition, current-code device
-qualification, and matched Classic evidence remain. Steps 14-16 remain future
-delivery work.
+accepted the current 21-item Neo visual review and, on 2026-09-17, confirmed
+the consolidated human/device/N6 checklist for the current working tree. This
+records development qualification for the current routes, states,
+accessibility, and affected Classic-parity scope; it is not release approval.
+Step 14 is implemented, automated-verified, and included in that acceptance.
+Neo remains development-only until Step 15 receives an explicit release
+decision. Remaining work includes Step 15, release treatment for retained
+placeholders, final product-specific Neo recipes where still needed, broader
+per-file ratchet evidence, and native-speaker review. For the planned Android
+release, the user accepts the current translations for all supported locales
+without native-speaker review; that is an accepted limitation, not a completed
+linguistic signoff.
 
 The 2026-09-15 theme-ready compatibility extension now gives evolving
 non-default exercise-definition, history, cardio, stretch, measurement, trend,
@@ -21,13 +28,16 @@ and nutrition consumers an explicit Classic/Neo presentation boundary. This
 reduces unowned structural styling without claiming final Neo route design:
 the shared wrapper keeps the original Classic `Card` recipe and resolves a
 semantic `TonosSurface` for Neo. Final product-specific geometry, state
-coverage, and device qualification remain deferred until those areas stabilize.
+coverage, and product-specific design decisions remain deferred for selected
+evolving surfaces; this does not reopen accepted development qualification.
 
 ## Historical Pre-Q2 Status
 
 Read [Pre-Q2 Closeout Ledger](theme-pre-q2-closeout.md) for the current seven-item
 follow-up status and verification evidence. It supersedes historical pending-test
-labels below. The latest user run passed 200 scoped theme/configuration tests;
+labels below. The latest earlier expanded run passed 302 scoped
+theme/configuration tests,
+plus 6 responsive tests;
 manual, device,
 accessibility, visual-parity, and release qualification remain separate gates.
 
@@ -78,10 +88,11 @@ correction supersedes older statements below about generic progress palettes
 and shared health-card surfaces.
 
 Latest verification: the B1-C2 review fixes, C2-D3 work, and pre-Q2 follow-up
-changes are covered by clean analysis and 200 passing scoped tests reported by
-the user. This supersedes pending-verification labels in the historical records
-below. Device and full-release qualification remain pending and are tracked in
-the closeout ledger.
+changes are covered by clean analysis, 302 passing theme/configuration tests,
+6 passing responsive tests, a passing route-boundary batch, and a passing
+enforce-mode ratchet reported by the user. This supersedes pending-
+verification labels in the historical records below. Device and full-release
+qualification remain pending and are tracked in the closeout ledger.
 Device visual/interaction checks and full-release qualification remain pending;
 the source-contract tests alone do not establish rendered state preservation.
 
@@ -95,11 +106,11 @@ app_configuration_test; that is scoped automated evidence, not full visual or
 release qualification. C1 catalog/media implementation is now scoped-verified
 with clean analysis and 148 focused tests; device and full-release
 qualification remain pending. C2 detail-tabs/form-guide/metrics/records work
-is implemented-awaiting-verification; C3 remains responsible for zoom and
-media overlays. D1 dashboard/logbook structure is now
-implemented-awaiting-verification; D2 progress/records/metric structure is
-scoped-verified with clean analysis and 158 focused tests; device and
-full-release verification remain pending.
+is automated-verified in the expanded 2026-09-17 user run; C3 remains
+responsible for zoom and media overlays. D1 dashboard/logbook structure is
+also automated-verified in that run; D2 progress/records/metric structure is
+scoped-verified with clean analysis and 158 focused tests; rendered state,
+device and full-release verification remain pending.
 
 The earlier review identified Classic color differences, overlapping theme
 writes, and incomplete rendered parity coverage. Source fixes and regression
@@ -147,7 +158,8 @@ separately as correctness work.
 
 ## Objective
 
-C3 is implemented-awaiting-verification alongside the B1-C2 review fixes.
+C3 is automated-verified in the expanded 2026-09-17 user run alongside the
+B1-C2 review fixes.
 Detail media geometry and shadows use AppMediaTokens; fixed viewing contrast
 has a narrow MediaViewingColors owner. Full-size images now have an error
 fallback. See the playbook C3 record for preserved interactions and outstanding
@@ -157,7 +169,7 @@ Review follow-up for B1-C2: corrected the exercise-detail handle to its original
 0.55 opacity (the workout handle remains 0.50), removed an unused test import,
 avoided eager fallback token construction, and added in-place flow presentation
 refresh on theme changes. Regression coverage checks flow graph geometry and
-connection retention. These fixes await user-run analysis/tests. C2's source
+connection retention. The expanded user-run analysis/tests passed. C2's source
 contracts must not be treated as rendered tab/scroll/state or visual evidence.
 
 Create a theme system that keeps the current Tonos appearance as the default
@@ -1030,9 +1042,9 @@ Completion evidence:
 This step is implemented by `AppThemeSelection`, `AppThemePreferences`, and
 the evolved `ThemeProvider`. Appearance preferences remain device-local in
 `SharedPreferences`; settings export/import can adopt the same explicit codes
-later as a separate preference-schema decision. The family selector remains
-hidden until the centralized availability policy and a complete alternate
-family exist.
+later as a separate preference-schema decision. The family selector is exposed
+only where the centralized availability policy reports an eligible complete
+family.
 
 ### Step 6: Add centralized theme availability policy (complete)
 
@@ -1283,7 +1295,7 @@ Completion evidence:
 - Classic remains unchanged and selectable;
 - feature behavior and data are identical between families.
 
-### Step 14: Add the user-facing theme selector (not started)
+### Step 14: Add the user-facing theme selector (implemented; current development qualification accepted)
 
 1. Add localized names, concise descriptions, and previews for approved
    families to UI and Appearance settings.
@@ -1303,6 +1315,23 @@ Completion evidence:
 - users can switch approved families without restarting or losing work;
 - family and brightness remain separate settings;
 - Classic is clearly available as the familiar permanent option.
+
+Current implementation record (2026-09-16): `UIAppearanceSettingsPage` uses the
+capability-filtered `ThemeProvider.availableFamilies` list, a compact preview
+of each family at the active brightness, and the localized `TonosChoiceDialog`
+radio control. Selection persists through
+`ThemeProvider.setFamily`, preserves the independent brightness mode, keeps the
+previous value after a failed write, and offers localized retry guidance.
+`test/theme/theme_family_selector_test.dart` covers selection, restart,
+downgrade, unavailable values, failed writes and bundled locale copy. User-run
+automated verification and the user's current human visual, accessibility,
+and N6 device acceptance are recorded above. Neo remains development-only
+pending the separate Step 15 release decision.
+
+The first expanded verifier rerun also exposed a 129 px right RenderFlex
+overflow in the Neo food editor at 320x640/2x text in both brightness modes.
+The bottom extended-action row now wraps on narrow layouts; the subsequent
+focused and expanded reruns passed.
 
 ### Step 15: Qualify themes for release (not started)
 
@@ -1358,13 +1387,13 @@ The baseline for visual comparisons is the pre-extraction recipe plus explicitly
 approved deviations, including the readable light anatomy correction. Never
 update an expected value merely to make a changed implementation pass.
 
-### Step 17: Close the review findings and add consumer parity evidence (visual review accepted; state evidence in progress)
+### Step 17: Close the review findings and add consumer parity evidence (current affected development scope accepted)
 
-The following matrix records the original review assessment. The current
-21-item Neo visual review is accepted; remaining work is state, device,
-accessibility, and parity evidence. Read it together
-with the implementation status below and the playbook's current-status section;
-its repair wording is historical, not a fresh list of unimplemented defects.
+The following matrix records the original review assessment. The user accepted
+the current 21-item Neo visual review and the human/device/N6 qualification,
+including affected Classic parity, on 2026-09-17. Actions in the matrix are
+historical remedies or regression requirements, not open findings. Reopen only
+if a later change affects the scope or a defect is reproduced.
 
 The original eight findings had the following closure status:
 
@@ -1957,7 +1986,15 @@ their presentation migration before Step 19.
 8. Update Theme Lab with representative real component recipes where useful,
    without requiring private user data or duplicating feature business logic.
 
-### Step 18: Enforce migration boundaries and qualify the shared system (not complete)
+### Step 18: Enforce migration boundaries and qualify the shared system (scoped enforcement complete; broader work remains)
+
+The Q1 ratchet protects one exact production scope, and current development
+human/device qualification is accepted. The corrected verifier scope passed
+on 2026-09-22; its results are recorded in the consolidated roadmap. Further
+production enrollment requires per-file evidence; it is intentionally not a
+blanket completion requirement.
+The design criteria below preserve the original architecture and guide any
+future expansion without reopening the accepted current development checks.
 
 #### 18.1 Turn inventory labels into enforceable scoped checks
 
@@ -1965,25 +2002,27 @@ Files: `tools/theme_style_inventory.dart`,
 `docs/theme-style-inventory.json`, `docs/theme-style-inventory.md`, and
 `test/theme/theme_style_inventory_contract_test.dart`.
 
-Currently, a destination and status on every finding proves assignment, not
-migration correctness. Broad fallback rules can classify new raw styling as
-pending, and migrated path labels alone do not reject a new literal.
+The report-only inventory's destination and status prove assignment, not
+migration correctness. The separate Q1 ratchet protects one exact production
+scope; it does not turn every migrated path into an enforced scope. Broad
+fallback rules can still classify new raw styling as pending.
 
 Keep the full report for unconverted areas. For qualified migrated scopes,
-add a ratchet that detects newly introduced structural literals/overrides or
-unresolved findings. Require a narrow exception with rationale and owner/recipe
-when a fixed expression is intentional. Avoid a line-number-only baseline:
-normal formatting should not invalidate exceptions, while new expressions must
-not disappear under a broad wildcard.
+extend the ratchet only when it can detect newly introduced structural
+literals/overrides or unresolved findings. Require a narrow exception with
+rationale and owner/recipe when a fixed expression is intentional. Avoid a
+line-number-only baseline: normal formatting should not invalidate exceptions,
+while new expressions must not disappear under a broad wildcard.
 
 Test the scanner with fixtures containing a new structural literal in migrated
 scope, an allowed data/media value, a pending-scope value, and a rule-ordering
 conflict. Specify exactly which cases fail. Add evidence references to migration
 records without pretending that a text path or boolean establishes parity.
 
-Update CI only after focused scopes and fixture behavior are proven. Do not
-block the repository on all existing pending debt or exempt an entire feature
-because one illustration uses fixed colors.
+The TonosSurface CI scope is already enabled. Add other paths only after focused
+scopes and fixture behavior are proven. Do not block the repository on all
+existing pending debt or exempt an entire feature because one illustration
+uses fixed colors.
 
 #### 18.2 Finish typography, local-theme, motion, and effect adoption
 
@@ -2010,9 +2049,11 @@ its preview mode, locale, or family.
 
 #### 18.3 Verify switching, accessibility, and state preservation
 
-Before a real alternate family exists, use a deliberately different test theme
-or injected token fixture to detect consumers that still ignore shared roles.
-Keep this fixture in tests/development; it is not a user-selectable family.
+The current development switching, accessibility, and state-preservation
+checks were user-accepted on 2026-09-17. For future consumers, use a
+deliberately different test theme or injected token fixture to detect ignored
+shared roles. Keep such fixtures in tests/development; they are not a
+user-selectable family.
 
 Exercise brightness/theme replacement while a route has scroll position,
 selected tabs, text-field focus, unsaved input, an open sheet, and an active
@@ -2020,11 +2061,12 @@ session. Check that provider/business objects are not recreated by theme
 selection and that route keys remain stable. Test rapid changes and failed
 writes with Step 17's queue.
 
-Cover supported locales and text scales 1.0, 1.3, 1.6, and 2.0 on representative
-small-phone layouts. Do not solve overflow by shrinking all text or removing
-accessibility scaling. Use existing localized resources for error feedback.
-Include selected/disabled semantics, keyboard focus, and meaningful labels;
-schedule physical TalkBack review for interactions automation cannot qualify.
+For future changed scopes, cover supported locales and text scales 1.0, 1.3,
+1.6, and 2.0 on representative small-phone layouts. Do not solve overflow by
+shrinking all text or removing accessibility scaling. Use existing localized
+resources for error feedback. Include selected/disabled semantics, keyboard
+focus, and meaningful labels; add focused physical TalkBack checks for affected
+interactions. Step 15 release qualification remains separate.
 
 Measure startup, scrolling, and switching on agreed physical hardware before
 declaring performance unchanged. Reuse cached factory themes, inspect repeated
@@ -2032,8 +2074,9 @@ fallback token construction if profiling identifies it as material, and avoid
 speculative caching or state changes merely to simplify tests.
 
 Exit: scope-specific migration checks work, representative real consumers
-respond to injected recipes, and outstanding device/manual checks are recorded
-with an owner and explicit disposition.
+respond to injected recipes, and any new device/manual checks are recorded
+with an owner and explicit disposition. The current development scope is
+accepted; the separate release gate is Step 15.
 
 ### Step 19: Approve readiness to start alternate-theme implementation (complete for agreed Q3 scope)
 
@@ -2079,19 +2122,21 @@ drive unapproved changes to Classic.
 | 8 | Complete | Keep zero production AppColors consumers |
 | 9 | Foundation implemented | Preserve framework defaults; audit local overrides |
 | 10 | Implemented; adoption ongoing | Preserve variants and complete release consumers |
-| 11 | Implemented; automatable coverage and current visual review accepted | Revalidate only affected pilots and record N6 device evidence |
-| 12 | Current 21-item Neo visual review accepted; boundary contract added | Finish exhaustive state/reachability ledger with N5 |
-| 17 | Original Q3 and current visual review accepted | Close remaining state/device and affected parity gaps |
-| 18 | Scoped work accepted; expansion remaining | Enroll qualified scopes and revalidate changed behavior |
+| 11 | Implemented; current visual and development device qualification accepted | Revalidate only affected pilots after changes |
+| 12 | Current visual, route/state, and development device qualification accepted | Resolve only separately deferred product/design decisions |
+| 17 | Current affected state/parity checks accepted | Reopen only for a reproduced defect or later affected change |
+| 18 | Current scoped work accepted; broader enrollment remains deliberately limited | Enroll only individually evidenced and qualified files |
 | 19 | Complete for agreed scope | Manual results accepted; 226 tests passed |
-| 13 | N1/N2 complete; N3 automation complete; N4 and current visual review accepted | Finish N5 state/reachability and N6 qualification |
-| 14 | Not started | Approved, localized family selector |
+| 13 | N1-N6 development scope accepted; route ledger closed | Requalify only affected scope after changes |
+| 14 | Implemented, automated-verified, and included in current development acceptance | Step 15 release gate remains separate |
 | 15 | Not started | Full alternate-family release qualification |
 | 16 | Not started | Later families through the same architecture |
 
-Next action: follow the consolidated roadmap's current comparison, route-sweep,
-and qualification tasks. N3 pilot implementation and repository-side
-automation are already present.
+Next action: prepare Step 15's release-candidate scope and decision record.
+Development human/device qualification is accepted for the current tree;
+release-specific automated output, candidate identity, localization signoff,
+and the explicit release decision remain. Keep broader ratchet enrollment
+evidence-driven rather than treating it as a blanket completion requirement.
 
 Historical migration execution order: use batches B1-B6 in
 [Theming Batch Playbook](theme-batch-playbook.md), then C1-C3, D1-D3, E1-E2,

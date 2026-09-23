@@ -1,6 +1,7 @@
 // File: lib/widgets/stretch_card.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_theme_ready.dart';
@@ -137,6 +138,7 @@ class _StretchCardState extends State<StretchCard> {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
+                  tooltip: AppLocalizations.of(context).commonAdd,
                   color: addActionColor,
                   onPressed:
                       readOnly || _stretchCustomController.text.trim().isEmpty
@@ -209,6 +211,7 @@ class _StretchCardState extends State<StretchCard> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.remove_circle_outline),
+                      tooltip: AppLocalizations.of(context).commonRemove,
                       onPressed:
                           readOnly
                               ? null

@@ -215,6 +215,7 @@ class TonosChoiceDialog<T> extends StatelessWidget {
     required this.label,
     required this.subtitle,
     this.choiceKey,
+    this.choicePreview,
   });
 
   final String title;
@@ -223,6 +224,7 @@ class TonosChoiceDialog<T> extends StatelessWidget {
   final String Function(T) label;
   final String Function(T) subtitle;
   final Key Function(T)? choiceKey;
+  final Widget Function(T)? choicePreview;
 
   @override
   Widget build(BuildContext context) {
@@ -275,6 +277,7 @@ class TonosChoiceDialog<T> extends StatelessWidget {
                   subtitle(value),
                   style: neo ? TextStyle(color: ink) : null,
                 ),
+                secondary: choicePreview?.call(value),
                 onChanged: (value) => Navigator.of(context).pop(value),
               ),
           ],

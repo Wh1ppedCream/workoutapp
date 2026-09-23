@@ -1,6 +1,6 @@
 # Theming Batch Playbook
 
-## Current Status And Ownership (2026-09-16)
+## Current Status And Ownership (2026-09-22)
 
 The [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) is the current
 task/status checklist. This playbook preserves batch scopes and historical
@@ -11,11 +11,20 @@ batches solely from an older status paragraph below.
 Neo N1/N2 are complete, N3 implementation and automatable coverage are
 complete, and original N4 development checks were accepted. The current
 21-item Neo visual review is user-accepted as good for now, including the
-specialized Profile/settings routes. Exhaustive current route-state disposition,
-broader ratchet enrollment, and N6 closure remain. The latest focused user run
-for the selector contrast correction completed formatting, clean analysis, and
-63 passing tests; it does not replace earlier broader suites or establish a
-complete device pass.
+specialized Profile/settings routes. The route ledger is closed, and the user
+has now accepted the current N5 route-state and N6 human/device qualification.
+The latest supplied corrected-scope run reported 135 files formatted with 0
+changes, clean analysis, 321 theme tests, 6 responsive tests, 46 route-boundary
+tests, and a passing enforce-mode style ratchet. This is current development
+qualification, not release approval.
+
+Step 14 implementation (2026-09-16): UI Appearance now contains a localized
+capability-filtered family selector with compact active-brightness previews,
+backed by `ThemeProvider.setFamily` and `TonosChoiceDialog`. Focused coverage
+exercises eligible selection, independent brightness, preview presence,
+failed-save retry, Classic-only hiding, restart, downgrade fallback, and bundled
+locale copy. The user-run selector, full-theme, responsive, and ratchet checks
+are now recorded above; Neo remains unavailable in release builds.
 
 Automatable completion pass (2026-09-15): the Neo pilot gallery now covers the
 second workout fixture, selected navigation, dialog cancellation, live reduced
@@ -23,7 +32,32 @@ motion, a large-text stacked WeightCard set editor, and narrow/2.0x mounting.
 The theme-ready Classic fallback and Neo surface ownership have a focused test,
 and pre_q2 route evidence records the secondary consumer boundaries.
 scripts/verify_neo_refinement.ps1 is the user-run entry point for this expanded
-scope. Visual/device/accessibility review remains intentionally separate.
+scope. Visual/device/accessibility review remains separately recorded; the
+current development qualification is accepted and later changes require
+focused rechecks.
+
+Current qualification confirmation (2026-09-17): the user confirmed that every
+item in the consolidated human/device/N6 checklist passed for the current
+working tree. This closes the current development route-state, accessibility,
+device, persistence, switching/effects, scanner/media, and affected Classic-
+parity checks, and supplies the human/device input for E2.4. It does not
+enroll new style-ratchet files, resolve retained placeholder product decisions,
+or make Neo eligible for release. Step 15 remains a separate release gate.
+
+Automatable non-human follow-up (2026-09-17): the verifier now analyzes the
+remaining catalog/media, history, measurements, scanner, nutrition, and
+settings route owners. It runs the existing provider, screen, widget,
+localization, media, scanner, health, and safe-error evidence outside the broad
+theme suite, and the nutrition presentation suite now includes a Neo light/dark
+320x640 at 2x text food-editor smoke test. This automated evidence does not
+replace visual, keyboard, TalkBack, camera, or physical-device evidence.
+
+The first expanded rerun reached the new smoke test and found a 129 px right
+RenderFlex overflow in both Neo brightness modes. The food editor action bar
+now wraps its extended buttons on narrow layouts. The focused checks and an
+earlier expanded user rerun passed afterward: the full theme suite passed 302 tests,
+the responsive run passed 6 tests, the route-boundary batch passed, and the
+enforce-mode ratchet passed.
 
 12A/N5 visual-review closure (2026-09-16): the consolidated roadmap records
 the accepted 21-item Neo visual review and its Profile/settings route ledger.
@@ -36,15 +70,25 @@ analysis, and 63 focused tests. The remaining settings work is non-happy-path,
 reachability, accessibility, and device evidence, not another ordinary visual
 route review.
 
+Automatable E2.3 follow-up (2026-09-16): GoalManualEntryPage now preserves the
+form and presents localized safe guidance when NutritionProfile.setGoals fails,
+while successful saves retain the existing return behavior. The focused
+`test/theme/nutrition_goals_behavior_test.dart` covers both paths. StretchCard
+add/remove, Train2 drawer/profile, and Food Logging action controls use
+existing localized tooltip labels where the action is unambiguous. This
+narrows known behavior/accessibility gaps; the current user confirmation records
+the E2.3 and N6 route/device qualification. Recheck these paths if the affected
+implementation changes.
+
 Theme-ready secondary-surface extension (2026-09-15): evolving non-default
 exercise-definition, history, cardio, stretch, measurement, trend, food
 customization, and food-logging consumers now have a shared compatibility
 boundary. `TonosThemeReadyCard` keeps the original Classic `Card` path and
 uses a semantic Neo `TonosSurface` path; focused Neo accents use existing
-semantic or data-visualization roles. This is an interim presentation boundary,
-not full Neo route implementation or N5/N6 qualification. The user supplied
+semantic or data-visualization roles. This remains an interim presentation
+boundary, not a final route-specific Neo design decision. The user supplied
 clean post-fix analysis for `current_metrics_section.dart` and 32 focused
-tests passed; broader route and device evidence remains pending.
+tests passed; current route and device qualification is recorded above.
 
 ## First Alternate Family
 
@@ -54,8 +98,9 @@ permits development. N2 shared capabilities are complete and automated-
 verified; the N3 family/recipe implementation has passed scoped automated
 verification and its Theme Lab smoke review is accepted. The current reviewed
 pilot and screen refinements are accepted for now. The full rendered,
-accessibility, and device qualification matrix remains pending. Visual recipes
-remain starting recipes for any unreviewed route.
+accessibility, and device qualification matrix is user-accepted for the current
+development scope. Visual recipes remain starting recipes for any unreviewed
+route.
 Expressive is a later candidate.
 
 N1 is complete: the user approved the revision 5 HTML proposal board after
@@ -196,17 +241,21 @@ checkpoint now also separates dark-canvas warm-paper text from near-black
 structural edge ink: colored-panel outlines, dividers and selector rails use
 `#161616`, while dark-mode hard shadows remain `#000000`. Neutral controls,
 sheet handles and data indicators retain contrasting colors. The 2026-09-12
-follow-up is implemented and awaits user-run analysis, tests and phone review. This
-checkpoint still needs the user's light/dark 1.15 screenshot review and
-does not close the N5 route sweep or release qualification.
+follow-up is covered by the expanded 2026-09-17 user-run analysis and tests.
+The current 21-item Neo visual review and N5/N6 development qualification are
+accepted; Step 15 release qualification remains a separate gate.
 
 ## Current Pre-Q2 Status
 
 [Pre-Q2 Closeout Ledger](theme-pre-q2-closeout.md) is the current status summary.
 It supersedes older pending-test labels in the historical implementation records
-below. The latest user run passed 200 scoped theme/configuration tests and
-verified the review corrections. Device, manual, visual-parity, accessibility, and broader production-enrollment
-qualification remain Q2 work.
+below. The latest supplied corrected-scope run (2026-09-22) formatted 135
+files with 0 changes and passed clean analysis, 321 theme/configuration tests,
+6 responsive tests, 46 route-boundary tests, and the enforce-mode ratchet.
+The user has accepted the
+current device, manual, visual-parity, accessibility, and route qualification;
+broader production enrollment and Step 15 release qualification remain
+separate.
 
 ## C3-D3 Review Correction (2026-09-09)
 
@@ -242,7 +291,10 @@ after formatting. All targets must be read again before editing.
 
 B1-C2 review follow-up and C2-D3 are now scoped-verified. The user reported
 clean scoped analysis and 168 passing scoped tests for the C3-D3 follow-up.
-The current pre-Q2 closeout also passed clean analysis and 200 scoped tests.
+The 2026-09-17 pre-Q2 closeout run passed clean analysis, 315
+theme/configuration tests, 6 responsive tests, 46 route-boundary tests, and
+the enforce-mode ratchet. The corrected-scope run on 2026-09-22 passed the
+updated verifier batch.
 These results supersede the pending verification labels in the historical
 implementation records below. Device and full-release qualification remain
 pending and are tracked separately in the closeout ledger.
@@ -270,8 +322,9 @@ and matched device appearance remain pending evidence.
   media placeholder, and media outline owners while preserving the existing
   Classic recipes. This is scoped automated evidence; device review and
   full-repository qualification remain pending.
-- C2 is implemented-awaiting-verification. It migrates the exercise-detail
-  sheet's form-guide, metrics, records, chart, selector, and sheet-shell
+- C2 is automated-verified in the expanded 2026-09-17 user run. It migrates
+  the exercise-detail sheet's form-guide, metrics, records, chart, selector,
+  and sheet-shell
   recipes to focused roles while preserving tab selection, expansion, scroll,
   record identity, and empty/loading/error states. C3 still owns zoom and
   media-overlay decisions.
@@ -675,7 +728,8 @@ The anatomy image/data palette and surrounding chrome require separate decisions
 Exit: each migrated section has a state list and an independent Classic check;
 unreviewed sections remain pending rather than inheriting the section's status.
 
-C2 implementation record (2026-09-08, implemented-awaiting-verification): the
+C2 implementation record (2026-09-08; automated-verified in the expanded
+2026-09-17 user run): the
 detail sheet now routes its custom form-guide cards, tags, metrics selector,
 metric summaries, rep-best list, loading/error/empty state card, saved-record
 cards, record actions, chart surfaces, chart grid/tooltip treatments, and
@@ -688,8 +742,8 @@ the anatomy heatmap, image preview, zoom viewer, scrims, and media fallback
 chrome remain outside this batch for C3 or data-visualization ownership.
 The contract test protects role adoption, Classic-derived defaults,
 copy/interpolation, tab/state evidence, and the preserved empty/loading/error
-paths. User-run verification is still required; device review and
-full-repository qualification remain pending.
+paths. The expanded user run passed; device review and full-repository
+qualification remain pending.
 
 C2 verification command:
 
@@ -707,8 +761,9 @@ git diff --check
 
 ### C3. Zoom And Media Overlays
 
-Status: implemented-awaiting-verification. User authorized C3 before the
-B1-C2 review fixes were verified; verify both together before another batch.
+Status: automated-verified in the expanded 2026-09-17 user run. User authorized
+C3 before the B1-C2 review fixes were verified; the combined automated scope is
+now recorded, while device qualification remains separate.
 
 Implementation: AppMediaTokens owns detail preview (18px), heatmap overlay
 (12px), and viewer (20px) shapes, overlay opacity (0.96), and overlay shadows
@@ -722,9 +777,10 @@ Full-size image decoding now has a broken-image fallback; preview failure and
 thumbnail retry/cache behavior retain their existing owners. Image cover versus
 contain, min/max zoom, boundary margin, scrolling and dismiss actions are kept.
 BodyHeatmap and its anatomy palette were inspected as data/illustration owners
-and are unchanged. Added media token and missing-file widget checks. User-run
-tests, real-image device inspection, pan/zoom/dismissal checks and rendered
-effects-disabled overlay evidence remain pending; C3 is not qualified.
+and are unchanged. Added media token and missing-file widget checks. The
+expanded user-run tests passed; real-image device inspection, pan/zoom/dismissal
+checks and rendered effects-disabled overlay evidence remain pending, so C3 is
+not device-qualified.
 
 Target: exercise_detail_sheet.dart zoom/modal paths, thumbnail consumers and
 body_heatmap.dart only where those paths depend on it. Inspect black scrims,
@@ -736,7 +792,7 @@ fixed media treatment has a narrow exception. No blanket file exemption.
 
 ### D1. Dashboard And Logbook Structure
 
-Status: implemented-awaiting-verification. The implementation is limited to
+Status: automated-verified in the expanded 2026-09-17 user run. The implementation is limited to
 actual dashboard/logbook hosts; the non-default `CombinedHistoryPage` remains
 an explicit placeholder and was not turned into a second history product flow.
 
@@ -749,7 +805,8 @@ and empty states while retaining date selection, list/calendar position and
 record navigation. Calendar data meaning stays distinct from structural selection.
 Exit: populated/empty states and date/scroll preservation are covered.
 
-D1 implementation record (2026-09-08, implemented-awaiting-verification):
+D1 implementation record (2026-09-08; automated-verified in the expanded
+2026-09-17 user run):
 `AppSurfaceTokens` now owns the dashboard hero, dashboard section/editor/usage,
 history period selector, calendar mode/day-empty, selected-period, and history
 divider recipes. `AppShapeTokens` owns the distinct dashboard hero, section,
@@ -770,8 +827,8 @@ those boundaries. The report-only inventory manifest remains unchanged.
 
 Added `dashboard_history_contract_test.dart` for consumer ownership/state
 evidence and `dashboard_history_tokens_test.dart` for Classic light/dark,
-override, and interpolation coverage. User-run formatting, analysis, tests,
-and diff-check are still required; device review and full-repository
+override, and interpolation coverage. The expanded user-run formatting,
+analysis, tests, and diff-check passed; device review and full-repository
 qualification remain pending.
 
 D1 verification command:
@@ -844,7 +901,7 @@ git diff --check
 
 ### D3. Health And Measurements
 
-Status: implemented-awaiting-verification. The implementation is limited to
+Status: automated-verified in the expanded 2026-09-17 user run. The implementation is limited to
 health-trend presentation recipes and evidence; it does not rewrite the
 measurement repository, validation rules, or navigation contracts.
 
@@ -878,7 +935,8 @@ formatting, analysis, and focused tests must pass before this is marked
 scoped-verified. Device checks for empty, populated, entry-edit, long localized
 values, and reduced-space scrolling remain separate qualification work.
 
-D3 implementation record (2026-09-08, implemented-awaiting-verification):
+D3 implementation record (2026-09-08; automated-verified in the expanded
+2026-09-17 user run):
 health trend cards, add cards, summary/chart cards, entry tiles, and empty
 messages now resolve card surfaces and geometry through theme extensions. The
 measurement series retains data-visualization ownership; the review correction
@@ -955,12 +1013,19 @@ manual accessibility checks are recorded where automation cannot establish them.
 
 ### E2. Remaining Reachable Features And Settings Residue
 
-Status: initial migration passed 181 user-run scoped tests, and the current
-21-item Neo visual review is accepted. E2 closeout and full route qualification
-remain open. Follow the detailed [E2 execution guide](theme-e2-qualification-guide.md#e2-remaining-reachable-features).
-Execute E2.1 route/residue ledger, E2.2 nutrition slices, E2.3 settings residue,
-then E2.4 closeout. Each slice requires independent evidence; do not combine
-the entire nutrition/settings tree into an unverified replacement pass.
+Status: E2.1 route/residue ledger is complete as of 2026-09-16. The initial
+migration passed 181 user-run scoped tests, and the current 21-item Neo visual
+review is accepted. E2.2 nutrition slices, E2.3 settings residue, N6 device
+evidence, and E2.4 closeout are user-accepted for the current development
+scope. Follow the detailed [E2 execution
+guide](theme-e2-qualification-guide.md#e2-remaining-reachable-features). Each
+remaining slice requires independent evidence; do not combine the entire
+nutrition/settings tree into an unverified replacement pass.
+
+The canonical route inventory is guarded by
+test/theme/e2_route_ledger_contract_test.dart. This protects inventory
+integrity only and does not close the independent route-state, visual,
+accessibility, device, or release gates.
 
 Current slice: food logging/customization/log-entry colors and frames now use
 AppNutritionTokens; exercise-editor media tiles use AppMediaTokens. All new
@@ -975,13 +1040,18 @@ lib/screens/nutrition_log_page.dart, lib/screens/nutrition/, and any routes foun
 by the release reachability audit. Split by real feature; this is not a single
 permission to rewrite every screen. Nutrition chart/category meaning belongs
 in its domain tokens. Include hidden-tab routes reachable by buttons or links.
-Exit: each route is qualified or explicitly gated/deferred, with a narrow reason;
-12A residue and all catch-all inventory findings have a disposition.
+Exit: the current route inventory is complete and every discovered route is
+qualified, experimental, placeholder, source-ready, or unreferenced with a
+narrow reason. Focused E2.2/E2.3 implementation and source contracts have
+since been added, and the user has confirmed the current development route,
+N6, and E2.4 qualification. Step 15 release approval remains separate.
 
 #### Theme-Ready Compatibility Extension (2026-09-15)
 
 Status: implemented as a bounded compatibility step; targeted post-fix
-verification is clean, while full route/device qualification remains pending.
+verification is clean and current route/device qualification is user-accepted.
+Final route-specific Neo recipes remain a separate design/implementation
+decision for evolving product surfaces.
 
 The extension covers:
 
@@ -1010,7 +1080,8 @@ remains pending. Follow
 and [the ratchet usage contract](theme-style-ratchet.md).
 The existing inventory validator remains report-only and continues to detect
 unassigned candidates. The separate ratchet now validates exact approved scopes;
-its fixture and deliberate-failure behavior passed in the latest 200-test run.
+its fixture and deliberate-failure behavior passed in the latest user run,
+which also passed 302 theme tests and 6 responsive tests.
 Broader enrollment still needs per-file qualification; do not use the inventory
 report as a production approval.
 
@@ -1027,9 +1098,12 @@ no whole-repository legacy-debt blockade, and explicit exceptions.
 
 ### Q2. Switching, Typography, Effects And Accessibility (Steps 2, 17, 18)
 
-Status: scoped-verified. The user reported unchanged formatting, clean analysis,
-213 passing scoped tests, and diff-check with line-ending warnings only.
-Manual/device evidence remains required for qualification.
+Status: scoped-verified for the prior and expanded non-human scope. The
+corrected-scope user-reported run (2026-09-22) formatted 135 files with 0
+changes, passed clean analysis, 321 theme tests, 6 responsive tests, 46
+route-boundary tests, and the enforce-mode ratchet. The user has separately
+accepted the current manual/device qualification; later changes require
+focused rechecks.
 Follow [Q2 runtime and evidence details](theme-e2-qualification-guide.md#q2-runtime-and-accessibility-qualification).
 
 Completed in this pass:
@@ -1047,15 +1121,16 @@ Completed in this pass:
 - Added Theme Lab assertions for every motion role and the newly covered
   effects-off roles.
 
-Still required before Q2 can be called qualified:
+The following qualification checklist is satisfied for the current development
+scope and is retained for future changes:
 
 - Automated rerun complete: 213 scoped tests passed. Revalidate after relevant edits.
 - Matched Classic light/dark captures against the approved baseline.
-- Human checks for TalkBack traversal and announcements, keyboard focus and
+- User-confirmed TalkBack traversal and announcements, keyboard focus and
   selection, screen-reader dismissal, constrained-height/keyboard layouts, and
   physical-device motion/scroll performance.
-- Physical camera/permission checks for scanner-owned platform behavior where
-  applicable.
+- User-confirmed physical camera/permission checks for scanner-owned platform
+  behavior where applicable.
 
 Include newly added media/progress/tutorial extensions, in-place state
 preservation, all visual durations/effects, and the documented manual checks.

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/screens/nutrition/food_customization_page.dart';
 import 'package:env_test/theme/classic_theme.dart';
+import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_nutrition_tokens.dart';
 
@@ -241,4 +242,100 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('Neo food editor keeps actions at both edges at normal width', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: NeoBrutalismThemeDefinition.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const FoodCustomizationPage(initialName: 'Test oats'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(FoodCustomizationPage)),
+    );
+    final cancel = find.widgetWithText(
+      FloatingActionButton,
+      strings.commonCancel,
+    );
+    final save = find.widgetWithText(FloatingActionButton, strings.commonSave);
+    expect(cancel, findsOneWidget);
+    expect(save, findsOneWidget);
+    expect(tester.getTopLeft(cancel).dx, lessThanOrEqualTo(24));
+    expect(tester.getTopRight(save).dx, greaterThanOrEqualTo(376));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('food editor keeps the route open on empty-name validation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        theme: NeoBrutalismThemeDefinition.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const FoodCustomizationPage(initialName: ''),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(FoodCustomizationPage));
+    final strings = AppLocalizations.of(context);
+    await tester.tap(
+      find.widgetWithText(FloatingActionButton, strings.commonSave),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FoodCustomizationPage), findsOneWidget);
+    expect(find.text(strings.foodCustomizationEnterName), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Neo ${brightness.name} food editor remains usable at 2x text on a narrow phone',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 640));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        final theme =
+            brightness == Brightness.light
+                ? NeoBrutalismThemeDefinition.light()
+                : NeoBrutalismThemeDefinition.dark();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder:
+                (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: const TextScaler.linear(2.0)),
+                  child: child!,
+                ),
+            home: const FoodCustomizationPage(initialName: 'Test oats'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final nameField = tester.widget<TextFormField>(
+          find.byType(TextFormField).first,
+        );
+        expect(nameField.controller?.text, 'Test oats');
+        expect(find.byType(FloatingActionButton), findsNWidgets(2));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

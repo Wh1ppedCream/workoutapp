@@ -30,6 +30,8 @@ class TonosSurface extends StatelessWidget {
     this.borderRadius,
     this.outlined,
     this.clipBehavior,
+    this.shape,
+    this.elevation,
     this.onTap,
     this.semanticLabel,
   });
@@ -49,6 +51,13 @@ class TonosSurface extends StatelessWidget {
 
   /// Overrides the variant's default clipping policy when provided.
   final Clip? clipBehavior;
+
+  /// Preserves an explicit production shape across the Neo surface boundary.
+  final ShapeBorder? shape;
+
+  /// Preserves an explicit production elevation across the Neo surface
+  /// boundary.
+  final double? elevation;
   final VoidCallback? onTap;
   final String? semanticLabel;
 
@@ -100,6 +109,7 @@ class TonosSurface extends StatelessWidget {
       AppSurfaceDepth.materialElevation => effects.cardElevation,
       AppSurfaceDepth.none || AppSurfaceDepth.explicitShadow => 0.0,
     };
+    final resolvedElevation = this.elevation ?? elevation;
     final shadowOffset = switch (variant) {
       TonosSurfaceVariant.panelRaised => effects.raisedPanelShadowOffset,
       _ => effects.cardShadowOffset,
@@ -126,18 +136,31 @@ class TonosSurface extends StatelessWidget {
               ? BorderSide(color: outlineColor, width: shapes.outlineWidth)
               : BorderSide.none,
     );
+    final resolvedShape = _resolveSurfaceShape(
+      customShape: this.shape,
+      fallback: shape,
+      outline: shape.side,
+    );
+    final shadowBorderRadius =
+        resolvedShape is RoundedRectangleBorder
+            ? resolvedShape.borderRadius
+            : resolvedBorderRadius;
     final effectiveClipBehavior = clipBehavior ?? defaultClipBehavior;
 
     Widget contents = Padding(padding: padding, child: child);
     if (onTap != null) {
-      contents = InkWell(onTap: onTap, customBorder: shape, child: contents);
+      contents = InkWell(
+        onTap: onTap,
+        customBorder: resolvedShape,
+        child: contents,
+      );
     }
 
     Widget surface = Material(
       color: backgroundColor,
-      elevation: elevation,
+      elevation: resolvedElevation,
       shadowColor: effects.shadowColor,
-      shape: shape,
+      shape: resolvedShape,
       clipBehavior: effectiveClipBehavior,
       child: contents,
     );
@@ -151,7 +174,7 @@ class TonosSurface extends StatelessWidget {
     if (visibleShadow != null) {
       surface = DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: resolvedBorderRadius,
+          borderRadius: shadowBorderRadius,
           boxShadow: [visibleShadow],
         ),
         child: surface,
@@ -160,6 +183,19 @@ class TonosSurface extends StatelessWidget {
 
     return Container(margin: margin, child: surface);
   }
+}
+
+ShapeBorder _resolveSurfaceShape({
+  required ShapeBorder? customShape,
+  required RoundedRectangleBorder fallback,
+  required BorderSide outline,
+}) {
+  if (customShape is RoundedRectangleBorder &&
+      outline != BorderSide.none &&
+      customShape.side == BorderSide.none) {
+    return customShape.copyWith(side: outline);
+  }
+  return customShape ?? fallback;
 }
 
 AppSurfaceDecorationRole _decorationRoleForVariant(

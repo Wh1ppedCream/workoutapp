@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/classic_theme.dart';
+import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_tutorial_tokens.dart';
 import 'package:env_test/widgets/guided_tutorial_overlay.dart';
@@ -52,6 +53,7 @@ void main() {
       measuringScrim: const Color(0xFF123456),
       confirmationScrim: const Color(0xFF123456),
       coachScrim: const Color(0xFF123456),
+      accentForeground: const Color(0xFF123456),
       focusShadowOpacity: 0.12,
       focusShadowBlur: 7,
       focusShadowSpread: 3,
@@ -151,6 +153,12 @@ void main() {
     expect(
       midpoint.coachScrim,
       Color.lerp(base.coachScrim, target.coachScrim, 0.5),
+    );
+    expect(target.accentForeground, const Color(0xFF123456));
+    expect(base.copyWith().accentForeground, base.accentForeground);
+    expect(
+      midpoint.accentForeground,
+      Color.lerp(base.accentForeground, target.accentForeground, 0.5),
     );
     expect(target.focusShadowOpacity, 0.12);
     expect(base.copyWith().focusShadowOpacity, base.focusShadowOpacity);
@@ -288,7 +296,106 @@ void main() {
       expect(tokens.effectsEnabled, isTrue);
       expect(tokens.cardShadow.blurRadius, 28);
       expect(tokens.coachShadow.offset, const Offset(0, 10));
+      expect(tokens.accentForeground, isNull);
     }
+  });
+
+  testWidgets('guided accent is scoped to Neo light mode', (tester) async {
+    Future<(Color?, Color?)> pumpAccent(ThemeData theme) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(key: key, width: 100, height: 50),
+                ),
+                GuidedTutorialOverlay(
+                  onFinished: (_) {},
+                  steps: [
+                    GuidedTutorialStep(
+                      targetKey: key,
+                      title: 'First',
+                      body: 'First body',
+                    ),
+                    GuidedTutorialStep(
+                      targetKey: key,
+                      title: 'Second',
+                      body: 'Second body',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      final icon = tester.widget<Icon>(
+        find.byIcon(Icons.tips_and_updates_outlined),
+      );
+      final progress = tester.widget<Text>(find.text('1/2'));
+      return (icon.color, progress.style?.color);
+    }
+
+    final neoLight = await pumpAccent(NeoBrutalismThemeDefinition.light());
+    final neoDark = await pumpAccent(NeoBrutalismThemeDefinition.dark());
+    final classicLight = await pumpAccent(ClassicThemeDefinition.light());
+    final classicDark = await pumpAccent(ClassicThemeDefinition.dark());
+
+    expect(neoLight.$1, const Color(0xFF7A5200));
+    expect(neoLight.$2, const Color(0xFF7A5200));
+    expect(neoDark.$1, NeoBrutalismThemeDefinition.dark().colorScheme.primary);
+    expect(neoDark.$2, NeoBrutalismThemeDefinition.dark().colorScheme.primary);
+    expect(classicLight.$1, ClassicThemeDefinition.light().colorScheme.primary);
+    expect(classicLight.$2, ClassicThemeDefinition.light().colorScheme.primary);
+    expect(classicDark.$1, ClassicThemeDefinition.dark().colorScheme.primary);
+    expect(classicDark.$2, ClassicThemeDefinition.dark().colorScheme.primary);
+  });
+
+  testWidgets('plan-builder coach uses the Neo light tutorial accent', (
+    tester,
+  ) async {
+    final key = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: NeoBrutalismThemeDefinition.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Stack(
+            children: [
+              Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(key: key, width: 100, height: 50),
+              ),
+              InteractiveTutorialOverlay(
+                step: InteractiveTutorialStep(
+                  targetKey: key,
+                  stepNumber: 1,
+                  totalSteps: 1,
+                  icon: Icons.info,
+                  title: 'Coach',
+                  body: 'Body',
+                ),
+                onSkip: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+
+    expect(
+      tester.widget<Icon>(find.byIcon(Icons.info)).color,
+      const Color(0xFF7A5200),
+    );
   });
 
   testWidgets('guided focus shadow follows tutorial effect tokens', (

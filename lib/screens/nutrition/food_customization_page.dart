@@ -434,24 +434,29 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: SafeArea(
         minimum: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            FloatingActionButton.extended(
-              heroTag: 'fab-cancel',
-              onPressed: _onCancel,
-              icon: const Icon(Icons.close),
-              label: Text(strings.commonCancel),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-            ),
-            FloatingActionButton.extended(
-              heroTag: 'fab-save',
-              onPressed: _onSave,
-              icon: const Icon(Icons.save),
-              label: Text(strings.commonSave),
-            ),
-          ],
+        child: SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              FloatingActionButton.extended(
+                heroTag: 'fab-cancel',
+                onPressed: _onCancel,
+                icon: const Icon(Icons.close),
+                label: Text(strings.commonCancel),
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              FloatingActionButton.extended(
+                heroTag: 'fab-save',
+                onPressed: _onSave,
+                icon: const Icon(Icons.save),
+                label: Text(strings.commonSave),
+              ),
+            ],
+          ),
         ),
       ),
       body: SingleChildScrollView(

@@ -11,6 +11,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppThemeFactory.light(family),
+          themeAnimationDuration: Duration.zero,
           home: const Scaffold(
             body: TonosThemeReadyCard(
               variant: TonosSurfaceVariant.compactCard,
@@ -33,4 +34,42 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('theme-ready cards preserve explicit shape and elevation', (
+    tester,
+  ) async {
+    const explicitShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(4)),
+      side: BorderSide(color: Colors.red),
+    );
+
+    for (final family in [
+      AppThemeFamily.classic,
+      AppThemeFamily.neoBrutalism,
+    ]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppThemeFactory.light(family),
+          themeAnimationDuration: Duration.zero,
+          home: const Scaffold(
+            body: TonosThemeReadyCard(
+              shape: explicitShape,
+              elevation: 0,
+              child: Text('Explicit recipe'),
+            ),
+          ),
+        ),
+      );
+
+      if (family == AppThemeFamily.classic) {
+        final card = tester.widget<Card>(find.byType(Card));
+        expect(card.shape, same(explicitShape));
+        expect(card.elevation, 0);
+      } else {
+        final surface = tester.widget<TonosSurface>(find.byType(TonosSurface));
+        expect(surface.shape, same(explicitShape));
+        expect(surface.elevation, 0);
+      }
+    }
+  });
 }

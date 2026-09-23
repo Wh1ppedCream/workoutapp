@@ -43,6 +43,15 @@ tests or exhaustive qualification of every route and state.
 | MouseTracker | Closed at user's explicit direction. Mouse-associated assertions were observed; touchscreen-only check passed. No framework/input fix is claimed. |
 | Theme Lab Close | Root-route fallback implemented; user confirmed it works. |
 
+## Current Development Qualification Confirmation (2026-09-17)
+
+The user subsequently confirmed every item in the consolidated human/device/N6
+qualification checklist for the current working tree. This supersedes the
+historical statement above that the Q3 record was not exhaustive for the later
+route/state work and closes the current development N5/N6, E2.2, E2.3, Q2,
+and affected Step 17 qualification. It does not create a new automated result,
+signed release artifact, or Step 15 release decision.
+
 The accepted screenshots are manual references, not approved automated goldens
 or proof of exact pre-migration pixel parity. Broader ratchet enrollment,
 unsupported interpolation, and any unexercised physical-keyboard cases remain

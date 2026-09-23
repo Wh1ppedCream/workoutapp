@@ -1,6 +1,6 @@
 # Consolidated Theming Roadmap
 
-Updated: 2026-09-16.
+Updated: 2026-09-22.
 
 This is the current status and execution checklist for Tonos theming. Start
 here when selecting work or checking completion. Original Steps 1-19 are
@@ -60,14 +60,14 @@ issue lists remain review history, not additional active milestone lists.
 | 8 | AppColors retirement | Complete |
 | 9 | Material ownership | Foundation implemented; local override audit remains |
 | 10 | Tonos primitives | Implemented; adoption and coverage remain |
-| 11 | Theme Lab | Classic/Neo pilot implementation and automatable coverage complete; current visual review accepted, with device/stress qualification remaining |
-| 12 | Surface migration | Current 21-item Neo visual route review accepted; exhaustive state/reachability and device evidence remain |
-| 13 | Neo-Brutalism | N1/N2 complete, N3 implementation/automatable coverage complete, N4 and the current 21-item visual review accepted; N5 state/ledger and N6 qualification remain |
-| 14 | Public selector | Not started as a release feature |
+| 11 | Theme Lab | Classic/Neo pilot implementation and automatable coverage complete; current visual review and current development device/stress qualification accepted |
+| 12 | Surface migration | Current 21-item Neo visual route review and current route/state/device qualification accepted; route ledger remains the source of truth |
+| 13 | Neo-Brutalism | N1/N2 complete, N3 implementation/automatable coverage complete, N4 and the current 21-item visual review accepted; current N5 route-state and N6 development qualification accepted |
+| 14 | Public selector | Implemented, automated-verified, and included in the current human/device qualification; Neo remains non-release eligible |
 | 15 | Release qualification | Not started as a release approval milestone |
 | 16 | Later families | Not started |
-| 17 | Review closure/parity | Original Q3 and current 21-item Neo visual review accepted; post-refinement state/parity closure remains |
-| 18 | Enforcement/qualification | Scoped work verified; broader enrollment and current evidence remain |
+| 17 | Review closure/parity | Original Q3, the current 21-item Neo visual review, and the current affected state/parity checks accepted; later changes require focused rechecks |
+| 18 | Enforcement/qualification | Current scoped work and development qualification accepted; broader per-file evidence and ratchet enrollment remain intentionally limited |
 | 19 | Development readiness | Complete for agreed Q3 scope, 2026-09-11 |
 
 Steps 17-19 were inserted as prerequisites, so numerical order is not execution
@@ -77,13 +77,20 @@ implementation are superseded.
 
 ## Verification Already Reported
 
-Latest acceptance (2026-09-16): the user accepted all 21 entries in the
+Prior acceptance record (2026-09-16): the user accepted all 21 entries in the
 current Neo visual review. Entries 1-13 were accepted in the earlier review;
 entries 14-21 cover Guided Tutorials, Bodypart Rankings, Muscle Rankings,
 Volume Boundaries, Anatomy Mapping, Exercise Set Allocation, Exercise Editor,
 and Flow Methods / Workout Progress Flows. This closes the current visual
 route-review scope, not the exhaustive state, accessibility, device, or release
 matrix.
+
+Follow-up review confirmation (2026-09-17): the user confirmed item 20,
+Guided Tutorials, after the Neo-light tutorial-card icon and progress-count
+foregrounds were deepened for the cream card. Items 1-21 are now visually
+accepted. AppTutorialTokens.accentForeground supplies the deeper Neo-light
+accent; Classic falls back to its ColorScheme primary and Neo dark retains its
+existing primary.
 
 Latest targeted verification (2026-09-16): the user ran `dart format` on
 `settings_tiles.dart`, `volume_boundaries_screen.dart`, and
@@ -93,6 +100,14 @@ analyze` reported no issues; and the focused Flutter run passed all 63 tests:
 `step17_consumer_parity_test.dart`, and `pre_q2_route_evidence_test.dart`.
 This specifically verifies the final Neo selector contrast correction. It is a
 scoped result, not a replacement for broader suites or N6 evidence.
+
+Latest Step 14 verification (2026-09-16): the user also ran the focused family
+selector test with 7 passing tests, the complete `test/theme` suite with 300
+passing tests, the responsive accessibility suite with 6 passing tests, and
+the style ratchet in enforce mode. Formatting was unchanged and analysis
+reported no issues. This closes the automated implementation check for the
+selector; it does not approve Neo for release or replace the consolidated
+human visual, accessibility, device, and performance batch.
 
 Earlier acceptance: the user considers the reviewed pilot screens and the
 current Catalog/Logbook/Progress plus exercise-detail refinement batch good for
@@ -191,6 +206,49 @@ scripts/verify_neo_refinement.ps1 includes these sources/tests plus
 git diff --check. User-run analyzer/test output, rendered screenshots,
 route-by-route reachability, accessibility and physical-device qualification
 are still required before N5/N6 can be called complete.
+
+Automatable nutrition follow-up (2026-09-16): the GoalManualEntryPage save
+path now distinguishes a successful repository write from a safe classified
+failure. A failed save keeps the form open and shows localized recovery
+guidance instead of reporting success by popping the route. The focused
+`nutrition_goals_behavior_test.dart` covers both outcomes. Active StretchCard,
+Train2, and Food Logging action controls now expose existing localized labels
+where their action meaning is unambiguous. At the time of this implementation
+note, this was behavior/accessibility evidence only; the later user
+qualification confirmation records the corresponding route, keyboard/TalkBack,
+and physical-device N6 checks as accepted.
+
+Earlier expanded verifier rerun (2026-09-17): the first run reached the new Neo
+food-editor smoke and exposed a 129 px right RenderFlex overflow in both
+brightness modes at 320x640 with 2x text. `FoodCustomizationPage` now wraps
+its bottom extended actions instead of forcing them into one row. The focused
+dark/light reruns and the expanded batch then passed; the full theme suite
+reported 302 tests, the responsive run reported 6 tests, the route-boundary
+batch passed, and the enforce-mode ratchet passed.
+
+Post-review non-human implementation pass (2026-09-17; verified again by the
+2026-09-22 corrected-scope user run):
+the route ledger now checks exact row ordering, source paths, and
+constructor-level caller edges; new contracts cover N5 state owners and
+settings residue; nutrition tests cover provider rollback, diary failure,
+grouped/date rendering, validation, and normal-width action geometry; and
+Classic parity covers health delta roles and the Classic/Neo card boundary.
+The Neo compatibility surface also preserves explicit shape and elevation,
+while large-text settings values can wrap without changing normal layout
+behavior. The post-review pass also restores outlines and shadow geometry for
+explicit custom rounded Neo shapes and tightens route-edge contract matching.
+No new production files were enrolled in the style ratchet.
+The 2026-09-17 run at that checkpoint reported 132 files formatted, with 1
+file changed, clean analysis, 315 theme/configuration tests, 6 responsive
+tests, 46 route-boundary tests, and a passing enforce-mode ratchet.
+
+Final verifier-scope rerun (2026-09-22; user-supplied): the corrected
+`scripts/verify_neo_refinement.ps1` formatted 135 files with 0 changes,
+reported clean analysis, passed 321 theme tests, 6 responsive tests, and 46
+route-boundary tests, and passed the enforce-mode ratchet with one protected
+production file. BodyHeatmap diagnostics showed active SVG anatomy paths for
+the tested palettes. This closes the previously recorded scope-only rerun;
+it does not expand ratchet enrollment or qualify Neo for release.
 
 1. Q3: clean analysis, 226 scoped tests, and user manual-plan confirmation on
    2026-09-11. Sixteen Classic images were accepted at font scale 1.15. Requested
@@ -417,8 +475,10 @@ independent matrix to complete twice.
 
 ### Step 12. Close The Reachable-Surface Migration Ledger
 
-Status: the current 21-item Neo visual route review is accepted. Exhaustive
-state/reachability disposition and broader device qualification remain.
+Status: the current 21-item visual review and the 2026-09-17 development
+route/state/device qualification are accepted. Later changes need focused
+rechecks; separate product/design decisions and Step 15 release qualification
+remain.
 
 Completed batches cover shell/settings, B1-B6 Train/plans/workouts, catalog and
 media, analytics/history/measurements, onboarding, and specialized flows. The
@@ -431,6 +491,12 @@ boundary for evolving non-default routes. It is intentionally narrower than a
 full Neo implementation: it lets these consumers resolve semantic surfaces and
 contrast-aware accents now, while leaving final route-specific geometry and
 visual recipes for the later product-complete pass.
+
+The current pass adds source/state ownership contracts and focused behavior
+coverage for the remaining non-human gaps, but does not claim rendered route
+qualification. The compatibility wrapper remains an interim boundary for
+exercise definitions/history, cardio/stretch, measurements/trends, and
+nutrition until final Neo recipes receive product and human review.
 
 Remaining tasks:
 
@@ -449,12 +515,13 @@ Remaining tasks:
    unreachable with evidence, or deferred with owner/impact. Link verification.
 8. Correct unexplained styling leakage while preserving accepted layout and data.
 
-#### Current Neo Visual Review Closure (2026-09-16)
+#### Current Neo Visual Review Status (updated 2026-09-17)
 
 The user accepted the full current 21-item Neo visual review as good for now.
-This is a route-and-normal-state acceptance record, not a claim that every
-loading, error, destructive, persistence, keyboard, TalkBack, rotation, media,
-scanner, or release condition has been qualified.
+This is a route-and-normal-state acceptance record. The separate development
+qualification confirmation below now covers the listed loading, error,
+destructive, persistence, keyboard, TalkBack, rotation, media, and scanner
+checks for the current code; release qualification remains separate.
 
 | Items | Review scope | Status |
 | --- | --- | --- |
@@ -470,11 +537,30 @@ triggers their field-ink foreground independently from the charcoal popup
 menu's foreground. The 63-test verification recorded above covers that change.
 Classic remains on its inherited/default selector path.
 
+#### Current Development Qualification Confirmation (2026-09-17)
+
+The user confirmed that every item in the consolidated human/device/N6
+qualification checklist passed for the current working tree. This closes the
+current development qualification for N5 route states, E2.2 nutrition,
+E2.3 settings residue, N6 device/accessibility behavior, Q2 switching and
+effects, and the affected Step 17 Classic-parity checks. It also supplies the
+human/device input required for E2.4 closeout accounting.
+
+This confirmation is user-reported qualification evidence, not a new terminal
+run or a signed release result. Preserve the existing device/build identity
+records where applicable, and record any later defect as a focused recheck.
+Neo remains development-only until Step 15 receives an explicit release
+decision; the confirmation does not enroll additional style-ratchet files or
+resolve the product decisions for retained placeholder routes.
+
 #### Current 12A/N5 Working Ledger (2026-09-16)
 
 This is the first continuation of the reachable-route review. It records source
 reachability and current visual ownership; a `pending` disposition still needs
 the user-run route, state, or device evidence named in the final column.
+The user’s 2026-09-17 qualification confirmation supersedes those pending
+dispositions for the current working tree; the table remains as the route/state
+ownership map and its final column identifies the checks that were performed.
 
 | Entry point | Reachable destinations and states | Current visual owner | Disposition and evidence |
 | --- | --- | --- | --- |
@@ -500,10 +586,10 @@ complete. It preserves the original Classic recipes through an explicit
 
 | Consumer group | Theme-ready coverage | Deferred work |
 | --- | --- | --- |
-| Exercise definitions and history | `definitions_by_bodypart_page.dart`, `definitions_by_muscle_page.dart`, `exercise_definition_info_tile.dart`, and `full_history_screen.dart` use the compatibility surface; Neo metadata accents use semantic positive color where appropriate. | Final route composition, empty/loading states, and device evidence remain part of N5. |
-| Cardio and stretch | `cardio_card.dart` uses semantic timer states in Neo; `stretch_card.dart` uses a semantic add-action color; both use the compatibility surface. | Full cardio/stretch product flows, records, history, and final Neo recipes remain deferred. |
-| Current measurements | `current_metrics_section.dart` resolves Neo metric colors through data-visualization roles while Classic keeps its original palette. | Measurement route/state and device qualification remain with the D3/E2 ledger. |
-| Nutrition surfaces | `nutrition_bar_details.dart`, `default_trend_page.dart`, `food_customization_page.dart`, and `food_logging_page.dart` now have theme-ready foreground, visualization, and surface ownership. | Nutrition product behavior, placeholders, reachability, and final Neo design remain deferred. |
+| Exercise definitions and history | `definitions_by_bodypart_page.dart`, `definitions_by_muscle_page.dart`, `exercise_definition_info_tile.dart`, and `full_history_screen.dart` use the compatibility surface; Neo metadata accents use semantic positive color where appropriate. | Current development route/state/device qualification is accepted. Final product-specific route composition and Neo recipes remain a separate design decision. |
+| Cardio and stretch | `cardio_card.dart` uses semantic timer states in Neo; `stretch_card.dart` uses a semantic add-action color; both use the compatibility surface. | Current development qualification is accepted. Any broader product-flow expansion and final Neo recipes remain deferred. |
+| Current measurements | `current_metrics_section.dart` resolves Neo metric colors through data-visualization roles while Classic keeps its original palette. | Current development route/state/device qualification is accepted; recheck only affected changes. |
+| Nutrition surfaces | `nutrition_bar_details.dart`, `default_trend_page.dart`, `food_customization_page.dart`, and `food_logging_page.dart` now have theme-ready foreground, visualization, and surface ownership. | Current nutrition behavior and development qualification are accepted. Retained-placeholder release treatment and any final Neo recipe decisions remain separate. |
 | Shared boundary | `theme/widgets/tonos_theme_ready.dart` owns the explicit Classic `Card`/Neo `TonosSurface` split. | Do not enroll every consumer in the style ratchet until its full route scope is reviewed. |
 
 Focused source evidence for this slice remains
@@ -567,39 +653,46 @@ Current device checks:
 Exit: affected current surfaces pass the correction matrix. Preserve accepted
 historical results for unaffected behavior.
 
-#### N5. Current 21-Item Visual Review Accepted; Route-State Sweep Not Closed
+#### N5. Current 21-Item Visual Review And Route-State Qualification Accepted
 
 The current visual review is complete for all 21 agreed Neo entries, including
 the specialized Profile/settings routes. Many routes beyond the original pilots
-have received refinements. Calling all N5 work unstarted would be inaccurate,
-but visual approval of normal route states is not the exhaustive N5 exit.
-Finish Step 12's reachability disposition, secondary callers, and non-happy-path
-corrections.
+have received refinements. The user has now confirmed the route-state and
+non-happy-path qualification for the current working tree; later changes need
+only focused rechecks.
 
-The theme-ready secondary-surface extension is an interim adoption step inside
-this sweep. It closes a compatibility gap but does not close the final Neo
-design or visual qualification for those evolving routes.
+The theme-ready secondary-surface extension remains an interim adoption step
+inside this sweep. It closes a compatibility gap but does not by itself close
+the final Neo design decision for evolving product areas.
 
 Exit: each in-scope surface has a disposition and evidence; no unexplained gaps.
 
-#### N6. Qualification/Handoff - Targeted Evidence Recorded; Final Acceptance Pending
+The new N5 state-owner contract covers loading, empty, error, editing,
+destructive, media, workout-completion, history, progress, nutrition, scanner,
+and settings categories. It proves that each category has a concrete source
+owner only; rendered state, interaction, accessibility, device, and
+performance qualification are separately recorded and user-accepted for the
+current development scope.
+
+#### N6. Qualification/Handoff - Current Development Acceptance Recorded
 
 Automated runs, original phone checks, the 21-item visual acceptance, and the
-latest 63-test selector-contrast verification exist. Complete current light/dark,
-localization, large text, TalkBack, keyboard, rotation, overlays, live switching,
-restart, effects-off, and reduced-motion checks for the current code. Record
-observed scrolling or workout performance concerns and investigate using a
-supported configuration without bypassing release gating. Link limitations and
-remaining release work.
+latest 63-test selector-contrast verification exist. The user has confirmed
+the current light/dark, localization, large text, TalkBack, keyboard, rotation,
+overlays, live switching, restart, effects-off, reduced-motion, scanner/media,
+and performance checks. Link any later limitation to the affected route and
+reopen only that scope without bypassing release gating.
 
-Exit: development qualification is recorded, ready for Step 14. Public release
-approval is still a separate Step 15 decision.
+Exit: development qualification is recorded, ready for Step 14. Step 14
+implementation is recorded below; public release approval is still a separate
+Step 15 decision.
 
 ### Step 14. Deliver The Public Family Selector
 
-Status: not started as a release feature.
+Status: implemented, automated-verified, and included in the current
+human/device qualification; Neo remains non-release eligible.
 
-Required tasks after Neo development acceptance:
+Implementation requirements (complete; retained as the selector contract):
 
 1. Add a localized real Appearance setting using existing provider/preferences
    and centrally filtered eligible families.
@@ -610,12 +703,73 @@ Required tasks after Neo development acceptance:
 6. Keep actual release enrollment subject to Step 15's decision; implementation
    of the setting does not require exposing an unfinished family publicly.
 
-Exit: a real settings control satisfies these requirements. Debug buttons do
-not count as the public selector.
+Implementation record (2026-09-16):
+
+- `UIAppearanceSettingsPage` now exposes a real localized theme-family setting
+  with a compact current-brightness preview when the centralized capability
+  policy provides more than Classic.
+- `TonosChoiceDialog` supplies the selected radio state, accessible labels,
+  focusable activation and keyboard activation without changing the existing
+  Weight Units dialog contract.
+- `ThemeProvider.setFamily` remains the only mutation path, preserving the
+  current brightness, route state and failed-write behavior. Failed writes
+  keep the previous family and show a localized retry action.
+- The selector test covers eligible selection, brightness independence,
+  failed-save retry, Classic-only hiding, restart, downgrade fallback and all
+  bundled locales. The user's current development qualification supplies the
+  corresponding human/device evidence.
+- No release capability was changed: Neo is still unavailable in release
+  builds and when experimental themes are disabled.
+
+Implementation and current development qualification exit: met in source,
+focused coverage, user-run automated verification, and the user's consolidated
+human visual/accessibility/device confirmation. The Step 15 release decision
+remains separate.
+Debug buttons do not count as the public selector.
 
 ### Step 15. Qualify Themes For Release
 
 Status: release approval milestone not started; reuse applicable prior evidence.
+
+Preflight snapshot (2026-09-22; planning only, not a release candidate):
+
+- User-provided checkout snapshot: branch `updates/backlog`, HEAD
+  `d9b4d111761f050462079e0059063a681ab5b6ae`, with uncommitted and untracked
+  changes. The user intends the current app/theme and exercise-thumbnail work
+  for the candidate, subject to resolving explicit blockers below. The exact
+  candidate commit/source set is not frozen yet.
+- Platform decision (user, 2026-09-22): Android is the current target for
+  internal and closed testing, not open testing or a Play Store release. iOS
+  and web are future targets; Windows, Linux, and macOS remain out of scope.
+- The app declares `bn`, `en`, `es`, `fr`, `fr_CA`, `hi`, and `zh`.
+  The user intends to keep all seven locales and accepts the current
+  translations for the planned Android release. Native-speaker review has not
+  occurred; the user accepts that as a release limitation, with review
+  potentially following later. Do not describe it as native-speaker signoff.
+- Family decision (user, 2026-09-22): the Android release target is Classic
+  plus Neo, with Classic remaining the default and Neo selectable in both
+  light and dark modes. This is the intended scope to qualify, not the final
+  release approval.
+- `AppThemeCapabilities` currently makes Classic available in release mode
+  and keeps Neo unavailable there. Changing that gate requires the Step 15
+  completed release qualification and explicit release approval, not just a
+  successful development qualification. Internal Neo testing should use a
+  non-release build with experimental themes enabled; a release-mode APK still
+  falls back to Classic even when that flag is set.
+- User-reported toolchain: Flutter 3.29.3 and Dart 3.7.2. The repository
+  version is `1.0.1+5`; confirm the source, built APK, and installed Android
+  version before distributing an internal candidate. Play Console version-code
+  checks and protected release signing are later Play Store gates; never place
+  signing secrets in the repository or terminal transcript.
+- Exercise media for internal testing can use the existing development manifest
+  v15 with 253/300 thumbnails (84.3%); validate its current remote assets and
+  keep the 47 missing entries on the heatmap fallback. No production-bucket
+  promotion is required for this internal/closed test. Production is still
+  documented at v5/62 assets and uses a temporary `r2.dev` URL. Before any
+  production-targeted Android release with the new thumbnails, promote and
+  validate the complete canonical media/manifest and clean-install sync. See
+  [production content setup](content-production-setup.md) and the
+  [cloud-content roadmap](cloud-content-roadmap.md).
 
 Required tasks:
 
@@ -651,12 +805,15 @@ no present obligation to implement every speculative family in the old plan.
 
 ### Step 17. Close Current Review Findings
 
-Status: original Q3 accepted; post-refinement closure remains.
+Status: current affected development state/parity scope accepted on 2026-09-17;
+reopen only for a later reproduced defect or an affected code change.
 
 Completed work includes persistence fixes, consumer tests, contrast/focus,
-responsive content, localized removal, shared presentation, and Classic restoration.
+responsive content, localized removal, shared presentation, Classic restoration,
+and focused Classic-parity contracts for the changed health-delta and
+compatibility-boundary behavior.
 
-Remaining tasks:
+Conditional defect-handling protocol:
 
 1. Reconcile old issues with current source and tests before carrying them forward;
    a historical line number is not current proof of a defect.
@@ -667,14 +824,21 @@ Remaining tasks:
 5. Close findings with evidence or explicit accepted limitations, keeping pending
    manual checks visible.
 
-Exit: no unexplained open correction-pass defect. Passing source tests do not
-automatically close visual acceptance.
+Exit: the current reviewed scope has no outstanding correction-pass review.
+If a new defect is reproduced, record and qualify that affected scope; source
+tests alone do not close visual acceptance.
 
 ### Step 18. Finish Enforcement And Shared-System Qualification
 
-Status: scoped ratchet and Q2 work verified/accepted; expansion remains.
+Status: scoped ratchet and Q2 work are verified/accepted; current development
+qualification is accepted. The corrected verifier scope passed on 2026-09-22;
+broader per-file evidence and enrollment remain intentionally limited.
 
-Remaining tasks:
+Latest verification (2026-09-22): formatting 135 files with 0 changes, clean
+analysis, 321 theme tests, 6 responsive tests, 46 route-boundary tests, and
+enforce-mode ratchet passed. The ratchet still protects one production file.
+
+Remaining and conditional work:
 
 1. Expand enforcement only from Step 3's reviewed inventory and qualified files.
 2. Audit actual typography, local themes, motion, and effects consumers found
@@ -686,8 +850,9 @@ Remaining tasks:
 5. Recheck affected physical behavior after edits, retaining the historical Q3
    acceptance and its explicit limitations.
 
-Exit: agreed migrated scopes are enforced and current shared behavior has
-appropriate automated/manual evidence. One protected scope is not global coverage.
+Exit: the current scope remains qualified and protected; any future enrollment
+has per-file evidence and appropriate automated/manual qualification. One
+protected scope is not global coverage.
 
 ### Step 19. Preserve The Q3 Readiness Decision
 
@@ -702,15 +867,12 @@ public selection/release stay in Steps 14/15.
 
 ## Next Execution Order
 
-1. Diagnose or reclassify the remaining Canadian French Profile failure under
-   Step 17; the earlier Mg copy-contract finding is recorded as fixed.
-2. Complete the remaining N5 reachability and non-happy-path ledger work;
-   review the theme-ready secondary-surface consumers without treating their
-   compatibility wrapper as final Neo route approval.
-3. Expand qualified enforcement and close affected behavior gaps in Steps 3/18.
-4. Record N6 current-code device, accessibility, lifecycle, and performance
-   results with explicit limitations where a check cannot be run.
-5. Implement Step 14, qualify Step 15, and obtain the release decision. Defer Step 16.
+1. Prepare Step 15's release-candidate scope and explicit decision record.
+2. Expand qualified style-ratchet enforcement only for surfaces with complete
+   per-file evidence; do not use the ratchet as a substitute for route/state
+   review.
+3. Fix only later reproduced issues, rerun the affected automated scope, and
+   perform a focused device recheck. Defer Step 16.
 
 ## Verification And Future Updates
 

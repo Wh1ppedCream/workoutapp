@@ -1,6 +1,6 @@
 {
   "namespace": "exercise_media",
-  "version": 10,
+  "version": 15,
   "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
   "exercises": [
     {
@@ -852,6 +852,22 @@
       ]
     },
     {
+      "exerciseId": 60,
+      "exerciseName": "External Rotation - Dumbbell",
+      "slug": "external_rotation_dumbbell",
+      "assets": [
+        {
+          "assetId": "external_rotation_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/external_rotation_dumbbell/v1/thumb.webp",
+          "title": "External Rotation - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 61,
       "exerciseName": "Face Pull - Cable Machine",
       "slug": "face_pull_cable_machine",
@@ -980,6 +996,22 @@
       ]
     },
     {
+      "exerciseId": 69,
+      "exerciseName": "Front Squat - Cable Machine",
+      "slug": "front_squat_cable_machine",
+      "assets": [
+        {
+          "assetId": "front_squat_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/front_squat_cable_machine/v1/thumb.webp",
+          "title": "Front Squat - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 70,
       "exerciseName": "Front Squat - Dumbbell",
       "slug": "front_squat_dumbbell",
@@ -1044,6 +1076,70 @@
       ]
     },
     {
+      "exerciseId": 74,
+      "exerciseName": "Glute Bridge - Dumbbell",
+      "slug": "glute_bridge_dumbbell",
+      "assets": [
+        {
+          "assetId": "glute_bridge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_bridge_dumbbell/v1/thumb.webp",
+          "title": "Glute Bridge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 75,
+      "exerciseName": "Glute Ham Raise",
+      "slug": "glute_ham_raise",
+      "assets": [
+        {
+          "assetId": "glute_ham_raise_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_ham_raise/v1/thumb.webp",
+          "title": "Glute Ham Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 76,
+      "exerciseName": "Glute Kickback",
+      "slug": "glute_kickback",
+      "assets": [
+        {
+          "assetId": "glute_kickback_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_kickback/v1/thumb.webp",
+          "title": "Glute Kickback thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 77,
+      "exerciseName": "Glute Kickback - Cable Machine",
+      "slug": "glute_kickback_cable_machine",
+      "assets": [
+        {
+          "assetId": "glute_kickback_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_kickback_cable_machine/v1/thumb.webp",
+          "title": "Glute Kickback - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 78,
       "exerciseName": "Good Morning - Barbell",
       "slug": "good_morning_barbell",
@@ -1060,6 +1156,38 @@
       ]
     },
     {
+      "exerciseId": 79,
+      "exerciseName": "Hack Squat - Hack Squat Machine",
+      "slug": "hack_squat_hack_squat_machine",
+      "assets": [
+        {
+          "assetId": "hack_squat_hack_squat_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hack_squat_hack_squat_machine/v1/thumb.webp",
+          "title": "Hack Squat - Hack Squat Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 80,
+      "exerciseName": "Hammer Curl - Cable Machine",
+      "slug": "hammer_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "hammer_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hammer_curl_cable_machine/v1/thumb.webp",
+          "title": "Hammer Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 81,
       "exerciseName": "Hammer Curl - Dumbbell",
       "slug": "hammer_curl_dumbbell",
@@ -1069,6 +1197,22 @@
           "type": "thumbnail",
           "path": "exercises/hammer_curl_dumbbell/v1/thumb.webp",
           "title": "Hammer Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 82,
+      "exerciseName": "Hammer Curl - Dumbbell (Crossbody)",
+      "slug": "hammer_curl_dumbbell_crossbody",
+      "assets": [
+        {
+          "assetId": "hammer_curl_dumbbell_crossbody_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hammer_curl_dumbbell_crossbody/v1/thumb.webp",
+          "title": "Hammer Curl - Dumbbell (Crossbody) thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1172,6 +1316,22 @@
       ]
     },
     {
+      "exerciseId": 89,
+      "exerciseName": "Hip Adductor - Cable Machine",
+      "slug": "hip_adductor_cable_machine",
+      "assets": [
+        {
+          "assetId": "hip_adductor_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_adductor_cable_machine/v1/thumb.webp",
+          "title": "Hip Adductor - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 90,
       "exerciseName": "Hip Extension",
       "slug": "hip_extension",
@@ -1204,6 +1364,38 @@
       ]
     },
     {
+      "exerciseId": 92,
+      "exerciseName": "Hip Frog Extension",
+      "slug": "hip_frog_extension",
+      "assets": [
+        {
+          "assetId": "hip_frog_extension_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_frog_extension/v1/thumb.webp",
+          "title": "Hip Frog Extension thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 93,
+      "exerciseName": "Hip Raise",
+      "slug": "hip_raise",
+      "assets": [
+        {
+          "assetId": "hip_raise_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_raise/v1/thumb.webp",
+          "title": "Hip Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 94,
       "exerciseName": "Hip Thrust - Hip Thrust Machine",
       "slug": "hip_thrust_hip_thrust_machine",
@@ -1213,6 +1405,22 @@
           "type": "thumbnail",
           "path": "exercises/hip_thrust_hip_thrust_machine/v1/thumb.webp",
           "title": "Hip Thrust - Hip Thrust Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 95,
+      "exerciseName": "Hip Thrust - Cable Machine",
+      "slug": "hip_thrust_cable_machine",
+      "assets": [
+        {
+          "assetId": "hip_thrust_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_thrust_cable_machine/v1/thumb.webp",
+          "title": "Hip Thrust - Cable Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1309,6 +1517,22 @@
           "type": "thumbnail",
           "path": "exercises/incline_bench_fly_dumbbell/v1/thumb.webp",
           "title": "Incline Bench Fly - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 102,
+      "exerciseName": "Incline Bench Press - Cable Machine",
+      "slug": "incline_bench_press_cable_machine",
+      "assets": [
+        {
+          "assetId": "incline_bench_press_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/incline_bench_press_cable_machine/v1/thumb.webp",
+          "title": "Incline Bench Press - Cable Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1476,6 +1700,22 @@
       ]
     },
     {
+      "exerciseId": 115,
+      "exerciseName": "Inverted Row (Reverse Grip)",
+      "slug": "inverted_row_reverse_grip",
+      "assets": [
+        {
+          "assetId": "inverted_row_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/inverted_row_reverse_grip/v1/thumb.webp",
+          "title": "Inverted Row (Reverse Grip) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 116,
       "exerciseName": "Jump Squat",
       "slug": "jump_squat",
@@ -1581,6 +1821,22 @@
           "type": "thumbnail",
           "path": "exercises/knee_raise_twist_hanging/v1/thumb.webp",
           "title": "Knee Raise Twist thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 124,
+      "exerciseName": "Kneeling Crunch - Cable Machine",
+      "slug": "kneeling_crunch_cable_machine",
+      "assets": [
+        {
+          "assetId": "kneeling_crunch_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/kneeling_crunch_cable_machine/v1/thumb.webp",
+          "title": "Kneeling Crunch - Cable Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1764,6 +2020,38 @@
       ]
     },
     {
+      "exerciseId": 139,
+      "exerciseName": "Leg Curl - Cable Machine (Standing)",
+      "slug": "leg_curl_cable_machine_standing",
+      "assets": [
+        {
+          "assetId": "leg_curl_cable_machine_standing_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_curl_cable_machine_standing/v1/thumb.webp",
+          "title": "Leg Curl - Cable Machine (Standing) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 142,
+      "exerciseName": "Leg Extension - Leg Extension Machine",
+      "slug": "leg_extension_leg_extension_machine",
+      "assets": [
+        {
+          "assetId": "leg_extension_leg_extension_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_extension_leg_extension_machine/v1/thumb.webp",
+          "title": "Leg Extension - Leg Extension Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 143,
       "exerciseName": "Lying Leg Raise",
       "slug": "leg_raise",
@@ -1789,6 +2077,22 @@
           "type": "thumbnail",
           "path": "exercises/leg_raise_hanging/v1/thumb.webp",
           "title": "Hanging Leg Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 147,
+      "exerciseName": "Leg Raise Twist (Hanging)",
+      "slug": "leg_raise_twist_hanging",
+      "assets": [
+        {
+          "assetId": "leg_raise_twist_hanging_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_raise_twist_hanging/v1/thumb.webp",
+          "title": "Leg Raise Twist (Hanging) thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -1885,6 +2189,22 @@
           "type": "thumbnail",
           "path": "exercises/mountain_climber/v1/thumb.webp",
           "title": "Mountain Climber thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 157,
+      "exerciseName": "Mountain Climber (Crossbody)",
+      "slug": "mountain_climber_crossbody",
+      "assets": [
+        {
+          "assetId": "mountain_climber_crossbody_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/mountain_climber_crossbody/v1/thumb.webp",
+          "title": "Mountain Climber (Crossbody) thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -2244,6 +2564,54 @@
       ]
     },
     {
+      "exerciseId": 183,
+      "exerciseName": "Pull Up - Reverse Grip",
+      "slug": "pull_up_reverse_grip",
+      "assets": [
+        {
+          "assetId": "pull_up_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_up_reverse_grip/v1/thumb.webp",
+          "title": "Pull Up - Reverse Grip thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 184,
+      "exerciseName": "Pull Up - Assisted Dip/Pull-Up Machine",
+      "slug": "pull_up_assisted_dip_pull_up_machine",
+      "assets": [
+        {
+          "assetId": "pull_up_assisted_dip_pull_up_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_up_assisted_dip_pull_up_machine/v1/thumb.webp",
+          "title": "Pull Up - Assisted Dip/Pull-Up Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 185,
+      "exerciseName": "Pullover - Cable Machine",
+      "slug": "pullover_cable_machine",
+      "assets": [
+        {
+          "assetId": "pullover_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pullover_cable_machine/v1/thumb.webp",
+          "title": "Pullover - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 186,
       "exerciseName": "Pullover - Barbell",
       "slug": "pullover_barbell",
@@ -2253,6 +2621,22 @@
           "type": "thumbnail",
           "path": "exercises/pullover_barbell/v1/thumb.webp",
           "title": "Pullover - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 189,
+      "exerciseName": "Push Away",
+      "slug": "push_away",
+      "assets": [
+        {
+          "assetId": "push_away_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_away/v1/thumb.webp",
+          "title": "Push Away thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -2301,6 +2685,22 @@
           "type": "thumbnail",
           "path": "exercises/push_up/v1/thumb.webp",
           "title": "Push-up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 193,
+      "exerciseName": "Push-up (Close Grip)",
+      "slug": "push_up_close_grip",
+      "assets": [
+        {
+          "assetId": "push_up_close_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_up_close_grip/v1/thumb.webp",
+          "title": "Push-up (Close Grip) thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -2372,6 +2772,22 @@
       ]
     },
     {
+      "exerciseId": 201,
+      "exerciseName": "Reverse Fly - Dumbbell (Lying)",
+      "slug": "reverse_fly_dumbbell_lying",
+      "assets": [
+        {
+          "assetId": "reverse_fly_dumbbell_lying_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_fly_dumbbell_lying/v1/thumb.webp",
+          "title": "Reverse Fly - Dumbbell (Lying) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 202,
       "exerciseName": "Reverse Crunch",
       "slug": "reverse_crunch",
@@ -2381,6 +2797,22 @@
           "type": "thumbnail",
           "path": "exercises/reverse_crunch/v1/thumb.webp",
           "title": "Reverse Crunch thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 203,
+      "exerciseName": "Reverse Crunch - Cable Machine",
+      "slug": "reverse_crunch_cable_machine",
+      "assets": [
+        {
+          "assetId": "reverse_crunch_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_crunch_cable_machine/v1/thumb.webp",
+          "title": "Reverse Crunch - Cable Machine thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"
@@ -2436,6 +2868,54 @@
       ]
     },
     {
+      "exerciseId": 207,
+      "exerciseName": "Reverse Lunge",
+      "slug": "reverse_lunge",
+      "assets": [
+        {
+          "assetId": "reverse_lunge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_lunge/v1/thumb.webp",
+          "title": "Reverse Lunge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 210,
+      "exerciseName": "Reverse Lunge - Barbell",
+      "slug": "reverse_lunge_barbell",
+      "assets": [
+        {
+          "assetId": "reverse_lunge_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_lunge_barbell/v1/thumb.webp",
+          "title": "Reverse Lunge - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 214,
+      "exerciseName": "Reverse Plank",
+      "slug": "reverse_plank",
+      "assets": [
+        {
+          "assetId": "reverse_plank_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_plank/v1/thumb.webp",
+          "title": "Reverse Plank thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 215,
       "exerciseName": "Romanian Deadlift - Barbell",
       "slug": "romanian_deadlift_barbell",
@@ -2452,6 +2932,86 @@
       ]
     },
     {
+      "exerciseId": 216,
+      "exerciseName": "Row - Landmine Attachment",
+      "slug": "row_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "row_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_landmine_attachment/v1/thumb.webp",
+          "title": "Row - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 217,
+      "exerciseName": "Row - Resistance Band",
+      "slug": "row_resistance_band",
+      "assets": [
+        {
+          "assetId": "row_resistance_band_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_resistance_band/v1/thumb.webp",
+          "title": "Row - Resistance Band thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 218,
+      "exerciseName": "Row - Kettlebell",
+      "slug": "row_kettlebell",
+      "assets": [
+        {
+          "assetId": "row_kettlebell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_kettlebell/v1/thumb.webp",
+          "title": "Row - Kettlebell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 219,
+      "exerciseName": "Row - Cable Machine",
+      "slug": "row_cable_machine",
+      "assets": [
+        {
+          "assetId": "row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_cable_machine/v1/thumb.webp",
+          "title": "Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 220,
+      "exerciseName": "Row - Smith Machine",
+      "slug": "row_smith_machine",
+      "assets": [
+        {
+          "assetId": "row_smith_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_smith_machine/v1/thumb.webp",
+          "title": "Row - Smith Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
       "exerciseId": 221,
       "exerciseName": "Row - Barbell",
       "slug": "row_barbell",
@@ -2461,6 +3021,1030 @@
           "type": "thumbnail",
           "path": "exercises/row_barbell/v1/thumb.webp",
           "title": "Row - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 225,
+      "exerciseName": "Row - Dumbbell",
+      "slug": "row_dumbbell",
+      "assets": [
+        {
+          "assetId": "row_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_dumbbell/v1/thumb.webp",
+          "title": "Row - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 227,
+      "exerciseName": "Russian Twist",
+      "slug": "russian_twist",
+      "assets": [
+        {
+          "assetId": "russian_twist_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/russian_twist/v1/thumb.webp",
+          "title": "Russian Twist thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 228,
+      "exerciseName": "Russian Twist - Dumbbell",
+      "slug": "russian_twist_dumbbell",
+      "assets": [
+        {
+          "assetId": "russian_twist_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/russian_twist_dumbbell/v1/thumb.webp",
+          "title": "Russian Twist - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 229,
+      "exerciseName": "Seated Chest Press",
+      "slug": "seated_chest_press",
+      "assets": [
+        {
+          "assetId": "seated_chest_press_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_chest_press/v1/thumb.webp",
+          "title": "Seated Chest Press thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 230,
+      "exerciseName": "Seated Leg Curl",
+      "slug": "seated_leg_curl",
+      "assets": [
+        {
+          "assetId": "seated_leg_curl_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_leg_curl/v1/thumb.webp",
+          "title": "Seated Leg Curl thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 231,
+      "exerciseName": "Seated Leg Press",
+      "slug": "seated_leg_press",
+      "assets": [
+        {
+          "assetId": "seated_leg_press_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_leg_press/v1/thumb.webp",
+          "title": "Seated Leg Press thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 232,
+      "exerciseName": "Shrug - Cable Machine",
+      "slug": "shrug_cable_machine",
+      "assets": [
+        {
+          "assetId": "shrug_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_cable_machine/v1/thumb.webp",
+          "title": "Shrug - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 233,
+      "exerciseName": "Shrug - Barbell",
+      "slug": "shrug_barbell",
+      "assets": [
+        {
+          "assetId": "shrug_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_barbell/v1/thumb.webp",
+          "title": "Shrug - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 234,
+      "exerciseName": "Shrug - Dumbbell",
+      "slug": "shrug_dumbbell",
+      "assets": [
+        {
+          "assetId": "shrug_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_dumbbell/v1/thumb.webp",
+          "title": "Shrug - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 235,
+      "exerciseName": "Side Bend - Cable Machine",
+      "slug": "side_bend_cable_machine",
+      "assets": [
+        {
+          "assetId": "side_bend_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bend_cable_machine/v1/thumb.webp",
+          "title": "Side Bend - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 236,
+      "exerciseName": "Side Bend - Dumbbell",
+      "slug": "side_bend_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_bend_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bend_dumbbell/v1/thumb.webp",
+          "title": "Side Bend - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 237,
+      "exerciseName": "Side Bridge",
+      "slug": "side_bridge",
+      "assets": [
+        {
+          "assetId": "side_bridge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bridge/v1/thumb.webp",
+          "title": "Side Bridge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 238,
+      "exerciseName": "Side Bridge - Dumbbell",
+      "slug": "side_bridge_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_bridge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bridge_dumbbell/v1/thumb.webp",
+          "title": "Side Bridge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 239,
+      "exerciseName": "Side Lunge",
+      "slug": "side_lunge",
+      "assets": [
+        {
+          "assetId": "side_lunge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_lunge/v1/thumb.webp",
+          "title": "Side Lunge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 241,
+      "exerciseName": "Side Lunge - Dumbbell",
+      "slug": "side_lunge_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_lunge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_lunge_dumbbell/v1/thumb.webp",
+          "title": "Side Lunge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 245,
+      "exerciseName": "Single Arm Row - Landmine Attachment",
+      "slug": "single_arm_row_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "single_arm_row_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_landmine_attachment/v1/thumb.webp",
+          "title": "Single Arm Row - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 246,
+      "exerciseName": "Single Arm Row - Cable Machine",
+      "slug": "single_arm_row_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_cable_machine/v1/thumb.webp",
+          "title": "Single Arm Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 247,
+      "exerciseName": "Single Arm Row - Dumbbell (Kneeling)",
+      "slug": "single_arm_row_dumbbell_kneeling",
+      "assets": [
+        {
+          "assetId": "single_arm_row_dumbbell_kneeling_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_dumbbell_kneeling/v1/thumb.webp",
+          "title": "Single Arm Row - Dumbbell (Kneeling) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 249,
+      "exerciseName": "Single Arm Lat Pull-down - Lat Pulldown Machine",
+      "slug": "single_arm_lat_pull_down_lat_pulldown_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_pull_down_lat_pulldown_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_pull_down_lat_pulldown_machine/v1/thumb.webp",
+          "title": "Single Arm Lat Pull-down - Lat Pulldown Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 250,
+      "exerciseName": "Single Arm Lat Pull-down - Cable Machine",
+      "slug": "single_arm_lat_pull_down_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_pull_down_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_pull_down_cable_machine/v1/thumb.webp",
+          "title": "Single Arm Lat Pull-down - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 251,
+      "exerciseName": "Single Arm Lat Raise - Cable Machine",
+      "slug": "single_arm_lat_raise_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_raise_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_raise_cable_machine/v1/thumb.webp",
+          "title": "Single Arm Lat Raise - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 252,
+      "exerciseName": "Single Arm Lat Raise - Dumbbell",
+      "slug": "single_arm_lat_raise_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_raise_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_raise_dumbbell/v1/thumb.webp",
+          "title": "Single Arm Lat Raise - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 253,
+      "exerciseName": "Single Leg Deadlift - Barbell",
+      "slug": "single_leg_deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "single_leg_deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_deadlift_barbell/v1/thumb.webp",
+          "title": "Single Leg Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 254,
+      "exerciseName": "Single Leg Deadlift - Dumbbell",
+      "slug": "single_leg_deadlift_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_leg_deadlift_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_deadlift_dumbbell/v1/thumb.webp",
+          "title": "Single Leg Deadlift - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 255,
+      "exerciseName": "Single Leg Hip Thrust - Dumbbell",
+      "slug": "single_leg_hip_thrust_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_leg_hip_thrust_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_hip_thrust_dumbbell/v1/thumb.webp",
+          "title": "Single Leg Hip Thrust - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 256,
+      "exerciseName": "Single Leg Hip Thrust - Barbell",
+      "slug": "single_leg_hip_thrust_barbell",
+      "assets": [
+        {
+          "assetId": "single_leg_hip_thrust_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_hip_thrust_barbell/v1/thumb.webp",
+          "title": "Single Leg Hip Thrust - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 257,
+      "exerciseName": "Sit-Up",
+      "slug": "sit_up",
+      "assets": [
+        {
+          "assetId": "sit_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sit_up/v1/thumb.webp",
+          "title": "Sit-Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 258,
+      "exerciseName": "Sit-Up - Dumbbell",
+      "slug": "sit_up_dumbbell",
+      "assets": [
+        {
+          "assetId": "sit_up_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sit_up_dumbbell/v1/thumb.webp",
+          "title": "Sit-Up - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 259,
+      "exerciseName": "Skull Crusher - Cable Machine",
+      "slug": "skull_crusher_cable_machine",
+      "assets": [
+        {
+          "assetId": "skull_crusher_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/skull_crusher_cable_machine/v1/thumb.webp",
+          "title": "Skull Crusher - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 260,
+      "exerciseName": "Skull Crusher - Barbell",
+      "slug": "skull_crusher_barbell",
+      "assets": [
+        {
+          "assetId": "skull_crusher_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/skull_crusher_barbell/v1/thumb.webp",
+          "title": "Skull Crusher - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 263,
+      "exerciseName": "Sled Pull",
+      "slug": "sled_pull",
+      "assets": [
+        {
+          "assetId": "sled_pull_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sled_pull/v1/thumb.webp",
+          "title": "Sled Pull thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 264,
+      "exerciseName": "Sled Push",
+      "slug": "sled_push",
+      "assets": [
+        {
+          "assetId": "sled_push_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sled_push/v1/thumb.webp",
+          "title": "Sled Push thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 267,
+      "exerciseName": "Split Squat",
+      "slug": "split_squat",
+      "assets": [
+        {
+          "assetId": "split_squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat/v1/thumb.webp",
+          "title": "Split Squat thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 268,
+      "exerciseName": "Split Squat - Dumbbell",
+      "slug": "split_squat_dumbbell",
+      "assets": [
+        {
+          "assetId": "split_squat_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat_dumbbell/v1/thumb.webp",
+          "title": "Split Squat - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 269,
+      "exerciseName": "Split Squat - Barbell",
+      "slug": "split_squat_barbell",
+      "assets": [
+        {
+          "assetId": "split_squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat_barbell/v1/thumb.webp",
+          "title": "Split Squat - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 270,
+      "exerciseName": "Squat",
+      "slug": "squat",
+      "assets": [
+        {
+          "assetId": "squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat/v1/thumb.webp",
+          "title": "Squat thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 271,
+      "exerciseName": "Squat - Landmine Attachment",
+      "slug": "squat_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "squat_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_landmine_attachment/v1/thumb.webp",
+          "title": "Squat - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 272,
+      "exerciseName": "Squat - Barbell",
+      "slug": "squat_barbell",
+      "assets": [
+        {
+          "assetId": "squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_barbell/v1/thumb.webp",
+          "title": "Squat - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 273,
+      "exerciseName": "Squat - Dumbbell",
+      "slug": "squat_dumbbell",
+      "assets": [
+        {
+          "assetId": "squat_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_dumbbell/v1/thumb.webp",
+          "title": "Squat - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 280,
+      "exerciseName": "Stiff Leg Deadlift - Barbell",
+      "slug": "stiff_leg_deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "stiff_leg_deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/stiff_leg_deadlift_barbell/v1/thumb.webp",
+          "title": "Stiff Leg Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 285,
+      "exerciseName": "Tricep Dip",
+      "slug": "tricep_dip",
+      "assets": [
+        {
+          "assetId": "tricep_dip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_dip/v1/thumb.webp",
+          "title": "Tricep Dip thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 286,
+      "exerciseName": "Tricep Dip - Assisted Dip/Pull-Up Machine",
+      "slug": "tricep_dip_assisted_dip_pull_up_machine",
+      "assets": [
+        {
+          "assetId": "tricep_dip_assisted_dip_pull_up_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_dip_assisted_dip_pull_up_machine/v1/thumb.webp",
+          "title": "Tricep Dip - Assisted Dip/Pull-Up Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 287,
+      "exerciseName": "Overhead Tricep Extension - Cable Machine",
+      "slug": "overhead_tricep_extension_cable_machine",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_cable_machine/v1/thumb.webp",
+          "title": "Overhead Tricep Extension - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 288,
+      "exerciseName": "Overhead Tricep Extension - Dumbbell",
+      "slug": "overhead_tricep_extension_dumbbell",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_dumbbell/v1/thumb.webp",
+          "title": "Overhead Tricep Extension - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 289,
+      "exerciseName": "Overhead Tricep Extension - Barbell",
+      "slug": "overhead_tricep_extension_barbell",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_barbell/v1/thumb.webp",
+          "title": "Overhead Tricep Extension - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 291,
+      "exerciseName": "Tricep Kickback - Cable Machine",
+      "slug": "tricep_kickback_cable_machine",
+      "assets": [
+        {
+          "assetId": "tricep_kickback_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_kickback_cable_machine/v1/thumb.webp",
+          "title": "Tricep Kickback - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 292,
+      "exerciseName": "Tricep Kickback - Dumbbell",
+      "slug": "tricep_kickback_dumbbell",
+      "assets": [
+        {
+          "assetId": "tricep_kickback_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_kickback_dumbbell/v1/thumb.webp",
+          "title": "Tricep Kickback - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 293,
+      "exerciseName": "Tricep Pushdown - Cable Machine",
+      "slug": "tricep_pushdown_cable_machine",
+      "assets": [
+        {
+          "assetId": "tricep_pushdown_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_pushdown_cable_machine/v1/thumb.webp",
+          "title": "Tricep Pushdown - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 294,
+      "exerciseName": "Tuck Crunch",
+      "slug": "tuck_crunch",
+      "assets": [
+        {
+          "assetId": "tuck_crunch_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tuck_crunch/v1/thumb.webp",
+          "title": "Tuck Crunch thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 295,
+      "exerciseName": "Tuck Crunch - Dumbbell",
+      "slug": "tuck_crunch_dumbbell",
+      "assets": [
+        {
+          "assetId": "tuck_crunch_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tuck_crunch_dumbbell/v1/thumb.webp",
+          "title": "Tuck Crunch - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 296,
+      "exerciseName": "Turkish Get Up",
+      "slug": "turkish_get_up",
+      "assets": [
+        {
+          "assetId": "turkish_get_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/turkish_get_up/v1/thumb.webp",
+          "title": "Turkish Get Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 297,
+      "exerciseName": "Up-Down Twist - Cable Machine",
+      "slug": "up_down_twist_cable_machine",
+      "assets": [
+        {
+          "assetId": "up_down_twist_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/up_down_twist_cable_machine/v1/thumb.webp",
+          "title": "Up-Down Twist - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 298,
+      "exerciseName": "Upright Row - Cable Machine",
+      "slug": "upright_row_cable_machine",
+      "assets": [
+        {
+          "assetId": "upright_row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_cable_machine/v1/thumb.webp",
+          "title": "Upright Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 299,
+      "exerciseName": "Upright Row - Barbell",
+      "slug": "upright_row_barbell",
+      "assets": [
+        {
+          "assetId": "upright_row_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_barbell/v1/thumb.webp",
+          "title": "Upright Row - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 300,
+      "exerciseName": "Upright Row - Dumbbell",
+      "slug": "upright_row_dumbbell",
+      "assets": [
+        {
+          "assetId": "upright_row_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_dumbbell/v1/thumb.webp",
+          "title": "Upright Row - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 301,
+      "exerciseName": "V Up",
+      "slug": "v_up",
+      "assets": [
+        {
+          "assetId": "v_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/v_up/v1/thumb.webp",
+          "title": "V Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 304,
+      "exerciseName": "V Up - Dumbbell",
+      "slug": "v_up_dumbbell",
+      "assets": [
+        {
+          "assetId": "v_up_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/v_up_dumbbell/v1/thumb.webp",
+          "title": "V Up - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 305,
+      "exerciseName": "Windshield Wipers",
+      "slug": "windshield_wipers",
+      "assets": [
+        {
+          "assetId": "windshield_wipers_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/windshield_wipers/v1/thumb.webp",
+          "title": "Windshield Wipers thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 308,
+      "exerciseName": "Wrist Curl - Cable Machine",
+      "slug": "wrist_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "wrist_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_cable_machine/v1/thumb.webp",
+          "title": "Wrist Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 309,
+      "exerciseName": "Wrist Curl - Barbell",
+      "slug": "wrist_curl_barbell",
+      "assets": [
+        {
+          "assetId": "wrist_curl_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_barbell/v1/thumb.webp",
+          "title": "Wrist Curl - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 310,
+      "exerciseName": "Wrist Curl - Dumbbell",
+      "slug": "wrist_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "wrist_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_dumbbell/v1/thumb.webp",
+          "title": "Wrist Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 311,
+      "exerciseName": "Wrist Curl - Dumbbell (Reverse Grip)",
+      "slug": "wrist_curl_dumbbell_reverse_grip",
+      "assets": [
+        {
+          "assetId": "wrist_curl_dumbbell_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_dumbbell_reverse_grip/v1/thumb.webp",
+          "title": "Wrist Curl - Dumbbell (Reverse Grip) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 312,
+      "exerciseName": "Zercher Carry - Barbell",
+      "slug": "zercher_carry_barbell",
+      "assets": [
+        {
+          "assetId": "zercher_carry_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/zercher_carry_barbell/v1/thumb.webp",
+          "title": "Zercher Carry - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 313,
+      "exerciseName": "Zercher Squat - Barbell",
+      "slug": "zercher_squat_barbell",
+      "assets": [
+        {
+          "assetId": "zercher_squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/zercher_squat_barbell/v1/thumb.webp",
+          "title": "Zercher Squat - Barbell thumbnail",
           "sortOrder": 0,
           "version": 1,
           "licenseId": "tonos_owned"

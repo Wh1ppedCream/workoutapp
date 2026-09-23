@@ -210,6 +210,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get uiAppearanceSubtitle => 'Controla el aspecto de Tonos y el comportamiento de las pestañas inferiores.';
 
   @override
+  String get themeFamilyTitle => 'Familia de tema';
+
+  @override
+  String get themeFamilySubtitle => 'Elige la familia visual independientemente del modo claro u oscuro.';
+
+  @override
+  String get themeFamilyClassic => 'Clásico';
+
+  @override
+  String get themeFamilyClassicDescription => 'La apariencia habitual de Tonos.';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'Neo-brutalismo';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'Colores intensos, contornos de tinta y sombras marcadas.';
+
+  @override
   String get displaySettingsTitle => 'Pantalla';
 
   @override

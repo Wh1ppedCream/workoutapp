@@ -185,6 +185,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get uiAppearanceSubtitle => 'Tonos का रूप और नीचे के टैब का व्यवहार नियंत्रित करें।';
 
   @override
+  String get themeFamilyTitle => 'थीम परिवार';
+
+  @override
+  String get themeFamilySubtitle => 'लाइट या डार्क मोड से स्वतंत्र रूप से दृश्य थीम चुनें।';
+
+  @override
+  String get themeFamilyClassic => 'क्लासिक';
+
+  @override
+  String get themeFamilyClassicDescription => 'Tonos का परिचित रूप।';
+
+  @override
+  String get themeFamilyNeoBrutalism => 'नियो-ब्रूटलिज़्म';
+
+  @override
+  String get themeFamilyNeoBrutalismDescription => 'चटकीले रंग, इंक आउटलाइन और स्पष्ट छायाएँ।';
+
+  @override
   String get displaySettingsTitle => 'डिस्प्ले';
 
   @override

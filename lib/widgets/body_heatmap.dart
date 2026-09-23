@@ -224,6 +224,102 @@ class BodyHeatmap extends StatelessWidget {
     return '${_toRgbHex(lowColor)}|${_toRgbHex(highColor)}|$encodedEntries';
   }
 
+  static String _replacePathFills(String svg, String hex, {String? id}) {
+    final idSelector =
+        id == null ? '' : '(?=[^>]*\\bid="${RegExp.escape(id)}")';
+    final pathPattern = RegExp(
+      '<path\\b$idSelector[^>]*>',
+      caseSensitive: false,
+    );
+    final styleFillPattern = RegExp(
+      r'\bfill\s*:\s*#[0-9a-fA-F]+\s*;?',
+      caseSensitive: false,
+    );
+    final attributeFillPattern = RegExp(r'\sfill="[^"]*"');
+
+    String replaceTag(String tag) {
+      var normalizedTag = tag.replaceFirst(attributeFillPattern, '');
+      final styleAttributePattern = RegExp(
+        r'\sstyle="([^"]*)"',
+        caseSensitive: false,
+      );
+      final styleMatch = styleAttributePattern.firstMatch(normalizedTag);
+      if (styleMatch != null) {
+        final styleWithoutFill = styleMatch
+            .group(1)!
+            .replaceAll(styleFillPattern, '')
+            .split(';')
+            .map((property) => property.trim())
+            .where((property) => property.isNotEmpty)
+            .join(';');
+        final replacement =
+            styleWithoutFill.isEmpty ? '' : ' style="$styleWithoutFill"';
+        normalizedTag = normalizedTag.replaceRange(
+          styleMatch.start,
+          styleMatch.end,
+          replacement,
+        );
+      }
+
+      final closing = normalizedTag.endsWith('/>') ? '/>' : '>';
+      final tagBody =
+          normalizedTag
+              .substring(0, normalizedTag.length - closing.length)
+              .trimRight();
+      return '$tagBody fill="$hex"$closing';
+    }
+
+    return svg.replaceAllMapped(
+      pathPattern,
+      (match) => replaceTag(match.group(0)!),
+    );
+  }
+
+  static void _debugAssertRenderedSvg(
+    String svg,
+    List<MapEntry<String, double>> entries,
+    Color lowColor,
+    Color highColor,
+  ) {
+    assert(() {
+      final unresolvedIds = <String>[];
+      for (final entry in entries) {
+        final paintColor = Color.lerp(lowColor, highColor, entry.value)!;
+        final expectedHex = _toRgbHex(paintColor);
+        final pathPattern = RegExp(
+          r'<path\b[^>]*id="' +
+              RegExp.escape(entry.key) +
+              r'"[^>]*fill="' +
+              expectedHex +
+              r'"',
+          caseSensitive: false,
+        );
+        if (!pathPattern.hasMatch(svg)) {
+          unresolvedIds.add('${entry.key}=$expectedHex');
+        }
+      }
+
+      final hasInlineFillStyle = RegExp(
+        r'<path\b[^>]*\bstyle="[^"]*\bfill\s*:',
+        caseSensitive: false,
+      ).hasMatch(svg);
+      if (hasInlineFillStyle || unresolvedIds.isNotEmpty) {
+        throw StateError(
+          'BodyHeatmap SVG invariant failed: '
+          'inlineFillStyle=$hasInlineFillStyle '
+          'unresolved=${unresolvedIds.join(', ')}',
+        );
+      }
+
+      debugPrint(
+        'BodyHeatmap SVG: low=${_toRgbHex(lowColor)} '
+        'high=${_toRgbHex(highColor)} '
+        'active=${entries.map((entry) => entry.key).join(', ')}',
+      );
+      return true;
+    }());
+  }
+
   String _renderSvg(String template) {
     final entries = _normalizedFrequencyEntries();
     final cacheKey = _cacheKey(entries);
@@ -233,16 +329,8 @@ class BodyHeatmap extends StatelessWidget {
       return cachedSvg;
     }
 
-    var svgContent = template;
-
-    svgContent = svgContent.replaceAll(RegExp(r'\sfill="[^"]*"'), '');
-
     final defaultHex = _toRgbHex(lowColor);
-
-    svgContent = svgContent.replaceAllMapped(
-      RegExp(r'(<path\b[^>]*?)(\/?)>'),
-      (m) => '${m[1]} fill="$defaultHex"${m[2]}>',
-    );
+    var svgContent = _replacePathFills(template, defaultHex);
 
     for (final entry in entries) {
       final id = entry.key;
@@ -250,17 +338,11 @@ class BodyHeatmap extends StatelessWidget {
       final paintColor = Color.lerp(lowColor, highColor, t)!;
       final hex = _toRgbHex(paintColor);
 
-      final re = RegExp(
-        r'(<path\b[^>]*\bid="' +
-            RegExp.escape(id) +
-            r'"[^>]*?)\sfill="[^"]*"([^>]*)(\/?)>',
-        caseSensitive: false,
-      );
+      svgContent = _replacePathFills(svgContent, hex, id: id);
+    }
 
-      svgContent = svgContent.replaceAllMapped(
-        re,
-        (m) => '${m[1]} fill="$hex"${m[2]}${m[3]}>',
-      );
+    if (entries.isNotEmpty) {
+      _debugAssertRenderedSvg(svgContent, entries, lowColor, highColor);
     }
 
     _renderCache[cacheKey] = svgContent;
@@ -301,5 +383,19 @@ class BodyHeatmap extends StatelessWidget {
         return _buildSvg(_renderSvg(snapshot.data!));
       },
     );
+  }
+
+  @visibleForTesting
+  static String renderSvgForTesting({
+    required String template,
+    required Map<String, double> frequencyMap,
+    required Color lowColor,
+    required Color highColor,
+  }) {
+    return BodyHeatmap(
+      frequencyMap: frequencyMap,
+      lowColor: lowColor,
+      highColor: highColor,
+    )._renderSvg(template);
   }
 }

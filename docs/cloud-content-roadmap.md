@@ -5,16 +5,22 @@ future nutrition content.
 
 ## Current Development Snapshot
 
-As of 2026-08-23, the canonical development source is
-`tools/content_pipeline/exercise_media_source.example.json` version 10. It
-contains thumbnails for 154 of 310 exercises (49.7%); 156 exercises still use
-the heatmap fallback. Batches 001 through 008 are merged into this source and
-the current canonical manifest is live in the development bucket.
+As of 2026-09-22, the canonical development source is
+`tools/content_pipeline/exercise_media_source.example.json` version 15. It
+contains thumbnails for 253 of 300 exercises (84.3%); 47 exercises still use
+the heatmap fallback. Batches 001 through 013 are merged into this source and
+the current canonical manifest is live in the development bucket and has been
+publicly verified.
+
+For the current Android internal/closed test, use the development manifest
+with explicit development content selection. The 47 uncovered exercises retain
+their heatmap fallback. This does not require copying all 253 thumbnails to
+the production bucket; production promotion remains a later release gate.
 
 `development` remains the safe no-define fallback. Official builds now select
 an allowlisted content target explicitly and lock release artifacts against
 saved/custom overrides. The production bucket and temporary public URL are
-configured, but the current 154-asset canonical manifest has not been promoted
+configured, but the current 253-asset canonical manifest has not been promoted
 and validated there. Do not describe production as current until that promotion
 and a clean-install sync check are complete.
 
@@ -58,7 +64,7 @@ sync, and explicit approval of the locked production release target.
 
 Outside-code dependencies:
 
-- [ ] Continue uploading real media files as they are produced; 156 exercise
+- [ ] Continue uploading real media files as they are produced; 47 exercise
   thumbnails remain uncovered.
 
 ## Phase 4 - Local Pipeline
@@ -108,7 +114,7 @@ Outside-code dependencies:
 - [x] Upload the expanded development manifest.
 - [x] Sync in-app and spot-check new media plus missing-media fallbacks.
 - [x] Create, validate, merge, and publish development batches 002 through
-  008.
+  013.
 - [ ] Complete a fresh development spot-check for batches 004 through 008 and
   uncovered-exercise fallbacks before production promotion.
 
@@ -136,7 +142,7 @@ Outside-code dependencies:
   validation.
 - [x] Update `assets/content/content_environments.json` with the production
   URL.
-- [ ] Promote the current 154-exercise canonical assets and manifest to
+- [ ] Promote the current 253-exercise canonical assets and manifest to
   production after development validation.
 - [ ] Verify remote production URLs and a clean-install production sync before
   approving the explicit production release target.

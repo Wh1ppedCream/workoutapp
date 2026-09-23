@@ -31,12 +31,17 @@ class SettingsValueText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final foreground =
         context.surfaceDecorationTokens.panel.outlined
             ? theme.colorScheme.onSurface
             : theme.colorScheme.primary;
     return Text(
       value,
+      maxLines: largeText ? 2 : null,
+      overflow: largeText ? TextOverflow.ellipsis : null,
+      softWrap: largeText ? true : null,
+      textAlign: largeText ? TextAlign.end : null,
       style: theme.textTheme.labelLarge?.copyWith(
         color: foreground,
         fontWeight: FontWeight.w900,
@@ -1240,61 +1245,80 @@ class SettingsActionTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final presentation = context.settingsPresentationTokens;
     final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final controlForeground = scheme.onSurface;
     final resolvedIconColor = iconColor ?? scheme.primary;
-    final tile = ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-      leading: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color:
-              usesInkRecipe
-                  ? resolvedIconColor.withValues(alpha: 0.28)
-                  : resolvedIconColor.withValues(
-                    alpha: presentation.iconFillOpacity,
-                  ),
-          borderRadius: shapes.settingsAction,
-        ),
-        child: Icon(
-          icon,
-          color: usesInkRecipe ? controlForeground : resolvedIconColor,
-          size: 22,
-        ),
-      ),
-      title:
-          titleWidget ??
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: usesInkRecipe ? controlForeground : null,
-            ),
-          ),
-      subtitle:
-          subtitle == null
-              ? null
-              : Text(
-                subtitle!,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color:
-                      usesInkRecipe
-                          ? controlForeground.withValues(alpha: 0.72)
-                          : scheme.onSurfaceVariant,
+    final leading = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color:
+            usesInkRecipe
+                ? resolvedIconColor.withValues(alpha: 0.28)
+                : resolvedIconColor.withValues(
+                  alpha: presentation.iconFillOpacity,
                 ),
-              ),
-      trailing:
-          trailing ??
-          Icon(
-            Icons.chevron_right,
-            color: usesInkRecipe ? controlForeground : scheme.onSurfaceVariant,
-          ),
-      onTap: onTap,
+        borderRadius: shapes.settingsAction,
+      ),
+      child: Icon(
+        icon,
+        color: usesInkRecipe ? controlForeground : resolvedIconColor,
+        size: 22,
+      ),
     );
+    final titleContent =
+        titleWidget ??
+        Text(
+          title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: usesInkRecipe ? controlForeground : null,
+          ),
+        );
+    final subtitleContent =
+        subtitle == null
+            ? null
+            : Text(
+              subtitle!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color:
+                    usesInkRecipe
+                        ? controlForeground.withValues(alpha: 0.72)
+                        : scheme.onSurfaceVariant,
+              ),
+            );
+    final hasExplicitTrailing = trailing != null;
+    final trailingContent =
+        trailing ??
+        Icon(
+          Icons.chevron_right,
+          color: usesInkRecipe ? controlForeground : scheme.onSurfaceVariant,
+        );
+    final tile =
+        largeText
+            ? _buildLargeTextSettingsAction(
+              leading: leading,
+              title: titleContent,
+              subtitle: subtitleContent,
+              trailing: trailingContent,
+              hasExplicitTrailing: hasExplicitTrailing,
+              onTap: onTap,
+            )
+            : ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 7,
+              ),
+              leading: leading,
+              title: titleContent,
+              subtitle: subtitleContent,
+              trailing: trailingContent,
+              onTap: onTap,
+            );
     if (!usesInkRecipe) return tile;
     return DefaultTextStyle.merge(
       style: TextStyle(color: controlForeground),
@@ -1304,6 +1328,47 @@ class SettingsActionTile extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildLargeTextSettingsAction({
+  required Widget leading,
+  required Widget title,
+  required Widget? subtitle,
+  required Widget trailing,
+  required bool hasExplicitTrailing,
+  required VoidCallback? onTap,
+}) {
+  final content = Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            leading,
+            const SizedBox(width: 14),
+            Expanded(child: title),
+            if (!hasExplicitTrailing) ...[const SizedBox(width: 8), trailing],
+          ],
+        ),
+        if (subtitle != null) ...[const SizedBox(height: 4), subtitle],
+        if (hasExplicitTrailing) ...[
+          const SizedBox(height: 8),
+          Align(alignment: AlignmentDirectional.centerEnd, child: trailing),
+        ],
+      ],
+    ),
+  );
+
+  return Semantics(
+    button: onTap != null,
+    container: true,
+    child: SizedBox(
+      width: double.infinity,
+      child: InkWell(onTap: onTap, child: content),
+    ),
+  );
 }
 
 class SettingsSwitchTile extends StatelessWidget {

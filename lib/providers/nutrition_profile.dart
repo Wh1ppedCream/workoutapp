@@ -478,8 +478,22 @@ class NutritionProfile extends ChangeNotifier {
     );
   }
 
-  Future<void> setGoals(NutritionGoal goal) async {
-    await _runAndReload(() => _repo.setGoals(goal));
+  Future<bool> setGoals(NutritionGoal goal) async {
+    if (profileId == null) return false;
+    try {
+      error = null;
+      await _repo.setGoals(goal);
+      return true;
+    } catch (e) {
+      if (_disposed) return false;
+      error = SafeFailure.classify(e);
+      _safeNotify();
+      return false;
+    } finally {
+      if (!_disposed) {
+        _requestReload();
+      }
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────

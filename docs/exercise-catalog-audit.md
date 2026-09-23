@@ -99,7 +99,7 @@ For each changed or added exercise, confirm:
 Date: 2026-08-31
 
 - 300 active catalog exercises.
-- 154 current development thumbnail mappings, all resolving to a current name
+- 169 current development thumbnail mappings, all resolving to a current name
   or declared alias.
 - All catalog equipment, body parts, and muscles resolve to their canonical
   reference assets.

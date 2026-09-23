@@ -25,6 +25,13 @@ evidence for the reviewed normal route appearances only. Do not translate it
 into PASS values for the device matrix below without the exact conditions,
 results, and evidence that each row requires.
 
+## Visual Review Confirmation (2026-09-17)
+
+The user confirmed item 20, Guided Tutorials, after its Neo-light
+tutorial-card icon and progress count were corrected with the theme-owned deep
+accent role. Items 1-21 are now visually accepted. The prior 2026-09-16
+statement remains historical evidence for the pre-correction appearance.
+
 ## Setup Metadata
 
 - Reviewer: Pending

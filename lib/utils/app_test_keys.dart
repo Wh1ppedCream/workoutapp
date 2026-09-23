@@ -42,6 +42,9 @@ abstract final class AppTestKeys {
   static const databaseResultClose = ValueKey('database-result-close');
 
   static const uiAppearanceLanguage = ValueKey('ui-appearance-language');
+  static const uiAppearanceThemeFamily = ValueKey('ui-appearance-theme-family');
+  static ValueKey<String> uiAppearanceThemeFamilyOption(String code) =>
+      ValueKey('ui-appearance-theme-family-option-$code');
   static const uiAppearanceNavigation = ValueKey('ui-appearance-navigation');
   static const navigationSave = ValueKey('navigation-save');
   static const progressMeasurementLibrary = ValueKey(

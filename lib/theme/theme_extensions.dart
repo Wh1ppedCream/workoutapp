@@ -193,7 +193,8 @@ Color tonosOutlineForSurface(
 /// contain the diagram. Bright Neo panels need a darker inactive silhouette
 /// than the charcoal canvas, while the intensity ordering remains unchanged.
 Color tonosHeatmapLowForSurface(BuildContext context, Color surface) {
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.surfaceDecorationTokens.panel.outlined ||
+      _isKnownNeutralSurface(context, surface)) {
     return context.dataVisualizationTokens.heatmapLow;
   }
 
@@ -238,10 +239,44 @@ Color tonosSecondarySeriesForSurface(BuildContext context, Color surface) {
   );
 }
 
+/// Resolves the positive health delta color for the surface that will contain
+/// it. Neo's bright health cards need a saturated dark accent instead of the
+/// luminous progress token used on the charcoal canvas.
+Color tonosHealthIncreaseForSurface(BuildContext context, Color surface) {
+  final progressColors = context.progressColors;
+  if (!context.surfaceDecorationTokens.panel.outlined ||
+      !_isKnownBrightSurface(context, surface)) {
+    return progressColors.healthIncrease;
+  }
+  return _neoDataColorForSurface(
+    context,
+    surface,
+    candidates: const [Color(0xFF1B5E20), _neoDarkInk],
+    minimumContrast: 4.5,
+  );
+}
+
+/// Resolves the negative health delta color for the surface that will contain
+/// it while preserving the Classic progress palette.
+Color tonosHealthDecreaseForSurface(BuildContext context, Color surface) {
+  final progressColors = context.progressColors;
+  if (!context.surfaceDecorationTokens.panel.outlined ||
+      !_isKnownBrightSurface(context, surface)) {
+    return progressColors.healthDecrease;
+  }
+  return _neoDataColorForSurface(
+    context,
+    surface,
+    candidates: const [Color(0xFF8E2445), _neoDarkInk],
+    minimumContrast: 4.5,
+  );
+}
+
 /// Resolves the high-intensity anatomy color for its actual painted surface.
 Color tonosHeatmapHighForSurface(BuildContext context, Color surface) {
   final data = context.dataVisualizationTokens;
   if (!context.surfaceDecorationTokens.panel.outlined ||
+      _isKnownNeutralSurface(context, surface) ||
       !_isKnownBrightSurface(context, surface)) {
     return data.heatmapHigh;
   }

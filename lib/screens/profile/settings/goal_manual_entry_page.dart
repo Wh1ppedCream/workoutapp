@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/nutrition_models.dart';
 import '../../../providers/nutrition_profile.dart';
+import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class GoalManualEntryPage extends StatefulWidget {
@@ -96,8 +97,18 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
         sodiumMg: _toDouble(_sodiumCtrl),
       );
 
-      await profile.setGoals(goal);
+      final saved = await profile.setGoals(goal);
       if (!mounted) return;
+      if (!saved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          safeFailureSnackBar(
+            context,
+            error: profile.error ?? StateError('goal save failed'),
+            summary: AppLocalizations.of(context).safeFailureSaveTitle,
+          ),
+        );
+        return;
+      }
       Navigator.pop(context, true);
     } finally {
       if (mounted) {

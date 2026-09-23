@@ -20,8 +20,8 @@ void main() {
       'shapes.healthTrendEntry',
       'dataVisualization.tertiarySeries',
       'context.progressColors.healthGrid',
-      'progressColors.healthIncrease',
-      'progressColors.healthDecrease',
+      'tonosHealthIncreaseForSurface',
+      'tonosHealthDecreaseForSurface',
       'textTheme.bodySmall?.color',
     ]) {
       expect(health, contains(role), reason: role);

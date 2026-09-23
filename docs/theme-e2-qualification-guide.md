@@ -9,14 +9,18 @@ current code and record the discrepancy before changing behavior.
 ## Current Evidence And Boundaries
 
 - E1 has user-reported clean analysis and 184 passing scoped tests. The pasted
-  analyzer command was truncated, so retain that limitation in evidence.
-  Device visual and accessibility qualification remains pending.
+  analyzer command was truncated, so retain that limitation in evidence; that
+  historical E1 record predates the current development qualification below.
+- Current development qualification update (2026-09-17): the user confirmed
+  every item in the consolidated human/device/N6 checklist for the current
+  working tree. Treat the N5 route-state, E2.2, E2.3, Q2, and N6 development
+  checks as accepted, with Step 15 release qualification still separate.
 - The Q2 implementation passed the user's 213-test rerun and clean analysis.
-  It still requires manual qualification:
-  automated results, matched Classic captures and human/device evidence remain
-  separate requirements. Sub-batch IDs here are execution units, not new
-  top-level numbered phases. Keep Steps 12E, 18 and 19 aligned with their
-  parent batches.
+  Those historical requirements were later completed for the current
+  development scope by the user's qualification confirmation. Automated
+  results, matched Classic captures, and human/device evidence remain separate
+  records. Sub-batch IDs here are execution units, not new top-level numbered
+  phases. Keep Steps 12E, 18 and 19 aligned with their parent batches.
 - Work in E:\projects\env_test. Preserve unrelated working-tree changes.
   Do not run Dart/Flutter verification from Codex; supply exact user-run commands.
 - Classic is a compatibility target, not an opportunity to redesign. Do not
@@ -25,6 +29,18 @@ current code and record the discrepancy before changing behavior.
 - Do not combine migration with data-model, localization, repository, permission,
   navigation, or persistence rewrites. Open a separate issue for unrelated bugs.
   If a migration exposes a real bug, isolate its fix and evidence.
+- E2.1 route and residue inventory is complete in
+  [the route ledger](theme-e2-route-ledger.md#route-ledger-closure-2026-09-16).
+  Treat its reachability and placeholder dispositions as the current source of
+  truth. E2.2, E2.3, N6, and E2.4 remain independently tracked gates, and the
+  user has now confirmed the current development qualification for each of
+  them. Step 15 release qualification remains separate.
+- Step 14's localized family selector is implemented and automated-verified in
+  `UIAppearanceSettingsPage`. The user-run focused, full-theme and responsive
+  checks passed; the focused test covers capability filtering, independent
+  brightness, failed-save retry, restart, downgrade fallback and bundled locale
+  copy. This does not enroll Neo for release; the later user qualification
+  confirmation supplies the current development N6 device/accessibility evidence.
 
 ## E2. Remaining Reachable Features
 
@@ -35,10 +51,16 @@ configuration, button, drawer, sheet and Navigator push. Hidden tabs are not
 unreachable routes. Inspect lib/screens/catalog_page.dart and
 lib/screens/profile/settings/profile_page.dart as additional entry points.
 
-Create a route ledger in the playbook or a linked table. Each row must include:
+The linked route ledger is now the authoritative table. Each row includes:
 entry point; destination file/widget; shared widgets; release/debug visibility;
 empty/loading/error/populated/editing states; current visual owners; batch ID;
 verification evidence; outstanding manual checks or approved exclusion.
+
+test/theme/e2_route_ledger_contract_test.dart guards the canonical matrix's
+exact row order, 12-field schema, route names, concrete source-file paths,
+constructor-level nested caller edges, and cited evidence paths. Treat its
+passing result as inventory integrity only; it does not replace route-state,
+visual, accessibility, or physical-device evidence.
 
 Inspect these actual files rather than inferring scope from directory names:
 
@@ -98,6 +120,48 @@ Split implementation by food entry, pantry/meals and scanner/trends as necessary
 Each slice must pass before expanding into another feature. There is no minimum
 file count; a small coherent batch is preferable to an unverified broad rewrite.
 
+Non-human follow-up (2026-09-17): the verifier now analyzes the nutrition,
+catalog/media, history, measurements, scanner, and settings route owners and
+runs the existing provider, screen, widget, localization, media, scanner,
+health, and safety evidence outside the broad theme suite. A rendered Neo
+food-editor smoke test covers both brightness modes at 320x640 with 2x text.
+An earlier expanded batch passed successfully: formatting reported 128 files
+unchanged, analysis reported no issues, the full theme suite passed 302 tests,
+the responsive run passed 6 tests, the route-boundary batch passed, and the
+enforce-mode ratchet passed. The earlier 2026-09-17 supplied post-review run
+passed clean analysis, formatting of 132 files with 1 file changed, 315
+theme/configuration tests, 6 responsive tests, 46 route-boundary tests, and
+the enforce-mode ratchet.
+The corrected-scope verifier rerun on 2026-09-22 formatted 135 files with 0
+changes, passed clean analysis, 321 theme tests, 6 responsive tests, 46
+route-boundary tests, and the enforce-mode ratchet with one protected
+production file. This does not replace
+visual, keyboard, TalkBack, camera, or physical-device evidence.
+
+The first expanded rerun reached that smoke test and found a 129 px right
+RenderFlex overflow in both Neo brightness modes. The food editor's bottom
+extended-action row was changed to a wrapping layout, and the focused and
+expanded reruns above confirmed the fix.
+
+Post-review implementation pass (2026-09-17; verified again by the 2026-09-22
+corrected-scope user run): focused coverage now also exercises nutrition
+provider favorite rollback and diary write failure, stable grouped/date ordering
+in the log-entry route, normal-width food-editor action geometry, empty-name
+validation, large-text settings value wrapping, surface-aware health delta
+contrast with Classic parity, and explicit
+shape/elevation preservation through the Neo compatibility boundary. The N5
+state-owner and E2.3 settings-residue source contracts are included in the
+verifier. The post-review surface-geometry regression test and stricter route-edge
+contracts were included in that run and passed. That run also exposed and then
+resolved the large-text settings-row layout failure, the ThemeReady animation
+race, and the surface-test outline fixture mismatch. The selector row needed
+one further responsive correction after the initial three-line adjustment:
+large-text SettingsActionTile instances now use a bounded stacked composition
+so values and controls cannot starve the title and subtitle of horizontal
+constraints. The focused settings fixture mirrors the failing 320x640
+viewport, and the selector harness uses a zero-duration theme transition to
+keep family changes deterministic.
+
 **Exit:** all ledger routes in this slice have resolved visual ownership,
 Classic value checks, injected-token coverage and relevant behavioral tests.
 
@@ -122,6 +186,26 @@ Add tests for disabled controls, expansion/reorder state where present, and
 save/cancel behavior around a rebuild. Existing source contracts are adoption
 checks only; they are not substitutes for exercising the actual widgets.
 
+Current automatable follow-up (2026-09-16): GoalManualEntryPage now receives a
+boolean outcome from NutritionProfile.setGoals. Successful writes still return
+to the parent route; classified write failures keep the editor open and show
+localized safe recovery guidance. `test/theme/nutrition_goals_behavior_test.dart`
+covers both outcomes. StretchCard add/remove controls also expose existing
+localized labels as tooltips, as do the active Train2 and Food Logging action
+controls with unambiguous existing keys. These checks do not replace route
+persistence, keyboard, TalkBack, visual, or physical-device qualification.
+
+The expanded verifier also includes the existing navigation persistence,
+measurement hub, onboarding, responsive settings, localized-name, media-state,
+and safe-error tests. Its new narrow Neo nutrition smoke check is an
+implementation guard only; no human result is inferred until the user runs the
+batch.
+
+The new settings-residue contract maps reachable settings and nested routes to
+their concrete save, dialog, disabled/busy, validation, reorder, and error
+owners. It is a source-boundary contract, not proof that every widget state,
+persistence path, or device condition was rendered.
+
 **Exit:** every settings residue entry is migrated, intentionally Material-owned,
 or individually documented with rationale and approval where deferral is needed.
 
@@ -133,14 +217,24 @@ commands, counts and tree identity. Do not claim full E2 completion from only
 the theme suite. If no feature tests exist, add focused tests rather than silently
 omitting that feature from verification. Keep manual checks explicitly pending.
 
+Closeout accounting (2026-09-17): the route matrix is guarded by exact
+ordering/path/caller contracts, N5 state categories have explicit source
+owners, and focused E2.2/E2.3 behavior/source contracts are in the verifier.
+The current implementation pass is automated-verified by the latest supplied
+user-run formatter/analyzer, focused tests, expanded verifier, and ratchet
+result. The user subsequently confirmed every item in the human/device/N6
+qualification checklist, closing current development qualification and E2.4
+for this scope. This does not authorize Step 15 release enrollment.
+
 ## Q1. Inventory Enforcement
 
-Current status (2026-09-09): the separate `tools/theme_style_ratchet.dart`
+Checkpoint status (2026-09-09): the separate `tools/theme_style_ratchet.dart`
 enforcer has user-run fixture verification, and
 `docs/theme-style-ratchet.json` protects the exact
 `lib/theme/widgets/tonos_surface.dart` production scope. CI runs that enforcer
-after the report-only inventory check. The latest user-run theme/configuration
-suite passed 200 tests. The inventory remains report-only; this does not qualify
+after the report-only inventory check. That checkpoint's theme/configuration
+suite passed 302 tests, with a separate 6-test responsive run and the ratchet
+passing in enforce mode. The inventory remains report-only; this does not qualify
 other production files or replace manual/device review.
 
 ### Q1.1 Define The Contract Before Changing The Tool
@@ -258,6 +352,10 @@ resolution; hiding a link alone is not a release gate. Lab experimentation must
 not write production preferences. Do not add enum entries for a fake release
 theme just to test switching.
 
+The Step 14 Appearance selector reuses this same capability boundary and
+provider persistence queue. Its user-run verification is separate from the
+broader Q2/N6 route and device checks.
+
 ### Q2.3 Responsive And Motion Tests
 
 Use deterministic viewport sizes including approximately 360px wide phones,
@@ -291,13 +389,15 @@ Compare matched captures with docs/classic-theme-baseline.md. If no reliable
 pre-migration capture exists, label the gap; do not invent parity evidence.
 Record light/dark, device/OS, text scale, route/state and any accepted difference.
 
-Human evidence still required: TalkBack traversal/announcements, keyboard focus,
-screen-reader dismissal behavior, real camera permissions where applicable,
-and physical-device animation/scroll performance. Automated semantics checks
-support but do not replace these. Record the tester and result or leave pending.
+For any future unqualified scope, human evidence is still required for TalkBack
+traversal/announcements, keyboard focus, screen-reader dismissal behavior, real
+camera permissions where applicable, and physical-device animation/scroll
+performance. Automated semantics checks support but do not replace these.
+Record the tester and result or leave pending.
 
 **Exit:** automated failures are fixed; every required manual check has evidence
-or an explicit approved exception. Q2 is not qualified while silent gaps remain.
+or an explicit approved exception. A future Q2 scope is not qualified while
+silent gaps remain; the current scope is recorded as user-qualified above.
 
 ## Q3. Readiness Decision
 

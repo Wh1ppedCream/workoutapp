@@ -7,7 +7,7 @@
       "evidence": "test/theme/widgets/tonos_surface_test.dart covers injected surface, shape and effect roles, clipping, shadows, tap behavior and semantics; the post-fix user report supplied the exact current fingerprint set while final N2 verification is completed.",
       "approvals": [
         {
-            "fingerprint": "1d014456af809fd58589eb2af8547fba470abce070b987176af396c2b3fbecc5",
+          "fingerprint": "1d014456af809fd58589eb2af8547fba470abce070b987176af396c2b3fbecc5",
           "count": 2,
           "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
         },
@@ -22,7 +22,7 @@
           "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
         },
         {
-            "fingerprint": "843159fff7b247d827b84cbff3029017b9c96b7486f30f95d9d8dff3bc036167",
+          "fingerprint": "843159fff7b247d827b84cbff3029017b9c96b7486f30f95d9d8dff3bc036167",
           "count": 1,
           "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
         },
@@ -32,14 +32,39 @@
           "reason": "Reviewed current TonosSurface style scope after the N2 shared decoration-policy integration."
         },
         {
-          "fingerprint": "fe2ae92bea1a0d17157f55a4f56cb616ecde7299c69e292d57dd110acb190006",
-          "count": 1,
-          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
-        },
-        {
           "fingerprint": "cc60278889d6352b1d5906bb3dacd403f0ff4ea749b367019aaf692c86adbf05",
           "count": 1,
           "reason": "Reviewed TonosSurface role-color override support added for the Neo proposal realignment."
+        },
+        {
+          "fingerprint": "0961137f72286f266eb0345809ee7919cbe5f475f9bc4eddf8d06560f4c7d362",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "0de229af23bbaa710e92dfcdbe75387104cc1b7e94cfdebcc2f24a63adc0d14a",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "77447743a36d8175adae1816edb75d955e25219148a550faa12bd6ed1455e25a",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "a9d1539f7623b35d8d9005d07a0498a563d7aec353acbd1a21c64c818c48609f",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "b576cc7c052b26b161f1971db20fd028ad516557dbed0294c189eec7d592f1c7",
+          "count": 2,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "f29562555a9c6f3ea425c144d87e76cd89c00ad8e78dba7bc2e4bd1990334770",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
         }
       ]
     }

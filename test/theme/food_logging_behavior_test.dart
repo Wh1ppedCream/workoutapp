@@ -54,13 +54,19 @@ class _CatalogSource implements FoodCatalogSource {
 }
 
 class _FakeRepository extends AppRepository {
-  _FakeRepository(this.food, this.portions)
-    : catalog = FoodCatalogRepository(source: _CatalogSource(food, portions)),
-      super();
+  _FakeRepository(
+    this.food,
+    this.portions, {
+    this.failFavorites = false,
+    this.failDiaryWrite = false,
+  }) : catalog = FoodCatalogRepository(source: _CatalogSource(food, portions)),
+       super();
 
   final Food food;
   final List<FoodPortion> portions;
   final FoodCatalogRepository catalog;
+  final bool failFavorites;
+  final bool failDiaryWrite;
   final Set<int> favorites = {};
   final logged = <Map<String, Object?>>[];
   final diary = <DiaryEntryWithItem>[];
@@ -106,11 +112,13 @@ class _FakeRepository extends AppRepository {
 
   @override
   Future<void> addFavorite(int profileId, int foodId) async {
+    if (failFavorites) throw StateError('favorite write failed');
     favorites.add(foodId);
   }
 
   @override
   Future<void> removeFavorite(int profileId, int foodId) async {
+    if (failFavorites) throw StateError('favorite write failed');
     favorites.remove(foodId);
   }
 
@@ -127,6 +135,7 @@ class _FakeRepository extends AppRepository {
     DateTime? loggedAt,
     String? notes,
   }) async {
+    if (failDiaryWrite) throw StateError('diary write failed');
     logged.add({
       'foodId': foodId,
       'portionId': portionId,
@@ -250,12 +259,15 @@ void main() {
     await tester.pump();
     expect(find.widgetWithText(ListTile, food.name), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Favorite'));
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(FoodLoggingPage)),
+    );
+    await tester.tap(find.byTooltip(strings.foodFavorite));
     await tester.pump();
     expect(repository.favorites, contains(food.id));
-    expect(find.byTooltip('Unfavorite'), findsOneWidget);
+    expect(find.byTooltip(strings.foodUnfavorite), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Edit & add'));
+    await tester.tap(find.byTooltip(strings.foodEditAndAdd));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(DropdownButton<FoodPortion>));
     await tester.pumpAndSettle();
@@ -276,4 +288,120 @@ void main() {
     expect(repository.logged.single['loggedGrams'], 200.0);
     expect(tester.takeException(), isNull);
   });
+
+  test(
+    'nutrition profile rolls back failed favorites and records log errors',
+    () async {
+      final food = _food();
+      final repository = _FakeRepository(
+        food,
+        const [],
+        failFavorites: true,
+        failDiaryWrite: true,
+      );
+      final profile = NutritionProfile(repository: repository);
+      await _waitForProfile(profile);
+
+      await profile.toggleFavorite(food.id!);
+      expect(profile.isFavorite(food.id!), isFalse);
+      expect(profile.error, isNotNull);
+
+      await profile.addFood(meal: MealType.lunch, foodId: food.id!);
+      expect(repository.logged, isEmpty);
+      expect(profile.error, isNotNull);
+      profile.dispose();
+    },
+  );
+
+  testWidgets(
+    'log entry groups same-time rows and keeps stable date ordering',
+    (tester) async {
+      final date = DateTime(2020, 1, 2);
+      final repository = _FakeRepository(_food(), []);
+      repository.diary.addAll([
+        _diaryRow(
+          id: 2,
+          name: 'Breakfast later',
+          date: date,
+          meal: MealType.breakfast,
+          loggedAt: DateTime(2020, 1, 2, 8, 2),
+        ),
+        _diaryRow(
+          id: 1,
+          name: 'Breakfast first',
+          date: date,
+          meal: MealType.breakfast,
+          loggedAt: DateTime(2020, 1, 2, 8, 2),
+        ),
+        _diaryRow(
+          id: 3,
+          name: 'Dinner',
+          date: date,
+          meal: MealType.dinner,
+          loggedAt: DateTime(2020, 1, 2, 18),
+        ),
+      ]);
+      final profile = NutritionProfile(repository: repository);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: ChangeNotifierProvider<NutritionProfile>(
+            create: (_) => profile,
+            child: LogEntryPage(date: date),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(profile.mealsWithItems.map((row) => row.itemName).toList(), [
+        'Breakfast first',
+        'Breakfast later',
+        'Dinner',
+      ]);
+      Finder chipWithTitle(String title) => find.byWidgetPredicate((widget) {
+        return widget is RichText &&
+            widget.text.toPlainText().startsWith('$title\n');
+      });
+
+      expect(chipWithTitle('Breakfast first'), findsOneWidget);
+      expect(chipWithTitle('Breakfast later'), findsOneWidget);
+      expect(chipWithTitle('Dinner'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+}
+
+DiaryEntryWithItem _diaryRow({
+  required int id,
+  required String name,
+  required DateTime date,
+  required MealType meal,
+  required DateTime loggedAt,
+}) {
+  return DiaryEntryWithItem(
+    itemName: name,
+    entry: DiaryEntry(
+      id: id,
+      profileId: 1,
+      date: date,
+      mealType: meal,
+      foodId: 7,
+      quantity: 1,
+      loggedAt: loggedAt,
+      kcalSnapshot: 100,
+      proteinGSnapshot: 10,
+      carbGSnapshot: 20,
+      fatGSnapshot: 5,
+    ),
+  );
+}
+
+Future<void> _waitForProfile(NutritionProfile profile) async {
+  for (var attempt = 0; attempt < 100; attempt++) {
+    if (profile.profileId != null) return;
+    await Future<void>.delayed(const Duration(milliseconds: 1));
+  }
+  expect(profile.profileId, isNotNull);
 }

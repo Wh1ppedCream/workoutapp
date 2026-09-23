@@ -20,6 +20,7 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     this.measuringScrim = const Color(0x66000000),
     this.confirmationScrim = const Color(0xB3000000),
     this.coachScrim = const Color.fromRGBO(0, 0, 0, 0.42),
+    this.accentForeground,
     this.focusShadowOpacity = 0.36,
     this.focusShadowBlur = 22,
     this.focusShadowSpread = 2,
@@ -57,6 +58,7 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
   final Color measuringScrim;
   final Color confirmationScrim;
   final Color coachScrim;
+  final Color? accentForeground;
   final double focusShadowOpacity;
   final double focusShadowBlur;
   final double focusShadowSpread;
@@ -86,6 +88,7 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     Color? measuringScrim,
     Color? confirmationScrim,
     Color? coachScrim,
+    Color? accentForeground,
     double? focusShadowOpacity,
     double? focusShadowBlur,
     double? focusShadowSpread,
@@ -113,6 +116,7 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
     measuringScrim: measuringScrim ?? this.measuringScrim,
     confirmationScrim: confirmationScrim ?? this.confirmationScrim,
     coachScrim: coachScrim ?? this.coachScrim,
+    accentForeground: accentForeground ?? this.accentForeground,
     focusShadowOpacity: focusShadowOpacity ?? this.focusShadowOpacity,
     focusShadowBlur: focusShadowBlur ?? this.focusShadowBlur,
     focusShadowSpread: focusShadowSpread ?? this.focusShadowSpread,
@@ -147,6 +151,7 @@ class AppTutorialTokens extends ThemeExtension<AppTutorialTokens> {
       confirmationScrim:
           Color.lerp(confirmationScrim, other.confirmationScrim, t)!,
       coachScrim: Color.lerp(coachScrim, other.coachScrim, t)!,
+      accentForeground: Color.lerp(accentForeground, other.accentForeground, t),
       focusShadowOpacity:
           focusShadowOpacity +
           (other.focusShadowOpacity - focusShadowOpacity) * t,

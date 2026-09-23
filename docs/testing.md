@@ -121,6 +121,18 @@ analysis, and 63 passing tests across `settings_tiles_test.dart`,
 manual visual acceptance, not a substitute for the remaining N5 route-state or
 N6 device/accessibility qualification.
 
+On 2026-09-17, the user confirmed item 20, Guided Tutorials, after Neo light's
+tutorial-card icon and progress count were corrected for the cream surface.
+Items 1-21 are now visually accepted. The fix is covered by
+tutorial_presentation_test.dart.
+
+The user subsequently confirmed every item in the consolidated human/device/N6
+qualification checklist for the current working tree. This records current
+development qualification for route states, accessibility, keyboard and
+large-text behavior, switching, persistence, media/scanner lifecycle, and
+affected Classic parity. It is user-reported evidence, not a new automated run
+or signed-release approval; Step 15 remains separate.
+
 ## Latest deterministic localization verification
 
 On 2026-09-03, the recorded localization verification regenerated the ARB
