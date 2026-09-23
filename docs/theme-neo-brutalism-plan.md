@@ -6,11 +6,12 @@ development acceptance is complete.
 The reviewed current screen batch is accepted for now. Later refinements require
 affected-surface rechecks. The user has now confirmed the current development
 qualification for the rendered route states, N5 state matrix, and N6 device/
-accessibility checks. The route inventory and disposition are closed; release
-qualification remains a separate Step 15 gate. The user authorized an
+accessibility checks. The route inventory and disposition are closed; Step 15 is complete for the accepted Android internal/closed candidate. Wider release qualification remains separate. The user authorized an
 internal Android release candidate using `TONOS_ENABLE_NEO_RELEASE=true` and
-accepted the signed `1.0.1+6` candidate on 2026-09-23 after all six focused device checks
-passed. Source-commit association remains before Step 15 closeout. See
+accepted the signed `1.0.1+6` candidate on 2026-09-23 after all six focused
+device checks passed. Tested source commit `eae77c321a7acd7ec66a77f634eec08d009d727c` is associated with
+APK SHA-256 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. Internal Step 15 is closed for Android internal/closed
+testing; wider release remains separate. See
 `scripts/verify_neo_release.ps1` and the current roadmap candidate record.
 
 Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) for current
@@ -1471,8 +1472,9 @@ verification is recorded above. The user has now confirmed the consolidated
 human visual/accessibility batch and N6 device checks for the current working
 tree. The subsequent Step 15 internal release opt-in is implemented; its
 automated checks and signed-device acceptance passed for the `1.0.1+6` internal
-candidate. Associate the tested working-tree source with a commit before
-closing Step 15.
+candidate. Tested application/build/test source
+`eae77c321a7acd7ec66a77f634eec08d009d727c` is associated with APK SHA-256 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. The internal Step 15 gate
+is closed for Android internal/closed testing.
 
 ### N5. Current Visual Review And Route-State Qualification
 
@@ -1540,8 +1542,7 @@ Current development qualification confirmation (2026-09-17): the user
 confirmed that every item in the consolidated human/device/N6 checklist passed
 for the current working tree. This closes the current N5 route-state, E2.2,
 E2.3, N6, Q2 switching/effects, and affected Classic-parity qualification.
-E2.4 accounting is recorded in the route ledger. Step 15 release qualification
-and the retained placeholder product decisions remain separate.
+E2.4 accounting is recorded in the route ledger. Broader release qualification and retained placeholder product decisions remain separate.
 
 1. Run the batch-specific analyzer, tests and style ratchet through user-supplied
    terminal output; record the actual commands and results.

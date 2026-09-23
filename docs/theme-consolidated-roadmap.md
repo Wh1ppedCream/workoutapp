@@ -55,7 +55,7 @@ issue lists remain review history, not additional active milestone lists.
 | 3 | Inventory/classification | Inventory and scoped ratchet implemented; broader qualification partial |
 | 4 | Classic extraction | Implemented and accepted for Q3; recheck affected parity after refinements |
 | 5 | Selection/preferences | Implemented; original persistence/switching accepted; revalidate relevant changes |
-| 6 | Availability policy | Internal Neo release opt-in and Android internal candidate accepted; source-commit association remains |
+| 6 | Availability policy | Internal Neo opt-in and accepted candidate source `eae77c321a7acd7ec66a77f634eec08d009d727c` linked to the APK hash |
 | 7 | Focused tokens | Foundation complete; adoption follows route work |
 | 8 | AppColors retirement | Complete |
 | 9 | Material ownership | Foundation implemented; local override audit remains |
@@ -64,7 +64,7 @@ issue lists remain review history, not additional active milestone lists.
 | 12 | Surface migration | Current 21-item Neo visual route review and current route/state/device qualification accepted; route ledger remains the source of truth |
 | 13 | Neo-Brutalism | N1/N2 complete, N3 implementation/automatable coverage complete, N4 and the current 21-item visual review accepted; current N5 route-state and N6 development qualification accepted |
 | 14 | Public selector | Implemented and accepted; Neo is selectable in the accepted Android internal candidate, with Classic as default |
-| 15 | Release qualification | Android internal/closed candidate accepted; associate tested source with a commit before closeout; open/Play release is out of scope |
+| 15 | Release qualification | Android internal/closed candidate accepted and source-linked; open/Play release is out of scope |
 | 16 | Later families | Not started |
 | 17 | Review closure/parity | Original Q3, the current 21-item Neo visual review, and the current affected state/parity checks accepted; later changes require focused rechecks |
 | 18 | Enforcement/qualification | Current scoped work and development qualification accepted; broader per-file evidence and ratchet enrollment remain intentionally limited |
@@ -375,18 +375,17 @@ a separate preference-schema decision, not an unfinished prerequisite here.
 
 ### Step 6. Maintain Availability And Release Gating
 
-Status: development policy and internal Android opt-in qualification accepted.
-The tested-source commit/hash association remains open under Step 15.
+Status: internal Android availability policy, signed candidate, and source/hash
+association are complete for Step 15. Wider release remains a separate decision.
 
 Completed: Neo registration, central capability filtering, experimental opt-in,
-default release denial/fallback, explicit release opt-in for the internal
-candidate, and the selector/persistence checks required for that candidate.
-The user accepted the signed Android internal/closed candidate and all six
-focused device checks on 2026-09-23.
+default release denial/fallback, explicit internal release opt-in, and the
+selector/persistence and device checks for the accepted candidate. Source
+commit `eae77c321a7acd7ec66a77f634eec08d009d727c` is associated with the accepted
+APK SHA-256 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`.
 
-Remaining: commit the exact tested working-tree source and associate its commit
-with the candidate APK hash before closing Step 15. Open testing and the Play
-Store remain separate decisions.
+Remaining: no Step 6 work remains for this internal candidate. Broader release
+decisions are tracked separately.
 
 Exit: unfinished families cannot leak into release selection.
 
@@ -481,8 +480,7 @@ independent matrix to complete twice.
 
 Status: the current 21-item visual review and the 2026-09-17 development
 route/state/device qualification are accepted. Later changes need focused
-rechecks; separate product/design decisions and Step 15 release qualification
-remain.
+rechecks; separate product/design decisions and wider-release Step 15 qualification remain.
 
 Completed batches cover shell/settings, B1-B6 Train/plans/workouts, catalog and
 media, analytics/history/measurements, onboarding, and specialized flows. The
@@ -554,7 +552,8 @@ This confirmation is user-reported qualification evidence, not a new terminal
 run or a signed release result. Preserve the existing device/build identity
 records where applicable, and record any later defect as a focused recheck.
 The user accepted the signed Step 15 Android internal candidate and all six
-focused device checks on 2026-09-23; source-commit/hash association remains pending. The earlier confirmation does not enroll additional
+focused device checks on 2026-09-23. The candidate source commit and APK hash are
+now linked in the closeout record. This acceptance does not enroll additional
 style-ratchet files or resolve wider-release treatment of retained placeholders.
 
 #### Current 12A/N5 Working Ledger (2026-09-16)
@@ -733,17 +732,18 @@ Debug buttons do not count as the public selector.
 
 ### Step 15. Qualify Themes For Release
 
-Status: Android internal/closed candidate accepted; signed-artifact checks and
-all six focused device checks passed. Source-commit association remains before
-Step 15 closeout; wider distribution remains a separate decision.
+Status: Android internal/closed candidate, six focused device checks, and
+source/hash association complete. Source commit `eae77c321a7acd7ec66a77f634eec08d009d727c`
+is linked to APK SHA-256 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`.
+Open testing and Play Store release remain out of scope.
 
-Candidate built 2026-09-22; accepted 2026-09-23; source-commit association pending:
+Candidate built 2026-09-22; accepted 2026-09-23; source commit associated:
 
 - Source baseline: `55b0222` on `updates/backlog`, committed and pushed after
   verification of the development media and debug APK. The release opt-in
-  changes are a subsequent working-tree patch; all checks below have passed.
-  Commit the exact tested patch and record the source commit with the APK hash
-  before Step 15 closeout. `incoming/` and
+  changes are a subsequent working-tree patch; all checks below passed. The
+  exact tested source is committed as `eae77c321a7acd7ec66a77f634eec08d009d727c`
+  and associated with the accepted APK hash. `incoming/` and
   `tmp/` are excluded from the candidate.
 - Platform decision (user, 2026-09-22): Android is the current target for
   internal and closed testing, not open testing or a Play Store release. iOS
@@ -793,10 +793,12 @@ Internal candidate closeout:
 3. The user accepted this signed internal candidate on 2026-09-23; all six
    device checks passed, as recorded in [Testing Tonos](testing.md#neo-internal-android-release-candidate). The
    installed APK is `com.tonos.internal` `1.0.1+6`, SHA-256
-   `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. It was
-   built from working-tree changes based on `55b0222071645392e1c66d5e01c5f8b3eaf10f11`;
-   commit the exact tested source and associate that commit with this APK hash
-   before closing Step 15.
+   `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. The
+   exact tested application/build/test source is committed as
+   `eae77c321a7acd7ec66a77f634eec08d009d727c` and associated with this APK hash.
+   The working tree was based on `55b0222071645392e1c66d5e01c5f8b3eaf10f11`;
+   the acceptance documentation was added after the APK build and does not
+   change app/build source.
 
 The 47 heatmap fallbacks, owner-accepted translations, and retained placeholder
 routes remain the existing internal-test limitations. Experimental navigation

@@ -16,7 +16,9 @@ accessibility, and affected Classic-parity scope; it is not release approval.
 Step 14 is implemented, automated-verified, and included in that acceptance.
 The Step 15 signed Android internal candidate and all six focused device
 checks were accepted on 2026-09-23. Its tested-source commit/hash association
-remains the final internal closeout task. Wider-release treatment for retained
+is recorded as `eae77c321a7acd7ec66a77f634eec08d009d727c` and linked to APK SHA-256
+`549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. Internal Step 15 is closed for Android internal/closed testing.
+Wider-release treatment for retained
 placeholders, final product-specific Neo recipes where still needed, broader
 per-file ratchet evidence, and native-speaker review remain separate. For the
 planned Android release, the user accepts the current translations for all
@@ -1328,24 +1330,28 @@ previous value after a failed write, and offers localized retry guidance.
 downgrade, unavailable values, failed writes and bundled locale copy. User-run
 automated verification and the user's current human visual, accessibility,
 and N6 device acceptance are recorded above. The Step 15 Android internal
-candidate is accepted; only its tested-source commit/hash association remains.
+candidate is accepted, and its tested-source commit/hash association is
+recorded as `eae77c321a7acd7ec66a77f634eec08d009d727c` linked to APK SHA-256
+`549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`.
 
 The first expanded verifier rerun also exposed a 129 px right RenderFlex
 overflow in the Neo food editor at 320x640/2x text in both brightness modes.
 The bottom extended-action row now wraps on narrow layouts; the subsequent
 focused and expanded reruns passed.
 
-### Step 15: Qualify themes for release (Android internal candidate accepted; commit association pending)
+### Step 15: Qualify themes for release (Android internal/closed candidate accepted; wider release out of scope)
 
 The user accepted the signed Android internal/closed candidate on 2026-09-23;
 all six focused device checks passed. The candidate uses application ID
 `com.tonos.internal`, version `1.0.1+6`, and SHA-256
 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. Neo is
 enabled through `TONOS_ENABLE_NEO_RELEASE=true`; Classic remains the default.
-The APK source tree was based on `55b0222071645392e1c66d5e01c5f8b3eaf10f11`
-with working-tree changes. Commit the exact tested source and associate that
-commit with the APK hash before closing the internal Step 15 gate. This is not
-approval for open testing or a Play Store release. See the [current candidate
+The APK was built from working-tree changes based on source commit
+`55b0222071645392e1c66d5e01c5f8b3eaf10f11`. Its exact tested
+application/build/test source is committed as `eae77c321a7acd7ec66a77f634eec08d009d727c` and associated with
+APK SHA-256 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. The internal Step 15 gate is closed for Android
+internal/closed testing only; this does not approve open testing or a Play
+Store release. See the [current candidate
 record](theme-consolidated-roadmap.md#step-15-qualify-themes-for-release) and
 [execution checklist](testing.md#neo-internal-android-release-candidate).
 Accepted development evidence is reused for unchanged surfaces.
@@ -2083,7 +2089,7 @@ For future changed scopes, cover supported locales and text scales 1.0, 1.3,
 shrinking all text or removing accessibility scaling. Use existing localized
 resources for error feedback. Include selected/disabled semantics, keyboard
 focus, and meaningful labels; add focused physical TalkBack checks for affected
-interactions. Step 15 release qualification remains separate.
+interactions. Wider-release Step 15 qualification remains separate.
 
 Measure startup, scrolling, and switching on agreed physical hardware before
 declaring performance unchanged. Reuse cached factory themes, inspect repeated
@@ -2146,15 +2152,12 @@ drive unapproved changes to Classic.
 | 19 | Complete for agreed scope | Manual results accepted; 226 tests passed |
 | 13 | N1-N6 development scope accepted; route ledger closed | Requalify only affected scope after changes |
 | 14 | Implemented and accepted; available in the Android internal candidate | Public/open release approval remains separate |
-| 15 | Android internal/closed candidate accepted | Commit tested source and associate it with the APK SHA-256 before closeout |
+| 15 | Android internal/closed candidate accepted and source-linked | Wider release qualification is separate |
 | 16 | Not started | Later families through the same architecture |
 
-Next action: commit the exact tested candidate source and associate that commit
-with the APK hash to close internal Step 15. Development/device qualification,
-automated checks, and signed-APK acceptance are recorded. Wider release approval,
-production content promotion, and other previously documented product decisions
-remain separate. Keep broader ratchet enrollment evidence-driven rather than
-treating it as a blanket completion requirement.
+Internal Step 15 closeout: complete. Tested application/build/test source
+`eae77c321a7acd7ec66a77f634eec08d009d727c` is associated with the accepted APK SHA-256
+`549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. Development/device qualification, automated checks, and signed-APK acceptance are recorded. Wider release approval, production content promotion, and other previously documented product decisions remain separate. Keep broader ratchet enrollment evidence-driven rather than treating it as a blanket completion requirement.
 
 Historical migration execution order: use batches B1-B6 in
 [Theming Batch Playbook](theme-batch-playbook.md), then C1-C3, D1-D3, E1-E2,

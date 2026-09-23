@@ -324,12 +324,13 @@ User confirmation received on 2026-09-23: all six focused device checks passed
 with no failures reported. The accepted APK is `com.tonos.internal`, version
 `1.0.1+6`, SHA-256
 `549BE2C9EDD96E44840C7E42976BDF436C29B3F53DC9C946FA043EB3EC68615D`. The build
-was based on source commit `55b0222071645392e1c66d5e01c5f8b3eaf10f11` with
-additional working-tree changes. Commit the exact tested source and associate
-that commit with the APK hash before closing the internal Step 15 gate. The
-user-supplied install output reported successful v1/v2 signature checks and
-installation alongside the original app. Any source change after acceptance
-requires a fresh APK and affected checks.
+was built from working-tree changes based on source commit
+`55b0222071645392e1c66d5e01c5f8b3eaf10f11`; its tested application/build/test
+changes are committed as `eae77c321a7acd7ec66a77f634eec08d009d727c` and
+associated with the APK hash. The user-supplied install output reported
+successful v1/v2 signature checks and installation alongside the original app.
+No app/build source changes were made after the accepted device checks. Any
+source change from this committed state requires a fresh APK and affected checks.
 Open testing, Play Store launch, and production-content promotion remain later
 decisions.
 
