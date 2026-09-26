@@ -2,14 +2,23 @@
 
 This is the current status summary for the seven pre-Q2 follow-ups. Older batch
 records describe their original implementation checkpoints; they are not current
-qualification claims. The latest supplied user-run verification (2026-09-22)
-covers the post-review automated implementation and test changes: 135 files
-were formatted with 0 changes, analysis was clean, the full theme suite passed
-321 tests, the responsive suite passed 6 tests, the route-boundary batch
-passed 46 tests, and the enforce-mode ratchet passed with one protected
-production file. The user has now confirmed the
-human/device/N6 checklist for the current development scope, and E2.4 closeout
-is recorded as complete. Step 15 release qualification remains separate.
+qualification claims. The 2026-09-22 supplied verification passed formatting
+(135 files, no changes), analysis, 321 theme tests, 6 responsive tests, 46
+route-boundary tests, and the one-file ratchet baseline. The manifest later
+expanded to two protected production files, and its post-enrollment checks
+passed before the current TonosSurfaceTheme edit. For the current edit, analysis
+was clean and an initial focused batch passed 46 tests; a later suite passed 44
+and failed the exact ratchet contract on three new tonos_surface.dart
+fingerprints. Those hashes were then exactly mapped and narrowly approved; the
+two-scope report/enforce rerun passed at that checkpoint. The refreshed
+inventory at that checkpoint covered 2,296 candidates (59 allowlisted, 1,214
+migrated, 1,012 pending, 11 review). These are historical results: the
+ExpansionTile scope was enrolled afterward, and the current three-scope
+report/enforce and inventory refresh passed on 2026-09-24. See the current
+[roadmap](theme-consolidated-roadmap.md) and [ratchet guide](theme-style-ratchet.md).
+The user-confirmed human/device/N6 checklist and E2.4 closeout remain accepted
+for their reviewed source state. Android internal/closed Step 15 is accepted;
+wider/open release remains separate.
 
 This ledger does not qualify later Q2 code. The current cross-prerequisite
 decision, including the passing 213-test Q2 rerun and dirty-tree identity, is recorded
@@ -30,7 +39,7 @@ in [Q3 Theming Readiness Gate](theme-q3-readiness-gate.md).
   selector correction passed user-run formatting, clean analysis, and 63
   focused tests. The later user qualification confirmation closes the current
   development nutrition, scanner, route-state, accessibility, and device
-  review. It does not qualify Neo for release.
+  review. It does not qualify Neo for wider/open release.
 - These are scoped automated results, not matched screenshots, device
   accessibility review, full application correctness, or approval of every
   production style expression.
@@ -61,18 +70,20 @@ zero-duration theme transition for deterministic family changes.
 | 4. Scanner tests | Fake-session automation and current user real-device qualification complete | Recheck camera/lifecycle behavior after scanner changes. |
 | 5. Earlier consumer evidence | Automated viewer/effects evidence and current user device/accessibility qualification complete | Finish final Neo recipes only where the product surface still requires them. |
 | 6. Q1 hardening | Complete for the current scoped implementation | Keep interpolated files ineligible until parser support exists. |
-| 7. Enrollment and CI | One exact production scope enforced in CI | Enroll additional files only after per-file ownership and qualification evidence exist. |
+| 7. Enrollment and CI | Three exact production scopes are listed; current three-scope report/enforce passed on 2026-09-24 with matching approved fingerprints | Enroll additional files only after per-file ownership and qualification evidence exist. |
 
 The latest supplied post-review automated verification (2026-09-22) reported
 135 files formatted with 0 changes, clean analysis, 321 theme/configuration
-tests, 6 responsive tests, 46 route-boundary tests, and a passing enforce-mode
-ratchet with one protected production file.
+  tests, 6 responsive tests, 46 route-boundary tests, and a passing enforce-mode
+  ratchet with the one production file protected at that historical checkpoint.
 The standalone 2-test nutrition behavior run also passed. These results do not
 replace human/device/Classic parity or full-release qualification; the user’s
-current development qualification is recorded above, while Step 15 remains
-open.
-Q1 is complete for the enrolled TonosSurface scope and its CI enforcement;
-additional production enrollment is intentionally pending per-file evidence.
+  current development qualification is recorded above, while wider/open Step 15
+  qualification remains open.
+Q1's original TonosSurface scope passed its enforcement checks. The later
+ExpansionTile enrollment brings the manifest to three scopes, whose current
+report/enforce rerun passed on 2026-09-24; additional production enrollment is
+intentionally pending per-file evidence.
 Interpolation support is explicitly deferred under theme-style-ratchet.md.
 Manual/device/Classic parity qualification is accepted for the current scope;
 later changes require focused rechecks.
@@ -163,9 +174,18 @@ not replace route visual or device qualification.
 
 ## Enrollment Rule
 
-`docs/theme-style-ratchet.json` enrolls only
-`lib/theme/widgets/tonos_surface.dart`. Do not populate it with every current
-finding to obtain a green run. Each exact file needs an owner, evidence and
-narrowly justified approvals. Missing manual qualification must stay visible.
-Q1 fixture correctness and broader production protection are separate
-milestones.
+At the two-scope verification checkpoint, `docs/theme-style-ratchet.json`
+enrolled `lib/theme/widgets/tonos_surface.dart` and
+`lib/widgets/workout_record_badges.dart`; report/enforce passed for that source
+state. The manifest now also enrolls
+`lib/theme/widgets/tonos_expansion_tile_scope.dart`; its current three-scope
+report/enforce rerun passed on 2026-09-24 with matching approved fingerprints. Flow Methods / Workout Progress Flows and the
+Exercise Progress chart are visually accepted for their reviewed scope. The
+darker Neo-dark settings validation-error change passed formatting, analysis,
+and 32 focused tests; the user accepted its device appearance on 2026-09-24.
+Nested flow states are explicitly deferred.
+Do not populate the
+manifest with every current finding to obtain a green run. Each exact file
+needs an owner, evidence and narrowly justified approvals. Missing manual
+qualification must stay visible. Q1 fixture correctness and broader production
+protection are separate milestones.

@@ -209,7 +209,8 @@ class _BodyPartMuscleMappingScreenState
                 iconEnabledColor: settingsInputForeground(context),
                 iconDisabledColor: settingsInputForeground(
                   context,
-                )?.withValues(alpha: 0.38),
+                  enabled: false,
+                ),
                 decoration: settingsFieldDecoration(
                   context,
                   label: strings.mappingBodyPart,

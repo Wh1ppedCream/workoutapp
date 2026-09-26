@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_expansion_tile_scope.dart';
+import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:flutter/services.dart';
 
@@ -469,12 +471,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Name & Brand
-              TextFormField(
+              TonosFormField(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: strings.foodCustomizationName,
-                  border: OutlineInputBorder(),
-                ),
+                labelText: strings.foodCustomizationName,
+                border: const OutlineInputBorder(),
                 validator:
                     (v) =>
                         (v == null || v.isEmpty)
@@ -483,12 +483,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              TonosFormField(
                 controller: _brandController,
-                decoration: InputDecoration(
-                  labelText: strings.foodCustomizationBrand,
-                  border: OutlineInputBorder(),
-                ),
+                labelText: strings.foodCustomizationBrand,
+                border: const OutlineInputBorder(),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 20),
@@ -643,7 +641,6 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     Map<String, TextEditingController>? controllerOverrides,
     bool initiallyExpanded = true, // toggle default here
   }) {
-    final theme = Theme.of(context);
     return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -651,8 +648,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         borderRadius: context.nutritionTokens.sectionShape,
         side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
+      child: TonosExpansionTileScope(
         child: ExpansionTile(
           key: PageStorageKey('group_$groupKey'),
           initiallyExpanded: initiallyExpanded,
@@ -683,17 +679,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         controller ?? _controllerFor(keyPath ?? label);
     return Padding(
       padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
-      child: TextFormField(
+      child: TonosFormField(
         key:
             keyPath != null
                 ? PageStorageKey('field_$keyPath')
                 : null, // ✅ unique per field
         controller: ctrl,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          isDense: true,
-        ),
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         inputFormatters: _numericFormatters,
       ),
@@ -748,22 +742,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required String title,
   }) {
     final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        dividerColor: Colors.transparent,
-        listTileTheme: const ListTileThemeData(
-          dense: true, // ← tighter ListTile
-          minVerticalPadding: 0, // ← remove extra vertical padding
-          contentPadding: EdgeInsets.zero, // ← no horizontal padding
-          visualDensity: VisualDensity(
-            horizontal: 0,
-            vertical: -3, // ← make header shorter (try -2 to -4)
-          ),
-        ),
-        iconTheme: const IconThemeData(
-          size: 18,
-        ), // ← smaller expand/collapse arrow
-      ),
+    return TonosExpansionTileScope.dense(
       child: ExpansionTile(
         key: PageStorageKey(
           'breakdown_$keyPath',
@@ -963,7 +942,6 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   }
 
   Widget _buildPortionCard() {
-    final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     return TonosThemeReadyCard(
       elevation: 0,
@@ -972,8 +950,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         borderRadius: context.nutritionTokens.sectionShape,
         side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
+      child: TonosExpansionTileScope(
         child: ExpansionTile(
           key: const PageStorageKey('group_PortionInfo'),
           initiallyExpanded: true,
@@ -1026,17 +1003,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required ValueChanged<int> onDefaultChanged,
     bool initiallyExpanded = false, // ← new param
   }) {
-    final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        dividerColor: Colors.transparent,
-        listTileTheme: const ListTileThemeData(
-          dense: true,
-          visualDensity: VisualDensity(horizontal: 0, vertical: -2),
-          contentPadding: EdgeInsets.zero,
-        ),
-        iconTheme: const IconThemeData(size: 18),
-      ),
+    return TonosExpansionTileScope.compact(
       child: ExpansionTile(
         key: PageStorageKey('portion_list_$groupKey'),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
@@ -1205,15 +1172,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: amountKey,
                     controller: entry.amountCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationAmount,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationAmount,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -1243,15 +1208,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: gramsKey,
                     controller: entry.gramsCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationWeight,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationWeight,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -1260,15 +1223,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: mlKey,
                     controller: entry.mlCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationVolume,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationVolume,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),

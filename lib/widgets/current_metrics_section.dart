@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/localized_formatters.dart';
 
 class _CurrentMetric {
@@ -242,30 +243,41 @@ class _MetricsMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleSmall),
-          if (body != null) ...[
-            const SizedBox(height: 4),
-            Text(body!, style: Theme.of(context).textTheme.bodySmall),
-          ],
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton(
-              onPressed: onAction,
-              child: Text(actionLabel),
-            ),
-          ),
-        ],
+      child: TonosSurfaceTheme(
+        surface: context.surfaceTokens.panelRaised,
+        child: Builder(
+          builder:
+              (surfaceContext) => TonosSurface(
+                variant: TonosSurfaceVariant.panelRaised,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(surfaceContext).textTheme.titleSmall,
+                    ),
+                    if (body != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        body!,
+                        style: Theme.of(surfaceContext).textTheme.bodySmall,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton(
+                        onPressed: onAction,
+                        child: Text(actionLabel),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ),
       ),
     );
   }

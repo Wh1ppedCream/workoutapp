@@ -80,19 +80,29 @@ void main() {
         '_isSaving',
       ],
       'lib/screens/profile/settings/flow_methods_page.dart': [
+        'TonosField',
+        'TonosSurfaceTheme',
         'TonosDialogFrame',
         'showDialog',
         'ExpansionTile',
         'rulesNameRequired',
       ],
+      'lib/screens/profile/settings/app_settings_page.dart': [
+        'TonosDialogFrame',
+        'TonosField',
+        'importDatabase(result',
+      ],
       'lib/screens/profile/settings/workout_progress_flows_page.dart': [
         'SettingsPageScaffold',
+        'TonosSurfaceTheme',
         'SafeErrorView',
         'ExpansionTile',
         'AutoPresetFlowScreen',
       ],
       'lib/screens/exercise/auto_preset_flow_screen.dart': [
         'TonosDialogFrame',
+        'TonosDialogDropdownButton',
+        'TonosField',
         'DropdownButtonFormField',
         'flowMethodNameRequired',
         'canDeleteNode',
@@ -100,6 +110,7 @@ void main() {
       'lib/screens/profile/settings/database_settings_page.dart': [
         'SettingsPageScaffold',
         'TonosDialogFrame',
+        'TonosField',
         'showDialog',
         'SnackBar',
         '_contentActionRunning',
@@ -151,6 +162,37 @@ void main() {
     );
     expect(dialog, contains('TonosDialogFrame'));
     expect(dialog, contains('dialogButtonForeground'));
+  });
+
+  test('flow and database forms use the shared field primitive', () {
+    for (final path in const [
+      'lib/screens/profile/settings/flow_methods_page.dart',
+      'lib/screens/profile/settings/app_settings_page.dart',
+      'lib/screens/profile/settings/database_settings_page.dart',
+    ]) {
+      final source = _withoutCommentsAndImports(File(path).readAsStringSync());
+      expect(source, contains('TonosField'), reason: path);
+      expect(source, isNot(contains('TextField(')), reason: path);
+      expect(source, isNot(contains('InputDecoration(')), reason: path);
+    }
+  });
+
+  test('Auto Preset add-method dialog uses shared form controls', () {
+    final source = _withoutCommentsAndImports(
+      File(
+        'lib/screens/exercise/auto_preset_flow_screen.dart',
+      ).readAsStringSync(),
+    );
+    final start = source.indexOf('Future<void> _showAddMethodDialog()');
+    final end = source.indexOf('Future<void> _saveFlow()', start);
+    expect(start, isNonNegative);
+    expect(end, greaterThan(start));
+
+    final dialogSource = source.substring(start, end);
+    expect(dialogSource, contains('TonosField('));
+    expect(dialogSource, contains('TonosDialogDropdownButton<'));
+    expect(dialogSource, isNot(contains('TextField(')));
+    expect(dialogSource, isNot(contains('InputDecoration(')));
   });
 }
 

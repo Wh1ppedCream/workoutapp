@@ -16,6 +16,8 @@ void main() {
     expect(mealPlanAddBar, contains('PantryLogPage'));
     expect(mealPlanAddBar, contains('FoodLoggingPage'));
     expect(mealPlanAddBar, contains('PlanMealPage'));
+    expect(mealPlanAddBar, contains('TonosSegmentedActionBar'));
+    expect(mealPlanAddBar, contains('tonosForegroundForSurface'));
   });
 
   test('profile settings callers retain shared presentation boundaries', () {

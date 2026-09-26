@@ -1350,32 +1350,7 @@ class _CompletedSetRow extends StatelessWidget {
           ),
           if (badges.isNotEmpty) ...[
             const SizedBox(width: 8),
-            if (badges.length == 1)
-              WorkoutRecordBadgeChip(
-                badge: badges.single,
-                width: _recordBadgeWidth,
-                textAlign: TextAlign.center,
-              )
-            else
-              SizedBox(
-                width: _recordBadgeWidth,
-                height: 28,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var index = 0; index < badges.length; index++) ...[
-                      if (index > 0) const SizedBox(height: 2),
-                      WorkoutRecordBadgeChip(
-                        badge: badges[index],
-                        compact: true,
-                        width: _recordBadgeWidth,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+            WorkoutRecordBadgeStack(badges: badges, width: _recordBadgeWidth),
           ],
           const SizedBox(width: 12),
           SizedBox(

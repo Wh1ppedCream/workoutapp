@@ -171,6 +171,60 @@ void main() {
     expect(material.clipBehavior, Clip.none);
   });
 
+  testWidgets('scopes Neo inherited foreground roles to its surface', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        TonosSurfaceTheme(
+          surface: _testSurfaces.settingsSection,
+          child: const Text('Scoped content'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panel: AppSurfaceDecoration.outlinedOnly,
+        ),
+      ),
+    );
+
+    final localTheme = tester.widget<Theme>(
+      find.descendant(
+        of: find.byType(TonosSurfaceTheme),
+        matching: find.byType(Theme),
+      ),
+    );
+    expect(localTheme.data.colorScheme.surface, _testSurfaces.settingsSection);
+    expect(
+      localTheme.data.textTheme.bodyMedium?.color,
+      localTheme.data.colorScheme.onSurface,
+    );
+    expect(
+      localTheme.data.textTheme.bodyMedium?.color,
+      localTheme.data.iconTheme.color,
+    );
+  });
+
+  testWidgets('leaves Classic inherited Material theme unchanged', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        TonosSurfaceTheme(
+          surface: _testSurfaces.settingsSection,
+          child: const Text('Classic content'),
+        ),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byType(TonosSurfaceTheme),
+        matching: find.byType(Theme),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Classic content'), findsOneWidget);
+  });
+
   testWidgets('renders an injected outline and explicit shadow policy', (
     tester,
   ) async {

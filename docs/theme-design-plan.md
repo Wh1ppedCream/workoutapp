@@ -1,6 +1,6 @@
 # Scalable Theme Design Plan
 
-## Current Status (2026-09-23)
+## Current Status (2026-09-24)
 
 Use the [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) as the
 current Step 1-19 checklist. This document retains architecture and original
@@ -33,6 +33,40 @@ the shared wrapper keeps the original Classic `Card` recipe and resolves a
 semantic `TonosSurface` for Neo. Final product-specific geometry, state
 coverage, and product-specific design decisions remain deferred for selected
 evolving surfaces; this does not reopen accepted development qualification.
+
+Earlier settings-slice evidence before final verification (2026-09-23): the TonosField batch passed
+formatting, analysis, and 13 focused tests. The later TonosSurfaceTheme edit
+was formatted (two files changed), analyzed cleanly, and included in a
+46-test passing batch. That checkpoint's refreshed scan reported 2,293 candidates (59
+allowlisted, 1,212 migrated, 1,011 pending, 11 review). A later focused suite
+passed 44 tests and failed only the exact ratchet contract on three new
+tonos_surface.dart fingerprints. Those exact statements are now mapped and
+narrowly approved. At that earlier checkpoint, the affected Neo visual check
+remained pending.
+
+Latest user-run follow-up (2026-09-23): after correcting the ExpansionTile-scope
+test's TextTheme baseline to use MaterialApp's resolved parent, the user
+formatted the test file (0 changes), analysis reported no issues, and the
+five-file Flutter suite passed all 25 tests. At that checkpoint, inventory
+check/report passed for 278 files / 2,288 candidates (59 allowlisted, 1,222
+migrated, 996 pending, 11 review); ratchet report/enforce passed for two
+protected files, before the later ExpansionTile enrollment. On 2026-09-24,
+the user accepted the current Flow Methods and Workout Progress Flows appearance,
+including the Neo-dark dropdown contrast correction, the Exercise Progress
+chart, and the Preset Generation QA / Food Customization ExpansionTiles. The
+user-run formatter changed three files, analysis reported no issues, and the
+settings/residue suite passed all 32 tests. The user then accepted the darker
+Neo-dark validation style on device on 2026-09-24. Nested flow
+persistence/editing review is explicitly deferred by the user.
+
+Latest inventory follow-up (2026-09-24): the user-run check/report passed for
+278 Dart files / 2,297 candidates (86 allowlisted, 1,228 migrated, 983 pending,
+zero review/unassigned). All 11 profile/plan identity-color findings are now
+allowlisted, and the scan includes the SettingsExpansionSection divider-scope
+edit. Formatting and analysis were clean for the palette source and focused
+tests. The corrected contract/drawers/settings run passed all 37 tests;
+formatting reported no changes and analysis found no issues. The
+SettingsExpansionSection integration assertion was included and passed.
 
 ## Historical Pre-Q2 Status
 
@@ -982,6 +1016,25 @@ The first two outcomes are represented by explicit hotspot rules and
 allowlisted data/media rules; the inventory is intentionally still report-only
 until the Step 12 release-surface migrations are complete.
 
+2026-09-24 continuation: a rule-order audit found the exact exercise-editor
+hotspot after its broader `profile-settings` glob, so it could never receive
+findings. The exact rule now precedes the broad rule, and a contract covers the
+specific destination plus all editor findings. The scanner's report also gains
+live per-queue status counts and unique/outside/overlap metrics; tests require
+the current queues to stay disjoint. These working-tree changes await the
+user-run format, analysis, focused tests, and inventory check/report.
+
+That earlier user-run report (2026-09-23) covered 277 Dart files / 2,293
+candidates: 59 allowlisted, 1,212 migrated, 1,011 pending, and 11 review.
+The supplied focus grouping reports 20 pending findings in FlowMethodsPage,
+18 in WorkoutProgressFlowsPage, and 12 migrated findings in tonos_surface.dart.
+The 2026-09-23 report is historical: its 11 review findings were all in the
+fixed identity-color palette. The user accepted preserving those mappings on
+2026-09-24, and the inventory rule now classifies them as an intentional
+data-color allowlist; the latest totals are recorded in the consolidated
+roadmap and theme-style inventory. Earlier queue totals refer to a
+pre-extraction snapshot and should not be reused as current counts.
+
 ### Step 4: Extract Classic from `main.dart` (implemented; affected parity rechecks remain)
 
 1. Create the initial theme folder and `themes/classic_theme.dart`.
@@ -1107,6 +1160,26 @@ families. Reduced-motion and no-effects values are part of the token contracts.
 The focused roles are now consumed directly; no compatibility extension is
 needed to preserve the reviewed Classic appearance.
 
+Focused token adoption (2026-09-23): `AppProgressColors.estimatedOneRm` now
+owns the estimated-one-rep-max series in exercise history. Its default preserves
+the existing Classic green; Neo uses its brightness-aware positive role. The
+chart and legend consume this role. This slice advances token adoption without
+changing the Classic baseline. User-run formatting changed 2 of 8 files,
+analysis was clean, and all 47 focused tests passed. The supplied Pixel 7
+screenshot shows the marker and legend in Neo dark; cross-mode visual approval
+remains unconfirmed. The separate workout-detail badge follow-up passed
+analysis and all 16 focused tests; its Pixel 7 screenshot confirms rep-best and
+volume-best labels remain inside their card with no overflow.
+The user later confirmed the Measurement Trends graphs in all four
+Classic/Neo light/dark modes. The subsequent settings-field and surface-helper
+work added no token role and is covered by the user-run 120-test batch, clean
+analysis, and ratchet report/enforce pass. Focused Neo visual review of the
+affected Flow Methods and Workout Progress Flows appearance was accepted on
+2026-09-24. The user also accepted the Exercise Progress chart and the Preset
+Generation QA / Food Customization ExpansionTiles. The darker Neo-dark settings
+validation-error change passed formatting, analysis, and 32 focused tests; the
+user accepted its device appearance on 2026-09-24. Nested flow-state review is deferred.
+
 ### Step 8: Bridge and retire the existing `AppColors` (complete)
 
 1. Keep `AppColors` temporarily so the 8 remaining compatibility files do not
@@ -1168,6 +1241,26 @@ instead of being globally copied into a second component-recipe layer. The
 Classic tests explicitly guard this ownership boundary; local feature overrides
 remain deliberate Step 12 migration targets rather than being changed silently.
 
+Current local-scope follow-up: five repeated ExpansionTile wrappers in Preset
+Generation QA and Food Customization now use the standard, compact, or dense
+`TonosExpansionTileScope` recipe. The wrappers preserve their prior divider,
+ListTile-density, and icon-size values. The refreshed inventory check passed,
+and the four-mode widget tests passed in the user's 25-test focused suite.
+
+The latest verified pre-extraction snapshot recorded 16 pending and 3 migrated
+local Theme expressions. The refreshed report groups 20 pending findings in
+FlowMethodsPage and 18 in WorkoutProgressFlowsPage, with 12 migrated findings
+in tonos_surface.dart. Focused tests and analysis passed for the new wrapper;
+the three protected-file fingerprints are now exactly reviewed and approved.
+The latest user-run enforce rerun passed. The user accepted the current Flow
+Methods and Workout Progress Flows appearance on 2026-09-24, including the
+dropdown contrast correction, and accepted the Exercise Progress chart and the
+Preset Generation QA / Food Customization ExpansionTiles. The darker Neo-dark
+settings validation-error change passed formatting, analysis, and 32 focused
+tests; the user accepted its device appearance on 2026-09-24. Nested flow-state review is deferred.
+The subsequent ExpansionTile-scope extraction's inventory
+check and four-mode tests are verified.
+
 ### Step 10: Build a small set of Tonos primitives (implemented; adoption ongoing)
 
 1. Use Theme Lab and the inventory to identify repeated custom structures.
@@ -1200,6 +1293,39 @@ Material does not express by itself. All primitives retain feature-owned
 callbacks, semantics, and layout constraints without accepting raw visual
 values. Widget contracts cover Classic token resolution, light/dark behavior,
 callbacks, semantics, and the shared effect/surface recipes.
+
+Focused field adoption converted 12 flow-editor fields and one database
+JSON-import field plus the database manifest-URL field to TonosField, preserving
+controllers, numeric/URL keyboards, multiline behavior, and the import field's
+explicit border. The user's format and analysis run was clean and the focused
+four-file batch passed 13 tests. A subsequent
+TonosSurfaceTheme wrapper now scopes contrast-aware inherited roles to two
+flow-card surfaces while preserving the Classic pass-through. The user-run
+focused test batch passed 46 tests and analysis was clean; a later suite passed
+44 tests and failed only the ratchet contract. Its three exact statements are
+now narrowly approved, and the two-file report/enforce passed for that source
+state before ExpansionTile enrollment. The current
+Flow Methods and Workout Progress Flows appearance was accepted on 2026-09-24;
+the user also accepted the Exercise Progress chart and Preset Generation QA /
+Food Customization ExpansionTiles. Neo-dark settings validation styling was
+accepted by the user on device on 2026-09-24; nested flow-state review is deferred.
+
+Focused adoption: workout-detail set rows now use `WorkoutRecordBadgeStack` for
+one or multiple rep/volume badges. The multi-badge stack keeps its compact width
+but takes the height required by wrapped localized labels, including at larger
+text scales. A widget regression test covers this layout. User-run formatting
+changed 2 of 3 files, analysis was clean, all 16 focused tests passed, the style
+inventory check/report succeeded, and the Pixel 7 screenshot confirms the
+overflow is gone.
+
+The current ExpansionTile adoption centralizes five repeated scopes from
+Preset Generation QA and Food Customization into the standard, compact, and
+dense `TonosExpansionTileScope` variants, retaining their prior divider,
+ListTile density, and icon-size values. Four-mode inheritance tests were
+formatted, analyzed, and passed in the earlier focused 25/26-test runs. The
+latest inventory scan includes the later SettingsExpansionSection divider-scope
+edit; its integration assertion passed in the latest settings test run. The
+corrected identity-rationale contract test passed in the 37-test follow-up.
 
 ### Step 11: Build the development-only Theme Lab (implemented; current review accepted)
 
@@ -1647,10 +1773,14 @@ Work through `lib/main.dart`, `lib/widgets/drawers.dart`,
 - Close Step 17 first. Preserve the navigation editor's undecorated save bar
   with 10px top padding and User Information's tinted, animated save bar with
   12px top padding.
-- Classify SettingsAccent category colors and the gym/profile identity palette.
-  Decide whether each is a theme-adjustable category role or intentionally
-  stable identity data. Record the decision; do not replace all categories with
-  primary or success colors.
+- Classify the remaining SettingsAccent category colors as theme-adjustable
+  category roles or stable feature identity data; do not replace them wholesale
+  with primary or success colors. The gym/profile identity palette decision is
+  complete: keep its current mapping stable across theme families and brightness.
+  Any future app-wide color choice should use a persisted `ThemePaletteId`,
+  independent from theme family/brightness. If identity palette selection is
+  added separately, use an `IdentityPaletteId`; resolve curated swatches rather
+  than storing raw identity colors.
 - Inspect local Theme and control overrides across settings. Extract a named,
   parent-derived variant only where repeated or meaningfully family-dependent.
   Preserve existing spacing, typography, field borders, validation, disabled
@@ -2009,15 +2139,47 @@ their presentation migration before Step 19.
 8. Update Theme Lab with representative real component recipes where useful,
    without requiring private user data or duplicating feature business logic.
 
-### Step 18: Enforce migration boundaries and qualify the shared system (scoped enforcement complete; broader work remains)
+### Step 18: Enforce migration boundaries and qualify the shared system (scoped enforcement in place; broader qualification partial)
 
-The Q1 ratchet protects one exact production scope, and current development
-human/device qualification is accepted. The corrected verifier scope passed
-on 2026-09-22; its results are recorded in the consolidated roadmap. Further
-production enrollment requires per-file evidence; it is intentionally not a
-blanket completion requirement.
+Historically, the Q1 ratchet started with one exact production scope; badge
+enrollment then brought the manifest to two. Its user-run post-enrollment report
+and enforce checks and 15 focused tests passed on 2026-09-23; the formatted CLI
+test also analyzed cleanly. For the newer TonosSurfaceTheme edit, formatting,
+analysis, and focused widget/route tests passed; the first updated ratchet run
+failed closed on three fingerprints, which were mapped and narrowly approved.
+The subsequent user-run report/enforce rerun passed. This continuation adds an
+exact migrated inventory rule and contract assertion for the already-protected
+badge file, plus a shared ExpansionTile scope and four-mode test. The inventory
+check and corrected five-file focused test suite passed all 25 tests for that
+earlier source state. The user accepted the current Flow Methods and Workout
+Progress Flows appearance on 2026-09-24, including the dropdown contrast correction, and
+accepted the Exercise Progress chart and dedicated Preset Generation QA / Food
+Customization ExpansionTiles. A darker Neo-dark settings validation-error
+change passed formatting, analysis, and 32 focused tests; the user accepted
+its device appearance on 2026-09-24. Nested flow-state review is deferred.
+Current development qualification for the earlier source state remains
+accepted. Further production enrollment requires per-file evidence and is not a
+blanket completion requirement. An earlier pre-SettingsAccent checkpoint
+reported 278 Dart files / 2,293 candidates (70 allowlisted, 1,224 migrated,
+999 pending, zero review/unassigned).
+The corrected contract/drawers/settings run passed all
+37 tests; formatting reported no changes and analysis found no issues. The
+SettingsExpansionSection integration assertion also passed in that batch.
 The design criteria below preserve the original architecture and guide any
 future expansion without reopening the accepted current development checks.
+
+The 2026-09-24 rule-order audit found that the exact exercise-editor hotspot
+was shadowed by the broader settings rule; the specific rule is now ordered
+first and a regression contract checks the destination. The inventory report
+computes queue counts and overlaps; its latest JSON reconciles all six queues
+(731 uniquely assigned, 1,566 outside, zero overlapping). The focused suite
+passed all 22 tests before the final manifest/test-contract edits. The three
+ExpansionTile fingerprints were manually mapped and added to the canonical
+manifest. Since that run, its CLI contract test and the narrow SettingsAccent
+classification were then verified: current inventory and focused tests passed,
+and the three-scope report/enforce matched approved fingerprints. Two chart
+imports were removed after analysis; targeted post-cleanup analysis remains
+pending. Step 18 protects three files.
 
 #### 18.1 Turn inventory labels into enforceable scoped checks
 
@@ -2026,8 +2188,8 @@ Files: `tools/theme_style_inventory.dart`,
 `test/theme/theme_style_inventory_contract_test.dart`.
 
 The report-only inventory's destination and status prove assignment, not
-migration correctness. The separate Q1 ratchet protects one exact production
-scope; it does not turn every migrated path into an enforced scope. Broad
+migration correctness. The separate ratchet now lists three exact production
+scopes; it does not turn every migrated path into an enforced scope. Broad
 fallback rules can still classify new raw styling as pending.
 
 Keep the full report for unconverted areas. For qualified migrated scopes,

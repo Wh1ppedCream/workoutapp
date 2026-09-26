@@ -23,6 +23,14 @@ theme/configuration tests, 6 responsive tests, 46 route-boundary tests, and
 the enforce-mode ratchet. Human/device/N6
 qualification is now recorded for the current development scope; release
 qualification remains separate.
+Affected-source follow-up (2026-09-23): the later TonosSurfaceTheme edit
+replaces foreground Theme wrappers in Flow Methods and Workout Progress Flows.
+The current user-run verification passed analysis, all 120 focused tests, and
+the two-file ratchet report/enforce. The three fingerprints that failed the
+earlier ratchet attempt were mapped and narrowly approved before the passing
+rerun. This does not alter acceptance of the earlier tested Android candidate;
+the affected Neo route visuals still need a focused recheck for the newer
+working-tree implementation.
 Public selection and release approval remain separate Steps 14-15.
 
 The latest Train refinement also aligns the Neo depth hierarchy: the compact
@@ -1435,6 +1443,22 @@ Report, User Information, Weight Units, UI and Appearance, Edit Gym Profile,
 Database Settings, Guided Tutorials, Bodypart Rankings, Muscle Rankings,
 Volume Boundaries, Anatomy Mapping, Exercise Set Allocation, Exercise Editor,
 and Flow Methods / Workout Progress Flows.
+
+Affected-source caveat (2026-09-23): the later TonosSurfaceTheme refactor
+changes foreground inheritance in the Flow Methods and Workout Progress Flows
+cards. The accepted review remains valid for its reviewed source state; the
+updated implementation needs focused test and Neo visual rechecks before that
+acceptance is carried forward.
+
+Current-source visual follow-up (2026-09-24): the user confirmed Flow Methods and
+Workout Progress Flows look good, including the Add App Default Rule dropdown
+arrows and option contrast in Neo dark mode. The Exercise Progress chart and the
+Preset Generation QA / Food Customization ExpansionTiles were also accepted.
+This supersedes the visual-recheck caveat for the current route appearance only;
+nested persistence and non-happy-path qualification remain separate, with
+nested-flow review explicitly deferred. The darker Neo-dark settings
+validation-error style passed formatting, analysis, and 32 focused tests; the
+user accepted its device appearance on 2026-09-24.
 
 The final selector contrast correction is also user-verified: the selected
 value on a bright Neo field uses dark field ink while the charcoal popup keeps

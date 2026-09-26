@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:provider/provider.dart';
 
@@ -881,26 +882,24 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TonosField(
                     controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).foodSearchHint,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon:
-                          (_searchCtrl.text.isEmpty)
-                              ? null
-                              : IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchCtrl.clear();
-                                  _kickoffSearch('');
-                                  FocusScope.of(context).unfocus();
-                                  setState(() {}); // refresh suffixIcon state
-                                },
-                              ),
-                      border: OutlineInputBorder(
-                        borderRadius: context.nutritionTokens.compactShape,
-                      ),
+                    variant: TonosFieldVariant.search,
+                    hintText: AppLocalizations.of(context).foodSearchHint,
+                    suffixIcon:
+                        (_searchCtrl.text.isEmpty)
+                            ? null
+                            : IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                _kickoffSearch('');
+                                FocusScope.of(context).unfocus();
+                                setState(() {}); // refresh suffixIcon state
+                              },
+                            ),
+                    border: OutlineInputBorder(
+                      borderRadius: context.nutritionTokens.compactShape,
                     ),
                     onChanged: (s) {
                       _kickoffSearch(s);
@@ -1063,23 +1062,21 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           const SizedBox(height: 16),
 
           // Existing manual fallback
-          TextField(
+          TonosField(
             controller: _barcodeCtrl,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: strings.foodEnterBarcode,
-              hintText: strings.foodEnterBarcodeHint,
-              prefixIcon: const Icon(Icons.qr_code),
-              suffixIcon:
-                  (_barcodeCtrl.text.isEmpty)
-                      ? null
-                      : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _barcodeCtrl.clear()),
-                      ),
-              border: OutlineInputBorder(
-                borderRadius: context.nutritionTokens.compactShape,
-              ),
+            labelText: strings.foodEnterBarcode,
+            hintText: strings.foodEnterBarcodeHint,
+            prefixIcon: const Icon(Icons.qr_code),
+            suffixIcon:
+                (_barcodeCtrl.text.isEmpty)
+                    ? null
+                    : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _barcodeCtrl.clear()),
+                    ),
+            border: OutlineInputBorder(
+              borderRadius: context.nutritionTokens.compactShape,
             ),
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _handleScanAdd(),
@@ -1600,7 +1597,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       const SizedBox(width: 12),
                       SizedBox(
                         width: 100,
-                        child: TextFormField(
+                        child: TonosFormField(
                           initialValue: qty.toStringAsFixed(1),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -1608,10 +1605,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                           onChanged:
                               (s) =>
                                   setB(() => qty = double.tryParse(s) ?? 1.0),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                          ),
+                          isDense: true,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1622,29 +1617,25 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   const SizedBox(height: 12),
 
                   // Note
-                  TextFormField(
+                  TonosFormField(
                     minLines: 1,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Note (optional)',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Note (optional)',
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     onChanged: (s) => note = s.trim().isEmpty ? null : s.trim(),
                   ),
 
                   const SizedBox(height: 12),
 
                   // NEW: Tags (comma-separated)
-                  TextFormField(
+                  TonosFormField(
                     minLines: 1,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText:
-                          'Tags (comma-separated, e.g. "post-workout, high-protein")',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        'Tags (comma-separated, e.g. "post-workout, high-protein")',
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     onChanged: (s) => tagsText = s,
                   ),
 
@@ -2073,7 +2064,7 @@ class _QtyEditorState extends State<_QtyEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return TonosFormField(
       controller: _c,
       textAlign: TextAlign.center,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -2081,11 +2072,9 @@ class _QtyEditorState extends State<_QtyEditor> {
         final v = double.tryParse(s);
         if (v != null) widget.onChanged(v < 0 ? 0 : v);
       },
-      decoration: const InputDecoration(
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        border: OutlineInputBorder(),
-      ),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      border: const OutlineInputBorder(),
     );
   }
 }

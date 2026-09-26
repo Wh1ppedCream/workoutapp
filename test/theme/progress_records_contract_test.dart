@@ -76,8 +76,7 @@ void main() {
         'progressColors.grid',
         'progressColors.label',
         'dataVisualization.selection',
-        'progressColors.workoutIncrease',
-        'progressColors.workoutDecrease',
+        'tonosPrimarySeriesForSurface',
       ]) {
         expect(metric, contains(role), reason: role);
       }

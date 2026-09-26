@@ -7,6 +7,7 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
   const AppProgressColors({
     required this.accent,
     required this.estimated,
+    required this.estimatedOneRm,
     required this.grid,
     required this.label,
     required this.exerciseIncrease,
@@ -23,6 +24,7 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
   factory AppProgressColors.fromTheme(ThemeData theme) => AppProgressColors(
     accent: theme.colorScheme.primary,
     estimated: theme.colorScheme.onSurfaceVariant,
+    estimatedOneRm: Colors.green.shade400,
     grid: theme.colorScheme.outlineVariant,
     label: theme.colorScheme.onSurfaceVariant,
     exerciseIncrease: Colors.green.shade400,
@@ -38,6 +40,9 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
 
   final Color accent;
   final Color estimated;
+
+  /// The separate estimated one-rep-max series in exercise history charts.
+  final Color estimatedOneRm;
   final Color grid;
   final Color label;
   final Color exerciseIncrease;
@@ -54,6 +59,7 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
   AppProgressColors copyWith({
     Color? accent,
     Color? estimated,
+    Color? estimatedOneRm,
     Color? grid,
     Color? label,
     Color? exerciseIncrease,
@@ -68,6 +74,7 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
   }) => AppProgressColors(
     accent: accent ?? this.accent,
     estimated: estimated ?? this.estimated,
+    estimatedOneRm: estimatedOneRm ?? this.estimatedOneRm,
     grid: grid ?? this.grid,
     label: label ?? this.label,
     exerciseIncrease: exerciseIncrease ?? this.exerciseIncrease,
@@ -87,6 +94,7 @@ class AppProgressColors extends ThemeExtension<AppProgressColors> {
     return AppProgressColors(
       accent: Color.lerp(accent, other.accent, t)!,
       estimated: Color.lerp(estimated, other.estimated, t)!,
+      estimatedOneRm: Color.lerp(estimatedOneRm, other.estimatedOneRm, t)!,
       grid: Color.lerp(grid, other.grid, t)!,
       label: Color.lerp(label, other.label, t)!,
       exerciseIncrease:

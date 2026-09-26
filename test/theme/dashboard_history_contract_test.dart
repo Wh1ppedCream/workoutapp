@@ -42,6 +42,13 @@ void main() {
 
       expect(summary, contains('surfaces.historyPeriodSelector'));
       expect(summary, contains('shapes.compact'));
+      expect(summary, contains('TonosSurfaceVariant.compactCard'));
+      expect(summary, contains('semantic.strongContent'));
+      expect(summary, contains('semantic.mutedContent'));
+      expect(summary, contains('tonosForegroundForSurface'));
+      expect(summary, contains('Colors.transparent'));
+      expect(summary, contains('_tabSegmentRadius(context, i)'));
+      expect(summary, contains('BorderRadius.zero'));
       expect(summary, contains('_selectedIndex'));
       expect(summary, contains('_ensureTabLoaded'));
       expect(summary, isNot(contains('surfaceContainerHighest')));
@@ -56,6 +63,7 @@ void main() {
       ]) {
         expect(calendar, contains(role), reason: role);
       }
+      expect(calendar, contains('TonosSurfaceTheme('));
       for (final stateField in [
         '_selectedDay',
         '_selectedWeekStart',

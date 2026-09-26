@@ -406,7 +406,10 @@ class _BoundaryTab<T> extends StatelessWidget {
                 dropdownColor: settingsDropdownMenuColor(context),
                 style: settingsInputTextStyle(context),
                 iconEnabledColor: dropdownIconColor,
-                iconDisabledColor: dropdownIconColor?.withValues(alpha: 0.38),
+                iconDisabledColor: settingsInputForeground(
+                  context,
+                  enabled: false,
+                ),
                 decoration: settingsFieldDecoration(context, label: title),
                 selectedItemBuilder:
                     (_) =>

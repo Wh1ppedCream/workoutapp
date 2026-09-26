@@ -5,6 +5,47 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 
 void main() {
+  test('completed workout palette is scoped to Classic light', () {
+    final classicLight = AppThemeFactory.light(AppThemeFamily.classic);
+    final classicDark = AppThemeFactory.dark(AppThemeFamily.classic);
+
+    expect(classicLight.surfaceTokens.workoutCardCompleteFill, 1);
+    expect(classicLight.surfaceTokens.workoutSetCompleteFill, 1);
+    expect(
+      classicLight.surfaceTokens.workoutSetCompleteOutline,
+      const Color(0xFF85BA90),
+    );
+    expect(
+      classicLight.semanticColors.workoutCompleted,
+      const Color(0xFF123D1A),
+    );
+    expect(
+      classicLight.semanticColors.workoutExerciseCompleted,
+      const Color(0xFF70B479),
+    );
+    expect(
+      classicLight.semanticColors.workoutSetCompleted,
+      const Color(0xFFB7E5BE),
+    );
+
+    expect(classicDark.surfaceTokens.workoutCardCompleteFill, 24 / 255);
+    expect(classicDark.surfaceTokens.workoutSetCompleteFill, 76 / 255);
+    expect(
+      classicDark.surfaceTokens.workoutSetCompleteOutline,
+      Colors.transparent,
+    );
+    expect(classicDark.semanticColors.workoutCompleted, Colors.green);
+
+    for (final neo in [
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      expect(neo.surfaceTokens.workoutCardCompleteFill, 1);
+      expect(neo.surfaceTokens.workoutSetCompleteFill, 1);
+      expect(neo.surfaceTokens.workoutSetCompleteOutline, Colors.transparent);
+    }
+  });
+
   test('record surfaces copy and interpolate independently', () {
     final base = AppThemeFactory.light(AppThemeFamily.classic).surfaceTokens;
     final target = base.copyWith(
@@ -15,6 +56,7 @@ void main() {
       recordBadgeBorder: 0.6000000000000001,
       workoutCardCompleteFill: 0.4,
       workoutSetCompleteFill: 0.7,
+      workoutSetCompleteOutline: Colors.orange,
       workoutChangeSetOutline: Colors.cyan,
     );
     expect(target.workoutHandle, Colors.orange);
@@ -31,17 +73,23 @@ void main() {
     expect(base.recordBadgeBorder, 0.62);
     expect(target.recordBadgeBorder, 0.6000000000000001);
     expect(target.copyWith().recordBadgeBorder, target.recordBadgeBorder);
-    expect(base.workoutCardCompleteFill, 24 / 255);
+    expect(base.workoutCardCompleteFill, 1);
     expect(target.workoutCardCompleteFill, 0.4);
     expect(
       target.copyWith().workoutCardCompleteFill,
       target.workoutCardCompleteFill,
     );
-    expect(base.workoutSetCompleteFill, 76 / 255);
+    expect(base.workoutSetCompleteFill, 1);
     expect(target.workoutSetCompleteFill, 0.7);
     expect(
       target.copyWith().workoutSetCompleteFill,
       target.workoutSetCompleteFill,
+    );
+    expect(base.workoutSetCompleteOutline, const Color(0xFF85BA90));
+    expect(target.workoutSetCompleteOutline, Colors.orange);
+    expect(
+      target.copyWith().workoutSetCompleteOutline,
+      target.workoutSetCompleteOutline,
     );
     expect(target.workoutChangeSetOutline, Colors.cyan);
     expect(
@@ -102,6 +150,10 @@ void main() {
               (target.workoutSetCompleteFill - base.workoutSetCompleteFill) * t,
           1e-9,
         ),
+      );
+      expect(
+        result.workoutSetCompleteOutline,
+        Color.lerp(base.workoutSetCompleteOutline, Colors.orange, t),
       );
       expect(
         result.workoutChangeSetOutline,

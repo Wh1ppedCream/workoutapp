@@ -2,6 +2,7 @@ import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/focused_sets_list.dart';
 import 'package:env_test/widgets/seven_day_focus_card.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +63,51 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
+
+        final presentationThemeFinder = find.descendant(
+          of: find.byType(SevenDayFocusPresentation),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Theme && widget.child is Column,
+          ),
+        );
+        expect(presentationThemeFinder, findsOneWidget);
+        final presentationTheme = tester.widget<Theme>(presentationThemeFinder);
+        final usesInkRecipe =
+            theme.surfaceDecorationTokens.panelRaised.outlined;
+        final expectedIndicatorColor =
+            usesInkRecipe
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.progressIndicatorTheme.color;
+        final expectedTrackColor =
+            usesInkRecipe
+                ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.22)
+                : theme.progressIndicatorTheme.linearTrackColor;
+        expect(
+          presentationTheme.data.progressIndicatorTheme.color,
+          expectedIndicatorColor,
+          reason: '$family ${brightness.name} progress color',
+        );
+        expect(
+          presentationTheme.data.progressIndicatorTheme.linearTrackColor,
+          expectedTrackColor,
+          reason: '$family ${brightness.name} progress track color',
+        );
+        final progressBars = find.byType(LinearProgressIndicator);
+        expect(progressBars, findsNWidgets(3));
+        for (final element in progressBars.evaluate()) {
+          final renderedProgressTheme =
+              Theme.of(element).progressIndicatorTheme;
+          expect(
+            renderedProgressTheme.color,
+            expectedIndicatorColor,
+            reason: '$family ${brightness.name} rendered progress color',
+          );
+          expect(
+            renderedProgressTheme.linearTrackColor,
+            expectedTrackColor,
+            reason: '$family ${brightness.name} rendered progress track',
+          );
+        }
       }
 
       await pumpAt(

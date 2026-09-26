@@ -17,6 +17,7 @@ import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../theme/theme_extensions.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_field.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../utils/app_test_keys.dart';
@@ -1381,15 +1382,12 @@ class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
       title: Text(
         AppLocalizations.of(context).databaseExerciseManifestDialogTitle,
       ),
-      content: TextField(
+      content: TonosField(
         controller: _controller,
-        autofocus: false,
         keyboardType: TextInputType.url,
-        decoration: InputDecoration(
-          labelText: AppLocalizations.of(context).databaseManifestUrl,
-          hintText:
-              'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
-        ),
+        labelText: AppLocalizations.of(context).databaseManifestUrl,
+        hintText:
+            'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
         minLines: 1,
         maxLines: 3,
       ),

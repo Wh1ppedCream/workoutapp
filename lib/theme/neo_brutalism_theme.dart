@@ -206,6 +206,7 @@ abstract final class NeoBrutalismThemeDefinition {
     final progressColors = AppProgressColors.fromTheme(base).copyWith(
       accent: purple,
       estimated: ink.withValues(alpha: 0.72),
+      estimatedOneRm: positiveText,
       grid: ink.withValues(alpha: 0.24),
       label: ink.withValues(alpha: 0.72),
       exerciseIncrease: positiveText,
@@ -894,6 +895,8 @@ abstract final class NeoBrutalismThemeDefinition {
   static AppShapeTokens _shapeTokens() {
     return AppShapeTokens.classic.copyWith(
       trainTab: _radius(6),
+      trainTabButton: _radius(3),
+      workoutCompletedSet: BorderRadius.zero,
       workoutAddChangeSet: _radius(4),
       mediaThumbnail: _radius(4),
       exerciseDetailSheet: _topRadius(12),

@@ -1719,19 +1719,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
       ),
     );
     if (!usesInkRecipe) return content;
-    return Theme(
-      data: theme.copyWith(
-        colorScheme: theme.colorScheme.copyWith(
-          onSurface: titleForeground,
-          onSurfaceVariant: subtitleForeground,
-        ),
-        textTheme: theme.textTheme.apply(
-          bodyColor: foreground,
-          displayColor: foreground,
-        ),
-      ),
-      child: content,
-    );
+    return TonosSurfaceTheme(surface: periodSurface, child: content);
   }
 }
 

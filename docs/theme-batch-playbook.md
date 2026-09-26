@@ -1,12 +1,52 @@
 # Theming Batch Playbook
 
-## Current Status And Ownership (2026-09-22)
+## Current Status And Ownership (updated 2026-09-25; development evidence through 2026-09-25)
 
 The [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) is the current
 task/status checklist. This playbook preserves batch scopes and historical
 evidence. Q3 supersedes older pending labels for its accepted scope; later
 refinements still need affected-route verification. Do not restart completed
 batches solely from an older status paragraph below.
+
+D2 Dashboard/DataRecords source-contract closeout (2026-09-25): added exact,
+kind-limited ownership rules for the eight existing token-backed
+`WorkoutDashboard` findings and four `DataRecordsSection` findings. The
+inventory contract pins both scopes; the existing progress-record source and
+token contracts continue to verify roles, Classic recipes, scale, and
+navigation/callback paths. Targeted analysis was clean; the inventory contract
+passed 18 tests, the progress-record source contract passed 1, the progress
+token suite passed 2, and the dashboard/history contract and token suites each
+passed 2. Inventory check/refresh passed at 278 files / 2,301 candidates
+(92 allowlisted, 1,555 migrated, 654 pending; 1,029 uniquely queued, 1,272
+outside queues, zero overlaps/unassigned). No production widget, protected
+ratchet file, or ratchet manifest changed, so no new visual or ratchet approval
+is claimed.
+
+Resumed verification follow-up (2026-09-25): `PresetsLoaded` now has an exact
+rule for six migrated findings and a four-mode rendered contract for archived
+empty-state contrast plus the progressive Show More recipe and reveal behavior.
+The initial failure was a finder matching the exact runtime type instead of
+Flutter's private `OutlinedButton.icon` subtype; the test now uses a subtype
+predicate. Formatting made no changes; targeted analysis was clean; the
+Train/PresetsLoaded suite passed 7 tests, inventory/ratchet suites passed 30,
+and progress/history contracts passed 7. Inventory check/refresh passed at
+2,301 candidates (92 allowlisted, 1,561 migrated, 648 pending; 1,029 uniquely
+queued, 1,272 outside queues, zero overlaps/unassigned). No production source
+or ratchet scope changed in this follow-up; fresh report/enforce checks matched
+all three approved ratchet scopes.
+
+Latest Step 3/7/9/10/18 batch (2026-09-25): removed WeightCard's unused input
+hint/suffix styles and added rendered popup contrast coverage in all four modes;
+then added a four-mode Train split-action-bar contract and exact seven-finding
+inventory owner. WeightCard and Train now have no pending style candidates.
+Format/analysis passed, the combined Train/WeightCard/inventory/workout/ratchet
+suite passed 57 tests, and inventory check reported 278 files / 2,301 candidates
+(92 allowlisted, 1,543 migrated, 666 pending; 1,029 uniquely queued, 1,272
+outside queues, zero overlaps/unassigned). The three-scope ratchet passed
+report/enforce and `git diff --check` passed. The preceding responsive
+action-bar batch separately passed 118 tests. Neo Current Metrics and
+MealPlanAddBar still need user visual acceptance; broader style queues remain
+open.
 
 Neo N1/N2 are complete, N3 implementation and automatable coverage are
 complete, and original N4 development checks were accepted. The current
@@ -16,7 +56,157 @@ has now accepted the current N5 route-state and N6 human/device qualification.
 The latest supplied corrected-scope run reported 135 files formatted with 0
 changes, clean analysis, 321 theme tests, 6 responsive tests, 46 route-boundary
 tests, and a passing enforce-mode style ratchet. This is current development
-qualification, not release approval.
+qualification, not broad/open release approval. The signed Android internal/closed
+candidate was subsequently accepted on 2026-09-23 after six focused device checks;
+its tested source and APK hash are linked in the
+[current roadmap](theme-consolidated-roadmap.md#step-15-qualify-themes-for-release).
+This does not approve open testing or a Play Store release.
+
+Earlier working-tree snapshot (2026-09-23, before final verification): the TonosSurfaceTheme routes were
+formatted (two files changed), analysis was clean, and the first focused batch
+passed 46 tests. The refreshed inventory covers 277 Dart files / 2,293
+candidates (59 allowlisted, 1,212 migrated, 1,011 pending, 11 review); the
+supplied grouping reports 20 pending in FlowMethodsPage, 18 in
+WorkoutProgressFlowsPage, and 12 migrated in tonos_surface.dart. A later
+focused suite passed 44 tests and failed only the production ratchet contract,
+which found three unapproved fingerprints in tonos_surface.dart. Those exact
+statements were subsequently mapped and narrowly approved; the current
+report/enforce rerun passed. At that checkpoint, the affected Neo visual
+recheck remained open.
+Earlier TonosField and ratchet passes remain valid for their tested source
+states only.
+
+Prior user-run follow-up (2026-09-24): after correcting the scope test's
+TextTheme baseline and preserving inherited ListTile/Icon styling, formatting
+reported no changes, analysis was clean, and the five-file Flutter suite passed
+all 26 tests. Ratchet report/enforce passed for the two protected files. The user
+accepted the current Flow Methods and Workout Progress Flows appearance,
+including the dropdown contrast correction, the Exercise Progress chart, and
+the Preset Generation QA / Food Customization ExpansionTiles. The darker
+Neo-dark settings validation-error style passed its focused 32-test run and
+device review. Nested flow-state review remains explicitly deferred.
+Inventory follow-up checkpoint (2026-09-24, before the SettingsAccent rule and
+ExpansionTile manifest enrollment): check/report passed for 278 Dart files /
+2,293 candidates (70 allowlisted, 1,224 migrated, 999 pending, zero
+review/unassigned). All 11 identity-color findings were allowlisted. The scan
+included the SettingsExpansionSection divider-scope change and no longer
+included its former pending divider finding. The corrected contract/drawers/
+settings run passed all 37 tests; formatting reported no changes and analysis
+found no issues. The SettingsExpansionSection integration assertion passed in
+that run. At this checkpoint, the ratchet protected two files. The current
+manifest has a third ExpansionTile scope, and the SettingsAccent classification
+has since changed the inventory rules; current inventory and three-scope
+report/enforce verification passed on 2026-09-24; see the consolidated roadmap for current counts and remaining analyzer follow-up.
+
+Focused inventory/theme follow-up (2026-09-23): the shared settings form's Neo
+error message and borders first moved to `ColorScheme.error`; its focused
+28-test run passed. Review then found that dark Neo's luminous error role was
+not readable on the bright field, so the current patch resolves a contrast-
+checked negative role against the field and its containing section. The
+estimated-1RM chart series first moved to an explicit progress role; its
+47-test analysis/behavior
+batch passed, and a Pixel 7 screenshot shows the
+marker and legend in Neo dark. Cross-mode visual approval for that color remains
+separate. In workout details, rep-best and volume-best badges now use a
+shrink-wrapped stack instead of the overflow-prone fixed-height box. The user
+reports formatting changed 2 of 3 files, clean analysis, 16 passing tests, and
+a refreshed report-only scan of 277 Dart files / 2,320 findings (1,039 pending;
+zero unassigned). The device screenshot confirms the badges stay inside their
+cards with no overflow. These focused changes do not classify whole files as
+migrated or add ratchet scopes.
+
+Local-theme boundary audit (2026-09-23): SettingsInfoCard no longer wraps
+its explicitly colored, closed subtree in a local Theme; a cross-family,
+cross-brightness regression test is added. The section and expansion scopes in
+the same file remain because they own inherited roles for caller-provided
+controls. Static inspection likewise retained local scopes around Material
+controls, editable fields, selectors, progress indicators, and open child
+content in health trends, workout history, workout cards, seven-day focus,
+exercise progress, and settings flow cards. No token manifest classification
+or ratchet scope changed. The user-run formatter changed one of two files,
+analysis was clean, the two focused suites passed all 57 tests, and the
+report-only inventory returned 2,319 findings / 1,038 pending / zero
+unassigned.
+
+Follow-up primitive review found the first-record and weighted-record badge
+widgets duplicated their fill/border contrast, shape, and text-density
+renderer while differing in semantic token values and compact spacing. They
+now delegate that rendering to one private visual owner without changing those
+inputs. The 2026-09-23 user run passed the focused seven-suite batch (37 tests),
+refreshed the report-only inventory to 2,312 findings / 1,031 pending / zero
+unassigned, and passed ratchet report and enforce modes. The user screenshot
+confirms the workout-detail badges no longer overflow. The analyzer reported
+three interpolation-style infos in the new chart test key; the key was
+converted to interpolation, then passed formatting, clean focused analysis, and
+all four responsive chart tests. The user confirmed the Measurement Trends
+graphs pass in all four Classic/Neo light/dark modes on 2026-09-23. No inventory
+classification or ratchet scope changed.
+
+Step 7 token follow-up: WorkoutMetricChartCard previously used hard-coded
+Material green/red for Neo direction labels despite brightness-aware
+workoutIncrease/workoutDecrease roles already existing in AppProgressColors.
+It now uses those roles for Classic and Neo. The rendered regression test checks
+up/down labels and role colors in all four theme modes; the 2026-09-23 focused
+batch passed all 37 tests, and the follow-up interpolation cleanup passed clean
+analysis and all four responsive tests. The user confirmed that the Measurement
+Trends graphs pass in all four Classic/Neo light/dark modes on 2026-09-23.
+
+Step 18 candidate review: `lib/widgets/workout_record_badges.dart` has six
+pending inventory findings. A rendered regression covers first-record and
+weighted-record badge fill, border, shape, compact/regular padding, and Classic
+versus Neo density in all four theme modes. The first run sampled a
+theme-transition frame; setting its `themeAnimationDuration` to zero made the
+matrix deterministic. The expanded test also checks monthly and all-time
+legend dots. The user-run formatter, analyzer, and focused test passed on
+2026-09-23, and the user confirmed the workout-detail badges do not overflow.
+After manual source review, the 13 exact report fingerprints were added to the
+canonical ratchet manifest as count-1 approvals. The user-run post-enrollment
+report and enforce checks passed with two protected files, and the focused
+ratchet and badge tests passed all 15 tests. The user then ran analysis on
+the formatted CLI test and reported no issues. This continuation assigns the
+six badge findings to the exact migrated component rule based on token
+ownership, the rendered four-mode contract, user-reviewed layout, and existing
+ratchet. The interim inventory check/report passed with 278 files and 2,288
+candidates; after correcting the test baseline, the initial contract/widget
+suite passed all 25 tests. The later September 24 2,294-candidate inventory and
+follow-up 26-test suite superseded those interim results; the 2,293-candidate
+report was the current checkpoint at that time. The current 2,297-candidate
+report is recorded in `theme-style-inventory.md`. Broader file styling debt
+remains open. The current
+continuation also replaces five repeated ExpansionTile Theme scopes in Preset
+Generation QA and Food Customization with the standard/compact/dense
+`TonosExpansionTileScope`.
+The helper preserves the prior divider, density, and icon-size values; its
+four-mode tests and refreshed inventory scan passed. The user accepted the
+Preset Generation QA and Food Customization ExpansionTiles on 2026-09-24; the
+separate Flow Methods and Workout Progress Flows appearance was accepted that
+day as well.
+
+Latest settings primitive follow-up (2026-09-23): the user converted 12
+flow-editor fields and one database JSON-import field to TonosField while
+preserving controllers, numeric input, and the import field's explicit
+outline. The user-run formatter changed 2 of 7 files, analysis was clean, and
+the focused field/settings/route batch passed 13 tests. The refreshed
+pre-extraction report covered 277 files / 2,294 candidates (59 allowlisted,
+1,211 migrated, 1,013 pending, 11 review, zero unassigned); its six queues
+assigned 731 candidates (690 pending, 18 migrated, 23 allowlisted). It showed
+21 pending findings in flow_methods_page.dart and none in app_settings_page.dart.
+
+Subsequent current-tree edits added TonosSurfaceTheme to the already-protected
+tonos_surface.dart and replaced the local foreground Theme wrappers in
+FlowMethodsPage and WorkoutProgressFlowsPage. Those edits are not covered by
+the earlier field-batch run. The subsequent inventory check/report and
+two-file ratchet report/enforce passed; after correcting the test baseline, the
+initial five-file focused suite passed 25 tests. The follow-up preserving
+inherited ListTile/Icon styling passed formatting, analysis, and all 26 tests
+on 2026-09-24. The user accepted the current Flow Methods and
+Workout Progress Flows appearance on 2026-09-24, including the dropdown contrast
+correction, and accepted the Exercise Progress chart and the Preset Generation
+QA / Food Customization ExpansionTiles. The darker Neo-dark settings
+validation-error change passed formatting, analysis, and 32 focused tests; its
+device appearance was accepted by the user on 2026-09-24, and nested flow-state
+review is deferred.
+These results do not broaden ratchet enrollment.
 
 Step 14 implementation (2026-09-16): UI Appearance now contains a localized
 capability-filtered family selector with compact active-brightness previews,
@@ -24,7 +214,9 @@ backed by `ThemeProvider.setFamily` and `TonosChoiceDialog`. Focused coverage
 exercises eligible selection, independent brightness, preview presence,
 failed-save retry, Classic-only hiding, restart, downgrade fallback, and bundled
 locale copy. The user-run selector, full-theme, responsive, and ratchet checks
-are now recorded above; Neo remains unavailable in release builds.
+are recorded above. At this 2026-09-16 checkpoint Neo remained unavailable in
+release builds; the subsequently accepted Step 15 opt-in enables Neo only for
+Android internal/closed testing.
 
 Automatable completion pass (2026-09-15): the Neo pilot gallery now covers the
 second workout fixture, selected navigation, dialog cancellation, live reduced
@@ -40,9 +232,11 @@ Current qualification confirmation (2026-09-17): the user confirmed that every
 item in the consolidated human/device/N6 checklist passed for the current
 working tree. This closes the current development route-state, accessibility,
 device, persistence, switching/effects, scanner/media, and affected Classic-
-parity checks, and supplies the human/device input for E2.4. It does not
-enroll new style-ratchet files, resolve retained placeholder product decisions,
-or make Neo eligible for release. Step 15 remains a separate release gate.
+parity checks, and supplies the human/device input for E2.4. It does not enroll
+new style-ratchet files, resolve retained placeholder product decisions, or
+authorize open/Play release. The internal Step 15 Android
+candidate was accepted later on 2026-09-23; its source/hash association is
+recorded in the current roadmap.
 
 Automatable non-human follow-up (2026-09-17): the verifier now analyzes the
 remaining catalog/media, history, measurements, scanner, nutrition, and
@@ -461,8 +655,11 @@ Targets: lib/screens/exercise/train_page.dart, lib/widgets/presets_loaded.dart,
 lib/widgets/preset_info_card.dart. Search the lightGreen profile avatar,
 panelRaised alpha 0.75, outline alpha 0.18, primary alpha 0.45 and plan palette.
 
-Classify the profile/plan identity palettes before moving them. A stable identity
-color is not success/error state; use a domain palette or a documented exception.
+The profile/plan identity palette disposition is recorded: preserve the current
+stable mapping across Classic/Neo and light/dark. Identity colors are not
+success/error states and are owned by the dedicated data-color allowlist; do not
+move them into theme-primary roles. Any future selectable identity palette must
+use a stable palette identifier and curated, contrast-qualified swatches.
 Review selected/unselected surfaces, empty lists, edit controls and collapsed
 plan sections. Transparent paint may intentionally expose a parent and can stay.
 Preserve Overview/Plans text sizing, scale behavior, plan order, selected profile,
@@ -963,8 +1160,11 @@ git diff --check
 
 Status: scoped-verified from user output: analysis reported no issues and all
 184 selected tests passed. The pasted analyzer command is truncated; retain
-that evidence limitation. Device accessibility and visual qualification remain
-pending. Do not interpret scoped verification as full release qualification.
+that evidence limitation. The pending label below is historical for this batch.
+The 2026-09-17 Q3 confirmation and accepted 21-item visual review close the
+requested current development checks, including Guided Tutorials, TalkBack, and
+motion/effects. These are user-reported results, not new Codex-run tests or
+wider release qualification.
 
 Implementation:
 - `AppTutorialTokens` is registered in both Classic modes, with a plain-theme
@@ -993,11 +1193,15 @@ skip-all confirmation/storage, missing-target dismissal, and reduced-motion
 coach interaction. The onboarding flow suite adds zero-animation advancement.
 Existing responsive accessibility and tutorial storage tests must also pass.
 
-Manual qualification pending: matched light/dark Classic captures; TalkBack
-focus order and announcements; system-back behavior; long text/RTL at 1.0,
-1.3, 1.6 and 2.0 scales; keyboard/rotation during target measurement; live theme
-switch while a tutorial is open. Existing locale-specific tutorial reflow is
-not redesigned here; broader responsive remediation remains part of Q2.
+Historical requalification checklist: matched light/dark Classic captures;
+TalkBack focus order and announcements; system-back behavior; long text/RTL at
+1.0, 1.3, 1.6 and 2.0 scales; keyboard/rotation during target measurement; live
+theme switch while a tutorial is open. These cases are not current development
+blockers after the accepted Q3 confirmation. The exact result for each subcase
+was not recorded individually, so rerun affected cases if the code changes or a
+future release scope requires more granular evidence. Existing locale-specific
+tutorial reflow is not redesigned here; broader responsive remediation remains
+part of Q2.
 
 Run formatting and analysis for `lib/theme`, all three consumers below, and
 the two changed test files; run the theme suite, onboarding flow suite,
@@ -1008,8 +1212,8 @@ Targets: lib/screens/onboarding_flow.dart, lib/widgets/guided_tutorial_overlay.d
 onboarding_plan_builder_coach.dart and tutorial entry points in Train/Session.
 Classify spotlight, scrim, focus, dismissal and readiness timing. Route visual
 motion/effects through appropriate roles while retaining the tutorial progression
-and stored completion state. Exit: reduced motion/effects-off and dismissal work;
-manual accessibility checks are recorded where automation cannot establish them.
+and stored completion state. Current development-scope exit criteria are
+accepted; requalify affected accessibility/effects behavior after later changes.
 
 ### E2. Remaining Reachable Features And Settings Residue
 
@@ -1073,9 +1277,11 @@ stabilize.
 
 ### Q1. Inventory Ratchet (Steps 3 And 18.1)
 
-Status: the ratchet is implemented and verified for one exact qualified
-production scope; CI enforcement is enabled for that scope. Broader enrollment
-remains pending. Follow
+Status: Q1 established and verified the first exact qualified production scope.
+The later Step 18 badge enrollment passed report and enforcement checks on
+2026-09-23, bringing the then-current manifest to two protected files. The
+ExpansionTile scope was enrolled afterward as the third; its current
+report/enforce rerun passed on 2026-09-24. Broader enrollment remains pending. Follow
 [Q1 implementation details](theme-e2-qualification-guide.md#q1-inventory-enforcement)
 and [the ratchet usage contract](theme-style-ratchet.md).
 The existing inventory validator remains report-only and continues to detect

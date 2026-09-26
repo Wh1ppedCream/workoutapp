@@ -125,7 +125,7 @@ class _TonosTrainTabButton extends StatelessWidget {
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final textTheme = Theme.of(context).textTheme;
-    final buttonRadius = usesInkRecipe ? BorderRadius.circular(3) : shapes.pill;
+    final buttonRadius = usesInkRecipe ? shapes.trainTabButton : shapes.pill;
     final buttonShape = RoundedRectangleBorder(
       borderRadius: buttonRadius,
       side:

@@ -17,6 +17,30 @@ for the tested palettes. The user subsequently confirmed all items
 in the human/device/N6 qualification checklist for the current working tree;
 the development qualification and E2.4 closeout are recorded below. Step 15
 release qualification remains separate.
+The 2026-09-23 TonosSurfaceTheme refactor in Flow Methods and Workout Progress
+Flows replaces two flow-card Theme boundaries. Its focused test batch passed
+46 tests and analysis was clean; a later suite passed 44 tests and failed only
+the production ratchet contract on three then-unapproved fingerprints. Those
+exact statements were reviewed and approved before the 120-test run and
+two-file report/enforce passed. The latest September 24 inventory covers 278
+Dart files / 2,293 candidates (70 allowlisted, 1,224 migrated, 999 pending,
+zero review and zero unassigned); all 11 identity-color findings are now
+allowlisted. The user visually
+accepted the current Flow Methods and Workout Progress Flows appearance,
+including the Neo-dark Add App Default Rule dropdown contrast correction. The
+user also accepted the Exercise Progress chart and the Preset Generation QA /
+Food Customization ExpansionTiles. The prior five-file suite passed all 26
+tests, including the ExpansionTile inheritance regression. A later focused
+corrected contract/drawers/settings run passed all 37 tests; formatting reported
+no changes and analysis found no issues.
+Nested persistence/editing review is explicitly deferred.
+The darker Neo-dark
+settings validation-error change passed formatting, analysis, and 32 focused
+tests; the user accepted its device appearance on 2026-09-24.
+After the prior widget suite, SettingsExpansionSection began using the shared
+divider scope. The latest inventory includes that edit and no longer reports
+the former divider candidate; its integration assertion passed in the latest
+settings test run.
 See [current pre-Q2 follow-ups](theme-pre-q2-closeout.md) for current
 automated results and remaining release/design decisions. Older row-level
 `pending` labels and the pre-closeout checklist below describe their original
@@ -116,8 +140,8 @@ not replace manual visual, accessibility, or physical-device qualification.
 | R44 | Analytics settings | lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart: BodyPartMuscleMappingScreen | selected entity dropdown, linked-muscle list, edit/save | Release | selected; empty/populated links; editing; save | Anatomy mapping / E2.3 | E2.3 | current 21-item Neo visual review; focused settings tests | selection/edit persistence and N6 review |
 | R45 | Analytics settings | lib/screens/profile/settings/exercise_analytics_screen.dart: ExerciseAnalyticsScreen | allocation tabs, credit fields, save actions | Release | selected exercise; muscle/body-part tabs; editing; validation | Exercise allocation / E2.3 | E2.3 | current 21-item Neo visual review; settings contracts | persistence, validation, and accessibility review |
 | R46 | Analytics settings | lib/screens/profile/settings/exercise_editor_screen.dart: ExerciseEditorScreen | catalog picker, definition tabs, media, allocation dialogs | Release | no selection/selected; loading/error; editing; save/delete | Exercise editor / E2.3 | E2.3 | current 21-item Neo visual review; source trace | destructive/media/dialog/device states |
-| R47 | Training settings | lib/screens/profile/settings/flow_methods_page.dart: FlowMethodsPage | flow cards, editor dialogs, reorder/delete | Release | empty/populated; editing; save/delete; confirmation | Flow settings / E2.3 | E2.3 | source trace; settings contracts | nested editor, persistence, and N6 review |
-| R48 | Training settings | lib/screens/profile/settings/workout_progress_flows_page.dart: WorkoutProgressFlowsPage | flow cards, AutoPresetFlowScreen, reorder | Release | empty/populated; editing; save/delete; confirmation | Progress-flow settings / E2.3 | E2.3 | source trace; current visual review | nested editor/reorder persistence and N6 review |
+| R47 | Training settings | lib/screens/profile/settings/flow_methods_page.dart: FlowMethodsPage | flow cards, editor dialogs, reorder/delete | Release | empty/populated; editing; save/delete; confirmation | Flow settings / E2.3 | E2.3 | source trace; settings contracts; focused TonosSurfaceTheme tests and analysis; current appearance accepted 2026-09-24 | nested editor/persistence |
+| R48 | Training settings | lib/screens/profile/settings/workout_progress_flows_page.dart: WorkoutProgressFlowsPage | flow cards, AutoPresetFlowScreen, reorder | Release | empty/populated; editing; save/delete; confirmation | Progress-flow settings / E2.3 | E2.3 | source trace; focused TonosSurfaceTheme tests and analysis; current appearance accepted 2026-09-24 | nested editor/reorder persistence |
 | R49 | Workout progress flows | lib/screens/exercise/auto_preset_flow_screen.dart: AutoPresetFlowScreen | flow editor, preset/profile defaults, dialogs | Release when caller reachable | defaults; populated; editing; validation; save/cancel | Auto-preset flow / E2.3 | E2.3 | source trace; pre-Q2 route evidence | nested editor persistence and device review |
 | R50 | Profile data | lib/screens/profile/settings/database_settings_page.dart: DatabaseSettingsPage | import/export, maintenance actions, confirmations | Release | idle/busy; success/error; confirmation; file action | Database settings / E2.3 | E2.3 | current 21-item Neo visual review; source trace | import/export, permission, busy/error, and N6 review |
 | R51 | Profile data | lib/screens/profile/settings/diagnostics_settings_page.dart: DiagnosticsSettingsPage | diagnostics actions, status/error surfaces | Release | idle/busy; success/error; confirmation | Diagnostics settings / E2.3 | E2.3 | source trace; settings contracts | device/error evidence and accessibility review |
@@ -128,7 +152,7 @@ not replace manual visual, accessibility, or physical-device qualification.
 | R56 | Onboarding nested plan actions | lib/screens/onboarding_flow.dart: PremadePlansPage, PresetGenerationQaScreen, PresetDetailScreen, GymProfileScreen callers | onboarding state store, plan/preset/profile forms | Release first-run | loading; editing; discard/save; return | Onboarding / BASE-B6 | BASE-B6 | test/screens/onboarding_and_plan_flow_test.dart | full onboarding route/device accessibility review |
 | R57 | Profile/settings source residue | lib/screens/profile/settings/app_settings_page.dart: AppSettingsPage | settings scaffold, dialogs | No current caller | source-only; dialog code present | Unreferenced residue / UNREF | UNREF | source trace found no production caller | retain; no release qualification or navigation change |
 | R58 | Nutrition source residue | lib/screens/nutrition/default_trend_page.dart: DefaultTrendPage | trend placeholder/data visualization | No current caller | source-only placeholder | Unreferenced residue / UNREF | UNREF | source trace found no production caller | retain; no release qualification until a caller exists |
-| R59 | Shared detail boundary | lib/widgets/health_trends_section.dart: _MeasurementDefinitionDialog and entry/delete dialogs | health trends, date/time pickers, validation | Release when health caller reachable | add/edit/delete; validation; confirmation | Health trends / D3 | D3 | health measurement contract/token tests | dialog-level keyboard/accessibility/device evidence |
+| R59 | Shared detail boundary | lib/widgets/health_trends_section.dart: _MeasurementDefinitionDialog and entry/delete dialogs | health trends, date/time pickers, validation | Release when health caller reachable | add/edit/delete; validation; confirmation | Health trends / D3 | D3 | Health-measurement contract/token tests; TonosDialog tests | Neo Dark entry/dropdown/date-time appearance accepted 2026-09-24; formatter unchanged, analyzer clean, and the corrected captured-menu-theme check passed within the 38-test focused run; keyboard/semantics and non-happy-path states remain |
 | R60 | Shared workout boundary | lib/widgets/ongoing_session_fab.dart, lib/screens/exercise/session_screen.dart: exit/finish dialogs and sheets | workout exit preferences, session controls | Release when workout caller reachable | finish busy/error; discard/confirm; sheet open/dismiss | Workout/session / B2 | B2 | workout controls/exit tests; source trace | real-device back/keyboard/rotation and destructive-state review |
 | R61 | Shared dashboard boundary | lib/screens/dashboard_page.dart: edit/restore dialog; lib/widgets/dashboard_sections.dart action routes | DashboardConfig, dialogs, section cards | Release when Dashboard enabled | edit/reorder; hide/show; restore; cancel/save | Dashboard / D1 | D1 | dashboard contract/token tests; source trace | configurable-tab and large-text device review |
 | R62 | Shared data/settings boundary | lib/screens/profile/settings/database_settings_page.dart, lib/screens/profile/settings/exercise_editor_screen.dart, lib/screens/profile/settings/flow_methods_page.dart: confirmation/editor dialogs | dialogs, sheets, save bars, field tokens | Release | busy/error; validation; confirm/cancel; editing | Settings consumers / E2.3 | E2.3 | settings tile/consumer parity tests; source trace | complete destructive/media/dialog state evidence |
@@ -176,11 +200,11 @@ filters experimental tabs and denies them in release builds.
 | Entry | Destination / state matrix | Current owner / evidence | Disposition |
 | --- | --- | --- | --- |
 | Dashboard tab | Visible/hidden modules, edit mode, reorder, restore defaults, empty visible set, scroll | `DashboardConfig`, `dashboard_page.dart`, `dashboard_sections.dart`; dashboard contract/token tests | reachable when enabled; D1 source-ready |
-| Dashboard history module | Summary, calendar/list period selection, selected day, no records, refresh after completed session | `history_summary_widget.dart`, `workout_history_calendar.dart`, `history_content.dart` | reachable through dashboard; D1 source-ready |
+| Dashboard history module | Summary, calendar/list period selection, selected day, no records, refresh after completed session | `history_summary_widget.dart`, `workout_history_calendar.dart`, `history_content.dart` | reachable through dashboard; selected-period card visually accepted by user 2026-09-24; broader state/device checks remain |
 | Dashboard history action | `FullHistoryScreen`: waiting, load error, empty, populated, session detail, return refresh | `full_history_screen.dart`; source parity coverage | reachable; theme-ready compatibility present; manual/device pending |
-| Logbook tab | `HistoryScreen` and `PastSessionsList`: empty/populated, calendar selection, session detail, reload | `history_screen.dart`, `past_sessions_list.dart`, `history_content.dart` | reachable; D1 source-ready |
+| Logbook tab | `HistoryScreen` and `PastSessionsList`: empty/populated, calendar selection, session detail, reload | `history_screen.dart`, `past_sessions_list.dart`, `history_content.dart` | reachable; selected-period card visually accepted by user 2026-09-24; broader state/device checks remain |
 | Progress tab | Exercise progress, metric report, data records, range/details, zero/no-data, long values and tooltips | D2 consumers and tests | reachable; D2 scoped-verified; large-text/device pending |
-| Progress health section | Empty, one entry, populated, compact scroll, chart/grid and refresh | `health_trends_section.dart`; health measurement tests | reachable from Progress/Nutrition; D3 source-ready |
+| Progress health section | Empty, one entry, populated, compact scroll, chart/grid and refresh | `health_trends_section.dart`; health measurement tests | reachable from Progress/Nutrition; Neo Dark entry/date-time picker appearance accepted 2026-09-24; keyboard, validation, and CRUD state evidence remains |
 | Measurements settings | Settings -> `MeasuredItemsPage` | settings page and measured-items widget tests | reachable; D3 compatibility present; add/edit/delete/device pending |
 | Generic trend source | `lib/screens/nutrition/default_trend_page.dart` | No production caller found by source trace | unreferenced; retained as source residue, not release-qualified |
 
@@ -207,7 +231,7 @@ filters experimental tabs and denies them in release builds.
 | User Information | Identity/body fields, date picker, units, validation, focus, keyboard, save feedback | `user_information_settings_page.dart` | reachable; visual review accepted; N6 form pending |
 | Profile -> training | Gym/Exercise Settings and exit-behavior dialog | `gym_exercise_settings_page.dart`, `WorkoutExitPreferences` | reachable; visual review accepted; persistence/dialog pending |
 | Training -> analytics | Bodypart rankings, muscle rankings, volume boundaries, anatomy mapping, set allocation, exercise editor | `analytics_setting_screen.dart` and linked screens | reachable; visual review accepted; save/loading/error/selection pending |
-| Training -> flow tools | Flow Methods and Workout Progress Flows, nested plan/profile/edit states | `flow_methods_page.dart`, `workout_progress_flows_page.dart` | reachable; visual review accepted; nested reorder/save pending |
+| Training -> flow tools | Flow Methods and Workout Progress Flows, nested plan/profile/edit states | `flow_methods_page.dart`, `workout_progress_flows_page.dart` | reachable; current appearance visually accepted 2026-09-24 after dropdown contrast fix; focused surface-theme tests and analysis passed; nested persistence/editing review explicitly deferred by user |
 | Training -> exercise editor | Catalog picker, custom exercise, muscles/bodyparts/equipment/media tabs, allocation dialogs, save/delete confirmations | `exercise_editor_screen.dart`, `exercise_analytics_screen.dart` | reachable; visual review accepted; destructive/media/dialog pending |
 | Profile -> progress settings | Measurements/Trends settings -> Measured Items | `measurements_trends_settings_page.dart` | reachable; included in D3 ledger |
 | Profile -> data | Database Settings and Diagnostics Settings | `database_settings_page.dart`, `diagnostics_settings_page.dart` | reachable; visual review accepted; import/export/maintenance/busy/error/confirmation pending |

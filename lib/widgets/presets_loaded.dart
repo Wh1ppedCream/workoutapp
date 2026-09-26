@@ -304,7 +304,12 @@ class _PresetsLoadedState extends State<PresetsLoaded>
                 children: [
                   Icon(Icons.archive_outlined, color: foreground),
                   SizedBox(width: 8 * widget.scale),
-                  Expanded(child: Text(emptyMessage)),
+                  Expanded(
+                    child: Text(
+                      emptyMessage,
+                      style: TextStyle(color: foreground),
+                    ),
+                  ),
                 ],
               ),
             );

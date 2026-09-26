@@ -7,6 +7,7 @@ import 'package:env_test/theme/tokens/app_progress_colors.dart';
 List<Color> _values(AppProgressColors colors) => [
   colors.accent,
   colors.estimated,
+  colors.estimatedOneRm,
   colors.grid,
   colors.label,
   colors.exerciseIncrease,
@@ -35,6 +36,7 @@ void main() {
       expect(_values(colors!), [
         legacy.colorScheme.primary,
         legacy.colorScheme.onSurfaceVariant,
+        Colors.green.shade400,
         legacy.colorScheme.outlineVariant,
         legacy.colorScheme.onSurfaceVariant,
         Colors.green.shade400,
@@ -66,6 +68,7 @@ void main() {
       final target = base.copyWith(
         accent: const Color(0xFF123400),
         estimated: const Color(0xFF124400),
+        estimatedOneRm: const Color(0xFF124800),
         grid: const Color(0xFF125400),
         label: const Color(0xFF126400),
         exerciseIncrease: const Color(0xFF127400),
@@ -83,6 +86,7 @@ void main() {
       final expected = [
         const Color(0xFF123400),
         const Color(0xFF124400),
+        const Color(0xFF124800),
         const Color(0xFF125400),
         const Color(0xFF126400),
         const Color(0xFF127400),

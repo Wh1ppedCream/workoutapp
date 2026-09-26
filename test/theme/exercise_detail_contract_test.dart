@@ -74,6 +74,11 @@ void main() {
         'class _ExerciseRecordTrendChart',
         'class _RecordLegendDot',
       );
+      final legend = _section(
+        source,
+        'class _RecordLegendDot',
+        'class _RecordChartBounds',
+      );
 
       expect(detailCard, contains('surfaces.exerciseDetailCard'));
       expect(detailCard, contains('shapes.exerciseDetailCard'));
@@ -93,6 +98,8 @@ void main() {
         contains('surfaces.exerciseDetailLoadMoreBorderOpacity'),
       );
       expect(recordsTab, contains('shapes.exerciseDetailLoadMore'));
+      expect(recordsTab, contains('_exerciseRecordActualSeriesColor'));
+      expect(recordsTab, contains('_exerciseRecordEstimatedSeriesColor'));
       expect(historyCard, contains('surfaces.exerciseDetailRecord'));
       expect(historyCard, contains('shapes.exerciseDetailRecord'));
       expect(
@@ -112,6 +119,15 @@ void main() {
       expect(chart, contains('surfaces.exerciseDetailChartGridOpacity'));
       expect(chart, contains('surfaces.exerciseDetailTooltip'));
       expect(chart, contains('motion.exerciseDetailSelection'));
+      expect(chart, contains('_exerciseRecordActualSeriesColor'));
+      expect(chart, contains('_exerciseRecordEstimatedSeriesColor'));
+      expect(source, contains('tonosEstimatedOneRmForSurface'));
+      expect(source, contains('tonosPrimarySeriesForSurface'));
+      expect(chart, isNot(contains('Colors.green.shade400')));
+      expect(source, isNot(contains('Colors.green.shade400')));
+      expect(legend, contains('tonosForegroundForSurface'));
+      expect(legend, contains('surfaces.sheet'));
+      expect(legend, contains('theme.shapeTokens.outlineWidth'));
 
       expect(source, contains('DefaultTabController'));
       expect(source, contains('TabBarView'));

@@ -14,6 +14,7 @@ import '../../widgets/flow_screen_widgets.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/flow_diagram_presentation.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_field.dart';
 
 enum AddSetMode { explicit, copy }
 
@@ -643,14 +644,12 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          TextField(
+                          TonosField(
                             controller: nameCtl,
-                            decoration: InputDecoration(
-                              labelText: strings.commonName,
-                            ),
+                            labelText: strings.commonName,
                           ),
                           const SizedBox(height: 12),
-                          DropdownButton<MethodType>(
+                          TonosDialogDropdownButton<MethodType>(
                             value: type,
                             isExpanded: true,
                             onChanged: (v) => setState(() => type = v!),
@@ -668,8 +667,9 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                           ),
                           const SizedBox(height: 12),
                           if (type == MethodType.weight) ...[
-                            DropdownButton<String>(
+                            TonosDialogDropdownButton<String>(
                               value: sign,
+                              isExpanded: false,
                               onChanged: (v) => setState(() => sign = v!),
                               items: const [
                                 DropdownMenuItem(value: '+', child: Text('+')),
@@ -677,18 +677,17 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            TextField(
+                            TonosField(
                               controller: factorCtl,
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: InputDecoration(
-                                labelText: strings.flowFactor,
-                              ),
+                              labelText: strings.flowFactor,
                             ),
                           ] else if (type == MethodType.rep) ...[
-                            DropdownButton<String>(
+                            TonosDialogDropdownButton<String>(
                               value: sign,
+                              isExpanded: false,
                               onChanged: (v) => setState(() => sign = v!),
                               items: const [
                                 DropdownMenuItem(value: '+', child: Text('+')),
@@ -696,12 +695,10 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            TextField(
+                            TonosField(
                               controller: amountCtl,
                               keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: strings.flowAmount,
-                              ),
+                              labelText: strings.flowAmount,
                             ),
                           ] else if (type == MethodType.addSet) ...[
                             Row(
@@ -724,32 +721,26 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                             ),
                             const SizedBox(height: 8),
                             if (addMode == AddSetMode.explicit)
-                              TextField(
+                              TonosField(
                                 controller: weightCtl,
                                 keyboardType: TextInputType.numberWithOptions(
                                   decimal: true,
                                 ),
-                                decoration: InputDecoration(
-                                  labelText: strings.flowWeight,
-                                ),
+                                labelText: strings.flowWeight,
                               ),
                             if (addMode == AddSetMode.explicit)
                               const SizedBox(height: 8),
                             if (addMode == AddSetMode.explicit)
-                              TextField(
+                              TonosField(
                                 controller: repsCtl,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: strings.flowReps,
-                                ),
+                                labelText: strings.flowReps,
                               ),
                             if (addMode == AddSetMode.copy)
-                              TextField(
+                              TonosField(
                                 controller: copyIndexCtl,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: strings.flowSetIndex,
-                                ),
+                                labelText: strings.flowSetIndex,
                               ),
                           ] else if (type == MethodType.delSet) ...[
                             Text(strings.flowDeleteLastSetBody),
@@ -956,6 +947,8 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
+      // Text entry is in an inset-aware dialog; keep the editor behind it stable.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [

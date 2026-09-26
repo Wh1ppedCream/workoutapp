@@ -46,7 +46,7 @@ void main() {
       'editing': {
         'lib/screens/nutrition/food_customization_page.dart': [
           'TextEditingController',
-          'TextFormField',
+          'TonosFormField',
           'validator:',
         ],
         'lib/screens/profile/settings/user_information_settings_page.dart': [
@@ -126,6 +126,8 @@ void main() {
         'lib/screens/nutrition/food_logging_page.dart': [
           'NutritionProfile',
           'SnackBar',
+          'TonosField',
+          'TonosFormField',
         ],
         'lib/screens/nutrition/log_entry_page.dart': [
           'NutritionProfile',
@@ -158,6 +160,12 @@ void main() {
         ],
       },
     };
+
+    final fieldOwner = _withoutCommentsAndImports(
+      File('lib/theme/widgets/tonos_field.dart').readAsStringSync(),
+    );
+    expect(fieldOwner, contains('class TonosFormField'));
+    expect(fieldOwner, contains('TextFormField('));
 
     for (final category in stateCoverage.entries) {
       for (final route in category.value.entries) {

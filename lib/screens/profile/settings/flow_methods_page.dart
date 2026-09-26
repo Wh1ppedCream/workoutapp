@@ -8,6 +8,8 @@ import '../../../models/gym_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../theme/theme_extensions.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_field.dart';
+import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/settings_tiles.dart';
 
 /// Same enum as in auto_preset_flow_screen.dart
@@ -156,16 +158,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          TextField(
+                          TonosField(
                             controller: nameCtl,
-                            decoration: InputDecoration(
-                              labelText: strings.commonName,
-                            ),
+                            labelText: strings.commonName,
                           ),
                           const SizedBox(height: 12),
-                          DropdownButton<MethodType>(
+                          TonosDialogDropdownButton<MethodType>(
                             value: type,
-                            isExpanded: true,
                             onChanged: (v) => setSt(() => type = v!),
                             items:
                                 MethodType.values
@@ -181,9 +180,8 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                           ),
                           const SizedBox(height: 12),
                           if (type == MethodType.weight) ...[
-                            DropdownButton<String>(
+                            TonosDialogDropdownButton<String>(
                               value: sign,
-                              isExpanded: true,
                               onChanged: (v) => setSt(() => sign = v!),
                               items: const [
                                 DropdownMenuItem(value: '+', child: Text('+')),
@@ -191,19 +189,16 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            TextField(
+                            TonosField(
                               controller: factorCtl,
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: InputDecoration(
-                                labelText: strings.flowFactor,
-                              ),
+                              labelText: strings.flowFactor,
                             ),
                           ] else if (type == MethodType.rep) ...[
-                            DropdownButton<String>(
+                            TonosDialogDropdownButton<String>(
                               value: sign,
-                              isExpanded: true,
                               onChanged: (v) => setSt(() => sign = v!),
                               items: const [
                                 DropdownMenuItem(value: '+', child: Text('+')),
@@ -211,12 +206,10 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            TextField(
+                            TonosField(
                               controller: amountCtl,
                               keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: strings.flowAmount,
-                              ),
+                              labelText: strings.flowAmount,
                             ),
                           ] else if (type == MethodType.addSet) ...[
                             Row(
@@ -237,30 +230,24 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
                             ),
                             const SizedBox(height: 8),
                             if (addMode == AddSetMode.explicit) ...[
-                              TextField(
+                              TonosField(
                                 controller: weightCtl,
                                 keyboardType: TextInputType.numberWithOptions(
                                   decimal: true,
                                 ),
-                                decoration: InputDecoration(
-                                  labelText: strings.flowWeight,
-                                ),
+                                labelText: strings.flowWeight,
                               ),
                               const SizedBox(height: 8),
-                              TextField(
+                              TonosField(
                                 controller: repsCtl,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: strings.flowReps,
-                                ),
+                                labelText: strings.flowReps,
                               ),
                             ] else ...[
-                              TextField(
+                              TonosField(
                                 controller: copyIndexCtl,
                                 keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: strings.rulesCopyIndex,
-                                ),
+                                labelText: strings.rulesCopyIndex,
                               ),
                             ],
                           ] else if (type == MethodType.delSet) ...[
@@ -907,22 +894,8 @@ class _RuleScopeCard extends StatelessWidget {
           width: shapes.outlineWidth,
         ),
       ),
-      child: Theme(
-        data:
-            neo
-                ? theme.copyWith(
-                  colorScheme: scheme.copyWith(
-                    surface: cardSurface,
-                    onSurface: cardForeground,
-                    onSurfaceVariant: cardSecondary,
-                  ),
-                  textTheme: theme.textTheme.apply(
-                    bodyColor: cardForeground,
-                    displayColor: cardForeground,
-                  ),
-                  iconTheme: theme.iconTheme.copyWith(color: cardForeground),
-                )
-                : theme,
+      child: TonosSurfaceTheme(
+        surface: cardSurface,
         child: ExpansionTile(
           initiallyExpanded: initiallyExpanded,
           tilePadding: EdgeInsets.symmetric(horizontal: padding, vertical: 3),
@@ -1262,14 +1235,10 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _nameCtl,
-              decoration: InputDecoration(labelText: strings.commonName),
-            ),
+            TonosField(controller: _nameCtl, labelText: strings.commonName),
             const SizedBox(height: 12),
-            DropdownButton<MethodType>(
+            TonosDialogDropdownButton<MethodType>(
               value: _type,
-              isExpanded: true,
               onChanged: (v) => setState(() => _type = v!),
               items:
                   MethodType.values
@@ -1283,9 +1252,8 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
             ),
             const SizedBox(height: 12),
             if (_type == MethodType.weight) ...[
-              DropdownButton<String>(
+              TonosDialogDropdownButton<String>(
                 value: _sign,
-                isExpanded: true,
                 onChanged: (v) => setState(() => _sign = v!),
                 items: const [
                   DropdownMenuItem(value: '+', child: Text('+')),
@@ -1293,15 +1261,14 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              TextField(
+              TonosField(
                 controller: _factorCtl,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: strings.flowFactor),
+                labelText: strings.flowFactor,
               ),
             ] else if (_type == MethodType.rep) ...[
-              DropdownButton<String>(
+              TonosDialogDropdownButton<String>(
                 value: _sign,
-                isExpanded: true,
                 onChanged: (v) => setState(() => _sign = v!),
                 items: const [
                   DropdownMenuItem(value: '+', child: Text('+')),
@@ -1309,10 +1276,10 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              TextField(
+              TonosField(
                 controller: _amountCtl,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: strings.flowAmount),
+                labelText: strings.flowAmount,
               ),
             ] else if (_type == MethodType.addSet) ...[
               Row(
@@ -1333,24 +1300,22 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               ),
               const SizedBox(height: 8),
               if (_addMode == AddSetMode.explicit) ...[
-                TextField(
+                TonosField(
                   controller: _weightCtl,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: strings.flowWeight),
+                  labelText: strings.flowWeight,
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                TonosField(
                   controller: _repsCtl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: strings.flowReps),
+                  labelText: strings.flowReps,
                 ),
               ] else ...[
-                TextField(
+                TonosField(
                   controller: _copyIndexCtl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: strings.rulesCopyIndex,
-                  ),
+                  labelText: strings.rulesCopyIndex,
                 ),
               ],
             ] else if (_type == MethodType.delSet) ...[

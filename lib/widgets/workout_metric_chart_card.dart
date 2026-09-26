@@ -9,7 +9,6 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
-import '../theme/tokens/app_progress_colors.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
@@ -822,10 +821,8 @@ class _ReportStat extends StatelessWidget {
             ? tonosOutlineForSurface(context, selectedFill)
             : progressColors.accent.withValues(alpha: 0.75);
     final strings = AppLocalizations.of(context);
-    final trendColor = _trendColor(
-      progressColors,
-      useNeoDirectionalColors: usesInkRecipe,
-    );
+    final trendSurface = selected ? selectedFill : unselectedFill;
+    final trendColor = _trendColor(context, trendSurface);
     final compactLayout = MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Semantics(
       button: true,
@@ -1010,21 +1007,14 @@ class _ReportStat extends StatelessWidget {
     );
   }
 
-  Color _trendColor(
-    AppProgressColors progressColors, {
-    required bool useNeoDirectionalColors,
-  }) {
+  Color _trendColor(BuildContext context, Color surface) {
     switch (trend.direction) {
       case _MetricTrendDirection.up:
-        return useNeoDirectionalColors
-            ? Colors.green.shade600
-            : progressColors.workoutIncrease;
+        return tonosWorkoutIncreaseForSurface(context, surface);
       case _MetricTrendDirection.down:
-        return useNeoDirectionalColors
-            ? Colors.red.shade600
-            : progressColors.workoutDecrease;
+        return tonosWorkoutDecreaseForSurface(context, surface);
       case _MetricTrendDirection.flat:
-        return progressColors.neutral;
+        return tonosWorkoutNeutralForSurface(context, surface);
     }
   }
 }

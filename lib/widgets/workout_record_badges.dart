@@ -18,9 +18,53 @@ class FirstRecordBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dataVisualization = context.dataVisualizationTokens;
-    final shapes = context.shapeTokens;
     final color = dataVisualization.firstRecord;
-    final fill = color.withValues(alpha: context.surfaceTokens.firstRecordFill);
+    final surfaces = context.surfaceTokens;
+    return _RecordBadgeVisual(
+      label: AppLocalizations.of(context).recordFirst,
+      color: color,
+      fillOpacity: surfaces.firstRecordFill,
+      borderOpacity: surfaces.firstRecordBorder,
+      compact: compact,
+      foregroundSurface: foregroundSurface,
+      compactPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      regularPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      maxLines: 1,
+    );
+  }
+}
+
+class _RecordBadgeVisual extends StatelessWidget {
+  final String label;
+  final Color color;
+  final double fillOpacity;
+  final double borderOpacity;
+  final bool compact;
+  final Color? foregroundSurface;
+  final EdgeInsetsGeometry compactPadding;
+  final EdgeInsetsGeometry regularPadding;
+  final double? width;
+  final TextAlign textAlign;
+  final int? maxLines;
+
+  const _RecordBadgeVisual({
+    required this.label,
+    required this.color,
+    required this.fillOpacity,
+    required this.borderOpacity,
+    required this.compact,
+    required this.compactPadding,
+    required this.regularPadding,
+    this.foregroundSurface,
+    this.width,
+    this.textAlign = TextAlign.start,
+    this.maxLines,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final shapes = context.shapeTokens;
+    final fill = color.withValues(alpha: fillOpacity);
     final foreground =
         context.surfaceDecorationTokens.panel.outlined &&
                 foregroundSurface != null
@@ -34,22 +78,17 @@ class FirstRecordBadge extends StatelessWidget {
         context.usesClassicPresentation &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Container(
-      padding:
-          compact
-              ? const EdgeInsets.symmetric(horizontal: 4, vertical: 1)
-              : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      width: width,
+      padding: compact ? compactPadding : regularPadding,
       decoration: BoxDecoration(
         color: fill,
         borderRadius: compact ? shapes.recordBadgeCompact : shapes.recordBadge,
-        border: Border.all(
-          color: color.withValues(
-            alpha: context.surfaceTokens.firstRecordBorder,
-          ),
-        ),
+        border: Border.all(color: color.withValues(alpha: borderOpacity)),
       ),
       child: Text(
-        AppLocalizations.of(context).recordFirst,
-        maxLines: 1,
+        label,
+        maxLines: maxLines,
+        textAlign: textAlign,
         style: TextStyle(
           color: foreground,
           fontSize:
@@ -84,54 +123,71 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dataVisualization = context.dataVisualizationTokens;
-    final shapes = context.shapeTokens;
     final color =
         badge.tier == WorkoutRecordBadgeTier.allTime
             ? dataVisualization.recordAllTime
             : dataVisualization.recordMonthly;
-    final fill = color.withValues(alpha: context.surfaceTokens.recordBadgeFill);
-    final foreground =
-        context.surfaceDecorationTokens.panel.outlined &&
-                foregroundSurface != null
-            ? tonosForegroundForSurface(
-              context,
-              fill,
-              parentSurface: foregroundSurface,
-            )
-            : color;
     final strings = AppLocalizations.of(context);
-    final preservesClassicDensity =
-        context.usesClassicPresentation &&
-        MediaQuery.textScalerOf(context).scale(1) <= 1.15;
-    return Container(
+    final surfaces = context.surfaceTokens;
+    return _RecordBadgeVisual(
+      label:
+          badge.type == WorkoutRecordBadgeType.repBest
+              ? strings.recordRepBest(badge.reps ?? 0)
+              : strings.recordVolumeBest,
+      color: color,
+      fillOpacity: surfaces.recordBadgeFill,
+      borderOpacity: surfaces.recordBadgeBorder,
+      compact: compact,
+      foregroundSurface: foregroundSurface,
+      compactPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      regularPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       width: width,
-      padding:
-          compact
-              ? const EdgeInsets.symmetric(horizontal: 4, vertical: 0)
-              : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: compact ? shapes.recordBadgeCompact : shapes.recordBadge,
-        border: Border.all(
-          color: color.withValues(
-            alpha: context.surfaceTokens.recordBadgeBorder,
-          ),
+      textAlign: textAlign,
+    );
+  }
+}
+
+/// Lays out a set's record badges without constraining wrapped labels vertically.
+class WorkoutRecordBadgeStack extends StatelessWidget {
+  final List<WorkoutRecordBadge> badges;
+  final double width;
+
+  const WorkoutRecordBadgeStack({
+    super.key,
+    required this.badges,
+    required this.width,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (badges.isEmpty) return const SizedBox.shrink();
+
+    if (badges.length == 1) {
+      return SizedBox(
+        width: width,
+        child: WorkoutRecordBadgeChip(
+          badge: badges.single,
+          textAlign: TextAlign.center,
         ),
-      ),
-      child: Text(
-        badge.type == WorkoutRecordBadgeType.repBest
-            ? strings.recordRepBest(badge.reps ?? 0)
-            : strings.recordVolumeBest,
-        textAlign: textAlign,
-        style: TextStyle(
-          color: foreground,
-          fontSize:
-              preservesClassicDensity
-                  ? (compact ? 7.5 : 9)
-                  : (compact ? 10 : 12),
-          height: compact ? 1 : null,
-          fontWeight: FontWeight.w800,
-        ),
+      );
+    }
+
+    return SizedBox(
+      width: width,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var index = 0; index < badges.length; index++) ...[
+            if (index > 0) const SizedBox(height: 2),
+            WorkoutRecordBadgeChip(
+              badge: badges[index],
+              compact: true,
+              width: width,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
       ),
     );
   }

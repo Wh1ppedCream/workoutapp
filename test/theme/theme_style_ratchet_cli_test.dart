@@ -5,20 +5,61 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../tools/theme_style_ratchet.dart';
 
 void main() {
-  test('production manifest retains an exact qualified scope', () {
+  test('production manifest retains exact qualified scopes', () {
     final manifest =
         jsonDecode(File('docs/theme-style-ratchet.json').readAsStringSync())
             as Map<String, dynamic>;
     final files = manifest['files'] as List<dynamic>;
-    expect(files, hasLength(1));
+    expect(files, hasLength(3));
+    final paths =
+        files.cast<Map<String, dynamic>>().map((file) => file['path']).toSet();
     expect(
-      (files.single as Map<String, dynamic>)['path'],
-      'lib/theme/widgets/tonos_surface.dart',
+      paths,
+      containsAll([
+        'lib/theme/widgets/tonos_expansion_tile_scope.dart',
+        'lib/theme/widgets/tonos_surface.dart',
+        'lib/widgets/workout_record_badges.dart',
+      ]),
+    );
+    final expansionScope = files.cast<Map<String, dynamic>>().singleWhere(
+      (file) =>
+          file['path'] == 'lib/theme/widgets/tonos_expansion_tile_scope.dart',
+    );
+    final expansionApprovals =
+        (expansionScope['approvals'] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+    expect(expansionApprovals, hasLength(3));
+    expect(
+      expansionApprovals.map((approval) => approval['fingerprint']).toSet(),
+      containsAll([
+        '01941e88c6ebd2ec01e2857976243cbc5d8f948f7f08bd954ae56c6c457e92c2',
+        'bee7073bcd06b3c316dcda9c6eaa21e3a69b1b97f55708540a5c0547f3d77c54',
+        'd2d922eabbf86a9668f71c0e18fe5e42425ff589417c18bc990d583b78db8068',
+      ]),
+    );
+    expect(
+      expansionApprovals.every(
+        (approval) =>
+            approval['count'] == 1 &&
+            (approval['reason'] as String).trim().isNotEmpty,
+      ),
+      isTrue,
     );
     final result = checkStyleRatchet(manifest, root: Directory.current);
     expect(
       result,
+      containsPair(
+        'lib/theme/widgets/tonos_expansion_tile_scope.dart',
+        isNotEmpty,
+      ),
+    );
+    expect(
+      result,
       containsPair('lib/theme/widgets/tonos_surface.dart', isNotEmpty),
+    );
+    expect(
+      result,
+      containsPair('lib/widgets/workout_record_badges.dart', isNotEmpty),
     );
   });
 

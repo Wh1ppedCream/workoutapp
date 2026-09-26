@@ -4,6 +4,7 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +12,152 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  testWidgets(
+    'workout trend text preserves Classic colors and contrasts in Neo',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      addTearDown(units.dispose);
+      await units.ready;
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      final neoTrendColorsBySurface = <String, Map<int, Color>>{};
+
+      for (final counts in [
+        (current: 2, previous: 1),
+        (current: 1, previous: 2),
+        (current: 2, previous: 2),
+      ]) {
+        final direction = counts.current.compareTo(counts.previous);
+        for (final family in [
+          AppThemeFamily.classic,
+          AppThemeFamily.neoBrutalism,
+        ]) {
+          for (final brightness in Brightness.values) {
+            final theme =
+                brightness == Brightness.light
+                    ? AppThemeFactory.light(family)
+                    : AppThemeFactory.dark(family);
+            await tester.pumpWidget(
+              MultiProvider(
+                providers: [
+                  Provider<AppRepository>.value(
+                    value: _DirectionalTrendRepository(
+                      currentCount: counts.current,
+                      previousCount: counts.previous,
+                    ),
+                  ),
+                  ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                    value: units,
+                  ),
+                ],
+                child: MaterialApp(
+                  key: ValueKey(
+                    'trend-${family.name}-${brightness.name}-$direction',
+                  ),
+                  theme: theme,
+                  locale: const Locale('en'),
+                  localizationsDelegates:
+                      AppLocalizations.localizationsDelegates,
+                  supportedLocales: const [Locale('en')],
+                  home: const Scaffold(
+                    body: SingleChildScrollView(
+                      child: WorkoutMetricChartCard(),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle(
+              const Duration(milliseconds: 100),
+              EnginePhase.sendSemanticsUpdate,
+              const Duration(seconds: 5),
+            );
+
+            final workoutsTile = find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.label ==
+                      strings.workoutReportMetricSemantics(
+                        strings.workoutReportWorkouts,
+                      ),
+            );
+            final trendText = find.descendant(
+              of: workoutsTile,
+              matching: find.byWidgetPredicate(
+                (widget) =>
+                    widget is Text &&
+                    widget.style?.fontWeight == FontWeight.w800 &&
+                    widget.style?.height == 1.05,
+              ),
+            );
+            expect(trendText, findsOneWidget);
+            final trendColor = tester.widget<Text>(trendText).style!.color!;
+            if (family == AppThemeFamily.classic) {
+              final progressColors = theme.extension<AppProgressColors>()!;
+              expect(trendColor, switch (direction) {
+                1 => progressColors.workoutIncrease,
+                -1 => progressColors.workoutDecrease,
+                _ => progressColors.neutral,
+              });
+            } else {
+              final statInk = tester.widget<Ink>(
+                find.ancestor(of: trendText, matching: find.byType(Ink)).first,
+              );
+              final statSurface = (statInk.decoration! as BoxDecoration).color!;
+              neoTrendColorsBySurface.putIfAbsent(
+                    '${family.name}-${brightness.name}-selected',
+                    () => <int, Color>{},
+                  )[direction] =
+                  trendColor;
+              expect(
+                _contrastRatio(trendColor, statSurface),
+                greaterThanOrEqualTo(4.5),
+              );
+
+              final timeTile = find.byWidgetPredicate(
+                (widget) =>
+                    widget is Semantics &&
+                    widget.properties.label ==
+                        strings.workoutReportMetricSemantics(
+                          strings.workoutReportTime,
+                        ),
+              );
+              await tester.tap(timeTile);
+              await tester.pumpAndSettle(
+                const Duration(milliseconds: 100),
+                EnginePhase.sendSemanticsUpdate,
+                const Duration(seconds: 5),
+              );
+
+              final unselectedTrendColor =
+                  tester.widget<Text>(trendText).style!.color!;
+              final unselectedStatInk = tester.widget<Ink>(
+                find.ancestor(of: trendText, matching: find.byType(Ink)).first,
+              );
+              final unselectedStatSurface =
+                  (unselectedStatInk.decoration! as BoxDecoration).color!;
+              expect(unselectedStatSurface, isNot(statSurface));
+              expect(
+                _contrastRatio(unselectedTrendColor, unselectedStatSurface),
+                greaterThanOrEqualTo(4.5),
+              );
+              neoTrendColorsBySurface.putIfAbsent(
+                    '${family.name}-${brightness.name}-unselected',
+                    () => <int, Color>{},
+                  )[direction] =
+                  unselectedTrendColor;
+            }
+            expect(tester.takeException(), isNull);
+          }
+        }
+      }
+      for (final trendColors in neoTrendColorsBySurface.values) {
+        expect(trendColors, hasLength(3));
+        expect(trendColors.values.toSet(), hasLength(3));
+      }
+    },
+  );
+
   testWidgets('Classic report metrics retain equal compact heights', (
     tester,
   ) async {
@@ -386,4 +533,57 @@ class _ReportRepository extends AppRepository {
       setCount: 15,
     ),
   ];
+}
+
+class _DirectionalTrendRepository extends AppRepository {
+  final int currentCount;
+  final int previousCount;
+
+  _DirectionalTrendRepository({
+    required this.currentCount,
+    required this.previousCount,
+  });
+
+  @override
+  Future<List<WorkoutReportSession>> fetchWorkoutReportSessions({
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final previousWeek = today.subtract(const Duration(days: 7));
+    final sessions = <WorkoutReportSession>[];
+
+    void addSessions(DateTime date, int count) {
+      for (var index = 0; index < count; index++) {
+        sessions.add(
+          WorkoutReportSession(
+            id: sessions.length + 1,
+            date: date,
+            durationSeconds: 1800,
+            totalVolume: 100,
+            exerciseCount: 1,
+            setCount: 3,
+          ),
+        );
+      }
+    }
+
+    addSessions(previousWeek, previousCount);
+    addSessions(today, currentCount);
+    return sessions;
+  }
+}
+
+double _contrastRatio(Color foreground, Color background) {
+  final foregroundLuminance = foreground.computeLuminance();
+  final backgroundLuminance = background.computeLuminance();
+  final lighter =
+      foregroundLuminance > backgroundLuminance
+          ? foregroundLuminance
+          : backgroundLuminance;
+  final darker =
+      foregroundLuminance > backgroundLuminance
+          ? backgroundLuminance
+          : foregroundLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
 }

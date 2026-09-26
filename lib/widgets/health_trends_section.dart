@@ -14,6 +14,7 @@ import '../services/measurement_validation.dart';
 import '../services/safe_failure.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/app_test_keys.dart';
 import '../utils/localized_formatters.dart';
@@ -21,26 +22,8 @@ import 'guided_tutorial_overlay.dart';
 import 'safe_error_view.dart';
 
 Widget _withHealthCardForeground(BuildContext context, Widget child) {
-  if (!context.surfaceDecorationTokens.panel.outlined) return child;
-
-  final theme = Theme.of(context);
-  final surface = _healthTrendCardSurface(context);
-  final foreground = tonosForegroundForSurface(context, surface);
-  final secondaryForeground = tonosSecondaryForegroundForSurface(
-    context,
-    surface,
-  );
-  return Theme(
-    data: theme.copyWith(
-      colorScheme: theme.colorScheme.copyWith(
-        onSurface: foreground,
-        onSurfaceVariant: secondaryForeground,
-      ),
-      textTheme: theme.textTheme.apply(
-        bodyColor: foreground,
-        displayColor: foreground,
-      ),
-    ),
+  return TonosSurfaceTheme(
+    surface: _healthTrendCardSurface(context),
     child: child,
   );
 }
@@ -146,6 +129,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
       builder:
           (_) => TonosDialogFrame(
             styleFormControls: true,
+            styleDarkNeoPickerSurfaces: true,
             child: _MeasurementEntryDialog(
               title: _strings.healthLogMeasurement(
                 _measurementTitle(trend.definition, _strings),
@@ -469,6 +453,7 @@ class _MeasurementTrendDetailPageState
       builder:
           (_) => TonosDialogFrame(
             styleFormControls: true,
+            styleDarkNeoPickerSurfaces: true,
             child: _MeasurementEntryDialog(
               title: _strings.healthLogMeasurement(
                 _measurementTitle(widget.definition, _strings),
@@ -500,6 +485,7 @@ class _MeasurementTrendDetailPageState
       builder:
           (_) => TonosDialogFrame(
             styleFormControls: true,
+            styleDarkNeoPickerSurfaces: true,
             child: _MeasurementEntryDialog(
               title: _strings.healthEditMeasurement(
                 _measurementTitle(widget.definition, _strings),

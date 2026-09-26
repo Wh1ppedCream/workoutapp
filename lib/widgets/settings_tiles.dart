@@ -4,6 +4,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/tokens/app_settings_presentation_tokens.dart';
 import '../theme/widgets/tonos_action_depth.dart';
+import '../theme/widgets/tonos_expansion_tile_scope.dart';
 
 /// Stable category accents for grouped settings content.
 ///
@@ -294,6 +295,10 @@ InputDecoration settingsInputDecoration(
     );
   }
   final fieldInk = _settingsInputInk(context);
+  final errorColor = tonosSettingsValidationErrorForSurface(
+    context,
+    surfaces.settingsInput,
+  );
   final fieldBorder = BorderSide(color: fieldInk, width: shapes.outlineWidth);
   return InputDecoration(
     labelText: label,
@@ -314,20 +319,14 @@ InputDecoration settingsInputDecoration(
         width: shapes.outlineWidth,
       ),
     ),
-    errorStyle: const TextStyle(color: Color(0xFFB3261E)),
+    errorStyle: TextStyle(color: errorColor),
     errorBorder: OutlineInputBorder(
       borderRadius: shapes.settingsField,
-      borderSide: BorderSide(
-        color: const Color(0xFFB3261E),
-        width: shapes.outlineWidth,
-      ),
+      borderSide: BorderSide(color: errorColor, width: shapes.outlineWidth),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: shapes.settingsField,
-      borderSide: BorderSide(
-        color: const Color(0xFFB3261E),
-        width: shapes.focusRingWidth,
-      ),
+      borderSide: BorderSide(color: errorColor, width: shapes.focusRingWidth),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: shapes.settingsField,
@@ -353,16 +352,16 @@ InputDecoration settingsInputDecoration(
 /// a bright field.
 TextStyle? settingsInputTextStyle(BuildContext context, {bool enabled = true}) {
   if (!context.surfaceDecorationTokens.panel.outlined) return null;
-  final fieldInk = _settingsInputInk(context);
   return Theme.of(context).textTheme.bodyLarge?.copyWith(
-    color: enabled ? fieldInk : fieldInk.withValues(alpha: 0.38),
+    color: settingsInputForeground(context, enabled: enabled),
   );
 }
 
-/// Resolves the icon foreground for a colored settings field.
-Color? settingsInputForeground(BuildContext context) {
+/// Resolves enabled or disabled foreground ink for a colored settings field.
+Color? settingsInputForeground(BuildContext context, {bool enabled = true}) {
   if (!context.surfaceDecorationTokens.panel.outlined) return null;
-  return _settingsInputInk(context);
+  final fieldInk = _settingsInputInk(context);
+  return enabled ? fieldInk : fieldInk.withValues(alpha: 0.38);
 }
 
 /// Resolves a neutral popup surface for selectors whose trigger is a bright
@@ -427,6 +426,16 @@ InputDecoration settingsFieldDecoration(
 
   final surfaces = context.surfaceTokens;
   final fieldInk = _settingsInputInk(context);
+  final usesDarkNeoValidationInk =
+      context.surfaceDecorationTokens.panel.outlined &&
+      Theme.of(context).brightness == Brightness.dark;
+  final errorColor =
+      usesDarkNeoValidationInk
+          ? tonosSettingsValidationErrorForSurface(
+            context,
+            surfaces.settingsInput,
+          )
+          : null;
   final fieldBorder = BorderSide(
     color: tonosOutlineForSurface(context, surfaces.settingsInput),
     width: shapes.outlineWidth,
@@ -443,6 +452,27 @@ InputDecoration settingsFieldDecoration(
     hintStyle: TextStyle(color: fieldInk.withValues(alpha: 0.62)),
     prefixIconColor: fieldInk,
     suffixStyle: TextStyle(color: fieldInk),
+    errorStyle: errorColor == null ? null : TextStyle(color: errorColor),
+    errorBorder:
+        errorColor == null
+            ? null
+            : OutlineInputBorder(
+              borderRadius: shapes.settingsField,
+              borderSide: BorderSide(
+                color: errorColor,
+                width: shapes.outlineWidth,
+              ),
+            ),
+    focusedErrorBorder:
+        errorColor == null
+            ? null
+            : OutlineInputBorder(
+              borderRadius: shapes.settingsField,
+              borderSide: BorderSide(
+                color: errorColor,
+                width: shapes.focusRingWidth,
+              ),
+            ),
     enabledBorder: OutlineInputBorder(
       borderRadius: shapes.settingsField,
       borderSide: fieldBorder,
@@ -1011,7 +1041,6 @@ class SettingsExpansionSection extends StatelessWidget {
         ),
         child: Theme(
           data: theme.copyWith(
-            dividerColor: Colors.transparent,
             colorScheme: scheme.copyWith(
               primary:
                   presentation.sectionUsesAccentForControls
@@ -1034,49 +1063,51 @@ class SettingsExpansionSection extends StatelessWidget {
                     )
                     : theme.textTheme,
           ),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 4,
-            ),
-            childrenPadding: EdgeInsets.zero,
-            leading: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color:
-                    usesInkRecipe
-                        ? accentColor.withValues(alpha: 0.28)
-                        : accentColor.withValues(
-                          alpha: presentation.iconFillOpacity,
-                        ),
-                borderRadius: shapes.settingsAction,
+          child: TonosExpansionTileScope(
+            child: ExpansionTile(
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 4,
               ),
-              child: Icon(
-                icon,
-                color: usesInkRecipe ? controlForeground : accentColor,
-                size: 22,
+              childrenPadding: EdgeInsets.zero,
+              leading: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color:
+                      usesInkRecipe
+                          ? accentColor.withValues(alpha: 0.28)
+                          : accentColor.withValues(
+                            alpha: presentation.iconFillOpacity,
+                          ),
+                  borderRadius: shapes.settingsAction,
+                ),
+                child: Icon(
+                  icon,
+                  color: usesInkRecipe ? controlForeground : accentColor,
+                  size: 22,
+                ),
               ),
-            ),
-            title: Text(
-              title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: usesInkRecipe ? controlForeground : null,
+              title: Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: usesInkRecipe ? controlForeground : null,
+                ),
               ),
-            ),
-            subtitle: Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color:
-                    usesInkRecipe
-                        ? controlForeground.withValues(alpha: 0.72)
-                        : scheme.onSurfaceVariant,
+              subtitle: Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color:
+                      usesInkRecipe
+                          ? controlForeground.withValues(alpha: 0.72)
+                          : scheme.onSurfaceVariant,
+                ),
               ),
+              children: children,
             ),
-            children: children,
           ),
         ),
       ),
@@ -1438,7 +1469,7 @@ class SettingsInfoCard extends StatelessWidget {
             : scheme.onSurfaceVariant;
     final iconForeground = usesInkRecipe ? foreground : resolvedIconColor;
 
-    final content = Container(
+    return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaces.settingsSection,
@@ -1491,20 +1522,6 @@ class SettingsInfoCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-    if (!usesInkRecipe) return content;
-    return Theme(
-      data: theme.copyWith(
-        colorScheme: scheme.copyWith(
-          onSurface: foreground,
-          onSurfaceVariant: secondaryForeground,
-        ),
-        textTheme: theme.textTheme.apply(
-          bodyColor: foreground,
-          displayColor: foreground,
-        ),
-      ),
-      child: content,
     );
   }
 }

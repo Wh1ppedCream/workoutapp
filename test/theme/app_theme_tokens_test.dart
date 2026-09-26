@@ -177,6 +177,7 @@ void main() {
     final trainTabsSource =
         File('lib/widgets/tonos_train_tabs.dart').readAsStringSync();
     expect(trainTabsSource, contains('surfaces.trainTabSurfaceOpacity'));
+    expect(trainTabsSource, contains('shapes.trainTabButton'));
     expect(
       trainTabsSource,
       contains("key: const ValueKey('tonos-train-tabs-frame')"),
@@ -430,16 +431,18 @@ void main() {
     expect(detailSource, contains('surfaces.sessionSummary'));
     expect(detailSource, contains('shapes.metric'));
     expect(detailSource, contains('context.shapeTokens.mediaThumbnail'));
-    expect(detailSource, contains('WorkoutRecordBadgeChip'));
+    expect(detailSource, contains('WorkoutRecordBadgeStack('));
+    expect(detailSource, contains('width: _recordBadgeWidth'));
 
     final badgesSource = source('lib/widgets/workout_record_badges.dart');
     expect(badgesSource, contains('dataVisualization.firstRecord'));
     expect(badgesSource, contains('dataVisualization.recordMonthly'));
     expect(badgesSource, contains('dataVisualization.recordAllTime'));
-    expect(badgesSource, contains('context.surfaceTokens.firstRecordFill'));
-    expect(badgesSource, contains('context.surfaceTokens.firstRecordBorder'));
-    expect(badgesSource, contains('context.surfaceTokens.recordBadgeFill'));
-    expect(badgesSource, contains('context.surfaceTokens.recordBadgeBorder'));
+    expect(badgesSource, contains('final surfaces = context.surfaceTokens;'));
+    expect(badgesSource, contains('surfaces.firstRecordFill'));
+    expect(badgesSource, contains('surfaces.firstRecordBorder'));
+    expect(badgesSource, contains('surfaces.recordBadgeFill'));
+    expect(badgesSource, contains('surfaces.recordBadgeBorder'));
     expect(badgesSource, contains('shapes.recordBadge'));
     expect(badgesSource, contains('shapes.recordBadgeCompact'));
 
@@ -522,21 +525,31 @@ void main() {
       expect(dark.trainTabSurfaceOpacity, 0.75);
       expect(light.splitWorkoutDividerOpacity, 0.18);
       expect(dark.splitWorkoutDividerOpacity, 0.18);
+      expect(light.workoutInputHintOpacity, 0.7);
+      expect(dark.workoutInputHintOpacity, 0.7);
+      expect(light.workoutTextSelectionOpacity, 0.2);
+      expect(dark.workoutTextSelectionOpacity, 0.2);
       expect(light.planRevealBorderOpacity, 0.45);
       expect(dark.planRevealBorderOpacity, 0.45);
 
       final target = light.copyWith(
         trainTabSurfaceOpacity: 0.4,
         splitWorkoutDividerOpacity: 0.3,
+        workoutInputHintOpacity: 0.5,
+        workoutTextSelectionOpacity: 0.4,
         planRevealBorderOpacity: 0.6,
       );
       expect(target.copyWith().trainTabSurfaceOpacity, 0.4);
       expect(target.copyWith().splitWorkoutDividerOpacity, 0.3);
+      expect(target.copyWith().workoutInputHintOpacity, 0.5);
+      expect(target.copyWith().workoutTextSelectionOpacity, 0.4);
       expect(target.copyWith().planRevealBorderOpacity, 0.6);
 
       final midpoint = light.lerp(target, 0.5);
       expect(midpoint.trainTabSurfaceOpacity, 0.575);
       expect(midpoint.splitWorkoutDividerOpacity, 0.24);
+      expect(midpoint.workoutInputHintOpacity, 0.6);
+      expect(midpoint.workoutTextSelectionOpacity, closeTo(0.3, 1e-12));
       expect(midpoint.planRevealBorderOpacity, 0.525);
     },
   );
@@ -583,6 +596,7 @@ void main() {
     final base = AppShapeTokens.classic;
     final target = base.copyWith(
       trainTab: BorderRadius.circular(21),
+      trainTabButton: BorderRadius.circular(22),
       mediaThumbnail: BorderRadius.circular(39),
       compact: BorderRadius.circular(40),
       control: BorderRadius.circular(42),
@@ -617,6 +631,12 @@ void main() {
       BorderRadius.lerp(base.trainTab, BorderRadius.circular(21), 0.5),
     );
     expect(target.copyWith().trainTab, target.trainTab);
+    expect(target.trainTabButton, BorderRadius.circular(22));
+    expect(
+      midpoint.trainTabButton,
+      BorderRadius.lerp(base.trainTabButton, BorderRadius.circular(22), 0.5),
+    );
+    expect(target.copyWith().trainTabButton, target.trainTabButton);
     expect(target.mediaThumbnail, BorderRadius.circular(39));
     expect(
       midpoint.mediaThumbnail,
@@ -843,6 +863,7 @@ void main() {
     expect(semanticCopy.disabledContainer, semantic.disabledContainer);
 
     final shapeCopy = AppShapeTokens.classic.copyWith();
+    expect(shapeCopy.trainTabButton, AppShapeTokens.classic.trainTabButton);
     expect(shapeCopy.compact, AppShapeTokens.classic.compact);
     expect(shapeCopy.mediaThumbnail, AppShapeTokens.classic.mediaThumbnail);
     expect(shapeCopy.control, AppShapeTokens.classic.control);
@@ -876,6 +897,30 @@ void main() {
     expect(shapeCopy.dialogChoice, AppShapeTokens.classic.dialogChoice);
     expect(shapeCopy.outlineWidth, AppShapeTokens.classic.outlineWidth);
     expect(shapeCopy.focusRingWidth, AppShapeTokens.classic.focusRingWidth);
+    expect(
+      shapeCopy.workoutCompletedSet,
+      AppShapeTokens.classic.workoutCompletedSet,
+    );
+    expect(
+      shapeCopy.workoutCompletedSetBorderWidth,
+      AppShapeTokens.classic.workoutCompletedSetBorderWidth,
+    );
+    expect(
+      shapeCopy.workoutCompletedSetAccentBorderWidth,
+      AppShapeTokens.classic.workoutCompletedSetAccentBorderWidth,
+    );
+
+    final workoutShapeMidpoint = AppShapeTokens.classic.lerp(
+      AppShapeTokens.classic.copyWith(
+        workoutCompletedSet: BorderRadius.circular(8),
+        workoutCompletedSetBorderWidth: 3,
+        workoutCompletedSetAccentBorderWidth: 5,
+      ),
+      0.5,
+    );
+    expect(workoutShapeMidpoint.workoutCompletedSet, BorderRadius.circular(10));
+    expect(workoutShapeMidpoint.workoutCompletedSetBorderWidth, 2);
+    expect(workoutShapeMidpoint.workoutCompletedSetAccentBorderWidth, 4);
 
     final surface = AppSurfaceTokens.fromColorScheme(
       ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -887,6 +932,14 @@ void main() {
       surface.workoutCardCompleteFill,
     );
     expect(surfaceCopy.workoutSetCompleteFill, surface.workoutSetCompleteFill);
+    expect(
+      surfaceCopy.workoutInputHintOpacity,
+      surface.workoutInputHintOpacity,
+    );
+    expect(
+      surfaceCopy.workoutTextSelectionOpacity,
+      surface.workoutTextSelectionOpacity,
+    );
     expect(
       surfaceCopy.workoutChangeSetOutline,
       surface.workoutChangeSetOutline,

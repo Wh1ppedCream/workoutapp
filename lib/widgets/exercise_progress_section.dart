@@ -389,30 +389,37 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                         onTap: () => _openDetail(selectedTile),
                       ),
                     SizedBox(height: layout.sectionGap),
-                    preservesClassicGeometry
-                        ? SizedBox(
-                          key: const ValueKey(
-                            'exercise-progress-selector-strip',
-                          ),
-                          height: layout.selectorHeight,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: selectorChildren,
-                          ),
-                        )
-                        : SingleChildScrollView(
-                          key: const ValueKey(
-                            'exercise-progress-selector-strip',
-                          ),
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ...selectorChildren,
-                              SizedBox(width: layout.value(4)),
-                            ],
-                          ),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight:
+                            preservesClassicGeometry
+                                ? layout.selectorMinimumHeight
+                                : 0,
+                      ),
+                      child: SingleChildScrollView(
+                        key: const ValueKey('exercise-progress-selector-strip'),
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment:
+                              preservesClassicGeometry
+                                  ? CrossAxisAlignment.start
+                                  : CrossAxisAlignment.center,
+                          children: [
+                            for (final child in selectorChildren)
+                              if (preservesClassicGeometry)
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: layout.selectorMinimumHeight,
+                                  ),
+                                  child: child,
+                                )
+                              else
+                                child,
+                            SizedBox(width: layout.value(4)),
+                          ],
                         ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -455,7 +462,6 @@ class _ExerciseProgressLayout {
   double get loadingHeight => value(248);
   double get heroPadding => value(10);
   double get heroHeight => value(226);
-  double get heroStackedStatsHeight => value(184);
   double get heroChartHeight => value(166);
   double get heroStackedChartHeight => value(166);
   double get heroColumnGap => value(12);
@@ -471,7 +477,7 @@ class _ExerciseProgressLayout {
   double get statIconGap => value(3);
   double get statLabelGap => value(3);
   double get statHelperGap => value(2);
-  double get selectorHeight => value(138);
+  double get selectorMinimumHeight => value(138);
   double get selectorWidth => value(154);
   double get selectorChartHeight => value(52);
   double get selectorActionMinHeight => value(112);
@@ -600,11 +606,17 @@ class _ExerciseProgressHero extends StatelessWidget {
                   ).scale(1).clamp(1.0, 2.0).toDouble();
               final preservesClassicGeometry =
                   context.usesClassicPresentation && textScale <= 1.15;
-              final classicStacked =
-                  preservesClassicGeometry &&
-                  constraints.maxWidth < layout.value(270);
               final minimumChartWidth = layout.heroMinimumChartWidth(textScale);
               final minimumStatsWidth = layout.heroMinimumStatsWidth(textScale);
+              final classicStacked =
+                  preservesClassicGeometry &&
+                  constraints.maxWidth <
+                      math.max(
+                        layout.value(270),
+                        minimumChartWidth +
+                            layout.heroRowGap +
+                            minimumStatsWidth,
+                      );
               final useStacked =
                   constraints.maxWidth <
                   minimumChartWidth + layout.heroRowGap + minimumStatsWidth;
@@ -632,18 +644,15 @@ class _ExerciseProgressHero extends StatelessWidget {
                     children: [
                       chartColumn,
                       SizedBox(height: layout.heroColumnGap),
-                      SizedBox(
-                        height: layout.heroStackedStatsHeight,
-                        child: statsColumn,
-                      ),
+                      statsColumn,
                     ],
                   );
                 }
-                return SizedBox(
+                return ConstrainedBox(
                   key: const ValueKey('exercise-progress-hero-side-by-side'),
-                  height: layout.heroHeight,
+                  constraints: BoxConstraints(minHeight: layout.heroHeight),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 7, child: chartColumn),
                       SizedBox(width: layout.heroRowGap),
@@ -710,6 +719,7 @@ class _ExerciseProgressHero extends StatelessWidget {
     );
     if (!usesInkRecipe) return container;
     final progressColors = context.progressColors;
+    // Chart descendants read the surface-resolved progress roles from Theme.
     return Theme(
       data: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
@@ -1181,6 +1191,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
         ),
       ),
     );
+    // The selector scopes selected-surface foregrounds for nested chart labels.
     return usesInkRecipe ? Theme(data: tileTheme, child: selector) : selector;
   }
 }

@@ -12,6 +12,13 @@ void main() {
       'lib/screens/profile/settings/measurements_trends_settings_page.dart',
     );
 
+    expect(health, contains('TonosSurfaceTheme('));
+    expect(
+      RegExp(r'styleDarkNeoPickerSurfaces:\s*true').allMatches(health).length,
+      3,
+      reason: 'each Health Trends entry/edit dialog opts into picker surfaces',
+    );
+
     for (final role in [
       'context.progressColors.healthCard',
       'surfaces.subtleOutline',

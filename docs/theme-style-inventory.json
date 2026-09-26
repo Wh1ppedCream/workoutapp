@@ -39,6 +39,12 @@
       "status": "allowlisted"
     },
     {
+      "id": "stable_category_data",
+      "label": "Stable category data colors",
+      "target": "Curated category identities, separate from application theme and state roles",
+      "status": "allowlisted"
+    },
+    {
       "id": "illustration_media",
       "label": "Illustration and media",
       "target": "Asset/media treatment contracts, not application chrome",
@@ -169,9 +175,9 @@
         "shadow"
       ],
       "classification": "intentional_one_off",
-      "status": "review",
-      "target": "AppEffectTokens and an accessibility-reviewed tutorial scrim recipe",
-      "rationale": "The overlay needs a controlled scrim and spotlight treatment, but it remains a review item until effect fallbacks and accessibility are explicitly qualified."
+      "status": "allowlisted",
+      "target": "Reviewed AppTutorialTokens/AppEffectTokens recipe with semantic ColorScheme roles",
+      "rationale": "The tutorial overlay's token-backed geometry, scrims, optional effects, and semantic scheme colors were accepted in the 21-item visual review, including Guided Tutorials, and the user-reported accessibility and motion/effects checks recorded in the Q3 gate. Keep this kind-limited local spotlight/card recipe as an intentional one-off; do not treat it as general approval for other surfaces."
     },
     {
       "id": "quick-action-bar",
@@ -190,17 +196,17 @@
         "color_literal_candidate"
       ],
       "classification": "intentional_one_off",
-      "status": "review",
-      "target": "An explicitly retained fixed profile and plan identity palette",
-      "rationale": "Profile and plan colors distinguish saved entities rather than application state. The retained fixed-palette decision is explicit through dedicated identity owners; visual treatment remains a manual review item."
+      "status": "allowlisted",
+      "target": "Stable profile and plan identity data colors, independent of theme roles",
+      "rationale": "The user accepted retaining the current profile and plan identity mapping across theme families and brightness modes. These fixed data colors distinguish entities, not application state or theme-primary roles. Keep any future app-wide ThemePaletteId separate from a future IdentityPaletteId; resolve both through curated, contrast-qualified theme-aware swatches instead of persisting raw colors or mapping identity to status colors."
     },
     {
       "id": "navigation-drawers",
       "pattern": "lib/widgets/drawers.dart",
       "classification": "structural_theme",
       "status": "migrated",
-      "target": "Tonos drawer primitives, focused shape/motion tokens, and a reviewed profile identity palette",
-      "rationale": "Drawers are shared navigation surfaces; structural roles now use focused tokens and standard scheme roles, while the profile identity palette remains a deliberate review item."
+      "target": "Tonos drawer primitives, focused shape/motion tokens, and the dedicated profile identity palette",
+      "rationale": "Drawers are shared navigation surfaces; structural roles use focused tokens and standard scheme roles. Profile identity colors are owned by the dedicated intentional data-color allowlist, separate from drawer chrome and theme roles."
     },
     {
       "id": "ongoing-session-action",
@@ -219,12 +225,89 @@
       "rationale": "This banner is injected at the app root and now uses standard feedback colors plus shared shape, elevation, and shadow ownership."
     },
     {
-      "id": "settings-tiles",
+      "id": "settings-category-accents",
       "pattern": "lib/widgets/settings_tiles.dart",
+      "kinds": [
+        "color_literal",
+        "color_literal_candidate"
+      ],
+      "classification": "stable_category_data",
+      "status": "allowlisted",
+      "target": "Stable settings-category data colors, independent of theme and status roles",
+      "rationale": "SettingsAccent.account, appearance, training, progress, data, advanced, safety, and muted are curated category identifiers used across settings routes, not app-primary or UI-state colors. Preserve this mapping across the current theme families and brightness modes; any future user-selectable theme palette must remain separate and may resolve category slots through curated contrast-aware swatches. This exact-file, literal-only rule does not exempt transforms, decorations, geometry, themes, or text styling in settings_tiles.dart."
+    },
+    {
+      "id": "settings-tiles-recipes",
+      "pattern": "lib/widgets/settings_tiles.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "gradient",
+        "shadow",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Theme-aware settings presentation tokens, surface roles, shape tokens, and shared tile primitives",
+      "rationale": "A line-by-line audit of the 99 current non-local candidates found them owned by the shared settings recipes: theme-aware surface/foreground resolvers, AppSettingsPresentationTokens, AppSurfaceTokens, AppShapeTokens, semantic colors, and inherited Material field/action recipes. Existing four-mode component regressions and the user's current settings review qualify this exact recipe scope. SettingsAccent data colors remain separately allowlisted; the two local Theme scopes are qualified separately by settings-tiles-local-theme. Keep this rule kind-limited and update its exact candidate-count contract after any source additions."
+    },
+    {
+      "id": "settings-tiles-local-theme",
+      "pattern": "lib/widgets/settings_tiles.dart",
+      "kinds": [
+        "local_theme"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Theme-aware caller-descendant role scopes for shared settings sections",
+      "rationale": "SettingsSection and SettingsExpansionSection intentionally scope inherited color, text, icon, ListTile, progress, and ExpansionTile roles around caller-provided content. Four-mode contracts render descendant ListTiles and progress indicators and assert the scoped roles; the settings residue and route-ledger suites pass, and the user accepted the affected current settings screens. Retain these component-owned Theme boundaries because their accent/control policies differ from a generic surface wrapper. Keep this exact rule kind-limited to the two reviewed local_theme findings."
+    },
+    {
+      "id": "seven-day-focus-local-theme",
+      "pattern": "lib/widgets/seven_day_focus_card.dart",
+      "kinds": [
+        "local_theme"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Weekly Overview foreground and progress-indicator roles on its raised panel",
+      "rationale": "SevenDayFocusPresentation keeps Classic's inherited Material theme and scopes Neo foreground and progress-indicator foreground/track roles to the raised dashboard surface. The four-mode presentation contract renders the focused-set LinearProgressIndicators and verifies their inherited roles. This exact rule covers only the local Theme candidate; other widget styles remain in their existing inventory scopes."
+    },
+    {
+      "id": "exercise-editor-hotspot",
+      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
       "classification": "structural_theme",
       "status": "pending",
-      "target": "Tonos section/action primitives and semantic category roles",
-      "rationale": "Settings tiles are shared application chrome; surface, geometry, divider, value-text, form-recipe, save-bar, and status-badge ownership has started migrating while category accents and local control overrides remain pending."
+      "target": "Tonos fields, sections, and component themes",
+      "rationale": "The exercise editor is a high-use settings surface with dense form styling."
+    },
+    {
+      "id": "flow-methods-recipes",
+      "pattern": "lib/screens/profile/settings/flow_methods_page.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppFlowTokens and ColorScheme accents with surface-aware Tonos dialog, section, shape, foreground, and outline recipes",
+      "rationale": "A line-by-line audit of the 21 current candidates found flow/scope accents owned by AppFlowTokens or ColorScheme; Neo surfaces, text, outlines, and geometry resolve through AppSurfaceTokens, surface-aware foreground/outline helpers, AppShapeTokens, TonosSurfaceTheme, and Tonos dialog/field recipes. Classic retains its established ColorScheme/category mapping. The user accepted the current Flow Methods appearance after the Neo-dark dropdown contrast fix; route/residue contracts protect source behavior. This is presentation ownership only: nested persistence and editing-state review remains explicitly deferred. Keep this exact-file, kind-limited rule."
+    },
+    {
+      "id": "workout-progress-flows-recipes",
+      "pattern": "lib/screens/profile/settings/workout_progress_flows_page.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppFlowTokens with surface-aware Tonos section, entry, empty-state, shape, foreground, and outline recipes",
+      "rationale": "A line-by-line audit of the 18 current candidates found profile/plan scope accents owned by AppFlowTokens; Neo section and entry surfaces, foregrounds, outlines, and geometry use AppSurfaceTokens, surface-aware contrast helpers, and AppShapeTokens. Classic retains its established scope accents and ColorScheme surfaces. The user accepted the current Workout Progress Flows appearance; route/residue contracts protect source behavior. This rule covers presentation only and does not close the separately deferred nested persistence/editing-state review. Keep it exact-file and kind-limited."
     },
     {
       "id": "profile-settings",
@@ -233,14 +316,6 @@
       "status": "pending",
       "target": "Tonos field/section/action primitives and component themes",
       "rationale": "Profile settings contain repeated controls and local theme overrides; the first UI Appearance, User Information, bottom-tab editor, and deferred-feature badge recipes have migrated while the broader subtree and local overrides remain pending."
-    },
-    {
-      "id": "exercise-detail-hotspot",
-      "pattern": "lib/widgets/exercise_detail_sheet.dart",
-      "classification": "structural_theme",
-      "status": "pending",
-      "target": "Tonos sheet/surface/section primitives and media tokens",
-      "rationale": "The exercise detail sheet is a high-use release surface with repeated containment, tabs, and media treatment."
     },
     {
       "id": "onboarding-hotspot",
@@ -259,14 +334,6 @@
       "rationale": "Dashboard sections combine application chrome with data and anatomy visuals; mixed ownership must be separated rather than globally recolored."
     },
     {
-      "id": "exercise-editor-hotspot",
-      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
-      "classification": "structural_theme",
-      "status": "pending",
-      "target": "Tonos fields, sections, and component themes",
-      "rationale": "The exercise editor is a high-use settings surface with dense form styling."
-    },
-    {
       "id": "preset-generation-hotspot",
       "pattern": "lib/screens/exercise/preset_generation_qa.dart",
       "classification": "structural_theme",
@@ -275,12 +342,248 @@
       "rationale": "Preset generation QA is visually dense and must not silently establish a second untracked theme system."
     },
     {
+      "id": "train-panel-ink-theme",
+      "pattern": "lib/screens/exercise/train_page.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "local_theme"
+      ],
+      "target": "Outlined Train-panel foreground roles without changing inherited icon roles",
+      "rationale": "The exact local Theme helper scopes onSurface, onSurfaceVariant, and text styles for the Overview Active Plans panel and the Active, Archived, and Premade Plans sections. Four-mode Train panel and archived-empty-state regressions preserve inherited icon roles; the user visually accepted Train in Classic and Neo, light and dark, on 2026-09-25. Classic bypasses the helper and retains its accepted baseline. Do not replace this helper with TonosSurfaceTheme, which owns a different set of surface and icon roles."
+    },
+    {
+      "id": "train-action-bar-recipes",
+      "pattern": "lib/screens/exercise/train_page.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "shadow",
+        "color",
+        "color_transform",
+        "text_style"
+      ],
+      "target": "Train profile contrast and split workout action-bar recipes",
+      "rationale": "This exact file/kind rule covers the seven existing Train candidates: the avatar uses onTrainProfileAvatar, and the split action-bar frame, divider, transparent Material, and action labels resolve through the existing shape, effect, surface, semantic, and ColorScheme roles. The four-mode Train regression checks the existing compact horizontal geometry (including its accepted Classic/Neo frame heights), frame border/shadow/clipping/elevation, divider, action colors/text, and enabled action/settings callbacks. The user accepted the Train appearance in all four modes. A contract pins the rule to these seven findings so new styling in the screen is not silently enrolled."
+    },
+    {
       "id": "release-screens",
       "pattern": "lib/screens/**",
       "classification": "release_surface",
       "status": "pending",
       "target": "Vertical-slice migration to shared theme ownership",
       "rationale": "Screens remain reportable until their styling expressions are classified and migrated without changing behavior."
+    },
+    {
+      "id": "tonos-train-tabs-geometry",
+      "pattern": "lib/widgets/tonos_train_tabs.dart",
+      "kinds": [
+        "geometry"
+      ],
+      "classification": "theme_system",
+      "status": "migrated",
+      "target": "The exact shared Train-tab geometry, including the Neo button corner radius",
+      "rationale": "The four remaining geometry findings resolve through named AppShapeTokens roles: the frame uses trainTab, its outline uses outlineWidth, and each tab button uses trainTabButton (retaining the established 3px Neo radius) or the Classic pill. The literal radius candidate is removed by the token reference. The four-mode widget contract checks the frame and button shapes/borders; the inventory contract pins this kind-limited scope. Other colors, decoration, and effects remain separately reportable."
+    },
+    {
+      "id": "tonos-train-tabs-recipes",
+      "pattern": "lib/widgets/tonos_train_tabs.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "shadow"
+      ],
+      "classification": "theme_system",
+      "status": "migrated",
+      "target": "TonosTrainTabs frame surface/effect recipe and expected Material transparency",
+      "rationale": "This exact kind-limited rule covers the four remaining candidates in the shared Overview/Plans selector: frame decoration uses its named shape/surface roles, the Classic surface opacity comes from AppSurfaceTokens, the optional Neo hard shadow comes from AppEffectTokens, and transparent Material is the expected unselected Classic fill. The four-mode TonosTrainTabs widget test asserts frame color, radius, border, shadow policy/effect values, and both button colors/shapes; the separate semantics test verifies selection and activation. The user accepted the Train visual review across Classic/Neo light/dark. The existing geometry rule remains separate, and no other navigation component is included."
+    },
+    {
+      "id": "tonos-bottom-navigation",
+      "pattern": "lib/widgets/tonos_bottom_navigation_bar.dart",
+      "kinds": [
+        "color",
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "classification": "theme_system",
+      "status": "migrated",
+      "target": "TonosBottomNavigationBar's theme-owned Neo rail, selected fill, outline, and elevation",
+      "rationale": "This exact shared owner has four current candidates: transparent Material fill preserves the selected-segment layer, the frame uses ColorScheme/surface tokens and AppShapeTokens, and its optional shadow is derived from AppEffectTokens. A four-mode widget contract now checks both the Classic Material owner and Neo rail colors, outline, shape, effects, and activation; an inventory contract pins the exact candidate count and kinds. Keep the rule kind-limited and do not generalize it to other navigation widgets."
+    },
+    {
+      "id": "workout-record-badges",
+      "pattern": "lib/widgets/workout_record_badges.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "_RecordBadgeVisual with AppDataVisualizationTokens, AppSurfaceTokens, AppShapeTokens, and the existing Classic-density variant",
+      "rationale": "This exact, already-ratchet-protected component owns all six remaining style candidates. Badge colors come from data-visualization roles, fill/border alpha from surface tokens, radii from shape tokens, and the compact typography variant preserves the accepted Classic baseline. The rendered four-mode contract and user-reviewed device layout qualify this scope; do not generalize this rule to other widgets."
+    },
+    {
+      "id": "health-trends-recipes",
+      "pattern": "lib/widgets/health_trends_section.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "shadow",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppDataVisualizationTokens, AppProgressColors, AppSurfaceTokens, AppShapeTokens, effect tokens, and inherited Material field/dialog themes",
+      "rationale": "A line-by-line audit of the 29 current candidates found semantic data-series/grid roles, surface-aware decoration/geometry, named effects, theme-derived text, transparent structural fills, and InputDecoration recipes owned by the app theme. Health measurement, dashboard-history, and TonosDialog regressions cover these routes; the user accepted Health Trends in both brightness modes, including entry fields and date/time selection, on 2026-09-24. Keep this exact-file rule kind-limited; this classification does not migrate the adjacent Workout History or other progress widgets."
+    },
+    {
+      "id": "workout-metric-chart-recipes",
+      "pattern": "lib/widgets/workout_metric_chart_card.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppProgressColors, AppSurfaceTokens, AppShapeTokens, and surface-aware workout-metric trend contrast recipes",
+      "rationale": "A line-by-line audit of the 35 current candidates found chart series/grid/label colors resolved from progress roles, surfaces and contrast from AppSurfaceTokens and surface-aware helpers, geometry from AppShapeTokens, and chart painter colors derived from those semantic inputs. The responsive widget test covers Classic and Neo in both brightness modes, asserts Neo trend contrast, and protects Classic compact layout; the user accepted the workout trend graphs. Keep this exact-file rule kind-limited; adjacent history/calendar widgets remain separately pending."
+    },
+    {
+      "id": "history-summary-recipes",
+      "pattern": "lib/widgets/history_summary_widget.dart",
+      "kinds": [
+        "color",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppSurfaceTokens.historyPeriodSelector, AppShapeTokens.compact, semantic InfoCard text, and surface-aware selector foregrounds",
+      "rationale": "The 10 current candidates are owned by this exact widget: InfoCard uses TonosSurfaceVariant.compactCard and semantic.strongContent/mutedContent while retaining its compact value/label hierarchy; the selector uses surfaces.historyPeriodSelector, theme primary/transparent selected-state fills, tonosForegroundForSurface, and geometry derived from shapes.compact. Existing dashboard/history contracts protect the selector state and lazy range loading, and the user accepted the selected-period Workout History card visually. The inventory contract pins the exact path, kinds, and current count; do not generalize to adjacent history or measurement widgets."
+    },
+    {
+      "id": "current-metrics-category-colors",
+      "pattern": "lib/widgets/current_metrics_section.dart",
+      "kinds": [
+        "color"
+      ],
+      "classification": "stable_category_data",
+      "status": "allowlisted",
+      "target": "Preserved Classic measurement-category palette with Neo AppDataVisualizationTokens",
+      "rationale": "The five current color candidates are only the Classic branch of _metricColor: body weight, height, waist/hip, chest/shoulder/arm, and other measurement categories retain their established green, blue, purple, orange, and teal mapping. The outlined Neo branch resolves those categories through AppDataVisualizationTokens. A four-mode rendered-color regression pins both behaviors. These are category identifiers, not completion/status colors; the exact-path color-only rule does not cover unrelated widget decoration."
+    },
+    {
+      "id": "current-metrics-category-marker",
+      "pattern": "lib/widgets/current_metrics_section.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "classification": "stable_category_data",
+      "status": "allowlisted",
+      "target": "Circular measurement-series marker with theme-aware category color",
+      "rationale": "The one decoration candidate is MetricItem's 8px circular series marker. Its fixed circular encoding is intentionally shared across theme families while the supplied category color retains the Classic palette or resolves through Neo AppDataVisualizationTokens. The four-mode rendered-color regression pins all five categories; the inventory contract pins this rule to exactly one decoration so unrelated styling cannot silently enter the allowlist."
+    },
+    {
+      "id": "exercise-progress-chart-recipes",
+      "pattern": "lib/widgets/exercise_progress_section.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "local_theme",
+        "shadow",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppProgressColors, AppSurfaceTokens, AppShapeTokens, AppEffectTokens, and surface-aware foreground/outline recipes",
+      "rationale": "A line-by-line audit of all 40 current candidates found transparent structural fills, chart/grid/series colors derived from AppProgressColors and semantic theme roles, surfaces and contrast from AppSurfaceTokens/helpers, geometry from AppShapeTokens, and tooltip/remove-action effects from AppEffectTokens and ColorScheme. The two local Theme scopes are widget-owned: the hero scope injects its resolved foreground/progress roles into the hero chart subtree, and the selector scope injects its selected-surface foreground/progress roles into that selector's descendants. The responsive widget test covers Neo light at narrow/wide widths and text scale 2 plus Classic dark, with the added matrix checks covering Classic light and Neo dark; route/progress contracts preserve behavior, and the user accepted the chart appearance. Keep this exact-file rule kind-limited; do not generalize to unrelated local themes."
+    },
+    {
+      "id": "weight-card-input-theme",
+      "pattern": "lib/widgets/weight_card.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "local_theme"
+      ],
+      "target": "Workout-card input, label, border, hint, and text-selection role scope",
+      "rationale": "The exact local Theme scope owns editable workout fields and applies semantic ink, input borders, hint/suffix, and selection roles only when the semantic workout-card surface is active. A four-mode widget regression checks effective field descendants while preserving inherited Classic roles; the user visually accepted the WeightCard in Classic and Neo, light and dark, on 2026-09-25. Do not generalize the rule to other WeightCard styles."
+    },
+    {
+      "id": "weight-card-recipes",
+      "pattern": "lib/widgets/weight_card.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "target": "WeightCard completion surfaces, set/change-set decoration, field geometry, and token-owned effects",
+      "rationale": "This exact kind-limited rule covers only the WeightCard recipes backed by semantic, surface, shape, and effect roles. New named tokens preserve selection and hint opacity, Neo square completed-set radius, and 1px/3px completion borders. Four-mode rendered contracts check completed card/row fills, family-specific row radius and border, effects, change-set outline, and fields; the separate input-theme contract checks transparent fill, label/hint/suffix colors, field borders, and Classic inheritance. Text-style candidates are assigned to the separate migrated weight-card-popup-text rule. The user accepted WeightCard in Classic and Neo, light and dark, on 2026-09-25; keep this classification exact-path and kind-limited."
+    },
+    {
+      "id": "weight-card-popup-text",
+      "pattern": "lib/widgets/weight_card.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "text_style"
+      ],
+      "target": "WeightCard popup and input text styles against their resolved surfaces",
+      "rationale": "Three WeightCard text-style candidates are migrated here: the popup label and the workout-field hint/suffix styles. The popup style resolves ink with tonosForegroundForSurface against the actual menu surface; a rendered four-mode test opens that menu and checks its effective text color. The four-mode input-theme test checks token-derived hint opacity and suffix foreground for the semantic workout surface while preserving Classic's inherited styles. The user accepted WeightCard in all four modes on 2026-09-25. Keep this rule exact-path and kind-limited."
+    },
+    {
+      "id": "data-records-recipes",
+      "pattern": "lib/widgets/data_records_section.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "target": "DataRecordsSection today-state meaning, ordinary divider, and calendar-cell structure",
+      "rationale": "D2 records the existing recordTodayContainer, recordTodayBorder, onRecordTodayContainer, and shared divider roles. The progress-records source contract pins those owners and the LogEntryPage tap path. This exact kind-limited rule covers the four current findings only; it does not imply rendered long-range/date/device or full-release qualification."
+    },
+    {
+      "id": "workout-dashboard-recipes",
+      "pattern": "lib/widgets/workout_dashboard.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "target": "WorkoutDashboard section, profile input, action icon, and scaled text recipes",
+      "rationale": "D2 records the existing dashboard section, settings-input, dashboard-action, workout-action, and ColorScheme outline roles. The source contract pins those ownership paths and the widget-scale and session-callback behavior. This exact kind-limited rule covers the eight current findings in that recipe only; it records existing token adoption and is not rendered/device or full-release qualification."
+    },
+    {
+      "id": "presets-loaded-recipes",
+      "pattern": "lib/widgets/presets_loaded.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "geometry",
+        "text_style"
+      ],
+      "target": "Archived-plan empty-state contrast and progressive Show More action",
+      "rationale": "A four-mode rendered contract checks archived empty-state text against its resolved card surface and checks the progressive Show More action's theme-primary ink, token-owned border opacity, scaled shape, and reveal interaction. This exact kind-limited rule covers the six current PresetsLoaded findings only; it does not qualify every plan detail, device condition, or release route."
     },
     {
       "id": "release-widgets",
@@ -373,6 +676,93 @@
       ],
       "target": "Named Tonos variants, effect fallbacks, and release-gated surface ownership",
       "rationale": "These routes have specialized presentation and must not introduce hidden theme branches or unqualified effects."
+    },
+    {
+      "id": "exercise-planning-analytics",
+      "title": "Exercise planning, analytics, and supporting widgets",
+      "patterns": [
+        "lib/screens/exercise/gym_profile_screen.dart",
+        "lib/screens/exercise/auto_preset_flow_screen.dart",
+        "lib/screens/exercise/analytics_dashboard_screen.dart",
+        "lib/screens/exercise/premade_plans_page.dart",
+        "lib/screens/exercise/definitions_by_bodypart_page.dart",
+        "lib/screens/exercise/plan_management_page.dart",
+        "lib/screens/exercise/optimized_workout_settings_page.dart",
+        "lib/screens/exercise/definitions_by_muscle_page.dart",
+        "lib/screens/exercise/muscle_filter_page.dart",
+        "lib/screens/exercise/preset_detail_screen.dart",
+        "lib/screens/exercise_muscle_percent_screen.dart",
+        "lib/widgets/onboarding_plan_builder_coach.dart",
+        "lib/widgets/presets_loaded.dart",
+        "lib/widgets/bodypart_focus_chips.dart",
+        "lib/widgets/recommended_sets_editor_dialog.dart",
+        "lib/widgets/preset_bar.dart",
+        "lib/widgets/set_stat_chip.dart",
+        "lib/widgets/swap_exercise_sheet.dart",
+        "lib/widgets/exercise_definition_info_tile.dart",
+        "lib/widgets/past_sessions_list.dart",
+        "lib/widgets/preset_info_card.dart"
+      ],
+      "target": "Tonos surface/action recipes plus exercise-specific semantic and data-visualization roles",
+      "rationale": "These non-overlapping exercise routes and supporting widgets currently contain pending findings outside the six original queues. Queue membership assigns a review owner only; it does not classify any style as migrated or approve visual behavior."
+    },
+    {
+      "id": "nutrition-workflows",
+      "title": "Nutrition and meal-entry workflows",
+      "patterns": [
+        "lib/screens/nutrition/**",
+        "lib/widgets/meal_plan_add_bar.dart",
+        "lib/widgets/nutrition_text_details.dart"
+      ],
+      "target": "Tonos form/surface primitives and nutrition semantic roles",
+      "rationale": "This disjoint route family groups nutrition entry, customization, and scanning findings for focused review. Queue membership is triage only and does not exempt or migrate findings."
+    },
+    {
+      "id": "history-measurement-support",
+      "title": "History, measurement, and summary support",
+      "patterns": [
+        "lib/widgets/history_summary_widget.dart",
+        "lib/widgets/current_metrics_section.dart",
+        "lib/widgets/workout_dashboard.dart",
+        "lib/widgets/data_records_section.dart",
+        "lib/widgets/seven_day_focus_card.dart"
+      ],
+      "target": "Tonos surfaces plus semantic measurement and progress roles",
+      "rationale": "These history and measurement summaries need one owner for inherited theme behavior and data-versus-structure separation. Queue membership does not constitute route qualification."
+    },
+    {
+      "id": "shared-flow-controls",
+      "title": "Shared flow and configuration controls",
+      "patterns": [
+        "lib/widgets/automatic_settings_sheet.dart",
+        "lib/widgets/flow_screen_widgets.dart",
+        "lib/widgets/flow_widgets.dart"
+      ],
+      "target": "Tonos field, dialog, and action primitives with preserved flow behavior",
+      "rationale": "These shared flow/configuration widgets are not covered by the settings-screen subtree queue. Keep their interaction and persistence state in the existing route ledger; this queue supplies a non-overlapping style-review owner only."
+    },
+    {
+      "id": "catalog-conditioning-browse",
+      "title": "Catalog browse and conditioning widgets",
+      "patterns": [
+        "lib/screens/catalog_page.dart",
+        "lib/widgets/cardio_card.dart",
+        "lib/widgets/stretch_card.dart",
+        "lib/widgets/stretch_search_dialog.dart"
+      ],
+      "target": "Tonos cards/dialogs plus exercise-media and conditioning-specific roles",
+      "rationale": "The browse and conditioning surfaces have distinct ownership from the exercise catalog detail sheet. Queue membership is routing metadata, not migration evidence."
+    },
+    {
+      "id": "navigation-anatomy-support",
+      "title": "Navigation and anatomy support widgets",
+      "patterns": [
+        "lib/widgets/tonos_bottom_navigation_bar.dart",
+        "lib/widgets/tonos_train_tabs.dart",
+        "lib/widgets/body_heatmap.dart"
+      ],
+      "target": "Shared navigation tokens and anatomy/data-visualization ownership",
+      "rationale": "This final disjoint queue captures shared bottom navigation, the Train selector, and anatomy-map candidates so every pending finding has a named review route. Existing non-pending candidates in these files are included in queue counts but are not reclassified."
     }
   ]
 }

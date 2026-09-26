@@ -11,6 +11,27 @@ Q3 decision and does not convert it into fresh N5/N6 device or release
 qualification; the consolidated roadmap is the current status source.
 This record supersedes the 2026-09-10 missing-device-evidence statuses.
 
+Historical source-state follow-up (2026-09-24, two-scope checkpoint): the
+TonosSurfaceTheme refactor in
+Flow Methods and Workout Progress Flows passed the user-run 120-test batch and
+clean analysis; its three fingerprints were mapped and approved before the
+two-file report/enforce pass. The user subsequently accepted the current Neo
+appearance, including the dropdown contrast correction. The prior five-file
+follow-up suite passed 26 tests. The latest inventory check/report passed for
+278 files / 2,293 candidates (70 allowlisted, 1,224 migrated, 999 pending,
+zero review/unassigned). The corrected contract/drawers/settings run passed all
+37 tests; formatting reported no changes and analysis found no issues. The
+settings integration assertion passed. This updates
+the affected development evidence without expanding Q3 scope or release
+approval; see the consolidated roadmap and ratchet guide for remaining work.
+These inventory totals and the two-scope report/enforce result are historical
+checkpoint evidence. The later SettingsAccent classification and third ratchet
+scope are reflected in the current 278-file / 2,297-candidate report, 52-test
+focused inventory/ratchet/settings/ExpansionTile suite, and passing three-scope
+report/enforce result recorded in the consolidated roadmap. Targeted analysis
+after removal of two unused chart imports remains pending; that cleanup does
+not invalidate the reported test or ratchet results.
+
 ## Build And Evidence Identity
 
 - User-recorded branch: updates/backlog.

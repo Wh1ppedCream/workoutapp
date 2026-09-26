@@ -7,6 +7,7 @@ import '../../../repositories/app_repository.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_field.dart';
 
 class AppSettingsPage extends StatefulWidget {
   const AppSettingsPage({super.key}); // use_super_parameters
@@ -84,13 +85,11 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
                 title: Text(AppLocalizations.of(context).databaseImportTitle),
                 content: SizedBox(
                   width: double.maxFinite,
-                  child: TextField(
+                  child: TonosField(
                     controller: controller,
                     maxLines: 10,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).databasePasteJson,
-                      border: OutlineInputBorder(),
-                    ),
+                    hintText: AppLocalizations.of(context).databasePasteJson,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 actions: [

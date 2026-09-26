@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets(
-    'Exercise Progress sizes hero and selector content at 320 and 420 pixels',
+    'Exercise Progress adapts to size and theme mode without overflow',
     (tester) async {
       SharedPreferences.setMockInitialValues({
         'exercise_progress_tile_ids_v1': <String>['2'],
@@ -102,6 +102,66 @@ void main() {
         find.byKey(const ValueKey('exercise-progress-hero-stacked')),
         findsOneWidget,
       );
+      await pumpAt(
+        width: 393,
+        textScale: 1,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.light,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-side-by-side')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 393,
+        textScale: 1,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-side-by-side')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 420,
+        textScale: 2,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-stacked')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 420,
+        textScale: 1,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.light,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-side-by-side')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 420,
+        textScale: 1,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-side-by-side')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 420,
+        textScale: 1,
+        family: AppThemeFamily.neoBrutalism,
+        brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-side-by-side')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       expect(narrowHeight, greaterThan(0));
 
@@ -110,6 +170,32 @@ void main() {
         textScale: 2,
         family: AppThemeFamily.classic,
         brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-stacked')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+
+      await pumpAt(
+        width: 320,
+        textScale: 1,
+        family: AppThemeFamily.classic,
+        brightness: Brightness.light,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-stacked')),
+        findsOneWidget,
+      );
+      await pumpAt(
+        width: 320,
+        textScale: 1,
+        family: AppThemeFamily.neoBrutalism,
+        brightness: Brightness.dark,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-hero-stacked')),
+        findsOneWidget,
       );
       expect(tester.takeException(), isNull);
     },

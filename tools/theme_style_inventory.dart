@@ -156,16 +156,25 @@ class ThemeStyleReviewItem {
   ThemeStyleReviewItem({
     required this.id,
     required this.title,
-    required this.patterns,
+    required List<String> patterns,
     required this.target,
     required this.rationale,
-  });
+  }) : patterns = List<String>.unmodifiable(patterns),
+       _pathExpressions = patterns.map(_globToRegExp).toList(growable: false);
 
   final String id;
   final String title;
   final List<String> patterns;
   final String target;
   final String rationale;
+  final List<RegExp> _pathExpressions;
+
+  bool matches(String path) {
+    final normalizedPath = _normalizePath(path);
+    return _pathExpressions.any(
+      (expression) => expression.hasMatch(normalizedPath),
+    );
+  }
 
   factory ThemeStyleReviewItem.fromJson(Map<String, dynamic> json) {
     final rawPatterns = json['patterns'];
@@ -187,7 +196,7 @@ class ThemeStyleReviewItem {
     return ThemeStyleReviewItem(
       id: _requiredString(json, 'id', context: 'review item'),
       title: _requiredString(json, 'title', context: 'review item'),
-      patterns: List<String>.unmodifiable(patterns),
+      patterns: patterns,
       target: _requiredString(json, 'target', context: 'review item'),
       rationale: _requiredString(json, 'rationale', context: 'review item'),
     );
@@ -417,6 +426,54 @@ class ThemeStyleInventoryReport {
   Map<String, int> get countsByStatus =>
       _counts(findings.map((finding) => finding.status));
 
+  Map<String, dynamic> get reviewQueueCoverage {
+    var uniquelyAssignedCandidateCount = 0;
+    var outsideQueueCandidateCount = 0;
+    var pendingOutsideQueueCandidateCount = 0;
+    var overlappingCandidateCount = 0;
+
+    for (final finding in findings) {
+      final matchingQueueCount =
+          reviewQueue.where((item) => item.matches(finding.file)).length;
+      if (matchingQueueCount == 1) {
+        uniquelyAssignedCandidateCount++;
+      } else if (matchingQueueCount == 0) {
+        outsideQueueCandidateCount++;
+        if (finding.status == 'pending') {
+          pendingOutsideQueueCandidateCount++;
+        }
+      } else {
+        overlappingCandidateCount++;
+      }
+    }
+
+    final queues = reviewQueue
+        .map((item) {
+          final queueFindings = findings.where(
+            (finding) => item.matches(finding.file),
+          );
+          return <String, dynamic>{
+            'id': item.id,
+            'title': item.title,
+            'target': item.target,
+            'candidateCount': queueFindings.length,
+            'countsByStatus': _counts(
+              queueFindings.map((finding) => finding.status),
+            ),
+          };
+        })
+        .toList(growable: false);
+
+    return <String, dynamic>{
+      'candidateCount': findings.length,
+      'uniquelyAssignedCandidateCount': uniquelyAssignedCandidateCount,
+      'outsideQueueCandidateCount': outsideQueueCandidateCount,
+      'pendingOutsideQueueCandidateCount': pendingOutsideQueueCandidateCount,
+      'overlappingCandidateCount': overlappingCandidateCount,
+      'queues': queues,
+    };
+  }
+
   Map<String, dynamic> toJson() => <String, dynamic>{
     'mode': 'report-only',
     'scannedRoot': scannedRoot,
@@ -425,6 +482,7 @@ class ThemeStyleInventoryReport {
     'countsByKind': countsByKind,
     'countsByClassification': countsByClassification,
     'countsByStatus': countsByStatus,
+    'reviewQueueCoverage': reviewQueueCoverage,
     'scannedFiles': scannedFiles,
     'findings': findings.map((finding) => finding.toJson()).toList(),
     'reviewQueue':
@@ -455,6 +513,33 @@ class ThemeStyleInventoryReport {
     _appendCounts(lines, countsByClassification);
     lines.add('Candidates by status:');
     _appendCounts(lines, countsByStatus);
+    lines.add('');
+    final queueCoverage = reviewQueueCoverage;
+    final pendingOutsideQueueCount =
+        queueCoverage['pendingOutsideQueueCandidateCount'];
+    lines.add(
+      'Pending candidates without a review queue: $pendingOutsideQueueCount',
+    );
+    lines.add('Review queue coverage:');
+    lines.add(
+      '- ${queueCoverage['uniquelyAssignedCandidateCount']} candidates in exactly one queue',
+    );
+    lines.add(
+      '- ${queueCoverage['outsideQueueCandidateCount']} candidates outside configured queues',
+    );
+    lines.add(
+      '- ${queueCoverage['overlappingCandidateCount']} candidates in multiple queues',
+    );
+    for (final queue in queueCoverage['queues'] as List<Map<String, dynamic>>) {
+      final statusCounts = queue['countsByStatus'] as Map<String, int>;
+      final statusSummary = statusCounts.entries
+          .map((entry) => '${entry.key}=${entry.value}')
+          .join(', ');
+      lines.add(
+        '- ${queue['id']}: ${queue['candidateCount']} candidates'
+        '${statusSummary.isEmpty ? '' : ' ($statusSummary)'}',
+      );
+    }
     lines.add('');
     if (hasUnassignedFindings) {
       lines.add('Unassigned candidates: configuration error');

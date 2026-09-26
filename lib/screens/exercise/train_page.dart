@@ -630,12 +630,7 @@ class _TrainPageState extends State<TrainPage> {
 
     return Consumer<SelectedProfile>(
       builder: (context, sel, _) {
-        final usesNeoPresentation =
-            context.surfaceDecorationTokens.panel.outlined;
-        final avatarForeground =
-            usesNeoPresentation
-                ? context.semanticColors.onTrainProfileAvatar
-                : Colors.white;
+        final avatarForeground = context.semanticColors.onTrainProfileAvatar;
         return Scaffold(
           key: _scaffoldKey,
           endDrawer: ProfileDrawer(
@@ -882,20 +877,10 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final surfaceInk = context.cs.onPrimaryContainer;
-    final content = Theme(
-      data:
-          usesInkRecipe
-              ? theme.copyWith(
-                colorScheme: theme.colorScheme.copyWith(
-                  onSurface: surfaceInk,
-                  onSurfaceVariant: surfaceInk,
-                ),
-                textTheme: theme.textTheme.apply(
-                  bodyColor: surfaceInk,
-                  displayColor: surfaceInk,
-                ),
-              )
-              : theme,
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
       child: FutureBuilder<Set<int>>(
         future: _selectedIdsFuture,
         builder: (context, snapshot) {
@@ -1156,20 +1141,10 @@ class _PresetSectionCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final surfaceInk = context.cs.onPrimaryContainer;
-    final content = Theme(
-      data:
-          usesInkRecipe
-              ? theme.copyWith(
-                colorScheme: theme.colorScheme.copyWith(
-                  onSurface: surfaceInk,
-                  onSurfaceVariant: surfaceInk,
-                ),
-                textTheme: theme.textTheme.apply(
-                  bodyColor: surfaceInk,
-                  displayColor: surfaceInk,
-                ),
-              )
-              : theme,
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1223,20 +1198,10 @@ class _PremadePlansCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final surfaceInk = context.cs.onPrimaryContainer;
-    final content = Theme(
-      data:
-          usesInkRecipe
-              ? theme.copyWith(
-                colorScheme: theme.colorScheme.copyWith(
-                  onSurface: surfaceInk,
-                  onSurfaceVariant: surfaceInk,
-                ),
-                textTheme: theme.textTheme.apply(
-                  bodyColor: surfaceInk,
-                  displayColor: surfaceInk,
-                ),
-              )
-              : theme,
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1302,6 +1267,30 @@ class _PremadePlansCard extends StatelessWidget {
       child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
+}
+
+Widget _withPanelInkTheme({
+  required BuildContext context,
+  required bool usesInkRecipe,
+  required Color foreground,
+  required Widget child,
+}) {
+  if (!usesInkRecipe) return child;
+
+  final theme = Theme.of(context);
+  return Theme(
+    data: theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: foreground,
+        onSurfaceVariant: foreground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: foreground,
+        displayColor: foreground,
+      ),
+    ),
+    child: child,
+  );
 }
 
 class _SplitWorkoutBar extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_action_depth.dart';
+import 'package:env_test/theme/widgets/tonos_expansion_tile_scope.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/tokens/app_settings_presentation_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
@@ -124,6 +125,61 @@ const _testSurfaces = AppSurfaceTokens(
 );
 
 void main() {
+  test('settings category accents retain their stable mapping', () {
+    const expected = <String, Color>{
+      'account': Color(0xFFB39DDB),
+      'appearance': Color(0xFFCE93D8),
+      'training': Color(0xFF4DB6AC),
+      'progress': Color(0xFF81C784),
+      'data': Color(0xFF64B5F6),
+      'advanced': Color(0xFFFFB74D),
+      'safety': Color(0xFFEF9A9A),
+      'muted': Color(0xFF9E9E9E),
+    };
+
+    expect(<String, Color>{
+      'account': SettingsAccent.account,
+      'appearance': SettingsAccent.appearance,
+      'training': SettingsAccent.training,
+      'progress': SettingsAccent.progress,
+      'data': SettingsAccent.data,
+      'advanced': SettingsAccent.advanced,
+      'safety': SettingsAccent.safety,
+      'muted': SettingsAccent.muted,
+    }, expected);
+  });
+
+  testWidgets('settings info cards do not create a redundant local theme', (
+    tester,
+  ) async {
+    for (final theme in [
+      AppThemeFactory.light(AppThemeFamily.classic),
+      AppThemeFactory.dark(AppThemeFamily.classic),
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      await tester.pumpWidget(
+        _testApp(
+          const SettingsInfoCard(
+            key: ValueKey('settings-info-card'),
+            title: 'Information',
+            body: 'Settings details.',
+            icon: Icons.info_outline,
+          ),
+          theme: theme,
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('settings-info-card')),
+          matching: find.byType(Theme),
+        ),
+        findsNothing,
+      );
+    }
+  });
+
   testWidgets('hero switches between Classic gradient and solid recipe', (
     tester,
   ) async {
@@ -357,6 +413,121 @@ void main() {
     );
   });
 
+  testWidgets(
+    'settings section child theme preserves Material roles in every mode',
+    (tester) async {
+      const accent = Colors.teal;
+      for (final entry in _registeredThemes().entries) {
+        late BuildContext outerContext;
+        late ThemeData childTheme;
+        await tester.pumpWidget(
+          _testApp(
+            Builder(
+              builder: (context) {
+                outerContext = context;
+                return SettingsSection(
+                  title: 'Training',
+                  accentColor: accent,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        childTheme = Theme.of(context);
+                        return const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(title: Text('Scoped settings row')),
+                            LinearProgressIndicator(value: 0.5),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+            theme: entry.value,
+          ),
+        );
+
+        final baseTheme = Theme.of(outerContext);
+        final presentation = outerContext.settingsPresentationTokens;
+        final usesInkRecipe =
+            outerContext.surfaceDecorationTokens.panel.outlined;
+        final sectionSurface = outerContext.surfaceTokens.settingsSection;
+        final foreground = tonosForegroundForSurface(
+          outerContext,
+          sectionSurface,
+        );
+        final secondaryForeground = tonosSecondaryForegroundForSurface(
+          outerContext,
+          sectionSurface,
+        );
+        final hasLocalTheme =
+            usesInkRecipe || presentation.sectionUsesAccentForControls;
+
+        expect(
+          childTheme.colorScheme.primary,
+          presentation.sectionUsesAccentForControls
+              ? accent
+              : baseTheme.colorScheme.primary,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.colorScheme.surface,
+          usesInkRecipe ? sectionSurface : baseTheme.colorScheme.surface,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.colorScheme.onSurface,
+          hasLocalTheme ? foreground : baseTheme.colorScheme.onSurface,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.colorScheme.onSurfaceVariant,
+          hasLocalTheme
+              ? secondaryForeground
+              : baseTheme.colorScheme.onSurfaceVariant,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.textTheme.bodyMedium?.color,
+          usesInkRecipe ? foreground : baseTheme.textTheme.bodyMedium?.color,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.iconTheme.color,
+          usesInkRecipe ? foreground : baseTheme.iconTheme.color,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.listTileTheme.textColor,
+          usesInkRecipe ? foreground : baseTheme.listTileTheme.textColor,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.progressIndicatorTheme.color,
+          usesInkRecipe ? foreground : baseTheme.progressIndicatorTheme.color,
+          reason: entry.key,
+        );
+        final progressBar = find.byType(LinearProgressIndicator);
+        expect(progressBar, findsOneWidget, reason: entry.key);
+        final renderedProgressTheme =
+            Theme.of(tester.element(progressBar)).progressIndicatorTheme;
+        expect(
+          renderedProgressTheme.color,
+          usesInkRecipe ? foreground : baseTheme.progressIndicatorTheme.color,
+          reason: entry.key,
+        );
+        expect(
+          renderedProgressTheme.linearTrackColor,
+          baseTheme.progressIndicatorTheme.linearTrackColor,
+          reason: entry.key,
+        );
+        expect(tester.takeException(), isNull, reason: entry.key);
+      }
+    },
+  );
+
   testWidgets('expandable settings sections preserve themed expansion recipe', (
     tester,
   ) async {
@@ -401,7 +572,123 @@ void main() {
     await tester.tap(find.text('Tutorials'));
     await tester.pumpAndSettle();
     expect(find.text('Tutorial item'), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text('Tutorial item'),
+        matching: find.byType(TonosExpansionTileScope),
+      ),
+      findsOneWidget,
+    );
+    final childTheme = Theme.of(tester.element(find.text('Tutorial item')));
+    expect(childTheme.dividerColor, Colors.transparent);
+    expect(childTheme.colorScheme.primary, Colors.teal);
   });
+
+  testWidgets(
+    'expandable settings child theme preserves Material roles in every mode',
+    (tester) async {
+      const accent = Colors.teal;
+      for (final entry in _registeredThemes().entries) {
+        late BuildContext outerContext;
+        late ThemeData childTheme;
+        await tester.pumpWidget(
+          _testApp(
+            Builder(
+              builder: (context) {
+                outerContext = context;
+                return SettingsExpansionSection(
+                  key: ValueKey(entry.key),
+                  title: 'Preferences',
+                  subtitle: 'Theme-owned controls',
+                  icon: Icons.tune,
+                  accentColor: accent,
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        childTheme = Theme.of(context);
+                        return const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(title: Text('Scoped settings row')),
+                            LinearProgressIndicator(value: 0.5),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+            theme: entry.value,
+          ),
+        );
+
+        await tester.tap(find.text('Preferences'));
+        await tester.pumpAndSettle();
+
+        final baseTheme = Theme.of(outerContext);
+        final presentation = outerContext.settingsPresentationTokens;
+        final usesInkRecipe =
+            outerContext.surfaceDecorationTokens.panel.outlined;
+        final sectionSurface = outerContext.surfaceTokens.settingsSection;
+        final foreground = tonosForegroundForSurface(
+          outerContext,
+          sectionSurface,
+        );
+        final secondaryForeground = tonosSecondaryForegroundForSurface(
+          outerContext,
+          sectionSurface,
+        );
+
+        expect(
+          childTheme.colorScheme.primary,
+          presentation.sectionUsesAccentForControls
+              ? accent
+              : baseTheme.colorScheme.primary,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.colorScheme.onSurface,
+          usesInkRecipe ? foreground : baseTheme.colorScheme.onSurface,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.colorScheme.onSurfaceVariant,
+          usesInkRecipe
+              ? secondaryForeground
+              : baseTheme.colorScheme.onSurfaceVariant,
+          reason: entry.key,
+        );
+        expect(
+          childTheme.textTheme.bodyMedium?.color,
+          usesInkRecipe ? foreground : baseTheme.textTheme.bodyMedium?.color,
+          reason: entry.key,
+        );
+        expect(childTheme.dividerColor, Colors.transparent, reason: entry.key);
+        expect(childTheme.iconTheme, baseTheme.iconTheme, reason: entry.key);
+        expect(
+          childTheme.listTileTheme,
+          baseTheme.listTileTheme,
+          reason: entry.key,
+        );
+        final progressBar = find.byType(LinearProgressIndicator);
+        expect(progressBar, findsOneWidget, reason: entry.key);
+        final renderedProgressTheme =
+            Theme.of(tester.element(progressBar)).progressIndicatorTheme;
+        expect(
+          renderedProgressTheme.color,
+          baseTheme.progressIndicatorTheme.color,
+          reason: entry.key,
+        );
+        expect(
+          renderedProgressTheme.linearTrackColor,
+          baseTheme.progressIndicatorTheme.linearTrackColor,
+          reason: entry.key,
+        );
+        expect(tester.takeException(), isNull, reason: entry.key);
+      }
+    },
+  );
 
   testWidgets('shared settings actions preserve callbacks', (tester) async {
     var taps = 0;
@@ -884,12 +1171,19 @@ void main() {
     ]) {
       TextStyle? enabledStyle;
       TextStyle? disabledStyle;
+      Color? enabledForeground;
+      Color? disabledForeground;
       await tester.pumpWidget(
         _testApp(
           Builder(
             builder: (context) {
               enabledStyle = settingsInputTextStyle(context);
               disabledStyle = settingsInputTextStyle(context, enabled: false);
+              enabledForeground = settingsInputForeground(context);
+              disabledForeground = settingsInputForeground(
+                context,
+                enabled: false,
+              );
               return TextField(
                 style: enabledStyle,
                 decoration: settingsInputDecoration(
@@ -905,21 +1199,38 @@ void main() {
       );
 
       expect(enabledStyle?.color, const Color(0xFF161616));
-      expect(disabledStyle?.color?.a, closeTo(0.38, 0.01));
+      expect(enabledForeground, const Color(0xFF161616));
+      expect(disabledStyle?.color, disabledForeground);
+      expect(disabledForeground, enabledForeground!.withValues(alpha: 0.38));
     }
 
-    TextStyle? classicStyle;
-    await tester.pumpWidget(
-      _testApp(
-        Builder(
-          builder: (context) {
-            classicStyle = settingsInputTextStyle(context);
-            return const SizedBox.shrink();
-          },
+    for (final theme in [
+      AppThemeFactory.light(AppThemeFamily.classic),
+      AppThemeFactory.dark(AppThemeFamily.classic),
+    ]) {
+      TextStyle? classicStyle;
+      Color? classicForeground;
+      Color? classicDisabledForeground;
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (context) {
+              classicStyle = settingsInputTextStyle(context);
+              classicForeground = settingsInputForeground(context);
+              classicDisabledForeground = settingsInputForeground(
+                context,
+                enabled: false,
+              );
+              return const SizedBox.shrink();
+            },
+          ),
+          theme: theme,
         ),
-      ),
-    );
-    expect(classicStyle, isNull);
+      );
+      expect(classicStyle, isNull);
+      expect(classicForeground, isNull);
+      expect(classicDisabledForeground, isNull);
+    }
   });
 
   testWidgets('Neo settings focus contrasts with its colored input', (
@@ -948,18 +1259,99 @@ void main() {
       await tester.tap(find.byType(TextField));
       await tester.pump();
       final focus = decoration.focusedBorder!.borderSide;
-      final ink = focus.color.computeLuminance();
-      final fill = decoration.fillColor!.computeLuminance();
-      final contrast =
-          ink > fill
-              ? (ink + 0.05) / (fill + 0.05)
-              : (fill + 0.05) / (ink + 0.05);
-      expect(contrast, greaterThanOrEqualTo(3));
+      expect(
+        _contrastRatio(focus.color, decoration.fillColor!),
+        greaterThanOrEqualTo(3),
+      );
       expect(
         focus.width,
         greaterThan(decoration.enabledBorder!.borderSide.width),
       );
       expect(focus.color, theme.semanticColors.focusRing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
+
+  testWidgets('Neo validation ink has surface contrast', (tester) async {
+    for (final theme in [
+      AppThemeFactory.light(AppThemeFamily.classic),
+      AppThemeFactory.dark(AppThemeFamily.classic),
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      late List<InputDecoration> decorations;
+      final isNeo = theme.surfaceDecorationTokens.panel.outlined;
+      final expectedError =
+          theme.brightness == Brightness.dark
+              ? const Color(0xFF5C102C)
+              : const Color(0xFF7A1738);
+      await tester.pumpWidget(
+        _testApp(
+          Builder(
+            builder: (context) {
+              decorations = [
+                settingsInputDecoration(
+                  context,
+                  label: 'Name',
+                  icon: Icons.person_outline,
+                ),
+                settingsFieldDecoration(context, label: 'Goal'),
+              ];
+              return TextField(decoration: decorations.first);
+            },
+          ),
+          theme: theme,
+        ),
+      );
+
+      final inputDecoration = decorations.first;
+      final fieldDecoration = decorations.last;
+      if (!isNeo) {
+        expect(inputDecoration.errorStyle, isNull);
+        expect(inputDecoration.errorBorder, isNull);
+        expect(inputDecoration.focusedErrorBorder, isNull);
+        expect(fieldDecoration.errorStyle, isNull);
+        expect(fieldDecoration.errorBorder, isNull);
+        expect(fieldDecoration.focusedErrorBorder, isNull);
+      } else {
+        expect(inputDecoration.errorStyle?.color, expectedError);
+        expect(
+          (inputDecoration.errorBorder! as OutlineInputBorder).borderSide.color,
+          expectedError,
+        );
+        expect(
+          (inputDecoration.focusedErrorBorder! as OutlineInputBorder)
+              .borderSide
+              .color,
+          expectedError,
+        );
+        expect(
+          _contrastRatio(expectedError, theme.surfaceTokens.settingsInput),
+          greaterThanOrEqualTo(4.5),
+        );
+        expect(
+          _contrastRatio(expectedError, theme.surfaceTokens.settingsSection),
+          greaterThanOrEqualTo(4.5),
+        );
+      }
+
+      if (isNeo && theme.brightness == Brightness.dark) {
+        expect(fieldDecoration.errorStyle?.color, expectedError);
+        expect(
+          (fieldDecoration.errorBorder! as OutlineInputBorder).borderSide.color,
+          expectedError,
+        );
+        expect(
+          (fieldDecoration.focusedErrorBorder! as OutlineInputBorder)
+              .borderSide
+              .color,
+          expectedError,
+        );
+      } else {
+        expect(fieldDecoration.errorStyle, isNull);
+        expect(fieldDecoration.errorBorder, isNull);
+        expect(fieldDecoration.focusedErrorBorder, isNull);
+      }
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });
@@ -1153,6 +1545,13 @@ void main() {
   );
 }
 
+Map<String, ThemeData> _registeredThemes() => <String, ThemeData>{
+  'Classic light': AppThemeFactory.light(AppThemeFamily.classic),
+  'Classic dark': AppThemeFactory.dark(AppThemeFamily.classic),
+  'Neo light': AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+  'Neo dark': AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+};
+
 Widget _testApp(
   Widget child, {
   ThemeData? theme,
@@ -1177,3 +1576,17 @@ Widget _testApp(
 }
 
 void _noop() {}
+
+double _contrastRatio(Color foreground, Color background) {
+  final foregroundLuminance = foreground.computeLuminance();
+  final backgroundLuminance = background.computeLuminance();
+  final lighter =
+      foregroundLuminance > backgroundLuminance
+          ? foregroundLuminance
+          : backgroundLuminance;
+  final darker =
+      foregroundLuminance > backgroundLuminance
+          ? backgroundLuminance
+          : foregroundLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
+}

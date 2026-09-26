@@ -25,6 +25,9 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     this.recordBadgeBorder = 0.62,
     this.workoutCardCompleteFill = 24 / 255,
     this.workoutSetCompleteFill = 76 / 255,
+    this.workoutInputHintOpacity = 0.7,
+    this.workoutTextSelectionOpacity = 0.2,
+    this.workoutSetCompleteOutline = Colors.transparent,
     this.useSemanticWorkoutCardFill = false,
     this.workoutChangeSetOutline = Colors.grey,
     this.exerciseDetailCardBorderOpacity = 0.32,
@@ -232,6 +235,9 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
   final double recordBadgeBorder;
   final double workoutCardCompleteFill;
   final double workoutSetCompleteFill;
+  final double workoutInputHintOpacity;
+  final double workoutTextSelectionOpacity;
+  final Color workoutSetCompleteOutline;
   final bool useSemanticWorkoutCardFill;
   final Color workoutChangeSetOutline;
   final double exerciseDetailCardBorderOpacity;
@@ -340,6 +346,9 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     double? recordBadgeBorder,
     double? workoutCardCompleteFill,
     double? workoutSetCompleteFill,
+    double? workoutInputHintOpacity,
+    double? workoutTextSelectionOpacity,
+    Color? workoutSetCompleteOutline,
     bool? useSemanticWorkoutCardFill,
     Color? workoutChangeSetOutline,
     double? exerciseDetailCardBorderOpacity,
@@ -461,6 +470,12 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
           workoutCardCompleteFill ?? this.workoutCardCompleteFill,
       workoutSetCompleteFill:
           workoutSetCompleteFill ?? this.workoutSetCompleteFill,
+      workoutInputHintOpacity:
+          workoutInputHintOpacity ?? this.workoutInputHintOpacity,
+      workoutTextSelectionOpacity:
+          workoutTextSelectionOpacity ?? this.workoutTextSelectionOpacity,
+      workoutSetCompleteOutline:
+          workoutSetCompleteOutline ?? this.workoutSetCompleteOutline,
       useSemanticWorkoutCardFill:
           useSemanticWorkoutCardFill ?? this.useSemanticWorkoutCardFill,
       workoutChangeSetOutline:
@@ -660,6 +675,18 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       workoutSetCompleteFill:
           workoutSetCompleteFill +
           (other.workoutSetCompleteFill - workoutSetCompleteFill) * t,
+      workoutInputHintOpacity:
+          workoutInputHintOpacity +
+          (other.workoutInputHintOpacity - workoutInputHintOpacity) * t,
+      workoutTextSelectionOpacity:
+          workoutTextSelectionOpacity +
+          (other.workoutTextSelectionOpacity - workoutTextSelectionOpacity) * t,
+      workoutSetCompleteOutline:
+          Color.lerp(
+            workoutSetCompleteOutline,
+            other.workoutSetCompleteOutline,
+            t,
+          )!,
       useSemanticWorkoutCardFill:
           t < 0.5
               ? useSemanticWorkoutCardFill

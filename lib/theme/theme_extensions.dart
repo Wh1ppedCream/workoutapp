@@ -99,6 +99,12 @@ const _neoDarkInk = Color(0xFF161616);
 const _neoWarmPaper = Color(0xFFFFF8E7);
 const _neoBrightPanelPurple = Color(0xFF4D2D78);
 const _neoBrightPanelCyan = Color(0xFF006A72);
+const _neoBrightPanelPositive = Color(0xFF1B5E20);
+const _neoBrightPanelPositiveStrong = Color(0xFF174A12);
+const _neoBrightPanelNegative = Color(0xFF8E2445);
+const _neoBrightPanelNegativeStrong = Color(0xFF701A38);
+const _neoBrightPanelError = Color(0xFF7A1738);
+const _neoDarkSettingsValidationError = Color(0xFF5C102C);
 const _neoBrightPanelHeatmapLow = Color(0xFF4B4740);
 
 /// Chooses the readable foreground for a painted surface.
@@ -239,35 +245,136 @@ Color tonosSecondarySeriesForSurface(BuildContext context, Color surface) {
   );
 }
 
-/// Resolves the positive health delta color for the surface that will contain
-/// it. Neo's bright health cards need a saturated dark accent instead of the
-/// luminous progress token used on the charcoal canvas.
-Color tonosHealthIncreaseForSurface(BuildContext context, Color surface) {
-  final progressColors = context.progressColors;
+/// Resolves the estimated one-rep-max series against its painted chart surface.
+Color tonosEstimatedOneRmForSurface(BuildContext context, Color surface) {
+  return _tonosPositiveForSurface(
+    context,
+    surface,
+    fallback: context.progressColors.estimatedOneRm,
+  );
+}
+
+/// Resolves the Material error role against its painted surface.
+Color tonosErrorForSurface(BuildContext context, Color surface) {
+  return _tonosNegativeForSurface(
+    context,
+    surface,
+    fallback: Theme.of(context).colorScheme.error,
+    candidates: const [_neoBrightPanelError, _neoDarkInk],
+  );
+}
+
+/// Keeps validation ink subdued on Neo's bright dark-mode settings surfaces.
+Color tonosSettingsValidationErrorForSurface(
+  BuildContext context,
+  Color surface,
+) {
   if (!context.surfaceDecorationTokens.panel.outlined ||
-      !_isKnownBrightSurface(context, surface)) {
-    return progressColors.healthIncrease;
+      Theme.of(context).brightness != Brightness.dark) {
+    return tonosErrorForSurface(context, surface);
   }
   return _neoDataColorForSurface(
     context,
     surface,
-    candidates: const [Color(0xFF1B5E20), _neoDarkInk],
+    candidates: const [_neoDarkSettingsValidationError, _neoDarkInk],
     minimumContrast: 4.5,
+  );
+}
+
+/// Resolves the positive health delta color for the surface that will contain
+/// it. Neo's bright health cards need a saturated dark accent instead of the
+/// luminous progress token used on the charcoal canvas.
+Color tonosHealthIncreaseForSurface(BuildContext context, Color surface) {
+  return _tonosPositiveForSurface(
+    context,
+    surface,
+    fallback: context.progressColors.healthIncrease,
   );
 }
 
 /// Resolves the negative health delta color for the surface that will contain
 /// it while preserving the Classic progress palette.
 Color tonosHealthDecreaseForSurface(BuildContext context, Color surface) {
-  final progressColors = context.progressColors;
+  return _tonosNegativeForSurface(
+    context,
+    surface,
+    fallback: context.progressColors.healthDecrease,
+    candidates: const [
+      _neoBrightPanelNegative,
+      _neoBrightPanelNegativeStrong,
+      _neoDarkInk,
+    ],
+  );
+}
+
+/// Resolves a workout increase label for the surface that actually contains it.
+Color tonosWorkoutIncreaseForSurface(BuildContext context, Color surface) {
+  return _tonosPositiveForSurface(
+    context,
+    surface,
+    fallback: context.progressColors.workoutIncrease,
+  );
+}
+
+/// Resolves a workout decrease label for the surface that actually contains it.
+Color tonosWorkoutDecreaseForSurface(BuildContext context, Color surface) {
+  return _tonosNegativeForSurface(
+    context,
+    surface,
+    fallback: context.progressColors.workoutDecrease,
+    candidates: const [
+      _neoBrightPanelNegative,
+      _neoBrightPanelNegativeStrong,
+      _neoDarkInk,
+    ],
+  );
+}
+
+/// Resolves a neutral workout trend against its bright Neo stat-tile surface.
+Color tonosWorkoutNeutralForSurface(BuildContext context, Color surface) {
+  final fallback = context.progressColors.neutral;
   if (!context.surfaceDecorationTokens.panel.outlined ||
       !_isKnownBrightSurface(context, surface)) {
-    return progressColors.healthDecrease;
+    return fallback;
+  }
+  return tonosForegroundForSurface(context, surface);
+}
+
+Color _tonosPositiveForSurface(
+  BuildContext context,
+  Color surface, {
+  required Color fallback,
+}) {
+  if (!context.surfaceDecorationTokens.panel.outlined ||
+      !_isKnownBrightSurface(context, surface)) {
+    return fallback;
   }
   return _neoDataColorForSurface(
     context,
     surface,
-    candidates: const [Color(0xFF8E2445), _neoDarkInk],
+    candidates: const [
+      _neoBrightPanelPositive,
+      _neoBrightPanelPositiveStrong,
+      _neoDarkInk,
+    ],
+    minimumContrast: 4.5,
+  );
+}
+
+Color _tonosNegativeForSurface(
+  BuildContext context,
+  Color surface, {
+  required Color fallback,
+  required List<Color> candidates,
+}) {
+  if (!context.surfaceDecorationTokens.panel.outlined ||
+      !_isKnownBrightSurface(context, surface)) {
+    return fallback;
+  }
+  return _neoDataColorForSurface(
+    context,
+    surface,
+    candidates: candidates,
     minimumContrast: 4.5,
   );
 }

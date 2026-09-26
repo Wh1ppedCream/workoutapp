@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   const AppShapeTokens({
     this.trainTab = const BorderRadius.all(Radius.circular(20)),
+    this.trainTabButton = const BorderRadius.all(Radius.circular(3)),
+    this.workoutCompletedSet = const BorderRadius.all(Radius.circular(12)),
+    this.workoutCompletedSetBorderWidth = 1,
+    this.workoutCompletedSetAccentBorderWidth = 3,
     this.workoutAddChangeSet = const BorderRadius.all(Radius.circular(4)),
     this.mediaThumbnail = const BorderRadius.all(Radius.circular(10)),
     this.exerciseDetailSheet = const BorderRadius.vertical(
@@ -83,6 +87,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
 
   static const AppShapeTokens classic = AppShapeTokens(
     trainTab: BorderRadius.all(Radius.circular(20)),
+    trainTabButton: BorderRadius.all(Radius.circular(3)),
     mediaThumbnail: BorderRadius.all(Radius.circular(10)),
     exerciseDetailSheet: BorderRadius.vertical(top: Radius.circular(16)),
     exerciseDetailCard: BorderRadius.all(Radius.circular(16)),
@@ -152,6 +157,10 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
 
   final BorderRadius compact;
   final BorderRadius trainTab;
+  final BorderRadius trainTabButton;
+  final BorderRadius workoutCompletedSet;
+  final double workoutCompletedSetBorderWidth;
+  final double workoutCompletedSetAccentBorderWidth;
   final BorderRadius mediaThumbnail;
   final BorderRadius workoutAddChangeSet;
   final BorderRadius exerciseDetailSheet;
@@ -221,6 +230,10 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   @override
   AppShapeTokens copyWith({
     BorderRadius? trainTab,
+    BorderRadius? trainTabButton,
+    BorderRadius? workoutCompletedSet,
+    double? workoutCompletedSetBorderWidth,
+    double? workoutCompletedSetAccentBorderWidth,
     BorderRadius? workoutAddChangeSet,
     BorderRadius? mediaThumbnail,
     BorderRadius? exerciseDetailSheet,
@@ -290,6 +303,13 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   }) {
     return AppShapeTokens(
       trainTab: trainTab ?? this.trainTab,
+      trainTabButton: trainTabButton ?? this.trainTabButton,
+      workoutCompletedSet: workoutCompletedSet ?? this.workoutCompletedSet,
+      workoutCompletedSetBorderWidth:
+          workoutCompletedSetBorderWidth ?? this.workoutCompletedSetBorderWidth,
+      workoutCompletedSetAccentBorderWidth:
+          workoutCompletedSetAccentBorderWidth ??
+          this.workoutCompletedSetAccentBorderWidth,
       mediaThumbnail: mediaThumbnail ?? this.mediaThumbnail,
       workoutAddChangeSet: workoutAddChangeSet ?? this.workoutAddChangeSet,
       exerciseDetailSheet: exerciseDetailSheet ?? this.exerciseDetailSheet,
@@ -380,6 +400,20 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     }
     return AppShapeTokens(
       trainTab: BorderRadius.lerp(trainTab, other.trainTab, t)!,
+      trainTabButton:
+          BorderRadius.lerp(trainTabButton, other.trainTabButton, t)!,
+      workoutCompletedSet:
+          BorderRadius.lerp(workoutCompletedSet, other.workoutCompletedSet, t)!,
+      workoutCompletedSetBorderWidth: _lerpDouble(
+        workoutCompletedSetBorderWidth,
+        other.workoutCompletedSetBorderWidth,
+        t,
+      ),
+      workoutCompletedSetAccentBorderWidth: _lerpDouble(
+        workoutCompletedSetAccentBorderWidth,
+        other.workoutCompletedSetAccentBorderWidth,
+        t,
+      ),
       mediaThumbnail:
           BorderRadius.lerp(mediaThumbnail, other.mediaThumbnail, t)!,
       workoutAddChangeSet:

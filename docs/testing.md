@@ -132,6 +132,35 @@ development qualification for route states, accessibility, keyboard and
 large-text behavior, switching, persistence, media/scanner lifecycle, and
 affected Classic parity. It is user-reported evidence, not a new automated run
 or signed-release approval; Step 15 remains separate.
+Source-state follow-up (2026-09-24): the TonosSurfaceTheme refactor's three
+fingerprints were reviewed and narrowly approved; the subsequent two-file
+report/enforce run passed. The user accepted the current Flow Methods and
+Workout Progress Flows Neo appearance, including the dropdown contrast fix.
+The earlier user-run five-file suite passed 26 tests, including the ExpansionTile
+inherited-style regression and workout-badge parent-surface contrast check;
+analysis was clean and formatting reported no changes. The refreshed inventory
+report (2026-09-24) covers 278 Dart files / 2,297 candidates (86 allowlisted,
+1,228 migrated, 983 pending, zero review/unassigned); 731 candidates are
+uniquely assigned to queues, 1,566 are outside queues, and none overlap. The
+focused inventory/ratchet/CLI/settings/ExpansionTile suite passed all 52 tests.
+Additional user-run batches passed 27 chart/theme tests, 58 widget/settings
+tests, and 10 inventory/ratchet CLI tests. The current three-scope ratchet
+report and enforce outputs matched the approved manifest fingerprints.
+The latest inventory includes the SettingsExpansionSection change delegating
+its transparent divider to TonosExpansionTileScope. Its integration assertion
+was included in `settings_tiles_test.dart` and passed.
+Those earlier inventory totals and two-scope report/enforce results are
+historical checkpoint evidence and are superseded by the refreshed results
+above. The chart analyzer run reported two unused imports; both directives were
+removed afterward, and the 2026-09-26 repository-wide `dart analyze` reported no
+issues. After the later narrow WeightCard hint/suffix restoration, targeted
+analysis and the workout-theme regression suite passed. The 2026-09-26 full
+Flutter suite passed all 797 tests. The subsequent TrainTabs inventory-only
+rule and count-pinned contract passed the focused 26-test widget/inventory run;
+the refreshed inventory check and three-scope ratchet enforcement also passed.
+These focused results do not replace the broader accepted development checklist
+or constitute signed-release approval. See the consolidated roadmap and
+style-ratchet guide for current status.
 
 ## Latest deterministic localization verification
 

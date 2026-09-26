@@ -274,7 +274,11 @@ void main() {
                 extension.runtimeType != theme.shapeTokens.runtimeType,
           ),
           surfaces,
-          theme.semanticColors.copyWith(workoutCompleted: Colors.pink),
+          theme.semanticColors.copyWith(
+            workoutCompleted: Colors.pink,
+            workoutExerciseCompleted: Colors.orange,
+            workoutSetCompleted: Colors.teal,
+          ),
           theme.shapeTokens.copyWith(control: BorderRadius.circular(3)),
         ],
       );
@@ -303,11 +307,23 @@ void main() {
 
       expect(
         tester.widget<Card>(find.byType(Card)).color,
-        Colors.green.withAlpha(24),
+        theme.semanticColors.workoutExerciseCompleted.withValues(
+          alpha: theme.surfaceTokens.workoutCardCompleteFill,
+        ),
+      );
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(WeightCard)),
+      );
+      expect(
+        tester
+            .widget<Text>(find.text(strings.weightCardSetsDone(1, 1)))
+            .style
+            ?.color,
+        theme.semanticColors.workoutCompleted,
       );
       expect(
         tester.widget<Checkbox>(find.byType(Checkbox)).activeColor,
-        Colors.green,
+        theme.semanticColors.workoutCompleted,
       );
       final classicRow = tester.widget<Container>(
         find.byWidgetPredicate(
@@ -315,7 +331,9 @@ void main() {
               w is Container &&
               w.decoration is BoxDecoration &&
               (w.decoration! as BoxDecoration).color ==
-                  Colors.green.withAlpha(76),
+                  theme.semanticColors.workoutSetCompleted.withValues(
+                    alpha: theme.surfaceTokens.workoutSetCompleteFill,
+                  ),
         ),
       );
       final classicDecoration = classicRow.decoration! as BoxDecoration;
@@ -334,7 +352,7 @@ void main() {
       await tester.pump();
 
       final card = tester.widget<Card>(find.byType(Card));
-      expect(card.color, Colors.pink.withValues(alpha: 0.4));
+      expect(card.color, Colors.orange.withValues(alpha: 0.4));
       expect(
         tester.widget<Checkbox>(find.byType(Checkbox)).activeColor,
         Colors.pink,
@@ -346,7 +364,7 @@ void main() {
           }
           final decoration = widget.decoration! as BoxDecoration;
           return decoration.borderRadius == BorderRadius.circular(3) &&
-              decoration.color == Colors.pink.withValues(alpha: 0.6);
+              decoration.color == Colors.teal.withValues(alpha: 0.6);
         }),
       );
       expect(

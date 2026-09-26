@@ -7,6 +7,7 @@ import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../exercise/auto_preset_flow_screen.dart';
@@ -338,22 +339,8 @@ class _FlowScopeCard extends StatelessWidget {
           width: shapes.outlineWidth,
         ),
       ),
-      child: Theme(
-        data:
-            neo
-                ? theme.copyWith(
-                  colorScheme: scheme.copyWith(
-                    surface: cardSurface,
-                    onSurface: cardForeground,
-                    onSurfaceVariant: cardSecondary,
-                  ),
-                  textTheme: theme.textTheme.apply(
-                    bodyColor: cardForeground,
-                    displayColor: cardForeground,
-                  ),
-                  iconTheme: theme.iconTheme.copyWith(color: cardForeground),
-                )
-                : theme,
+      child: TonosSurfaceTheme(
+        surface: cardSurface,
         child: ExpansionTile(
           initiallyExpanded: initiallyExpanded,
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),

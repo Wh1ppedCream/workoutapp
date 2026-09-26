@@ -185,6 +185,49 @@ class TonosSurface extends StatelessWidget {
   }
 }
 
+/// Scopes inherited foreground roles to the actual surface beneath content.
+/// Classic keeps its existing Material theme; outlined Neo surfaces receive
+/// contrast-checked text, icon, and surface roles for nested Material widgets.
+class TonosSurfaceTheme extends StatelessWidget {
+  const TonosSurfaceTheme({
+    super.key,
+    required this.surface,
+    required this.child,
+  });
+
+  final Color surface;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.surfaceDecorationTokens.panel.outlined) return child;
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final foreground = tonosForegroundForSurface(context, surface);
+    final secondaryForeground = tonosSecondaryForegroundForSurface(
+      context,
+      surface,
+    );
+
+    return Theme(
+      data: theme.copyWith(
+        colorScheme: scheme.copyWith(
+          surface: surface,
+          onSurface: foreground,
+          onSurfaceVariant: secondaryForeground,
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: foreground,
+          displayColor: foreground,
+        ),
+        iconTheme: theme.iconTheme.copyWith(color: foreground),
+      ),
+      child: child,
+    );
+  }
+}
+
 ShapeBorder _resolveSurfaceShape({
   required ShapeBorder? customShape,
   required RoundedRectangleBorder fallback,

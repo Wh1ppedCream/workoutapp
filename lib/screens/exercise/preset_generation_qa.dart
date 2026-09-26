@@ -17,6 +17,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../models/training_plan_models.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_expansion_tile_scope.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -504,8 +505,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         borderRadius: generation.sectionShape,
         border: Border.all(color: generation.sectionBorder),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: TonosExpansionTileScope(
         child: ExpansionTile(
           tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),

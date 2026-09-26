@@ -322,6 +322,8 @@ void main() {
       );
       expect(light.progressColors.workoutIncrease, const Color(0xFF38651F));
       expect(light.progressColors.workoutDecrease, const Color(0xFF9B284C));
+      expect(light.progressColors.estimatedOneRm, const Color(0xFF38651F));
+      expect(dark.progressColors.estimatedOneRm, const Color(0xFF8CFF5A));
     });
 
     testWidgets('Neo TextButton focus state is rendered and keyboard active', (
@@ -500,7 +502,7 @@ void main() {
         AppThemeFactory.light(AppThemeFamily.neoBrutalism),
         AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
       ]) {
-        late List<(Color, Color, Color, Color)> resolved;
+        late List<(Color, Color, Color, Color, Color)> resolved;
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
@@ -544,6 +546,7 @@ void main() {
                       _compositeTestSurface(surface, theme.colorScheme.surface),
                       tonosPrimarySeriesForSurface(context, surface),
                       tonosSecondarySeriesForSurface(context, surface),
+                      tonosEstimatedOneRmForSurface(context, surface),
                       tonosHeatmapHighForSurface(context, surface),
                     ),
                 ];
@@ -564,6 +567,10 @@ void main() {
           );
           expect(
             _contrastRatioForTest(pair.$4, background),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            _contrastRatioForTest(pair.$5, background),
             greaterThanOrEqualTo(3),
           );
         }
@@ -576,6 +583,7 @@ void main() {
       final theme = AppThemeFactory.dark(AppThemeFamily.classic);
       late Color primary;
       late Color secondary;
+      late Color estimatedOneRm;
       late Color heatmap;
       await tester.pumpWidget(
         MaterialApp(
@@ -585,6 +593,7 @@ void main() {
               final surface = context.surfaceTokens.planGroup;
               primary = tonosPrimarySeriesForSurface(context, surface);
               secondary = tonosSecondarySeriesForSurface(context, surface);
+              estimatedOneRm = tonosEstimatedOneRmForSurface(context, surface);
               heatmap = tonosHeatmapHighForSurface(context, surface);
               return const SizedBox.shrink();
             },
@@ -594,6 +603,7 @@ void main() {
 
       expect(primary, theme.dataVisualizationTokens.primarySeries);
       expect(secondary, theme.dataVisualizationTokens.secondarySeries);
+      expect(estimatedOneRm, theme.progressColors.estimatedOneRm);
       expect(heatmap, theme.dataVisualizationTokens.heatmapHigh);
     });
 

@@ -12,83 +12,119 @@ void main() {
     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Logbook'),
   ];
 
-  testWidgets('Neo navigation uses one framed rail and shared selection', (
-    tester,
-  ) async {
-    var selectedIndex = 0;
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppThemeFactory.light(AppThemeFamily.neoBrutalism),
-        home: Scaffold(
-          bottomNavigationBar: TonosBottomNavigationBar(
-            items: items,
-            currentIndex: selectedIndex,
-            onTap: (index) => selectedIndex = index,
-          ),
-        ),
-      ),
-    );
-
-    final context = tester.element(find.byType(TonosBottomNavigationBar));
-    final frame = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('tonos-bottom-navigation-frame')),
-    );
-    final decoration = frame.decoration as BoxDecoration;
-    final effects = context.effectTokens;
-    final shapes = context.shapeTokens;
-    expect(decoration.color, context.cs.primaryContainer);
-    expect(decoration.border, isNotNull);
-    expect(decoration.border!.top.width, shapes.outlineWidth);
-    expect(decoration.borderRadius, shapes.trainTab);
-    expect(decoration.boxShadow, hasLength(1));
-    expect(decoration.boxShadow!.single.offset, effects.cardShadowOffset);
-    expect(decoration.boxShadow!.single.blurRadius, effects.cardShadowBlur);
-    expect(
-      tester
-          .widget<ColoredBox>(
-            find.byKey(
-              const ValueKey('tonos-bottom-navigation-selected-segment'),
+  for (final family in AppThemeFamily.values) {
+    for (final brightness in Brightness.values) {
+      testWidgets(
+        '${family.name} ${brightness.name} navigation preserves its theme owner',
+        (tester) async {
+          final theme =
+              brightness == Brightness.light
+                  ? AppThemeFactory.light(family)
+                  : AppThemeFactory.dark(family);
+          var selectedIndex = 0;
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                bottomNavigationBar: TonosBottomNavigationBar(
+                  items: items,
+                  currentIndex: selectedIndex,
+                  onTap: (index) => selectedIndex = index,
+                ),
+              ),
             ),
-          )
-          .color,
-      context.cs.secondaryContainer,
-    );
-    expect(
-      tester
-          .widget<ColoredBox>(
-            find.byKey(
-              const ValueKey('tonos-bottom-navigation-selected-underline'),
-            ),
-          )
-          .color,
-      context.surfaceTokens.subtleOutline,
-    );
+          );
 
-    await tester.tap(find.text('Catalog'));
-    await tester.pump();
-    expect(selectedIndex, 1);
-  });
+          final context = tester.element(find.byType(TonosBottomNavigationBar));
+          final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+          final navigation = tester.widget<BottomNavigationBar>(
+            find.byType(BottomNavigationBar),
+          );
+          expect(navigation.currentIndex, 0);
 
-  testWidgets('Classic navigation keeps the ordinary Material owner', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppThemeFactory.light(AppThemeFamily.classic),
-        home: Scaffold(
-          bottomNavigationBar: TonosBottomNavigationBar(
-            items: items,
-            currentIndex: 0,
-            onTap: (_) {},
-          ),
-        ),
-      ),
-    );
+          if (!usesInkRecipe) {
+            expect(
+              find.byKey(const ValueKey('tonos-bottom-navigation-frame')),
+              findsNothing,
+            );
+          } else {
+            final frame = tester.widget<DecoratedBox>(
+              find.byKey(const ValueKey('tonos-bottom-navigation-frame')),
+            );
+            final decoration = frame.decoration as BoxDecoration;
+            final effects = context.effectTokens;
+            final shapes = context.shapeTokens;
+            final expectedBackground =
+                Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
+                context.cs.primaryContainer;
+            expect(decoration.color, expectedBackground);
+            expect(decoration.border, isNotNull);
+            expect(decoration.border!.top.width, shapes.outlineWidth);
+            expect(decoration.borderRadius, shapes.trainTab);
+            expect(navigation.backgroundColor, Colors.transparent);
+            expect(navigation.elevation, 0);
+            expect(
+              navigation.selectedItemColor,
+              context.cs.onSecondaryContainer,
+            );
+            expect(
+              navigation.unselectedItemColor,
+              context.cs.onPrimaryContainer,
+            );
+            expect(
+              navigation.selectedIconTheme?.color,
+              context.cs.onSecondaryContainer,
+            );
+            expect(
+              navigation.unselectedIconTheme?.color,
+              context.cs.onPrimaryContainer,
+            );
+            final shadows = decoration.boxShadow;
+            final hasVisibleShadow =
+                effects.cardShadow.a != 0 &&
+                (effects.cardShadowBlur > 0 ||
+                    effects.cardShadowOffset != Offset.zero);
+            if (!hasVisibleShadow) {
+              expect(shadows, isNull);
+            } else {
+              final visibleShadows = shadows!;
+              expect(visibleShadows, hasLength(1));
+              expect(visibleShadows.single.color, effects.cardShadow);
+              expect(visibleShadows.single.offset, effects.cardShadowOffset);
+              expect(visibleShadows.single.blurRadius, effects.cardShadowBlur);
+            }
+            expect(
+              tester
+                  .widget<ColoredBox>(
+                    find.byKey(
+                      const ValueKey(
+                        'tonos-bottom-navigation-selected-segment',
+                      ),
+                    ),
+                  )
+                  .color,
+              context.cs.secondaryContainer,
+            );
+            expect(
+              tester
+                  .widget<ColoredBox>(
+                    find.byKey(
+                      const ValueKey(
+                        'tonos-bottom-navigation-selected-underline',
+                      ),
+                    ),
+                  )
+                  .color,
+              context.surfaceTokens.subtleOutline,
+            );
+          }
 
-    expect(find.byType(BottomNavigationBar), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('tonos-bottom-navigation-frame')),
-      findsNothing,
-    );
-  });
+          await tester.tap(find.text('Catalog'));
+          await tester.pump();
+          expect(selectedIndex, 1);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
 }

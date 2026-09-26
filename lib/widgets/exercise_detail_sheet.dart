@@ -1383,12 +1383,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             Row(
               children: [
                 _RecordLegendDot(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: _exerciseRecordActualSeriesColor(context),
                   label: _strings.exerciseDetailBestWeight,
                 ),
                 const SizedBox(width: 16),
                 _RecordLegendDot(
-                  color: Colors.green.shade400,
+                  color: _exerciseRecordEstimatedSeriesColor(context),
                   label: _strings.exerciseDetailEstimatedOneRm,
                 ),
               ],
@@ -2252,6 +2252,24 @@ class _ExerciseRecordPoint {
   }
 }
 
+Color _exerciseRecordActualSeriesColor(BuildContext context) {
+  final theme = Theme.of(context);
+  if (!context.surfaceDecorationTokens.panel.outlined) {
+    return theme.colorScheme.primary;
+  }
+  return tonosPrimarySeriesForSurface(
+    context,
+    theme.surfaceTokens.exerciseDetailChart,
+  );
+}
+
+Color _exerciseRecordEstimatedSeriesColor(BuildContext context) {
+  return tonosEstimatedOneRmForSurface(
+    context,
+    Theme.of(context).surfaceTokens.exerciseDetailChart,
+  );
+}
+
 class _ExerciseRecordTrendChart extends StatelessWidget {
   final List<_ExerciseRecordPoint> points;
   final WeightUnit weightUnit;
@@ -2306,8 +2324,8 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
     final bounds = _recordChartBounds(points);
     final labelIndexes = _recordDateLabelIndexes(points.length);
     final showTimes = _shouldUseTimeLabels(points);
-    final actualColor = scheme.primary;
-    final estimatedColor = Colors.green.shade400;
+    final actualColor = _exerciseRecordActualSeriesColor(context);
+    final estimatedColor = _exerciseRecordEstimatedSeriesColor(context);
     final hasBestWeight = points.any((point) => point.bestWeight > 0);
     final hasEstimatedOneRm = points.any(
       (point) => point.bestEstimatedOneRm > 0,
@@ -2509,6 +2527,9 @@ class _RecordLegendDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaces = theme.surfaceTokens;
+    final outlined = context.surfaceDecorationTokens.panel.outlined;
     return Flexible(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2516,7 +2537,20 @@ class _RecordLegendDot extends StatelessWidget {
           Container(
             width: 9,
             height: 9,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border:
+                  outlined
+                      ? Border.all(
+                        color: tonosForegroundForSurface(
+                          context,
+                          surfaces.sheet,
+                        ),
+                        width: theme.shapeTokens.outlineWidth,
+                      )
+                      : null,
+            ),
           ),
           const SizedBox(width: 6),
           Flexible(
@@ -2524,7 +2558,7 @@ class _RecordLegendDot extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall,
+              style: theme.textTheme.labelSmall,
             ),
           ),
         ],

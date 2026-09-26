@@ -8,6 +8,7 @@ class TonosDialogFrame extends StatelessWidget {
     super.key,
     required this.child,
     this.styleFormControls = false,
+    this.styleDarkNeoPickerSurfaces = false,
   });
 
   final Widget child;
@@ -15,6 +16,10 @@ class TonosDialogFrame extends StatelessWidget {
   /// Gives nested text fields a bright Neo control surface instead of letting
   /// the dialog's foreground recipe leak onto a charcoal input.
   final bool styleFormControls;
+
+  /// Gives nested popup, date-picker, and time-picker routes a surface that
+  /// pairs with the dark Neo dialog foreground. Callers opt in per flow.
+  final bool styleDarkNeoPickerSurfaces;
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +37,24 @@ class TonosDialogFrame extends StatelessWidget {
       context,
       dialogSurface,
     );
+    final needsDarkNeoPickerContrast =
+        styleDarkNeoPickerSurfaces && theme.brightness == Brightness.dark;
+    // Picker and popup routes capture this theme, so give them the same
+    // readable surface/foreground pairing as the dialog itself.
+    final pickerSurface = needsDarkNeoPickerContrast ? dialogSurface : null;
+    final formButtonBackground =
+        needsDarkNeoPickerContrast && styleFormControls
+            ? WidgetStatePropertyAll<Color?>(context.surfaceTokens.dialogChoice)
+            : null;
     final dialogButtonForeground = WidgetStateProperty.resolveWith<Color?>(
       (states) =>
           states.contains(WidgetState.disabled)
               ? foreground.withValues(alpha: 0.38)
               : foreground,
+    );
+    final outlinedButtonStyle = theme.outlinedButtonTheme.style?.copyWith(
+      foregroundColor: dialogButtonForeground,
+      backgroundColor: formButtonBackground,
     );
     final formInputTheme =
         styleFormControls
@@ -61,9 +79,19 @@ class TonosDialogFrame extends StatelessWidget {
     return Theme(
       data: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
+          surface: pickerSurface,
+          surfaceDim: pickerSurface,
+          surfaceBright: pickerSurface,
+          surfaceContainerLowest: pickerSurface,
+          surfaceContainerLow: pickerSurface,
+          surfaceContainer: pickerSurface,
+          surfaceContainerHigh: pickerSurface,
+          surfaceContainerHighest: pickerSurface,
           onSurface: foreground,
           onSurfaceVariant: secondaryForeground,
         ),
+        canvasColor: pickerSurface,
+        popupMenuTheme: theme.popupMenuTheme.copyWith(color: pickerSurface),
         textTheme: theme.textTheme.apply(
           bodyColor: foreground,
           displayColor: foreground,
@@ -94,9 +122,7 @@ class TonosDialogFrame extends StatelessWidget {
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
-          style: theme.outlinedButtonTheme.style?.copyWith(
-            foregroundColor: dialogButtonForeground,
-          ),
+          style: outlinedButtonStyle,
         ),
         textButtonTheme: TextButtonThemeData(
           style: theme.textButtonTheme.style?.copyWith(
@@ -113,6 +139,47 @@ class TonosDialogFrame extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+}
+
+/// Applies the dialog's surface and readable foreground to dropdown controls.
+///
+/// Use inside [TonosDialogFrame] so Neo popup routes inherit the same contrast
+/// recipe as the dialog. Classic leaves the Material defaults untouched.
+class TonosDialogDropdownButton<T> extends StatelessWidget {
+  const TonosDialogDropdownButton({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.isExpanded = true,
+  });
+
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final bool isExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final usesOutlinedDialog = context.surfaceDecorationTokens.panel.outlined;
+    final dialogSurface =
+        theme.dialogTheme.backgroundColor ?? context.surfaceTokens.dialog;
+    final foreground =
+        usesOutlinedDialog
+            ? tonosForegroundForSurface(context, dialogSurface)
+            : null;
+
+    return DropdownButton<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      isExpanded: isExpanded,
+      style: foreground == null ? null : TextStyle(color: foreground),
+      dropdownColor: usesOutlinedDialog ? dialogSurface : null,
+      iconEnabledColor: foreground,
     );
   }
 }

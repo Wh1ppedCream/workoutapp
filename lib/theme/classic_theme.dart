@@ -16,15 +16,24 @@ import 'tokens/app_media_tokens.dart';
 import 'tokens/app_progress_colors.dart';
 import 'tokens/app_tutorial_tokens.dart';
 
-/// The unchanged visual definition of the permanent Classic theme family.
+/// The visual definition of the permanent Classic theme family.
 abstract final class ClassicThemeDefinition {
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(seedColor: Colors.deepPurple);
-    final semanticColors = AppSemanticColors.fromColorScheme(colorScheme);
+    final semanticColors = AppSemanticColors.fromColorScheme(
+      colorScheme,
+    ).copyWith(
+      workoutCompleted: const Color(0xFF123D1A),
+      workoutExerciseCompleted: const Color(0xFF70B479),
+      workoutSetCompleted: const Color(0xFFB7E5BE),
+    );
     final effectTokens = AppEffectTokens.classic(colorScheme.brightness);
     final surfaceTokens = AppSurfaceTokens.fromColorScheme(
       colorScheme,
     ).copyWith(
+      workoutCardCompleteFill: 1,
+      workoutSetCompleteFill: 1,
+      workoutSetCompleteOutline: const Color(0xFF85BA90),
       divider: const Color(0xFFBDBDBD),
       subtleOutline: const Color(0xFFE0E0E0),
     );

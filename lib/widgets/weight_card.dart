@@ -293,13 +293,11 @@ class _WeightCardState extends State<WeightCard> {
             : allSetsComplete
             ? semantic.workoutCompleted
             : theme.textTheme.bodySmall?.color;
-    final completedCardColor =
+    final completedCardColor = semantic.workoutExerciseCompleted;
+    final completedSetColor = semantic.workoutSetCompleted;
+    final completedCheckboxColor =
         surfaces.useSemanticWorkoutCardFill
-            ? semantic.workoutExerciseCompleted
-            : semantic.workoutCompleted;
-    final completedSetColor =
-        surfaces.useSemanticWorkoutCardFill
-            ? semantic.workoutSetCompleted
+            ? completedSetColor
             : semantic.workoutCompleted;
 
     final cardTheme =
@@ -317,7 +315,7 @@ class _WeightCardState extends State<WeightCard> {
                 cursorColor: semantic.onWorkoutContainer,
                 selectionHandleColor: semantic.onWorkoutContainer,
                 selectionColor: semantic.onWorkoutContainer.withValues(
-                  alpha: 0.2,
+                  alpha: surfaces.workoutTextSelectionOpacity,
                 ),
               ),
               inputDecorationTheme: theme.inputDecorationTheme.copyWith(
@@ -325,11 +323,13 @@ class _WeightCardState extends State<WeightCard> {
                 fillColor: Colors.transparent,
                 labelStyle: workoutFieldLabelStyle,
                 floatingLabelStyle: workoutFieldLabelStyle,
-                floatingLabelBehavior: FloatingLabelBehavior.always,
                 hintStyle: TextStyle(
-                  color: semantic.onWorkoutContainer.withValues(alpha: 0.7),
+                  color: semantic.onWorkoutContainer.withValues(
+                    alpha: surfaces.workoutInputHintOpacity,
+                  ),
                 ),
                 suffixStyle: TextStyle(color: semantic.onWorkoutContainer),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 6,
                   vertical: 7,
@@ -555,24 +555,34 @@ class _WeightCardState extends State<WeightCard> {
                                 ? Border(
                                   top: BorderSide(
                                     color: semantic.onWorkoutContainer,
-                                    width: 1,
+                                    width:
+                                        shapes.workoutCompletedSetBorderWidth,
                                   ),
                                   right: BorderSide(
                                     color: semantic.onWorkoutContainer,
-                                    width: 1,
+                                    width:
+                                        shapes.workoutCompletedSetBorderWidth,
                                   ),
                                   bottom: BorderSide(
                                     color: semantic.onWorkoutContainer,
-                                    width: 1,
+                                    width:
+                                        shapes.workoutCompletedSetBorderWidth,
                                   ),
                                   left: BorderSide(
                                     color: semantic.onWorkoutContainer,
-                                    width: 3,
+                                    width:
+                                        shapes
+                                            .workoutCompletedSetAccentBorderWidth,
                                   ),
                                 )
                                 : _isChangeSetMode
                                 ? Border.all(
                                   color: surfaces.workoutChangeSetOutline,
+                                )
+                                : isSetComplete &&
+                                    surfaces.workoutSetCompleteOutline.a > 0
+                                ? Border.all(
+                                  color: surfaces.workoutSetCompleteOutline,
                                 )
                                 : null,
                         boxShadow:
@@ -586,7 +596,9 @@ class _WeightCardState extends State<WeightCard> {
                                 ]
                                 : null,
                         borderRadius:
-                            usesInkRecipe ? BorderRadius.zero : shapes.control,
+                            usesInkRecipe
+                                ? shapes.workoutCompletedSet
+                                : shapes.control,
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -708,7 +720,7 @@ class _WeightCardState extends State<WeightCard> {
                                     semanticLabel: strings.weightSetLabel(
                                       index + 1,
                                     ),
-                                    activeColor: completedSetColor,
+                                    activeColor: completedCheckboxColor,
                                     visualDensity: VisualDensity.compact,
                                     onChanged:
                                         readOnly

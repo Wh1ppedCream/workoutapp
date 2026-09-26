@@ -15,6 +15,36 @@ current code and record the discrepancy before changing behavior.
   every item in the consolidated human/device/N6 checklist for the current
   working tree. Treat the N5 route-state, E2.2, E2.3, Q2, and N6 development
   checks as accepted, with Step 15 release qualification still separate.
+- Earlier focused follow-up (2026-09-24): after correcting the ExpansionTile-
+  scope test's TextTheme baseline and preserving inherited ListTile/Icon fields,
+  formatting reported no changes, analysis reported no issues, and the
+five-file Flutter suite passed all 26 tests. At that checkpoint, the inventory
+  check/report passed for 278 files / 2,293 candidates (70 allowlisted, 1,224
+  migrated, 999 pending, zero review/unassigned), including the identity-color
+  allowlist update; ratchet report/enforce passed for two protected files in
+  the earlier tested source state. The corrected contract/drawers/settings
+  batch passed all 37 tests; formatting reported no changes and analysis found
+  no issues. The user
+  accepted the current Flow Methods and Workout Progress Flows Neo appearance,
+  including the
+  dropdown contrast correction, and accepted the Exercise Progress chart and
+  Preset Generation QA / Food Customization ExpansionTiles. See the roadmap and
+  ratchet guide for current status; nested flow persistence/editing review is
+  explicitly deferred.
+- Current focused verification (2026-09-24): inventory check/report passed for
+  278 Dart files / 2,297 candidates (86 allowlisted, 1,228 migrated, 983
+  pending, zero review/unassigned); six-queue coverage is 731 uniquely assigned,
+  1,566 outside, and zero overlapping. The inventory/ratchet/CLI/settings/
+  ExpansionTile suite passed 52 tests; additional chart/theme, widget/settings,
+  and inventory/ratchet CLI batches passed 27, 58, and 10 tests respectively.
+  Three-scope ratchet report/enforce matched the approved fingerprints. Analysis
+  of the chart change found two unused imports; those imports have since been
+  removed, and targeted post-cleanup analysis remains to be rerun.
+- Post-run source follow-up: SettingsExpansionSection now delegates its
+  transparent divider to the standard TonosExpansionTileScope while retaining
+  its local color/text recipe. The latest inventory includes this edit and no
+  longer counts the former pending divider candidate; its integration
+  assertion passed in the latest settings test run.
 - The Q2 implementation passed the user's 213-test rerun and clean analysis.
   Those historical requirements were later completed for the current
   development scope by the user's qualification confirmation. Automated
@@ -459,3 +489,4 @@ script. ErrorActionPreference alone does not stop native commands. Respect
 AGENTS.md: Codex does not execute Dart/Flutter verification. Record user output
 verbatim enough to establish scope and success; line-ending warnings alone do
 not require a repository-wide normalization.
+five-file Flutter suite passed all 26 tests. At that checkpoint, the inventory
