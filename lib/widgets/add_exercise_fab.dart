@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../models/models.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
 
 /// Callback when a weight exercise definition is picked.
 typedef WeightPicker = Future<void> Function(ExerciseDefinition definition);
@@ -27,18 +27,22 @@ class AddExerciseFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final extras = theme.extension<AppColors>();
-    final fabBg = extras?.addExerciseFabBg ?? cs.primary;
-    final fabFg = extras?.addExerciseFabIcon ?? cs.onPrimary;
+    final actionColors = context.semanticColors;
+    final strings = AppLocalizations.of(context);
 
-    return FloatingActionButton(
-      tooltip: AppLocalizations.of(context).commonAdd,
-      backgroundColor: fabBg,
-      foregroundColor: fabFg,
-      onPressed: () => _openExerciseCatalog(context),
-      child: const Icon(Icons.add),
+    return Semantics(
+      button: true,
+      label: strings.commonAdd,
+      onTap: () => _openExerciseCatalog(context),
+      child: ExcludeSemantics(
+        child: FloatingActionButton(
+          tooltip: strings.commonAdd,
+          backgroundColor: actionColors.primaryAction,
+          foregroundColor: actionColors.onPrimaryAction,
+          onPressed: () => _openExerciseCatalog(context),
+          child: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 

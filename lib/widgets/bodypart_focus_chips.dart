@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/definition_models.dart';
+import '../theme/theme_extensions.dart';
+import '../utils/localized_body_part_name.dart';
 
 /// Immutable selection state returned by [BodypartFocusChips].
 class BodypartFocusSelection {
@@ -40,6 +42,16 @@ class BodypartFocusChips extends StatelessWidget {
       return Text(emptyText, style: const TextStyle(fontSize: 12));
     }
 
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final chipSurface = surfaces.dialogChoice;
+    final chipForeground =
+        neo ? tonosForegroundForSurface(context, chipSurface) : null;
+    final chipOutline =
+        neo
+            ? tonosOutlineForSurface(context, chipSurface)
+            : Theme.of(context).dividerColor;
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -56,12 +68,19 @@ class BodypartFocusChips extends StatelessWidget {
                     : null;
 
             return RawChip(
-              label: Text(bodyPart.name),
+              label: Text(localizedBodyPartName(context, bodyPart.name)),
               selected: isSelected,
-              selectedColor: color?.withAlpha(61),
-              side: BorderSide(color: color ?? Theme.of(context).dividerColor),
+              backgroundColor: neo ? chipSurface : null,
+              selectedColor:
+                  neo ? color?.withValues(alpha: 0.28) : color?.withAlpha(61),
+              side: BorderSide(color: color ?? chipOutline),
               labelStyle:
-                  color == null
+                  neo
+                      ? TextStyle(
+                        color: chipForeground,
+                        fontWeight: FontWeight.w700,
+                      )
+                      : color == null
                       ? null
                       : TextStyle(color: color, fontWeight: FontWeight.w700),
               avatar:

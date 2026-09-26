@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
 import '../l10n/generated/app_localizations.dart';
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/flow_diagram_presentation.dart';
+import '../theme/widgets/tonos_dialog.dart';
 
 /// Data class to track child counts, depth, and event list for each node.
 class NodeData {
@@ -27,6 +29,7 @@ class FlowChartWidget extends StatefulWidget {
 
 class FlowChartWidgetState extends State<FlowChartWidget> {
   late Dashboard _dashboard;
+  bool _initialized = false;
   final Map<String, FlowElement> _nodes = {};
   final Map<String, NodeData> _nodeData = {};
   String? _selectedNode;
@@ -53,7 +56,23 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   void initState() {
     super.initState();
     _dashboard = Dashboard(defaultArrowStyle: ArrowStyle.curve);
-    _initializeTree();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _initializeTree();
+    }
+    final flow = context.flowTokens;
+    updateFlowDiagramPresentation(
+      nodes: _nodes.values,
+      rootId: _nodes['1st attempt']!.id,
+      success: flow.diagramSuccess,
+      failure: flow.diagramSuccess,
+      loopback: flow.diagramLoopback,
+    );
   }
 
   void _initializeTree() {
@@ -141,39 +160,42 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
       final key = await showDialog<String>(
         context: context,
         builder:
-            (ctx) => AlertDialog(
-              title: Text(_strings.flowNewEvent),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: keyCtrl,
-                    decoration: InputDecoration(
-                      labelText: _strings.flowEventKey,
+            (ctx) => TonosDialogFrame(
+              styleFormControls: true,
+              child: AlertDialog(
+                title: Text(_strings.flowNewEvent),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: keyCtrl,
+                      decoration: InputDecoration(
+                        labelText: _strings.flowEventKey,
+                      ),
                     ),
+                    TextField(
+                      controller: labelCtrl,
+                      decoration: InputDecoration(
+                        labelText: _strings.flowEventDisplayLabel,
+                      ),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(null),
+                    child: Text(_strings.commonCancel),
                   ),
-                  TextField(
-                    controller: labelCtrl,
-                    decoration: InputDecoration(
-                      labelText: _strings.flowEventDisplayLabel,
-                    ),
+                  ElevatedButton(
+                    onPressed: () {
+                      final k = keyCtrl.text.trim();
+                      if (k.isEmpty) return;
+                      Navigator.of(ctx).pop(k);
+                    },
+                    child: Text(_strings.commonAdd),
                   ),
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(null),
-                  child: Text(_strings.commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    final k = keyCtrl.text.trim();
-                    if (k.isEmpty) return;
-                    Navigator.of(ctx).pop(k);
-                  },
-                  child: Text(_strings.commonAdd),
-                ),
-              ],
             ),
       );
       if (key == null || !mounted) return;
@@ -229,7 +251,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   }
 
   ArrowParams _arrow(FlowElement f, FlowElement t) => ArrowParams(
-    color: Colors.green,
+    color: context.flowTokens.diagramSuccess,
     thickness: 2,
     style: ArrowStyle.segmented,
     startArrowPosition: Alignment.bottomCenter,
@@ -237,7 +259,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   );
 
   ArrowParams _loopArrow(FlowElement f, FlowElement t) => ArrowParams(
-    color: Colors.yellow.withValues(alpha: 0.3),
+    color: context.flowTokens.diagramLoopback,
     thickness: 2,
     style: ArrowStyle.curve,
     startArrowPosition: Alignment.centerLeft,
@@ -247,9 +269,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final extras = theme.extension<AppColors>()!;
+    final flow = context.flowTokens;
 
     return Column(
       children: [
@@ -268,8 +288,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: extras.buttonBg ?? cs.primary,
-                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                  backgroundColor: flow.action,
+                  foregroundColor: flow.onAction,
                 ),
                 onPressed:
                     (_selectedNode == null ||
@@ -286,8 +306,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: extras.buttonBg ?? cs.primary,
-                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                  backgroundColor: flow.action,
+                  foregroundColor: flow.onAction,
                 ),
                 onPressed:
                     (_selectedNode == null ||
@@ -323,8 +343,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
               const SizedBox(width: 8),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: extras.buttonBg ?? cs.primary,
-                  foregroundColor: extras.buttonText ?? cs.onPrimary,
+                  backgroundColor: flow.action,
+                  foregroundColor: flow.onAction,
                 ),
                 onPressed: _showAddEventDialog,
                 child: Text(strings.flowAddEvent),
@@ -347,8 +367,8 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: extras.buttonBg ?? cs.primary,
-                    foregroundColor: extras.buttonText ?? cs.onPrimary,
+                    backgroundColor: flow.action,
+                    foregroundColor: flow.onAction,
                   ),
                   onPressed: _onRemoveSelectedEvent,
                   child: Text(strings.flowRemoveEvent),
@@ -359,7 +379,7 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
         // flow chart area
         Expanded(
           child: Container(
-            color: extras.flowChartBackground ?? cs.surface,
+            color: flow.canvas,
             child: FlowChart(
               dashboard: _dashboard,
               onDashboardTapped: (_, __) {},
@@ -391,12 +411,11 @@ class NodeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final extras = theme.extension<AppColors>()!;
 
     return SizedBox(
       width: 150,
       child: DropdownButton<String>(
-        dropdownColor: extras.dialogBackground ?? cs.surface,
+        dropdownColor: context.surfaceTokens.dialog,
         style: theme.textTheme.bodyMedium!.copyWith(color: cs.onSurface),
         isExpanded: true,
         hint: Text(hint),

@@ -6,10 +6,14 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
+import '../services/catalog_entity_localizer.dart';
 import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/workout_actions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
+import 'localized_catalog_entity_name.dart';
+import 'localized_exercise_name.dart';
 
 /// Bottom sheet that helps replace the current exercise with a similar one.
 ///
@@ -182,7 +186,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       muscleUnitsById: muscleUnitsById,
       bodyPartHits: bodyPartHits,
       frequencyMap: frequencyMap,
-      equipmentText: _equipmentText(detailedDefinition),
+      equipment: _equipmentEntities(detailedDefinition),
     );
   }
 
@@ -225,6 +229,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
 
     return ExerciseDefinition(
       id: hydrated.id,
+      catalogId: hydrated.catalogId,
       name: hydrated.name,
       equipmentId: hydrated.equipmentId,
       rating: hydrated.rating,
@@ -370,8 +375,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Material(
-          elevation: 12,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          elevation: context.effectTokens.swapSheetElevation,
+          borderRadius: context.shapeTokens.swapSheet,
           clipBehavior: Clip.antiAlias,
           child: FutureBuilder<_SwapExerciseData>(
             future: _dataFuture,
@@ -496,29 +501,20 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
             child: Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  child: WorkoutSwapAction(
+                    cancel: true,
+                    label: strings.commonCancel,
                     onPressed: () => Navigator.pop(context),
-                    child: Text(strings.commonCancel),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                  child: WorkoutSwapAction(
+                    label: strings.swapConfirm,
                     onPressed:
                         selected == null
                             ? null
                             : () => Navigator.pop(context, selected.definition),
-                    child: Text(strings.swapConfirm),
                   ),
                 ),
               ],
@@ -529,12 +525,18 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     );
   }
 
-  String _equipmentText(ExerciseDefinition definition) {
-    final equipment = definition.equipmentList
-        .map((item) => item.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
-    return equipment.isEmpty ? _strings.swapNoEquipment : equipment;
+  List<CatalogEntityDisplayName> _equipmentEntities(
+    ExerciseDefinition definition,
+  ) {
+    return definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
   }
 
   List<_ExerciseSwapEntry> _filteredCandidates(_SwapExerciseData data) {
@@ -585,6 +587,7 @@ class _SwapSheetHeader extends StatelessWidget {
             ),
           ),
           IconButton(
+            tooltip: strings.commonClose,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -608,31 +611,11 @@ class _ProfileEquipmentFilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              strings.swapFilterProfileEquipment,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: enabled ? null : scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Switch(value: value, onChanged: enabled ? onChanged : null),
-        ],
-      ),
+    return WorkoutEquipmentFilter(
+      label: strings.swapFilterProfileEquipment,
+      value: value,
+      enabled: enabled,
+      onChanged: onChanged,
     );
   }
 }
@@ -651,7 +634,7 @@ class _ExerciseSwapBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
 
     return Card(
       child: Padding(
@@ -675,24 +658,39 @@ class _ExerciseSwapBox extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: entry.definition.name),
-                  TextSpan(
-                    text: '  •  ${entry.equipmentText}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withAlpha(184),
-                      fontWeight: FontWeight.w500,
-                    ),
+            LocalizedExerciseNameBuilder(
+              definition: entry.definition,
+              builder:
+                  (context, name) => LocalizedCatalogEntityNamesBuilder(
+                    entities: entry.equipment,
+                    builder:
+                        (context, equipmentNames) => Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(text: name),
+                              TextSpan(
+                                text:
+                                    '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.textTheme.bodySmall?.color
+                                      ?.withValues(
+                                        alpha:
+                                            context
+                                                .surfaceTokens
+                                                .swapSecondaryTextOpacity,
+                                      ),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                   ),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
             ),
             const SizedBox(height: 16),
             LayoutBuilder(
@@ -708,8 +706,14 @@ class _ExerciseSwapBox extends StatelessWidget {
                   child: Center(
                     child: BodyHeatmap(
                       frequencyMap: entry.frequencyMap,
-                      lowColor: colors.historySummaryHeatmapLow!,
-                      highColor: colors.historySummaryHeatmapHigh!,
+                      lowColor: tonosHeatmapLowForSurface(
+                        context,
+                        surfaces.card,
+                      ),
+                      highColor: tonosHeatmapHighForSurface(
+                        context,
+                        surfaces.card,
+                      ),
                       width: heatmapSize,
                       height: heatmapSize,
                     ),
@@ -763,14 +767,7 @@ class _BodyPartNameList extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const WorkoutMatchMarker(),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -800,23 +797,7 @@ class _MatchBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final percent = (score * 100).clamp(0, 100).round();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.green.withAlpha(30),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.green.withAlpha(110)),
-      ),
-      child: Text(
-        strings.swapMatch(percent),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.green,
-          fontSize: 10,
-          height: 1,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return WorkoutMatchBadge(label: strings.swapMatch(percent));
   }
 }
 
@@ -895,7 +876,7 @@ class _ExerciseSwapEntry {
   final Map<int, double> muscleUnitsById;
   final List<_BodyPartHit> bodyPartHits;
   final Map<String, double> frequencyMap;
-  final String equipmentText;
+  final List<CatalogEntityDisplayName> equipment;
   final double score;
 
   const _ExerciseSwapEntry({
@@ -904,7 +885,7 @@ class _ExerciseSwapEntry {
     required this.muscleUnitsById,
     required this.bodyPartHits,
     required this.frequencyMap,
-    required this.equipmentText,
+    required this.equipment,
     this.score = 1.0,
   });
 
@@ -915,7 +896,7 @@ class _ExerciseSwapEntry {
       muscleUnitsById: muscleUnitsById,
       bodyPartHits: bodyPartHits,
       frequencyMap: frequencyMap,
-      equipmentText: equipmentText,
+      equipment: equipment,
       score: score ?? this.score,
     );
   }

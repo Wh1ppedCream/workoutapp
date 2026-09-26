@@ -42,6 +42,7 @@ class _HistoryContentState extends State<HistoryContent> {
                     WorkoutSession(
                       id: reportSession.id,
                       date: reportSession.date,
+                      calendarDayKey: reportSession.calendarDayKey,
                       duration: reportSession.durationSeconds,
                     ),
                   ),

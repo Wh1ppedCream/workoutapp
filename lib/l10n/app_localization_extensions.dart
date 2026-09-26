@@ -1,3 +1,5 @@
+import '../models/exercise_allocation_models.dart';
+import '../models/unit_preference.dart';
 import '../providers/nav_bar_config.dart';
 import 'generated/app_localizations.dart';
 
@@ -15,6 +17,28 @@ extension LocalizedTabItem on TabItem {
       TabItem.nutritionLog => strings.tabNutritionLog,
       TabItem.combinedHistory => strings.tabCombinedHistory,
       TabItem.formAndPosing => strings.tabFormAndPosing,
+    };
+  }
+}
+
+extension LocalizedExerciseAllocationSource on ExerciseAllocationSource {
+  String localizedLabel(AppLocalizations strings) {
+    return switch (this) {
+      ExerciseAllocationSource.automatic => strings.allocationSourceAutomatic,
+      ExerciseAllocationSource.creatorDefault =>
+        strings.allocationSourceCreatorDefault,
+      ExerciseAllocationSource.personalOverride =>
+        strings.allocationSourcePersonalOverride,
+      ExerciseAllocationSource.legacy => strings.allocationSourceLegacy,
+    };
+  }
+}
+
+extension LocalizedWeightUnit on WeightUnit {
+  String localizedLabel(AppLocalizations strings) {
+    return switch (this) {
+      WeightUnit.pounds => strings.onboardingPounds,
+      WeightUnit.kilograms => strings.onboardingKilograms,
     };
   }
 }

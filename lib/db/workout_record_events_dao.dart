@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../models/session_record_badge_models.dart';
+import '../models/temporal_semantics.dart';
 import 'db_query_utils.dart';
 
 /// Stores factual record events for completed weighted parent sets.
@@ -119,6 +120,8 @@ class WorkoutRecordEventsDao {
       SELECT
         e.id AS exercise_id,
         sess.date AS session_date,
+        sess.completed_at_ms AS session_completed_at_ms,
+        sess.training_day AS session_training_day,
         st.id AS set_id,
         st.order_index AS set_index,
         st.weight AS weight,
@@ -129,7 +132,7 @@ class WorkoutRecordEventsDao {
       WHERE e.type = 'weight'
         AND e.exercise_def_id = ?
         AND st.parent_set_id IS NULL
-      ORDER BY sess.date ASC, sess.id ASC, e.id ASC, st.order_index ASC
+      ORDER BY sess.completed_at_ms ASC, sess.id ASC, e.id ASC, st.order_index ASC
       ''',
       [definitionId],
     );
@@ -144,7 +147,11 @@ class WorkoutRecordEventsDao {
         id: row['set_id'] as int,
         exerciseId: row['exercise_id'] as int,
         setIndex: row['set_index'] as int,
-        completedAt: DateTime.parse(row['session_date'] as String),
+        trainingDay: TemporalSemantics.readCalendarDay(
+          calendarDay: row['session_training_day'],
+          legacyIso: row['session_date'],
+          epochMilliseconds: row['session_completed_at_ms'],
+        ),
         weight: (row['weight'] as num).toDouble(),
         reps: (row['reps'] as num).toInt(),
       );
@@ -154,7 +161,7 @@ class WorkoutRecordEventsDao {
       if (currentRepLeader == null || set.weight > currentRepLeader.weight) {
         allTimeRepLeaders[set.reps] = set;
       }
-      final monthRepKey = _monthlyKey(set.completedAt, set.reps);
+      final monthRepKey = _monthlyKey(set.trainingDay, set.reps);
       final currentMonthlyRepLeader = monthlyRepLeaders[monthRepKey];
       if (currentMonthlyRepLeader == null ||
           set.weight > currentMonthlyRepLeader.weight) {
@@ -165,7 +172,7 @@ class WorkoutRecordEventsDao {
           set.volume > allTimeVolumeLeader.volume) {
         allTimeVolumeLeader = set;
       }
-      final monthVolumeKey = _monthlyKey(set.completedAt, null);
+      final monthVolumeKey = _monthlyKey(set.trainingDay, null);
       final currentMonthlyVolumeLeader = monthlyVolumeLeaders[monthVolumeKey];
       if (currentMonthlyVolumeLeader == null ||
           set.volume > currentMonthlyVolumeLeader.volume) {
@@ -283,6 +290,8 @@ class WorkoutRecordEventsDao {
         e.id AS exercise_id,
         e.exercise_def_id AS definition_id,
         sess.date AS session_date,
+        sess.completed_at_ms AS session_completed_at_ms,
+        sess.training_day AS session_training_day,
         st.id AS set_id,
         st.weight AS weight,
         st.reps AS reps
@@ -294,7 +303,7 @@ class WorkoutRecordEventsDao {
         AND st.parent_set_id IS NULL
       ORDER BY
         e.exercise_def_id ASC,
-        sess.date ASC,
+        sess.completed_at_ms ASC,
         sess.id ASC,
         e.id ASC,
         st.order_index ASC
@@ -308,7 +317,11 @@ class WorkoutRecordEventsDao {
         current = _RecordedExercise(
           exerciseId: exerciseId,
           definitionId: row['definition_id'] as int,
-          completedAt: DateTime.parse(row['session_date'] as String),
+          trainingDay: TemporalSemantics.readCalendarDay(
+            calendarDay: row['session_training_day'],
+            legacyIso: row['session_date'],
+            epochMilliseconds: row['session_completed_at_ms'],
+          ),
         );
         exercises.add(current);
       }
@@ -339,7 +352,7 @@ class WorkoutRecordEventsDao {
           (set) => _HistoricalSet(
             weight: set.weight,
             reps: set.reps,
-            completedAt: exercise.completedAt,
+            trainingDay: exercise.trainingDay,
           ),
         ),
       );
@@ -351,19 +364,11 @@ class WorkoutRecordEventsDao {
     _RecordedExercise exercise,
     List<_HistoricalSet> history,
   ) async {
-    final monthStart = DateTime(
-      exercise.completedAt.year,
-      exercise.completedAt.month,
-    );
-    final nextMonthStart = DateTime(
-      exercise.completedAt.year,
-      exercise.completedAt.month + 1,
-    );
     final monthlyHistory = history
         .where(
           (set) =>
-              !set.completedAt.isBefore(monthStart) &&
-              set.completedAt.isBefore(nextMonthStart),
+              set.trainingDay.year == exercise.trainingDay.year &&
+              set.trainingDay.month == exercise.trainingDay.month,
         )
         .toList(growable: false);
     final allTimeWeights = _maxWeightByRep(history);
@@ -491,23 +496,23 @@ class WorkoutRecordEventsDao {
     return tier == WorkoutRecordBadgeTier.monthly ? 'monthly' : 'all_time';
   }
 
-  static String _monthlyKey(DateTime date, int? reps) {
+  static String _monthlyKey(LocalCalendarDay day, int? reps) {
     return reps == null
-        ? '${date.year}-${date.month}'
-        : '${date.year}-${date.month}-$reps';
+        ? '${day.year}-${day.month}'
+        : '${day.year}-${day.month}-$reps';
   }
 }
 
 class _RecordedExercise {
   final int exerciseId;
   final int definitionId;
-  final DateTime completedAt;
+  final LocalCalendarDay trainingDay;
   final List<_RecordedSet> sets = <_RecordedSet>[];
 
   _RecordedExercise({
     required this.exerciseId,
     required this.definitionId,
-    required this.completedAt,
+    required this.trainingDay,
   });
 }
 
@@ -528,12 +533,12 @@ class _RecordedSet {
 class _HistoricalSet {
   final double weight;
   final int reps;
-  final DateTime completedAt;
+  final LocalCalendarDay trainingDay;
 
   const _HistoricalSet({
     required this.weight,
     required this.reps,
-    required this.completedAt,
+    required this.trainingDay,
   });
 
   double get volume => weight * reps;
@@ -543,7 +548,7 @@ class _CurrentRecordSet {
   final int id;
   final int exerciseId;
   final int setIndex;
-  final DateTime completedAt;
+  final LocalCalendarDay trainingDay;
   final double weight;
   final int reps;
 
@@ -551,7 +556,7 @@ class _CurrentRecordSet {
     required this.id,
     required this.exerciseId,
     required this.setIndex,
-    required this.completedAt,
+    required this.trainingDay,
     required this.weight,
     required this.reps,
   });

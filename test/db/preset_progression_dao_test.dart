@@ -121,4 +121,28 @@ void main() {
     expect(sets.first['weight'], 100.0);
     expect(await db.query('preset_exercise_auto'), isEmpty);
   });
+
+  test('rejects malformed mutations before any preset write', () async {
+    await expectLater(
+      PresetProgressionDao.apply(
+        db,
+        const PresetProgressionBatch(
+          updates: [
+            PresetSetProgressionUpdate(
+              setId: 1,
+              weight: 105,
+              reps: 5,
+              orderIndex: 0,
+            ),
+          ],
+          deletedSetIds: [1],
+        ),
+      ),
+      throwsArgumentError,
+    );
+
+    final sets = await db.query('preset_sets', orderBy: 'order_index');
+    expect(sets, hasLength(2));
+    expect(sets.first['weight'], 100.0);
+  });
 }

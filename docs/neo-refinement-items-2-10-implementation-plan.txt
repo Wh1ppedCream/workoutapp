@@ -1,0 +1,1292 @@
+TONOS NEO-BRUTALISM CORRECTION PLAN: ITEMS 2 THROUGH 10
+======================================================
+
+Prepared: 2026-09-13
+Repository: E:\projects\env_test
+
+PURPOSE
+-------
+
+This document turns findings 2 through 10 into an implementation-ready
+correction plan. It describes what must change, why the change is needed, how
+the behavior should be tested, and what must be true before each item can be
+closed.
+
+Item 1, the fixed Exercise Progress hero and selector-strip geometry, has
+already been implemented and verified. The existing direct responsive test is:
+
+  test\theme\widgets\exercise_progress_responsive_test.dart
+
+That test currently proves the basic 320 px, 420 px, 100 percent, and 200
+percent layout transitions. Item 9 below therefore treats Exercise Progress as
+partially covered and specifies only the remaining content, semantics, and
+interaction cases.
+
+This document is a plan only. Creating it does not change production behavior.
+
+
+SHARED IMPLEMENTATION RULES
+---------------------------
+
+1. Preserve all user data, repository behavior, chart calculations, and
+   navigation behavior. This pass is about responsive presentation,
+   accessibility, color contrast, testing, and evidence.
+
+2. Do not solve overflow by shrinking text with FittedBox, reducing the user's
+   text scale, clipping, fading, or adding ellipses. Important user-facing names
+   and values must remain readable at the system-selected scale.
+
+3. Let text-bearing containers grow vertically. Keep only genuinely graphical
+   regions, such as chart canvases, explicitly bounded.
+
+4. Keep Neo-specific visual changes behind the existing theme-family boundary,
+   normally context.surfaceDecorationTokens.panel.outlined and the semantic
+   token extensions. Shared accessibility and responsive-layout fixes may also
+   improve Classic, but every Classic-visible difference must be classified in
+   the Classic baseline record described in item 8.
+
+5. Test rendered behavior, user actions, and semantics. Source-string tests and
+   direct token-resolution tests are useful supporting checks, but they cannot
+   replace widget tests of the final rendered component.
+
+6. Use stable ValueKey values on important interactive or layout boundaries
+   when a test otherwise requires a fragile descendant search. Keys are test
+   handles, not substitutes for correct semantics.
+
+7. Run repository verification only after the related implementation and tests
+   have been updated. Per repository policy, Codex must not run Dart or Flutter
+   commands; the user runs the commands listed at the end and supplies the
+   output.
+
+
+ITEM 2: SELECTOR CONTENT MUST NOT BE TRUNCATED
+----------------------------------------------
+
+Affected production file:
+
+  lib\widgets\exercise_progress_section.dart
+
+Current problem:
+
+The selector tile now has a naturally sized outer strip, but important content
+inside each tile still truncates itself. _ExerciseProgressSelectorTile passes
+maxLines: 2 and TextOverflow.ellipsis to LocalizedExerciseName. The latest value
+has maxLines: 1 and an ellipsis, and _CompactDelta does the same for the change
+value. A long translated name, a large formatted weight, a long unit label, or
+a 200 percent system text scale can therefore hide meaningful data even though
+the tile is now allowed to become taller.
+
+Why this must change:
+
+Exercise identity and progress values are primary content, not decorative
+metadata. A user must not have to guess which exercise a tile represents or
+which value was measured. Truncation also makes localization correctness
+dependent on English string length. The accepted responsive behavior is to
+grow vertically and, when needed, stack content rather than remove text.
+
+Required production changes:
+
+1. Refactor the selector tile to resolve the localized exercise name once with
+   LocalizedExerciseNameBuilder.
+
+   The builder has this existing contract:
+
+     builder: (BuildContext context, String name) => Widget
+
+   Wrap the selector presentation in that builder and use the resolved name for
+   both the visible heading and the remove-action label required by item 3.
+   This prevents the visible text and semantics text from being resolved by two
+   separate asynchronous paths and guarantees that both refer to the same
+   localized exercise name.
+
+2. Render the selector heading with a normal Text(name) whose maxLines and
+   overflow are both null. Keep the current weight and color styling, but let
+   the text wrap to as many lines as the fixed selector width requires.
+
+3. Do not place a multiline heading and the remove button in a Row that can
+   starve the heading of width. Use one of these equivalent structures:
+
+   - A Stack in which the heading receives right padding equal to the remove
+     target width plus the intended gap and the remove control is aligned to
+     the top trailing corner; or
+   - A Row with crossAxisAlignment: CrossAxisAlignment.start, an Expanded
+     heading, and a separate fixed 48x48 remove target.
+
+   Prefer the Stack if the 48x48 target makes the heading column too narrow in
+   edit mode. In either version, the remove control must remain a sibling
+   interaction rather than swallowing taps intended for the selector body.
+
+4. Replace the final latest-value/delta Row with a responsive value area.
+   Introduce a small private presentation widget, for example
+   _ExerciseProgressSelectorValues, so the decision is isolated and directly
+   testable through stable keys.
+
+5. In that value widget, use LayoutBuilder and the effective text scale to
+   choose between these arrangements:
+
+   - Side by side only when the allocated width can accommodate both formatted
+     strings without truncation at the current text scale.
+   - A vertical Column at narrow widths, at 200 percent text scale, or whenever
+     measured text does not fit.
+
+   Do not use only a magic total-screen breakpoint. The decision must be based
+   on the width actually available inside the selector after padding, the edit
+   button, and the selector's own fixed width are accounted for.
+
+6. A robust implementation may measure the two formatted strings with
+   TextPainter using the exact TextStyle, locale, text direction, and
+   MediaQuery.textScalerOf(context). The required side-by-side width is:
+
+     latest text width
+     + selectorDeltaGap
+     + delta icon width when present
+     + compactIconGap when present
+     + delta text width
+
+   If the sum exceeds the available width, use the vertical layout. Keep a
+   simple 200 percent text-scale override to stack even if a short fixture would
+   technically fit; this produces a more stable accessible layout.
+
+7. Remove maxLines: 1 and TextOverflow.ellipsis from the latest value. In
+   stacked mode it should be an unconstrained Text within the available width.
+   In side-by-side mode it may wrap naturally if a font or locale changes after
+   measurement; the parent must still be allowed to grow.
+
+8. Update _CompactDelta so its Text also has null maxLines and null overflow.
+   Change its Row to crossAxisAlignment: CrossAxisAlignment.start so the icon
+   remains aligned with the first line if the value wraps. Do not use Expanded
+   when the widget is placed in an unconstrained horizontal context; use
+   Flexible only in a bounded Row, or let the containing Column provide width.
+
+9. Preserve the selector chart's explicit selectorChartHeight. It is a
+   graphical canvas and should remain finite. The heading and value regions
+   around it are the parts that must grow.
+
+10. Add stable keys for the responsive value arrangement, for example:
+
+      exercise-progress-selector-values-row
+      exercise-progress-selector-values-stacked
+
+    These should identify layout state only. The visible name and values must
+    still be found by their actual text in tests.
+
+Required tests:
+
+1. Extend test\theme\widgets\exercise_progress_responsive_test.dart rather than
+   replacing its already-passing geometry coverage.
+
+2. Supply fixture data containing:
+
+   - A deliberately long localized exercise display name.
+   - A latest value large enough to produce a wide localized number.
+   - A non-null positive or negative delta so the icon and delta text render.
+   - A unit choice that includes its visible suffix.
+
+3. Pump at 320 px and 420 px widths with text scales 1.0 and 2.0. At each
+   combination assert:
+
+   - tester.takeException() is null after settling.
+   - The complete localized exercise name is present.
+   - The complete latest value is present.
+   - The complete delta value is present.
+   - The relevant Text widgets do not set an ellipsis.
+   - At 200 percent, the stacked-values key is present.
+   - The selector remains reachable by horizontal scrolling when multiple
+     selector tiles exist.
+
+4. Include both Neo light and Neo dark. Include one Classic smoke case because
+   this is a shared layout. Classic does not have to use Neo decoration, but it
+   must not clip or throw.
+
+Acceptance criteria:
+
+- No exercise name, latest value, or delta in a selector tile uses an ellipsis.
+- Long localized content remains visible at 320 px width and 200 percent text.
+- The selector tile grows vertically without constraining the chart canvas.
+- Multiple selectors remain horizontally scrollable and do not introduce a
+  second vertical scroll region.
+- Existing selection, chart, and edit behavior remains unchanged.
+
+
+ITEM 3: FULLY QUALIFY AND SEPARATE THE REMOVE ACTION
+----------------------------------------------------
+
+Affected production files:
+
+  lib\widgets\exercise_progress_section.dart
+  lib\l10n\app_en.arb
+  lib\l10n\app_es.arb
+  lib\l10n\app_fr.arb
+  lib\l10n\app_fr_CA.arb
+  lib\l10n\app_bn.arb
+  lib\l10n\app_hi.arb
+  lib\l10n\app_zh.arb
+
+Current problem:
+
+The remove badge meets the 48x48 minimum target, but its label is constructed
+as commonRemove plus tile.definition.name. That name is the raw stored or
+canonical name rather than the localized display name. The label also does not
+say that the exercise will be removed from Progress. In addition, the selector
+tile and hero tile expose a parent selection action while the remove button is
+nested inside the same visual control. There is no direct test proving that
+selection and removal remain independent semantic nodes, tap actions, focus
+stops, and keyboard actions.
+
+Why this must change:
+
+Screen-reader and keyboard users need to know both the target and the scope of
+a destructive action. \"Remove Barbell Squat\" is ambiguous when the exercise is
+not being deleted from the catalog or history. Nested actions are also easy to
+merge accidentally, causing a remove tap to select the tile, a selection tap to
+remove it, or assistive technology to expose only one of the actions.
+
+Required localization changes:
+
+1. Add one parameterized localization entry to every supported ARB file. Use a
+   stable key such as:
+
+     exerciseProgressRemoveExerciseLabel
+
+2. The English source meaning must be:
+
+     Remove {exerciseName} from Progress
+
+3. Add ARB placeholder metadata in app_en.arb declaring exerciseName as a
+   String. Follow the repository's existing placeholder format exactly.
+
+4. Translate the complete sentence in all seven supported locales. Do not
+   concatenate commonRemove, a name, and a second phrase in Dart, because word
+   order and inflection differ by language.
+
+5. Regenerate the files under lib\l10n\generated through the repository's
+   normal Flutter localization generation path. Do not manually edit generated
+   localization Dart files.
+
+Required presentation and semantics changes:
+
+1. Use LocalizedExerciseNameBuilder around each selectable presentation that
+   can show a remove badge: the selected hero and every selector tile. Pass the
+   resolved localized name into _ExerciseProgressRemoveBadge.
+
+2. Change _ExerciseProgressRemoveBadge to accept the localized exercise name,
+   not a generic semanticLabel. Construct the final label with the new
+   generated localization method:
+
+     strings.exerciseProgressRemoveExerciseLabel(exerciseName)
+
+   Use exactly the same final string for Semantics.label and Tooltip.message.
+
+3. Keep button: true and onTap: onTap on the remove badge semantics. Add a
+   stable key to the underlying actionable control so tests can focus and
+   activate the badge without relying on an icon finder.
+
+4. Give the selector body and remove badge separate action regions. The safest
+   structure is:
+
+   - An outer non-interactive decorated surface.
+   - A selector-body InkWell that covers the name, chart, and values but not the
+     remove target.
+   - A remove IconButton or InkWell aligned as a sibling over or beside that
+     body.
+
+   If a Stack is used, ensure the selector body's tappable region does not sit
+   above the remove target in hit-test order. Put the remove control later in
+   the Stack children so it receives its own pointer events.
+
+5. Apply the same separation to the selected hero. Its remove action currently
+   has the same raw-name input and the same nested-action risk.
+
+6. Make the semantic grouping explicit. The outer visual surface may use
+   Semantics(container: true, explicitChildNodes: true). The selector body's
+   node must expose button: true, selected: isSelected, its localized name, and
+   its selection callback. The remove node must expose its fully qualified
+   remove label and remove callback. Do not use MergeSemantics across these two
+   controls.
+
+7. Preserve the 48x48 minimum hit target in all density and theme variants.
+   The painted circle may remain visually smaller if desired, but the actual
+   Material/Ink response and semantics bounds must be at least 48x48 logical
+   pixels.
+
+8. Ensure focus order is logical: selector body first, then its remove action,
+   then the next selector. Default reading order is acceptable if the widget
+   tree follows this order. Use FocusTraversalOrder only if the visual Stack
+   produces a different keyboard order.
+
+9. Give both controls visible focus feedback using existing theme focus styles.
+   Do not add one-off colors inside Exercise Progress.
+
+Required tests:
+
+1. Extend the direct Exercise Progress widget test with a deterministic fake
+   repository, mock preferences, and a localized exercise fixture.
+
+2. Enable semantics with:
+
+     final handle = tester.ensureSemantics();
+     addTearDown(handle.dispose);
+
+   Register disposal immediately so the test cannot leak a SemanticsHandle.
+
+3. Assert that the selector body and remove action are two distinct semantics
+   nodes. The selector must have its localized name, button action, and selected
+   state. The remove node must have the complete localized label ending in the
+   localized equivalent of \"from Progress\".
+
+4. Tap the selector body and assert only the selection callback or state
+   changes. The remove callback or saved-ID mutation must not occur.
+
+5. Tap the remove target and assert only removal occurs. It must not trigger
+   the parent selection action first.
+
+6. Focus the selector action and send Enter, then Space, asserting selection is
+   invoked once for each activation. Focus the remove action and repeat,
+   asserting removal is invoked once for each activation.
+
+7. Run the separation test for both the selector tile and the selected hero.
+
+8. Run at 200 percent text scale to prove that the larger localized label and
+   multiline visible name do not collapse the 48x48 control or merge semantics.
+
+Acceptance criteria:
+
+- Visual names and remove labels use the same localized exercise name.
+- The label communicates \"Remove [localized name] from Progress\" as one
+  translated sentence.
+- Selector and remove are separate semantic nodes, focus stops, and actions.
+- Pointer, Enter, and Space activation call only the intended action.
+- The remove target remains at least 48x48 logical pixels.
+
+
+ITEM 4: DISABLED TEXT BUTTONS MUST WIN OVER FOCUS
+-------------------------------------------------
+
+Affected production file:
+
+  lib\theme\neo_brutalism_theme.dart
+
+Current problem:
+
+The Neo TextButton ButtonStyle.side resolver checks only whether the state set
+contains WidgetState.focused. Flutter can resolve a button style with both
+WidgetState.disabled and WidgetState.focused. In that combination the current
+resolver returns the active focus border even though the button cannot be
+activated.
+
+Why this must change:
+
+An active focus frame communicates that a control is available and ready for
+keyboard activation. Showing it on a disabled action is misleading and violates
+the required disabled-first state precedence. The fix must live in the shared
+theme resolver so every Neo TextButton behaves consistently.
+
+Required production changes:
+
+1. Replace the expression-only TextButton side resolver with an ordered block:
+
+     side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
+       if (states.contains(WidgetState.disabled)) {
+         return BorderSide.none;
+       }
+       if (states.contains(WidgetState.focused)) {
+         return focusBorder;
+       }
+       return BorderSide.none;
+     }),
+
+2. Disabled must be checked before focused. Do not encode this as a condition
+   whose order is unclear, and do not remove focus styling from enabled text
+   buttons.
+
+3. Review the adjacent foreground, overlay, and side resolvers for the same
+   precedence rule. The TextButton foreground already has a disabled branch;
+   keep it first. If FilledButton or OutlinedButton can resolve a disabled and
+   focused combination, ensure they keep their intended inactive structural
+   border and never use the active focus color. Their disabled border does not
+   necessarily need to be BorderSide.none; it must simply not be the focus
+   border.
+
+4. Search for local TextButton styles that override side or shape. Any local
+   override must either defer to the theme or implement the same disabled-first
+   rule. Do not leave a screen-specific exception that makes the global
+   correction incomplete.
+
+5. Keep this change Neo-specific. Classic ThemeData must retain its existing
+   Material state behavior unless a separate Classic accessibility bug is
+   documented and approved.
+
+Required tests:
+
+The resolver-level matrix and rendered tests belong in item 5. At minimum, the
+matrix must explicitly cover:
+
+  no states             -> no focus border
+  focused               -> approved focus border
+  disabled              -> no focus border
+  disabled + focused    -> no focus border
+
+Acceptance criteria:
+
+- An enabled focused Neo TextButton retains the approved focus border.
+- A disabled Neo TextButton never receives that border, even if focused remains
+  in the Material state set.
+- Existing disabled foreground treatment remains intact.
+- Classic styling is unchanged.
+
+
+ITEM 5: TEST THE RENDERED TEXT-BUTTON FOCUS BEHAVIOR
+----------------------------------------------------
+
+Affected test file:
+
+  test\theme\neo_brutalism_theme_test.dart
+
+Potential supporting production change:
+
+  Add a ValueKey only if the rendered Material cannot be found reliably from
+  the keyed TextButton subtree.
+
+Current problem:
+
+The existing test resolves dark.textButtonTheme.style.side directly. That is a
+token/property unit test. It does not prove that a real TextButton receives
+focus, that Flutter paints the expected final shape, that disabled-plus-focused
+uses disabled precedence, or that Enter and Space activate the control.
+
+Why this must change:
+
+Theme properties can be overridden or combined by ButtonStyleButton during
+rendering. A resolver can pass while the actual control has the wrong shape,
+state, focus ownership, or keyboard behavior. The acceptance criterion is the
+user-visible control, so at least one test must inspect the rendered result.
+
+Required test changes:
+
+1. Keep a small direct resolver test for the four state combinations listed in
+   item 4. Rename it to make clear that it verifies resolver precedence rather
+   than rendered behavior.
+
+2. Add a widget test that pumps a MaterialApp with the Neo light theme and a
+   Scaffold containing a keyed TextButton. Supply a FocusNode owned by the test
+   and dispose it with addTearDown(focusNode.dispose).
+
+3. Request focus through the FocusNode, call await tester.pump(), and confirm
+   focusNode.hasFocus before inspecting paint configuration.
+
+4. Starting from the keyed TextButton finder, locate the descendant Material
+   that carries the resolved button shape. Inspect its final shape or border
+   side and assert the approved focus color and width. Scope the finder to the
+   button subtree; do not use a global find.byType(Material).last, which is
+   brittle when framework internals change.
+
+5. Clear focus, pump, and assert that the active focus side is absent.
+
+6. Pump a second keyed TextButton with onPressed: null. Request focus through an
+   explicit Focus wrapper or FocusNode so the state combination is exercised.
+   Assert that the final painted side is not the active focus border. Also
+   retain the direct {disabled, focused} resolver assertion because Flutter
+   traversal may normally skip a disabled button.
+
+7. Add keyboard activation coverage for the enabled button:
+
+   - Give it focus.
+   - Send Enter and assert the callback count increases exactly once.
+   - Send Space and assert the callback count increases exactly once.
+   - Confirm the disabled button never increments the count.
+
+   Use sendKeyDownEvent and sendKeyUpEvent if sendKeyEvent makes it difficult
+   to distinguish one activation from a key repeat.
+
+8. Repeat the rendered-border portion with Neo dark because its approved focus
+   color is especially important against charcoal surfaces. Share a helper to
+   avoid duplicating the harness.
+
+9. Add a Classic sanity case that pumps the same button with Classic ThemeData
+   and confirms the Neo-specific hard focus border is not imposed. Do not lock
+   down private Material defaults more tightly than necessary.
+
+10. If semantics are enabled for keyboard assertions, immediately register the
+    handle for disposal:
+
+      final semantics = tester.ensureSemantics();
+      addTearDown(semantics.dispose);
+
+    This avoids the leaked SemanticsHandle failure encountered in earlier
+    navigation tests.
+
+11. Assert tester.takeException() is null after each state transition. This
+    catches layout or paint failures that ordinary callback expectations miss.
+
+Acceptance criteria:
+
+- Both resolver precedence and final rendered border behavior are tested.
+- Neo light and dark show the approved focus frame only while enabled.
+- Disabled-plus-focused resolves and renders without the active frame.
+- Enter and Space activate an enabled focused TextButton exactly once each.
+- Disabled buttons do not activate.
+- Every FocusNode and SemanticsHandle is disposed.
+
+
+ITEM 6: MAKE BRIGHT-SURFACE DATA COLORS CONTRAST-AWARE
+------------------------------------------------------
+
+Affected production files:
+
+  lib\theme\theme_extensions.dart
+  lib\theme\neo_brutalism_theme.dart
+  Production chart, heatmap, legend, and marker call sites found by the audit
+
+Affected test file:
+
+  test\theme\neo_brutalism_theme_test.dart
+
+Current problem:
+
+tonosSecondarySeriesForSurface and tonosHeatmapHighForSurface return the same
+cyan, #006A72, for every known bright Neo surface. That cyan has only about
+2.41:1 contrast against dark-mode pink #FF6BAE and about 2.71:1 against
+dark-mode orange #FF8A3D, below the required 3:1 for meaningful non-text
+graphics. The secondary-series resolver also has no confirmed production call
+site, so its test currently proves only an unused helper.
+
+Why this must change:
+
+Charts, points, selected markers, legends, and anatomy heatmaps convey data.
+They cannot disappear when the same component is placed on a different bright
+surface. A single palette color cannot be assumed to work on yellow, pink,
+orange, green, purple, and cyan. The resolver must consider the actual painted
+surface, including alpha compositing, and production must actually use it.
+
+Required resolver design:
+
+1. Replace the one-color-for-all-bright-surfaces behavior with a shared,
+   contrast-aware selection helper. Keep the helper private unless more than
+   one library genuinely needs to call it. A suitable conceptual signature is:
+
+     Color _neoDataColorForSurface(
+       BuildContext context,
+       Color surface, {
+       required List<Color> preferredCandidates,
+       Color? parentSurface,
+       double minimumContrast = 3.0,
+     })
+
+2. Composite translucent surfaces over the supplied parent surface before
+   calculating contrast, using the existing _compositeSurface behavior. The
+   default parent should be Theme.of(context).colorScheme.surface.
+
+3. Evaluate candidates in semantic preference order and return the first color
+   meeting 3:1. Candidate order must preserve series identity where possible:
+
+   - Primary series should prefer the approved dark purple.
+   - Secondary series should prefer the approved teal/cyan.
+   - Heatmap high should prefer the approved teal/cyan.
+   - Each role must have one or more darker fallback candidates for pink and
+     orange surfaces.
+
+4. Do not select a fallback by visual guess. Add the candidate color to the Neo
+   palette or tokens, calculate its exact contrast against every applicable
+   light and dark bright surface, and retain it only if all intended pairings
+   meet or exceed 3:1.
+
+5. If no chromatic candidate meets the threshold, fall back to the approved
+   near-black Neo ink for a bright panel. The resolver must never knowingly
+   return a failing color merely to preserve hue.
+
+6. Preserve Classic behavior exactly. When
+   surfaceDecorationTokens.panel.outlined is false, return the original
+   AppDataVisualizationTokens role without applying Neo candidate selection.
+
+7. Avoid putting arbitrary surface equality rules into individual widgets.
+   Surface-aware color selection belongs in theme_extensions.dart, while
+   widgets provide the actual surface they paint on.
+
+Required production adoption audit:
+
+1. Search for all direct uses of:
+
+   - dataVisualizationTokens.primarySeries
+   - dataVisualizationTokens.secondarySeries
+   - dataVisualizationTokens.heatmapHigh
+   - progressColors.estimated
+   - chart line and point colors
+   - selected marker colors
+   - legend swatch colors
+
+2. For every call site painting on a known bright Neo surface, replace the
+   direct token with the appropriate surface-aware resolver and pass the exact
+   fill color used by that component.
+
+3. Adopt tonosSecondarySeriesForSurface in at least one real secondary-series
+   production path if a secondary series is actually rendered. The series line,
+   its points, and its legend swatch must all use the same resolved color.
+
+4. If no production component currently renders a secondary series, do not keep
+   an unproven public helper merely to satisfy a test. Either remove or defer
+   that helper and its claim, or introduce it only with the feature that
+   consumes it. The preferred result is a real call site plus a rendered widget
+   test.
+
+5. For heatmaps, test more than the high endpoint. If the widget interpolates
+   between low and high, verify representative colors at t = 0.0, 0.25, 0.5,
+   0.75, and 1.0 against the actual background. A linear blend can dip below
+   3:1 even when both endpoints pass. If that occurs, use discrete approved
+   steps or surface-specific endpoints instead of an unsafe interpolation.
+
+6. Do not apply chart-series colors to ordinary text. Normal-size text still
+   requires 4.5:1 unless it qualifies as large text. Keep text foreground
+   resolution in tonosForegroundForSurface and
+   tonosSecondaryForegroundForSurface.
+
+Required tests:
+
+1. Add a reusable WCAG contrast-ratio helper in the test file if one does not
+   already exist. Test the composited colors actually painted, not just constant
+   equality.
+
+2. Build the full known bright-surface matrix from the light and dark Neo
+   themes. For every surface, assert at least 3.0 for:
+
+   - Primary series.
+   - Secondary series when that role is supported in production.
+   - Heatmap low.
+   - Heatmap high.
+   - Every representative interpolated heatmap step used in production.
+
+3. Include explicit regression expectations for dark pink #FF6BAE and dark
+   orange #FF8A3D, because those are the known failures.
+
+4. Add a widget test for at least one real chart or heatmap on each problematic
+   surface. Inspect the painter/widget configuration or a stable exposed color
+   role to prove production consumes the resolver.
+
+5. Assert the Classic resolver path returns the original Classic data token so
+   this fix cannot silently recolor Classic charts.
+
+Acceptance criteria:
+
+- Every meaningful data graphic on every supported bright Neo surface is at
+  least 3:1 against its actual composited background.
+- Pink and orange dark-mode panels have explicit passing coverage.
+- Primary, secondary, point, marker, and legend colors remain internally
+  consistent for the same series.
+- The secondary resolver is used by production or removed/deferred honestly.
+- Classic data colors remain unchanged.
+
+
+ITEM 7: REPORT INSIGHT TILES MUST SHOW THEIR COMPLETE CONTENT
+------------------------------------------------------------
+
+Affected production file:
+
+  lib\widgets\workout_metric_chart_card.dart
+
+Current problem:
+
+_ReportInsightGrid now uses Wrap and content-sized children, so the original
+fixed-height failure is gone. However, _ReportInsightTile still caps labels at
+two lines and caps values and details at one line, all with ellipses. The grid's
+two-column decision is also based only on a 360 px outer-width threshold and a
+1.15 text-scale threshold, not on the width the content requires.
+
+Why this must change:
+
+Insight labels, values, and details are report data. Hiding a unit, qualifier,
+duration, or translated label can change the meaning. Because Wrap already
+allows tiles to grow, the remaining truncation is unnecessary. The component
+should use one column or stack its internal value fields when space is limited.
+
+Required production changes:
+
+1. Remove maxLines and TextOverflow.ellipsis from:
+
+   - insight.label
+   - insight.value
+   - insight.detail
+
+   All three Text widgets must be allowed to wrap and grow the tile vertically.
+
+2. Change the outer tile Row to
+   crossAxisAlignment: CrossAxisAlignment.start. Align the icon with the first
+   text line rather than vertically centering it next to an arbitrarily tall
+   content block.
+
+3. Keep the icon at its intended visual size and preserve at least the current
+   gap, but do not let it force the text column below a practical minimum width.
+
+4. Replace the simple constraints.maxWidth >= 360 and textScale <= 1.15
+   two-column rule with a usable-tile-width calculation. Define a minimum width
+   for one complete insight tile after subtracting:
+
+   - Grid spacing.
+   - Tile horizontal padding.
+   - Icon width.
+   - Icon-to-content gap.
+
+   Two columns may be used only when each resulting tile meets that minimum and
+   text scale is not enlarged. At 200 percent, always use one column.
+
+5. Inside the tile, use a Column for value and detail whenever either string
+   cannot fit side by side. A TextPainter fit check may be used with the exact
+   styles, locale, direction, and text scaler. It is also acceptable to use a
+   Wrap with natural line wrapping if it produces deterministic reading order.
+
+6. Prefer the simpler stable rule of stacking value above detail for all narrow
+   or enlarged-text layouts. Side-by-side presentation is an enhancement, not a
+   requirement. Complete content and predictable reading order take priority.
+
+7. Keep the overall report in the page's existing vertical scroll view. Do not
+   put a ListView or SingleChildScrollView inside _ReportInsightGrid; nested
+   vertical scrolling would make the expanded details harder to navigate.
+
+8. Add stable keys for one-column/two-column grid state and stacked/inline tile
+   state if needed by tests. Do not encode English label text into keys.
+
+9. Add one coherent semantics description per insight tile if separate Text
+   nodes read awkwardly. A suitable order is label, value, detail. If an outer
+   Semantics label is added, wrap the visual text in ExcludeSemantics to prevent
+   duplicate announcements. Do not hide any interactive descendant; insight
+   tiles are currently informational.
+
+10. Preserve the Neo surface, border, typography weights, and accent icon. This
+    item should change flow and readability, not invent another card style.
+
+Required tests:
+
+1. Add a direct widget test for WorkoutMetricChartCard using a deterministic
+   repository fixture that produces non-empty Additional Details insights.
+
+2. Pump the report at 320 px and 420 px widths with text scales 1.0 and 2.0.
+
+3. Expand Additional Details through the real disclosure control rather than
+   constructing _ReportInsightTile directly. This proves the complete user path
+   and animation remain functional.
+
+4. Use deliberately long labels, large values, and long detail/unit strings.
+   Assert the complete strings are present and their Text widgets do not use an
+   ellipsis.
+
+5. At 200 percent, assert the one-column grid and stacked value/detail layouts
+   are used. At 420 px and 100 percent, permit two columns only if the calculated
+   minimum width is met.
+
+6. Assert tester.takeException() is null after expansion and after
+   pumpAndSettle().
+
+7. Verify the parent page scrolls far enough to reach the last insight and that
+   no nested vertical Scrollable was introduced by the insight grid.
+
+8. Run Neo light, Neo dark, and one Classic responsive smoke case.
+
+Acceptance criteria:
+
+- Labels, values, details, and units are never ellipsized inside report insight
+  tiles.
+- Tiles grow vertically and switch to one column or stacked content when needed.
+- Additional Details still expands, collapses, animates, and scrolls normally.
+- Long translations and 200 percent text produce no overflow exceptions.
+- Neo styling remains coherent and Classic remains functional.
+
+
+ITEM 8: CLASSIFY EVERY CLASSIC-VISIBLE CHANGE
+---------------------------------------------
+
+Affected documentation file:
+
+  docs\classic-theme-baseline.md
+
+Affected test files:
+
+  test\theme\classic_theme_baseline_test.dart
+  Relevant responsive widget tests from items 2, 7, and 9
+
+Current problem:
+
+The Classic baseline says accessibility deviations must be recorded, but the
+recent correction pass has no explicit classification for the overview layout,
+Settings hero reflow, Exercise Progress selectors, report spacing, and record
+badges. The baseline also correctly says matched-state evidence, device/build
+metadata, intentional-deviation records, and approved goldens remain
+outstanding.
+
+Why this must change:
+
+Shared components can improve accessibility while unintentionally changing the
+established Classic appearance. Without a written classification, a visual
+change can be mistaken for either a regression or an approved improvement.
+Documentation and tests must distinguish Neo-only restyling from shared,
+intentional accessibility behavior.
+
+Required documentation changes:
+
+1. Add a dated section to docs\classic-theme-baseline.md named similarly to:
+
+     Neo correction pass: Classic-visible change classification
+
+2. Add one row for each of these shared areas:
+
+   - Weekly Overview or SevenDayFocusPresentation and its responsive layout.
+   - SettingsHeroCard title/subtitle reflow.
+   - Exercise Progress hero and selector sizing/content flow.
+   - Workout Report metric and insight spacing/content flow.
+   - Workout record badge wrapping and spacing.
+
+3. Use columns with this exact information:
+
+   - Surface or component.
+   - Previous Classic behavior.
+   - Current or new Classic behavior.
+   - Classification.
+   - Reason.
+   - Automated evidence.
+   - Manual evidence status.
+
+4. Use only these classifications so the record stays unambiguous:
+
+   - Neo-only: no intended Classic visual change.
+   - Intentional shared accessibility fix: Classic layout may reflow or grow to
+     preserve text, tap targets, focus, or semantics.
+   - Classic regression - correction required: an accidental Classic color,
+     radius, border, shadow, spacing, or typography change.
+   - Pending visual decision: use only when a real product decision is needed;
+     do not use it to avoid inspecting the code.
+
+5. Expected classification guidance:
+
+   - Natural height and wrapping needed to avoid clipped content should usually
+     be Intentional shared accessibility fix.
+   - Neo yellow, pink, or cyan fills, heavy black borders, hard shadows, square
+     geometry, and Neo focus colors must be Neo-only.
+   - Any of those Neo visual traits appearing in Classic is a regression.
+
+6. For every Neo-only entry, record the actual code boundary that protects
+   Classic, such as surfaceDecorationTokens.panel.outlined or a semantic token
+   role with separate Classic values.
+
+7. For every shared accessibility entry, describe the visible difference
+   precisely. For example: \"At 200 percent text, the selector tile grows taller
+   and stacks values; colors, radii, and elevation remain Classic.\"
+
+8. Link each row to the direct automated test that covers it. A source-contract
+   test that merely searches for a class name is not sufficient evidence.
+
+9. Keep the existing outstanding-evidence section honest. Do not mark the
+   baseline fully reviewed until item 10's matched screenshots and metadata are
+   recorded.
+
+10. Add fields for reviewer, date, build or commit identifier, device, locale,
+    and text scale to the manual evidence record. Leave them explicitly Pending
+    until real captures exist rather than inventing values.
+
+Required code and test audit:
+
+1. Compare the correction-pass diff for each listed component with its Classic
+   token contract. Verify that layout changes are shared only where necessary
+   for accessibility.
+
+2. Ensure every Neo-specific color, border, radius, and shadow is supplied by
+   theme extensions or guarded by the Neo family boundary.
+
+3. Extend classic_theme_baseline_test.dart only for stable, intentional visual
+   contracts. Assert semantic token values or component behavior rather than
+   brittle framework implementation details.
+
+4. Add Classic light and dark cases to direct responsive tests for shared
+   components. Assert no overflow and preserved Classic theme roles.
+
+Acceptance criteria:
+
+- Every listed shared component has an explicit classification.
+- Neo-only decoration is proven not to leak into Classic.
+- Shared accessibility reflow is documented with its reason and test evidence.
+- Regressions found during the comparison are corrected before closure.
+- Outstanding manual evidence remains marked pending until item 10 is complete.
+
+
+ITEM 9: COMPLETE RESPONSIVE, SEMANTICS, AND INTERACTION TEST COVERAGE
+-------------------------------------------------------------------
+
+Affected test files and suggested additions:
+
+  test\theme\widgets\exercise_progress_responsive_test.dart
+  test\theme\widgets\workout_metric_chart_card_responsive_test.dart
+  test\theme\widgets\seven_day_focus_presentation_test.dart
+  test\widgets\responsive_accessibility_test.dart
+  test\theme\neo_brutalism_theme_test.dart
+  scripts\verify_neo_refinement.ps1
+
+Current status and remaining problem:
+
+Exercise Progress is no longer completely untested: item 1 added a direct
+responsive test for its hero and selector container at 320 and 420 px and 100
+and 200 percent text. The remaining Exercise Progress content and interaction
+cases are specified in items 2 and 3. Direct tests are still absent for
+WorkoutMetricChartCard and SevenDayFocusPresentation. The Settings hero
+accessibility tests still use 160 percent rather than the required 200 percent.
+The health-measurements contract test only checks that class names occur in a
+source file and does not prove runtime behavior.
+
+Why this must change:
+
+The problems in this pass are caused by real constraint, localization,
+semantics, focus, and interaction combinations. Static source checks cannot
+detect RenderFlex overflow, merged actions, inaccessible keyboard behavior, or
+truncated strings. Direct widget tests are needed to keep these fixes from
+regressing.
+
+Required test matrix:
+
+1. Use these viewport widths where a component is responsive:
+
+   - 320 logical pixels: narrow supported phone width.
+   - 420 logical pixels: wider phone width where side-by-side layouts may fit.
+
+2. Use these text scales:
+
+   - 1.0: normal layout.
+   - 2.0: accessibility acceptance layout.
+
+3. Use these theme variants:
+
+   - Neo light.
+   - Neo dark.
+   - Classic light and dark for shared-layout smoke or parity cases.
+
+4. Use at least English plus the longest representative fixture available from
+   each relevant script family. Settings hero tests should iterate all supported
+   locales because only seven locales exist and the component is inexpensive to
+   pump: en, es, fr, fr_CA, bn, hi, and zh.
+
+Required Exercise Progress coverage:
+
+1. Keep the existing item 1 breakpoint and height test.
+
+2. Add long localized names, large values, deltas, and full visibility checks
+   from item 2.
+
+3. Add separate selector/remove semantics, tap, focus, Enter, and Space checks
+   from item 3.
+
+4. Verify horizontal selector scrolling with at least three tiles while the
+   containing report or page remains vertically scrollable.
+
+Required Workout Report coverage:
+
+1. Add a direct WorkoutMetricChartCard test with repository data sufficient to
+   show summary metrics, chart data, and Additional Details insights.
+
+2. Exercise the real expand/collapse control.
+
+3. Verify complete long content, one or two-column decisions, stacked values,
+   page scrolling, and no overflow as described in item 7.
+
+4. Check that chart line, point, and legend colors use the surface-aware roles
+   from item 6 when the report paints on a bright Neo surface.
+
+Required Weekly Overview coverage:
+
+1. Add a direct test for the public SevenDayFocusPresentation or the smallest
+   public presentation boundary that renders the actual production layout. Do
+   not duplicate the layout in a test-only surrogate.
+
+2. Supply deterministic body-part counts and representative heatmap data.
+
+3. At 420 px and 100 percent, verify the intended side-by-side heatmap/list
+   arrangement when it fits.
+
+4. At 320 px and 200 percent, verify the presentation stacks or otherwise
+   reflows without clipping the title, labels, counts, progress indicators, or
+   \"more\" action.
+
+5. Activate the \"more\" action and assert the production callback fires.
+
+6. Run Neo light and dark and Classic light and dark. Assert Neo uses its
+   structural decoration while Classic retains its own surface roles.
+
+Required Settings hero coverage:
+
+1. Change the acceptance cases in
+   test\widgets\responsive_accessibility_test.dart from TextScaler 1.6 to 2.0.
+
+2. Run 320 px and 420 px for every supported locale in both light and dark where
+   practical.
+
+3. Assert title and subtitle have null maxLines and overflow, all text is
+   present, the leading icon does not overlap text, and no exception occurs.
+
+Required focus coverage:
+
+Implement the rendered TextButton state and keyboard tests from item 5.
+
+Test quality rules:
+
+1. Use fake repository subclasses and SharedPreferences mock values to create
+   deterministic data. Do not rely on a developer database or the system date.
+
+2. Give the test surface enough vertical extent or wrap it in the same parent
+   scroll view used by production. A huge fixed test window alone must not be
+   used to hide a component overflow.
+
+3. After every pump or interaction that changes layout, assert
+   tester.takeException() is null.
+
+4. Verify complete visible strings and actual callbacks. Do not use source-file
+   substring checks as acceptance evidence.
+
+5. Dispose PageController, FocusNode, ChangeNotifier, SemanticsHandle, and
+   overridden surface sizes with addTearDown as soon as each resource is
+   created.
+
+6. Avoid broad finders whose result depends on Flutter's private widget tree.
+   Scope descendant searches under stable keys or public component boundaries.
+
+7. Keep source-contract tests only for architecture rules they can genuinely
+   prove; do not cite them as responsive or interaction evidence.
+
+Verification-script changes:
+
+1. Add every new test under test\theme\widgets to $reviewTests in
+   scripts\verify_neo_refinement.ps1.
+
+2. If test\widgets\responsive_accessibility_test.dart remains outside
+   test\theme, add it explicitly to $reviewTests and include $reviewTests in the
+   analyze command. The current script formats $reviewTests but analyzes
+   test/theme; it must not silently omit a listed test outside that directory.
+
+3. Either run every $reviewTests entry explicitly or retain
+   flutter test test/theme plus a separate command for tests outside test/theme.
+   The script output must make it clear that all acceptance tests ran.
+
+Acceptance criteria:
+
+- Exercise Progress has direct geometry, content, semantics, and interaction
+  coverage.
+- WorkoutMetricChartCard and SevenDayFocusPresentation have direct widget tests.
+- Settings hero acceptance runs at 200 percent, not 160 percent.
+- The 320/420, 1.0/2.0, Neo light/dark matrix is covered where applicable.
+- Shared layouts receive Classic light/dark smoke coverage.
+- Tests prove runtime behavior and are included in the verification script.
+
+
+ITEM 10: COMPLETE FRESH DEVICE QUALIFICATION
+---------------------------------------------
+
+Affected documentation and evidence:
+
+  docs\classic-theme-baseline.md
+  A new dated Neo correction-pass evidence record under docs
+  Screenshot files stored in the repository's approved evidence location
+
+Current problem:
+
+The correction pass has not yet been qualified on a fresh physical device.
+There is no post-change matched set of light and dark screenshots, keyboard
+focus review, editing and removal review, scrolling review, or matched Classic
+comparison.
+
+Why this must change:
+
+Widget tests catch many layout and behavior failures, but they do not reproduce
+every physical device's font metrics, density, system bars, keyboard behavior,
+screen-reader output, animation timing, or screenshot appearance. This item is
+the manual release gate and cannot be completed by source changes alone.
+
+Required setup record:
+
+Before capturing anything, create a dated evidence record containing:
+
+1. Device manufacturer and model.
+2. Android version and API level.
+3. Physical resolution and Flutter logical viewport size.
+4. Display density or display-size setting.
+5. System font-size and text-scale setting.
+6. App build mode and build identifier or Git commit.
+7. Locale and region.
+8. Date and reviewer.
+9. Exact fixture account and data state.
+10. Whether TalkBack, hardware keyboard, emulator keyboard, or D-pad was used.
+
+Required matched visual captures:
+
+1. Use the same route, data, selected item, scroll position, and interaction
+   state for every light and dark pair.
+
+2. Capture Neo light and Neo dark at normal text scale for:
+
+   - Train Overview with Weekly Overview and populated Active Plans.
+   - Progress with populated Exercise Progress selectors and selected hero.
+   - Progress with Workout Report Additional Details expanded.
+   - Profile and Settings hero surfaces touched by the responsive pass.
+   - Any chart or heatmap using the new bright-surface data-color resolver.
+
+3. Capture the responsive target surfaces at 200 percent text:
+
+   - Exercise Progress at the narrowest supported device width.
+   - Expanded report insights.
+   - Weekly Overview.
+   - Settings hero in at least the longest observed supported locale.
+
+4. Capture matched Classic light and Classic dark versions of every shared
+   component changed by the pass. The fixture and state must match the Neo and
+   Classic comparison wherever possible.
+
+5. Name evidence consistently with theme family, brightness, route, state,
+   locale, and text scale. For example:
+
+     neo-correction-2026-09-13\progress-exercise-dark-en-200.png
+
+   Follow an existing repository evidence convention if one is already
+   established by the Classic baseline.
+
+Required interaction qualification:
+
+1. Keyboard focus and activation:
+
+   - Connect or enable a hardware or emulator keyboard.
+   - Tab to an enabled TextButton in Neo light and dark.
+   - Confirm the approved focus frame is clearly visible and not clipped.
+   - Activate with Enter, then Space, and confirm one action per key press.
+   - Inspect a disabled TextButton and confirm it does not show the active focus
+     frame or activate.
+
+2. Exercise Progress editing and removal:
+
+   - Enter edit mode.
+   - Tap a selector body and confirm it selects only.
+   - Tap its remove action and confirm it removes only.
+   - Repeat with keyboard focus and activation.
+   - Repeat for the selected hero's remove action.
+   - Confirm the tooltip and TalkBack label use the localized exercise name and
+     say that removal is from Progress.
+
+3. Screen-reader semantics:
+
+   - Enable TalkBack.
+   - Navigate through a selector and its remove action.
+   - Confirm they are announced as two controls in logical order.
+   - Confirm selected state is announced for the selector.
+   - Confirm the remove action does not sound like catalog or history deletion.
+
+4. Scrolling:
+
+   - Horizontally scroll the Exercise Progress selector strip with multiple
+     tiles.
+   - Vertically scroll the whole Progress page before and after doing so.
+   - Confirm horizontal gestures do not permanently trap vertical scrolling.
+   - Expand report details and reach the final insight without an inner vertical
+     scroll trap.
+   - At 200 percent text, reach all Weekly Overview and Settings hero content.
+
+5. Theme switching and state retention:
+
+   - With a selected exercise and expanded report details, switch Neo light to
+     Neo dark and back.
+   - Confirm selection, edit state where intended, expanded state, data, and
+     scroll behavior remain valid.
+   - Confirm there is no flash of unreadable foreground and background pairing.
+
+6. Bright-surface visual review:
+
+   - Inspect chart lines, points, markers, legends, and heatmap intensity on
+     every bright surface used in production.
+   - Pay particular attention to dark-mode pink and orange.
+   - Confirm each series remains distinguishable without relying only on color
+     if the chart has multiple series.
+
+Required Classic comparison:
+
+1. Compare each matched Classic capture with the approved baseline or the most
+   recent valid reference.
+
+2. Confirm Classic colors, corner radii, borders, shadows, typography, and
+   density did not acquire Neo styling.
+
+3. Accept only the reflow changes classified as intentional shared
+   accessibility fixes in item 8.
+
+4. Record every other difference as a defect or an explicit pending decision;
+   do not silently update the baseline to match an accidental regression.
+
+Evidence result format:
+
+For every check, record:
+
+  Check ID
+  Route or component
+  Theme family and brightness
+  Width, text scale, and locale
+  Expected result
+  Actual result
+  PASS, FAIL, or BLOCKED
+  Evidence filename
+  Issue reference when failed
+  Reviewer and date
+
+Closure rules:
+
+1. A FAIL creates a concrete follow-up issue and keeps item 10 open.
+
+2. BLOCKED is allowed only with a stated external reason, such as no physical
+   keyboard being available. It is not equivalent to PASS.
+
+3. Update docs\classic-theme-baseline.md with the matched Classic evidence,
+   metadata, and accepted deviations from item 8.
+
+4. Mark the Neo correction-pass evidence record complete only after all
+   required screenshots and interactions have been reviewed, not merely
+   captured.
+
+Acceptance criteria:
+
+- Fresh matched Neo light and dark screenshots exist after all code fixes.
+- 200 percent text captures show complete content on target surfaces.
+- Keyboard, pointer, removal, screen-reader, and scrolling checks are recorded.
+- Bright-surface data colors are visibly distinct on the real device.
+- Matched Classic comparisons are recorded and agree with item 8's
+  classifications.
+- Device, build, locale, and fixture metadata accompanies the evidence.
+- Every check has an explicit PASS, FAIL, or BLOCKED result.
+
+
+RECOMMENDED IMPLEMENTATION ORDER
+--------------------------------
+
+1. Complete item 2 so selector content can flow naturally.
+2. Complete item 3 while the selector and hero structure is already being
+   touched; this avoids resolving and localizing the name twice.
+3. Complete item 4's disabled-first resolver.
+4. Complete item 5 immediately so the state resolver is proven in a rendered
+   TextButton before further theme work.
+5. Complete item 6 and its production call-site audit.
+6. Complete item 7's report insight flow.
+7. Complete item 9's remaining direct tests, including Weekly Overview and the
+   200 percent Settings hero matrix.
+8. Complete item 8's Classic classification using the final code and passing
+   automated evidence.
+9. Complete item 10 last on a fresh device so screenshots and manual checks
+   represent the actual final correction pass.
+
+
+USER-RUN VERIFICATION COMMANDS
+------------------------------
+
+Run these from PowerShell after the implementation is complete. Update the
+verification script first so every new acceptance test is included.
+
+  Set-Location E:\projects\env_test
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify_neo_refinement.ps1
+
+If the responsive Settings test remains outside test\theme, also run:
+
+  flutter test test\widgets\responsive_accessibility_test.dart
+
+Run the direct tests individually when diagnosing a failure:
+
+  flutter test test\theme\widgets\exercise_progress_responsive_test.dart
+  flutter test test\theme\widgets\workout_metric_chart_card_responsive_test.dart
+  flutter test test\theme\widgets\seven_day_focus_presentation_test.dart
+  flutter test test\theme\neo_brutalism_theme_test.dart
+
+The implementation is not complete until formatting, analysis, and all listed
+tests pass, followed by the manual evidence in item 10.

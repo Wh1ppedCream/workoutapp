@@ -7,6 +7,9 @@ import '../../../models/preset_models.dart';
 import '../../../models/gym_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_field.dart';
+import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/settings_tiles.dart';
 
 /// Same enum as in auto_preset_flow_screen.dart
@@ -147,133 +150,123 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       builder:
           (ctx) => StatefulBuilder(
             builder:
-                (ctx, setSt) => AlertDialog(
-                  title: Text(dialogTitle),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TextField(
-                          controller: nameCtl,
-                          decoration: InputDecoration(
+                (ctx, setSt) => TonosDialogFrame(
+                  styleFormControls: true,
+                  child: AlertDialog(
+                    title: Text(dialogTitle),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TonosField(
+                            controller: nameCtl,
                             labelText: strings.commonName,
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButton<MethodType>(
-                          value: type,
-                          isExpanded: true,
-                          onChanged: (v) => setSt(() => type = v!),
-                          items:
-                              MethodType.values
-                                  .map(
-                                    (t) => DropdownMenuItem(
-                                      value: t,
-                                      child: Text(_methodTypeLabel(t, strings)),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        if (type == MethodType.weight) ...[
-                          DropdownButton<String>(
-                            value: sign,
-                            isExpanded: true,
-                            onChanged: (v) => setSt(() => sign = v!),
-                            items: const [
-                              DropdownMenuItem(value: '+', child: Text('+')),
-                              DropdownMenuItem(value: '-', child: Text('-')),
-                            ],
+                          const SizedBox(height: 12),
+                          TonosDialogDropdownButton<MethodType>(
+                            value: type,
+                            onChanged: (v) => setSt(() => type = v!),
+                            items:
+                                MethodType.values
+                                    .map(
+                                      (t) => DropdownMenuItem(
+                                        value: t,
+                                        child: Text(
+                                          _methodTypeLabel(t, strings),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: factorCtl,
-                            keyboardType: TextInputType.numberWithOptions(
-                              decimal: true,
+                          const SizedBox(height: 12),
+                          if (type == MethodType.weight) ...[
+                            TonosDialogDropdownButton<String>(
+                              value: sign,
+                              onChanged: (v) => setSt(() => sign = v!),
+                              items: const [
+                                DropdownMenuItem(value: '+', child: Text('+')),
+                                DropdownMenuItem(value: '-', child: Text('-')),
+                              ],
                             ),
-                            decoration: InputDecoration(
-                              labelText: strings.flowFactor,
-                            ),
-                          ),
-                        ] else if (type == MethodType.rep) ...[
-                          DropdownButton<String>(
-                            value: sign,
-                            isExpanded: true,
-                            onChanged: (v) => setSt(() => sign = v!),
-                            items: const [
-                              DropdownMenuItem(value: '+', child: Text('+')),
-                              DropdownMenuItem(value: '-', child: Text('-')),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: amountCtl,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: strings.flowAmount,
-                            ),
-                          ),
-                        ] else if (type == MethodType.addSet) ...[
-                          Row(
-                            children: [
-                              Radio<AddSetMode>(
-                                value: AddSetMode.explicit,
-                                groupValue: addMode,
-                                onChanged: (v) => setSt(() => addMode = v!),
-                              ),
-                              Text(strings.flowExplicit),
-                              Radio<AddSetMode>(
-                                value: AddSetMode.copy,
-                                groupValue: addMode,
-                                onChanged: (v) => setSt(() => addMode = v!),
-                              ),
-                              Text(strings.rulesCopy),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (addMode == AddSetMode.explicit) ...[
-                            TextField(
-                              controller: weightCtl,
+                            const SizedBox(height: 8),
+                            TonosField(
+                              controller: factorCtl,
                               keyboardType: TextInputType.numberWithOptions(
                                 decimal: true,
                               ),
-                              decoration: InputDecoration(
-                                labelText: strings.flowWeight,
-                              ),
+                              labelText: strings.flowFactor,
+                            ),
+                          ] else if (type == MethodType.rep) ...[
+                            TonosDialogDropdownButton<String>(
+                              value: sign,
+                              onChanged: (v) => setSt(() => sign = v!),
+                              items: const [
+                                DropdownMenuItem(value: '+', child: Text('+')),
+                                DropdownMenuItem(value: '-', child: Text('-')),
+                              ],
                             ),
                             const SizedBox(height: 8),
-                            TextField(
-                              controller: repsCtl,
+                            TonosField(
+                              controller: amountCtl,
                               keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
+                              labelText: strings.flowAmount,
+                            ),
+                          ] else if (type == MethodType.addSet) ...[
+                            Row(
+                              children: [
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.explicit,
+                                  groupValue: addMode,
+                                  onChanged: (v) => setSt(() => addMode = v!),
+                                ),
+                                Text(strings.flowExplicit),
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.copy,
+                                  groupValue: addMode,
+                                  onChanged: (v) => setSt(() => addMode = v!),
+                                ),
+                                Text(strings.rulesCopy),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (addMode == AddSetMode.explicit) ...[
+                              TonosField(
+                                controller: weightCtl,
+                                keyboardType: TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
+                                labelText: strings.flowWeight,
+                              ),
+                              const SizedBox(height: 8),
+                              TonosField(
+                                controller: repsCtl,
+                                keyboardType: TextInputType.number,
                                 labelText: strings.flowReps,
                               ),
-                            ),
-                          ] else ...[
-                            TextField(
-                              controller: copyIndexCtl,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
+                            ] else ...[
+                              TonosField(
+                                controller: copyIndexCtl,
+                                keyboardType: TextInputType.number,
                                 labelText: strings.rulesCopyIndex,
                               ),
-                            ),
+                            ],
+                          ] else if (type == MethodType.delSet) ...[
+                            Text(strings.rulesDeleteLastSetBody),
                           ],
-                        ] else if (type == MethodType.delSet) ...[
-                          Text(strings.rulesDeleteLastSetBody),
                         ],
-                      ],
+                      ),
                     ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(strings.commonCancel),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(strings.commonSave),
+                      ),
+                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: Text(strings.commonCancel),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: Text(strings.commonSave),
-                    ),
-                  ],
                 ),
           ),
     );
@@ -284,16 +277,18 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final weight = double.tryParse(weightCtl.text) ?? 0.0;
     final reps = int.tryParse(repsCtl.text) ?? 0;
     final copyIndexValue = int.tryParse(copyIndexCtl.text) ?? -1;
-    for (final controller in [
-      nameCtl,
-      factorCtl,
-      amountCtl,
-      weightCtl,
-      repsCtl,
-      copyIndexCtl,
-    ]) {
-      controller.dispose();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final controller in [
+        nameCtl,
+        factorCtl,
+        amountCtl,
+        weightCtl,
+        repsCtl,
+        copyIndexCtl,
+      ]) {
+        controller.dispose();
+      }
+    });
 
     if (saved != true) {
       return;
@@ -387,25 +382,27 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: Text(strings.rulesAddToExistingTitle(destinationLabel)),
-            content: Text(
-              strings.rulesAddToExistingBody(
-                name,
-                destinationCount,
-                destinationLabel,
+          (dialogContext) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.rulesAddToExistingTitle(destinationLabel)),
+              content: Text(
+                strings.rulesAddToExistingBody(
+                  name,
+                  destinationCount,
+                  destinationLabel,
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text(strings.rulesNotNow),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: Text(strings.rulesAddTo(destinationLabel)),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(strings.rulesNotNow),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(strings.rulesAddTo(destinationLabel)),
-              ),
-            ],
           ),
     );
     if (confirmed != true || !mounted) return;
@@ -449,7 +446,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final updated = await showDialog<FlowMethod>(
       context: context,
       builder:
-          (_) => AddPresetMethodDialog(presetId: presetId, existing: existing),
+          (_) => TonosDialogFrame(
+            styleFormControls: true,
+            child: AddPresetMethodDialog(
+              presetId: presetId,
+              existing: existing,
+            ),
+          ),
     );
     if (updated == null) return;
     if (existing != null && existing.name != updated.name) {
@@ -469,9 +472,15 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     required VoidCallback onDelete,
   }) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final color = _methodTypeColor(m.type, cs);
+    final shapes = context.shapeTokens;
+    final color = _methodTypeColor(m.type, context);
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tileSurface = context.surfaceTokens.dialogChoice;
+    final tileForeground =
+        neo ? tonosForegroundForSurface(context, tileSurface) : null;
+    final tileSecondary =
+        neo ? tonosSecondaryForegroundForSurface(context, tileSurface) : color;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
@@ -480,7 +489,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         height: 40,
         decoration: BoxDecoration(
           color: color.withValues(alpha: .16),
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: shapes.settingsIcon,
         ),
         child: Icon(_methodTypeIcon(m.type), color: color, size: 21),
       ),
@@ -490,11 +499,12 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w800,
+          color: tileForeground,
         ),
       ),
       subtitle: Text(
         _methodTypeLabel(m.type, strings),
-        style: theme.textTheme.bodySmall?.copyWith(color: color),
+        style: theme.textTheme.bodySmall?.copyWith(color: tileSecondary),
       ),
       trailing: PopupMenuButton<_RuleAction>(
         tooltip: strings.rulesOptionsTooltip,
@@ -771,11 +781,12 @@ class _LoadedProfileMethods {
 
 enum _RuleAction { edit, delete }
 
-Color _methodTypeColor(MethodType type, ColorScheme scheme) {
+Color _methodTypeColor(MethodType type, BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
   return switch (type) {
     MethodType.weight => scheme.primary,
     MethodType.rep => scheme.secondary,
-    MethodType.addSet => const Color(0xFF26A69A),
+    MethodType.addSet => context.flowTokens.addSetAction,
     MethodType.delSet => scheme.error,
   };
 }
@@ -790,15 +801,11 @@ IconData _methodTypeIcon(MethodType type) {
 }
 
 Color _profileScopeColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF4DB6AC)
-      : const Color(0xFF00796B);
+  return context.flowTokens.profileScope;
 }
 
 Color _planScopeColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFEF6C00);
+  return context.flowTokens.planScope;
 }
 
 class _RuleScopeLegend extends StatelessWidget {
@@ -813,53 +820,19 @@ class _RuleScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(color: scheme.primary, label: strings.rulesAppDefaultsChip),
-        _LegendChip(
+        SettingsLegendChip(
+          color: scheme.primary,
+          label: strings.rulesAppDefaultsChip,
+        ),
+        SettingsLegendChip(
           color: _profileScopeColor(context),
           label: strings.rulesProfilesChip,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: _planScopeColor(context),
           label: strings.rulesPlansChip,
         ),
       ],
-    );
-  }
-}
-
-class _LegendChip extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendChip({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: .36)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -889,84 +862,87 @@ class _RuleScopeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
     final padding = compact ? 12.0 : 14.0;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(
+              alpha: compact ? .20 : .28,
+            );
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
 
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(
-          alpha: compact ? .20 : .28,
+        color: cardSurface,
+        borderRadius: compact ? shapes.profileTile : shapes.settingsPanel,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : color.withValues(alpha: compact ? .36 : .52),
+          width: shapes.outlineWidth,
         ),
-        borderRadius: BorderRadius.circular(compact ? 18 : 22),
-        border: Border.all(color: color.withValues(alpha: compact ? .36 : .52)),
       ),
-      child: ExpansionTile(
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: EdgeInsets.symmetric(horizontal: padding, vertical: 3),
-        childrenPadding: EdgeInsets.zero,
-        collapsedBackgroundColor: color.withValues(alpha: compact ? .05 : .08),
-        backgroundColor: color.withValues(alpha: .04),
-        leading: Container(
-          width: compact ? 38 : 42,
-          height: compact ? 38 : 42,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: .17),
-            borderRadius: BorderRadius.circular(compact ? 12 : 14),
+      child: TonosSurfaceTheme(
+        surface: cardSurface,
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: EdgeInsets.symmetric(horizontal: padding, vertical: 3),
+          childrenPadding: EdgeInsets.zero,
+          collapsedBackgroundColor:
+              neo ? cardSurface : color.withValues(alpha: compact ? .05 : .08),
+          backgroundColor: neo ? cardSurface : color.withValues(alpha: .04),
+          leading: Container(
+            width: compact ? 38 : 42,
+            height: compact ? 38 : 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .17),
+              borderRadius: compact ? shapes.control : shapes.settingsScopeIcon,
+            ),
+            child: Icon(
+              icon,
+              color: neo ? cardForeground : color,
+              size: compact ? 20 : 22,
+            ),
           ),
-          child: Icon(icon, color: color, size: compact ? 20 : 22),
-        ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: (compact
-                  ? theme.textTheme.titleSmall
-                  : theme.textTheme.titleMedium)
-              ?.copyWith(fontWeight: FontWeight.w900),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: compact ? 1 : 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: (compact
+                    ? theme.textTheme.titleSmall
+                    : theme.textTheme.titleMedium)
+                ?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: neo ? cardForeground : null,
+                ),
           ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _CountBadge(count: count, color: color),
-            const SizedBox(width: 4),
-            Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
-          ],
-        ),
-        children: children,
-      ),
-    );
-  }
-}
-
-class _CountBadge extends StatelessWidget {
-  final int count;
-  final Color color;
-
-  const _CountBadge({required this.count, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 28),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w900,
+          subtitle: Text(
+            subtitle,
+            maxLines: compact ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SettingsCountBadge(count: count, color: color),
+              const SizedBox(width: 4),
+              Icon(Icons.expand_more, color: cardSecondary),
+            ],
+          ),
+          children: children,
         ),
       ),
     );
@@ -1023,20 +999,28 @@ class _NestedHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(
+              context,
+              context.surfaceTokens.settingsSection,
+            )
+            : color;
     return Row(
       children: [
-        Icon(icon, color: color, size: 20),
+        Icon(icon, color: foreground, size: 20),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: color,
+              color: foreground,
               fontWeight: FontWeight.w900,
             ),
           ),
         ),
-        _CountBadge(count: count, color: color),
+        SettingsCountBadge(count: count, color: color),
       ],
     );
   }
@@ -1050,18 +1034,28 @@ class _EmptyRuleState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surface = context.surfaceTokens.settingsSection;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surface)
+            : scheme.onSurfaceVariant;
+    final secondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, surface)
+            : scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 18, color: scheme.onSurfaceVariant),
+          Icon(Icons.info_outline, size: 18, color: foreground),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ).textTheme.bodySmall?.copyWith(color: secondary),
             ),
           ),
         ],
@@ -1083,15 +1077,39 @@ class _AddRuleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final shapes = context.shapeTokens;
+    final actionForeground =
+        neo ? tonosForegroundForSurface(context, color) : color;
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: color,
-            side: BorderSide(color: color.withValues(alpha: .55)),
-          ),
+          style:
+              neo
+                  ? OutlinedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: actionForeground,
+                    disabledBackgroundColor: color.withValues(alpha: .42),
+                    disabledForegroundColor: actionForeground.withValues(
+                      alpha: .72,
+                    ),
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    side: BorderSide(
+                      color: tonosOutlineForSurface(context, color),
+                      width: shapes.outlineWidth,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: shapes.settingsAction,
+                    ),
+                  )
+                  : OutlinedButton.styleFrom(
+                    foregroundColor: color,
+                    side: BorderSide(color: color.withValues(alpha: .55)),
+                  ),
           onPressed: onPressed,
           icon: const Icon(Icons.add, size: 19),
           label: Text(label),
@@ -1109,14 +1127,33 @@ class _EmptyProfilesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surface = neo ? context.surfaceTokens.settingsSection : null;
+    final secondary =
+        neo && surface != null
+            ? tonosSecondaryForegroundForSurface(context, surface)
+            : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .28),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant),
+        color:
+            neo
+                ? surface
+                : scheme.surfaceContainerHighest.withValues(alpha: .28),
+        borderRadius: shapes.settingsPanel,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, surface!)
+                  : scheme.outlineVariant,
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
-      child: _EmptyRuleState(message: message),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: secondary),
+        child: _EmptyRuleState(message: message),
+      ),
     );
   }
 }
@@ -1198,14 +1235,10 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _nameCtl,
-              decoration: InputDecoration(labelText: strings.commonName),
-            ),
+            TonosField(controller: _nameCtl, labelText: strings.commonName),
             const SizedBox(height: 12),
-            DropdownButton<MethodType>(
+            TonosDialogDropdownButton<MethodType>(
               value: _type,
-              isExpanded: true,
               onChanged: (v) => setState(() => _type = v!),
               items:
                   MethodType.values
@@ -1219,9 +1252,8 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
             ),
             const SizedBox(height: 12),
             if (_type == MethodType.weight) ...[
-              DropdownButton<String>(
+              TonosDialogDropdownButton<String>(
                 value: _sign,
-                isExpanded: true,
                 onChanged: (v) => setState(() => _sign = v!),
                 items: const [
                   DropdownMenuItem(value: '+', child: Text('+')),
@@ -1229,15 +1261,14 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              TextField(
+              TonosField(
                 controller: _factorCtl,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: strings.flowFactor),
+                labelText: strings.flowFactor,
               ),
             ] else if (_type == MethodType.rep) ...[
-              DropdownButton<String>(
+              TonosDialogDropdownButton<String>(
                 value: _sign,
-                isExpanded: true,
                 onChanged: (v) => setState(() => _sign = v!),
                 items: const [
                   DropdownMenuItem(value: '+', child: Text('+')),
@@ -1245,10 +1276,10 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              TextField(
+              TonosField(
                 controller: _amountCtl,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: strings.flowAmount),
+                labelText: strings.flowAmount,
               ),
             ] else if (_type == MethodType.addSet) ...[
               Row(
@@ -1269,24 +1300,22 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
               ),
               const SizedBox(height: 8),
               if (_addMode == AddSetMode.explicit) ...[
-                TextField(
+                TonosField(
                   controller: _weightCtl,
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: strings.flowWeight),
+                  labelText: strings.flowWeight,
                 ),
                 const SizedBox(height: 8),
-                TextField(
+                TonosField(
                   controller: _repsCtl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: strings.flowReps),
+                  labelText: strings.flowReps,
                 ),
               ] else ...[
-                TextField(
+                TonosField(
                   controller: _copyIndexCtl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: strings.rulesCopyIndex,
-                  ),
+                  labelText: strings.rulesCopyIndex,
                 ),
               ],
             ] else if (_type == MethodType.delSet) ...[

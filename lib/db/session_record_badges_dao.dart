@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../models/session_record_badge_models.dart';
+import '../models/temporal_semantics.dart';
 
 /// Computes completion-sheet record badges from persisted workout history.
 ///
@@ -13,17 +14,19 @@ class SessionRecordBadgesDao {
   ) async {
     final sessionRows = await db.query(
       'sessions',
-      columns: const ['date'],
+      columns: const ['date', 'completed_at_ms', 'training_day'],
       where: 'id = ?',
       whereArgs: [sessionId],
       limit: 1,
     );
     if (sessionRows.isEmpty) return const <int, WorkoutExerciseRecordBadges>{};
 
-    final sessionDate = DateTime.tryParse(sessionRows.single['date'] as String);
-    if (sessionDate == null) {
-      return const <int, WorkoutExerciseRecordBadges>{};
-    }
+    final sessionRow = sessionRows.single;
+    final sessionDay = TemporalSemantics.readCalendarDay(
+      calendarDay: sessionRow['training_day'],
+      legacyIso: sessionRow['date'],
+      epochMilliseconds: sessionRow['completed_at_ms'],
+    );
 
     final currentRows = await db.rawQuery(
       '''
@@ -62,8 +65,6 @@ class SessionRecordBadgesDao {
 
     if (byExercise.isEmpty) return const <int, WorkoutExerciseRecordBadges>{};
 
-    final monthStart = DateTime(sessionDate.year, sessionDate.month);
-    final nextMonthStart = DateTime(sessionDate.year, sessionDate.month + 1);
     final badges = <int, WorkoutExerciseRecordBadges>{};
     final exercisesByDefinition =
         <int, List<MapEntry<int, List<_RecordedSet>>>>{};
@@ -90,15 +91,14 @@ class SessionRecordBadgesDao {
         badges[currentExercise.key] = _evaluate(
           currentSets: currentExercise.value,
           history: comparisonHistory,
-          monthStart: monthStart,
-          nextMonthStart: nextMonthStart,
+          monthDay: sessionDay,
         );
         comparisonHistory.addAll(
           currentExercise.value.map(
             (set) => _HistoricalSet(
               weight: set.weight,
               reps: set.reps,
-              completedAt: sessionDate,
+              trainingDay: sessionDay,
             ),
           ),
         );
@@ -118,7 +118,9 @@ class SessionRecordBadgesDao {
       SELECT
         st.weight AS weight,
         st.reps AS reps,
-        sess.date AS session_date
+        sess.date AS session_date,
+        sess.completed_at_ms AS session_completed_at_ms,
+        sess.training_day AS session_training_day
       FROM sets st
       INNER JOIN exercises e ON e.id = st.exercise_id
       INNER JOIN sessions sess ON sess.id = e.session_id
@@ -135,7 +137,11 @@ class SessionRecordBadgesDao {
           (row) => _HistoricalSet(
             weight: (row['weight'] as num).toDouble(),
             reps: row['reps'] as int,
-            completedAt: DateTime.parse(row['session_date'] as String),
+            trainingDay: TemporalSemantics.readCalendarDay(
+              calendarDay: row['session_training_day'],
+              legacyIso: row['session_date'],
+              epochMilliseconds: row['session_completed_at_ms'],
+            ),
           ),
         )
         .toList();
@@ -144,15 +150,14 @@ class SessionRecordBadgesDao {
   static WorkoutExerciseRecordBadges _evaluate({
     required List<_RecordedSet> currentSets,
     required List<_HistoricalSet> history,
-    required DateTime monthStart,
-    required DateTime nextMonthStart,
+    required LocalCalendarDay monthDay,
   }) {
     final monthlyHistory =
         history
             .where(
               (set) =>
-                  !set.completedAt.isBefore(monthStart) &&
-                  set.completedAt.isBefore(nextMonthStart),
+                  set.trainingDay.year == monthDay.year &&
+                  set.trainingDay.month == monthDay.month,
             )
             .toList();
     final allTimeWeights = _maxWeightByRep(history);
@@ -278,12 +283,12 @@ class _RecordedSet {
 class _HistoricalSet {
   final double weight;
   final int reps;
-  final DateTime completedAt;
+  final LocalCalendarDay trainingDay;
 
   const _HistoricalSet({
     required this.weight,
     required this.reps,
-    required this.completedAt,
+    required this.trainingDay,
   });
 
   double get volume => weight * reps;

@@ -8,6 +8,7 @@ import '../repositories/app_repository.dart';
 class SelectedProfile extends ChangeNotifier {
   static const String _selectedProfileStateKey = 'selected_gym_profile_id';
   final AppRepository _repo;
+  bool _disposed = false;
 
   List<GymProfile> profiles = [];
   GymProfile? currentProfile;
@@ -25,20 +26,25 @@ class SelectedProfile extends ChangeNotifier {
   Future<void> loadProfiles({int? preferredProfileId}) async {
     final previousProfileId = preferredProfileId ?? currentProfile?.id;
     profiles = await _repo.fetchAllProfiles();
+    if (_disposed) return;
     if (profiles.isEmpty) {
       final allEquip = await _repo.fetchAllEquipment();
+      if (_disposed) return;
       final defaultId = await _repo.saveGymProfileAtomic(
         existingProfile: null,
         name: 'General',
         equipmentIds: allEquip.map((item) => item.id).toSet(),
       );
+      if (_disposed) return;
       profiles = await _repo.fetchAllProfiles();
+      if (_disposed) return;
       preferredProfileId = defaultId;
     }
 
     final storedProfileId = int.tryParse(
       await _repo.getAppState(_selectedProfileStateKey) ?? '',
     );
+    if (_disposed) return;
     final targetProfileId =
         preferredProfileId ?? previousProfileId ?? storedProfileId;
     currentProfile = profiles.firstWhere(
@@ -46,7 +52,9 @@ class SelectedProfile extends ChangeNotifier {
       orElse: () => profiles.first,
     );
     await _loadEquipment();
+    if (_disposed) return;
     await _persistSelection();
+    if (_disposed) return;
     notifyListeners();
   }
 
@@ -54,7 +62,9 @@ class SelectedProfile extends ChangeNotifier {
   Future<void> selectProfile(GymProfile profile) async {
     currentProfile = profile;
     await _loadEquipment();
+    if (_disposed) return;
     await _persistSelection();
+    if (_disposed) return;
     notifyListeners();
   }
 
@@ -86,6 +96,7 @@ class SelectedProfile extends ChangeNotifier {
       await _repo.addEquipmentToProfile(currentProfile!.id!, equipmentId);
     }
     await _loadEquipment();
+    if (_disposed) return;
     notifyListeners();
   }
 
@@ -103,5 +114,11 @@ class SelectedProfile extends ChangeNotifier {
       _selectedProfileStateKey,
       currentProfile?.id?.toString(),
     );
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

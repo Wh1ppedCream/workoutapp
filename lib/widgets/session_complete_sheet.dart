@@ -8,8 +8,14 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../utils/async_pool.dart';
+import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
+import '../theme/widgets/workout_actions.dart';
+import '../theme/widgets/workout_sheet_handle.dart';
 import 'workout_record_badges.dart';
 
 /// A container for session metadata and its exercises.
@@ -31,6 +37,766 @@ class _CompletedWeightExercise {
     required this.exercise,
     required this.badges,
   });
+}
+
+/// Production presentation for one completed weighted exercise.
+///
+/// Data loading stays in [SessionCompleteSheet], while this widget can also be
+/// rendered by Theme Lab with deterministic fixture data. That keeps the
+/// result-card geometry, foreground policy, separators, and badge treatment in
+/// one place.
+class WorkoutCompletionExerciseCard extends StatelessWidget {
+  const WorkoutCompletionExerciseCard({
+    super.key,
+    required this.exercise,
+    required this.weightUnit,
+    required this.badges,
+  });
+
+  final WeightExercise exercise;
+  final WeightUnit weightUnit;
+  final WorkoutExerciseRecordBadges badges;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: _buildCard);
+
+  Widget _buildCard(BuildContext context, BoxConstraints constraints) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesClassicPresentation = context.usesClassicPresentation;
+    final panelForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.card)
+            : colorScheme.onSurface;
+    final panelSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, surfaces.card)
+            : colorScheme.onSurfaceVariant;
+    final estimatedMaxTextStyle =
+        usesClassicPresentation
+            ? const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)
+            : theme.textTheme.bodySmall?.copyWith(
+              color: panelSecondaryForeground,
+              fontStyle: FontStyle.italic,
+              fontSize: 12,
+            );
+    final accentColor = _completionExerciseAccentColor(
+      exercise.name,
+      colorScheme,
+    );
+    final exerciseFill =
+        usesInkRecipe
+            ? surfaces.card
+            : accentColor.withValues(alpha: surfaces.completionExerciseFill);
+    final exerciseBorder =
+        usesInkRecipe
+            ? tonosOutlineForSurface(context, surfaces.card)
+            : accentColor.withValues(alpha: surfaces.completionExerciseBorder);
+    final exerciseRadius =
+        usesInkRecipe ? shapes.compact : shapes.workoutSection;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final usesStackedRows = textScale > 1.15 || constraints.maxWidth < 360;
+    final usesCompactNeoSpacing = usesInkRecipe && !usesStackedRows;
+    final rows = <Widget>[
+      Padding(
+        padding: EdgeInsets.only(bottom: usesCompactNeoSpacing ? 2 : 3),
+        child: Row(
+          children: [
+            Icon(Icons.square, size: 11, color: accentColor),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                exercise.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color:
+                      usesClassicPresentation ? accentColor : panelForeground,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (badges.isFirstRecord && !usesStackedRows) ...[
+              const SizedBox(width: 8),
+              const FirstRecordBadge(),
+            ],
+          ],
+        ),
+      ),
+      if (badges.isFirstRecord && usesStackedRows)
+        const Padding(
+          padding: EdgeInsets.only(bottom: 4),
+          child: FirstRecordBadge(),
+        ),
+    ];
+
+    for (var index = 0; index < exercise.sets.length; index++) {
+      if (usesInkRecipe && index > 0) {
+        rows.add(
+          Divider(
+            height: usesCompactNeoSpacing ? 4 : 8,
+            thickness: 1,
+            color: panelSecondaryForeground.withValues(alpha: 0.35),
+          ),
+        );
+      }
+      rows.add(
+        _buildSetRow(
+          context,
+          set: exercise.sets[index],
+          index: index,
+          badges: badges.forSet(index),
+          accentColor: accentColor,
+          exerciseBorder: exerciseBorder,
+          panelForeground: panelForeground,
+          estimatedMaxTextStyle: estimatedMaxTextStyle,
+          usesInkRecipe: usesInkRecipe,
+          usesClassicPresentation: usesClassicPresentation,
+          usesStackedRows: usesStackedRows,
+        ),
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: usesCompactNeoSpacing ? 6 : 8),
+      padding:
+          usesCompactNeoSpacing
+              ? const EdgeInsets.fromLTRB(10, 4, 10, 5)
+              : const EdgeInsets.fromLTRB(12, 5, 12, 7),
+      decoration: BoxDecoration(
+        color: exerciseFill,
+        borderRadius: exerciseRadius,
+        border: Border.all(
+          color: exerciseBorder,
+          width: usesInkRecipe ? shapes.outlineWidth : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: rows,
+      ),
+    );
+  }
+
+  Widget _buildSetRow(
+    BuildContext context, {
+    required ExerciseSet set,
+    required int index,
+    required List<WorkoutRecordBadge> badges,
+    required Color accentColor,
+    required Color exerciseBorder,
+    required Color panelForeground,
+    required TextStyle? estimatedMaxTextStyle,
+    required bool usesInkRecipe,
+    required bool usesClassicPresentation,
+    required bool usesStackedRows,
+  }) {
+    final locale = Localizations.localeOf(context);
+    final surfaces = context.surfaceTokens;
+    final estimatedMax = set.weight * (1 + 0.0333 * set.reps);
+    final setText =
+        '${WeightUnitFormatter.formatWeight(set.weight, weightUnit, locale: locale)} x ${LocalizedFormatters.number(set.reps, locale, maximumFractionDigits: 0)}';
+    final estimatedText = AppLocalizations.of(context).sessionEstimatedMax(
+      WeightUnitFormatter.formatWeight(
+        estimatedMax,
+        weightUnit,
+        locale: locale,
+      ),
+    );
+    final setForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              accentColor,
+              parentSurface: surfaces.card,
+            )
+            : (usesClassicPresentation ? accentColor : panelForeground);
+    final rowGap = usesInkRecipe && !usesStackedRows ? 6.0 : 8.0;
+    final rowTopPadding = usesInkRecipe && !usesStackedRows ? 2.0 : 4.0;
+    final badgeTopPadding = usesInkRecipe && !usesStackedRows ? 2.0 : 4.0;
+    final indicatorSize = 22.0 * MediaQuery.textScalerOf(context).scale(1);
+    final setIndicator = Container(
+      constraints: BoxConstraints(
+        minWidth: indicatorSize,
+        minHeight: indicatorSize,
+      ),
+      padding: const EdgeInsets.all(2),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: surfaces.completionSetFill),
+        border: Border.all(
+          color: usesInkRecipe ? exerciseBorder : accentColor,
+          width: usesInkRecipe ? 1 : 0,
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '${index + 1}',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: setForeground,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+    final estimatedMaxColumn = SizedBox(
+      width: 88,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerRight,
+        child: Text(
+          estimatedText,
+          maxLines: 1,
+          textAlign: TextAlign.right,
+          style: estimatedMaxTextStyle,
+        ),
+      ),
+    );
+    final resultRow = Row(
+      children: [
+        setIndicator,
+        SizedBox(width: rowGap),
+        Expanded(
+          child: Text(
+            setText,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: panelForeground),
+          ),
+        ),
+        if (!usesStackedRows) ...[SizedBox(width: rowGap), estimatedMaxColumn],
+      ],
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(top: rowTopPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          resultRow,
+          if (usesStackedRows)
+            Padding(
+              padding: EdgeInsets.only(left: indicatorSize + rowGap, top: 3),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: Text(
+                  estimatedText,
+                  textAlign: TextAlign.end,
+                  style: estimatedMaxTextStyle,
+                ),
+              ),
+            ),
+          if (badges.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(
+                left: indicatorSize + rowGap,
+                top: badgeTopPadding,
+              ),
+              child: Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  for (final badge in badges)
+                    WorkoutRecordBadgeChip(badge: badge),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _completionExerciseAccentColor(
+  String exerciseName,
+  ColorScheme colorScheme,
+) {
+  final palette = [
+    colorScheme.primary,
+    colorScheme.tertiary,
+    colorScheme.secondary,
+    colorScheme.error,
+  ];
+  final hash = exerciseName.codeUnits.fold<int>(
+    0,
+    (value, codeUnit) => value + codeUnit,
+  );
+  return palette[hash % palette.length];
+}
+
+/// Shared bounded shell for completion loading, error, preview, and success
+/// states. Classic returns the child unchanged so its existing modal surface
+/// remains the source of truth.
+class WorkoutCompletionSurface extends StatelessWidget {
+  const WorkoutCompletionSurface({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.surfaceDecorationTokens.sheet.outlined) return child;
+
+    final effects = context.effectTokens;
+    final shadowRight =
+        effects.raisedPanelShadowOffset.dx > 0
+            ? effects.raisedPanelShadowOffset.dx
+            : 0.0;
+    final shadowBottom =
+        effects.raisedPanelShadowOffset.dy > 0
+            ? effects.raisedPanelShadowOffset.dy
+            : 0.0;
+    return Padding(
+      padding: EdgeInsets.only(right: shadowRight, bottom: shadowBottom),
+      child: TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: context.surfaceTokens.sheet,
+        padding: padding,
+        borderRadius: context.shapeTokens.sheet,
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Shared loading and failure content; only the caller owns dismissal.
+class WorkoutCompletionStatus extends StatelessWidget {
+  const WorkoutCompletionStatus.loading({super.key})
+    : isLoading = true,
+      onClose = null;
+
+  const WorkoutCompletionStatus.error({super.key, required this.onClose})
+    : isLoading = false;
+
+  final bool isLoading;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.sheet.outlined;
+    final foreground = tonosForegroundForSurface(
+      context,
+      context.surfaceTokens.sheet,
+    );
+    return WorkoutCompletionSurface(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 152),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child:
+              isLoading
+                  ? SizedBox(
+                    height: 152,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: neo ? foreground : null,
+                      ),
+                    ),
+                  )
+                  : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        strings.sessionCompleteLoadError,
+                        textAlign: TextAlign.center,
+                        style: neo ? TextStyle(color: foreground) : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: onClose,
+                        child: Text(strings.commonClose),
+                      ),
+                    ],
+                  ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Prepared exercise data consumed by the shared completion presentation.
+///
+/// The production sheet builds these records after repository hydration, while
+/// Theme Lab supplies deterministic fixtures. Keeping the data boundary here
+/// prevents either caller from reimplementing the result-card presentation.
+@immutable
+class WorkoutCompletionExercise {
+  const WorkoutCompletionExercise({
+    required this.exercise,
+    required this.weightUnit,
+    required this.badges,
+  });
+
+  final WeightExercise exercise;
+  final WeightUnit weightUnit;
+  final WorkoutExerciseRecordBadges badges;
+}
+
+/// Shared presentation for a prepared workout-completion summary.
+///
+/// Repository access and modal routing stay outside this widget. A nullable
+/// [scrollController] lets the production bottom sheet provide its draggable
+/// scroll view while Theme Lab renders the same header, metrics, result cards,
+/// legend, and Done action in its fixture column.
+class WorkoutCompletionPresentation extends StatelessWidget {
+  const WorkoutCompletionPresentation({
+    super.key,
+    required this.exercises,
+    required this.totalSets,
+    required this.duration,
+    required this.volume,
+    required this.onDone,
+    this.doneButtonKey,
+    this.scrollController,
+    this.showHandle = true,
+  });
+
+  final List<WorkoutCompletionExercise> exercises;
+  final int totalSets;
+  final String duration;
+  final String volume;
+  final VoidCallback onDone;
+  final Key? doneButtonKey;
+  final ScrollController? scrollController;
+  final bool showHandle;
+
+  @override
+  Widget build(BuildContext context) {
+    if (scrollController == null) {
+      return _buildColumn(context);
+    }
+
+    final usesClassicPresentation = context.usesClassicPresentation;
+    final scrollView = CustomScrollView(
+      controller: scrollController,
+      slivers: [
+        SliverToBoxAdapter(child: _buildHeaderBlock(context)),
+        if (_hasRecordBadges)
+          const SliverToBoxAdapter(child: WorkoutRecordBadgeLegend()),
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            usesClassicPresentation ? 88 : 12,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => WorkoutCompletionExerciseCard(
+                exercise: exercises[index].exercise,
+                weightUnit: exercises[index].weightUnit,
+                badges: exercises[index].badges,
+              ),
+              childCount: exercises.length,
+            ),
+          ),
+        ),
+      ],
+    );
+    final doneAction = SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: WorkoutDoneAction(
+          buttonKey: doneButtonKey,
+          onPressed: onDone,
+          label: AppLocalizations.of(context).commonDone,
+        ),
+      ),
+    );
+
+    if (usesClassicPresentation) {
+      return Stack(
+        children: [
+          Positioned.fill(child: scrollView),
+          Positioned(left: 0, right: 0, bottom: 0, child: doneAction),
+        ],
+      );
+    }
+
+    final content = Column(children: [Expanded(child: scrollView), doneAction]);
+    return WorkoutCompletionSurface(padding: EdgeInsets.zero, child: content);
+  }
+
+  Widget _buildColumn(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showHandle) const WorkoutSheetHandle(),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: _buildSummaryHeader(context),
+        ),
+        const Divider(),
+        if (_hasRecordBadges) const WorkoutRecordBadgeLegend(),
+        for (final completed in exercises)
+          WorkoutCompletionExerciseCard(
+            exercise: completed.exercise,
+            weightUnit: completed.weightUnit,
+            badges: completed.badges,
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: WorkoutDoneAction(
+            buttonKey: doneButtonKey,
+            onPressed: onDone,
+            label: AppLocalizations.of(context).commonDone,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderBlock(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showHandle)
+          const Padding(
+            padding: EdgeInsets.only(top: 8, bottom: 4),
+            child: Center(child: WorkoutSheetHandle()),
+          ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: _buildSummaryHeader(context),
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
+  Widget _buildSummaryHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final semantic = context.semanticColors;
+    final completionColor = semantic.completionAccent;
+    final usesInkRecipe = context.surfaceDecorationTokens.sheet.outlined;
+    final shapes = context.shapeTokens;
+    final celebrationTextStyle = DefaultTextStyle.of(
+      context,
+    ).style.copyWith(fontSize: 25);
+    final completionHeader = Center(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('🎉', style: celebrationTextStyle),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppLocalizations.of(context).sessionCompleteTitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color:
+                    usesInkRecipe
+                        ? semantic.onWorkoutContainer
+                        : completionColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text('🎉', style: celebrationTextStyle),
+        ],
+      ),
+    );
+    final header =
+        usesInkRecipe
+            ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: completionColor,
+                border: Border.all(
+                  color: tonosOutlineForSurface(context, completionColor),
+                  width: shapes.outlineWidth,
+                ),
+                borderRadius: shapes.control,
+              ),
+              child: completionHeader,
+            )
+            : completionHeader;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        const SizedBox(height: 16),
+        _buildSummaryMetricsGrid(context),
+      ],
+    );
+  }
+
+  Widget _buildSummaryMetricsGrid(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final dataVisualization = context.dataVisualizationTokens;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final metrics = [
+      (
+        icon: Icons.fitness_center_outlined,
+        label: strings.sessionMetricExercises,
+        value: exercises.length.toString(),
+        accent: dataVisualization.sessionExercises,
+      ),
+      (
+        icon: Icons.format_list_numbered,
+        label: strings.sessionMetricSets,
+        value: totalSets.toString(),
+        accent: dataVisualization.sessionSets,
+      ),
+      (
+        icon: Icons.timer_outlined,
+        label: strings.sessionMetricDuration,
+        value: duration,
+        accent: dataVisualization.sessionDuration,
+      ),
+      (
+        icon: Icons.monitor_weight_outlined,
+        label: strings.sessionMetricVolume,
+        value: volume,
+        accent: dataVisualization.sessionVolume,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns =
+            textScale >= 1.8 || constraints.maxWidth < 300
+                ? 1
+                : textScale > 1.15 || constraints.maxWidth < 360
+                ? 2
+                : 4;
+        const gap = 6.0;
+        final itemWidth =
+            (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final metric in metrics)
+              SizedBox(
+                width: itemWidth,
+                child: _buildSummaryMetric(
+                  context,
+                  icon: metric.icon,
+                  label: metric.label,
+                  value: metric.value,
+                  accentColor: metric.accent,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSummaryMetric(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accentColor,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.sheet.outlined;
+    final preservesClassicDensity =
+        context.usesClassicPresentation &&
+        MediaQuery.textScalerOf(context).scale(1) <= 1.15;
+    final keepsNeoMetricLinesCompact =
+        usesInkRecipe && MediaQuery.textScalerOf(context).scale(1) <= 1.15;
+    final surfaces = context.surfaceTokens;
+    final metricFill =
+        usesInkRecipe
+            ? surfaces.card
+            : accentColor.withValues(alpha: surfaces.completionMetricFill);
+    final metricBorder =
+        usesInkRecipe
+            ? tonosOutlineForSurface(context, surfaces.card)
+            : accentColor.withValues(alpha: surfaces.completionMetricBorder);
+    final metricForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              metricFill,
+              parentSurface: surfaces.sheet,
+            )
+            : colorScheme.onSurface;
+    final metricSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, metricFill)
+            : colorScheme.onSurfaceVariant;
+    Widget metricLine(String text, TextStyle? style) {
+      final line = Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.visible,
+        style: style,
+      );
+      if (!keepsNeoMetricLinesCompact) return line;
+      return SizedBox(
+        width: double.infinity,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: line,
+        ),
+      );
+    }
+
+    return Container(
+      key: usesInkRecipe ? ValueKey('workout-completion-metric-$label') : null,
+      constraints: const BoxConstraints(minHeight: 70),
+      padding: const EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        color: metricFill,
+        borderRadius: shapes.control,
+        border: Border.all(
+          color: metricBorder,
+          width: usesInkRecipe ? shapes.outlineWidth : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: usesInkRecipe ? metricForeground : accentColor,
+          ),
+          const SizedBox(height: 4),
+          metricLine(
+            value,
+            theme.textTheme.labelLarge?.copyWith(
+              color: metricForeground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 1),
+          metricLine(
+            label,
+            theme.textTheme.labelSmall?.copyWith(
+              fontSize: preservesClassicDensity ? 9 : 11,
+              color: metricSecondaryForeground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool get _hasRecordBadges => exercises.any(
+    (completed) => completed.badges.setBadges.values.any(
+      (setBadges) => setBadges.isNotEmpty,
+    ),
+  );
 }
 
 /// A bottom sheet showing session summary & details.
@@ -60,19 +826,11 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       future: _dataFuture,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return SizedBox(
-            height: 200,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const WorkoutCompletionStatus.loading();
         }
         if (snap.hasError || snap.data == null) {
-          return SizedBox(
-            height: 200,
-            child: Center(
-              child: Text(
-                AppLocalizations.of(context).sessionCompleteLoadError,
-              ),
-            ),
+          return WorkoutCompletionStatus.error(
+            onClose: () => Navigator.of(context).pop(),
           );
         }
         final data = snap.data!;
@@ -87,11 +845,12 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     if (session == null) {
       throw Exception('Session not found');
     }
-    final badgesFuture = _repo.fetchSessionRecordBadges(widget.sessionId);
+    final badgesByExerciseId = await _repo.fetchSessionRecordBadges(
+      widget.sessionId,
+    );
     // Fetch detailed exercises
     final exRows = await _repo.fetchExercises(widget.sessionId);
     final loadedExercises = await _loadDetailedExercises(exRows);
-    final badgesByExerciseId = await badgesFuture;
     // TODO(cardio/stretch): include cardio and stretch rows here after those
     // cards are fixed, updated, and added back into the user flow.
     final exs =
@@ -132,9 +891,6 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   Widget _buildContent(BuildContext context, _SessionData data) {
     final session = data.session;
     final exercises = data.exercises;
-    final theme = Theme.of(context);
-    final strings = AppLocalizations.of(context);
-    const completionColor = Color(0xFF7CFF8B);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     // Compute total volume:
@@ -149,14 +905,24 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       0,
       (total, completed) => total + completed.exercise.sets.length,
     );
-    final hasSetRecordBadges = exercises.any(
-      (completed) => completed.badges.setBadges.values.any(
-        (setBadges) => setBadges.isNotEmpty,
-      ),
+    final durationText = formatCompletedWorkoutDuration(
+      AppLocalizations.of(context),
+      session.duration,
     );
-    final durationText = _formatDuration(Duration(seconds: session.duration));
 
-    final volumeText = WeightUnitFormatter.formatVolume(totalVol, weightUnit);
+    final volumeText = WeightUnitFormatter.formatVolume(
+      totalVol,
+      weightUnit,
+      locale: Localizations.localeOf(context),
+    );
+    final preparedExercises = [
+      for (final completed in exercises)
+        WorkoutCompletionExercise(
+          exercise: completed.exercise,
+          weightUnit: weightUnit,
+          badges: completed.badges,
+        ),
+    ];
 
     return DraggableScrollableSheet(
       expand: false,
@@ -165,453 +931,17 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       maxChildSize: 0.95,
       snap: true,
       shouldCloseOnMinExtent: false,
-      builder:
-          (ctx, scrollCtrl) => Stack(
-            children: [
-              CustomScrollView(
-                controller: scrollCtrl,
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 4),
-                          child: Center(
-                            child: Container(
-                              width: 36,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // HEADER
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        '🎉',
-                                        style: TextStyle(fontSize: 25),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        strings.sessionCompleteTitle,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.headlineSmall
-                                            ?.copyWith(
-                                              color: completionColor,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        '🎉',
-                                        style: TextStyle(fontSize: 25),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildSummaryMetricsGrid(
-                                context,
-                                exercises: exercises.length,
-                                sets: totalSets,
-                                duration: durationText,
-                                volume: volumeText,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(),
-                      ],
-                    ),
-                  ),
-                  if (hasSetRecordBadges)
-                    SliverToBoxAdapter(child: _buildBadgeLegend()),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 88),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((ctx, index) {
-                        final completed = exercises[index];
-                        return _buildWeightSection(
-                          completed.exercise,
-                          weightUnit,
-                          badges: completed.badges,
-                        );
-                      }, childCount: exercises.length),
-                    ),
-                  ),
-                ],
-              ),
-              // DONE BUTTON
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: FilledButton.icon(
-                      key: AppTestKeys.sessionCompleteDone,
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.check_rounded),
-                      label: Text(strings.commonDone),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Widget _buildBadgeLegend() {
-    return const WorkoutRecordBadgeLegend();
-  }
-
-  Widget _buildSummaryMetric(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required bool compact,
-    required Color accentColor,
-  }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
-    return Container(
-      constraints: BoxConstraints(minHeight: compact ? 70 : 76),
-      padding: EdgeInsets.all(compact ? 7 : 10),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accentColor.withValues(alpha: 0.30)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: compact ? 14 : 16, color: accentColor),
-          SizedBox(height: compact ? 4 : 6),
-          usesLocalizedLayout
-              ? FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  style: (compact
-                          ? theme.textTheme.labelLarge
-                          : theme.textTheme.titleSmall)
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              )
-              : Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: (compact
-                        ? theme.textTheme.labelLarge
-                        : theme.textTheme.titleSmall)
-                    ?.copyWith(fontWeight: FontWeight.w700),
-              ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            maxLines: usesLocalizedLayout ? 2 : 1,
-            overflow: usesLocalizedLayout ? null : TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              fontSize: compact ? 9 : null,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryMetricsGrid(
-    BuildContext context, {
-    required int exercises,
-    required int sets,
-    required String duration,
-    required String volume,
-  }) {
-    final strings = AppLocalizations.of(context);
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
-    final metrics = [
-      (
-        icon: Icons.fitness_center_outlined,
-        label: strings.sessionMetricExercises,
-        value: '$exercises',
-        accent: const Color(0xFF64B5F6),
-      ),
-      (
-        icon: Icons.format_list_numbered,
-        label: strings.sessionMetricSets,
-        value: '$sets',
-        accent: const Color(0xFF81C784),
-      ),
-      (
-        icon: Icons.timer_outlined,
-        label: strings.sessionMetricDuration,
-        value: duration,
-        accent: const Color(0xFFFFD54F),
-      ),
-      (
-        icon: Icons.monitor_weight_outlined,
-        label: strings.sessionMetricVolume,
-        value: volume,
-        accent: const Color(0xFFF48FB1),
-      ),
-    ];
-
-    if (!usesLocalizedLayout) {
-      return Row(
-        children: [
-          for (var index = 0; index < metrics.length; index++) ...[
-            if (index > 0) const SizedBox(width: 6),
-            Expanded(
-              child: _buildSummaryMetric(
-                context,
-                icon: metrics[index].icon,
-                label: metrics[index].label,
-                value: metrics[index].value,
-                compact: true,
-                accentColor: metrics[index].accent,
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = textScale > 1.15 || constraints.maxWidth < 360 ? 2 : 4;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: metrics.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: 6,
-            mainAxisSpacing: 6,
-            childAspectRatio:
-                columns == 4
-                    ? 1.28
-                    : textScale > 1.5
-                    ? 1.6
-                    : 2.2,
-          ),
-          itemBuilder: (context, index) {
-            final metric = metrics[index];
-            return _buildSummaryMetric(
-              context,
-              icon: metric.icon,
-              label: metric.label,
-              value: metric.value,
-              compact: true,
-              accentColor: metric.accent,
-            );
-          },
+      builder: (_, scrollCtrl) {
+        return WorkoutCompletionPresentation(
+          exercises: preparedExercises,
+          totalSets: totalSets,
+          duration: durationText,
+          volume: volumeText,
+          scrollController: scrollCtrl,
+          doneButtonKey: AppTestKeys.sessionCompleteDone,
+          onDone: () => Navigator.of(context).pop(),
         );
       },
     );
-  }
-
-  Widget _buildWeightSection(
-    WeightExercise ex,
-    WeightUnit weightUnit, {
-    required WorkoutExerciseRecordBadges badges,
-  }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final accentColor = _exerciseAccentColor(ex.name, colorScheme);
-    final rows = <Widget>[
-      Padding(
-        padding: const EdgeInsets.only(bottom: 3),
-        child: Row(
-          children: [
-            Icon(Icons.square, size: 11, color: accentColor),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                ex.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: accentColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            if (badges.isFirstRecord) ...[
-              const SizedBox(width: 8),
-              const FirstRecordBadge(),
-            ],
-          ],
-        ),
-      ),
-    ];
-    for (var i = 0; i < ex.sets.length; i++) {
-      final s = ex.sets[i];
-      final setBadges = badges.forSet(i);
-      final erm = s.weight * (1 + 0.0333 * s.reps);
-      final setText =
-          '${WeightUnitFormatter.formatWeight(s.weight, weightUnit)} x ${s.reps}';
-      final ermText = AppLocalizations.of(
-        context,
-      ).sessionEstimatedMax(WeightUnitFormatter.formatWeight(erm, weightUnit));
-      rows.add(
-        Padding(
-          padding: EdgeInsets.only(top: i == 0 ? 6 : 7),
-          child: Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.20),
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  '${i + 1}',
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: accentColor,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (setBadges.isEmpty)
-                Expanded(
-                  child: Text(
-                    setText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              else ...[
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    setText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  flex: 3,
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (
-                            var badgeIndex = 0;
-                            badgeIndex < setBadges.length;
-                            badgeIndex++
-                          ) ...[
-                            if (badgeIndex > 0) const SizedBox(width: 4),
-                            WorkoutRecordBadgeChip(
-                              badge: setBadges[badgeIndex],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 88,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    ermText,
-                    maxLines: 1,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(12, 5, 12, 7),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentColor.withValues(alpha: 0.52)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: rows,
-      ),
-    );
-  }
-
-  Color _exerciseAccentColor(String exerciseName, ColorScheme colorScheme) {
-    final palette = [
-      colorScheme.primary,
-      colorScheme.tertiary,
-      colorScheme.secondary,
-      colorScheme.error,
-    ];
-    final hash = exerciseName.codeUnits.fold<int>(
-      0,
-      (value, codeUnit) => value + codeUnit,
-    );
-    return palette[hash % palette.length];
-  }
-
-  String _formatDuration(Duration duration) {
-    final strings = AppLocalizations.of(context);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours == 0) return strings.durationMinutesCompact(minutes);
-    if (minutes == 0) return strings.durationHoursCompact(hours);
-    return strings.durationHoursMinutesCompact(hours, minutes);
   }
 }

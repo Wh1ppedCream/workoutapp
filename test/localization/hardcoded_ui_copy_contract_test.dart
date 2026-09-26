@@ -13,19 +13,12 @@ void main() {
         final path = entity.path.replaceAll('\\', '/');
         if (_isDeferredSurface(path)) continue;
 
-        final source = entity.readAsStringSync();
-        for (final pattern in _userFacingLiteralPatterns) {
-          for (final match in pattern.allMatches(source)) {
-            final copy = match.namedGroup('copy')?.trim() ?? '';
-            if (!_looksLikeUserFacingEnglish(copy) ||
-                _allowedTokens.contains(copy)) {
-              continue;
-            }
-            final line =
-                '\n'.allMatches(source.substring(0, match.start)).length + 1;
-            violations.add('$path:$line: "$copy"');
-          }
-        }
+        violations.addAll(
+          _findUserFacingLiteralViolations(
+            source: entity.readAsStringSync(),
+            path: path,
+          ),
+        );
       }
     }
 
@@ -52,15 +45,140 @@ void main() {
       isFalse,
     );
   });
+
+  test(
+    'literal contract detects conditional, semantic, and empty-state copy',
+    () {
+      final violations = _findUserFacingLiteralViolations(
+        path: 'test_fixture.dart',
+        source: '''
+        Text(isReady ? 'Ready to train' : 'Still loading');
+        SelectableText('More details');
+        Tooltip(message: isSaved ? 'Saved workout' : 'Save workout');
+        Semantics(semanticLabel: isOpen ? 'Close panel' : 'Open panel');
+        EmptyState(emptyMessage: 'No workouts yet');
+      ''',
+      );
+
+      expect(violations, hasLength(8));
+      expect(violations.join('\n'), contains('Ready to train'));
+      expect(violations.join('\n'), contains('Still loading'));
+      expect(violations.join('\n'), contains('No workouts yet'));
+    },
+  );
+
+  test('literal contract detects native platform prompt copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: "FilePicker.pickFiles(dialogTitle: 'Select a file');",
+    );
+
+    expect(violations, hasLength(1));
+    expect(violations.single, contains('Select a file'));
+  });
+
+  test('literal contract detects rich-text and menu copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: '''
+      Text.rich(TextSpan(text: 'Rich details'));
+      PopupMenuItem(child: Text('Edit item'));
+      ''',
+    );
+
+    expect(violations, hasLength(2));
+    expect(violations.join('\n'), contains('Rich details'));
+    expect(violations.join('\n'), contains('Edit item'));
+  });
+
+  test('literal contract detects helper-returned user-facing copy', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: '''
+      String emptyMessage() => 'No workouts yet';
+      String titleText() {
+        return 'Save changes';
+      }
+      String machineCode() => 'session_state';
+      ''',
+    );
+
+    expect(violations, hasLength(2));
+    expect(violations.join('\n'), contains('No workouts yet'));
+    expect(violations.join('\n'), contains('Save changes'));
+  });
+
+  test('literal contract detects hardcoded weekday label lists', () {
+    final violations = _findUserFacingLiteralViolations(
+      path: 'test_fixture.dart',
+      source: "const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];",
+    );
+
+    expect(violations, hasLength(1));
+    expect(violations.single, contains('S'));
+  });
+}
+
+List<String> _findUserFacingLiteralViolations({
+  required String source,
+  required String path,
+}) {
+  final violations = <String>[];
+  for (final pattern in _userFacingLiteralPatterns) {
+    for (final match in pattern.allMatches(source)) {
+      final copy = match.namedGroup('copy')?.trim() ?? '';
+      if (!_looksLikeUserFacingEnglish(copy) || _allowedTokens.contains(copy)) {
+        continue;
+      }
+      final line = '\n'.allMatches(source.substring(0, match.start)).length + 1;
+      violations.add('$path:$line: "$copy"');
+    }
+  }
+  return violations;
 }
 
 final _userFacingLiteralPatterns = <RegExp>[
   RegExp(
-    r'''Text\(\s*(?:const\s+)?['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''(?:Text|SelectableText)\(\s*(?:const\s+)?['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
     multiLine: true,
   ),
   RegExp(
-    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    r'''TextSpan\(\s*(?:const\s+)?text:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:Text|SelectableText)\(\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:Text|SelectableText)\(\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*[^'"\r\n]*?\?\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:title|subtitle|label|labelText|emptyMessage|hintText|helperText|tooltip|semanticLabel|message|description|body|primaryLabel|secondaryLabel|dialogTitle)\s*:\s*[^'"\r\n]*?\?\s*['"][^'"\r\n]*['"]\s*:\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    multiLine: true,
+  ),
+  RegExp(
+    r'''String\??\s+_?[A-Za-z]\w*(?:label|title|subtitle|message|description|copy|text|summary|tooltip|empty|error|status|name)\w*\s*(?:\([^)]*\))?\s*=>\s*['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    caseSensitive: false,
+    multiLine: true,
+  ),
+  RegExp(
+    r'''String\??\s+_?[A-Za-z]\w*(?:label|title|subtitle|message|description|copy|text|summary|tooltip|empty|error|status|name)\w*\s*(?:\([^)]*\))?\s*\{[^{}]*?\breturn\s+['"](?<copy>[A-Za-z\$][^'"\r\n]*)['"]''',
+    caseSensitive: false,
+    multiLine: true,
+  ),
+  RegExp(
+    r'''(?:(?:static|final|const)\s+)*(?:List<String>\s+)?_?(?:day|weekday)[A-Za-z_]*Labels\s*=\s*\[(?<copy>[^\]]*)\]''',
+    caseSensitive: false,
     multiLine: true,
   ),
 ];
@@ -100,7 +218,6 @@ bool _isDeferredSurface(String path) {
     '/stretch_',
     '/meal_plan_',
     '/nutrition_',
-    '/speed_dial_fab.dart',
     '/combined_history_page.dart',
     '/form_posing_page.dart',
     '/train2_page.dart',

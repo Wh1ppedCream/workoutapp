@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -9,6 +8,9 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
+import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import 'body_heatmap.dart';
@@ -80,15 +82,39 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
 
   @override
   Widget build(BuildContext context) {
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shellForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressSelector,
+            )
+            : null;
+
+    Widget shell(Widget child) {
+      if (usesInkRecipe) {
+        return TonosSurface(
+          variant: TonosSurfaceVariant.panelRaised,
+          color: surfaces.exerciseProgressSelector,
+          margin: widget.margin,
+          padding: EdgeInsets.zero,
+          borderRadius: context.shapeTokens.card,
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      }
+      return Card(margin: widget.margin, child: child);
+    }
+
     return FutureBuilder<List<WorkoutReportSession>>(
       future: _sessionsFuture,
       initialData: _lastSessions,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return Card(
-            margin: widget.margin,
-            child: SizedBox(
+          return shell(
+            SizedBox(
               height: 280,
               child: Center(child: CircularProgressIndicator()),
             ),
@@ -96,12 +122,17 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         }
 
         if (snapshot.hasError && !snapshot.hasData) {
-          return Card(
-            margin: widget.margin,
-            child: Padding(
+          return shell(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
                 AppLocalizations.of(context).logbookCalendarLoadFailed,
+                style:
+                    usesInkRecipe
+                        ? Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: shellForeground)
+                        : null,
               ),
             ),
           );
@@ -119,60 +150,63 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
         final selectedRange = _selectedPeriodRange();
         final maxSessionsPerDay = _maxSessionsPerDayCache;
 
-        return Card(
-          margin: widget.margin,
-          child: Padding(
+        return shell(
+          Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _CalendarModeTabs(selectedMode: _mode, onChanged: _selectMode),
                 const SizedBox(height: 14),
-                _CalendarModeBody(
-                  mode: _mode,
-                  visibleMonth: _visibleMonth,
-                  visibleThreeMonthEnd: _visibleThreeMonthEnd,
-                  selectedDay: _selectedDay,
-                  selectedWeekStart: _selectedWeekStart,
-                  selectedMonth: _selectedMonth,
-                  visibleYear: _visibleYear,
-                  selectedYear: _selectedYear,
-                  sessionsByDay: sessionsByDay,
-                  maxSessionsPerDay: maxSessionsPerDay,
-                  onPreviousMonth:
-                      () => _showMonth(
-                        DateTime(_visibleMonth.year, _visibleMonth.month - 1),
-                      ),
-                  onNextMonth:
-                      () => _showMonth(
-                        DateTime(_visibleMonth.year, _visibleMonth.month + 1),
-                      ),
-                  onPreviousThreeMonths:
-                      () => _showThreeMonthBlock(
-                        DateTime(
-                          _visibleThreeMonthEnd.year,
-                          _visibleThreeMonthEnd.month - 3,
+                _buildCalendarModeSurface(
+                  context,
+                  _CalendarModeBody(
+                    mode: _mode,
+                    visibleMonth: _visibleMonth,
+                    visibleThreeMonthEnd: _visibleThreeMonthEnd,
+                    selectedDay: _selectedDay,
+                    selectedWeekStart: _selectedWeekStart,
+                    selectedMonth: _selectedMonth,
+                    visibleYear: _visibleYear,
+                    selectedYear: _selectedYear,
+                    sessionsByDay: sessionsByDay,
+                    maxSessionsPerDay: maxSessionsPerDay,
+                    onPreviousMonth:
+                        () => _showMonth(
+                          DateTime(_visibleMonth.year, _visibleMonth.month - 1),
                         ),
-                      ),
-                  onNextThreeMonths:
-                      () => _showThreeMonthBlock(
-                        DateTime(
-                          _visibleThreeMonthEnd.year,
-                          _visibleThreeMonthEnd.month + 3,
+                    onNextMonth:
+                        () => _showMonth(
+                          DateTime(_visibleMonth.year, _visibleMonth.month + 1),
                         ),
-                      ),
-                  onPreviousYear: () => _showYear(_visibleYear - 1),
-                  onNextYear: () => _showYear(_visibleYear + 1),
-                  onSelectDay: (day) => setState(() => _selectedDay = day),
-                  onSelectWeek:
-                      (weekStart) =>
-                          setState(() => _selectedWeekStart = weekStart),
-                  onSelectMonth:
-                      (month) => setState(() {
-                        _selectedMonth = month;
-                        _visibleYear = month.year;
-                      }),
-                  onSelectYear: (year) => setState(() => _selectedYear = year),
+                    onPreviousThreeMonths:
+                        () => _showThreeMonthBlock(
+                          DateTime(
+                            _visibleThreeMonthEnd.year,
+                            _visibleThreeMonthEnd.month - 3,
+                          ),
+                        ),
+                    onNextThreeMonths:
+                        () => _showThreeMonthBlock(
+                          DateTime(
+                            _visibleThreeMonthEnd.year,
+                            _visibleThreeMonthEnd.month + 3,
+                          ),
+                        ),
+                    onPreviousYear: () => _showYear(_visibleYear - 1),
+                    onNextYear: () => _showYear(_visibleYear + 1),
+                    onSelectDay: (day) => setState(() => _selectedDay = day),
+                    onSelectWeek:
+                        (weekStart) =>
+                            setState(() => _selectedWeekStart = weekStart),
+                    onSelectMonth:
+                        (month) => setState(() {
+                          _selectedMonth = month;
+                          _visibleYear = month.year;
+                        }),
+                    onSelectYear:
+                        (year) => setState(() => _selectedYear = year),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 _SelectedPeriodHeatmapSummary(
@@ -198,6 +232,18 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCalendarModeSurface(BuildContext context, Widget child) {
+    if (!context.surfaceDecorationTokens.panel.outlined) return child;
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.panel,
+      color: context.surfaceTokens.card,
+      padding: const EdgeInsets.all(10),
+      borderRadius: context.shapeTokens.compact,
+      child: child,
     );
   }
 
@@ -275,27 +321,19 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   }
 
   String _selectedPeriodTitle() {
+    final locale = Localizations.localeOf(context);
     switch (_mode) {
       case _CalendarRangeMode.month:
-        return DateFormat(
-          'EEE, MMM d',
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(_selectedDay);
+        return LocalizedFormatters.weekdayShortDate(_selectedDay, locale);
       case _CalendarRangeMode.threeMonth:
         final end = _monthWeekEndExclusive(
           _selectedWeekStart,
         ).subtract(const Duration(days: 1));
-        return _formatDateRange(
-          _selectedWeekStart,
-          end,
-          Localizations.localeOf(context).toLanguageTag(),
-        );
+        return _formatDateRange(_selectedWeekStart, end, locale);
       case _CalendarRangeMode.year:
-        return DateFormat.yMMMM(
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(_selectedMonth);
+        return LocalizedFormatters.monthYear(_selectedMonth, locale);
       case _CalendarRangeMode.fourYear:
-        return _selectedYear.toString();
+        return LocalizedFormatters.year(_selectedYear, locale);
     }
   }
 
@@ -308,7 +346,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
     final endDay = DateUtils.dateOnly(endExclusive);
     final periodSessions =
         sessions.where((session) {
-          final day = DateUtils.dateOnly(session.date);
+          final day = session.calendarDay.toLocalDateTime();
           return !day.isBefore(startDay) && day.isBefore(endDay);
         }).toList();
     periodSessions.sort((a, b) => b.date.compareTo(a.date));
@@ -376,7 +414,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   ) {
     final grouped = <DateTime, List<WorkoutReportSession>>{};
     for (final session in sessions) {
-      final day = DateUtils.dateOnly(session.date);
+      final day = session.calendarDay.toLocalDateTime();
       grouped.putIfAbsent(day, () => <WorkoutReportSession>[]).add(session);
     }
     for (final daySessions in grouped.values) {
@@ -432,27 +470,16 @@ String _workoutCountText(AppLocalizations strings, int count) {
   return strings.logbookWorkoutCount(count);
 }
 
-String _formatDateRange(DateTime start, DateTime end, String localeName) {
-  final startFormat =
-      start.year == end.year
-          ? DateFormat.MMMd(localeName)
-          : DateFormat.yMMMd(localeName);
-  final endFormat = DateFormat.yMMMd(localeName);
-  return '${startFormat.format(start)} - ${endFormat.format(end)}';
+String _formatDateRange(DateTime start, DateTime end, Locale locale) {
+  return LocalizedFormatters.dateRange(start, end, locale);
 }
 
 String _formatMonthRangeTitle(
   DateTime startMonth,
   DateTime endMonth,
-  String localeName,
+  Locale locale,
 ) {
-  final startFormat =
-      startMonth.year == endMonth.year
-          ? DateFormat.MMM(localeName)
-          : DateFormat.yMMM(localeName);
-  return '${startFormat.format(startMonth)} - '
-          '${DateFormat.yMMM(localeName).format(endMonth)}'
-      .toUpperCase();
+  return LocalizedFormatters.monthRange(startMonth, endMonth, locale);
 }
 
 int _sessionCountInRange(
@@ -482,18 +509,71 @@ class _CalendarModeTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final selectedFill =
+        usesInkRecipe ? surfaces.settingsHero : context.cs.primary;
+    final unselectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.calendarModeSelector)
+            : context.cs.onSurface;
+    final selectedForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, selectedFill)
+            : context.cs.onPrimary;
+    final railRadius = usesInkRecipe ? shapes.control : shapes.pill;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(999),
+        color: surfaces.calendarModeSelector,
+        borderRadius: railRadius,
+        border:
+            usesInkRecipe
+                ? Border.all(
+                  color: tonosOutlineForSurface(
+                    context,
+                    surfaces.calendarModeSelector,
+                  ),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
       child: Row(
         children: [
-          _buildButton(context, _CalendarRangeMode.month, 'M'),
-          _buildButton(context, _CalendarRangeMode.threeMonth, '3M'),
-          _buildButton(context, _CalendarRangeMode.year, 'Y'),
-          _buildButton(context, _CalendarRangeMode.fourYear, '4Y'),
+          _buildButton(
+            context,
+            _CalendarRangeMode.month,
+            'M',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
+          _buildButton(
+            context,
+            _CalendarRangeMode.threeMonth,
+            '3M',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
+          _buildButton(
+            context,
+            _CalendarRangeMode.year,
+            isSpanish ? 'A' : 'Y',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
+          _buildButton(
+            context,
+            _CalendarRangeMode.fourYear,
+            isSpanish ? '4A' : '4Y',
+            selectedFill: selectedFill,
+            selectedForeground: selectedForeground,
+            unselectedForeground: unselectedForeground,
+          ),
         ],
       ),
     );
@@ -502,27 +582,47 @@ class _CalendarModeTabs extends StatelessWidget {
   Widget _buildButton(
     BuildContext context,
     _CalendarRangeMode mode,
-    String label,
-  ) {
+    String label, {
+    required Color selectedFill,
+    required Color selectedForeground,
+    required Color unselectedForeground,
+  }) {
     final isSelected = selectedMode == mode;
+    final shapes = context.shapeTokens;
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius:
+            context.surfaceDecorationTokens.panel.outlined
+                ? shapes.control
+                : shapes.pill,
         onTap: () => onChanged(mode),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: appMotionDuration(
+            context,
+            context.motionTokens.exerciseDetailSelection,
+          ),
           padding: const EdgeInsets.symmetric(vertical: 9),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isSelected ? context.cs.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            color: isSelected ? selectedFill : Colors.transparent,
+            borderRadius:
+                context.surfaceDecorationTokens.panel.outlined
+                    ? shapes.control
+                    : shapes.pill,
+            border:
+                context.surfaceDecorationTokens.panel.outlined && isSelected
+                    ? Border.all(
+                      color: tonosOutlineForSurface(context, selectedFill),
+                      width: shapes.outlineWidth,
+                    )
+                    : null,
           ),
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: isSelected ? context.cs.onPrimary : context.cs.onSurface,
+              color: isSelected ? selectedForeground : unselectedForeground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -580,16 +680,17 @@ class _CalendarModeBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final localeName = Localizations.localeOf(context).toLanguageTag();
+    final locale = Localizations.localeOf(context);
     switch (mode) {
       case _CalendarRangeMode.month:
         return Column(
           children: [
             _CalendarHeader(
               title:
-                  DateFormat.yMMMM(
-                    localeName,
-                  ).format(visibleMonth).toUpperCase(),
+                  LocalizedFormatters.monthYear(
+                    visibleMonth,
+                    locale,
+                  ).toUpperCase(),
               onPrevious: onPreviousMonth,
               onNext: onNextMonth,
               previousTooltip: strings.logbookPreviousMonth,
@@ -677,7 +778,7 @@ class _ThreeMonthWeekSelector extends StatelessWidget {
           title: _formatMonthRangeTitle(
             months.first,
             visibleEndMonth,
-            Localizations.localeOf(context).toLanguageTag(),
+            Localizations.localeOf(context),
           ),
           onPrevious: onPrevious,
           onNext: onNext,
@@ -737,9 +838,7 @@ class _MonthWeekPanel extends StatelessWidget {
     return Column(
       children: [
         Text(
-          DateFormat.MMMM(
-            Localizations.localeOf(context).toLanguageTag(),
-          ).format(month),
+          LocalizedFormatters.month(month, Localizations.localeOf(context)),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
@@ -767,9 +866,10 @@ class _MonthWeekPanel extends StatelessWidget {
             return _PeriodCircleButton(
               label: AppLocalizations.of(context).logbookWeekShort(index + 1),
               semanticLabel: AppLocalizations.of(context).logbookMonthWeek(
-                DateFormat.MMMM(
-                  Localizations.localeOf(context).toLanguageTag(),
-                ).format(month),
+                LocalizedFormatters.month(
+                  month,
+                  Localizations.localeOf(context),
+                ),
                 index + 1,
               ),
               isSelected: DateUtils.isSameDay(weekStart, selectedWeekStart),
@@ -820,7 +920,10 @@ class _YearMonthSelector extends StatelessWidget {
     return Column(
       children: [
         _CalendarHeader(
-          title: visibleYear.toString(),
+          title: LocalizedFormatters.year(
+            visibleYear,
+            Localizations.localeOf(context),
+          ),
           onPrevious: onPrevious,
           onNext: onNext,
           previousTooltip: AppLocalizations.of(context).logbookPreviousYear,
@@ -845,12 +948,14 @@ class _YearMonthSelector extends StatelessWidget {
               DateTime(month.year, month.month + 1),
             );
             return _PeriodCircleButton(
-              label: DateFormat.MMM(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(month),
-              semanticLabel: DateFormat.yMMMM(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(month),
+              label: LocalizedFormatters.monthShort(
+                month,
+                Localizations.localeOf(context),
+              ),
+              semanticLabel: LocalizedFormatters.monthYear(
+                month,
+                Localizations.localeOf(context),
+              ),
               isSelected:
                   selectedMonth.year == month.year &&
                   selectedMonth.month == month.month,
@@ -907,8 +1012,14 @@ class _FourYearSelector extends StatelessWidget {
           DateTime(year + 1),
         );
         return _PeriodCircleButton(
-          label: year.toString(),
-          semanticLabel: year.toString(),
+          label: LocalizedFormatters.year(
+            year,
+            Localizations.localeOf(context),
+          ),
+          semanticLabel: LocalizedFormatters.year(
+            year,
+            Localizations.localeOf(context),
+          ),
           isSelected: year == selectedYear,
           sessionCount: sessionCount,
           maxSessionCount: maxYearSessions,
@@ -942,35 +1053,59 @@ class _PeriodCircleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionCount == 0
             ? 0.0
             : (sessionCount / maxSessionCount).clamp(0.0, 1.0).toDouble();
+    final selectedFill = usesInkRecipe ? surfaces.settingsHero : cs.primary;
+    final activityFill =
+        usesInkRecipe
+            ? Color.lerp(
+              surfaces.calendarDayEmpty,
+              surfaces.catalogSelection,
+              0.45 + intensity * 0.55,
+            )!
+            : cs.primary.withValues(alpha: 0.22 + intensity * 0.48);
     final backgroundColor =
         isSelected
-            ? cs.primary
+            ? selectedFill
             : hasWorkout
-            ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
-            : cs.surfaceContainerHighest;
-    final foregroundColor = isSelected ? cs.onPrimary : cs.onSurface;
+            ? activityFill
+            : surfaces.calendarDayEmpty;
+    final foregroundColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, backgroundColor)
+            : isSelected
+            ? cs.onPrimary
+            : cs.onSurface;
 
     return Semantics(
       button: true,
       label: semanticLabel,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: appMotionDuration(context, context.motionTokens.quick),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 shape: BoxShape.circle,
+                border:
+                    usesInkRecipe && isSelected
+                        ? Border.all(
+                          color: tonosOutlineForSurface(context, selectedFill),
+                          width: shapes.outlineWidth,
+                        )
+                        : null,
               ),
               child: Text(
                 label,
@@ -989,7 +1124,7 @@ class _PeriodCircleButton extends StatelessWidget {
               _WorkoutCountBadge(
                 count: sessionCount,
                 compact: compact,
-                foregroundColor: isSelected ? cs.primary : cs.onPrimary,
+                foregroundColor: isSelected ? selectedFill : cs.onPrimary,
                 backgroundColor: isSelected ? cs.onPrimary : cs.primary,
               ),
           ],
@@ -1048,13 +1183,21 @@ class _CalendarHeader extends StatelessWidget {
 class _WeekdayRow extends StatelessWidget {
   const _WeekdayRow();
 
-  static const _labels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final today = DateTime.now();
+    final sunday = today.subtract(Duration(days: today.weekday % 7));
+    final labels = List.generate(
+      DateTime.daysPerWeek,
+      (index) => LocalizedFormatters.weekdayNarrow(
+        sunday.add(Duration(days: index)),
+        locale,
+      ),
+    );
     return Row(
       children:
-          _labels
+          labels
               .map(
                 (label) => Expanded(
                   child: Center(
@@ -1152,48 +1295,69 @@ class _CalendarDayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.cs;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionsPerDay == 0
             ? 0.0
             : (sessionCount / maxSessionsPerDay).clamp(0.0, 1.0).toDouble();
-    final baseColor =
-        hasWorkout
-            ? cs.primary.withValues(alpha: 0.22 + intensity * 0.48)
-            : cs.surfaceContainerHighest;
-    final backgroundColor = isSelected ? cs.primary : baseColor;
-    final foregroundColor =
+    final selectedFill = usesInkRecipe ? surfaces.settingsHero : cs.primary;
+    final activityFill =
+        usesInkRecipe
+            ? Color.lerp(
+              surfaces.calendarDayEmpty,
+              surfaces.catalogSelection,
+              0.45 + intensity * 0.55,
+            )!
+            : cs.primary.withValues(alpha: 0.22 + intensity * 0.48);
+    final backgroundColor =
         isSelected
-            ? cs.onPrimary
+            ? selectedFill
+            : hasWorkout
+            ? activityFill
+            : surfaces.calendarDayEmpty;
+    final foregroundColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, backgroundColor)
             : isCurrentMonth
-            ? cs.onSurface
+            ? (isSelected ? cs.onPrimary : cs.onSurface)
             : cs.onSurfaceVariant.withValues(alpha: 0.45);
 
     return Semantics(
       button: true,
-      label: DateFormat.yMMMMd(
-        Localizations.localeOf(context).toLanguageTag(),
-      ).format(day),
+      label: LocalizedFormatters.longDate(day, Localizations.localeOf(context)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: shapes.pill,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
           clipBehavior: Clip.none,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: appMotionDuration(context, context.motionTokens.quick),
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: backgroundColor,
                 shape: BoxShape.circle,
                 border:
-                    DateUtils.isSameDay(day, DateTime.now()) && !isSelected
+                    usesInkRecipe && isSelected
+                        ? Border.all(
+                          color: tonosOutlineForSurface(context, selectedFill),
+                          width: shapes.outlineWidth,
+                        )
+                        : DateUtils.isSameDay(day, DateTime.now()) &&
+                            !isSelected
                         ? Border.all(color: cs.primary, width: 1.4)
                         : null,
               ),
               child: Text(
-                day.day.toString(),
+                LocalizedFormatters.number(
+                  day.day,
+                  Localizations.localeOf(context),
+                  maximumFractionDigits: 0,
+                ),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: foregroundColor,
                   fontWeight: FontWeight.w900,
@@ -1241,7 +1405,11 @@ class _WorkoutCountBadge extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Text(
-          count.toString(),
+          LocalizedFormatters.number(
+            count,
+            Localizations.localeOf(context),
+            maximumFractionDigits: 0,
+          ),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: foregroundColor,
             fontSize: compact ? 8 : 9,
@@ -1286,7 +1454,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final colors = context.colors;
+            final surfaces = context.surfaceTokens;
             final maxWidth = constraints.maxWidth;
             final gap = maxWidth < 330 ? 10.0 : 16.0;
             final heatmapBox = (maxWidth * 0.57).clamp(138.0, 250.0).toDouble();
@@ -1311,13 +1479,22 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                                 height: 28,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: colors.historySummaryHeatmapHigh!,
+                                  color: tonosHeatmapHighForSurface(
+                                    context,
+                                    surfaces.card,
+                                  ),
                                 ),
                               )
                               : BodyHeatmap(
                                 frequencyMap: frequencyMap,
-                                lowColor: colors.historySummaryHeatmapLow!,
-                                highColor: colors.historySummaryHeatmapHigh!,
+                                lowColor: tonosHeatmapLowForSurface(
+                                  context,
+                                  surfaces.card,
+                                ),
+                                highColor: tonosHeatmapHighForSurface(
+                                  context,
+                                  surfaces.card,
+                                ),
                                 width: heatmapSize,
                                 height: heatmapSize,
                               ),
@@ -1330,7 +1507,11 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                       children: [
                         Expanded(
                           child: _CalendarMetricCard(
-                            value: workoutCount.toString(),
+                            value: LocalizedFormatters.number(
+                              workoutCount,
+                              Localizations.localeOf(context),
+                              maximumFractionDigits: 0,
+                            ),
                             label: AppLocalizations.of(context).logbookWorkouts,
                             compact: compactMetrics,
                           ),
@@ -1338,7 +1519,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                         SizedBox(height: metricGap),
                         Expanded(
                           child: _CalendarMetricCard(
-                            value: _durationLabel(
+                            value: formatCompletedWorkoutDuration(
                               AppLocalizations.of(context),
                               totalDurationSeconds,
                             ),
@@ -1353,6 +1534,7 @@ class _SelectedPeriodHeatmapSummary extends StatelessWidget {
                             value: WeightUnitFormatter.formatVolume(
                               totalVolume,
                               weightUnit,
+                              locale: Localizations.localeOf(context),
                             ),
                             label:
                                 AppLocalizations.of(context).logbookTotalVolume,
@@ -1385,22 +1567,28 @@ class _CalendarMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
+    final semantic = context.semanticColors;
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final metricSurface =
+        usesInkRecipe ? surfaces.workoutMetricRange : surfaces.card;
+    final valueColor =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, metricSurface)
+            : semantic.strongContent;
+    final labelColor =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, metricSurface)
+            : semantic.mutedContent;
+    return TonosSurface(
+      variant:
+          usesInkRecipe
+              ? TonosSurfaceVariant.panel
+              : TonosSurfaceVariant.compactCard,
+      color: usesInkRecipe ? metricSurface : null,
       padding: EdgeInsets.symmetric(
         vertical: compact ? 8 : 12,
         horizontal: compact ? 12 : 16,
-      ),
-      decoration: BoxDecoration(
-        color: colors.infoCardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: colors.infoCardShadow!,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1415,7 +1603,7 @@ class _CalendarMetricCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: compact ? 13 : 14,
                 fontWeight: FontWeight.bold,
-                color: colors.infoCardValueText,
+                color: valueColor,
               ),
             ),
           ),
@@ -1424,10 +1612,7 @@ class _CalendarMetricCard extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: compact ? 9 : 10,
-              color: colors.infoCardLabelText,
-            ),
+            style: TextStyle(fontSize: compact ? 9 : 10, color: labelColor),
           ),
         ],
       ),
@@ -1452,11 +1637,26 @@ class _SelectedPeriodSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final periodSurface =
+        usesInkRecipe
+            ? surfaces.catalogSelection
+            : surfaces.historySelectedPeriod;
+    final foreground = tonosForegroundForSurface(context, periodSurface);
+    final titleForeground =
+        usesInkRecipe ? foreground : theme.colorScheme.onSurface;
+    final subtitleForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(context, periodSurface)
+            : theme.colorScheme.onSurfaceVariant;
+    final content = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: context.cs.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(18),
+        color: periodSurface,
+        borderRadius: shapes.historySelectedPeriod,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1472,7 +1672,8 @@ class _SelectedPeriodSummary extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: titleForeground,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -1481,8 +1682,8 @@ class _SelectedPeriodSummary extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.cs.onSurfaceVariant,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: subtitleForeground,
                       ),
                     ),
                   ],
@@ -1490,6 +1691,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
               ),
               IconButton(
                 tooltip: AppLocalizations.of(context).logbookViewAllSessions,
+                color: titleForeground,
                 icon: const Icon(Icons.fullscreen),
                 onPressed: onOpenFullHistory,
               ),
@@ -1502,7 +1704,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: context.cs.outlineVariant.withValues(alpha: 0.22),
+                  color: surfaces.historyDivider,
                 ),
               _SessionRow(
                 session: sessions[index],
@@ -1516,6 +1718,8 @@ class _SelectedPeriodSummary extends StatelessWidget {
         ],
       ),
     );
+    if (!usesInkRecipe) return content;
+    return TonosSurfaceTheme(surface: periodSurface, child: content);
   }
 }
 
@@ -1534,19 +1738,27 @@ class _SessionRow extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
       title: Text(
-        DateFormat.jm(
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(session.date),
+        LocalizedFormatters.time(
+          session.displayDateTime,
+          Localizations.localeOf(context),
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
       subtitle: Text(
         AppLocalizations.of(context).logbookSessionSummary(
-          session.durationMinutes,
+          formatCompletedWorkoutDuration(
+            AppLocalizations.of(context),
+            session.durationSeconds,
+          ),
           session.exerciseCount,
           session.setCount,
-          WeightUnitFormatter.formatVolume(session.totalVolume, weightUnit),
+          WeightUnitFormatter.formatVolume(
+            session.totalVolume,
+            weightUnit,
+            locale: Localizations.localeOf(context),
+          ),
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -1554,10 +1766,4 @@ class _SessionRow extends StatelessWidget {
       trailing: onTap == null ? null : const Icon(Icons.chevron_right),
     );
   }
-}
-
-String _durationLabel(AppLocalizations strings, int totalSeconds) {
-  final hours = totalSeconds ~/ 3600;
-  final mins = (totalSeconds % 3600) ~/ 60;
-  return strings.durationHoursMinutes(hours, mins);
 }

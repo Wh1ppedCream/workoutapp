@@ -1,6 +1,7 @@
 // File: lib/screens/nutrition/log_entry_page.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../theme/theme_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -30,14 +31,15 @@ class _LogEntryPageState extends State<LogEntryPage> {
     super.didChangeDependencies();
     if (_didSyncDay) return;
     final p = context.read<NutritionProfile>();
-    // Align provider to requested day
-    p.setDay(widget.date);
+    // Defer notification until provider mounting has finished.
     _didSyncDay = true;
 
     // If viewing today, auto-scroll near “now” after first frame.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      if (p.isToday) {
+      await p.setDay(widget.date);
+      if (!mounted) return;
+      if (p.isToday && _scroll.hasClients) {
         final now = DateTime.now();
         final minutes = now.hour * 60 + now.minute;
         final totalH = 24 * _rowHeight;
@@ -48,6 +50,12 @@ class _LogEntryPageState extends State<LogEntryPage> {
         ); // ← cast to double
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   String _hourLabel(BuildContext context, int hour) {
@@ -178,7 +186,7 @@ class _LogEntryPageState extends State<LogEntryPage> {
                             decoration: BoxDecoration(
                               border: Border(
                                 top: BorderSide(
-                                  color: Colors.grey.shade200,
+                                  color: context.nutritionTokens.logGrid,
                                   width: 1,
                                 ),
                               ),
@@ -398,8 +406,8 @@ class _MiniStat extends StatelessWidget {
           horizontal: 6,
         ), // no vertical padding
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
-          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: context.nutritionTokens.foodBorder),
+          borderRadius: context.nutritionTokens.quantityShape,
         ),
         // Prevent system text scaling from pushing us over 36px
         child: MediaQuery(
@@ -456,7 +464,9 @@ class _EntryChip extends StatelessWidget {
 
     return Material(
       color: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: context.nutritionTokens.sectionShape,
+      ),
       clipBehavior: Clip.hardEdge, // <- clip any accidental overflow
       child: MediaQuery(
         // <- prevent system text scaling from breaking fixed height
@@ -464,7 +474,7 @@ class _EntryChip extends StatelessWidget {
           context,
         ).copyWith(textScaler: const TextScaler.linear(1.0)),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: context.nutritionTokens.sectionShape,
           onTap: onTap,
           child: Padding(
             // keep this modest so content fits in _chipH

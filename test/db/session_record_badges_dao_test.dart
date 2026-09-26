@@ -15,6 +15,8 @@ void main() {
       CREATE TABLE sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
+        completed_at_ms INTEGER,
+        training_day TEXT,
         duration INTEGER NOT NULL
       )
     ''');
@@ -290,10 +292,15 @@ Future<int> _insertCompletedWeightSession(
 
 Future<int> _insertSession(Database db, DateTime date) {
   return db.insert('sessions', {
-    'date': date.toIso8601String(),
+    'date': date.toUtc().toIso8601String(),
+    'completed_at_ms': date.toUtc().millisecondsSinceEpoch,
+    'training_day': _calendarDay(date),
     'duration': 3600,
   });
 }
+
+String _calendarDay(DateTime value) =>
+    '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
 
 Future<int> _insertWeightExercise(
   Database db, {

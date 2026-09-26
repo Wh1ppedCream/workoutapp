@@ -34,6 +34,7 @@ void main() {
       'lib/screens/session_detail_screen.dart',
       'lib/screens/train_page.dart',
       'lib/screens/volume_boundaries_screen.dart',
+      'lib/screens/new_measurement_item_page.dart',
       'lib/screens/nutrition/new_measurement_item_page.dart',
     ];
 
@@ -42,20 +43,24 @@ void main() {
     }
   });
 
-  test('measurement entry imports use the canonical screen', () {
+  test('measurement entry routes use the measurement trends hub', () {
     for (final path in <String>[
       'lib/widgets/dashboard_sections.dart',
       'lib/widgets/quick_bar.dart',
       'lib/widgets/speed_dial_fab.dart',
-      'lib/screens/nutrition/measured_items_page.dart',
       'lib/screens/nutrition/nutrition_page.dart',
+      'lib/widgets/current_metrics_section.dart',
     ]) {
       final source = File(path).readAsStringSync();
-      expect(source, contains("new_measurement_item_page.dart"));
-      expect(
-        source,
-        isNot(contains("import 'new_measurement_item_page.dart'")),
-      );
+      expect(source, contains('measured_items_page.dart'));
+      expect(source, isNot(contains('new_measurement_item_page.dart')));
     }
+
+    final hub =
+        File(
+          'lib/screens/nutrition/measured_items_page.dart',
+        ).readAsStringSync();
+    expect(hub, contains('HealthTrendsSection'));
+    expect(hub, isNot(contains('new_measurement_item_page.dart')));
   });
 }

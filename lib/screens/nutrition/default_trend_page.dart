@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import '../../widgets/speed_dial_fab.dart';
 
 /// A reusable “trend” page layout for things like bodyweight, calories burned, etc.
@@ -27,6 +29,10 @@ class _DefaultTrendPageState extends State<DefaultTrendPage> {
 
   @override
   Widget build(BuildContext context) {
+    final seriesColor =
+        context.surfaceDecorationTokens.panel.outlined
+            ? context.dataVisualizationTokens.primarySeries
+            : Theme.of(context).primaryColor;
     return Scaffold(
       appBar: AppBar(title: Text('${widget.title} Trend')),
       body: Column(
@@ -85,7 +91,7 @@ class _DefaultTrendPageState extends State<DefaultTrendPage> {
                       belowBarData: BarAreaData(
                         show: true,
                         // TODO: replace with .withValues() once you configure exact color
-                        color: Theme.of(context).primaryColor,
+                        color: seriesColor,
                       ),
                     ),
                   ],
@@ -161,7 +167,7 @@ class _DefaultTrendPageState extends State<DefaultTrendPage> {
                   Duration(days: i * 3),
                 );
                 final placeholderValue = (100 + i * 5).toString();
-                return Card(
+                return TonosThemeReadyCard(
                   child: ListTile(
                     title: Text(placeholderValue),
                     subtitle: Text(

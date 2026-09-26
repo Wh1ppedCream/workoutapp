@@ -8,12 +8,18 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
+import '../../utils/localized_body_part_name.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_definition_info_tile.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
 import '../../widgets/recommended_sets_editor_dialog.dart';
 import '../../widgets/set_stat_chip.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'definitions_by_bodypart_page.dart';
 
 /// Muscle detail page for the exercise focus library.
@@ -113,9 +119,11 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
   }
 
   Future<void> _editRecommendedSets(_MusclePageData data) async {
+    final displayName = await _localizedMuscleName();
+    if (!mounted) return;
     final updatedBounds = await showRecommendedSetsEditorDialog(
       context,
-      targetName: widget.muscle.name,
+      targetName: displayName,
       targetId: widget.muscle.id,
       currentBounds: data.volumeBounds,
     );
@@ -133,7 +141,7 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
           content: Text(
             AppLocalizations.of(
               context,
-            ).anatomyRecommendedSetsUpdated(widget.muscle.name),
+            ).anatomyRecommendedSetsUpdated(displayName),
           ),
         ),
       );
@@ -142,6 +150,20 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).anatomySaveFailed)),
       );
+    }
+  }
+
+  Future<String> _localizedMuscleName() async {
+    try {
+      return await CatalogEntityLocalizer.instance.resolveName(
+        CatalogEntityDisplayName(
+          catalogId: widget.muscle.catalogId,
+          canonicalName: widget.muscle.name,
+        ),
+        Localizations.localeOf(context),
+      );
+    } catch (_) {
+      return widget.muscle.name;
     }
   }
 
@@ -182,10 +204,19 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
     final strings = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          strings.anatomyTargetExercises(widget.muscle.name),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        title: LocalizedCatalogEntityNamesBuilder(
+          entities: [
+            CatalogEntityDisplayName(
+              catalogId: widget.muscle.catalogId,
+              canonicalName: widget.muscle.name,
+            ),
+          ],
+          builder:
+              (context, names) => Text(
+                strings.anatomyTargetExercises(names.single),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
         ),
       ),
       body: FutureBuilder<_MusclePageData>(
@@ -266,7 +297,7 @@ class _MuscleHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Card(
+          TonosThemeReadyCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -276,9 +307,18 @@ class _MuscleHeader extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 26,
-                        child: Text(
-                          _initialFor(muscle.name),
-                          style: theme.textTheme.titleLarge,
+                        child: LocalizedCatalogEntityNamesBuilder(
+                          entities: [
+                            CatalogEntityDisplayName(
+                              catalogId: muscle.catalogId,
+                              canonicalName: muscle.name,
+                            ),
+                          ],
+                          builder:
+                              (context, names) => Text(
+                                _initialFor(names.single),
+                                style: theme.textTheme.titleLarge,
+                              ),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -286,8 +326,11 @@ class _MuscleHeader extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              muscle.name,
+                            LocalizedCatalogEntityName(
+                              entity: CatalogEntityDisplayName(
+                                catalogId: muscle.catalogId,
+                                canonicalName: muscle.name,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleLarge,
@@ -308,9 +351,9 @@ class _MuscleHeader extends StatelessWidget {
                   if (sourceBodyPart != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      ).anatomyOpenedFrom(sourceBodyPart!.name),
+                      AppLocalizations.of(context).anatomyOpenedFrom(
+                        localizedBodyPartName(context, sourceBodyPart!.name),
+                      ),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -325,7 +368,12 @@ class _MuscleHeader extends StatelessWidget {
                               context,
                             ).anatomySetsLastSevenDays,
                         value: AppLocalizations.of(context).anatomySetUnits(
-                          data.recentSetUnits.toStringAsFixed(1),
+                          LocalizedFormatters.number(
+                            data.recentSetUnits,
+                            Localizations.localeOf(context),
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          ),
                         ),
                       ),
                       SetStatChip(
@@ -333,6 +381,7 @@ class _MuscleHeader extends StatelessWidget {
                         value: _rangeLabel(
                           AppLocalizations.of(context),
                           data.volumeBounds,
+                          Localizations.localeOf(context),
                         ),
                         onEdit: onEditRecommended,
                       ),
@@ -361,7 +410,9 @@ class _MuscleHeader extends StatelessWidget {
                   data.bodyParts
                       .map(
                         (bodyPart) => ActionChip(
-                          label: Text(bodyPart.name),
+                          label: Text(
+                            localizedBodyPartName(context, bodyPart.name),
+                          ),
                           avatar: const Icon(Icons.accessibility_new, size: 18),
                           onPressed: () => onBodyPartTap(bodyPart),
                         ),
@@ -375,8 +426,19 @@ class _MuscleHeader extends StatelessWidget {
           ),
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
-            Text(
-              AppLocalizations.of(context).anatomyNoExercisesFor(muscle.name),
+            LocalizedCatalogEntityNamesBuilder(
+              entities: [
+                CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+              ],
+              builder:
+                  (context, names) => Text(
+                    AppLocalizations.of(
+                      context,
+                    ).anatomyNoExercisesFor(names.single),
+                  ),
             ),
           ],
         ],
@@ -389,10 +451,22 @@ class _MuscleHeader extends StatelessWidget {
     return trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
   }
 
-  String _rangeLabel(AppLocalizations strings, VolumeBoundaries? bounds) {
+  String _rangeLabel(
+    AppLocalizations strings,
+    VolumeBoundaries? bounds,
+    Locale locale,
+  ) {
     if (bounds == null) return strings.anatomyNotSet;
-    final min = bounds.minEffective.toStringAsFixed(0);
-    final max = bounds.maxRecoverable.toStringAsFixed(0);
+    final min = LocalizedFormatters.number(
+      bounds.minEffective,
+      locale,
+      maximumFractionDigits: 0,
+    );
+    final max = LocalizedFormatters.number(
+      bounds.maxRecoverable,
+      locale,
+      maximumFractionDigits: 0,
+    );
     return strings.anatomySetRange(min, max);
   }
 }
@@ -432,31 +506,54 @@ class _ExerciseMetadata extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final equipment =
-        definition.equipmentList.isEmpty
-            ? AppLocalizations.of(context).anatomyNoEquipment
-            : definition.equipmentList
-                .map((equipment) => equipment.name)
-                .join(', ');
+    final equipmentEntities = definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
+    final equipmentLabel =
+        equipmentEntities.isEmpty
+            ? Text(
+              AppLocalizations.of(context).anatomyNoEquipment,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+            : LocalizedCatalogEntityNamesBuilder(
+              entities: equipmentEntities,
+              builder:
+                  (context, names) => Text(
+                    names.join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+            );
     final bodyParts =
         definition.bodyParts.isEmpty
             ? AppLocalizations.of(context).anatomyNoBodyPartsListed
-            : definition.bodyParts.map((bodyPart) => bodyPart.name).join(', ');
+            : definition.bodyParts
+                .map(
+                  (bodyPart) => localizedBodyPartName(context, bodyPart.name),
+                )
+                .join(', ');
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            equipment,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          equipmentLabel,
           const SizedBox(height: 3),
           Text(
             AppLocalizations.of(
@@ -465,7 +562,10 @@ class _ExerciseMetadata extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: Colors.green.shade600,
+              color:
+                  context.surfaceDecorationTokens.panel.outlined
+                      ? context.semanticColors.positive
+                      : Colors.green.shade600,
               fontWeight: FontWeight.w500,
             ),
           ),

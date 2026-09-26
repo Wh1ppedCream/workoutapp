@@ -1,0 +1,347 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 82,
+      "exerciseName": "Hammer Curl - Dumbbell (Crossbody)",
+      "slug": "hammer_curl_dumbbell_crossbody",
+      "assets": [
+        {
+          "assetId": "hammer_curl_dumbbell_crossbody_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hammer_curl_dumbbell_crossbody/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\hammer_curl_dumbbell_crossbody\\v1\\thumb.webp",
+          "title": "Hammer Curl - Dumbbell (Crossbody) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 89,
+      "exerciseName": "Hip Adductor - Cable Machine",
+      "slug": "hip_adductor_cable_machine",
+      "assets": [
+        {
+          "assetId": "hip_adductor_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_adductor_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\hip_adductor_cable_machine\\v1\\thumb.webp",
+          "title": "Hip Adductor - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 92,
+      "exerciseName": "Hip Frog Extension",
+      "slug": "hip_frog_extension",
+      "assets": [
+        {
+          "assetId": "hip_frog_extension_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_frog_extension/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\hip_frog_extension\\v1\\thumb.webp",
+          "title": "Hip Frog Extension thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 93,
+      "exerciseName": "Hip Raise",
+      "slug": "hip_raise",
+      "assets": [
+        {
+          "assetId": "hip_raise_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_raise/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\hip_raise\\v1\\thumb.webp",
+          "title": "Hip Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 95,
+      "exerciseName": "Hip Thrust - Cable Machine",
+      "slug": "hip_thrust_cable_machine",
+      "assets": [
+        {
+          "assetId": "hip_thrust_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hip_thrust_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\hip_thrust_cable_machine\\v1\\thumb.webp",
+          "title": "Hip Thrust - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 102,
+      "exerciseName": "Incline Bench Press - Cable Machine",
+      "slug": "incline_bench_press_cable_machine",
+      "assets": [
+        {
+          "assetId": "incline_bench_press_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/incline_bench_press_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\incline_bench_press_cable_machine\\v1\\thumb.webp",
+          "title": "Incline Bench Press - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 115,
+      "exerciseName": "Inverted Row (Reverse Grip)",
+      "slug": "inverted_row_reverse_grip",
+      "assets": [
+        {
+          "assetId": "inverted_row_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/inverted_row_reverse_grip/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\inverted_row_reverse_grip\\v1\\thumb.webp",
+          "title": "Inverted Row (Reverse Grip) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 124,
+      "exerciseName": "Kneeling Crunch - Cable Machine",
+      "slug": "kneeling_crunch_cable_machine",
+      "assets": [
+        {
+          "assetId": "kneeling_crunch_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/kneeling_crunch_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\kneeling_crunch_cable_machine\\v1\\thumb.webp",
+          "title": "Kneeling Crunch - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 139,
+      "exerciseName": "Leg Curl - Cable Machine (Standing)",
+      "slug": "leg_curl_cable_machine_standing",
+      "assets": [
+        {
+          "assetId": "leg_curl_cable_machine_standing_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_curl_cable_machine_standing/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\leg_curl_cable_machine_standing\\v1\\thumb.webp",
+          "title": "Leg Curl - Cable Machine (Standing) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 183,
+      "exerciseName": "Pull Up - Reverse Grip",
+      "slug": "pull_up_reverse_grip",
+      "assets": [
+        {
+          "assetId": "pull_up_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_up_reverse_grip/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\pull_up_reverse_grip\\v1\\thumb.webp",
+          "title": "Pull Up - Reverse Grip thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 184,
+      "exerciseName": "Pull Up - Assisted Dip/Pull-Up Machine",
+      "slug": "pull_up_assisted_dip_pull_up_machine",
+      "assets": [
+        {
+          "assetId": "pull_up_assisted_dip_pull_up_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pull_up_assisted_dip_pull_up_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\pull_up_assisted_dip_pull_up_machine\\v1\\thumb.webp",
+          "title": "Pull Up - Assisted Dip/Pull-Up Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 185,
+      "exerciseName": "Pullover - Cable Machine",
+      "slug": "pullover_cable_machine",
+      "assets": [
+        {
+          "assetId": "pullover_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/pullover_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\pullover_cable_machine\\v1\\thumb.webp",
+          "title": "Pullover - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 189,
+      "exerciseName": "Push Away",
+      "slug": "push_away",
+      "assets": [
+        {
+          "assetId": "push_away_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_away/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\push_away\\v1\\thumb.webp",
+          "title": "Push Away thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 193,
+      "exerciseName": "Push-up (Close Grip)",
+      "slug": "push_up_close_grip",
+      "assets": [
+        {
+          "assetId": "push_up_close_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/push_up_close_grip/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\push_up_close_grip\\v1\\thumb.webp",
+          "title": "Push-up (Close Grip) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 201,
+      "exerciseName": "Reverse Fly - Dumbbell (Lying)",
+      "slug": "reverse_fly_dumbbell_lying",
+      "assets": [
+        {
+          "assetId": "reverse_fly_dumbbell_lying_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_fly_dumbbell_lying/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\reverse_fly_dumbbell_lying\\v1\\thumb.webp",
+          "title": "Reverse Fly - Dumbbell (Lying) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 203,
+      "exerciseName": "Reverse Crunch - Cable Machine",
+      "slug": "reverse_crunch_cable_machine",
+      "assets": [
+        {
+          "assetId": "reverse_crunch_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_crunch_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\reverse_crunch_cable_machine\\v1\\thumb.webp",
+          "title": "Reverse Crunch - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 207,
+      "exerciseName": "Reverse Lunge",
+      "slug": "reverse_lunge",
+      "assets": [
+        {
+          "assetId": "reverse_lunge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_lunge/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\reverse_lunge\\v1\\thumb.webp",
+          "title": "Reverse Lunge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 214,
+      "exerciseName": "Reverse Plank",
+      "slug": "reverse_plank",
+      "assets": [
+        {
+          "assetId": "reverse_plank_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_plank/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\reverse_plank\\v1\\thumb.webp",
+          "title": "Reverse Plank thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 216,
+      "exerciseName": "Row - Landmine Attachment",
+      "slug": "row_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "row_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_landmine_attachment/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\row_landmine_attachment\\v1\\thumb.webp",
+          "title": "Row - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 218,
+      "exerciseName": "Row - Kettlebell",
+      "slug": "row_kettlebell",
+      "assets": [
+        {
+          "assetId": "row_kettlebell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_kettlebell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_010\\exercises\\row_kettlebell\\v1\\thumb.webp",
+          "title": "Row - Kettlebell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

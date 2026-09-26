@@ -1,6 +1,7 @@
 // file: lib/models/workout_models.dart
 
 import 'definition_models.dart';
+import 'temporal_semantics.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STRETCH DEFINITIONS
@@ -17,6 +18,9 @@ class StretchDefinition {
   /// Unique identifier in the database.
   final int id;
 
+  /// Stable shipped-catalog identity. Null means a custom/local row.
+  final String? catalogId;
+
   /// Display name of the stretch.
   final String name;
 
@@ -31,6 +35,7 @@ class StretchDefinition {
   /// Defaults [bodyParts] to an empty list if not provided.
   StretchDefinition({
     required this.id,
+    this.catalogId,
     required this.name,
     required this.description,
     this.bodyParts = const [],
@@ -202,17 +207,28 @@ class ExerciseSet {
 /// Represents a recorded workout session with metadata.
 ///
 /// - [id]: Unique session identifier.
-/// - [date]: Session timestamp.
+/// - [date]: Exact completion instant, presented in the device's local zone.
+/// - [calendarDayKey]: Stable local calendar day assigned when completed.
 /// - [duration]: Total duration in seconds.
 class WorkoutSession {
   final int id;
   final DateTime date;
+  final String? calendarDayKey;
   final int duration;
 
   /// Creates a [WorkoutSession].
   WorkoutSession({
     required this.id,
     required this.date,
+    this.calendarDayKey,
     required this.duration,
   });
+
+  LocalCalendarDay get calendarDay => TemporalSemantics.readCalendarDay(
+    calendarDay: calendarDayKey,
+    epochMilliseconds: TemporalSemantics.utcEpochMilliseconds(date),
+  );
+
+  /// Date and time for labels: persisted calendar day plus the completion time.
+  DateTime get displayDateTime => calendarDay.atLocalTime(date);
 }

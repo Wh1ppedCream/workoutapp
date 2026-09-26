@@ -7,6 +7,9 @@
       "description": "Cloudflare R2 development bucket used for testing exercise media before release.",
       "exerciseMediaManifestUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/exercise_media_manifest.json",
       "sharedMediaManifestUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev/manifests/shared_media_manifest.json",
+      "allowedManifestHosts": [
+        "pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev"
+      ],
       "isProduction": false
     },
     {
@@ -15,6 +18,9 @@
       "description": "Production R2/CDN slot. Fill this URL after public access or a custom domain is ready.",
       "exerciseMediaManifestUrl": "https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/exercise_media_manifest.json",
       "sharedMediaManifestUrl": "https://pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev/manifests/shared_media_manifest.json",
+      "allowedManifestHosts": [
+        "pub-3e431bbfeef5400c9ccbea926ea9904f.r2.dev"
+      ],
       "isProduction": true
     }
   ]

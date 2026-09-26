@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "lib/theme/widgets/tonos_expansion_tile_scope.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/tonos_expansion_tile_scope_test.dart covers standard, compact, and dense recipes, inherited ListTile/Icon fields, and unrelated theme-role preservation across Classic/Neo light/dark. The user accepted the Preset Generation QA and Food Customization ExpansionTiles on 2026-09-24. The September 24 report-only run returned three count-1 fingerprints; each was mapped to its exact lexical statement and reviewed. The 2026-09-24 focused inventory/ratchet/CLI/settings/ExpansionTile suite passed all 52 tests with clean analysis; formatting changed three targeted test files. The current three-scope report/enforce output matches all approved fingerprints.",
+      "approvals": [
+        {
+          "fingerprint": "01941e88c6ebd2ec01e2857976243cbc5d8f948f7f08bd954ae56c6c457e92c2",
+          "count": 1,
+          "reason": "Reviewed the single Theme wrapper that preserves inherited roles while applying the shared divider and density recipes; four-mode tests assert unrelated theme roles remain unchanged."
+        },
+        {
+          "fingerprint": "bee7073bcd06b3c316dcda9c6eaa21e3a69b1b97f55708540a5c0547f3d77c54",
+          "count": 1,
+          "reason": "Reviewed the transparent ExpansionTile divider override as an intentional shared-scope recipe used by the accepted QA and nutrition surfaces."
+        },
+        {
+          "fingerprint": "d2d922eabbf86a9668f71c0e18fe5e42425ff589417c18bc990d583b78db8068",
+          "count": 1,
+          "reason": "Reviewed the Theme.of(context) lookup that copies the active inherited theme; four-mode tests resolve and compare the actual parent theme."
+        }
+      ]
+    },
+    {
+      "path": "lib/theme/widgets/tonos_surface.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/tonos_surface_test.dart covers injected surface, shape and effect roles, clipping, shadows, tap behavior, semantics, and TonosSurfaceTheme foreground inheritance. The user-run focused batch passed 46 tests with clean analysis, and the three TonosSurfaceTheme fingerprints were mapped to their exact source statements and manually reviewed on 2026-09-23. The user accepted the current Flow Methods and Workout Progress Flows Neo appearance on 2026-09-24, including the dropdown contrast correction; nested persistence/editing-state review remains explicitly deferred.",
+      "approvals": [
+        {
+          "fingerprint": "1d014456af809fd58589eb2af8547fba470abce070b987176af396c2b3fbecc5",
+          "count": 2,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
+        },
+        {
+          "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
+          "count": 1,
+          "reason": "Reviewed current TonosSurface style scope after the N2 shared decoration-policy integration."
+        },
+        {
+          "fingerprint": "82e54ec1112760a26d610f2812a0c9b3b6dd798cfcb9c1c748099c80ac44c1f1",
+          "count": 1,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
+        },
+        {
+          "fingerprint": "843159fff7b247d827b84cbff3029017b9c96b7486f30f95d9d8dff3bc036167",
+          "count": 1,
+          "reason": "Reviewed the formatter-normalized TonosSurface implementation after the Neo semantic input-outline refinement."
+        },
+        {
+          "fingerprint": "2c7f1b1f305688e0abca3dd091fe8342ab15b65e9159b137129c3a1da7240937",
+          "count": 1,
+          "reason": "Reviewed current TonosSurface style scope after the N2 shared decoration-policy integration."
+        },
+        {
+          "fingerprint": "cc60278889d6352b1d5906bb3dacd403f0ff4ea749b367019aaf692c86adbf05",
+          "count": 1,
+          "reason": "Reviewed TonosSurface role-color override support added for the Neo proposal realignment."
+        },
+        {
+          "fingerprint": "0961137f72286f266eb0345809ee7919cbe5f475f9bc4eddf8d06560f4c7d362",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "0de229af23bbaa710e92dfcdbe75387104cc1b7e94cfdebcc2f24a63adc0d14a",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "77447743a36d8175adae1816edb75d955e25219148a550faa12bd6ed1455e25a",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "a9d1539f7623b35d8d9005d07a0498a563d7aec353acbd1a21c64c818c48609f",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "b576cc7c052b26b161f1971db20fd028ad516557dbed0294c189eec7d592f1c7",
+          "count": 2,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "f29562555a9c6f3ea425c144d87e76cd89c00ad8e78dba7bc2e4bd1990334770",
+          "count": 1,
+          "reason": "Reviewed the current TonosSurface shape and elevation preservation after N2 surface-policy integration."
+        },
+        {
+          "fingerprint": "b4a7314cb5fe5c1f029c64a1fd626aceeb584dc8b0f9c7416e95eaa2545c3b18",
+          "count": 1,
+          "reason": "Reviewed TonosSurfaceTheme's explicit surface color role; the helper passes it to the contrast resolvers and its inherited foreground behavior is covered by the focused widget test."
+        },
+        {
+          "fingerprint": "c0c1508f90b9eab20bdd29eeb7eb400591ebb3e8d758f34761a47eb152ee4396",
+          "count": 1,
+          "reason": "Reviewed TonosSurfaceTheme's Theme lookup, which preserves the active family and changes only surface-scoped foreground roles for outlined presentation."
+        },
+        {
+          "fingerprint": "cf3529f26722b1a59f40a8edb32069d8762cf0c8e0ba9c0df2eba901338652c5",
+          "count": 1,
+          "reason": "Reviewed the contrast-scoped Theme recipe for surface, onSurface, onSurfaceVariant, text, and icon inheritance; focused tests cover Neo application and Classic pass-through."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/workout_record_badges.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/widgets/workout_record_badges_test.dart asserts token-derived first-record, monthly and all-time badge colors, fill and border opacity, shape, compact and regular padding, Classic and Neo density, legend-dot colors, and Neo parent-surface text contrast. The user confirmed the workout-detail badges no longer overflow. The 2026-09-24 five-file focused suite, including the parent-surface contrast regression, passed all 26 tests. Inventory and the current three-scope ratchet report/enforce passed on 2026-09-24; all protected-file fingerprint sets match the manifest. Source reviewed for the current lexer; this is exact-scope protection, not a full styling qualification.",
+      "approvals": [
+        {
+          "fingerprint": "0c00da0153c156fe6d9fb6496208da4fb71bbc8bcee91dfd11faf3e383edda29",
+          "count": 1,
+          "reason": "Reviewed the shared badge BoxDecoration border primitive; its alpha comes from the surface-token role and is asserted in the four-mode rendered test."
+        },
+        {
+          "fingerprint": "0dcafa3e0a55ea8c3d97317516fab3ed085c6df14cc55c3ef3ffc9fcfd665e00",
+          "count": 1,
+          "reason": "Reviewed the legend item's circular BoxDecoration; its dot color comes from the monthly/all-time visualization roles asserted in the four-mode rendered test."
+        },
+        {
+          "fingerprint": "0e2f66a1baeed4da72dc112f21fd8c10e7dedc309b0e4aea6534da11104bea3f",
+          "count": 1,
+          "reason": "Reviewed WorkoutRecordBadgeChip's optional foregroundSurface color input, consumed by the shared contrast-aware renderer."
+        },
+        {
+          "fingerprint": "230c5c6d5e62b1414e1e3947cdd7efd8203d5b4fa83436558baccc7eb275125b",
+          "count": 1,
+          "reason": "Reviewed the shared badge fill alpha expression; the opacity is supplied by the surface-token role and checked in all four theme modes."
+        },
+        {
+          "fingerprint": "279838ec5a44e75e245474599e871d49197410b1c2e0dc4712d319f8b86315bc",
+          "count": 1,
+          "reason": "Reviewed FirstRecordBadge's optional foregroundSurface color input, consumed by the shared contrast-aware renderer."
+        },
+        {
+          "fingerprint": "4ca11e1d9df78ec6471399b7ab242150550b8b74c7cf4589c5bee670d0431587",
+          "count": 1,
+          "reason": "Reviewed the legend's Theme lookup for its label text role; the rendered legend is covered in Classic/Neo light/dark."
+        },
+        {
+          "fingerprint": "6b49f6299b2701dba9bf75d0dc6eace3caf8cdc4f7f8a7e7d8eba33236d97663",
+          "count": 1,
+          "reason": "Reviewed the shared renderer's optional parent-surface color input for contrast-aware text."
+        },
+        {
+          "fingerprint": "716ab2aba46e1ba7924bab5af638c9fce962b88c10c717d38f84152760684a2c",
+          "count": 1,
+          "reason": "Reviewed the shared badge border alpha expression; the opacity is supplied by surface tokens and asserted in the four-mode rendered test."
+        },
+        {
+          "fingerprint": "9c9ee4d4f63f03ecbb20926a7e81473ca2917079e7c3fcf87cca65235adaac9b",
+          "count": 1,
+          "reason": "Reviewed the shared badge renderer's primary Color input, sourced from first-record or monthly/all-time visualization tokens."
+        },
+        {
+          "fingerprint": "a651bf8c73f0edf99963633c29ecf1eed2081f0f8072c20d04d651e171646427",
+          "count": 1,
+          "reason": "Reviewed the legend item TextStyle input; its inherited label role is overridden only with the semantic record color."
+        },
+        {
+          "fingerprint": "e9842187eff98f3bdda0cc3169a8b4028913ec2ab6c2488a3b7866bd3fd53c96",
+          "count": 1,
+          "reason": "Reviewed the shared badge BoxDecoration for token-derived fill, token shape, and semantic border; asserted across four modes."
+        },
+        {
+          "fingerprint": "f475cc3d01d8b3d6699fe1e3b71b76cac3355e3fc021a180411640e6d60ecd9d",
+          "count": 1,
+          "reason": "Reviewed the shared badge label TextStyle, including the deliberate Classic density variant and Neo sizing."
+        },
+        {
+          "fingerprint": "fd0c85aa6ab48efaa2076d05af9c9763827fc9a8d53771fcbbb3b22105364d31",
+          "count": 1,
+          "reason": "Reviewed the legend item's Color input, sourced from the monthly or all-time visualization role."
+        }
+      ]
+    }
+  ]
+}

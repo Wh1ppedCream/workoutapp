@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_tutorial_tokens.dart';
 
 class InteractiveTutorialStep {
   final GlobalKey targetKey;
@@ -99,7 +101,7 @@ class _InteractiveTutorialOverlayState extends State<InteractiveTutorialOverlay>
     if (targetContext != null) {
       await Scrollable.ensureVisible(
         targetContext,
-        duration: const Duration(milliseconds: 220),
+        duration: tutorialMotion(context, context.tutorialTokens.coachDuration),
         alignment: 0.36,
       );
       await Future<void>.delayed(const Duration(milliseconds: 240));
@@ -200,12 +202,16 @@ class _InteractiveTutorialOverlayState extends State<InteractiveTutorialOverlay>
                     painter: _InteractiveTutorialScrimPainter(
                       target: highlightedTarget,
                       borderColor: theme.colorScheme.primary,
+                      tokens: context.tutorialTokens,
                     ),
                   ),
                 ),
               ),
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 220),
+                duration: tutorialMotion(
+                  context,
+                  context.tutorialTokens.coachDuration,
+                ),
                 curve: Curves.easeOutCubic,
                 left: cardLeft,
                 width: cardWidth,
@@ -242,10 +248,12 @@ class _InteractiveTutorialOverlayState extends State<InteractiveTutorialOverlay>
 class _InteractiveTutorialScrimPainter extends CustomPainter {
   final Rect? target;
   final Color borderColor;
+  final AppTutorialTokens tokens;
 
   const _InteractiveTutorialScrimPainter({
     required this.target,
     required this.borderColor,
+    required this.tokens,
   });
 
   @override
@@ -253,15 +261,9 @@ class _InteractiveTutorialScrimPainter extends CustomPainter {
     final focus = target;
     if (focus == null) return;
 
-    final roundedTarget = RRect.fromRectAndRadius(
-      focus,
-      const Radius.circular(20),
-    );
+    final roundedTarget = tokens.coachShape.toRRect(focus);
     canvas.saveLayer(Offset.zero & size, Paint());
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = Colors.black.withValues(alpha: 0.42),
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = tokens.coachScrim);
     canvas.drawRRect(roundedTarget, Paint()..blendMode = BlendMode.clear);
     canvas.restore();
     canvas.drawRRect(
@@ -276,7 +278,9 @@ class _InteractiveTutorialScrimPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _InteractiveTutorialScrimPainter oldDelegate) {
     return oldDelegate.target != target ||
-        oldDelegate.borderColor != borderColor;
+        oldDelegate.borderColor != borderColor ||
+        oldDelegate.tokens.coachShape != tokens.coachShape ||
+        oldDelegate.tokens.coachScrim != tokens.coachScrim;
   }
 }
 
@@ -295,6 +299,8 @@ class _InteractiveTutorialCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final tutorialAccent =
+        context.tutorialTokens.accentForeground ?? scheme.primary;
 
     return Material(
       color: Colors.transparent,
@@ -302,15 +308,12 @@ class _InteractiveTutorialCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: context.tutorialTokens.coachShape,
           border: Border.all(color: scheme.primary.withValues(alpha: 0.65)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.28),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          boxShadow:
+              context.tutorialTokens.effectsEnabled
+                  ? [context.tutorialTokens.coachShadow]
+                  : const [],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,9 +323,9 @@ class _InteractiveTutorialCard extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: scheme.primary.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: context.tutorialTokens.coachIconShape,
               ),
-              child: Icon(step.icon, color: scheme.primary, size: 20),
+              child: Icon(step.icon, color: tutorialAccent, size: 20),
             ),
             const SizedBox(width: 10),
             Expanded(

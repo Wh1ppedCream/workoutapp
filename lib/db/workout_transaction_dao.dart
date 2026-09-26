@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/models.dart';
 import 'active_workout_dao.dart';
+import 'pending_workout_progression_dao.dart';
+import 'session_dao.dart';
 import 'workout_record_events_dao.dart';
 
 /// Atomic writes for completed and edited workout-session graphs.
@@ -13,6 +15,7 @@ class WorkoutTransactionDao {
     required DateTime completedAt,
     required int durationSeconds,
     required List<WorkoutExerciseWrite> exercises,
+    int? autoPresetId,
   }) {
     if (exercises.isEmpty) {
       throw ArgumentError.value(
@@ -22,10 +25,11 @@ class WorkoutTransactionDao {
       );
     }
     return db.transaction((txn) async {
-      final sessionId = await txn.insert('sessions', {
-        'date': completedAt.toIso8601String(),
-        'duration': durationSeconds,
-      });
+      final sessionId = await SessionDao.insertSession(
+        txn,
+        completedAt: completedAt,
+        duration: durationSeconds,
+      );
       final definitionIds = await _insertExercises(
         txn,
         sessionId,
@@ -33,6 +37,13 @@ class WorkoutTransactionDao {
         updateStats: true,
       );
       await ActiveWorkoutDao.clear(txn);
+      if (autoPresetId != null) {
+        await PendingWorkoutProgressionDao.enqueue(
+          txn,
+          sessionId: sessionId,
+          presetId: autoPresetId,
+        );
+      }
       await WorkoutRecordEventsDao.rebuildForDefinitions(txn, definitionIds);
       return sessionId;
     });

@@ -30,6 +30,12 @@ void main() {
     expect(find.text('Profil'), findsOneWidget);
     expect(find.text('Compte'), findsOneWidget);
     expect(find.text('Entraînement'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Données'),
+      500,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Données'), findsOneWidget);
   });
 
@@ -73,6 +79,10 @@ Widget _localizedApp({required Widget home}) {
 class _CatalogRepository extends AppRepository {
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
+
+  @override
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>
+      const [];
 
   @override
   Future<List<Map<String, dynamic>>> fetchMostUsedExerciseDefinitionsRaw({

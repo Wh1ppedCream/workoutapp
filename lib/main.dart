@@ -1,9 +1,10 @@
 // File: lib/main.dart
 
 import 'dart:async';
-import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/active_session.dart';
@@ -33,13 +34,19 @@ import 'screens/form_posing_page.dart';
 
 import 'widgets/ongoing_session_fab.dart';
 import 'widgets/body_heatmap.dart';
+import 'widgets/active_session_durability_banner.dart';
+import 'widgets/tonos_bottom_navigation_bar.dart';
 
-import '../theme/app_colors.dart';
+import 'theme/app_theme_factory.dart';
+import 'theme/debug_theme_family_control.dart';
+import 'theme/theme_lab_page.dart';
 
 import 'repositories/app_repository.dart';
 import 'services/active_plan_store.dart';
 import 'services/diagnostics_service.dart';
 import 'utils/app_test_keys.dart';
+
+const _compileTimeThemeLab = bool.fromEnvironment('TONOS_THEME_LAB');
 
 Future<void> main() async {
   final diagnostics = DiagnosticsService.instance;
@@ -71,8 +78,9 @@ Future<void> main() async {
       };
 
       unawaited(BodyHeatmap.preload());
+      final themeProvider = await ThemeProvider.load();
       final repo = AppRepository();
-      runApp(buildTonosApp(repo: repo));
+      runApp(buildTonosApp(repo: repo, themeProvider: themeProvider));
       WidgetsBinding.instance.addPostFrameCallback((_) {
         debugPrint(
           '[startup] first frame rendered in '
@@ -100,7 +108,14 @@ Future<void> main() async {
 Widget buildTonosApp({
   required AppRepository repo,
   bool closeRepositoryOnDispose = true,
+  ThemeProvider? themeProvider,
 }) {
+  final themeProviderNode =
+      themeProvider == null
+          ? ChangeNotifierProvider<ThemeProvider>(
+            create: (_) => ThemeProvider(),
+          )
+          : ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider);
   final app = MultiProvider(
     providers: [
       Provider<AppRepository>.value(value: repo), // repo FIRST
@@ -112,7 +127,7 @@ Widget buildTonosApp({
       ChangeNotifierProvider(create: (_) => ActiveSession(repository: repo)),
       ChangeNotifierProvider(create: (_) => SelectedProfile(repository: repo)),
       ChangeNotifierProvider(create: (_) => DashboardConfig()),
-      ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      themeProviderNode,
       ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
       ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
       ChangeNotifierProvider(create: (_) => NavBarConfig()),
@@ -180,316 +195,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer3<ThemeProvider, OnboardingConfig, LocalePreferenceProvider>(
       builder: (context, themeProv, onboardingConf, localePreferences, _) {
-        // Light theme with default AppColors
-        final lightTheme = ThemeData.from(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        ).copyWith(
-          extensions: <ThemeExtension<dynamic>>[
-            const AppColors(
-              quickBarMeasurementBg: Color(
-                0xFFB2DFDB,
-              ), // light mode teal.shade100
-              quickBarMeasurementText: Color(
-                0xFF004D40,
-              ), // light mode teal.shade800
-              quickBarFoodBg: Color(0xFFFFE0B2), // light mode orange.shade100
-              quickBarFoodText: Color(0xFFEF6C00), // light mode orange.shade800
-              quickBarWorkoutBg: Color(0xFFC8E6C9), // light mode green.shade100
-              quickBarWorkoutText: Color(
-                0xFF2E7D32,
-              ), // light mode green.shade800
-
-              addExerciseFabBg: Color(0xFF6200EE), // light-mode FAB bg
-              addExerciseFabIcon: Colors.white, // light-mode FAB icon
-              dialogBackground: Colors.white, // light-mode dialogs
-
-              sheetBackground: Colors.white, // light-mode bottom sheets
-              buttonBg: Colors.deepPurple, // light-mode button bg
-              buttonText: Colors.white, // light-mode button text
-              flowChartBackground: Color.fromARGB(
-                255,
-                255,
-                255,
-                255,
-              ), // blackish
-              flowChartGrid: Color.fromARGB(
-                102,
-                43,
-                42,
-                42,
-              ), // 40%-opaque white
-              // ── new flow-chart defaults ───────────────────
-              flowNodeBg: Color(0xFFFFFFFF),
-              flowNodeBorder: Color.fromARGB(255, 93, 188, 226),
-              flowNodeText: Color(0xFF333333),
-              flowArrowSuccess: Color(0xFF2E7D32),
-              flowArrowFailure: Color(0xFFC62828),
-              flowArrowLoopback: Color(0xFF757575),
-
-              metricAddBorderColor:
-                  Colors.deepPurple, // light-mode border color
-              metricAddIconColor:
-                  Colors.deepPurpleAccent, // light-mode icon color
-
-              genericBarAccent: Color(
-                0xFF6200EE,
-              ), // your current light-mode border/text color
-
-              presetBadgeBg: Color.fromARGB(
-                255,
-                78,
-                218,
-                65,
-              ), // light-mode badge background
-              presetBadgeText: Colors.white, // light-mode badge text color
-
-              mealPlanPantryLogBg: Color(0xFFFFF9C4), // yellow.shade100
-              mealPlanAddMealBg: Color(0xFFC8E6C9), // green.shade100
-              mealPlanPlanMealBg: Color(0xFFBBDEFB), // blue.shade100
-              mealPlanDivider: Color(0xFFBDBDBD), // grey.shade400
-
-              healthTrendBorder: Color(0xFFE0E0E0), // grey.shade300
-              healthTrendIcon: Color(
-                0xFF757575,
-              ), // grey.shade600 (matches your existing grey icon)
-              healthTrendLine: Colors.purple, // purple line for health trends
-
-              nutritionCalorieBar: Color.fromARGB(
-                255,
-                67,
-                160,
-                71,
-              ), // calorie bar color
-              nutritionProteinBar: Color.fromARGB(
-                255,
-                30,
-                136,
-                229,
-              ), // protein bar color
-              nutritionCarbBar: Color.fromARGB(
-                255,
-                255,
-                140,
-                0,
-              ), // carb bar color
-              nutritionFatBar: Color.fromARGB(
-                255,
-                229,
-                57,
-                53,
-              ), // fat bar color
-
-              nutritionCalorieCircle: Color.fromARGB(
-                255,
-                67,
-                160,
-                71,
-              ), // calorie circle color
-              nutritionProteinCircle: Colors.purple, // protein circle color
-              nutritionCarbCircle: Color.fromARGB(
-                255,
-                30,
-                136,
-                229,
-              ), // carb circle color
-              nutritionFatCircle: Color.fromARGB(
-                255,
-                255,
-                140,
-                0,
-              ), // fat circle color
-
-              nutritionTextDetailsBorder: Color.fromARGB(
-                255,
-                223,
-                223,
-                223,
-              ), // border color for text details
-
-              nutritionPageIndicatorActive: Colors.purple,
-              nutritionPageIndicatorInactive: Color(
-                0xFFBDBDBD,
-              ), // grey.shade400
-
-              workoutStartBg: Color(0xFF4CAF50), // light green
-              workoutStartText: Colors.white,
-
-              dataRecordsTodayBg: Color(
-                0x33388E3C,
-              ), // green.shade600 @20% opacity
-              dataRecordsTodayBorder: Color(0xFF388E3C), // green.shade600
-              dataRecordsTodayText: Color(0xFF388E3C),
-              dataRecordsDefaultBorder: Color(0xFFBDBDBD), // grey.shade400
-              dataRecordsChevron: Color(0xFF757575), // grey.shade600
-
-              pastSessionsProgress: Color(0xFF6200EE), // e.g. your primary
-              pastSessionsIcon: Color(0xFF6200EE),
-              pastSessionsDivider: Color(0xFFBDBDBD), // grey.shade400
-
-              historySummaryProgress: Color(0xFF6200EE),
-              historySummaryHeatmapLow: Color.fromARGB(255, 224, 224, 224),
-              historySummaryHeatmapHigh: Color(0xFF1565C0), // blue.shade800
-
-              infoCardBackground: Color(0xFFFFFFFF),
-              infoCardValueText: Color(0xFF000000),
-              infoCardLabelText: Color(0xFF757575), // grey.shade600
-              infoCardShadow: Color(0x22000000), // black12
-              // add other light-mode overrides here…
-            ),
-          ],
-        );
-
-        // Dark theme that builds on the seed-based dark colorScheme,
-        // then overrides just the QuickBar containers & text
-        final darkBase = ThemeData.from(
-          colorScheme: ColorScheme.fromSeed(
-            brightness: Brightness.dark,
-            seedColor: Colors.deepPurple,
-          ),
-        );
-        final darkTheme = darkBase.copyWith(
-          extensions: <ThemeExtension<dynamic>>[
-            const AppColors(
-              quickBarMeasurementBg: Color(
-                0xFF004D40,
-              ), // dark mode teal.shade700
-              quickBarMeasurementText: Color(0xFFE0F2F1), // teal.shade50
-              quickBarFoodBg: Color(0xFFF57C00), // orange.shade700
-              quickBarFoodText: Color(0xFFFFF3E0), // orange.shade50
-              quickBarWorkoutBg: Color(0xFF2E7D32), // green.shade700
-              quickBarWorkoutText: Color(0xFFE8F5E9), // green.shade50
-
-              addExerciseFabBg: Color(0xFF3700B3), // a darker purple
-              addExerciseFabIcon: Colors.black,
-              dialogBackground: Color(0xFF202020),
-
-              sheetBackground: Color(0xFF303030), // dark grey for bottom sheets
-              buttonBg: Colors.deepPurple, // darker purple for buttons
-              buttonText: Colors.white, // white text for contrast
-              flowChartBackground: Color(0xFF121212), // blackish
-              flowChartGrid: Color(0x66FFFFFF), // 40%-opaque white
-              // ── new flow-chart defaults ───────────────────
-              flowNodeBg: Color(0xFF1E1E1E),
-              flowNodeBorder: Color.fromARGB(255, 34, 55, 245),
-              flowNodeText: Color(0xFFE0E0E0),
-              flowArrowSuccess: Color(0xFF66BB6A),
-              flowArrowFailure: Color(0xFFEF5350),
-              flowArrowLoopback: Color(0xFF757575),
-
-              metricAddBorderColor:
-                  Colors.deepPurpleAccent, // dark-mode border color
-              metricAddIconColor: Colors.deepPurple, // dark-mode icon color
-
-              genericBarAccent: Color(
-                0xFFBB86FC,
-              ), // your chosen dark-mode accent
-
-              presetBadgeBg: Color.fromARGB(
-                255,
-                78,
-                218,
-                65,
-              ), // dark-mode badge background
-              presetBadgeText: Colors.blueGrey, // dark-mode badge text color
-
-              mealPlanPantryLogBg: Color(0xFF4E4E1A), // dark yellow
-              mealPlanAddMealBg: Color(0xFF2E4E2E), // dark green
-              mealPlanPlanMealBg: Color(0xFF1A2E4E), // dark blue
-              mealPlanDivider: Color(0xFF616161), // grey.shade700
-
-              healthTrendBorder: Color(0xFF616161), // grey.shade700
-              healthTrendIcon: Color(0xFFBDBDBD), // grey.shade400
-              healthTrendLine: Colors.purple, // purple line for health trends
-
-              nutritionCalorieBar: Color.fromARGB(
-                255,
-                102,
-                187,
-                106,
-              ), // dark green for calorie bar
-              nutritionProteinBar: Color.fromARGB(
-                255,
-                66,
-                165,
-                245,
-              ), // dark blue for protein bar
-              nutritionCarbBar: Color.fromARGB(
-                255,
-                255,
-                167,
-                38,
-              ), // dark orange for carb bar
-              nutritionFatBar: Color.fromARGB(
-                255,
-                239,
-                83,
-                80,
-              ), // dark red for fat bar
-
-              nutritionCalorieCircle: Color.fromARGB(
-                255,
-                102,
-                187,
-                106,
-              ), // dark green for calorie circle
-              nutritionProteinCircle: Color.fromARGB(
-                255,
-                181,
-                60,
-                202,
-              ), // dark purple for protein circle
-              nutritionCarbCircle: Color.fromARGB(
-                255,
-                66,
-                165,
-                245,
-              ), // dark blue for carb circle
-              nutritionFatCircle: Color.fromARGB(
-                255,
-                255,
-                167,
-                38,
-              ), // dark orange for fat circle
-
-              nutritionTextDetailsBorder: Color.fromARGB(
-                255,
-                100,
-                100,
-                100,
-              ), // dark grey for text details border
-
-              nutritionPageIndicatorActive: Colors.purple,
-              nutritionPageIndicatorInactive: Color(
-                0xFF757575,
-              ), // grey.shade600
-
-              workoutStartBg: Color(0xFF81C784), // lighter green for dark
-              workoutStartText: Colors.black,
-
-              dataRecordsTodayBg: Color(
-                0x2281C784,
-              ), // green.shade300 @20% opacity
-              dataRecordsTodayBorder: Color(0xFF81C784), // green.shade300
-              dataRecordsTodayText: Color(0xFF81C784),
-              dataRecordsDefaultBorder: Color(0xFF616161), // grey.shade700
-              dataRecordsChevron: Color(0xFFBDBDBD), // grey.shade400
-
-              pastSessionsProgress: Color(0xFFBB86FC),
-              pastSessionsIcon: Color(0xFFBB86FC),
-              pastSessionsDivider: Color(0xFF616161), // grey.shade700
-
-              historySummaryProgress: Color(0xFFBB86FC),
-              historySummaryHeatmapLow: Color.fromARGB(255, 161, 161, 161),
-              historySummaryHeatmapHigh: Color(0xFF1565C0), // blue.shade800
-
-              infoCardBackground: Color(0xFF222222),
-              infoCardValueText: Color(0xFFE0E0E0), // grey.shade300
-              infoCardLabelText: Color(0xFFBDBDBD), // grey.shade400
-              infoCardShadow: Color(0x66000000), // black40
-              // add other dark-mode overrides here…
-            ),
-          ],
-        );
+        final lightTheme = AppThemeFactory.light(themeProv.family);
+        final darkTheme = AppThemeFactory.dark(themeProv.family);
 
         return MaterialApp(
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
@@ -499,15 +206,93 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProv.mode,
+          builder: (context, child) {
+            final showDebugToolbar =
+                kDebugMode && const bool.fromEnvironment('TONOS_THEME_SWITCH');
+            final appChild = child ?? const SizedBox.shrink();
+
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Brightness.light
+                        : Brightness.dark,
+                statusBarBrightness: Theme.of(context).brightness,
+              ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ActiveSessionDurabilityBanner(child: appChild),
+                  if (showDebugToolbar) const _DebugThemeToolbar(),
+                ],
+              ),
+            );
+          },
 
           home:
               !onboardingConf.initialized
                   ? const _StartupGate()
+                  : kDebugMode && _compileTimeThemeLab
+                  ? const ThemeLabPage()
                   : onboardingConf.showOnboarding
                   ? const OnboardingFlow()
                   : const MainScreen(),
-          routes: {'/main': (_) => const MainScreen()},
+          routes: {
+            '/main': (_) => const MainScreen(),
+            if (kDebugMode) '/__theme_lab': (_) => const ThemeLabPage(),
+          },
         );
+      },
+    );
+  }
+}
+
+/// Floating development-only controls that leave the app's layout unchanged.
+class _DebugThemeToolbar extends StatelessWidget {
+  const _DebugThemeToolbar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + 4,
+      right: 48,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          DebugThemeFamilyControl(),
+          SizedBox(width: 4),
+          _DebugThemeSwitch(),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebugThemeSwitch extends StatelessWidget {
+  const _DebugThemeSwitch();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Keep text-field selection and keyboard focus during a live mode change.
+    return DebugThemeActionButton(
+      icon: isDark ? Icons.light_mode : Icons.dark_mode,
+      semanticLabel: 'Debug: switch to ${isDark ? "light" : "dark"} mode',
+      onPressed: () async {
+        try {
+          await context.read<ThemeProvider>().setMode(
+            isDark ? ThemeMode.light : ThemeMode.dark,
+          );
+        } catch (error, stack) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stack,
+              library: 'debug theme switch',
+            ),
+          );
+        }
       },
     );
   }
@@ -596,18 +381,12 @@ class _MainScreenState extends State<MainScreen> {
         ),
     ];
 
-    final bottomNavigationBar = BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      selectedItemColor: Theme.of(context).colorScheme.primary,
-      unselectedItemColor: Theme.of(
-        context,
-      ).colorScheme.onSurface.withValues(alpha: 0.6),
+    final bottomNavigationBar = TonosBottomNavigationBar(
       items: [
         for (final tab in tabs)
           BottomNavigationBarItem(
             icon: KeyedSubtree(
-              key: AppTestKeys.mainTab(tab.name),
+              key: AppTestKeys.mainTab(tab.storageKey),
               child: Icon(tab.icon),
             ),
             label: tab.localizedTitle(strings),

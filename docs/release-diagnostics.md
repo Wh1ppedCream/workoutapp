@@ -30,9 +30,10 @@ signing secrets:
 - `ANDROID_KEY_PASSWORD`
 
 It produces a signed APK for device validation and a signed AAB for
-distribution. It sets `TONOS_ENVIRONMENT=production`, but it must not receive
-or pass `TONOS_SENTRY_DSN`. Builds without a remote diagnostics endpoint are
-valid and are the only approved production artifacts today.
+distribution. It explicitly sets `TONOS_CONTENT_ENVIRONMENT=production` and
+`TONOS_CONTENT_ALLOW_OVERRIDES=false`, but it must not receive or pass
+`TONOS_SENTRY_DSN`. Builds without a remote diagnostics endpoint are valid and
+are the only approved production artifacts today.
 
 ## Future remote diagnostics requirements
 

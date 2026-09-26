@@ -47,6 +47,28 @@ void main() {
       },
     );
 
+    test(
+      'under-target completed sets follow the configured failure branch',
+      () async {
+        final repo = _FakeProgressionRepository(
+          successScope: ProgressionSuccessScope.set,
+          methods: [_weightMethod()],
+          presetSets: {
+            10: [_presetSet(11, 100, 5, 0)],
+          },
+          sessionSets: {
+            20: [_sessionSet(31, 11, 95, 5, 0)],
+          },
+        );
+
+        await AutoIncrementService(repo).apply(sessionId: 1, presetId: 1);
+
+        final batch = repo.appliedBatch!;
+        expect(_updatedWeight(batch, 11), 100);
+        expect(batch.exerciseStates.single.lastNode, 'failure');
+      },
+    );
+
     test('add-set actions create the configured parent set', () async {
       final repo = _FakeProgressionRepository(
         successScope: ProgressionSuccessScope.set,

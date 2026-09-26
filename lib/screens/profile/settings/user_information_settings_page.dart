@@ -9,6 +9,7 @@ import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../utils/weight_unit_formatter.dart';
 import '../../../utils/app_test_keys.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
@@ -183,6 +184,16 @@ class _UserInformationSettingsPageState
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final dropdownInk = usesInkRecipe ? context.cs.onPrimaryContainer : null;
+    final inputTextStyle = settingsInputTextStyle(context);
+    final dropdownStyle =
+        usesInkRecipe
+            ? Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: dropdownInk)
+            : null;
     final bodyFatOptions = <String>[
       '0-5%',
       '5-10%',
@@ -212,18 +223,27 @@ class _UserInformationSettingsPageState
       subtitle: strings.userInfoSubtitle,
       icon: Icons.badge_outlined,
       heroAccentColor: SettingsAccent.account,
-      bottomNavigationBar: _SaveBar(isVisible: _dirty, onSave: _save),
+      bottomNavigationBar: SettingsSaveBar(
+        buttonKey: AppTestKeys.userInformationSave,
+        label: strings.userInfoSaveChanges,
+        isVisible: _dirty,
+        onPressed: _save,
+        animate: true,
+      ),
       children: [
         SettingsSection(
           title: strings.userInfoIdentityTitle,
           subtitle: strings.userInfoIdentitySubtitle,
           accentColor: SettingsAccent.account,
+          surfaceColor: usesInkRecipe ? surfaces.settingsSection : null,
           children: [
             _FieldPadding(
               child: TextFormField(
                 key: AppTestKeys.userInformationName,
                 controller: _nameController,
-                decoration: _inputDecoration(
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoName,
                   hint: strings.userInfoNameHint,
@@ -234,6 +254,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _gender,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     genderOptions
                         .map(
@@ -247,7 +272,7 @@ class _UserInformationSettingsPageState
                   _gender = value;
                   _markDirty();
                 },
-                decoration: _inputDecoration(
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoGender,
                   icon: Icons.wc_outlined,
@@ -260,7 +285,9 @@ class _UserInformationSettingsPageState
                 child: AbsorbPointer(
                   child: TextFormField(
                     controller: _dobController,
-                    decoration: _inputDecoration(
+                    style: inputTextStyle,
+                    cursorColor: inputTextStyle?.color,
+                    decoration: settingsInputDecoration(
                       context,
                       label: strings.userInfoDateOfBirth,
                       hint: strings.userInfoDateHint,
@@ -276,11 +303,14 @@ class _UserInformationSettingsPageState
           title: strings.userInfoBodyMetricsTitle,
           subtitle: strings.userInfoBodyMetricsSubtitle,
           accentColor: SettingsAccent.progress,
+          surfaceColor: usesInkRecipe ? surfaces.planDuration : null,
           children: [
             _FieldPadding(
               child: TextFormField(
                 controller: _heightController,
-                decoration: _inputDecoration(
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoHeight,
                   hint: strings.userInfoHeightHint,
@@ -291,7 +321,9 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: TextFormField(
                 controller: _weightController,
-                decoration: _inputDecoration(
+                style: inputTextStyle,
+                cursorColor: inputTextStyle?.color,
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoCurrentWeight,
                   hint:
@@ -307,6 +339,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _bodyFatEstimate,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     bodyFatOptions
                         .map(
@@ -320,7 +357,7 @@ class _UserInformationSettingsPageState
                   _bodyFatEstimate = value;
                   _markDirty();
                 },
-                decoration: _inputDecoration(
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoBodyFat,
                   icon: Icons.percent,
@@ -333,10 +370,16 @@ class _UserInformationSettingsPageState
           title: strings.userInfoActivityTitle,
           subtitle: strings.userInfoActivitySubtitle,
           accentColor: SettingsAccent.training,
+          surfaceColor: usesInkRecipe ? surfaces.flowControl : null,
           children: [
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _weightTrend,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     trendOptions
                         .map(
@@ -350,7 +393,7 @@ class _UserInformationSettingsPageState
                   _weightTrend = value;
                   _markDirty();
                 },
-                decoration: _inputDecoration(
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoWeightTrend,
                   icon: Icons.trending_up,
@@ -360,6 +403,11 @@ class _UserInformationSettingsPageState
             _FieldPadding(
               child: DropdownButtonFormField<String?>(
                 value: _activityLevel,
+                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
+                style: dropdownStyle,
+                iconEnabledColor: dropdownInk,
+                isExpanded: true,
+                itemHeight: null,
                 items:
                     activityOptions
                         .map(
@@ -373,7 +421,7 @@ class _UserInformationSettingsPageState
                   _activityLevel = value;
                   _markDirty();
                 },
-                decoration: _inputDecoration(
+                decoration: settingsInputDecoration(
                   context,
                   label: strings.userInfoAverageSteps,
                   icon: Icons.directions_walk,
@@ -384,25 +432,6 @@ class _UserInformationSettingsPageState
         ),
         const SizedBox(height: 72),
       ],
-    );
-  }
-
-  InputDecoration _inputDecoration(
-    BuildContext context, {
-    required String label,
-    String? hint,
-    required IconData icon,
-    String? suffixText,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: Icon(icon),
-      suffixText: suffixText,
-      filled: true,
-      fillColor: scheme.surface.withValues(alpha: 0.44),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 
@@ -446,42 +475,6 @@ class _FieldPadding extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       child: child,
-    );
-  }
-}
-
-class _SaveBar extends StatelessWidget {
-  final bool isVisible;
-  final VoidCallback onSave;
-
-  const _SaveBar({required this.isVisible, required this.onSave});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AnimatedSlide(
-      offset: isVisible ? Offset.zero : const Offset(0, 1),
-      duration: const Duration(milliseconds: 200),
-      child: AnimatedOpacity(
-        opacity: isVisible ? 1 : 0,
-        duration: const Duration(milliseconds: 200),
-        child: SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            decoration: BoxDecoration(
-              color: scheme.surface.withValues(alpha: 0.96),
-              border: Border(top: BorderSide(color: scheme.outlineVariant)),
-            ),
-            child: FilledButton.icon(
-              key: AppTestKeys.userInformationSave,
-              onPressed: isVisible ? onSave : null,
-              icon: const Icon(Icons.save_outlined),
-              label: Text(AppLocalizations.of(context).userInfoSaveChanges),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

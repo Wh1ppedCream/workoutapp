@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/gym_profile_screen.dart';
+import '../theme/theme_extensions.dart';
+import 'identity_color_palettes.dart';
+
+export 'identity_color_palettes.dart';
 
 /// Represents an entry in the main drawer.
 class DrawerItem {
@@ -28,6 +32,9 @@ class MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final semantic = context.semanticColors;
     final strings = AppLocalizations.of(context);
     final useDefault = items == null || items!.isEmpty;
     return Drawer(
@@ -35,12 +42,13 @@ class MainDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            decoration: BoxDecoration(color: scheme.primary),
             child: Text(
               headerTitle ?? strings.drawerNavigation,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 18,
+                color: semantic.drawerHeaderForeground,
+              ),
             ),
           ),
           if (useDefault) ...[
@@ -104,14 +112,7 @@ class ProfileDrawer extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    const palette = [
-      Colors.blue,
-      Colors.orange,
-      Colors.green,
-      Colors.purple,
-      Colors.teal,
-    ];
-
+    final shapes = context.shapeTokens;
     return Drawer(
       backgroundColor: scheme.surface,
       child: SafeArea(
@@ -121,7 +122,7 @@ class ProfileDrawer extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: shapes.sheet,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -165,7 +166,9 @@ class ProfileDrawer extends StatelessWidget {
             ...profiles.asMap().entries.map((entry) {
               final index = entry.key;
               final profile = entry.value;
-              final color = palette[index % palette.length];
+              final color =
+                  ProfileIdentityPalette.colors[index %
+                      ProfileIdentityPalette.colors.length];
               final isSelected = profile.id == selected?.id;
               return ProfileTile(
                 profile: profile,
@@ -222,13 +225,15 @@ class ProfileTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final motion = context.motionTokens;
     final tileColor =
         isSelected
             ? color.withValues(alpha: 0.22)
             : scheme.surfaceContainerHighest.withValues(alpha: 0.36);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: appMotionDuration(context, motion.quick),
       margin: const EdgeInsets.symmetric(vertical: 5),
       decoration: BoxDecoration(
         color: tileColor,
@@ -237,10 +242,10 @@ class ProfileTile extends StatelessWidget {
               isSelected ? color : scheme.outlineVariant.withValues(alpha: 0.5),
           width: isSelected ? 1.4 : 1,
         ),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: shapes.profileTile,
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: shapes.profileTile,
         onTap: () => onSelect(profile),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
@@ -325,14 +330,15 @@ class _NewProfileTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: shapes.profileTile,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: shapes.profileTile,
           border: Border.all(
             color: scheme.outlineVariant.withValues(alpha: 0.55),
           ),

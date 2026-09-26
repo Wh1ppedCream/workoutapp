@@ -6,6 +6,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
 import '../utils/async_pool.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
@@ -216,7 +217,8 @@ class _PresetInfoCardState extends State<PresetInfoCard>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
     return FutureBuilder<_PresetInfoSummary>(
@@ -225,101 +227,118 @@ class _PresetInfoCardState extends State<PresetInfoCard>
         final summary = snapshot.data;
         final strings = AppLocalizations.of(context);
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child:
-                summary == null
-                    ? const SizedBox(
-                      height: 220,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                    : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _PresetMetricTile(
-                                icon: Icons.schedule,
-                                value: _formatMinutes(summary.estimatedMinutes),
-                                label: strings.presetEstimatedTime,
+        final content = Padding(
+          padding: const EdgeInsets.all(16),
+          child:
+              summary == null
+                  ? const SizedBox(
+                    height: 220,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                  : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _PresetMetricTile(
+                              icon: Icons.schedule,
+                              value: _formatMinutes(
+                                summary.estimatedMinutes,
+                                strings,
                               ),
+                              label: strings.presetEstimatedTime,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _PresetMetricTile(
-                                icon: Icons.fitness_center,
-                                value: WeightUnitFormatter.formatVolume(
-                                  summary.totalVolume,
-                                  weightUnit,
-                                ),
-                                label: strings.logbookTotalVolume,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _PresetMetricTile(
+                              icon: Icons.fitness_center,
+                              value: WeightUnitFormatter.formatVolume(
+                                summary.totalVolume,
+                                weightUnit,
+                                locale: Localizations.localeOf(context),
                               ),
+                              label: strings.logbookTotalVolume,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final maxWidth = constraints.maxWidth;
-                            final gap = maxWidth < 330 ? 10.0 : 16.0;
-                            final heatmapWidth =
-                                (maxWidth * 0.46)
-                                    .clamp(124.0, 180.0)
-                                    .toDouble();
-                            final heatmapSize =
-                                heatmapWidth.clamp(118.0, 180.0).toDouble();
-                            final heatmap = SizedBox(
-                              width: heatmapWidth,
-                              height: heatmapSize,
-                              child: Center(
-                                child: BodyHeatmap(
-                                  frequencyMap: summary.frequencyMap,
-                                  lowColor: colors.historySummaryHeatmapLow!,
-                                  highColor: colors.historySummaryHeatmapHigh!,
-                                  width: heatmapSize,
-                                  height: heatmapSize,
-                                ),
-                              ),
-                            );
-                            final focusList = FocusedSetsList(
-                              hits: summary.bodyPartHits,
-                              emptyMessage: strings.presetNoFocusData,
-                            );
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                heatmap,
-                                SizedBox(width: gap),
-                                Expanded(child: focusList),
-                              ],
-                            );
-                          },
-                        ),
-                        if (summary.bodyPartHits.isEmpty) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            strings.presetFocusPreviewHelp,
-                            style: theme.textTheme.bodySmall,
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxWidth = constraints.maxWidth;
+                          final gap = maxWidth < 330 ? 10.0 : 16.0;
+                          final heatmapWidth =
+                              (maxWidth * 0.46).clamp(124.0, 180.0).toDouble();
+                          final heatmapSize =
+                              heatmapWidth.clamp(118.0, 180.0).toDouble();
+                          final heatmap = SizedBox(
+                            width: heatmapWidth,
+                            height: heatmapSize,
+                            child: Center(
+                              child: BodyHeatmap(
+                                frequencyMap: summary.frequencyMap,
+                                lowColor: tonosHeatmapLowForSurface(
+                                  context,
+                                  surfaces.panelRaised,
+                                ),
+                                highColor: tonosHeatmapHighForSurface(
+                                  context,
+                                  surfaces.panelRaised,
+                                ),
+                                width: heatmapSize,
+                                height: heatmapSize,
+                              ),
+                            ),
+                          );
+                          final focusList = FocusedSetsList(
+                            hits: summary.bodyPartHits,
+                            emptyMessage: strings.presetNoFocusData,
+                          );
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              heatmap,
+                              SizedBox(width: gap),
+                              Expanded(child: focusList),
+                            ],
+                          );
+                        },
+                      ),
+                      if (summary.bodyPartHits.isEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          strings.presetFocusPreviewHelp,
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
-                    ),
-          ),
+                    ],
+                  ),
         );
+
+        if (context.surfaceDecorationTokens.card.outlined) {
+          return TonosSurface(
+            variant: TonosSurfaceVariant.panelRaised,
+            margin: const EdgeInsets.only(bottom: 16),
+            borderRadius: shapes.card,
+            clipBehavior: Clip.antiAlias,
+            child: content,
+          );
+        }
+
+        return Card(margin: const EdgeInsets.only(bottom: 16), child: content);
       },
     );
   }
 
-  static String _formatMinutes(int minutes) {
-    if (minutes < 60) return '${minutes}m';
+  static String _formatMinutes(int minutes, AppLocalizations strings) {
+    if (minutes < 60) return strings.durationMinutesCompact(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
+    if (mins == 0) return strings.durationHoursCompact(hours);
+    return strings.durationHoursMinutesCompact(hours, mins);
   }
 }
 
@@ -337,7 +356,15 @@ class _PresetMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final semantic = context.semanticColors;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final foreground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.card)
+            : semantic.strongContent;
+    final secondaryForeground = semantic.mutedContent;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -348,15 +375,25 @@ class _PresetMetricTile extends StatelessWidget {
             vertical: compact ? 10 : 12,
           ),
           decoration: BoxDecoration(
-            color: colors.infoCardBackground,
-            borderRadius: BorderRadius.circular(14),
+            color: surfaces.card,
+            borderRadius: shapes.metric,
+            border:
+                usesInkRecipe
+                    ? Border.all(
+                      color: tonosOutlineForSurface(context, surfaces.card),
+                      width: shapes.outlineWidth,
+                    )
+                    : null,
           ),
           child: Row(
             children: [
               Icon(
                 icon,
                 size: compact ? 18 : 20,
-                color: theme.colorScheme.primary,
+                color:
+                    usesInkRecipe
+                        ? tonosForegroundForSurface(context, surfaces.card)
+                        : theme.colorScheme.primary,
               ),
               SizedBox(width: compact ? 8 : 10),
               Expanded(
@@ -369,7 +406,7 @@ class _PresetMetricTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: colors.infoCardValueText,
+                        color: foreground,
                       ),
                     ),
                     FittedBox(
@@ -379,7 +416,7 @@ class _PresetMetricTile extends StatelessWidget {
                         label,
                         maxLines: 1,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.infoCardLabelText,
+                          color: secondaryForeground,
                         ),
                       ),
                     ),

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../widgets/exercise_card.dart';
 import '../../providers/active_session.dart';
@@ -15,6 +16,8 @@ import '../../widgets/guided_tutorial_overlay.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/workout_actions.dart';
 
 class SessionScreen extends StatefulWidget {
   const SessionScreen({super.key});
@@ -92,6 +95,8 @@ class _SessionScreenState extends State<SessionScreen> {
   Widget build(BuildContext context) {
     final session = context.watch<ActiveSession>();
     final strings = AppLocalizations.of(context);
+    final timerTextStyle =
+        Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
     _queueWorkoutTutorial();
 
     return Scaffold(
@@ -104,7 +109,7 @@ class _SessionScreenState extends State<SessionScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   strings.sessionTimerTitle,
-                  style: const TextStyle(fontSize: 20),
+                  style: timerTextStyle.copyWith(fontSize: 20),
                 ),
               ),
               ValueListenableBuilder<int>(
@@ -114,7 +119,7 @@ class _SessionScreenState extends State<SessionScreen> {
                   final s = seconds % 60;
                   return Text(
                     '$m:${s.toString().padLeft(2, '0')}',
-                    style: const TextStyle(fontSize: 48),
+                    style: timerTextStyle.copyWith(fontSize: 48),
                   );
                 },
               ),
@@ -126,6 +131,7 @@ class _SessionScreenState extends State<SessionScreen> {
         leading: Builder(
           builder:
               (innerCtx) => IconButton(
+                tooltip: strings.sessionTimerTitle,
                 icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(innerCtx).openDrawer(),
               ),
@@ -163,14 +169,10 @@ class _SessionScreenState extends State<SessionScreen> {
                                   defId,
                                 );
                                 if (def != null && context.mounted) {
-                                  showModalBottomSheet(
+                                  ExerciseDetailSheet.show(
                                     context: context,
-                                    isScrollControlled: true,
-                                    builder:
-                                        (_) => ExerciseDetailSheet(
-                                          definition: def,
-                                          defId: defId,
-                                        ),
+                                    definition: def,
+                                    defId: defId,
                                   );
                                 }
                               }
@@ -219,8 +221,10 @@ class _SessionScreenState extends State<SessionScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: KeyedSubtree(
             key: _finishWorkoutTutorialKey,
-            child: ElevatedButton(
-              key: AppTestKeys.sessionFinish,
+            child: WorkoutFinishAction(
+              buttonKey: AppTestKeys.sessionFinish,
+              label: strings.sessionFinishWorkout,
+              busy: session.isFinishing,
               onPressed:
                   session.isFinishing
                       ? null
@@ -240,6 +244,14 @@ class _SessionScreenState extends State<SessionScreen> {
                             context: context,
                             isScrollControlled: true,
                             enableDrag: false,
+                            backgroundColor:
+                                context.surfaceDecorationTokens.sheet.outlined
+                                    ? Colors.transparent
+                                    : null,
+                            elevation:
+                                context.surfaceDecorationTokens.sheet.outlined
+                                    ? 0
+                                    : null,
                             builder:
                                 (_) => SessionCompleteSheet(sessionId: sid),
                           );
@@ -250,19 +262,14 @@ class _SessionScreenState extends State<SessionScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                strings.sessionSaveFailed('$error'),
+                                strings.sessionSaveFailed(
+                                  safeFailureMessage(strings, error),
+                                ),
                               ),
                             ),
                           );
                         }
                       },
-              child:
-                  session.isFinishing
-                      ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : Text(strings.sessionFinishWorkout),
             ),
           ),
         ),

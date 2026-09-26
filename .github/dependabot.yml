@@ -1,0 +1,25 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      workflow-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pub
+    directory: /tools/catalog_builder
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5

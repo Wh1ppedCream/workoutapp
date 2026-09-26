@@ -16,10 +16,15 @@ class PremadeTrainingPlan {
     required this.description,
     required this.exercises,
   });
+
+  /// Stable identity for translating built-in plan presentation without using
+  /// a user-visible name as persistence or matching data.
+  String get catalogId => 'tonos.plan.$id';
 }
 
 class PremadeTrainingExercise {
   final String name;
+  final String? catalogId;
   final String equipment;
   final int sets;
   final int reps;
@@ -27,12 +32,34 @@ class PremadeTrainingExercise {
 
   const PremadeTrainingExercise({
     required this.name,
+    required this.catalogId,
     required this.equipment,
     required this.sets,
     required this.reps,
     this.weight = 0,
   });
+
+  /// Stable equipment identity for authored plan rows.
+  ///
+  /// These rows are shipped app content rather than user-created snapshots,
+  /// so the mapping stays explicit and does not affect matching or storage.
+  String? get equipmentCatalogId => _premadeEquipmentCatalogIds[equipment];
 }
+
+const _premadeEquipmentCatalogIds = <String, String>{
+  'Barbell': 'tonos.equipment.0005',
+  'Bodyweight': 'tonos.equipment.0006',
+  'Cable Machine': 'tonos.equipment.0011',
+  'Dip Bars': 'tonos.equipment.0013',
+  'Dumbbell': 'tonos.equipment.0014',
+  'Lat Pulldown Machine': 'tonos.equipment.0023',
+  'Leg Curl Machine (lying)': 'tonos.equipment.0025',
+  'Leg Curl Machine (seated)': 'tonos.equipment.0026',
+  'Leg Extension Machine': 'tonos.equipment.0027',
+  'Leg Press Machine': 'tonos.equipment.0028',
+  'Seated Calf Raise Machine': 'tonos.equipment.0035',
+  'Standing Calf Raise Machine': 'tonos.equipment.0039',
+};
 
 /// Homemade plan catalog shown on the Train > Plans tab.
 ///
@@ -57,42 +84,49 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Barbell Squat',
+        catalogId: 'tonos.exercise.0006',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0007',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Lat Pulldown - Lat Pulldown Machine',
+        catalogId: 'tonos.exercise.0130',
         equipment: 'Lat Pulldown Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Dumbbell (Straight Arm)',
+        catalogId: 'tonos.exercise.0137',
         equipment: 'Dumbbell',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bicep Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0105',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Calf Raise - Standing Calf Raise Machine',
+        catalogId: 'tonos.exercise.0025',
         equipment: 'Standing Calf Raise Machine',
         sets: 3,
         reps: 15,
@@ -109,42 +143,49 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0050',
         equipment: 'Barbell',
         sets: 3,
         reps: 5,
       ),
       PremadeTrainingExercise(
         name: 'Overhead Press - Barbell',
+        catalogId: 'tonos.exercise.0162',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Barbell',
+        catalogId: 'tonos.exercise.0221',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Chest Fly - Cable Machine',
+        catalogId: 'tonos.exercise.0030',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
+        catalogId: 'tonos.exercise.0287',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Face Pull - Cable Machine',
+        catalogId: 'tonos.exercise.0061',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -161,42 +202,49 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0103',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Cable Machine',
+        catalogId: 'tonos.exercise.0219',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Bulgarian Split Squat',
+        catalogId: 'tonos.exercise.0020',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Cable Machine',
+        catalogId: 'tonos.exercise.0136',
         equipment: 'Cable Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Hammer Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0081',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Tricep Pushdown - Cable Machine',
+        catalogId: 'tonos.exercise.0293',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -213,36 +261,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0007',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Overhead Press - Dumbbell',
+        catalogId: 'tonos.exercise.0163',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bench Fly - Dumbbell',
+        catalogId: 'tonos.exercise.0101',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Dumbbell (Straight Arm)',
+        catalogId: 'tonos.exercise.0137',
         equipment: 'Dumbbell',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
+        catalogId: 'tonos.exercise.0287',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Tricep Pushdown - Cable Machine',
+        catalogId: 'tonos.exercise.0293',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -259,36 +313,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0050',
         equipment: 'Barbell',
         sets: 3,
         reps: 5,
       ),
       PremadeTrainingExercise(
         name: 'Pull Up',
+        catalogId: 'tonos.exercise.0180',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Barbell',
+        catalogId: 'tonos.exercise.0221',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Face Pull - Cable Machine',
+        catalogId: 'tonos.exercise.0061',
         equipment: 'Cable Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bicep Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0105',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Hammer Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0081',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 15,
@@ -305,30 +365,35 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Barbell Squat',
+        catalogId: 'tonos.exercise.0006',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
+        catalogId: 'tonos.exercise.0150',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Calf Raise - Standing Calf Raise Machine',
+        catalogId: 'tonos.exercise.0025',
         equipment: 'Standing Calf Raise Machine',
         sets: 4,
         reps: 15,
@@ -345,36 +410,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Incline Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0103',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Overhead Press - Barbell',
+        catalogId: 'tonos.exercise.0162',
         equipment: 'Barbell',
         sets: 3,
         reps: 7,
       ),
       PremadeTrainingExercise(
         name: 'Bench Press - Dumbbells',
+        catalogId: 'tonos.exercise.0009',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Cable Machine',
+        catalogId: 'tonos.exercise.0136',
         equipment: 'Cable Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell (Close Grip)',
+        catalogId: 'tonos.exercise.0008',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Chest Dip - Dip Bars',
+        catalogId: 'tonos.exercise.0028',
         equipment: 'Dip Bars',
         sets: 3,
         reps: 12,
@@ -391,36 +462,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Pendlay Row - Barbell',
+        catalogId: 'tonos.exercise.0167',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Cable Machine',
+        catalogId: 'tonos.exercise.0219',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Single Arm Row - Dumbbell (Kneeling)',
+        catalogId: 'tonos.exercise.0247',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Reverse Fly - Dumbbell (Bent Over)',
+        catalogId: 'tonos.exercise.0198',
         equipment: 'Dumbbell',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Bicep Curl - Barbell',
+        catalogId: 'tonos.exercise.0012',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Preacher Curl - Barbell (with Preacher Bench)',
+        catalogId: 'tonos.exercise.0176',
         equipment: 'Barbell',
         sets: 3,
         reps: 15,
@@ -437,30 +514,35 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Bulgarian Split Squat',
+        catalogId: 'tonos.exercise.0020',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Leg Extension - Leg Extension Machine',
+        catalogId: 'tonos.exercise.0142',
         equipment: 'Leg Extension Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Seated Leg Curl',
+        catalogId: 'tonos.exercise.0230',
         equipment: 'Leg Curl Machine (seated)',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Calf Raise - Seated Calf Raise Machine',
+        catalogId: 'tonos.exercise.0024',
         equipment: 'Seated Calf Raise Machine',
         sets: 4,
         reps: 20,
@@ -478,18 +560,21 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0007',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Barbell',
+        catalogId: 'tonos.exercise.0221',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Dumbbell (Straight Arm)',
+        catalogId: 'tonos.exercise.0137',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 15,
@@ -507,24 +592,28 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Calf Raise - Standing Calf Raise Machine',
+        catalogId: 'tonos.exercise.0025',
         equipment: 'Standing Calf Raise Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Barbell Squat',
+        catalogId: 'tonos.exercise.0006',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Leg Extension - Leg Extension Machine',
+        catalogId: 'tonos.exercise.0142',
         equipment: 'Leg Extension Machine',
         sets: 3,
         reps: 12,
@@ -542,18 +631,21 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Overhead Press - Barbell',
+        catalogId: 'tonos.exercise.0162',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Pull Up',
+        catalogId: 'tonos.exercise.0180',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Cable Machine',
+        catalogId: 'tonos.exercise.0136',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -571,24 +663,28 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Calf Raise - Seated Calf Raise Machine',
+        catalogId: 'tonos.exercise.0024',
         equipment: 'Seated Calf Raise Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0050',
         equipment: 'Barbell',
         sets: 3,
         reps: 5,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
+        catalogId: 'tonos.exercise.0150',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 12,
@@ -605,36 +701,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0007',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bench Press - Dumbbell',
+        catalogId: 'tonos.exercise.0104',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Chest Fly - Cable Machine',
+        catalogId: 'tonos.exercise.0030',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Bicep Curl - Barbell',
+        catalogId: 'tonos.exercise.0012',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Incline Bicep Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0105',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Hammer Curl - Dumbbell',
+        catalogId: 'tonos.exercise.0081',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 15,
@@ -651,36 +753,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0050',
         equipment: 'Barbell',
         sets: 3,
         reps: 5,
       ),
       PremadeTrainingExercise(
         name: 'Lat Pulldown - Lat Pulldown Machine',
+        catalogId: 'tonos.exercise.0130',
         equipment: 'Lat Pulldown Machine',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Barbell',
+        catalogId: 'tonos.exercise.0221',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Row - Cable Machine',
+        catalogId: 'tonos.exercise.0219',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Face Pull - Cable Machine',
+        catalogId: 'tonos.exercise.0061',
         equipment: 'Cable Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Reverse Fly - Dumbbell (Bent Over)',
+        catalogId: 'tonos.exercise.0198',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 15,
@@ -697,36 +805,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Overhead Press - Barbell',
+        catalogId: 'tonos.exercise.0162',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Overhead Press - Dumbbell',
+        catalogId: 'tonos.exercise.0163',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Dumbbell (Straight Arm)',
+        catalogId: 'tonos.exercise.0137',
         equipment: 'Dumbbell',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Cable Machine',
+        catalogId: 'tonos.exercise.0136',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell (Close Grip)',
+        catalogId: 'tonos.exercise.0008',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Tricep Extension - Cable Machine',
+        name: 'Overhead Tricep Extension - Cable Machine',
+        catalogId: 'tonos.exercise.0287',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 12,
@@ -743,36 +857,42 @@ const _authoredPremadeTrainingPlans = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Barbell Squat',
+        catalogId: 'tonos.exercise.0006',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
+        catalogId: 'tonos.exercise.0150',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Calf Raise - Standing Calf Raise Machine',
+        catalogId: 'tonos.exercise.0025',
         equipment: 'Standing Calf Raise Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Calf Raise - Seated Calf Raise Machine',
+        catalogId: 'tonos.exercise.0024',
         equipment: 'Seated Calf Raise Machine',
         sets: 3,
         reps: 20,
@@ -825,36 +945,42 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Bench Press - Barbell',
+        catalogId: 'tonos.exercise.0007',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Row - Barbell',
+        catalogId: 'tonos.exercise.0221',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Lat Pulldown - Lat Pulldown Machine',
+        catalogId: 'tonos.exercise.0130',
         equipment: 'Lat Pulldown Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Dumbbell (Straight Arm)',
+        catalogId: 'tonos.exercise.0137',
         equipment: 'Dumbbell',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Chest Fly - Cable Machine',
+        catalogId: 'tonos.exercise.0030',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Tricep Pushdown - Cable Machine',
+        catalogId: 'tonos.exercise.0293',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -871,36 +997,42 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Calf Raise - Standing Calf Raise Machine',
+        catalogId: 'tonos.exercise.0025',
         equipment: 'Standing Calf Raise Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Barbell Squat',
+        catalogId: 'tonos.exercise.0006',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Romanian Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0215',
         equipment: 'Barbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Leg Extension - Leg Extension Machine',
+        catalogId: 'tonos.exercise.0142',
         equipment: 'Leg Extension Machine',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
+        catalogId: 'tonos.exercise.0150',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 15,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 12,
@@ -917,36 +1049,42 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Overhead Press - Barbell',
+        catalogId: 'tonos.exercise.0162',
         equipment: 'Barbell',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Pull Up',
+        catalogId: 'tonos.exercise.0180',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 8,
       ),
       PremadeTrainingExercise(
         name: 'Lateral Raise - Cable Machine',
+        catalogId: 'tonos.exercise.0136',
         equipment: 'Cable Machine',
         sets: 4,
         reps: 15,
       ),
       PremadeTrainingExercise(
         name: 'Bench Press - Dumbbells',
+        catalogId: 'tonos.exercise.0009',
         equipment: 'Dumbbell',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Row - Cable Machine',
+        catalogId: 'tonos.exercise.0219',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Face Pull - Cable Machine',
+        catalogId: 'tonos.exercise.0061',
         equipment: 'Cable Machine',
         sets: 3,
         reps: 15,
@@ -963,36 +1101,42 @@ const _twoHourPlanCounterparts = <PremadeTrainingPlan>[
     exercises: [
       PremadeTrainingExercise(
         name: 'Calf Raise - Seated Calf Raise Machine',
+        catalogId: 'tonos.exercise.0024',
         equipment: 'Seated Calf Raise Machine',
         sets: 4,
         reps: 20,
       ),
       PremadeTrainingExercise(
         name: 'Deadlift - Barbell',
+        catalogId: 'tonos.exercise.0050',
         equipment: 'Barbell',
         sets: 3,
         reps: 5,
       ),
       PremadeTrainingExercise(
-        name: 'Leg Press',
+        name: 'Seated Leg Press',
+        catalogId: 'tonos.exercise.0231',
         equipment: 'Leg Press Machine',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
-        name: 'Lying Leg Curl - Leg Curl Machine (lying)',
+        name: 'Lying Leg Curl - Leg Curl Machine',
+        catalogId: 'tonos.exercise.0150',
         equipment: 'Leg Curl Machine (lying)',
         sets: 3,
         reps: 12,
       ),
       PremadeTrainingExercise(
         name: 'Bulgarian Split Squat',
+        catalogId: 'tonos.exercise.0020',
         equipment: 'Bodyweight',
         sets: 3,
         reps: 10,
       ),
       PremadeTrainingExercise(
         name: 'Leg Extension - Leg Extension Machine',
+        catalogId: 'tonos.exercise.0142',
         equipment: 'Leg Extension Machine',
         sets: 3,
         reps: 15,

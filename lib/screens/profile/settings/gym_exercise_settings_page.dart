@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/workout_exit_preferences.dart';
+import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../widgets/settings_tiles.dart';
 import 'analytics_setting_screen.dart';
 import 'flow_methods_page.dart';
@@ -101,24 +103,33 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
     final strings = AppLocalizations.of(context);
     final selected = await showDialog<WorkoutExitBehavior>(
       context: context,
-      builder:
-          (dialogContext) => SimpleDialog(
+      builder: (dialogContext) {
+        final neo = context.surfaceDecorationTokens.panel.outlined;
+        final ink = context.cs.onPrimaryContainer;
+        return TonosDialogFrame(
+          child: SimpleDialog(
             title: Text(strings.gymSettingsExitTitle),
             children: [
               for (final behavior in WorkoutExitBehavior.values)
                 RadioListTile<WorkoutExitBehavior>(
                   value: behavior,
                   groupValue: current,
+                  fillColor: neo ? WidgetStatePropertyAll<Color?>(ink) : null,
                   title: Text(switch (behavior) {
                     WorkoutExitBehavior.askEveryTime => strings.gymExitAsk,
                     WorkoutExitBehavior.discard => strings.gymExitDiscard,
                     WorkoutExitBehavior.saveCompleted => strings.gymExitSave,
-                  }),
-                  subtitle: Text(_exitBehaviorLabel(behavior, strings)),
+                  }, style: neo ? TextStyle(color: ink) : null),
+                  subtitle: Text(
+                    _exitBehaviorLabel(behavior, strings),
+                    style: neo ? TextStyle(color: ink) : null,
+                  ),
                   onChanged: (value) => Navigator.pop(dialogContext, value),
                 ),
             ],
           ),
+        );
+      },
     );
     if (selected == null) return;
     await _exitPreferences.save(selected);

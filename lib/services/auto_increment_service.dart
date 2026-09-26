@@ -94,8 +94,34 @@ class AutoIncrementService {
 
   /// Applies auto-increment for [sessionId] and [presetId].
   Future<void> apply({required int sessionId, required int presetId}) async {
+    final progression = await _buildProgression(
+      sessionId: sessionId,
+      presetId: presetId,
+    );
+    await _repo.applyPresetProgressionBatch(progression);
+  }
+
+  /// Applies and acknowledges a queued progression as one database commit.
+  Future<void> applyPending({
+    required int sessionId,
+    required int presetId,
+  }) async {
+    final progression = await _buildProgression(
+      sessionId: sessionId,
+      presetId: presetId,
+    );
+    await _repo.completePendingWorkoutProgression(
+      sessionId: sessionId,
+      progression: progression,
+    );
+  }
+
+  Future<PresetProgressionBatch> _buildProgression({
+    required int sessionId,
+    required int presetId,
+  }) async {
     final settings = await _loadAutoSettings(presetId);
-    if (settings == null) return;
+    if (settings == null) return const PresetProgressionBatch();
 
     final results = await Future.wait<Object>([
       _repo.fetchFlowDefinition(presetId),
@@ -160,7 +186,7 @@ class AutoIncrementService {
         ),
       );
     }
-    if (contexts.isEmpty) return;
+    if (contexts.isEmpty) return const PresetProgressionBatch();
 
     final exerciseSuccesses = <int, bool>{
       for (final context in contexts)
@@ -197,13 +223,11 @@ class AutoIncrementService {
       );
     }
 
-    await _repo.applyPresetProgressionBatch(
-      PresetProgressionBatch(
-        updates: updates,
-        inserts: inserts,
-        deletedSetIds: deletedSetIds.toList(),
-        exerciseStates: exerciseStates,
-      ),
+    return PresetProgressionBatch(
+      updates: updates,
+      inserts: inserts,
+      deletedSetIds: deletedSetIds.toList(),
+      exerciseStates: exerciseStates,
     );
   }
 

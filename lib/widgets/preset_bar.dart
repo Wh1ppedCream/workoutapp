@@ -10,6 +10,8 @@ import '../screens/exercise/preset_detail_screen.dart';
 import 'body_heatmap.dart';
 import 'generic_bar.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/workout_thumbnail_frame.dart';
 
 /// A colored bar that *knows* how to open, rename, & delete its own preset.
 class PresetBar extends StatelessWidget {
@@ -49,11 +51,17 @@ class PresetBar extends StatelessWidget {
             : strings.planDefaultName(index + 1);
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
+    final usesInkRecipe = context.surfaceDecorationTokens.compactCard.outlined;
+    final trailingColor =
+        usesInkRecipe ? context.cs.onPrimaryContainer : accent;
 
     return GenericBar(
       label: title,
       // use the same color as before, but via the themed accent slot
       color: accent,
+      fillColor: context.surfaceTokens.planCard,
+      foregroundColor: context.cs.onPrimaryContainer,
+      markerColor: accent,
       onTap: () => _openDetail(context),
       scale: scale, // <-- pass down scale
       leading: _PresetFocusBadge(frequencyMap: focusFrequencyMap, scale: scale),
@@ -64,7 +72,7 @@ class PresetBar extends StatelessWidget {
           PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert,
-              color: accent,
+              color: trailingColor,
               size: 24 * scale, // scale the icon
             ),
             onSelected: (action) => _handleMenu(context, action),
@@ -133,19 +141,21 @@ class PresetBar extends StatelessWidget {
       final confirm = await showDialog<bool>(
         context: context,
         builder:
-            (dCtx) => AlertDialog(
-              title: Text(strings.planDeleteTitle),
-              content: Text(strings.planDeleteConfirmation),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dCtx, false),
-                  child: Text(strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(dCtx, true),
-                  child: Text(strings.commonDelete),
-                ),
-              ],
+            (dCtx) => TonosDialogFrame(
+              child: AlertDialog(
+                title: Text(strings.planDeleteTitle),
+                content: Text(strings.planDeleteConfirmation),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dCtx, false),
+                    child: Text(strings.commonCancel),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(dCtx, true),
+                    child: Text(strings.commonDelete),
+                  ),
+                ],
+              ),
             ),
       );
       if (!context.mounted) return;
@@ -159,23 +169,26 @@ class PresetBar extends StatelessWidget {
       final newName = await showDialog<String>(
         context: context,
         builder: (dCtx) {
-          return AlertDialog(
-            title: Text(strings.planRenameTitle),
-            content: TextField(
-              controller: ctl,
-              decoration: InputDecoration(labelText: strings.planNameLabel),
-              autofocus: true,
+          return TonosDialogFrame(
+            styleFormControls: true,
+            child: AlertDialog(
+              title: Text(strings.planRenameTitle),
+              content: TextField(
+                controller: ctl,
+                decoration: InputDecoration(labelText: strings.planNameLabel),
+                autofocus: true,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dCtx),
+                  child: Text(strings.commonCancel),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(dCtx, ctl.text.trim()),
+                  child: Text(strings.commonRename),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dCtx),
-                child: Text(strings.commonCancel),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dCtx, ctl.text.trim()),
-                child: Text(strings.commonRename),
-              ),
-            ],
           );
         },
       );
@@ -205,21 +218,18 @@ class _PresetFocusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
     final size = 60 * scale;
 
-    return Container(
-      width: size,
-      height: size,
-      padding: EdgeInsets.all(3 * scale),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(10 * scale),
-      ),
+    return WorkoutThumbnailFrame(
+      scale: scale,
       child: BodyHeatmap(
         frequencyMap: frequencyMap,
-        lowColor: colors.historySummaryHeatmapLow!,
-        highColor: colors.historySummaryHeatmapHigh!,
+        lowColor: tonosHeatmapLowForSurface(context, surfaces.mediaPlaceholder),
+        highColor: tonosHeatmapHighForSurface(
+          context,
+          surfaces.mediaPlaceholder,
+        ),
         width: size - 6 * scale,
         height: size - 6 * scale,
       ),
@@ -233,17 +243,17 @@ class _AutomaticBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final semantic = context.semanticColors;
     return Padding(
       padding: EdgeInsets.only(right: 8 * scale),
       child: CircleAvatar(
         radius: 8 * scale,
-        backgroundColor: colors.presetBadgeBg!,
+        backgroundColor: semantic.automaticPlanBadge,
         child: Text(
           'A',
           style: TextStyle(
             fontSize: 12 * scale,
-            color: colors.presetBadgeText!,
+            color: semantic.onAutomaticPlanBadge,
             fontWeight: FontWeight.bold,
           ),
         ),

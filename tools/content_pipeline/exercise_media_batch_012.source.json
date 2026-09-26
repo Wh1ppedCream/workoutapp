@@ -1,0 +1,398 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 210,
+      "exerciseName": "Reverse Lunge - Barbell",
+      "slug": "reverse_lunge_barbell",
+      "assets": [
+        {
+          "assetId": "reverse_lunge_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/reverse_lunge_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\reverse_lunge_barbell\\v1\\thumb.webp",
+          "title": "Reverse Lunge - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 227,
+      "exerciseName": "Russian Twist",
+      "slug": "russian_twist",
+      "assets": [
+        {
+          "assetId": "russian_twist_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/russian_twist/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\russian_twist\\v1\\thumb.webp",
+          "title": "Russian Twist thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 228,
+      "exerciseName": "Russian Twist - Dumbbell",
+      "slug": "russian_twist_dumbbell",
+      "assets": [
+        {
+          "assetId": "russian_twist_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/russian_twist_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\russian_twist_dumbbell\\v1\\thumb.webp",
+          "title": "Russian Twist - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 229,
+      "exerciseName": "Seated Chest Press",
+      "slug": "seated_chest_press",
+      "assets": [
+        {
+          "assetId": "seated_chest_press_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_chest_press/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\seated_chest_press\\v1\\thumb.webp",
+          "title": "Seated Chest Press thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 230,
+      "exerciseName": "Seated Leg Curl",
+      "slug": "seated_leg_curl",
+      "assets": [
+        {
+          "assetId": "seated_leg_curl_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_leg_curl/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\seated_leg_curl\\v1\\thumb.webp",
+          "title": "Seated Leg Curl thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 231,
+      "exerciseName": "Seated Leg Press",
+      "slug": "seated_leg_press",
+      "assets": [
+        {
+          "assetId": "seated_leg_press_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/seated_leg_press/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\seated_leg_press\\v1\\thumb.webp",
+          "title": "Seated Leg Press thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 232,
+      "exerciseName": "Shrug - Cable Machine",
+      "slug": "shrug_cable_machine",
+      "assets": [
+        {
+          "assetId": "shrug_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\shrug_cable_machine\\v1\\thumb.webp",
+          "title": "Shrug - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 233,
+      "exerciseName": "Shrug - Barbell",
+      "slug": "shrug_barbell",
+      "assets": [
+        {
+          "assetId": "shrug_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\shrug_barbell\\v1\\thumb.webp",
+          "title": "Shrug - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 234,
+      "exerciseName": "Shrug - Dumbbell",
+      "slug": "shrug_dumbbell",
+      "assets": [
+        {
+          "assetId": "shrug_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/shrug_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\shrug_dumbbell\\v1\\thumb.webp",
+          "title": "Shrug - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 235,
+      "exerciseName": "Side Bend - Cable Machine",
+      "slug": "side_bend_cable_machine",
+      "assets": [
+        {
+          "assetId": "side_bend_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bend_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_bend_cable_machine\\v1\\thumb.webp",
+          "title": "Side Bend - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 236,
+      "exerciseName": "Side Bend - Dumbbell",
+      "slug": "side_bend_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_bend_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bend_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_bend_dumbbell\\v1\\thumb.webp",
+          "title": "Side Bend - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 237,
+      "exerciseName": "Side Bridge",
+      "slug": "side_bridge",
+      "assets": [
+        {
+          "assetId": "side_bridge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bridge/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_bridge\\v1\\thumb.webp",
+          "title": "Side Bridge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 238,
+      "exerciseName": "Side Bridge - Dumbbell",
+      "slug": "side_bridge_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_bridge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_bridge_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_bridge_dumbbell\\v1\\thumb.webp",
+          "title": "Side Bridge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 239,
+      "exerciseName": "Side Lunge",
+      "slug": "side_lunge",
+      "assets": [
+        {
+          "assetId": "side_lunge_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_lunge/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_lunge\\v1\\thumb.webp",
+          "title": "Side Lunge thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 241,
+      "exerciseName": "Side Lunge - Dumbbell",
+      "slug": "side_lunge_dumbbell",
+      "assets": [
+        {
+          "assetId": "side_lunge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/side_lunge_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\side_lunge_dumbbell\\v1\\thumb.webp",
+          "title": "Side Lunge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 246,
+      "exerciseName": "Single Arm Row - Cable Machine",
+      "slug": "single_arm_row_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_row_cable_machine\\v1\\thumb.webp",
+          "title": "Single Arm Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 247,
+      "exerciseName": "Single Arm Row - Dumbbell (Kneeling)",
+      "slug": "single_arm_row_dumbbell_kneeling",
+      "assets": [
+        {
+          "assetId": "single_arm_row_dumbbell_kneeling_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_dumbbell_kneeling/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_row_dumbbell_kneeling\\v1\\thumb.webp",
+          "title": "Single Arm Row - Dumbbell (Kneeling) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 249,
+      "exerciseName": "Single Arm Lat Pull-down - Lat Pulldown Machine",
+      "slug": "single_arm_lat_pull_down_lat_pulldown_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_pull_down_lat_pulldown_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_pull_down_lat_pulldown_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_lat_pull_down_lat_pulldown_machine\\v1\\thumb.webp",
+          "title": "Single Arm Lat Pull-down - Lat Pulldown Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 250,
+      "exerciseName": "Single Arm Lat Pull-down - Cable Machine",
+      "slug": "single_arm_lat_pull_down_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_pull_down_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_pull_down_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_lat_pull_down_cable_machine\\v1\\thumb.webp",
+          "title": "Single Arm Lat Pull-down - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 251,
+      "exerciseName": "Single Arm Lat Raise - Cable Machine",
+      "slug": "single_arm_lat_raise_cable_machine",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_raise_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_raise_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_lat_raise_cable_machine\\v1\\thumb.webp",
+          "title": "Single Arm Lat Raise - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 252,
+      "exerciseName": "Single Arm Lat Raise - Dumbbell",
+      "slug": "single_arm_lat_raise_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_arm_lat_raise_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_lat_raise_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\single_arm_lat_raise_dumbbell\\v1\\thumb.webp",
+          "title": "Single Arm Lat Raise - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 312,
+      "exerciseName": "Zercher Carry - Barbell",
+      "slug": "zercher_carry_barbell",
+      "assets": [
+        {
+          "assetId": "zercher_carry_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/zercher_carry_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\zercher_carry_barbell\\v1\\thumb.webp",
+          "title": "Zercher Carry - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 313,
+      "exerciseName": "Zercher Squat - Barbell",
+      "slug": "zercher_squat_barbell",
+      "assets": [
+        {
+          "assetId": "zercher_squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/zercher_squat_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_012\\exercises\\zercher_squat_barbell\\v1\\thumb.webp",
+          "title": "Zercher Squat - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

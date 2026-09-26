@@ -8,13 +8,20 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
+import '../../services/exercise_content_localizer.dart';
 import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
+import '../../widgets/localized_exercise_name.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 
 /// Catalog of exercise definitions with profile-aware equipment filtering.
 ///
@@ -73,13 +80,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   // Dropdown options
   List<GymProfile> _profiles = [];
-  List<String> _equipmentOptions = [_allFilter];
+  List<Equipment> _equipmentOptions = [];
   List<String> _areaOptions = [_allFilter];
-  List<String> _muscleOptions = [_allFilter];
-  List<String>? _allEquipmentNames;
-  final Map<int, List<String>> _equipmentNamesByProfileId = {};
+  List<Muscle> _muscleOptions = [];
+  List<Equipment>? _allEquipmentItems;
+  final Map<int, List<Equipment>> _equipmentItemsByProfileId = {};
 
   ExerciseDefinition? _selectedDef;
+  String? _selectedDisplayName;
   bool _tutorialQueued = false;
   bool _planBuilderGuideSkipped = false;
 
@@ -132,8 +140,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     if (!mounted) return;
     setState(() {
       _areaOptions = [_allFilter, ...areas.map((b) => b.name)];
-      _muscleOptions = [_allFilter, ...muscles.map((m) => m.name)];
-      _equipmentOptions = [_allFilter, ...initialEquipment];
+      _muscleOptions = muscles;
+      _equipmentOptions = initialEquipment;
       _displayedDefs = List.from(_allDefs); // show all until they hit “Save”
       _isLoading = false;
     });
@@ -174,7 +182,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       title: AppLocalizations.of(context).catalogGuideAddTitle,
       body: AppLocalizations.of(
         context,
-      ).catalogGuideAddBody(_selectedDef!.name),
+      ).catalogGuideAddBody(_selectedDisplayName ?? _selectedDef!.name),
     );
   }
 
@@ -209,21 +217,30 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     }
   }
 
-  Future<List<String>> _allEquipment() async {
-    final cached = _allEquipmentNames;
+  Future<List<Equipment>> _allEquipment() async {
+    final cached = _allEquipmentItems;
     if (cached != null) return cached;
-    final names = await _repo.fetchAllEquipmentNames();
-    _allEquipmentNames = names;
-    return names;
+    final equipment = await _repo.fetchAllEquipment();
+    _allEquipmentItems = equipment;
+    return equipment;
   }
 
-  Future<List<String>> _equipmentForProfile(int profileId) async {
-    final cached = _equipmentNamesByProfileId[profileId];
+  Future<List<Equipment>> _equipmentForProfile(int profileId) async {
+    final cached = _equipmentItemsByProfileId[profileId];
     if (cached != null) return cached;
     final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(profileId);
-    final names = eqMaps.map((e) => e['name'] as String).toList();
-    _equipmentNamesByProfileId[profileId] = names;
-    return names;
+    final equipment =
+        eqMaps
+            .map(
+              (e) => Equipment(
+                e['id'] as int,
+                e['name'] as String,
+                e['catalog_id'] as String?,
+              ),
+            )
+            .toList();
+    _equipmentItemsByProfileId[profileId] = equipment;
+    return equipment;
   }
 
   /// Applies profile, equipment, bodypart, muscle, and text filters in one pass.
@@ -235,12 +252,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       });
     }
     List<ExerciseDefinition> filtered = List.from(_allDefs);
-    List<String> nextEquipmentOptions;
+    List<Equipment> nextEquipmentOptions;
 
     // 1) Workspace profile subset-of filter
     if (_useProfileFilter && _dialogProfileId != null) {
-      final allowedList = await _equipmentForProfile(_dialogProfileId!);
+      final allowedEquipment = await _equipmentForProfile(_dialogProfileId!);
       if (generation != _filterGeneration || !mounted) return;
+      final allowedList =
+          allowedEquipment.map((equipment) => equipment.name).toList();
       filtered =
           filtered.where((d) {
             return ExerciseEquipmentCompatibility.fitsProfileNames(
@@ -248,15 +267,17 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               allowedList,
             );
           }).toList();
-      nextEquipmentOptions = [_allFilter, ...allowedList];
+      nextEquipmentOptions = allowedEquipment;
     } else {
       // Profile off: use global equipment list
       final allEq = await _allEquipment();
       if (generation != _filterGeneration || !mounted) return;
-      nextEquipmentOptions = [_allFilter, ...allEq];
+      nextEquipmentOptions = allEq;
     }
+    final equipmentNames =
+        nextEquipmentOptions.map((equipment) => equipment.name).toSet();
     final equipmentFilter =
-        nextEquipmentOptions.contains(_filterEquipment)
+        equipmentNames.contains(_filterEquipment)
             ? _filterEquipment
             : _allFilter;
 
@@ -319,6 +340,52 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   void _openFilterDialog() {
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final isDarkNeo = usesInkRecipe && theme.brightness == Brightness.dark;
+    final fieldForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(context, surfaces.settingsInput)
+            : null;
+    final fieldTextStyle =
+        usesInkRecipe
+            ? (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+              color: fieldForeground,
+            )
+            : null;
+    final filterMenuSurface =
+        theme.popupMenuTheme.color ?? theme.colorScheme.surfaceContainer;
+    final filterMenuTextStyle =
+        isDarkNeo
+            ? (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+              color: tonosForegroundForSurface(context, filterMenuSurface),
+            )
+            : null;
+
+    Widget filterText(String value, TextStyle? style) {
+      return Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      );
+    }
+
+    Widget localizedFilterName(
+      CatalogEntityDisplayName entity,
+      TextStyle? style,
+    ) {
+      final child = LocalizedCatalogEntityName(
+        entity: entity,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+      return style == null
+          ? child
+          : DefaultTextStyle.merge(style: style, child: child);
+    }
+
     // Dialog local copies
     bool useProfile = _useProfileFilter;
     int? chosenProfile = _dialogProfileId;
@@ -331,150 +398,225 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       builder:
           (ctx) => StatefulBuilder(
             builder:
-                (ctx, setDialogState) => AlertDialog(
-                  title: Text(strings.catalogSelectedFilters),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SwitchListTile(
-                          title: Text(strings.catalogUseWorkspaceProfile),
-                          value: useProfile,
-                          onChanged:
-                              (v) => setDialogState(() => useProfile = v),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<int>(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: strings.catalogWorkspaceProfile,
+                (ctx, setDialogState) => TonosDialogFrame(
+                  styleFormControls: true,
+                  child: AlertDialog(
+                    title: Text(strings.catalogSelectedFilters),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SwitchListTile(
+                            title: Text(strings.catalogUseWorkspaceProfile),
+                            value: useProfile,
+                            onChanged:
+                                (v) => setDialogState(() => useProfile = v),
                           ),
-                          value: chosenProfile,
-                          items:
-                              _profiles
-                                  .map(
-                                    (p) => DropdownMenuItem(
-                                      value: p.id!,
-                                      child: Text(
-                                        p.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<int>(
+                            isExpanded: true,
+                            style: fieldTextStyle,
+                            iconEnabledColor: fieldForeground,
+                            dropdownColor: isDarkNeo ? filterMenuSurface : null,
+                            decoration: InputDecoration(
+                              labelText: strings.catalogWorkspaceProfile,
+                            ),
+                            value: chosenProfile,
+                            items:
+                                _profiles
+                                    .map(
+                                      (p) => DropdownMenuItem(
+                                        value: p.id!,
+                                        child: filterText(
+                                          p.name,
+                                          filterMenuTextStyle,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged:
-                              useProfile
-                                  ? (v) =>
-                                      setDialogState(() => chosenProfile = v)
-                                  : null,
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: strings.catalogEquipment,
+                                    )
+                                    .toList(),
+                            selectedItemBuilder:
+                                (_) =>
+                                    _profiles
+                                        .map(
+                                          (p) => filterText(
+                                            p.name,
+                                            fieldTextStyle,
+                                          ),
+                                        )
+                                        .toList(),
+                            onChanged:
+                                useProfile
+                                    ? (v) =>
+                                        setDialogState(() => chosenProfile = v)
+                                    : null,
                           ),
-                          value: eq,
-                          items:
-                              _equipmentOptions
-                                  .map(
-                                    (name) => DropdownMenuItem(
-                                      value: name,
-                                      child: Text(
-                                        name == _allFilter
-                                            ? strings.commonAll
-                                            : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            style: fieldTextStyle,
+                            iconEnabledColor: fieldForeground,
+                            dropdownColor: isDarkNeo ? filterMenuSurface : null,
+                            decoration: InputDecoration(
+                              labelText: strings.catalogEquipment,
+                            ),
+                            value: eq,
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: _allFilter,
+                                child: filterText(
+                                  strings.commonAll,
+                                  filterMenuTextStyle,
+                                ),
+                              ),
+                              ..._equipmentOptions.map(
+                                (equipment) => DropdownMenuItem<String>(
+                                  value: equipment.name,
+                                  child: localizedFilterName(
+                                    CatalogEntityDisplayName(
+                                      catalogId: equipment.catalogId,
+                                      canonicalName: equipment.name,
                                     ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => setDialogState(() => eq = v!),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: strings.catalogFocusArea,
+                                    filterMenuTextStyle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            selectedItemBuilder:
+                                (_) => [
+                                  filterText(strings.commonAll, fieldTextStyle),
+                                  ..._equipmentOptions.map(
+                                    (equipment) => localizedFilterName(
+                                      CatalogEntityDisplayName(
+                                        catalogId: equipment.catalogId,
+                                        canonicalName: equipment.name,
+                                      ),
+                                      fieldTextStyle,
+                                    ),
+                                  ),
+                                ],
+                            onChanged: (v) => setDialogState(() => eq = v!),
                           ),
-                          value: area,
-                          items:
-                              _areaOptions
-                                  .map(
-                                    (name) => DropdownMenuItem(
-                                      value: name,
-                                      child: Text(
-                                        name == _allFilter
-                                            ? strings.commonAll
-                                            : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            style: fieldTextStyle,
+                            iconEnabledColor: fieldForeground,
+                            dropdownColor: isDarkNeo ? filterMenuSurface : null,
+                            decoration: InputDecoration(
+                              labelText: strings.catalogFocusArea,
+                            ),
+                            value: area,
+                            items:
+                                _areaOptions
+                                    .map(
+                                      (name) => DropdownMenuItem(
+                                        value: name,
+                                        child: filterText(
+                                          name == _allFilter
+                                              ? strings.commonAll
+                                              : localizedBodyPartName(
+                                                context,
+                                                name,
+                                              ),
+                                          filterMenuTextStyle,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => setDialogState(() => area = v!),
-                        ),
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: strings.catalogSpecificMuscle,
+                                    )
+                                    .toList(),
+                            selectedItemBuilder:
+                                (_) =>
+                                    _areaOptions
+                                        .map(
+                                          (name) => filterText(
+                                            name == _allFilter
+                                                ? strings.commonAll
+                                                : localizedBodyPartName(
+                                                  context,
+                                                  name,
+                                                ),
+                                            fieldTextStyle,
+                                          ),
+                                        )
+                                        .toList(),
+                            onChanged: (v) => setDialogState(() => area = v!),
                           ),
-                          value: muscle,
-                          items:
-                              _muscleOptions
-                                  .map(
-                                    (name) => DropdownMenuItem(
-                                      value: name,
-                                      child: Text(
-                                        name == _allFilter
-                                            ? strings.commonAll
-                                            : name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            style: fieldTextStyle,
+                            iconEnabledColor: fieldForeground,
+                            dropdownColor: isDarkNeo ? filterMenuSurface : null,
+                            decoration: InputDecoration(
+                              labelText: strings.catalogSpecificMuscle,
+                            ),
+                            value: muscle,
+                            items: [
+                              DropdownMenuItem<String>(
+                                value: _allFilter,
+                                child: filterText(
+                                  strings.commonAll,
+                                  filterMenuTextStyle,
+                                ),
+                              ),
+                              ..._muscleOptions.map(
+                                (muscle) => DropdownMenuItem<String>(
+                                  value: muscle.name,
+                                  child: localizedFilterName(
+                                    CatalogEntityDisplayName(
+                                      catalogId: muscle.catalogId,
+                                      canonicalName: muscle.name,
                                     ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => setDialogState(() => muscle = v!),
-                        ),
-                      ],
+                                    filterMenuTextStyle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            selectedItemBuilder:
+                                (_) => [
+                                  filterText(strings.commonAll, fieldTextStyle),
+                                  ..._muscleOptions.map(
+                                    (muscle) => localizedFilterName(
+                                      CatalogEntityDisplayName(
+                                        catalogId: muscle.catalogId,
+                                        canonicalName: muscle.name,
+                                      ),
+                                      fieldTextStyle,
+                                    ),
+                                  ),
+                                ],
+                            onChanged: (v) => setDialogState(() => muscle = v!),
+                          ),
+                        ],
+                      ),
                     ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: Text(strings.commonCancel),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _useProfileFilter = useProfile;
+                            _dialogProfileId = chosenProfile;
+                            _filterEquipment = eq;
+                            _filterArea = area;
+                            _filterMuscle = muscle;
+                          });
+                          Navigator.of(ctx).pop();
+                          _applyAllFilters();
+                        },
+                        child: Text(strings.commonSave),
+                      ),
+                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: Text(strings.commonCancel),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _useProfileFilter = useProfile;
-                          _dialogProfileId = chosenProfile;
-                          _filterEquipment = eq;
-                          _filterArea = area;
-                          _filterMuscle = muscle;
-                        });
-                        Navigator.of(ctx).pop();
-                        _applyAllFilters();
-                      },
-                      child: Text(strings.commonSave),
-                    ),
-                  ],
                 ),
           ),
     );
   }
 
   void _openExerciseDetails(ExerciseDefinition def) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => ExerciseDetailSheet(definition: def, defId: def.id),
-    );
+    ExerciseDetailSheet.show(context: context, definition: def, defId: def.id);
   }
 
   @override
@@ -555,10 +697,31 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                   onTap:
                                       widget.onExercisePicked == null
                                           ? null
-                                          : () {
-                                            setState(() => _selectedDef = def);
+                                          : () async {
+                                            setState(() {
+                                              _selectedDef = def;
+                                              _selectedDisplayName = def.name;
+                                            });
                                             widget.onPlanBuilderSelectionChanged
                                                 ?.call(true);
+                                            final displayName =
+                                                await ExerciseContentLocalizer
+                                                    .instance
+                                                    .resolveName(
+                                                      def,
+                                                      Localizations.localeOf(
+                                                        context,
+                                                      ),
+                                                    );
+                                            if (!mounted ||
+                                                _selectedDef != def) {
+                                              return;
+                                            }
+                                            setState(
+                                              () =>
+                                                  _selectedDisplayName =
+                                                      displayName,
+                                            );
                                           },
                                   onHeatmapTap: () => _openExerciseDetails(def),
                                 );
@@ -574,6 +737,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                   ? KeyedSubtree(
                     key: _catalogAddTutorialKey,
                     child: FloatingActionButton(
+                      tooltip: strings.commonAdd,
                       child: const Icon(Icons.add),
                       onPressed: () {
                         final picked = _selectedDef!;
@@ -612,21 +776,75 @@ class _ExerciseCatalogBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final equipmentText = definition.equipmentList
-        .map((equipment) => equipment.name)
-        .where((name) => name.trim().isNotEmpty)
-        .join(', ');
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final effects = context.effectTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final equipment = definition.equipmentList
+        .where((item) => item.name.trim().isNotEmpty)
+        .map(
+          (item) => CatalogEntityDisplayName(
+            catalogId: item.catalogId,
+            canonicalName: item.name,
+          ),
+        )
+        .toList(growable: false);
+
+    if (usesInkRecipe) {
+      final rowSurface =
+          selected ? surfaces.settingsHero : surfaces.catalogSelection;
+      final rowForeground = tonosForegroundForSurface(context, rowSurface);
+      final rowBorder = tonosOutlineForSurface(context, rowSurface);
+      final rowShape = RoundedRectangleBorder(
+        borderRadius: shapes.compact,
+        side: BorderSide(
+          color: selected ? colorScheme.secondary : rowBorder,
+          width: selected ? 3 : 2,
+        ),
+      );
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          borderRadius: shapes.compact,
+          boxShadow: [
+            BoxShadow(
+              color: effects.cardShadow,
+              blurRadius: effects.cardShadowBlur,
+              offset: effects.cardShadowOffset,
+            ),
+          ],
+        ),
+        child: Material(
+          color: rowSurface,
+          shape: rowShape,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: _buildContent(
+                context,
+                theme,
+                colorScheme,
+                equipment,
+                rowForeground,
+                rowSurface,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 10),
-      color:
-          selected
-              ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-              : null,
+      color: selected ? surfaces.catalogSelection : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: selected ? colorScheme.primary : colorScheme.outlineVariant,
+          color: selected ? colorScheme.primary : surfaces.catalogOutline,
           width: selected ? 1.5 : 1,
         ),
       ),
@@ -634,43 +852,73 @@ class _ExerciseCatalogBar extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      definition.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (equipmentText.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        equipmentText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              _ExerciseInfoMediaButton(
-                definition: definition,
-                onTap: onHeatmapTap,
-              ),
-            ],
+          child: _buildContent(
+            context,
+            theme,
+            colorScheme,
+            equipment,
+            colorScheme.onSurface,
+            null,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+    List<CatalogEntityDisplayName> equipment,
+    Color foreground,
+    Color? foregroundSurface,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LocalizedExerciseName(
+                definition: definition,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (equipment.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                LocalizedCatalogEntityNamesBuilder(
+                  entities: equipment,
+                  builder:
+                      (context, names) => Text(
+                        names.join(', '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color:
+                              foregroundSurface == null
+                                  ? colorScheme.onSurfaceVariant
+                                  : tonosSecondaryForegroundForSurface(
+                                    context,
+                                    foregroundSurface,
+                                  ),
+                        ),
+                      ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        _ExerciseInfoMediaButton(
+          definition: definition,
+          onTap: onHeatmapTap,
+          heatmapSurface: foregroundSurface,
+        ),
+      ],
     );
   }
 }
@@ -678,10 +926,12 @@ class _ExerciseCatalogBar extends StatelessWidget {
 class _ExerciseInfoMediaButton extends StatelessWidget {
   final ExerciseDefinition definition;
   final VoidCallback onTap;
+  final Color? heatmapSurface;
 
   const _ExerciseInfoMediaButton({
     required this.definition,
     required this.onTap,
+    this.heatmapSurface,
   });
 
   @override
@@ -695,6 +945,7 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         padding: EdgeInsets.zero,
         framed: false,
+        heatmapSurface: heatmapSurface,
         onTap: onTap,
       ),
     );

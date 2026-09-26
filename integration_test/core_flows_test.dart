@@ -131,6 +131,23 @@ void main() {
     await _waitFor(tester, find.text('Tell us the basics'));
     expect(find.text('Tell us the basics'), findsOneWidget);
 
+    // Cover the supported quick-start branch: declining to choose a focus must
+    // show the confirmation and still leave the app with a usable home state.
+    _logPhase('skip optional onboarding setup');
+    await _tapAndWait(tester, find.widgetWithText(FilledButton, 'Next'));
+    await _tapAndWait(tester, find.widgetWithText(FilledButton, 'Next'));
+    await _waitFor(tester, find.byType(AlertDialog));
+    final skipDialog = find.byType(AlertDialog);
+    await _tapAndWait(
+      tester,
+      find.descendant(of: skipDialog, matching: find.byType(FilledButton)),
+    );
+    await _waitFor(tester, find.byKey(AppTestKeys.mainTab('train')));
+    expect(
+      (await SharedPreferences.getInstance()).getBool('onboarding_completed'),
+      isTrue,
+    );
+
     // Recreate all providers from the configured fixture rather than retaining
     // the first-install onboarding state for the training flow.
     await tester.pumpWidget(const SizedBox.shrink());
@@ -263,7 +280,7 @@ void main() {
       contains('UI Created Plan'),
     );
 
-    await tester.pageBack();
+    await _pressSystemBack(tester);
     await _waitFor(tester, find.byKey(AppTestKeys.trainOverviewTab));
     await _tapAndWait(tester, find.byKey(AppTestKeys.trainOverviewTab));
 
@@ -374,7 +391,7 @@ void main() {
       contains('UI Saved Workout Plan'),
     );
 
-    await tester.pageBack();
+    await _pressSystemBack(tester);
     await _waitFor(tester, find.byKey(AppTestKeys.mainTab('profile')));
     await _tapAndWait(tester, find.byKey(AppTestKeys.mainTab('profile')));
 
@@ -391,7 +408,7 @@ void main() {
     await _waitFor(tester, find.text('Changes saved'));
     expect((await repository.fetchPersonalInfo())?.name, 'UI Profile Name');
 
-    await tester.pageBack();
+    await _pressSystemBack(tester);
     await _waitFor(tester, find.byKey(AppTestKeys.profileDatabaseSettings));
     await _tapAndWait(tester, find.byKey(AppTestKeys.profileDatabaseSettings));
 
@@ -431,6 +448,7 @@ void main() {
     );
 
     await _tapAndWait(tester, find.byKey(AppTestKeys.databaseExport));
+    await _tapAndWait(tester, find.byKey(AppTestKeys.databaseConfirmExport));
     await _waitFor(tester, find.byKey(AppTestKeys.databaseResultClose));
     expect(exportedBytes, isNotNull);
     await _tapAndWait(tester, find.byKey(AppTestKeys.databaseResultClose));
@@ -450,5 +468,107 @@ void main() {
     expect(saveCallCount, 2, reason: 'Import must save a safety backup first.');
     expect((await repository.fetchPersonalInfo())?.name, 'UI Profile Name');
     await _tapAndWait(tester, find.byKey(AppTestKeys.databaseResultClose));
+
+    // A user who declines the mandatory safety-backup destination must keep the
+    // existing local database intact. Exercise this through the import dialog,
+    // not by calling import code directly.
+    _logPhase('cancel import when safety backup is not saved');
+    await repository.savePersonalInfo(PersonalInfo(name: 'Keep after cancel'));
+    var cancelSafetyBackup = true;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_filePickerChannel, (call) async {
+          if (call.method == 'save') {
+            if (cancelSafetyBackup) return null;
+            saveCallCount++;
+            return 'content://tonos-integration/export-$saveCallCount.json';
+          }
+          if (call.method == 'custom') {
+            final bytes = exportedBytes;
+            if (bytes == null) return null;
+            return <Map<String, Object?>>[
+              {
+                'name': 'ui-integration-export.json',
+                'path': null,
+                'bytes': bytes,
+                'size': bytes.length,
+                'identifier': 'content://tonos-integration/import.json',
+              },
+            ];
+          }
+          return null;
+        });
+    await _tapAndWait(tester, find.byKey(AppTestKeys.databaseImport));
+    await _tapAndWait(tester, find.byKey(AppTestKeys.databaseConfirmImport));
+    await tester.pump(const Duration(seconds: 1));
+    expect((await repository.fetchPersonalInfo())?.name, 'Keep after cancel');
+    cancelSafetyBackup = false;
+
+    await _pressSystemBack(tester);
+    _logPhase('log measurement through the Measurements UI');
+    await _tapAndWait(tester, find.byKey(AppTestKeys.profileProgressSettings));
+    await _tapAndWait(
+      tester,
+      find.byKey(AppTestKeys.progressMeasurementLibrary),
+    );
+    final definitions = await repository.fetchClassMeasurementDefinitions();
+    final weightDefinition = definitions.firstWhere(
+      (definition) => definition.type == MeasurementType.BodyWeight,
+    );
+    await _waitFor(
+      tester,
+      find.byKey(AppTestKeys.measurementTrend(weightDefinition.id)),
+    );
+    final addMeasurement = find.byKey(
+      AppTestKeys.measurementTrendAdd(weightDefinition.id),
+    );
+    await _tapAndWait(tester, addMeasurement);
+    await tester.enterText(
+      find.byKey(AppTestKeys.measurementEntryValue),
+      '180',
+    );
+    await tester.enterText(find.byKey(AppTestKeys.measurementEntryUnit), 'lbs');
+    await _hideKeyboard(tester);
+    await _tapAndWait(tester, find.byKey(AppTestKeys.measurementEntrySave));
+    await _waitFor(
+      tester,
+      find.byKey(AppTestKeys.measurementTrend(weightDefinition.id)),
+    );
+    expect(
+      await repository.fetchClassMeasurementsForDefinition(weightDefinition.id),
+      isNotEmpty,
+    );
+
+    await _pressSystemBack(tester);
+    await _pressSystemBack(tester);
+    await _waitFor(tester, find.byKey(AppTestKeys.profileUiAppearance));
+    _logPhase('persist navigation configuration through settings UI');
+    await _tapAndWait(tester, find.byKey(AppTestKeys.profileUiAppearance));
+    await _tapAndWait(tester, find.byKey(AppTestKeys.uiAppearanceNavigation));
+    final catalogSwitch = find.descendant(
+      of: find.byKey(const ValueKey('active-catalog')),
+      matching: find.byType(Switch),
+    );
+    await _tapAndWait(tester, catalogSwitch);
+    await _tapAndWait(tester, find.byKey(AppTestKeys.navigationSave));
+    await _waitFor(tester, find.text('Bottom tabs saved'));
+    await _pressSystemBack(tester);
+    await _pressSystemBack(tester);
+    expect(find.byKey(AppTestKeys.mainTab('catalog')), findsNothing);
+    final savedEnabledTabs = (await SharedPreferences.getInstance())
+        .getStringList('navBarEnabled');
+    expect(savedEnabledTabs, isNotNull);
+    expect(savedEnabledTabs, isNot(contains('TabItem.catalog')));
+
+    _logPhase('switch locale through settings UI');
+    await _tapAndWait(tester, find.byKey(AppTestKeys.profileUiAppearance));
+    await _tapAndWait(tester, find.byKey(AppTestKeys.uiAppearanceLanguage));
+    await _tapAndWait(tester, find.text('Spanish'));
+    await _waitFor(tester, find.text('UI y apariencia'));
+    expect(
+      (await SharedPreferences.getInstance()).getString(
+        'app_language_preference',
+      ),
+      'spanish',
+    );
   });
 }

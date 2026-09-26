@@ -53,8 +53,7 @@ class _NutritionDashState extends State<NutritionDash>
     super.build(context);
     final s = widget.scale;
 
-    // pull in our theme extension
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
 
     final detailWidgets = <Widget>[
       NutritionCircleDetails(
@@ -109,7 +108,10 @@ class _NutritionDashState extends State<NutritionDash>
           children: List.generate(detailWidgets.length, (idx) {
             final selected = idx == _currentPage;
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: appMotionDuration(
+                context,
+                context.motionTokens.standard,
+              ),
               margin: EdgeInsets.symmetric(horizontal: 4 * s, vertical: 1 * s),
               width: selected ? 12 * s : 8 * s,
               height: selected ? 12 * s : 8 * s,
@@ -117,8 +119,8 @@ class _NutritionDashState extends State<NutritionDash>
                 shape: BoxShape.circle,
                 color:
                     selected
-                        ? colors.nutritionPageIndicatorActive!
-                        : colors.nutritionPageIndicatorInactive!,
+                        ? dataVisualization.paginationActive
+                        : dataVisualization.paginationInactive,
               ),
             );
           }),

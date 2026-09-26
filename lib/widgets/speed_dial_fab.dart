@@ -2,12 +2,12 @@
 // for logging food intake and measurements
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/food_logging_page.dart';
-import '../screens/new_measurement_item_page.dart';
+import '../screens/nutrition/measured_items_page.dart';
+import '../theme/theme_extensions.dart';
 
-/// A toggleable FAB that expands into two actions:
-/// • Log Food → FoodLoggingPage
-/// • Log Measurement → NewMeasurementItemPage
+/// A toggleable FAB that expands into food and measurement actions.
 ///
 /// Pass [onFoodLogged] / [onMeasurementLogged] to react after a successful log.
 class SpeedDialFab extends StatefulWidget {
@@ -26,6 +26,8 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+
     return SizedBox(
       width: 160,
       child: Column(
@@ -36,7 +38,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             FloatingActionButton.extended(
               heroTag: 'log_food',
               icon: const Icon(Icons.restaurant),
-              label: const Text('Log Food'),
+              label: Text(strings.speedDialLogFood),
               onPressed: () async {
                 _toggle();
                 final changed = await Navigator.of(context).push<bool>(
@@ -52,13 +54,11 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             FloatingActionButton.extended(
               heroTag: 'log_measurement',
               icon: const Icon(Icons.straighten),
-              label: const Text('Log Measurement'),
+              label: Text(strings.speedDialLogMeasurement),
               onPressed: () async {
                 _toggle();
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder: (_) => const NewMeasurementItemPage(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
                 );
                 if (!mounted) return;
                 if (changed == true) {
@@ -73,7 +73,10 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
             onPressed: _toggle,
             child: AnimatedRotation(
               turns: _open ? 0.125 : 0,
-              duration: const Duration(milliseconds: 200),
+              duration: appMotionDuration(
+                context,
+                context.motionTokens.standard,
+              ),
               child: const Icon(Icons.add),
             ),
           ),

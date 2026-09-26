@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/premade_training_plans.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
 import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
@@ -13,15 +14,21 @@ import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/preset_generation_service.dart';
+import '../../services/tutorial_state_store.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_action.dart';
+import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_surface.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
 import '../../widgets/generic_bar.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/presets_loaded.dart';
 import '../../widgets/seven_day_focus_card.dart';
-import '../../services/tutorial_state_store.dart';
+import '../../widgets/tonos_train_tabs.dart';
 import 'analytics_dashboard_screen.dart';
 import 'gym_profile_screen.dart';
 import 'optimized_workout_settings_page.dart';
@@ -224,12 +231,32 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _createManualPreset(SelectedProfile sel) async {
+    try {
+      await _createManualPresetImpl(sel);
+    } catch (error, stack) {
+      assert(() {
+        debugPrint('Manual plan creation failed: $error');
+        debugPrintStack(stackTrace: stack);
+        return true;
+      }());
+      rethrow;
+    }
+  }
+
+  Future<void> _createManualPresetImpl(SelectedProfile sel) async {
     final profileId = sel.currentProfile?.id;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNum = existing.length + 1;
     if (!mounted) return;
     final name = AppLocalizations.of(context).trainNewPlanName(nextNum);
-    final newId = await _repo.createPreset(name, profileId: profileId);
+    await ActivePlanStore(repository: _repo).load(profileId);
+    final newId = await _repo.createPresetAtomic(
+      name: name,
+      profileId: profileId,
+      exercises: const [],
+      activate: true,
+      uniqueName: true,
+    );
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
     await _openPreset(newId);
@@ -313,10 +340,9 @@ class _TrainPageState extends State<TrainPage> {
     Set<int>? blacklistedBodypartIds,
   }) {
     final now = DateTime.now();
-    final date =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final time =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final locale = Localizations.localeOf(context);
+    final date = LocalizedFormatters.date(now, locale);
+    final time = LocalizedFormatters.time(now, locale);
     final minSets = minSetsPerExercise ?? _optimizedMinSetsPerExercise;
     final strings = AppLocalizations.of(context);
     return SessionSpec(
@@ -412,15 +438,17 @@ class _TrainPageState extends State<TrainPage> {
     return showDialog<void>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: Text(strings.trainRestTitle),
-            content: Text(strings.trainRestBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(strings.commonOkay),
-              ),
-            ],
+          (dialogContext) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.trainRestTitle),
+              content: Text(strings.trainRestBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(strings.commonOkay),
+                ),
+              ],
+            ),
           ),
     );
   }
@@ -544,7 +572,9 @@ class _TrainPageState extends State<TrainPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).trainOptimizedStartFailed('$e'),
+            AppLocalizations.of(context).trainOptimizedStartFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -600,6 +630,7 @@ class _TrainPageState extends State<TrainPage> {
 
     return Consumer<SelectedProfile>(
       builder: (context, sel, _) {
+        final avatarForeground = context.semanticColors.onTrainProfileAvatar;
         return Scaffold(
           key: _scaffoldKey,
           endDrawer: ProfileDrawer(
@@ -642,8 +673,13 @@ class _TrainPageState extends State<TrainPage> {
           ),
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            title: _TrainTabs(
+            toolbarHeight: TonosTrainTabs.toolbarHeight(context),
+            title: TonosTrainTabs(
               key: _trainTabsTutorialKey,
+              overviewKey: AppTestKeys.trainOverviewTab,
+              plansKey: AppTestKeys.trainPlansTab,
+              overviewLabel: strings.trainOverviewTab,
+              plansLabel: strings.trainPlansTab,
               selectedIndex: _selectedTab,
               onChanged: (index) {
                 setState(() => _selectedTab = index);
@@ -664,11 +700,12 @@ class _TrainPageState extends State<TrainPage> {
                   onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                   icon: CircleAvatar(
                     radius: 18,
-                    backgroundColor: Colors.lightGreen,
+                    backgroundColor:
+                        ProfileIdentityPalette.currentProfileAvatar,
                     child: Text(
                       _profileInitial(sel.currentProfile?.name),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: avatarForeground,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -722,88 +759,6 @@ class _TrainPageState extends State<TrainPage> {
     final trimmed = name?.trim();
     if (trimmed == null || trimmed.isEmpty) return 'P';
     return trimmed.substring(0, 1).toUpperCase();
-  }
-}
-
-class _TrainTabs extends StatelessWidget {
-  const _TrainTabs({
-    super.key,
-    required this.selectedIndex,
-    required this.onChanged,
-  });
-
-  final int selectedIndex;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final strings = AppLocalizations.of(context);
-    return Container(
-      height: 44,
-      constraints: const BoxConstraints(maxWidth: 320),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        children: [
-          _TabButton(
-            key: AppTestKeys.trainOverviewTab,
-            label: strings.trainOverviewTab,
-            selected: selectedIndex == 0,
-            onTap: () => onChanged(0),
-          ),
-          _TabButton(
-            key: AppTestKeys.trainPlansTab,
-            label: strings.trainPlansTab,
-            selected: selectedIndex == 1,
-            onTap: () => onChanged(1),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  const _TabButton({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Material(
-        color: selected ? colorScheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(999),
-          onTap: onTap,
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color:
-                    selected
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -919,72 +874,93 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: FutureBuilder<Set<int>>(
-          future: _selectedIdsFuture,
-          builder: (context, snapshot) {
-            final selectedIds = snapshot.data ?? const <int>{};
-            final isLoading =
-                snapshot.connectionState != ConnectionState.done &&
-                !snapshot.hasData;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        strings.trainActivePlans,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaceInk = context.cs.onPrimaryContainer;
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
+      child: FutureBuilder<Set<int>>(
+        future: _selectedIdsFuture,
+        builder: (context, snapshot) {
+          final selectedIds = snapshot.data ?? const <int>{};
+          final isLoading =
+              snapshot.connectionState != ConnectionState.done &&
+              !snapshot.hasData;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      strings.trainActivePlans,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: usesInkRecipe ? surfaceInk : null,
                       ),
                     ),
-                    IconButton(
-                      tooltip: strings.trainEditActivePlans,
-                      onPressed: isLoading ? null : _openPlanManagement,
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (widget.profileId == null)
-                  Text(
-                    strings.trainSelectProfileForPlans,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else if (selectedIds.isEmpty)
-                  Text(
-                    strings.trainChooseActivePlans,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else
-                  PresetsLoaded(
-                    scale: 0.92,
-                    refreshToken: widget.refreshToken,
-                    presetIds: selectedIds,
-                    planActiveState: true,
-                    padding: EdgeInsets.zero,
-                    physics: const NeverScrollableScrollPhysics(),
-                    emptyMessage: strings.trainSelectedPlansMissing,
-                    onRefresh: widget.onRefresh,
                   ),
-              ],
-            );
-          },
-        ),
+                  IconButton(
+                    tooltip: strings.trainEditActivePlans,
+                    onPressed: isLoading ? null : _openPlanManagement,
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (widget.profileId == null)
+                Text(
+                  strings.trainSelectProfileForPlans,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color:
+                        usesInkRecipe
+                            ? surfaceInk
+                            : theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              else if (selectedIds.isEmpty)
+                Text(
+                  strings.trainChooseActivePlans,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color:
+                        usesInkRecipe
+                            ? surfaceInk
+                            : theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              else
+                PresetsLoaded(
+                  scale: 0.92,
+                  refreshToken: widget.refreshToken,
+                  presetIds: selectedIds,
+                  planActiveState: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  emptyMessage: strings.trainSelectedPlansMissing,
+                  onRefresh: widget.onRefresh,
+                ),
+            ],
+          );
+        },
       ),
+    );
+    if (usesInkRecipe) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: surfaces.planGroup,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    return Card(
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 }
@@ -1074,6 +1050,7 @@ class _PlansTabState extends State<_PlansTab> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final dataVisualization = context.dataVisualizationTokens;
     return FutureBuilder<Set<int>>(
       future: _activePresetIdsFuture,
       builder: (context, snapshot) {
@@ -1129,14 +1106,14 @@ class _PlansTabState extends State<_PlansTab> {
             const SizedBox(height: 16),
             GenericBar(
               label: strings.trainGenerateCustomPlans,
-              color: Colors.purple,
+              color: dataVisualization.tertiarySeries,
               onTap: widget.onGeneratePreset,
             ),
             const SizedBox(height: 8),
             GenericBar(
               key: AppTestKeys.trainCreateManualPlan,
               label: strings.trainManuallyAddPlan,
-              color: Colors.purple,
+              color: dataVisualization.tertiarySeries,
               onTap: widget.onCreatePreset,
             ),
           ],
@@ -1161,35 +1138,50 @@ class _PresetSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaceInk = context.cs.onPrimaryContainer;
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: usesInkRecipe ? surfaceInk : null,
                   ),
                 ),
-                if (onEdit != null)
-                  IconButton(
-                    tooltip: strings.trainManagePlans,
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            child,
-          ],
-        ),
+              ),
+              if (onEdit != null)
+                IconButton(
+                  tooltip: strings.trainManagePlans,
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
       ),
+    );
+    if (usesInkRecipe) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: surfaces.planGroup,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    return Card(
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 }
@@ -1203,51 +1195,102 @@ class _PremadePlansCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_stories_outlined,
-                  color: theme.colorScheme.primary,
-                  size: 32,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    strings.trainPremadePlans,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+    final surfaces = context.surfaceTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaceInk = context.cs.onPrimaryContainer;
+    final content = _withPanelInkTheme(
+      context: context,
+      usesInkRecipe: usesInkRecipe,
+      foreground: surfaceInk,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_stories_outlined,
+                color: theme.colorScheme.primary,
+                size: 32,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  strings.trainPremadePlans,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: usesInkRecipe ? surfaceInk : null,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              strings.trainPremadeDescription(premadeTrainingPlans.length),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
               ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.trainPremadeDescription(premadeTrainingPlans.length),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color:
+                  usesInkRecipe
+                      ? surfaceInk
+                      : theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.tonalIcon(
-                onPressed: onOpen,
-                icon: const Icon(Icons.arrow_forward),
-                label: Text(strings.trainBrowsePremadePlans),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child:
+                usesInkRecipe
+                    ? TonosAction(
+                      variant: TonosActionVariant.primary,
+                      label: strings.trainBrowsePremadePlans,
+                      icon: const Icon(Icons.arrow_forward),
+                      onPressed: onOpen,
+                      expand: true,
+                    )
+                    : FilledButton.tonalIcon(
+                      onPressed: onOpen,
+                      icon: const Icon(Icons.arrow_forward),
+                      label: Text(strings.trainBrowsePremadePlans),
+                    ),
+          ),
+        ],
       ),
     );
+    if (usesInkRecipe) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panelRaised,
+        color: surfaces.optimizedAction,
+        padding: const EdgeInsets.all(16),
+        child: content,
+      );
+    }
+    return Card(
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
+    );
   }
+}
+
+Widget _withPanelInkTheme({
+  required BuildContext context,
+  required bool usesInkRecipe,
+  required Color foreground,
+  required Widget child,
+}) {
+  if (!usesInkRecipe) return child;
+
+  final theme = Theme.of(context);
+  return Theme(
+    data: theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: foreground,
+        onSurfaceVariant: foreground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: foreground,
+        displayColor: foreground,
+      ),
+    ),
+    child: child,
+  );
 }
 
 class _SplitWorkoutBar extends StatelessWidget {
@@ -1265,205 +1308,250 @@ class _SplitWorkoutBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final colorScheme = context.cs;
+    final semantic = context.semanticColors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final effects = context.effectTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final textTheme = Theme.of(context).textTheme;
     final strings = AppLocalizations.of(context);
-    final green = Colors.green.shade700;
+    final startWorkoutAction = semantic.startWorkoutAction;
+    final onStartWorkoutAction = semantic.onStartWorkoutAction;
+    final optimizeAction =
+        usesInkRecipe ? surfaces.optimizedAction : colorScheme.primaryContainer;
+    final onOptimizeAction =
+        usesInkRecipe
+            ? colorScheme.onSecondaryContainer
+            : colorScheme.onPrimaryContainer;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final usesClassicPresentation = context.usesClassicPresentation;
+    // This action bar serves all languages. Its layout follows available phone
+    // width and text scaling in Neo. Classic retains its compact baseline at
+    // ordinary text sizes, then reflows only when accessibility text needs it.
     final useVerticalLayout =
-        Localizations.localeOf(context).languageCode != 'en' &&
-        MediaQuery.textScalerOf(context).scale(1) > 1.15;
+        usesClassicPresentation
+            ? textScale > 1.15 &&
+                (languageCode != 'en' || MediaQuery.sizeOf(context).width < 380)
+            : textScale > 1.15 || MediaQuery.sizeOf(context).width < 380;
+    final actionBarHeight = textScale > 1.5 ? 152.0 : 120.0;
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        clipBehavior: Clip.antiAlias,
-        elevation: 8,
-        child: SizedBox(
-          height: useVerticalLayout ? 120 : 64,
-          child:
-              useVerticalLayout
-                  ? Column(
-                    children: [
-                      Expanded(
-                        child: Material(
-                          color: green,
-                          child: InkWell(
-                            key: AppTestKeys.trainStartWorkout,
-                            onTap: onStartWorkout,
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: Text(
-                                  strings.trainStartWorkout,
-                                  maxLines: 2,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        height: 1,
-                        color: colorScheme.outline.withValues(alpha: 0.18),
-                      ),
-                      Expanded(
-                        child: Material(
-                          color: colorScheme.primaryContainer,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: InkWell(
-                                  onTap:
-                                      isStartingOptimized
-                                          ? null
-                                          : onOptimizeWorkout,
-                                  child: Center(
-                                    child:
-                                        isStartingOptimized
-                                            ? SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color:
-                                                    colorScheme
-                                                        .onPrimaryContainer,
-                                              ),
-                                            )
-                                            : Text(
-                                              strings.trainOptimize,
-                                              maxLines: 2,
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color:
-                                                    colorScheme
-                                                        .onPrimaryContainer,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                tooltip: strings.trainOptimizedSettings,
-                                onPressed:
-                                    isStartingOptimized
-                                        ? null
-                                        : onOptimizeSettings,
-                                icon: const Icon(Icons.settings_outlined),
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: shapes.sheet,
+          border:
+              usesInkRecipe
+                  ? Border.all(
+                    color: surfaces.subtleOutline,
+                    width: shapes.outlineWidth,
                   )
-                  : Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Material(
-                          color: green,
-                          child: InkWell(
-                            key: AppTestKeys.trainStartWorkout,
-                            onTap: onStartWorkout,
-                            child: Center(
-                              child: Text(
-                                strings.trainStartWorkout,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
+                  : null,
+          boxShadow:
+              usesInkRecipe
+                  ? [
+                    BoxShadow(
+                      color: effects.cardShadow,
+                      blurRadius: effects.cardShadowBlur,
+                      offset: effects.primaryActionShadowOffset,
+                    ),
+                  ]
+                  : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: shapes.sheet,
+          clipBehavior: Clip.antiAlias,
+          elevation: effects.sheetElevation,
+          child: SizedBox(
+            height: useVerticalLayout ? actionBarHeight : 64,
+            child:
+                useVerticalLayout
+                    ? Column(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: startWorkoutAction,
+                            child: InkWell(
+                              key: AppTestKeys.trainStartWorkout,
+                              onTap: onStartWorkout,
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    strings.trainStartWorkout,
+                                    maxLines: 2,
+                                    textAlign: TextAlign.center,
+                                    style: textTheme.titleMedium?.copyWith(
+                                      color: onStartWorkoutAction,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: double.infinity,
-                        color: colorScheme.outline.withValues(alpha: 0.18),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Material(
-                          color: colorScheme.primaryContainer,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: InkWell(
-                                  onTap:
-                                      isStartingOptimized
-                                          ? null
-                                          : onOptimizeWorkout,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 36),
+                        Container(
+                          height: 1,
+                          color: colorScheme.outline.withValues(
+                            alpha: surfaces.splitWorkoutDividerOpacity,
+                          ),
+                        ),
+                        Expanded(
+                          child: Material(
+                            color: optimizeAction,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap:
+                                        isStartingOptimized
+                                            ? null
+                                            : onOptimizeWorkout,
                                     child: Center(
                                       child:
                                           isStartingOptimized
                                               ? SizedBox(
                                                 width: 18,
                                                 height: 18,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  color:
-                                                      colorScheme
-                                                          .onPrimaryContainer,
-                                                ),
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: onOptimizeAction,
+                                                    ),
                                               )
                                               : Text(
                                                 strings.trainOptimize,
+                                                maxLines: 2,
                                                 textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color:
-                                                      colorScheme
-                                                          .onPrimaryContainer,
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 14,
-                                                ),
+                                                style: textTheme.bodyMedium
+                                                    ?.copyWith(
+                                                      color:
+                                                          colorScheme
+                                                              .onPrimaryContainer,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
                                               ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: IconButton(
+                                IconButton(
                                   tooltip: strings.trainOptimizedSettings,
                                   onPressed:
                                       isStartingOptimized
                                           ? null
                                           : onOptimizeSettings,
                                   icon: const Icon(Icons.settings_outlined),
-                                  iconSize: 19,
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                    minHeight: 64,
-                                  ),
                                   color: colorScheme.onPrimaryContainer,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                    : Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Material(
+                            color: startWorkoutAction,
+                            child: InkWell(
+                              key: AppTestKeys.trainStartWorkout,
+                              onTap: onStartWorkout,
+                              child: Center(
+                                child: Text(
+                                  strings.trainStartWorkout,
+                                  style: textTheme.titleMedium?.copyWith(
+                                    color: onStartWorkoutAction,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: double.infinity,
+                          color: colorScheme.outline.withValues(
+                            alpha: surfaces.splitWorkoutDividerOpacity,
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Material(
+                            color: optimizeAction,
+                            child: Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: InkWell(
+                                    onTap:
+                                        isStartingOptimized
+                                            ? null
+                                            : onOptimizeWorkout,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 36),
+                                      child: Center(
+                                        child:
+                                            isStartingOptimized
+                                                ? SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color:
+                                                        colorScheme
+                                                            .onPrimaryContainer,
+                                                  ),
+                                                )
+                                                : Text(
+                                                  strings.trainOptimize,
+                                                  textAlign: TextAlign.center,
+                                                  style: textTheme.bodyMedium
+                                                      ?.copyWith(
+                                                        color: onOptimizeAction,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                      ),
+                                                ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: IconButton(
+                                    tooltip: strings.trainOptimizedSettings,
+                                    onPressed:
+                                        isStartingOptimized
+                                            ? null
+                                            : onOptimizeSettings,
+                                    icon: const Icon(Icons.settings_outlined),
+                                    iconSize: 19,
+                                    visualDensity: VisualDensity.compact,
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 36,
+                                      minHeight: 64,
+                                    ),
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+          ),
         ),
       ),
     );

@@ -8,6 +8,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../utils/tutorial_launcher.dart';
+import '../../theme/theme_extensions.dart';
 
 enum OptimizedWorkoutSettingsAction { save, startNow }
 
@@ -227,6 +228,7 @@ class _OptimizedWorkoutSettingsPageState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -454,8 +456,8 @@ class _OptimizedWorkoutSettingsPageState
                   onPressed:
                       () => _submit(OptimizedWorkoutSettingsAction.startNow),
                   style: FilledButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
+                    backgroundColor: semantic.startWorkoutAction,
+                    foregroundColor: semantic.onStartWorkoutAction,
                   ),
                   child: Text(strings.commonStartNow),
                 ),
@@ -540,9 +542,16 @@ class _FloatingHeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.optimizedAction)
+            : null;
     return Material(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.92),
-      borderRadius: BorderRadius.circular(999),
+      color: surfaces.optimizedAction,
+      borderRadius: shapes.pill,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPressed,
@@ -551,11 +560,12 @@ class _FloatingHeaderButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18),
+              Icon(icon, color: foreground, size: 18),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: theme.textTheme.labelLarge?.copyWith(
+                  color: foreground,
                   fontWeight: FontWeight.w800,
                 ),
               ),

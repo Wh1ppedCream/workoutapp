@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../theme/widgets/tonos_dialog.dart';
 
 class RecommendedSetsEditButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -16,9 +17,9 @@ class RecommendedSetsEditButton extends StatelessWidget {
     );
     return Semantics(
       button: true,
-      // Keep this shared control usable in lightweight widget hosts that do
-      // not install the app localization delegate.
-      label: strings?.recommendedSetsEdit ?? 'Edit recommended sets',
+      // Lightweight widget hosts may omit localization; avoid leaking an
+      // English fallback into the accessibility tree in that case.
+      label: strings?.recommendedSetsEdit ?? '',
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onPressed,
@@ -41,10 +42,13 @@ Future<VolumeBoundaries?> showRecommendedSetsEditorDialog(
   return showDialog<VolumeBoundaries>(
     context: context,
     builder:
-        (_) => _RecommendedSetsEditorDialog(
-          targetName: targetName,
-          targetId: targetId,
-          currentBounds: currentBounds,
+        (_) => TonosDialogFrame(
+          styleFormControls: true,
+          child: _RecommendedSetsEditorDialog(
+            targetName: targetName,
+            targetId: targetId,
+            currentBounds: currentBounds,
+          ),
         ),
   );
 }

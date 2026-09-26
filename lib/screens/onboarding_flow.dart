@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_tutorial_tokens.dart';
+import '../theme/widgets/tonos_dialog.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../providers/locale_preference_provider.dart';
@@ -12,9 +16,14 @@ import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../services/catalog_entity_localizer.dart';
+import '../utils/localized_digit_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../widgets/body_heatmap.dart';
+import '../widgets/localized_catalog_entity_name.dart';
 import '../widgets/preset_bar.dart';
+import '../widgets/settings_tiles.dart';
 import 'exercise/gym_profile_screen.dart';
 import 'exercise/premade_plans_page.dart';
 import 'exercise/preset_detail_screen.dart';
@@ -283,7 +292,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       if (!mounted) return;
       setState(() => _isFinishing = false);
       messenger.showSnackBar(
-        SnackBar(content: Text(_strings.onboardingFinishError('$error'))),
+        SnackBar(
+          content: Text(
+            _strings.onboardingFinishError(safeFailureMessage(_strings, error)),
+          ),
+        ),
       );
     }
   }
@@ -397,11 +410,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return;
     }
 
-    _controller.animateToPage(
-      equipmentPageIndex,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
+    _goToPage(equipmentPageIndex);
   }
 
   void _resetGymEquipment() {
@@ -464,22 +473,27 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       (_nutritionOnboardingEnabled && _useNutritionData) || _useExerciseData;
 
   Future<bool> _confirmSkipOnboarding() async {
+    // The confirmation route can outlive this page during an app teardown.
+    // Capture localized copy now instead of reading from a disposed context.
+    final strings = _strings;
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(_strings.onboardingSkipSetupTitle),
-          content: Text(_strings.onboardingSkipSetupBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(_strings.onboardingCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(_strings.onboardingConfirm),
-            ),
-          ],
+        return TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.onboardingSkipSetupTitle),
+            content: Text(strings.onboardingSkipSetupBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(strings.onboardingCancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(strings.onboardingConfirm),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -543,10 +557,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     }
 
     if (_currentPage < lastPageIndex) {
-      _controller.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+      _goToPage(_currentPage + 1);
       return;
     }
     _finishOnboarding();
@@ -578,10 +589,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       _finishOnboarding();
       return;
     }
-    _controller.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
+    _goToPage(_currentPage + 1);
   }
 
   Future<void> _openOnboardingPremadePlans() async {
@@ -714,8 +722,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   void _previousAction() {
     if (_currentPage <= 0) return;
-    _controller.previousPage(
-      duration: const Duration(milliseconds: 300),
+    _goToPage(_currentPage - 1);
+  }
+
+  void _goToPage(int page) {
+    final duration = tutorialMotion(
+      context,
+      context.tutorialTokens.pageDuration,
+    );
+    if (duration == Duration.zero) {
+      _controller.jumpToPage(page);
+      return;
+    }
+    _controller.animateToPage(
+      page,
+      duration: duration,
       curve: Curves.easeOutCubic,
     );
   }
@@ -813,6 +834,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget _buildWelcomePage() {
     final strings = _strings;
     final language = context.watch<LocalePreferenceProvider>().preference;
+    final theme = Theme.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.settingsSection)
+            : theme.colorScheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.settingsSection,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     return _OnboardingCard(
       icon: Icons.favorite,
       title: strings.onboardingWelcomeTitle,
@@ -820,9 +855,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         Text(
           strings.onboardingLanguageSelectionTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: neo ? cardForeground : null,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         const SizedBox(height: 10),
         DropdownButtonFormField<AppLanguagePreference>(
@@ -856,9 +892,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 8),
         Text(
           strings.onboardingLanguageSelectionHelp,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
         ),
         const SizedBox(height: 20),
         _FeatureRow(
@@ -1185,6 +1219,36 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildNutritionGoalPage() {
     final strings = _strings;
+    final locale = Localizations.localeOf(context);
+    final goalWeight = LocalizedFormatters.number(
+      _goalWeightValue.round(),
+      locale,
+      maximumFractionDigits: 0,
+    );
+    final weeklyRatePct = LocalizedFormatters.number(
+      _weeklyRatePct,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final weeklyRateLbs = LocalizedFormatters.number(
+      _weeklyRateLbs,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final monthlyRatePct = LocalizedFormatters.number(
+      _monthlyRatePct,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
+    final monthlyRateLbs = LocalizedFormatters.number(
+      _monthlyRateLbs,
+      locale,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    );
     return _OnboardingCard(
       icon: Icons.flag_outlined,
       title: strings.onboardingGoalPaceTitle,
@@ -1212,30 +1276,26 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 22),
         _SliderPanel(
           title: strings.onboardingTargetWeight,
-          valueLabel: '${_goalWeightValue.round()} lbs',
+          valueLabel: '$goalWeight lbs',
           child: Slider(
             value: _goalWeightValue,
             min: 100,
             max: 250,
             divisions: 150,
-            label: '${_goalWeightValue.round()}',
+            label: goalWeight,
             onChanged: (value) => setState(() => _goalWeightValue = value),
           ),
         ),
         const SizedBox(height: 16),
         _SliderPanel(
           title: strings.onboardingTargetGoalRate,
-          valueLabel: strings.onboardingBodyWeightPerWeek(
-            _weeklyRatePct.toStringAsFixed(1),
-          ),
+          valueLabel: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
           child: Slider(
             value: _weeklyRatePct,
             min: 0.1,
             max: 1.0,
             divisions: 9,
-            label: strings.onboardingBodyWeightPerWeek(
-              _weeklyRatePct.toStringAsFixed(1),
-            ),
+            label: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
             onChanged:
                 (value) => setState(() {
                   _weeklyRatePct = value;
@@ -1251,16 +1311,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             Expanded(
               child: _MiniStat(
                 label: strings.onboardingPerWeek,
-                value:
-                    '-${_weeklyRateLbs.toStringAsFixed(1)} lbs / ${_weeklyRatePct.toStringAsFixed(1)}%',
+                value: '-$weeklyRateLbs lbs / $weeklyRatePct%',
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _MiniStat(
                 label: strings.onboardingPerMonth,
-                value:
-                    '-${_monthlyRateLbs.toStringAsFixed(1)} lbs / ${_monthlyRatePct.toStringAsFixed(1)}%',
+                value: '-$monthlyRateLbs lbs / $monthlyRatePct%',
               ),
             ),
           ],
@@ -1333,7 +1391,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           decoration: InputDecoration(
             labelText: strings.onboardingProfileNameLabel,
             prefixIcon: const Icon(Icons.edit_outlined),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+            border: OutlineInputBorder(
+              borderRadius: context.tutorialTokens.inputShape,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -1343,7 +1403,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             color: Theme.of(
               context,
             ).colorScheme.surface.withValues(alpha: 0.46),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: context.tutorialTokens.sectionShape,
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -1362,7 +1422,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                     ),
                   ),
                   Text(
-                    '${selectedEquipment.length}',
+                    LocalizedFormatters.number(
+                      selectedEquipment.length,
+                      Localizations.localeOf(context),
+                      maximumFractionDigits: 0,
+                    ),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w900,
@@ -1396,7 +1460,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                             _onboardingEquipmentIcon(equipment.name),
                             size: 17,
                           ),
-                          label: Text(equipment.name),
+                          label: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: equipment.catalogId,
+                              canonicalName: equipment.name,
+                            ),
+                          ),
                           visualDensity: VisualDensity.compact,
                         );
                       }).toList(),
@@ -1729,16 +1798,24 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       labelText: label,
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+      border: OutlineInputBorder(
+        borderRadius: context.tutorialTokens.inputShape,
+      ),
     );
   }
 
   String _formatDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 
   String _shortDate(DateTime date) {
-    return MaterialLocalizations.of(context).formatMediumDate(date);
+    return preserveWesternDigits(
+      MaterialLocalizations.of(context).formatMediumDate(date),
+      Localizations.localeOf(context),
+    );
   }
 }
 
@@ -1764,6 +1841,15 @@ class _OnboardingHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final progressSurface =
+        neo ? surfaces.settingsSection : scheme.surfaceContainerHighest;
+    final progressValue = neo ? surfaces.settingsHero : scheme.primary;
+    final progressSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, progressSurface)
+            : scheme.onSurfaceVariant;
     final progress = pageCount <= 1 ? 1.0 : (currentPage + 1) / pageCount;
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
@@ -1776,15 +1862,18 @@ class _OnboardingHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 48,
+                  width: 104,
                   child:
                       onBack == null
                           ? null
-                          : IconButton(
-                            onPressed: onBack,
-                            tooltip: strings.onboardingPreviousStepTooltip,
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.chevron_left, size: 26),
+                          : Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: onBack,
+                              tooltip: strings.onboardingPreviousStepTooltip,
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.chevron_left, size: 26),
+                            ),
                           ),
                 ),
                 Expanded(
@@ -1798,8 +1887,14 @@ class _OnboardingHeader extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 72,
-                  child: TextButton(onPressed: onSkip, child: Text(skipLabel)),
+                  width: 104,
+                  child: TextButton(
+                    onPressed: onSkip,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(skipLabel, maxLines: 1),
+                    ),
+                  ),
                 ),
               ],
             )
@@ -1851,19 +1946,19 @@ class _OnboardingHeader extends StatelessWidget {
             ),
         const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: context.tutorialTokens.pillShape,
           child: LinearProgressIndicator(
             value: progress,
             minHeight: 8,
-            backgroundColor: scheme.surfaceContainerHighest,
+            backgroundColor: progressSurface,
+            valueColor:
+                neo ? AlwaysStoppedAnimation<Color>(progressValue) : null,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           strings.onboardingStepProgress(currentPage + 1, pageCount),
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: progressSecondary),
         ),
       ],
     );
@@ -1887,15 +1982,35 @@ class _OnboardingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
 
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-          borderRadius: BorderRadius.circular(30),
+          color: cardSurface,
+          borderRadius:
+              neo ? shapes.settingsPanel : context.tutorialTokens.heroShape,
           border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.55),
+            color:
+                neo
+                    ? tonosOutlineForSurface(context, cardSurface)
+                    : scheme.outlineVariant.withValues(alpha: 0.55),
+            width: neo ? shapes.outlineWidth : 1,
           ),
         ),
         child: Column(
@@ -1905,24 +2020,30 @@ class _OnboardingCard extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.18),
+                color:
+                    neo
+                        ? surfaces.dialogChoice
+                        : scheme.primary.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: scheme.primary, size: 28),
+              child: Icon(
+                icon,
+                color: neo ? cardForeground : scheme.primary,
+                size: 28,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               title,
               style: theme.textTheme.headlineSmall?.copyWith(
+                color: neo ? cardForeground : null,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: cardSecondary),
             ),
             const SizedBox(height: 20),
             ...children,
@@ -1955,17 +2076,29 @@ class _TextInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final neo = context.surfaceDecorationTokens.panel.outlined;
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon),
-        suffixText: suffixText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-      ),
+      style: settingsInputTextStyle(context),
+      decoration:
+          neo
+              ? settingsFieldDecoration(
+                context,
+                label: label,
+                hint: hint,
+                suffixText: suffixText,
+              ).copyWith(prefixIcon: Icon(icon))
+              : InputDecoration(
+                labelText: label,
+                hintText: hint,
+                prefixIcon: Icon(icon),
+                suffixText: suffixText,
+                border: OutlineInputBorder(
+                  borderRadius: context.tutorialTokens.inputShape,
+                ),
+              ),
     );
   }
 }
@@ -1985,16 +2118,26 @@ class _ActionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final decoration =
+        neo
+            ? settingsFieldDecoration(
+              context,
+              label: label,
+            ).copyWith(prefixIcon: Icon(icon))
+            : InputDecoration(
+              labelText: label,
+              prefixIcon: Icon(icon),
+              border: OutlineInputBorder(
+                borderRadius: context.tutorialTokens.inputShape,
+              ),
+            );
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
-        ),
-        child: Text(value),
+        decoration: decoration,
+        child: Text(value, style: settingsInputTextStyle(context)),
       ),
     );
   }
@@ -2023,26 +2166,59 @@ class _IntentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final selected = enabled && value;
-    final iconColor = enabled ? scheme.primary : scheme.onSurfaceVariant;
+    final tileSurface =
+        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
+    final iconColor =
+        neo
+            ? tonosForegroundForSurface(context, tileSurface!)
+            : enabled
+            ? scheme.primary
+            : scheme.onSurfaceVariant;
     final foregroundColor =
-        enabled ? scheme.onSurface : scheme.onSurfaceVariant;
-    final borderColor = selected ? scheme.primary : scheme.outlineVariant;
+        neo
+            ? tonosForegroundForSurface(context, tileSurface!)
+            : enabled
+            ? scheme.onSurface
+            : scheme.onSurfaceVariant;
+    final secondaryColor =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+            : scheme.onSurfaceVariant.withValues(alpha: enabled ? 1 : 0.78);
+    final borderColor =
+        neo
+            ? tonosOutlineForSurface(context, tileSurface!)
+            : selected
+            ? scheme.primary
+            : scheme.outlineVariant;
     final backgroundColor =
-        selected
+        neo
+            ? tileSurface
+            : selected
             ? scheme.primary.withValues(alpha: 0.16)
             : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius:
+          neo ? shapes.settingsInput : context.tutorialTokens.tileShape,
       onTap: enabled ? () => onChanged(!value) : null,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: borderColor),
+          borderRadius:
+              neo ? shapes.settingsInput : context.tutorialTokens.tileShape,
+          border: Border.all(
+            color: borderColor,
+            width: neo ? shapes.outlineWidth : 1,
+          ),
         ),
         child: Row(
           children: [
@@ -2066,9 +2242,7 @@ class _IntentTile extends StatelessWidget {
                   Text(
                     body,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(
-                        alpha: enabled ? 1 : 0.78,
-                      ),
+                      color: secondaryColor,
                     ),
                   ),
                 ],
@@ -2081,14 +2255,33 @@ class _IntentTile extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: scheme.outlineVariant),
+                  color:
+                      neo
+                          ? surfaces.settingsInput
+                          : scheme.surfaceContainerHighest,
+                  borderRadius:
+                      neo ? shapes.pill : context.tutorialTokens.pillShape,
+                  border: Border.all(
+                    color:
+                        neo
+                            ? tonosOutlineForSurface(
+                              context,
+                              surfaces.settingsInput,
+                            )
+                            : scheme.outlineVariant,
+                    width: neo ? shapes.outlineWidth : 1,
+                  ),
                 ),
                 child: Text(
                   statusLabel!,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color:
+                        neo
+                            ? tonosForegroundForSurface(
+                              context,
+                              surfaces.settingsInput,
+                            )
+                            : scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2097,6 +2290,11 @@ class _IntentTile extends StatelessWidget {
               Checkbox(
                 value: value,
                 onChanged: enabled ? (next) => onChanged(next ?? false) : null,
+                fillColor:
+                    neo
+                        ? WidgetStatePropertyAll<Color?>(foregroundColor)
+                        : null,
+                checkColor: neo ? surfaces.dialogChoice : null,
               ),
           ],
         ),
@@ -2119,21 +2317,37 @@ class _SwitchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final cardSurface = neo ? surfaces.settingsInput : scheme.surface;
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+        color: neo ? cardSurface : scheme.surface.withValues(alpha: 0.5),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : scheme.outlineVariant.withValues(alpha: 0.7),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: neo ? cardForeground : null,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           Switch(value: value, onChanged: onChanged),
@@ -2161,6 +2375,9 @@ class _ChoiceGroup<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2168,6 +2385,13 @@ class _ChoiceGroup<T> extends StatelessWidget {
         Text(
           title,
           style: theme.textTheme.titleSmall?.copyWith(
+            color:
+                neo
+                    ? tonosForegroundForSurface(
+                      context,
+                      surfaces.settingsSection,
+                    )
+                    : null,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -2178,10 +2402,40 @@ class _ChoiceGroup<T> extends StatelessWidget {
           children:
               options.map((option) {
                 final selected = option == value;
+                final chipSurface =
+                    neo
+                        ? (selected
+                            ? surfaces.settingsHero
+                            : surfaces.dialogChoice)
+                        : null;
                 return ChoiceChip(
-                  label: Text(labelBuilder?.call(option) ?? '$option'),
+                  label: Text(
+                    labelBuilder?.call(option) ?? '$option',
+                    style:
+                        neo
+                            ? TextStyle(
+                              color: tonosForegroundForSurface(
+                                context,
+                                chipSurface!,
+                              ),
+                              fontWeight: FontWeight.w800,
+                            )
+                            : null,
+                  ),
                   selected: selected,
                   onSelected: (_) => onChanged(option),
+                  selectedColor: neo ? chipSurface : null,
+                  backgroundColor: neo ? chipSurface : null,
+                  side:
+                      neo
+                          ? BorderSide(
+                            color: tonosOutlineForSurface(
+                              context,
+                              chipSurface!,
+                            ),
+                            width: shapes.outlineWidth,
+                          )
+                          : null,
                 );
               }).toList(),
         ),
@@ -2208,12 +2462,15 @@ class _BodyFatTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: context.tutorialTokens.inputShape,
           border: Border.all(
             color: isSelected ? scheme.primary : scheme.outlineVariant,
             width: isSelected ? 2.4 : 1,
@@ -2270,28 +2527,49 @@ class _MetricPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final cardSurface = neo ? surfaces.dialogChoice : scheme.surface;
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
+    final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
+        color: neo ? cardSurface : scheme.primary.withValues(alpha: 0.14),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
+        border:
+            neo
+                ? Border.all(
+                  color: tonosOutlineForSurface(context, cardSurface),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: scheme.primary),
+          Icon(icon, color: neo ? cardForeground : scheme.primary),
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: neo ? cardForeground : null,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           Text(
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: cardSecondary),
           ),
         ],
       ),
@@ -2314,13 +2592,26 @@ class _SliderPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final panelSurface = neo ? surfaces.settingsSection : scheme.surface;
+    final panelForeground =
+        neo
+            ? tonosForegroundForSurface(context, panelSurface)
+            : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(20),
+        color: neo ? panelSurface : scheme.surface.withValues(alpha: 0.52),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.65),
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, panelSurface)
+                  : scheme.outlineVariant.withValues(alpha: 0.65),
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Column(
@@ -2331,6 +2622,7 @@ class _SliderPanel extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: neo ? panelForeground : null,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2338,7 +2630,7 @@ class _SliderPanel extends StatelessWidget {
               Text(
                 valueLabel,
                 style: theme.textTheme.titleSmall?.copyWith(
-                  color: scheme.primary,
+                  color: neo ? panelForeground : scheme.primary,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -2360,13 +2652,30 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final statSurface = neo ? surfaces.dialogChoice : scheme.surface;
+    final statForeground =
+        neo
+            ? tonosForegroundForSurface(context, statSurface)
+            : scheme.onSurface;
+    final statSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, statSurface)
+            : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(18),
+        color: neo ? statSurface : scheme.surface.withValues(alpha: 0.52),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.inputShape,
         border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.65),
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, statSurface)
+                  : scheme.outlineVariant.withValues(alpha: 0.65),
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Column(
@@ -2374,16 +2683,17 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: neo ? statForeground : null,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ).textTheme.bodySmall?.copyWith(color: statSecondary),
           ),
         ],
       ),
@@ -2406,12 +2716,23 @@ class _FeatureRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final featureSurface = neo ? surfaces.settingsSection : scheme.surface;
+    final featureForeground =
+        neo
+            ? tonosForegroundForSurface(context, featureSurface)
+            : scheme.onSurface;
+    final featureSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, featureSurface)
+            : scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: scheme.primary),
+          Icon(icon, color: neo ? featureForeground : scheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -2420,6 +2741,7 @@ class _FeatureRow extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: neo ? featureForeground : null,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2427,7 +2749,7 @@ class _FeatureRow extends StatelessWidget {
                 Text(
                   body,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color: featureSecondary,
                   ),
                 ),
               ],
@@ -2449,15 +2771,27 @@ class _SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final summarySurface = neo ? surfaces.settingsSection : scheme.surface;
+    final summarySecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, summarySurface)
+            : scheme.onSurfaceVariant;
+    final summaryForeground =
+        neo
+            ? tonosForegroundForSurface(context, summarySurface)
+            : scheme.onSurface;
     final valueText = value.trim().isEmpty ? '-' : value;
     final usesStackedLayout =
         MediaQuery.textScalerOf(context).scale(1) > 1.15 ||
         MediaQuery.sizeOf(context).width < 360;
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant,
+      color: summarySecondary,
       fontWeight: FontWeight.w700,
     );
     final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: neo ? summaryForeground : null,
       fontWeight: FontWeight.w800,
     );
 
@@ -2499,18 +2833,41 @@ class _OnboardingSummaryCallout extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final calloutSurface = neo ? surfaces.dialogChoice : scheme.surface;
+    final calloutForeground =
+        neo
+            ? tonosForegroundForSurface(context, calloutSurface)
+            : scheme.onSurface;
+    final calloutSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, calloutSurface)
+            : scheme.onSurfaceVariant;
+    final shapes = context.shapeTokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.3)),
+        color: neo ? calloutSurface : scheme.primary.withValues(alpha: 0.12),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.compactShape,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, calloutSurface)
+                  : scheme.primary.withValues(alpha: 0.3),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.auto_awesome_outlined, color: scheme.primary, size: 21),
+          Icon(
+            Icons.auto_awesome_outlined,
+            color: neo ? calloutForeground : scheme.primary,
+            size: 21,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -2519,7 +2876,7 @@ class _OnboardingSummaryCallout extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: scheme.primary,
+                    color: neo ? calloutForeground : scheme.primary,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2527,7 +2884,7 @@ class _OnboardingSummaryCallout extends StatelessWidget {
                 Text(
                   value,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color: calloutSecondary,
                   ),
                 ),
               ],
@@ -2554,34 +2911,58 @@ class _OnboardingSummarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final sectionSurface = neo ? surfaces.settingsInput : scheme.surface;
+    final sectionForeground =
+        neo
+            ? tonosForegroundForSurface(context, sectionSurface)
+            : scheme.onSurface;
+    final shapes = context.shapeTokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
       decoration: BoxDecoration(
-        color: scheme.surface.withValues(alpha: 0.46),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        color: neo ? sectionSurface : scheme.surface.withValues(alpha: 0.46),
+        borderRadius:
+            neo ? shapes.settingsInput : context.tutorialTokens.inputShape,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, sectionSurface)
+                  : scheme.outlineVariant.withValues(alpha: 0.6),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: scheme.primary, size: 19),
+              Icon(
+                icon,
+                color: neo ? sectionForeground : scheme.primary,
+                size: 19,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: neo ? sectionForeground : null,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 10),
-            child: Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Divider(
+              height: 1,
+              color:
+                  neo ? tonosOutlineForSurface(context, sectionSurface) : null,
+            ),
           ),
           ...children,
         ],
@@ -2599,18 +2980,28 @@ class _PageDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final activeColor = neo ? surfaces.settingsHero : scheme.primary;
+    final inactiveColor =
+        neo
+            ? tonosOutlineForSurface(context, surfaces.settingsSection)
+            : scheme.outlineVariant;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(count, (index) {
         final active = index == activeIndex;
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: tutorialMotion(
+            context,
+            context.tutorialTokens.selectionDuration,
+          ),
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: active ? 20 : 7,
           height: 7,
           decoration: BoxDecoration(
-            color: active ? scheme.primary : scheme.outlineVariant,
-            borderRadius: BorderRadius.circular(999),
+            color: active ? activeColor : inactiveColor,
+            borderRadius: context.tutorialTokens.pillShape,
           ),
         );
       }),
@@ -2969,23 +3360,55 @@ class _GymSpaceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final accent = template.highlighted ? scheme.tertiary : scheme.primary;
+    final tileSurface =
+        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
+    final tileForeground =
+        neo
+            ? tonosForegroundForSurface(context, tileSurface!)
+            : scheme.onSurface;
+    final tileSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+            : scheme.onSurfaceVariant;
+    final tileBorder =
+        neo
+            ? tonosOutlineForSurface(context, tileSurface!)
+            : selected
+            ? accent
+            : scheme.outlineVariant;
+    final tileBackground =
+        neo
+            ? tileSurface
+            : selected
+            ? accent.withValues(alpha: 0.16)
+            : scheme.surface.withValues(alpha: 0.46);
+    final tileShape =
+        neo ? shapes.settingsInput : context.tutorialTokens.tileShape;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: tileShape,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color:
-              selected
-                  ? accent.withValues(alpha: 0.16)
-                  : scheme.surface.withValues(alpha: 0.46),
-          borderRadius: BorderRadius.circular(22),
+          color: tileBackground,
+          borderRadius: tileShape,
           border: Border.all(
-            color: selected ? accent : scheme.outlineVariant,
-            width: selected ? 2 : 1,
+            color: tileBorder,
+            width:
+                neo
+                    ? shapes.outlineWidth
+                    : selected
+                    ? 2
+                    : 1,
           ),
         ),
         child: Row(
@@ -2995,10 +3418,11 @@ class _GymSpaceTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(16),
+                color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
+                borderRadius:
+                    neo ? shapes.control : context.tutorialTokens.compactShape,
               ),
-              child: Icon(template.icon, color: accent),
+              child: Icon(template.icon, color: neo ? tileForeground : accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -3008,7 +3432,12 @@ class _GymSpaceTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: template.highlighted ? accent : null,
+                      color:
+                          neo
+                              ? tileForeground
+                              : template.highlighted
+                              ? accent
+                              : null,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -3016,7 +3445,7 @@ class _GymSpaceTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                      color: tileSecondary,
                     ),
                   ),
                 ],
@@ -3027,7 +3456,12 @@ class _GymSpaceTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: selected ? accent : scheme.onSurfaceVariant,
+              color:
+                  neo
+                      ? tileForeground
+                      : selected
+                      ? accent
+                      : tileSecondary,
             ),
           ],
         ),
@@ -3051,7 +3485,7 @@ class _GymEquipmentLoadError extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: 0.32),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: context.tutorialTokens.sectionShape,
       ),
       child: Column(
         children: [
@@ -3094,23 +3528,55 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final accent = scheme.primary;
+    final tileSurface =
+        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
+    final tileForeground =
+        neo
+            ? tonosForegroundForSurface(context, tileSurface!)
+            : scheme.onSurface;
+    final tileSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+            : scheme.onSurfaceVariant;
+    final tileBorder =
+        neo
+            ? tonosOutlineForSurface(context, tileSurface!)
+            : selected
+            ? accent
+            : scheme.outlineVariant;
+    final tileBackground =
+        neo
+            ? tileSurface
+            : selected
+            ? accent.withValues(alpha: 0.16)
+            : scheme.surface.withValues(alpha: 0.46);
+    final tileShape =
+        neo ? shapes.settingsInput : context.tutorialTokens.tileShape;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: tileShape,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.selectionDuration,
+        ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color:
-              selected
-                  ? scheme.primary.withValues(alpha: 0.16)
-                  : scheme.surface.withValues(alpha: 0.46),
-          borderRadius: BorderRadius.circular(22),
+          color: tileBackground,
+          borderRadius: tileShape,
           border: Border.all(
-            color: selected ? scheme.primary : scheme.outlineVariant,
-            width: selected ? 2 : 1,
+            color: tileBorder,
+            width:
+                neo
+                    ? shapes.outlineWidth
+                    : selected
+                    ? 2
+                    : 1,
           ),
         ),
         child: Row(
@@ -3119,10 +3585,11 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(16),
+                color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
+                borderRadius:
+                    neo ? shapes.control : context.tutorialTokens.compactShape,
               ),
-              child: Icon(icon, color: accent),
+              child: Icon(icon, color: neo ? tileForeground : accent),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -3132,6 +3599,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
+                      color: neo ? tileForeground : null,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -3139,7 +3607,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                      color: tileSecondary,
                     ),
                   ),
                 ],
@@ -3150,7 +3618,12 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              color:
+                  neo
+                      ? tileForeground
+                      : selected
+                      ? accent
+                      : tileSecondary,
             ),
           ],
         ),
@@ -3174,7 +3647,7 @@ class _OnboardingInfoCallout extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: scheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: context.tutorialTokens.inputShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.28)),
       ),
       child: Row(

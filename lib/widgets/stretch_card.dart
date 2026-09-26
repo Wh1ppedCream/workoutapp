@@ -1,7 +1,10 @@
 // File: lib/widgets/stretch_card.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_theme_ready.dart';
 import 'stretch_search_dialog.dart';
 
 /// Displays and edits a StretchExercise, including search and custom entries.
@@ -50,8 +53,12 @@ class _StretchCardState extends State<StretchCard> {
   Widget build(BuildContext context) {
     final readOnly = widget.readOnlyMode;
     final stretchList = widget.exercise.stretchInstances;
+    final addActionColor =
+        context.surfaceDecorationTokens.panel.outlined
+            ? context.semanticColors.info
+            : Colors.blue;
 
-    return Card(
+    return TonosThemeReadyCard(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -130,10 +137,9 @@ class _StretchCardState extends State<StretchCard> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(
-                    Icons.add_circle_outline,
-                    color: Colors.blue,
-                  ),
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: AppLocalizations.of(context).commonAdd,
+                  color: addActionColor,
                   onPressed:
                       readOnly || _stretchCustomController.text.trim().isEmpty
                           ? null
@@ -205,6 +211,7 @@ class _StretchCardState extends State<StretchCard> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.remove_circle_outline),
+                      tooltip: AppLocalizations.of(context).commonRemove,
                       onPressed:
                           readOnly
                               ? null

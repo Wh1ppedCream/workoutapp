@@ -4,6 +4,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_tutorial_tokens.dart';
+import '../theme/widgets/tonos_dialog.dart';
 import '../services/tutorial_state_store.dart';
 
 class GuidedTutorialStep {
@@ -108,7 +111,10 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     if (targetContext != null) {
       await Scrollable.ensureVisible(
         targetContext,
-        duration: const Duration(milliseconds: 260),
+        duration: tutorialMotion(
+          context,
+          context.tutorialTokens.guidedScrollDuration,
+        ),
         alignment: 0.36,
       );
       await Future<void>.delayed(const Duration(milliseconds: 280));
@@ -193,8 +199,7 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final usesLocalizedLayout =
-        Localizations.localeOf(context).languageCode != 'en';
+    final tutorial = context.tutorialTokens;
 
     return SizedBox.expand(
       key: _overlayKey,
@@ -210,8 +215,8 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
             if (measuredTarget == null) {
               return Stack(
                 children: [
-                  const ModalBarrier(
-                    color: Color(0xAD000000),
+                  ModalBarrier(
+                    color: context.tutorialTokens.scrim,
                     dismissible: false,
                   ),
                   Positioned(
@@ -235,7 +240,6 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                         size,
                         media.padding,
                         media.textScaler,
-                        usesLocalizedLayout: usesLocalizedLayout,
                       ),
                     ),
                   ),
@@ -259,7 +263,6 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                 size,
                 media.padding,
                 media.textScaler,
-                usesLocalizedLayout: usesLocalizedLayout,
               ),
             );
 
@@ -269,7 +272,12 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () {},
-                    child: CustomPaint(painter: _TutorialScrimPainter(target)),
+                    child: CustomPaint(
+                      painter: _TutorialScrimPainter(
+                        target,
+                        context.tutorialTokens,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned.fromRect(
@@ -277,15 +285,21 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                   child: IgnorePointer(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: tutorial.focusShape,
                         border: Border.all(color: scheme.primary, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: scheme.primary.withValues(alpha: 0.36),
-                            blurRadius: 22,
-                            spreadRadius: 2,
-                          ),
-                        ],
+                        boxShadow:
+                            tutorial.effectsEnabled
+                                ? [
+                                  BoxShadow(
+                                    color: scheme.primary.withValues(
+                                      alpha: tutorial.focusShadowOpacity,
+                                    ),
+                                    blurRadius: tutorial.focusShadowBlur,
+                                    spreadRadius: tutorial.focusShadowSpread,
+                                    offset: tutorial.focusShadowOffset,
+                                  ),
+                                ]
+                                : const [],
                       ),
                     ),
                   ),
@@ -311,7 +325,6 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
                       size,
                       media.padding,
                       media.textScaler,
-                      usesLocalizedLayout: usesLocalizedLayout,
                     ),
                   ),
                 ),
@@ -347,14 +360,9 @@ class _GuidedTutorialOverlayState extends State<GuidedTutorialOverlay>
     return preferredTop.clamp(minTop, math.max(minTop, maxTop)).toDouble();
   }
 
-  double _cardHeightFor(
-    Size size,
-    EdgeInsets padding,
-    TextScaler textScaler, {
-    required bool usesLocalizedLayout,
-  }) {
+  double _cardHeightFor(Size size, EdgeInsets padding, TextScaler textScaler) {
     final scale = textScaler.scale(1);
-    if (!usesLocalizedLayout || scale <= 1.15) {
+    if (scale <= 1.15) {
       return _cardEstimateHeight;
     }
 
@@ -395,23 +403,18 @@ class _TutorialCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final useStackedActions =
-        Localizations.localeOf(context).languageCode != 'en' &&
-        MediaQuery.textScalerOf(context).scale(1) > 1.15;
+    final useStackedActions = MediaQuery.textScalerOf(context).scale(1) > 1.15;
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 420),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: context.tutorialTokens.cardShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.42)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 28,
-            offset: const Offset(0, 14),
-          ),
-        ],
+        boxShadow:
+            context.tutorialTokens.effectsEnabled
+                ? [context.tutorialTokens.cardShadow]
+                : const [],
       ),
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -435,25 +438,28 @@ class _TutorialCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Wrap(
-                            spacing: 4,
-                            runSpacing: 2,
-                            children: [
-                              TextButton(
-                                onPressed: onSkip,
-                                child: Text(strings.tutorialSkip),
-                              ),
-                              TextButton(
-                                onPressed: onSkipAll,
-                                child: Text(strings.tutorialSkipAll),
-                              ),
-                              if (canGoBack)
-                                TextButton(
-                                  onPressed: onBack,
-                                  child: Text(strings.commonBack),
-                                ),
-                            ],
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              alignment: Alignment.centerLeft,
+                            ),
+                            onPressed: onSkip,
+                            child: Text(strings.tutorialSkip),
                           ),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              alignment: Alignment.centerLeft,
+                            ),
+                            onPressed: onSkipAll,
+                            child: Text(strings.tutorialSkipAll),
+                          ),
+                          if (canGoBack)
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                alignment: Alignment.centerLeft,
+                              ),
+                              onPressed: onBack,
+                              child: Text(strings.commonBack),
+                            ),
                           const SizedBox(height: 8),
                           FilledButton(
                             onPressed: onNext,
@@ -479,22 +485,31 @@ class _TutorialCard extends StatelessWidget {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        TextButton(
-                          onPressed: onSkip,
-                          child: Text(strings.tutorialSkip),
-                        ),
-                        TextButton(
-                          onPressed: onSkipAll,
-                          child: Text(strings.tutorialSkipAll),
-                        ),
-                        const Spacer(),
-                        if (canGoBack) ...[
-                          TextButton(
-                            onPressed: onBack,
-                            child: Text(strings.commonBack),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Wrap(
+                              spacing: 4,
+                              runSpacing: 2,
+                              children: [
+                                TextButton(
+                                  onPressed: onSkip,
+                                  child: Text(strings.tutorialSkip),
+                                ),
+                                TextButton(
+                                  onPressed: onSkipAll,
+                                  child: Text(strings.tutorialSkipAll),
+                                ),
+                                if (canGoBack)
+                                  TextButton(
+                                    onPressed: onBack,
+                                    child: Text(strings.commonBack),
+                                  ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                        ],
+                        ),
+                        const SizedBox(width: 8),
                         FilledButton(
                           onPressed: onNext,
                           child: Text(
@@ -527,38 +542,45 @@ class _TutorialCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tutorialAccent =
+        context.tutorialTokens.accentForeground ?? scheme.primary;
+    final useStackedHeader = MediaQuery.textScalerOf(context).scale(1) > 1.15;
+    final leadingIcon = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.18),
+        borderRadius: context.tutorialTokens.iconShape,
+      ),
+      child: Icon(step.icon, color: tutorialAccent),
+    );
+    final title = Text(
+      step.title,
+      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+    );
+    final progress = Text(
+      '$stepNumber/$totalSteps',
+      style: theme.textTheme.labelLarge?.copyWith(
+        color: tutorialAccent,
+        fontWeight: FontWeight.w900,
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(step.icon, color: scheme.primary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                step.title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            Text(
-              '$stepNumber/$totalSteps',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
+        if (useStackedHeader) ...[
+          Row(children: [leadingIcon, const Spacer(), progress]),
+          const SizedBox(height: 12),
+          title,
+        ] else
+          Row(
+            children: [
+              leadingIcon,
+              const SizedBox(width: 12),
+              Expanded(child: title),
+              progress,
+            ],
+          ),
         const SizedBox(height: 12),
         Text(
           step.body,
@@ -587,25 +609,30 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
     return Positioned.fill(
       child: Stack(
         children: [
-          const ModalBarrier(color: Color(0xB3000000), dismissible: false),
+          ModalBarrier(
+            color: context.tutorialTokens.confirmationScrim,
+            dismissible: false,
+          ),
           Center(
             child: SafeArea(
               minimum: const EdgeInsets.all(24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 360),
-                child: AlertDialog(
-                  title: Text(strings.tutorialSkipAllTitle),
-                  content: Text(strings.tutorialSkipAllBody),
-                  actions: [
-                    TextButton(
-                      onPressed: onKeepTutorials,
-                      child: Text(strings.tutorialKeep),
-                    ),
-                    FilledButton(
-                      onPressed: onSkipAll,
-                      child: Text(strings.tutorialSkipEverything),
-                    ),
-                  ],
+                child: TonosDialogFrame(
+                  child: AlertDialog(
+                    title: Text(strings.tutorialSkipAllTitle),
+                    content: Text(strings.tutorialSkipAllBody),
+                    actions: [
+                      TextButton(
+                        onPressed: onKeepTutorials,
+                        child: Text(strings.tutorialKeep),
+                      ),
+                      FilledButton(
+                        onPressed: onSkipAll,
+                        child: Text(strings.tutorialSkipEverything),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -619,7 +646,9 @@ class _SkipAllTutorialConfirmation extends StatelessWidget {
 class _TutorialScrimPainter extends CustomPainter {
   final Rect targetRect;
 
-  const _TutorialScrimPainter(this.targetRect);
+  final AppTutorialTokens tokens;
+
+  const _TutorialScrimPainter(this.targetRect, this.tokens);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -627,18 +656,15 @@ class _TutorialScrimPainter extends CustomPainter {
         Path()
           ..fillType = PathFillType.evenOdd
           ..addRect(Offset.zero & size)
-          ..addRRect(
-            RRect.fromRectAndRadius(targetRect, const Radius.circular(22)),
-          );
-    canvas.drawPath(
-      path,
-      Paint()..color = Colors.black.withValues(alpha: 0.68),
-    );
+          ..addRRect(tokens.focusShape.toRRect(targetRect));
+    canvas.drawPath(path, Paint()..color = tokens.scrim);
   }
 
   @override
   bool shouldRepaint(covariant _TutorialScrimPainter oldDelegate) {
-    return oldDelegate.targetRect != targetRect;
+    return oldDelegate.targetRect != targetRect ||
+        oldDelegate.tokens.scrim != tokens.scrim ||
+        oldDelegate.tokens.focusShape != tokens.focusShape;
   }
 }
 
@@ -647,6 +673,9 @@ class _MeasuringTutorialScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ModalBarrier(color: Color(0x66000000), dismissible: false);
+    return ModalBarrier(
+      color: context.tutorialTokens.measuringScrim,
+      dismissible: false,
+    );
   }
 }

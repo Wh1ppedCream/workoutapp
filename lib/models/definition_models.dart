@@ -105,7 +105,9 @@ class StarterLoadProfile {
 /// rating, ranking of targeted muscles, and optional starter-load metadata.
 class ExerciseDefinition {
   final int id;
+  final String? catalogId;
   final String name;
+  final String catalogStatus;
   final int? equipmentId;
   final int rating;
   final List<Equipment> equipmentList;
@@ -121,7 +123,9 @@ class ExerciseDefinition {
   /// Creates an [ExerciseDefinition].
   ExerciseDefinition({
     required this.id,
+    this.catalogId,
     required this.name,
+    this.catalogStatus = 'active',
     this.equipmentId,
     this.rating = 0,
     this.equipmentList = const [],
@@ -134,6 +138,10 @@ class ExerciseDefinition {
     required this.multiplyByRating,
     this.starterLoadProfile,
   });
+
+  /// Retired shipped definitions stay available to historic workouts, but are
+  /// not offered as new catalog selections.
+  bool get isRetiredCatalogEntry => catalogStatus == 'retired';
 }
 
 class ExerciseMediaItem {
@@ -275,9 +283,10 @@ class ExerciseMediaItem {
 class Equipment {
   final int id;
   final String name;
+  final String? catalogId;
 
   /// Creates an [Equipment] entry.
-  Equipment(this.id, this.name);
+  Equipment(this.id, this.name, [this.catalogId]);
 }
 
 /// Lookup table entry for body parts.
@@ -293,9 +302,10 @@ class BodyPart {
 class Muscle {
   final int id;
   final String name;
+  final String? catalogId;
 
   /// Creates a [Muscle] entry.
-  Muscle({required this.id, required this.name});
+  Muscle({required this.id, required this.name, this.catalogId});
 }
 
 /// Associates a [Muscle] with a specified [rank] (1 through 7).

@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,11 +12,16 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_progress_colors.dart';
+import '../theme/widgets/tonos_surface.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'guided_tutorial_overlay.dart';
+import 'localized_exercise_name.dart';
 
 const _exerciseProgressTileIdsKey = 'exercise_progress_tile_ids_v1';
 const _exerciseProgressHiddenAutoIdsKey =
@@ -137,10 +141,14 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
 
   Future<void> _addExerciseTile(ExerciseDefinition definition) async {
     if (_visibleDefinitionIds.contains(definition.id)) {
+      final displayName = await ExerciseContentLocalizer.instance.resolveName(
+        definition,
+        Localizations.localeOf(context),
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_strings.exerciseProgressAlreadyShown(definition.name)),
+          content: Text(_strings.exerciseProgressAlreadyShown(displayName)),
         ),
       );
       return;
@@ -240,7 +248,16 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final surfaces = context.surfaceTokens;
+    final sectionForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressSelector,
+            )
+            : null;
 
     return FutureBuilder<_ExerciseProgressSectionData>(
       future: _dataFuture,
@@ -258,6 +275,26 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
               constraints.maxWidth,
             );
 
+            Widget shell(Widget child) {
+              if (usesInkRecipe) {
+                return TonosSurface(
+                  variant: TonosSurfaceVariant.panelRaised,
+                  color: surfaces.exerciseProgressSelector,
+                  padding: EdgeInsets.all(layout.cardPadding),
+                  borderRadius: context.shapeTokens.card,
+                  clipBehavior: Clip.antiAlias,
+                  child: child,
+                );
+              }
+              return Card(
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: EdgeInsets.all(layout.cardPadding),
+                  child: child,
+                ),
+              );
+            }
+
             if (data == null &&
                 snapshot.connectionState != ConnectionState.done) {
               return Padding(
@@ -265,12 +302,12 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
                   horizontal: layout.outerPaddingHorizontal,
                   vertical: layout.outerPaddingVertical,
                 ),
-                child: Card(
-                  child: SizedBox(
+                child: shell(
+                  SizedBox(
                     height: layout.loadingHeight,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: colors.historySummaryProgress,
+                        color: dataVisualization.selection,
                       ),
                     ),
                   ),
@@ -285,83 +322,105 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
               for (final tile in tiles)
                 if (tile.definition.id != selectedId) tile,
             ];
+            final selectorChildren = <Widget>[
+              for (final tile in carouselTiles)
+                _ExerciseProgressSelectorTile(
+                  tile: tile,
+                  layout: layout,
+                  isSelected: false,
+                  isEditing: _isEditingExerciseProgress,
+                  onRemove: () => unawaited(_removeExerciseTile(tile)),
+                  onTap:
+                      () => setState(() {
+                        _isEditingExerciseProgress = false;
+                        _selectedDefinitionId = tile.definition.id;
+                      }),
+                ),
+              if (_isEditingExerciseProgress)
+                _AddExerciseProgressTile(
+                  layout: layout,
+                  onTap: _openExercisePicker,
+                )
+              else
+                _EditExerciseProgressTile(
+                  layout: layout,
+                  onTap:
+                      () => setState(() {
+                        _isEditingExerciseProgress = true;
+                      }),
+                ),
+            ];
+            final preservesClassicGeometry =
+                context.usesClassicPresentation &&
+                MediaQuery.textScalerOf(context).scale(1) <= 1.15;
 
             return Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: layout.outerPaddingHorizontal,
                 vertical: layout.outerPaddingVertical,
               ),
-              child: Card(
-                clipBehavior: Clip.antiAlias,
-                child: Padding(
-                  padding: EdgeInsets.all(layout.cardPadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        AppLocalizations.of(
-                          context,
-                        ).dashboardSectionExerciseProgressTitle,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+              child: shell(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      ).dashboardSectionExerciseProgressTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: sectionForeground,
+                        fontWeight: FontWeight.w900,
                       ),
-                      SizedBox(height: layout.sectionGap),
-                      if (selectedTile == null)
-                        _ExerciseProgressEmptyHero(
-                          layout: layout,
-                          onTap: _openExercisePicker,
-                        )
-                      else
-                        _ExerciseProgressHero(
-                          tile: selectedTile,
-                          layout: layout,
-                          isEditing: _isEditingExerciseProgress,
-                          onRemove:
-                              () =>
-                                  unawaited(_removeExerciseTile(selectedTile)),
-                          onTap: () => _openDetail(selectedTile),
-                        ),
-                      SizedBox(height: layout.sectionGap),
-                      SizedBox(
-                        height: layout.selectorHeight,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
+                    ),
+                    SizedBox(height: layout.sectionGap),
+                    if (selectedTile == null)
+                      _ExerciseProgressEmptyHero(
+                        layout: layout,
+                        onTap: _openExercisePicker,
+                      )
+                    else
+                      _ExerciseProgressHero(
+                        tile: selectedTile,
+                        layout: layout,
+                        isEditing: _isEditingExerciseProgress,
+                        onRemove:
+                            () => unawaited(_removeExerciseTile(selectedTile)),
+                        onTap: () => _openDetail(selectedTile),
+                      ),
+                    SizedBox(height: layout.sectionGap),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight:
+                            preservesClassicGeometry
+                                ? layout.selectorMinimumHeight
+                                : 0,
+                      ),
+                      child: SingleChildScrollView(
+                        key: const ValueKey('exercise-progress-selector-strip'),
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          crossAxisAlignment:
+                              preservesClassicGeometry
+                                  ? CrossAxisAlignment.start
+                                  : CrossAxisAlignment.center,
                           children: [
-                            for (final tile in carouselTiles)
-                              _ExerciseProgressSelectorTile(
-                                tile: tile,
-                                layout: layout,
-                                isSelected: false,
-                                isEditing: _isEditingExerciseProgress,
-                                onRemove:
-                                    () => unawaited(_removeExerciseTile(tile)),
-                                onTap:
-                                    () => setState(() {
-                                      _isEditingExerciseProgress = false;
-                                      _selectedDefinitionId =
-                                          tile.definition.id;
-                                    }),
-                              ),
-                            if (_isEditingExerciseProgress)
-                              _AddExerciseProgressTile(
-                                layout: layout,
-                                onTap: _openExercisePicker,
-                              )
-                            else
-                              _EditExerciseProgressTile(
-                                layout: layout,
-                                onTap:
-                                    () => setState(() {
-                                      _isEditingExerciseProgress = true;
-                                    }),
-                              ),
+                            for (final child in selectorChildren)
+                              if (preservesClassicGeometry)
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minHeight: layout.selectorMinimumHeight,
+                                  ),
+                                  child: child,
+                                )
+                              else
+                                child,
+                            SizedBox(width: layout.value(4)),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -402,37 +461,37 @@ class _ExerciseProgressLayout {
   double get sectionGap => value(14);
   double get loadingHeight => value(248);
   double get heroPadding => value(10);
-  double get heroRadius => value(18);
   double get heroHeight => value(226);
-  double get heroStackedStatsHeight => value(184);
   double get heroChartHeight => value(166);
   double get heroStackedChartHeight => value(166);
   double get heroColumnGap => value(12);
   double get heroRowGap => value(8);
+  double heroMinimumChartWidth(double textScale) =>
+      168.0 * (1 + (textScale - 1) * 0.18);
+  double heroMinimumStatsWidth(double textScale) => 116.0 * textScale;
   double get chartTitleGap => value(6);
-  double get statsGap => value(10);
   double get statPaddingHorizontal => value(9);
   double get statPaddingVertical => value(7);
-  double get statRadius => value(14);
   double get statBoxHeight => value(106);
   double get statIconSize => value(15);
   double get statIconGap => value(3);
   double get statLabelGap => value(3);
   double get statHelperGap => value(2);
-  double get selectorHeight => value(138);
+  double get selectorMinimumHeight => value(138);
   double get selectorWidth => value(154);
+  double get selectorChartHeight => value(52);
+  double get selectorActionMinHeight => value(112);
   double get selectorMarginRight => value(10);
   double get selectorPadding => value(10);
-  double get selectorRadius => value(14);
   double get selectorGraphGap => value(5);
   double get selectorDeltaGap => value(3);
   double get compactIconSize => value(12);
   double get compactIconGap => value(2);
   double get removeBadgeSize => value(24);
+  double get removeBadgeHitSize => math.max(48, removeBadgeSize);
   double get removeIconSize => value(15);
   double get addTileWidth => value(120);
   double get addTileMarginRight => value(8);
-  double get addTileRadius => value(12);
   double get addIconSize => value(32);
   double get emptyPadding => value(18);
   double get emptyIconSize => value(34);
@@ -458,21 +517,33 @@ class _ExerciseTrendTile {
 
 class _ExerciseProgressPoint {
   final int sessionId;
-  final DateTime date;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
   final double? actualOneRm;
   final double estimatedOneRm;
 
   const _ExerciseProgressPoint({
     required this.sessionId,
-    required this.date,
+    required this.completedAt,
+    required this.calendarDay,
     required this.actualOneRm,
     required this.estimatedOneRm,
   });
 
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
+
   factory _ExerciseProgressPoint.fromRow(Map<String, dynamic> row) {
     return _ExerciseProgressPoint(
       sessionId: row['session_id'] as int,
-      date: DateTime.parse(row['session_date'] as String),
+      completedAt: TemporalSemantics.readLocalDateTime(
+        epochMilliseconds: row['completed_at_ms'],
+        legacyIso: row['session_date'],
+      ),
+      calendarDay: TemporalSemantics.readCalendarDay(
+        calendarDay: row['training_day'],
+        legacyIso: row['session_date'],
+        epochMilliseconds: row['completed_at_ms'],
+      ),
       actualOneRm: (row['actual_one_rm'] as num?)?.toDouble(),
       estimatedOneRm: ((row['estimated_one_rm'] as num?) ?? 0).toDouble(),
     );
@@ -496,54 +567,92 @@ class _ExerciseProgressHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(layout.heroRadius),
-      child: Container(
-        padding: EdgeInsets.all(layout.heroPadding),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.36,
-          ),
-          borderRadius: BorderRadius.circular(layout.heroRadius),
-        ),
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final useStacked = constraints.maxWidth < layout.value(270);
-                final chartColumn = _ExerciseProgressHeroChart(
-                  tile: tile,
-                  layout: layout,
-                  chartHeight:
-                      useStacked
-                          ? layout.heroStackedChartHeight
-                          : layout.heroChartHeight,
-                );
-                final statsColumn = _ExerciseProgressStatsColumn(
-                  tile: tile,
-                  layout: layout,
-                );
+    return LocalizedExerciseNameBuilder(
+      definition: tile.definition,
+      builder: (context, localizedName) => _buildHero(context, localizedName),
+    );
+  }
 
-                if (useStacked) {
+  Widget _buildHero(BuildContext context, String localizedName) {
+    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final foreground = tonosForegroundForSurface(
+      context,
+      surfaces.exerciseProgressHero,
+    );
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final tooltipForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressTooltip,
+            )
+            : theme.colorScheme.onSurface;
+    final body = Semantics(
+      button: true,
+      label: localizedName,
+      onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: shapes.exerciseProgressHero * layout.scale,
+        child: Padding(
+          padding: EdgeInsets.all(layout.heroPadding),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final textScale =
+                  MediaQuery.textScalerOf(
+                    context,
+                  ).scale(1).clamp(1.0, 2.0).toDouble();
+              final preservesClassicGeometry =
+                  context.usesClassicPresentation && textScale <= 1.15;
+              final minimumChartWidth = layout.heroMinimumChartWidth(textScale);
+              final minimumStatsWidth = layout.heroMinimumStatsWidth(textScale);
+              final classicStacked =
+                  preservesClassicGeometry &&
+                  constraints.maxWidth <
+                      math.max(
+                        layout.value(270),
+                        minimumChartWidth +
+                            layout.heroRowGap +
+                            minimumStatsWidth,
+                      );
+              final useStacked =
+                  constraints.maxWidth <
+                  minimumChartWidth + layout.heroRowGap + minimumStatsWidth;
+              final chartColumn = _ExerciseProgressHeroChart(
+                tile: tile,
+                localizedName: localizedName,
+                layout: layout,
+                chartHeight:
+                    classicStacked
+                        ? layout.heroStackedChartHeight
+                        : layout.heroChartHeight,
+                tooltipTextColor: tooltipForeground,
+                isEditing: isEditing,
+              );
+              final statsColumn = _ExerciseProgressStatsColumn(
+                tile: tile,
+                layout: layout,
+              );
+
+              if (preservesClassicGeometry) {
+                if (classicStacked) {
                   return Column(
+                    key: const ValueKey('exercise-progress-hero-stacked'),
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       chartColumn,
                       SizedBox(height: layout.heroColumnGap),
-                      SizedBox(
-                        height: layout.heroStackedStatsHeight,
-                        child: statsColumn,
-                      ),
+                      statsColumn,
                     ],
                   );
                 }
-
-                return SizedBox(
-                  height: layout.heroHeight,
+                return ConstrainedBox(
+                  key: const ValueKey('exercise-progress-hero-side-by-side'),
+                  constraints: BoxConstraints(minHeight: layout.heroHeight),
                   child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 7, child: chartColumn),
                       SizedBox(width: layout.heroRowGap),
@@ -551,14 +660,51 @@ class _ExerciseProgressHero extends StatelessWidget {
                     ],
                   ),
                 );
-              },
-            ),
+              }
+
+              if (useStacked) {
+                return Column(
+                  key: const ValueKey('exercise-progress-hero-stacked'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    chartColumn,
+                    SizedBox(height: layout.heroColumnGap),
+                    statsColumn,
+                  ],
+                );
+              }
+
+              return Row(
+                key: const ValueKey('exercise-progress-hero-side-by-side'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: chartColumn),
+                  SizedBox(width: layout.heroRowGap),
+                  SizedBox(width: minimumStatsWidth, child: statsColumn),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    final content = Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: surfaces.exerciseProgressHero,
+          borderRadius: shapes.exerciseProgressHero * layout.scale,
+        ),
+        child: Stack(
+          children: [
+            body,
             if (isEditing)
               Positioned(
                 top: 0,
                 right: 0,
                 child: _ExerciseProgressRemoveBadge(
                   layout: layout,
+                  localizedName: localizedName,
                   onTap: onRemove,
                 ),
               ),
@@ -566,24 +712,62 @@ class _ExerciseProgressHero extends StatelessWidget {
         ),
       ),
     );
+    final container = Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: content,
+    );
+    if (!usesInkRecipe) return container;
+    final progressColors = context.progressColors;
+    // Chart descendants read the surface-resolved progress roles from Theme.
+    return Theme(
+      data: theme.copyWith(
+        colorScheme: theme.colorScheme.copyWith(
+          onSurface: foreground,
+          onSurfaceVariant: foreground.withValues(alpha: 0.72),
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: foreground,
+          displayColor: foreground,
+        ),
+        extensions: [
+          for (final extension in theme.extensions.values)
+            if (extension is! AppProgressColors) extension,
+          progressColors.copyWith(
+            estimated: foreground.withValues(alpha: 0.72),
+            grid: foreground.withValues(alpha: 0.24),
+            label: foreground.withValues(alpha: 0.72),
+            neutral: foreground.withValues(alpha: 0.62),
+          ),
+        ],
+      ),
+      child: container,
+    );
   }
 }
 
 class _ExerciseProgressHeroChart extends StatelessWidget {
   final _ExerciseTrendTile tile;
+  final String localizedName;
   final _ExerciseProgressLayout layout;
   final double chartHeight;
+  final Color tooltipTextColor;
+  final bool isEditing;
 
   const _ExerciseProgressHeroChart({
     required this.tile,
+    required this.localizedName,
     required this.layout,
     required this.chartHeight,
+    required this.tooltipTextColor,
+    required this.isEditing,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final surfaces = context.surfaceTokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -591,12 +775,15 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                tile.definition.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  right: isEditing ? layout.removeBadgeHitSize : 0,
+                ),
+                child: Text(
+                  localizedName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ),
@@ -615,6 +802,15 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
             showEmptyLabel: true,
             showAxes: true,
             weightUnit: weightUnit,
+            tooltipTextColor: tooltipTextColor,
+            actualColor: tonosPrimarySeriesForSurface(
+              context,
+              surfaces.exerciseProgressHero,
+            ),
+            estimatedColor: tonosSecondarySeriesForSurface(
+              context,
+              surfaces.exerciseProgressHero,
+            ),
           ),
         ),
       ],
@@ -635,6 +831,7 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     final latest = tile.latestPoint;
     final actualOneRm = latest?.actualOneRm;
     final actualDelta = _deltaFromPrevious(
@@ -647,23 +844,28 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       children: [
         _ExerciseProgressStatBox(
           label: strings.exerciseProgressOneRepMax,
           value:
               actualOneRm == null
                   ? '--'
-                  : _formatWeight(actualOneRm, weightUnit),
+                  : _formatWeight(actualOneRm, weightUnit, locale: locale),
           delta: actualDelta,
           layout: layout,
         ),
+        SizedBox(height: layout.heroRowGap),
         _ExerciseProgressStatBox(
           label: strings.exerciseProgressEstimatedOneRepMax,
           value:
               latest == null
                   ? '--'
-                  : _formatWeight(latest.estimatedOneRm, weightUnit),
+                  : _formatWeight(
+                    latest.estimatedOneRm,
+                    weightUnit,
+                    locale: locale,
+                  ),
           delta: estimatedDelta,
           layout: layout,
         ),
@@ -688,64 +890,86 @@ class _ExerciseProgressStatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final icon = _deltaIcon(delta);
-    final deltaColor = _deltaColor(context, delta);
-    return SizedBox(
-      height: layout.statBoxHeight,
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground = tonosForegroundForSurface(
+      context,
+      surfaces.exerciseProgressStat,
+    );
+    final secondary = tonosSecondaryForegroundForSurface(
+      context,
+      surfaces.exerciseProgressStat,
+    );
+    final deltaColor =
+        neo
+            ? (delta == null || delta == 0 ? secondary : foreground)
+            : _deltaColor(context, delta);
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: layout.statBoxHeight),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: layout.statPaddingHorizontal,
           vertical: layout.statPaddingVertical,
         ),
         decoration: BoxDecoration(
-          color: theme.cardColor.withValues(alpha: 0.72),
-          borderRadius: BorderRadius.circular(layout.statRadius),
+          color: surfaces.exerciseProgressStat,
+          borderRadius: shapes.exerciseProgressStat * layout.scale,
           border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+            color:
+                context.surfaceDecorationTokens.panel.outlined
+                    ? tonosOutlineForSurface(
+                      context,
+                      surfaces.exerciseProgressStat,
+                      neutral: true,
+                    )
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
           ),
         ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: secondary,
+                fontWeight: FontWeight.w800,
               ),
-              SizedBox(height: layout.statLabelGap),
-              Text(
-                value,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w900,
-                ),
+            ),
+            SizedBox(height: layout.statLabelGap),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w900,
               ),
-              SizedBox(height: layout.statHelperGap),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: layout.statIconSize, color: deltaColor),
-                    SizedBox(width: layout.statIconGap),
-                  ],
-                  Text(
-                    _formatDeltaWeight(delta, weightUnit),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: deltaColor,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+            ),
+            SizedBox(height: layout.statHelperGap),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: layout.statIconGap,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: layout.statIconSize, color: deltaColor),
                 ],
-              ),
-            ],
-          ),
+                Text(
+                  _formatDeltaWeight(
+                    delta,
+                    weightUnit,
+                    locale: Localizations.localeOf(context),
+                  ),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: deltaColor,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -771,138 +995,384 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LocalizedExerciseNameBuilder(
+      definition: tile.definition,
+      builder:
+          (context, localizedName) => _buildSelector(context, localizedName),
+    );
+  }
+
+  Widget _buildSelector(BuildContext context, String localizedName) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final effects = context.effectTokens;
+    final progressColors = context.progressColors;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = tile.latestPoint;
     final delta = _deltaFromPrevious(tile.points);
-    final accent = theme.colorScheme.primary;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: layout.selectorWidth,
-        margin: EdgeInsets.only(right: layout.selectorMarginRight),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? accent.withValues(alpha: 0.14)
-                  : theme.cardColor.withValues(alpha: 0.72),
-          border: Border.all(
-            color: isSelected ? accent : colors.healthTrendBorder!,
-            width: isSelected ? layout.value(1.5) : layout.value(1),
-          ),
-          borderRadius: BorderRadius.circular(layout.selectorRadius),
+    final accent = progressColors.accent;
+    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final selectedFill = accent.withValues(alpha: 0.14);
+    final tileFill =
+        isSelected ? selectedFill : surfaces.exerciseProgressSelector;
+    final tileForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              tileFill,
+              parentSurface: surfaces.card,
+            )
+            : theme.colorScheme.onSurface;
+    final tileSecondaryForeground =
+        usesInkRecipe
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              tileFill,
+              parentSurface: surfaces.card,
+            )
+            : theme.colorScheme.onSurfaceVariant;
+    final tooltipForeground =
+        usesInkRecipe
+            ? tonosForegroundForSurface(
+              context,
+              surfaces.exerciseProgressTooltip,
+            )
+            : theme.colorScheme.onSurface;
+    final tileTheme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: tileForeground,
+        onSurfaceVariant: tileSecondaryForeground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: tileForeground,
+        displayColor: tileForeground,
+      ),
+      extensions: [
+        for (final extension in theme.extensions.values)
+          if (extension is! AppProgressColors) extension,
+        progressColors.copyWith(
+          estimated: tileSecondaryForeground,
+          grid: tileForeground.withValues(alpha: 0.24),
+          label: tileSecondaryForeground,
+          neutral: tileSecondaryForeground,
+          exerciseIncrease: tileForeground,
+          exerciseDecrease: tileForeground,
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(layout.selectorPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tile.definition.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  SizedBox(height: layout.selectorGraphGap),
-                  Expanded(
-                    child: _ExerciseProgressChart(
-                      points: tile.points,
-                      showEmptyLabel: false,
-                      weightUnit: weightUnit,
-                    ),
-                  ),
-                  SizedBox(height: layout.selectorGraphGap),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          latest == null
-                              ? '--'
-                              : _formatWeight(
-                                latest.estimatedOneRm,
-                                weightUnit,
-                              ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontSize:
-                                theme.textTheme.labelMedium?.fontSize == null
-                                    ? null
-                                    : theme.textTheme.labelMedium!.fontSize! *
-                                        0.84,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: layout.selectorDeltaGap),
-                      Expanded(
-                        child: _CompactDelta(
-                          delta: delta,
-                          layout: layout,
-                          weightUnit: weightUnit,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            if (isEditing)
-              Positioned(
-                top: layout.value(6),
-                right: layout.value(6),
-                child: _ExerciseProgressRemoveBadge(
-                  layout: layout,
-                  onTap: onRemove,
+      ],
+    );
+
+    final selectorBody = Semantics(
+      key: ValueKey('exercise-progress-selector-${tile.definition.id}'),
+      container: true,
+      excludeSemantics: true,
+      button: true,
+      label: localizedName,
+      selected: isSelected,
+      onTap: onTap,
+      child: InkWell(
+        excludeFromSemantics: true,
+        borderRadius: shapes.exerciseProgressSelector * layout.scale,
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: layout.selectorPadding,
+            left: layout.selectorPadding,
+            right:
+                layout.selectorPadding +
+                (isEditing ? layout.removeBadgeHitSize : 0),
+            bottom: layout.selectorPadding,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                localizedName,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: tileForeground,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
-          ],
+              SizedBox(height: layout.selectorGraphGap),
+              SizedBox(
+                height: layout.selectorChartHeight,
+                child: _ExerciseProgressChart(
+                  points: tile.points,
+                  showEmptyLabel: false,
+                  weightUnit: weightUnit,
+                  tooltipTextColor: tooltipForeground,
+                  actualColor: tonosPrimarySeriesForSurface(
+                    context,
+                    surfaces.exerciseProgressSelector,
+                  ),
+                  estimatedColor: tonosSecondarySeriesForSurface(
+                    context,
+                    surfaces.exerciseProgressSelector,
+                  ),
+                ),
+              ),
+              SizedBox(height: layout.selectorGraphGap),
+              _ExerciseProgressSelectorValues(
+                latestValue:
+                    latest == null
+                        ? '--'
+                        : _formatWeight(
+                          latest.estimatedOneRm,
+                          weightUnit,
+                          locale: Localizations.localeOf(context),
+                        ),
+                delta: delta,
+                layout: layout,
+                weightUnit: weightUnit,
+                foreground: tileForeground,
+              ),
+            ],
+          ),
         ),
       ),
+    );
+    final selector = Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: layout.selectorWidth,
+          margin: EdgeInsets.only(right: layout.selectorMarginRight),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: tileFill,
+              border: Border.all(
+                color:
+                    isSelected
+                        ? accent
+                        : context.surfaceDecorationTokens.panel.outlined
+                        ? tonosOutlineForSurface(
+                          context,
+                          surfaces.exerciseProgressSelector,
+                        )
+                        : surfaces.subtleOutline,
+                width: isSelected ? layout.value(1.5) : layout.value(1),
+              ),
+              borderRadius: shapes.exerciseProgressSelector * layout.scale,
+              boxShadow:
+                  usesInkRecipe
+                      ? [
+                        BoxShadow(
+                          color: effects.cardShadow,
+                          blurRadius: 0,
+                          offset: effects.cardShadowOffset,
+                        ),
+                      ]
+                      : null,
+            ),
+            child: Stack(
+              children: [
+                // The body establishes the selector's natural height. Keeping
+                // it non-positioned avoids an unbounded cross-axis layout in
+                // the horizontal carousel when names or values wrap.
+                selectorBody,
+                if (isEditing)
+                  Positioned(
+                    key: ValueKey(
+                      'exercise-progress-remove-${tile.definition.id}',
+                    ),
+                    top: 0,
+                    right: 0,
+                    child: _ExerciseProgressRemoveBadge(
+                      layout: layout,
+                      localizedName: localizedName,
+                      onTap: onRemove,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    // The selector scopes selected-surface foregrounds for nested chart labels.
+    return usesInkRecipe ? Theme(data: tileTheme, child: selector) : selector;
+  }
+}
+
+class _ExerciseProgressSelectorValues extends StatelessWidget {
+  final String latestValue;
+  final double? delta;
+  final _ExerciseProgressLayout layout;
+  final WeightUnit weightUnit;
+  final Color foreground;
+
+  const _ExerciseProgressSelectorValues({
+    required this.latestValue,
+    required this.delta,
+    required this.layout,
+    required this.weightUnit,
+    required this.foreground,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final latestStyle = theme.textTheme.labelMedium?.copyWith(
+      color: foreground,
+      fontWeight: FontWeight.w800,
+    );
+    final deltaStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+    );
+    final deltaText = _formatDeltaWeight(
+      delta,
+      weightUnit,
+      locale: Localizations.localeOf(context),
+    );
+    final deltaIcon = _deltaIcon(delta);
+    final textDirection = Directionality.of(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final latestWidth = _measureText(
+          latestValue,
+          latestStyle,
+          textScaler,
+          textDirection,
+        );
+        final deltaWidth = _measureText(
+          deltaText,
+          deltaStyle,
+          textScaler,
+          textDirection,
+        );
+        final deltaDecorationWidth =
+            deltaIcon == null
+                ? 0.0
+                : layout.compactIconSize + layout.compactIconGap;
+        final requiredInlineWidth =
+            latestWidth +
+            layout.selectorDeltaGap +
+            deltaDecorationWidth +
+            deltaWidth;
+        final useStacked =
+            textScaler.scale(1) > 1.15 ||
+            !constraints.hasBoundedWidth ||
+            requiredInlineWidth > constraints.maxWidth;
+        final values =
+            useStacked
+                ? Column(
+                  key: const ValueKey(
+                    'exercise-progress-selector-values-stacked',
+                  ),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(latestValue, style: latestStyle),
+                    _CompactDelta(
+                      delta: delta,
+                      layout: layout,
+                      weightUnit: weightUnit,
+                    ),
+                  ],
+                )
+                : Row(
+                  key: const ValueKey('exercise-progress-selector-values-row'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: Text(latestValue, style: latestStyle)),
+                    SizedBox(width: layout.selectorDeltaGap),
+                    Expanded(
+                      child: _CompactDelta(
+                        delta: delta,
+                        layout: layout,
+                        weightUnit: weightUnit,
+                      ),
+                    ),
+                  ],
+                );
+        return values;
+      },
     );
   }
 }
 
+double _measureText(
+  String text,
+  TextStyle? style,
+  TextScaler textScaler,
+  TextDirection textDirection,
+) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: textDirection,
+    textScaler: textScaler,
+  )..layout();
+  return painter.width;
+}
+
 class _ExerciseProgressRemoveBadge extends StatelessWidget {
   final _ExerciseProgressLayout layout;
+  final String localizedName;
   final VoidCallback onTap;
 
   const _ExerciseProgressRemoveBadge({
     required this.layout,
+    required this.localizedName,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    final effects = context.effectTokens;
+    final badgeShadow = effects.progressRemoveBadgeShadow;
+    final shadows =
+        badgeShadow.color.a == 0 ? const <BoxShadow>[] : [badgeShadow];
+    final strings = AppLocalizations.of(context);
+    final hitSize = layout.removeBadgeHitSize;
+    final label = strings.exerciseProgressRemoveExerciseLabel(localizedName);
+    return Semantics(
+      container: true,
+      button: true,
+      label: label,
       onTap: onTap,
-      child: Container(
-        width: layout.removeBadgeSize,
-        height: layout.removeBadgeSize,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withValues(alpha: 0.94),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.24),
-              blurRadius: layout.value(8),
-              offset: Offset(0, layout.value(2)),
+      child: Tooltip(
+        excludeFromSemantics: true,
+        message: label,
+        child: Material(
+          key: const ValueKey('exercise-progress-remove-action'),
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: Ink(
+            width: hitSize,
+            height: hitSize,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.errorContainer.withValues(alpha: 0.94),
+              shape: BoxShape.circle,
+              boxShadow: [
+                for (final shadow in shadows)
+                  BoxShadow(
+                    color: shadow.color,
+                    blurRadius: layout.value(shadow.blurRadius),
+                    spreadRadius: layout.value(shadow.spreadRadius),
+                    offset: Offset(
+                      layout.value(shadow.offset.dx),
+                      layout.value(shadow.offset.dy),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
-        child: Icon(
-          Icons.remove,
-          size: layout.removeIconSize,
-          color: theme.colorScheme.onErrorContainer,
+            child: InkWell(
+              excludeFromSemantics: true,
+              customBorder: const CircleBorder(),
+              onTap: onTap,
+              child: Center(
+                child: Icon(
+                  Icons.remove,
+                  size: layout.removeIconSize,
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -925,6 +1395,7 @@ class _CompactDelta extends StatelessWidget {
     final color = _deltaColor(context, delta);
     final icon = _deltaIcon(delta);
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (icon != null) ...[
           Icon(icon, size: layout.compactIconSize, color: color),
@@ -932,15 +1403,12 @@ class _CompactDelta extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            _formatDeltaWeight(delta, weightUnit),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            _formatDeltaWeight(
+              delta,
+              weightUnit,
+              locale: Localizations.localeOf(context),
+            ),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize:
-                  Theme.of(context).textTheme.labelSmall?.fontSize == null
-                      ? null
-                      : Theme.of(context).textTheme.labelSmall!.fontSize! *
-                          0.82,
               color: color,
               fontWeight: FontWeight.w800,
             ),
@@ -972,18 +1440,28 @@ List<_ExerciseProgressPoint> _validPoints(
   ];
 }
 
-String _formatDeltaWeight(double? delta, WeightUnit unit) {
+String _formatDeltaWeight(double? delta, WeightUnit unit, {Locale? locale}) {
   if (delta == null) return '--';
   final value = WeightUnitFormatter.fromPounds(delta, unit);
   final rounded = value.round();
+  final number =
+      locale == null
+          ? rounded.abs().toString()
+          : LocalizedFormatters.number(
+            rounded.abs(),
+            locale,
+            maximumFractionDigits: 0,
+          );
   if (rounded == 0) return '0 ${unit.shortLabel}';
-  return '${rounded > 0 ? '+' : ''}$rounded ${unit.shortLabel}';
+  return '${rounded > 0 ? '+' : '-'}$number ${unit.shortLabel}';
 }
 
 Color _deltaColor(BuildContext context, double? delta) {
-  final scheme = Theme.of(context).colorScheme;
-  if (delta == null || delta == 0) return scheme.onSurfaceVariant;
-  return delta > 0 ? Colors.green.shade400 : scheme.error;
+  final progressColors = context.progressColors;
+  if (delta == null || delta == 0) return progressColors.neutral;
+  return delta > 0
+      ? progressColors.exerciseIncrease
+      : progressColors.exerciseDecrease;
 }
 
 IconData? _deltaIcon(double? delta) {
@@ -1000,41 +1478,55 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(layout.heroRadius),
-      child: Container(
-        padding: EdgeInsets.all(layout.emptyPadding),
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground = tonosForegroundForSurface(
+      context,
+      surfaces.exerciseProgressHero,
+    );
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.36,
-          ),
-          borderRadius: BorderRadius.circular(layout.heroRadius),
+          color: surfaces.exerciseProgressHero,
+          borderRadius: shapes.exerciseProgressHero * layout.scale,
         ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.add_chart,
-              size: layout.emptyIconSize,
-              color: theme.colorScheme.primary,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: shapes.exerciseProgressHero * layout.scale,
+          child: Padding(
+            padding: EdgeInsets.all(layout.emptyPadding),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.add_chart,
+                  size: layout.emptyIconSize,
+                  color: neo ? foreground : theme.colorScheme.primary,
+                ),
+                SizedBox(height: layout.emptyTitleGap),
+                Text(
+                  strings.exerciseProgressTrackExercise,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: neo ? foreground : null,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: layout.emptyBodyGap),
+                Text(
+                  strings.exerciseProgressTrackExerciseBody,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tonosSecondaryForegroundForSurface(
+                      context,
+                      surfaces.exerciseProgressHero,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: layout.emptyTitleGap),
-            Text(
-              strings.exerciseProgressTrackExercise,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            SizedBox(height: layout.emptyBodyGap),
-            Text(
-              strings.exerciseProgressTrackExerciseBody,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1049,21 +1541,50 @@ class _AddExerciseProgressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return GestureDetector(
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
+    final strings = AppLocalizations.of(context);
+    return Semantics(
+      button: true,
+      label: strings.commonAdd,
       onTap: onTap,
-      child: Container(
-        width: layout.addTileWidth,
-        margin: EdgeInsets.only(right: layout.addTileMarginRight),
-        decoration: BoxDecoration(
-          border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(layout.addTileRadius),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.add,
-            size: layout.addIconSize,
-            color: colors.healthTrendIcon!,
+      child: Tooltip(
+        message: strings.commonAdd,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: layout.addTileWidth,
+            constraints: BoxConstraints(
+              minHeight: layout.selectorActionMinHeight,
+            ),
+            margin: EdgeInsets.only(right: layout.addTileMarginRight),
+            child: Ink(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color:
+                      context.surfaceDecorationTokens.panel.outlined
+                          ? tonosOutlineForSurface(
+                            context,
+                            context.cs.surface,
+                            neutral: true,
+                          )
+                          : surfaces.subtleOutline,
+                ),
+                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
+              ),
+              child: InkWell(
+                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
+                onTap: onTap,
+                child: Center(
+                  child: Icon(
+                    Icons.add,
+                    size: layout.addIconSize,
+                    color: dataVisualization.label,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1079,21 +1600,50 @@ class _EditExerciseProgressTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return GestureDetector(
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final dataVisualization = context.dataVisualizationTokens;
+    final strings = AppLocalizations.of(context);
+    return Semantics(
+      button: true,
+      label: strings.commonEdit,
       onTap: onTap,
-      child: Container(
-        width: layout.addTileWidth,
-        margin: EdgeInsets.only(right: layout.addTileMarginRight),
-        decoration: BoxDecoration(
-          border: Border.all(color: colors.healthTrendBorder!),
-          borderRadius: BorderRadius.circular(layout.addTileRadius),
-        ),
-        child: Center(
-          child: Icon(
-            Icons.edit,
-            size: layout.value(26),
-            color: colors.healthTrendIcon!,
+      child: Tooltip(
+        message: strings.commonEdit,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: layout.addTileWidth,
+            constraints: BoxConstraints(
+              minHeight: layout.selectorActionMinHeight,
+            ),
+            margin: EdgeInsets.only(right: layout.addTileMarginRight),
+            child: Ink(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color:
+                      context.surfaceDecorationTokens.panel.outlined
+                          ? tonosOutlineForSurface(
+                            context,
+                            context.cs.surface,
+                            neutral: true,
+                          )
+                          : surfaces.subtleOutline,
+                ),
+                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
+              ),
+              child: InkWell(
+                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
+                onTap: onTap,
+                child: Center(
+                  child: Icon(
+                    Icons.edit,
+                    size: layout.value(26),
+                    color: dataVisualization.label,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1196,7 +1746,7 @@ class _ExerciseProgressDetailPageState
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tile.definition.name),
+        title: LocalizedExerciseName(definition: widget.tile.definition),
         centerTitle: true,
       ),
       body: ListView(
@@ -1225,10 +1775,19 @@ class _ExerciseProgressDetailPageState
                         showAxes: true,
                         interactive: true,
                         weightUnit: weightUnit,
+                        estimatedColor: tonosSecondarySeriesForSurface(
+                          context,
+                          context.surfaceTokens.exerciseProgressStat,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const _ExerciseProgressLegend(),
+                    _ExerciseProgressLegend(
+                      estimatedColor: tonosSecondarySeriesForSurface(
+                        context,
+                        context.surfaceTokens.exerciseProgressStat,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1271,21 +1830,23 @@ class _ExerciseProgressDetailPageState
 }
 
 class _ExerciseProgressLegend extends StatelessWidget {
-  const _ExerciseProgressLegend();
+  final Color? estimatedColor;
+
+  const _ExerciseProgressLegend({this.estimatedColor});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final progressColors = context.progressColors;
     return Wrap(
       spacing: 14,
       runSpacing: 8,
       children: [
         _LegendItem(
-          color: cs.primary,
+          color: progressColors.accent,
           label: AppLocalizations.of(context).exerciseProgressActual,
         ),
         _LegendItem(
-          color: cs.onSurfaceVariant,
+          color: estimatedColor ?? progressColors.estimated,
           label: AppLocalizations.of(context).exerciseProgressEstimated,
           dashed: true,
         ),
@@ -1334,6 +1895,7 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final locale = Localizations.localeOf(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       clipBehavior: Clip.antiAlias,
@@ -1345,7 +1907,10 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  DateFormat.yMMMd().add_jm().format(point.date),
+                  LocalizedFormatters.dateTime(
+                    point.displayDateTime,
+                    Localizations.localeOf(context),
+                  ),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1357,7 +1922,11 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                 children: [
                   Text(
                     AppLocalizations.of(context).exerciseProgressEstimatedValue(
-                      _formatWeight(point.estimatedOneRm, weightUnit),
+                      _formatWeight(
+                        point.estimatedOneRm,
+                        weightUnit,
+                        locale: locale,
+                      ),
                     ),
                     style: theme.textTheme.bodyMedium,
                   ),
@@ -1367,7 +1936,11 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
                         : AppLocalizations.of(
                           context,
                         ).exerciseProgressActualValue(
-                          _formatWeight(point.actualOneRm!, weightUnit),
+                          _formatWeight(
+                            point.actualOneRm!,
+                            weightUnit,
+                            locale: locale,
+                          ),
                         ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
@@ -1395,6 +1968,9 @@ class _ExerciseProgressChart extends StatefulWidget {
   final bool showAxes;
   final bool interactive;
   final WeightUnit weightUnit;
+  final Color? tooltipTextColor;
+  final Color? actualColor;
+  final Color? estimatedColor;
 
   const _ExerciseProgressChart({
     required this.points,
@@ -1402,6 +1978,9 @@ class _ExerciseProgressChart extends StatefulWidget {
     this.showAxes = false,
     this.interactive = false,
     this.weightUnit = WeightUnit.pounds,
+    this.tooltipTextColor,
+    this.actualColor,
+    this.estimatedColor,
   });
 
   @override
@@ -1449,6 +2028,11 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
 
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
+    final progressColors = context.progressColors;
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
@@ -1456,15 +2040,30 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
           size: size,
           painter: _ExerciseProgressChartPainter(
             points: widget.points,
-            actualColor: cs.primary,
-            estimatedColor: cs.onSurfaceVariant,
-            gridColor: cs.outlineVariant,
-            axisLabelColor: cs.onSurfaceVariant,
-            tooltipBackgroundColor: cs.surfaceContainerHighest,
-            tooltipTextColor: cs.onSurface,
+            actualColor:
+                widget.actualColor ??
+                tonosPrimarySeriesForSurface(
+                  context,
+                  surfaces.exerciseProgressStat,
+                ),
+            estimatedColor:
+                widget.estimatedColor ??
+                tonosSecondarySeriesForSurface(
+                  context,
+                  surfaces.exerciseProgressStat,
+                ),
+            gridColor: progressColors.grid,
+            axisLabelColor: progressColors.label,
+            tooltipBackgroundColor: surfaces.exerciseProgressTooltip,
+            tooltipTextColor: widget.tooltipTextColor ?? cs.onSurface,
+            tooltipBorderRadius: shapes.exerciseProgressTooltip,
             showAxes: widget.showAxes,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
+            locale: locale,
+            estimatedValueLabel: strings.exerciseProgressEstimatedValue,
+            actualValueLabel: strings.exerciseProgressActualValue,
+            noActualLabel: strings.exerciseProgressNoActual,
           ),
         );
 
@@ -1515,9 +2114,14 @@ class _ExerciseProgressChartPainter extends CustomPainter {
   final Color axisLabelColor;
   final Color tooltipBackgroundColor;
   final Color tooltipTextColor;
+  final BorderRadius tooltipBorderRadius;
   final bool showAxes;
   final int? selectedIndex;
   final WeightUnit weightUnit;
+  final Locale locale;
+  final String Function(String value) estimatedValueLabel;
+  final String Function(String value) actualValueLabel;
+  final String noActualLabel;
 
   const _ExerciseProgressChartPainter({
     required this.points,
@@ -1527,9 +2131,14 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     required this.axisLabelColor,
     required this.tooltipBackgroundColor,
     required this.tooltipTextColor,
+    required this.tooltipBorderRadius,
     required this.showAxes,
     required this.selectedIndex,
     required this.weightUnit,
+    required this.locale,
+    required this.estimatedValueLabel,
+    required this.actualValueLabel,
+    required this.noActualLabel,
   });
 
   @override
@@ -1555,7 +2164,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       if (showAxes) {
         _drawText(
           canvas,
-          _formatAxisWeight(tick, weightUnit),
+          _formatAxisWeight(tick, weightUnit, locale),
           Offset(0, y - 7),
           TextStyle(
             color: axisLabelColor,
@@ -1611,7 +2220,10 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     for (final index in scale.dateTickIndexes) {
-      final label = DateFormat.MMMd().format(points[index].date);
+      final label = LocalizedFormatters.shortDate(
+        points[index].calendarDay.toLocalDateTime(),
+        locale,
+      );
       final painter = TextPainter(
         text: TextSpan(text: label, style: dateStyle),
         textDirection: ui.TextDirection.ltr,
@@ -1687,12 +2299,19 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       fontWeight: FontWeight.w700,
     );
     final lines = [
-      (DateFormat.yMMMd().add_jm().format(point.date), titleStyle),
-      ('Est. ${_formatWeight(point.estimatedOneRm, weightUnit)}', bodyStyle),
+      (LocalizedFormatters.dateTime(point.displayDateTime, locale), titleStyle),
+      (
+        estimatedValueLabel(
+          _formatWeight(point.estimatedOneRm, weightUnit, locale: locale),
+        ),
+        bodyStyle,
+      ),
       (
         point.actualOneRm == null
-            ? 'No actual 1RM'
-            : 'Actual ${_formatWeight(point.actualOneRm!, weightUnit)}',
+            ? noActualLabel
+            : actualValueLabel(
+              _formatWeight(point.actualOneRm!, weightUnit, locale: locale),
+            ),
         bodyStyle,
       ),
     ];
@@ -1721,10 +2340,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         Paint()
           ..color = tooltipBackgroundColor.withValues(alpha: 0.96)
           ..style = PaintingStyle.fill;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(10)),
-      background,
-    );
+    canvas.drawRRect(tooltipBorderRadius.toRRect(rect), background);
 
     var y = rect.top + 8;
     for (final painter in painters) {
@@ -1793,9 +2409,12 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         oldDelegate.axisLabelColor != axisLabelColor ||
         oldDelegate.tooltipBackgroundColor != tooltipBackgroundColor ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
+        oldDelegate.tooltipBorderRadius != tooltipBorderRadius ||
         oldDelegate.showAxes != showAxes ||
         oldDelegate.selectedIndex != selectedIndex ||
-        oldDelegate.weightUnit != weightUnit;
+        oldDelegate.weightUnit != weightUnit ||
+        oldDelegate.locale != locale ||
+        oldDelegate.noActualLabel != noActualLabel;
   }
 }
 
@@ -1935,16 +2554,28 @@ class _LegendLinePainter extends CustomPainter {
   }
 }
 
-String _formatWeight(double value, WeightUnit unit) {
-  return WeightUnitFormatter.formatWeight(value, unit);
+String _formatWeight(double value, WeightUnit unit, {Locale? locale}) {
+  return WeightUnitFormatter.formatWeight(value, unit, locale: locale);
 }
 
-String _formatAxisWeight(double value, WeightUnit unit) {
+String _formatAxisWeight(double value, WeightUnit unit, [Locale? locale]) {
   final displayValue = WeightUnitFormatter.fromPounds(value, unit);
   final rounded = displayValue.round();
   if (rounded >= 1000) {
     final compact = rounded / 1000;
-    return '${compact.toStringAsFixed(compact >= 10 ? 0 : 1)}k';
+    final digits = compact >= 10 ? 0 : 1;
+    final text =
+        locale == null
+            ? compact.toStringAsFixed(digits)
+            : LocalizedFormatters.number(
+              compact,
+              locale,
+              minimumFractionDigits: digits,
+              maximumFractionDigits: digits,
+            );
+    return '${text}k';
   }
-  return '$rounded';
+  return locale == null
+      ? '$rounded'
+      : LocalizedFormatters.number(rounded, locale, maximumFractionDigits: 0);
 }

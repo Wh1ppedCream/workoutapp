@@ -16,12 +16,26 @@ void main() {
   tearDown(() => db.close());
 
   test(
-    'detailed definitions retain a missing primary equipment requirement',
+    'detailed definitions retain equipment and muscle catalog identities',
     () async {
-      await db.insert('equipment', {'id': 1, 'name': 'Barbell'});
-      await db.insert('equipment', {'id': 2, 'name': 'Adjustable Bench'});
+      await db.insert('equipment', {
+        'id': 1,
+        'name': 'Barbell',
+        'catalog_id': 'tonos.equipment.0001',
+      });
+      await db.insert('equipment', {
+        'id': 2,
+        'name': 'Adjustable Bench',
+        'catalog_id': 'tonos.equipment.0002',
+      });
+      await db.insert('muscles', {
+        'id': 10,
+        'name': 'Pectoralis Major',
+        'catalog_id': 'tonos.muscle.0001',
+      });
       await db.insert('exercise_definitions', {
         'id': 1,
+        'catalog_id': 'tonos.exercise.0007',
         'name': 'Bench Press - Barbell',
         'equipment_id': 1,
         'rating': 90,
@@ -29,6 +43,11 @@ void main() {
       await db.insert('exercise_equipment', {
         'exercise_id': 1,
         'equipment_id': 2,
+      });
+      await db.insert('exercise_muscle', {
+        'exercise_id': 1,
+        'muscle_id': 10,
+        'rank': 1,
       });
 
       final definitions =
@@ -39,6 +58,45 @@ void main() {
         definitions.single.equipmentList.map((equipment) => equipment.id),
         [1, 2],
       );
+      expect(
+        definitions.single.equipmentList.first.catalogId,
+        'tonos.equipment.0001',
+      );
+      expect(
+        definitions.single.muscles.single.muscle.catalogId,
+        'tonos.muscle.0001',
+      );
+
+      final batched = await DefinitionDao.getExerciseDefinitionsDetailedByIds(
+        db,
+        [1],
+      );
+      expect(
+        batched.single.equipmentList.first.catalogId,
+        'tonos.equipment.0001',
+      );
+      expect(
+        batched.single.muscles.single.muscle.catalogId,
+        'tonos.muscle.0001',
+      );
+
+      final byCatalogId = await DefinitionDao.getExerciseDefinitionByCatalogId(
+        db,
+        'tonos.exercise.0007',
+      );
+      expect(byCatalogId?.id, 1);
+      expect(
+        byCatalogId?.equipmentList.first.catalogId,
+        'tonos.equipment.0001',
+      );
+      expect(byCatalogId?.muscles.single.muscle.catalogId, 'tonos.muscle.0001');
+      expect(
+        await DefinitionDao.getExerciseDefinitionByCatalogId(
+          db,
+          'tonos.exercise.9999',
+        ),
+        isNull,
+      );
     },
   );
 }
@@ -47,6 +105,7 @@ Future<void> _createSchema(Database db) async {
   await db.execute('''
     CREATE TABLE exercise_definitions (
       id INTEGER PRIMARY KEY,
+      catalog_id TEXT,
       name TEXT NOT NULL,
       equipment_id INTEGER,
       rating INTEGER NOT NULL DEFAULT 0
@@ -55,7 +114,8 @@ Future<void> _createSchema(Database db) async {
   await db.execute('''
     CREATE TABLE equipment (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      catalog_id TEXT
     )
   ''');
   await db.execute('''
@@ -79,7 +139,8 @@ Future<void> _createSchema(Database db) async {
   await db.execute('''
     CREATE TABLE muscles (
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      catalog_id TEXT
     )
   ''');
   await db.execute('''

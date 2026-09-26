@@ -5,6 +5,10 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/gym_models.dart';
 import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
+import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_surface.dart';
+import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../exercise/auto_preset_flow_screen.dart';
 
@@ -23,7 +27,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
   AppRepository get _repository => context.read<AppRepository>();
 
   bool _isLoading = true;
-  String? _loadError;
+  SafeFailure? _loadFailure;
   int _loadRequest = 0;
   _FlowSummary _appSummary = const _FlowSummary.empty();
   List<_ProfileFlowGroup> _profiles = const [];
@@ -39,7 +43,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
     if (mounted) {
       setState(() {
         _isLoading = true;
-        _loadError = null;
+        _loadFailure = null;
       });
     }
 
@@ -61,11 +65,11 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
         _profiles = groups;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (error) {
       if (!mounted || request != _loadRequest) return;
       setState(() {
         _isLoading = false;
-        _loadError = 'load_failed';
+        _loadFailure = SafeFailure.classify(error);
       });
     }
   }
@@ -136,8 +140,13 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
             padding: EdgeInsets.symmetric(vertical: 52),
             child: Center(child: CircularProgressIndicator()),
           )
-        else if (_loadError != null)
-          _FlowLoadError(message: strings.flowLoadError, onRetry: _loadFlows)
+        else if (_loadFailure != null)
+          SafeErrorView(
+            title: strings.flowLoadError,
+            failure: _loadFailure!,
+            onRetry: _loadFlows,
+            compact: true,
+          )
         else ...[
           _FlowScopeCard(
             color: appColor,
@@ -264,56 +273,19 @@ class _ScopeLegend extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _LegendChip(
+        SettingsLegendChip(
           color: appColor,
           label: AppLocalizations.of(context).rulesAppDefaultsChip,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: profileColor,
           label: AppLocalizations.of(context).rulesGymProfilesTitle,
         ),
-        _LegendChip(
+        SettingsLegendChip(
           color: planColor,
           label: AppLocalizations.of(context).rulesPlansChip,
         ),
       ],
-    );
-  }
-}
-
-class _LegendChip extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendChip({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: .12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: .36)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -339,45 +311,69 @@ class _FlowScopeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: .28);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .28),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withValues(alpha: .52)),
+        color: cardSurface,
+        borderRadius: shapes.settingsPanel,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : color.withValues(alpha: .52),
+          width: shapes.outlineWidth,
+        ),
       ),
-      child: ExpansionTile(
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-        childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        collapsedBackgroundColor: color.withValues(alpha: .08),
-        backgroundColor: color.withValues(alpha: .04),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: .17),
-            borderRadius: BorderRadius.circular(14),
+      child: TonosSurfaceTheme(
+        surface: cardSurface,
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+          collapsedBackgroundColor:
+              neo ? cardSurface : color.withValues(alpha: .08),
+          backgroundColor: neo ? cardSurface : color.withValues(alpha: .04),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: .17),
+              borderRadius: shapes.settingsScopeIcon,
+            ),
+            child: Icon(icon, color: neo ? cardForeground : color, size: 22),
           ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w900,
+          title: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: neo ? cardForeground : null,
+            ),
           ),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
+          subtitle: Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
           ),
+          children: [child],
         ),
-        children: [child],
       ),
     );
   }
@@ -470,17 +466,35 @@ class _FlowEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tileSurface = neo ? surfaces.dialogChoice : null;
+    final tileForeground =
+        neo && tileSurface != null
+            ? tonosForegroundForSurface(context, tileSurface)
+            : scheme.onSurface;
+    final tileSecondary =
+        neo && tileSurface != null
+            ? tonosSecondaryForegroundForSurface(context, tileSurface)
+            : scheme.onSurfaceVariant;
     return Material(
-      color: color.withValues(alpha: .06),
-      borderRadius: BorderRadius.circular(16),
+      color: neo ? tileSurface! : color.withValues(alpha: .06),
+      borderRadius: shapes.card,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.card,
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: .34)),
+            borderRadius: shapes.card,
+            border: Border.all(
+              color:
+                  neo
+                      ? tonosOutlineForSurface(context, tileSurface!)
+                      : color.withValues(alpha: .34),
+              width: neo ? shapes.outlineWidth : 1,
+            ),
           ),
           child: Row(
             children: [
@@ -489,9 +503,13 @@ class _FlowEntryTile extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .16),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: shapes.control,
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(
+                  icon,
+                  color: neo ? tileForeground : color,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -504,6 +522,7 @@ class _FlowEntryTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: neo ? tileForeground : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -511,15 +530,19 @@ class _FlowEntryTile extends StatelessWidget {
                       summary.label(AppLocalizations.of(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: tileSecondary),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios, size: 16, color: color),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: neo ? tileForeground : color,
+              ),
             ],
           ),
         ),
@@ -575,23 +598,44 @@ class _EmptyFlowsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final emptySurface = neo ? surfaces.panel : null;
+    final foreground =
+        neo && emptySurface != null
+            ? tonosForegroundForSurface(context, emptySurface)
+            : scheme.onSurfaceVariant;
+    final secondary =
+        neo && emptySurface != null
+            ? tonosSecondaryForegroundForSurface(context, emptySurface)
+            : scheme.onSurfaceVariant;
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .24),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: .5)),
+        color:
+            neo
+                ? emptySurface
+                : scheme.surfaceContainerHighest.withValues(alpha: .24),
+        borderRadius: shapes.card,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, emptySurface!)
+                  : scheme.outlineVariant.withValues(alpha: .5),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: scheme.onSurfaceVariant),
+          Icon(Icons.info_outline, color: foreground),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ).textTheme.bodySmall?.copyWith(color: secondary),
             ),
           ),
         ],
@@ -600,45 +644,10 @@ class _EmptyFlowsCard extends StatelessWidget {
   }
 }
 
-class _FlowLoadError extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _FlowLoadError({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.errorContainer.withValues(alpha: .32),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.error.withValues(alpha: .38)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: scheme.error),
-          const SizedBox(width: 10),
-          Expanded(child: Text(message)),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(AppLocalizations.of(context).commonRetry),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 Color _profileColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF4DB6AC)
-      : const Color(0xFF00796B);
+  return context.flowTokens.profileScope;
 }
 
 Color _planColor(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFEF6C00);
+  return context.flowTokens.planScope;
 }

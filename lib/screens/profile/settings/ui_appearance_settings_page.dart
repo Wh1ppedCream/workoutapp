@@ -7,11 +7,16 @@ import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../providers/locale_preference_provider.dart';
 import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/app_theme_family.dart';
+import '../../../theme/app_theme_factory.dart';
+import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -74,7 +79,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = context.watch<ThemeProvider>().mode;
+    final themeProvider = context.watch<ThemeProvider>();
+    final themeMode = themeProvider.mode;
     final onboarding = context.watch<OnboardingConfig>();
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final language = context.watch<LocalePreferenceProvider>().preference;
@@ -93,6 +99,23 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             subtitle: strings.displaySettingsSubtitle,
             accentColor: SettingsAccent.appearance,
             children: settingsTilesWithDividers(context, [
+              if (themeProvider.availableFamilies.length > 1)
+                SettingsActionTile(
+                  key: AppTestKeys.uiAppearanceThemeFamily,
+                  icon: Icons.palette_outlined,
+                  iconColor: SettingsAccent.appearance,
+                  title: strings.themeFamilyTitle,
+                  subtitle: strings.themeFamilySubtitle,
+                  trailing: SettingsValueText(
+                    value: _themeFamilyLabel(strings, themeProvider.family),
+                  ),
+                  onTap:
+                      () => _showThemeFamilyDialog(
+                        context,
+                        themeProvider.family,
+                        themeProvider.availableFamilies,
+                      ),
+                ),
               SettingsSwitchTile(
                 icon: Icons.dark_mode_outlined,
                 iconColor: SettingsAccent.appearance,
@@ -100,8 +123,8 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 subtitle: strings.darkModeSubtitle,
                 value: themeMode == ThemeMode.dark,
                 onChanged:
-                    (on) => context.read<ThemeProvider>().setMode(
-                      on ? ThemeMode.dark : ThemeMode.light,
+                    (on) => unawaited(
+                      _setThemeMode(on ? ThemeMode.dark : ThemeMode.light),
                     ),
               ),
               SettingsSwitchTile(
@@ -117,28 +140,23 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                 iconColor: SettingsAccent.progress,
                 title: strings.weightUnitsTitle,
                 subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
-                trailing: Text(
-                  weightUnit.label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
+                trailing: SettingsValueText(
+                  value: _weightUnitLabel(strings, weightUnit),
                 ),
                 onTap: () => _showWeightUnitDialog(context, weightUnit),
               ),
-              SettingsActionTile(
-                icon: Icons.language_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.languageTitle,
-                subtitle: strings.languageSubtitle,
-                trailing: Text(
-                  _languageLabel(strings, language),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w900,
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceLanguage,
+                child: SettingsActionTile(
+                  icon: Icons.language_outlined,
+                  iconColor: SettingsAccent.appearance,
+                  title: strings.languageTitle,
+                  subtitle: strings.languageSubtitle,
+                  trailing: SettingsValueText(
+                    value: _languageLabel(strings, language),
                   ),
+                  onTap: () => _showLanguageDialog(context, language),
                 ),
-                onTap: () => _showLanguageDialog(context, language),
               ),
             ]),
           ),
@@ -150,23 +168,88 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             subtitle: strings.navigationSettingsSubtitle,
             accentColor: SettingsAccent.data,
             children: [
-              SettingsActionTile(
-                icon: Icons.space_dashboard_outlined,
-                iconColor: SettingsAccent.data,
-                title: strings.editBottomTabsTitle,
-                subtitle: strings.editBottomTabsSubtitle,
-                onTap:
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const NavBarSettingsPage(),
+              KeyedSubtree(
+                key: AppTestKeys.uiAppearanceNavigation,
+                child: SettingsActionTile(
+                  icon: Icons.space_dashboard_outlined,
+                  iconColor: SettingsAccent.data,
+                  title: strings.editBottomTabsTitle,
+                  subtitle: strings.editBottomTabsSubtitle,
+                  onTap:
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const NavBarSettingsPage(),
+                        ),
                       ),
-                    ),
+                ),
               ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    try {
+      await context.read<ThemeProvider>().setMode(mode);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).safeFailureSaveTitle),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showThemeFamilyDialog(
+    BuildContext context,
+    AppThemeFamily selectedFamily,
+    List<AppThemeFamily> availableFamilies,
+  ) async {
+    final strings = AppLocalizations.of(context);
+    final nextFamily = await showDialog<AppThemeFamily>(
+      context: context,
+      builder:
+          (dialogContext) => TonosChoiceDialog<AppThemeFamily>(
+            title: strings.themeFamilyTitle,
+            values: availableFamilies,
+            selected: selectedFamily,
+            label: (family) => _themeFamilyLabel(strings, family),
+            subtitle: (family) => _themeFamilyDescription(strings, family),
+            choicePreview:
+                (family) => _ThemeFamilyPreview(
+                  family: family,
+                  brightness: Theme.of(context).brightness,
+                ),
+            choiceKey:
+                (family) =>
+                    AppTestKeys.uiAppearanceThemeFamilyOption(family.code),
+          ),
+    );
+    if (nextFamily == null || !context.mounted) return;
+    await _setThemeFamily(nextFamily);
+  }
+
+  Future<void> _setThemeFamily(AppThemeFamily family) async {
+    try {
+      await context.read<ThemeProvider>().setFamily(family);
+    } catch (_) {
+      if (!mounted) return;
+      final strings = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(strings.safeFailureSaveTitle),
+            action: SnackBarAction(
+              label: strings.commonRetry,
+              onPressed: () => unawaited(_setThemeFamily(family)),
+            ),
+          ),
+        );
+    }
   }
 
   Future<void> _showWeightUnitDialog(
@@ -176,28 +259,36 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final strings = AppLocalizations.of(context);
     final nextUnit = await showDialog<WeightUnit>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(strings.weightUnitsTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final unit in WeightUnit.values)
-                RadioListTile<WeightUnit>(
-                  value: unit,
-                  groupValue: selectedUnit,
-                  title: Text(unit.label),
-                  subtitle: Text(unit.shortLabel),
-                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
-                ),
-            ],
+      builder:
+          (dialogContext) => TonosChoiceDialog<WeightUnit>(
+            title: strings.weightUnitsTitle,
+            values: WeightUnit.values,
+            selected: selectedUnit,
+            label: (unit) => _weightUnitLabel(strings, unit),
+            subtitle: (unit) => unit.shortLabel,
           ),
-        );
-      },
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
   }
+
+  String _weightUnitLabel(AppLocalizations strings, WeightUnit unit) {
+    return unit.localizedLabel(strings);
+  }
+
+  String _themeFamilyLabel(AppLocalizations strings, AppThemeFamily family) =>
+      switch (family) {
+        AppThemeFamily.classic => strings.themeFamilyClassic,
+        AppThemeFamily.neoBrutalism => strings.themeFamilyNeoBrutalism,
+      };
+
+  String _themeFamilyDescription(
+    AppLocalizations strings,
+    AppThemeFamily family,
+  ) => switch (family) {
+    AppThemeFamily.classic => strings.themeFamilyClassicDescription,
+    AppThemeFamily.neoBrutalism => strings.themeFamilyNeoBrutalismDescription,
+  };
 
   String _languageLabel(
     AppLocalizations strings,
@@ -222,24 +313,100 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final nextLanguage = await showDialog<AppLanguagePreference>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(strings.languageTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final language in AppLanguagePreference.values)
-                RadioListTile<AppLanguagePreference>(
-                  value: language,
-                  groupValue: selectedLanguage,
-                  title: Text(_languageLabel(strings, language)),
-                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
-                ),
-            ],
+        return TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.languageTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final language in AppLanguagePreference.values)
+                  RadioListTile<AppLanguagePreference>(
+                    value: language,
+                    groupValue: selectedLanguage,
+                    title: Text(_languageLabel(strings, language)),
+                    onChanged:
+                        (value) => Navigator.of(dialogContext).pop(value),
+                  ),
+              ],
+            ),
           ),
         );
       },
     );
     if (nextLanguage == null || !context.mounted) return;
     await context.read<LocalePreferenceProvider>().setPreference(nextLanguage);
+  }
+}
+
+class _ThemeFamilyPreview extends StatelessWidget {
+  const _ThemeFamilyPreview({required this.family, required this.brightness});
+
+  final AppThemeFamily family;
+  final Brightness brightness;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme =
+        brightness == Brightness.dark
+            ? AppThemeFactory.dark(family)
+            : AppThemeFactory.light(family);
+    final scheme = theme.colorScheme;
+    final isNeo = family == AppThemeFamily.neoBrutalism;
+    final panel = isNeo ? scheme.primary : scheme.surfaceContainerHighest;
+    final foreground = isNeo ? scheme.onPrimary : scheme.onSurface;
+    final accent = isNeo ? scheme.secondary : scheme.primary;
+
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: 52,
+        height: 36,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: panel,
+            border: Border.all(color: foreground, width: isNeo ? 1.5 : 1),
+            borderRadius: isNeo ? BorderRadius.zero : BorderRadius.circular(6),
+            boxShadow:
+                isNeo
+                    ? const [
+                      BoxShadow(color: Colors.black, offset: Offset(2, 2)),
+                    ]
+                    : null,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    width: 26,
+                    height: 4,
+                    child: ColoredBox(color: foreground),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      width: 18,
+                      height: 5,
+                      child: ColoredBox(color: accent),
+                    ),
+                    SizedBox(
+                      width: 10,
+                      height: 5,
+                      child: ColoredBox(
+                        color: foreground.withValues(alpha: 0.72),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

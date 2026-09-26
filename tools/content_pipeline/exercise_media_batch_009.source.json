@@ -1,0 +1,262 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 60,
+      "exerciseName": "External Rotation - Dumbbell",
+      "slug": "external_rotation_dumbbell",
+      "assets": [
+        {
+          "assetId": "external_rotation_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/external_rotation_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\external_rotation_dumbbell\\v1\\thumb.webp",
+          "title": "External Rotation - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 69,
+      "exerciseName": "Front Squat - Cable Machine",
+      "slug": "front_squat_cable_machine",
+      "assets": [
+        {
+          "assetId": "front_squat_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/front_squat_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\front_squat_cable_machine\\v1\\thumb.webp",
+          "title": "Front Squat - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 74,
+      "exerciseName": "Glute Bridge - Dumbbell",
+      "slug": "glute_bridge_dumbbell",
+      "assets": [
+        {
+          "assetId": "glute_bridge_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_bridge_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\glute_bridge_dumbbell\\v1\\thumb.webp",
+          "title": "Glute Bridge - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 75,
+      "exerciseName": "Glute Ham Raise",
+      "slug": "glute_ham_raise",
+      "assets": [
+        {
+          "assetId": "glute_ham_raise_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_ham_raise/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\glute_ham_raise\\v1\\thumb.webp",
+          "title": "Glute Ham Raise thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 76,
+      "exerciseName": "Glute Kickback",
+      "slug": "glute_kickback",
+      "assets": [
+        {
+          "assetId": "glute_kickback_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_kickback/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\glute_kickback\\v1\\thumb.webp",
+          "title": "Glute Kickback thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 77,
+      "exerciseName": "Glute Kickback - Cable Machine",
+      "slug": "glute_kickback_cable_machine",
+      "assets": [
+        {
+          "assetId": "glute_kickback_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/glute_kickback_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\glute_kickback_cable_machine\\v1\\thumb.webp",
+          "title": "Glute Kickback - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 79,
+      "exerciseName": "Hack Squat - Hack Squat Machine",
+      "slug": "hack_squat_hack_squat_machine",
+      "assets": [
+        {
+          "assetId": "hack_squat_hack_squat_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hack_squat_hack_squat_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\hack_squat_hack_squat_machine\\v1\\thumb.webp",
+          "title": "Hack Squat - Hack Squat Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 80,
+      "exerciseName": "Hammer Curl - Cable Machine",
+      "slug": "hammer_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "hammer_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/hammer_curl_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\hammer_curl_cable_machine\\v1\\thumb.webp",
+          "title": "Hammer Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 142,
+      "exerciseName": "Leg Extension - Leg Extension Machine",
+      "slug": "leg_extension_leg_extension_machine",
+      "assets": [
+        {
+          "assetId": "leg_extension_leg_extension_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_extension_leg_extension_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\leg_extension_leg_extension_machine\\v1\\thumb.webp",
+          "title": "Leg Extension - Leg Extension Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 147,
+      "exerciseName": "Leg Raise Twist (Hanging)",
+      "slug": "leg_raise_twist_hanging",
+      "assets": [
+        {
+          "assetId": "leg_raise_twist_hanging_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/leg_raise_twist_hanging/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\leg_raise_twist_hanging\\v1\\thumb.webp",
+          "title": "Leg Raise Twist (Hanging) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 157,
+      "exerciseName": "Mountain Climber (Crossbody)",
+      "slug": "mountain_climber_crossbody",
+      "assets": [
+        {
+          "assetId": "mountain_climber_crossbody_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/mountain_climber_crossbody/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\mountain_climber_crossbody\\v1\\thumb.webp",
+          "title": "Mountain Climber (Crossbody) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 219,
+      "exerciseName": "Row - Cable Machine",
+      "slug": "row_cable_machine",
+      "assets": [
+        {
+          "assetId": "row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\row_cable_machine\\v1\\thumb.webp",
+          "title": "Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 287,
+      "exerciseName": "Overhead Tricep Extension - Cable Machine",
+      "slug": "overhead_tricep_extension_cable_machine",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\overhead_tricep_extension_cable_machine\\v1\\thumb.webp",
+          "title": "Overhead Tricep Extension - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 288,
+      "exerciseName": "Overhead Tricep Extension - Dumbbell",
+      "slug": "overhead_tricep_extension_dumbbell",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\overhead_tricep_extension_dumbbell\\v1\\thumb.webp",
+          "title": "Overhead Tricep Extension - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 289,
+      "exerciseName": "Overhead Tricep Extension - Barbell",
+      "slug": "overhead_tricep_extension_barbell",
+      "assets": [
+        {
+          "assetId": "overhead_tricep_extension_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/overhead_tricep_extension_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_009\\exercises\\overhead_tricep_extension_barbell\\v1\\thumb.webp",
+          "title": "Overhead Tricep Extension - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

@@ -3,9 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart'; // adjust path if needed
 import '../services/workout_exit_preferences.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/workout_actions.dart';
 import '../utils/app_test_keys.dart';
 
 /// A FAB that toggles between a single dumbbell icon and
@@ -24,10 +28,12 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
     if (!_open) {
       return FloatingActionButton(
         key: AppTestKeys.ongoingSessionMenu,
-        backgroundColor: Colors.green,
+        backgroundColor: semantic.ongoingSessionAction,
+        tooltip: strings.sessionTitle,
         child: const Icon(Icons.fitness_center),
         onPressed: () => setState(() => _open = true),
       );
@@ -38,7 +44,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       children: [
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionResume,
-          backgroundColor: Colors.green,
+          backgroundColor: semantic.ongoingSessionAction,
           icon: const Icon(Icons.play_arrow),
           label: Text(strings.sessionResume),
           onPressed: () {
@@ -51,7 +57,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
         const SizedBox(width: 8),
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionExit,
-          backgroundColor: Colors.red,
+          backgroundColor: semantic.ongoingSessionExit,
           icon: const Icon(Icons.exit_to_app),
           label: Text(strings.sessionExit),
           onPressed:
@@ -106,7 +112,9 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).sessionEndFailed('$error'),
+            AppLocalizations.of(context).sessionEndFailed(
+              safeFailureMessage(AppLocalizations.of(context), error),
+            ),
           ),
         ),
       );
@@ -118,20 +126,22 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
     return showDialog<bool>(
       context: context,
       builder:
-          (dialogContext) => AlertDialog(
-            title: Text(strings.sessionCancelQuestion),
-            content: Text(strings.sessionCancelBody),
-            actions: [
-              TextButton(
-                key: AppTestKeys.ongoingSessionKeep,
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(strings.sessionKeepWorkout),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text(strings.sessionCancelWorkout),
-              ),
-            ],
+          (dialogContext) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.sessionCancelQuestion),
+              content: Text(strings.sessionCancelBody),
+              actions: [
+                TextButton(
+                  key: AppTestKeys.ongoingSessionKeep,
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text(strings.sessionKeepWorkout),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: Text(strings.sessionCancelWorkout),
+                ),
+              ],
+            ),
           ),
     );
   }
@@ -144,121 +154,137 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       builder:
           (dialogContext) => StatefulBuilder(
             builder: (context, setDialogState) {
-              final colors = Theme.of(context).colorScheme;
-              final textTheme = Theme.of(context).textTheme;
-              return Dialog(
-                insetPadding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 24,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 380),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: colors.primaryContainer,
-                                borderRadius: BorderRadius.circular(12),
+              return TonosDialogFrame(
+                child: Builder(
+                  builder: (dialogThemeContext) {
+                    final theme = Theme.of(dialogThemeContext);
+                    final colors = theme.colorScheme;
+                    final textTheme = theme.textTheme;
+                    final shapes = dialogThemeContext.shapeTokens;
+                    final surfaces = dialogThemeContext.surfaceTokens;
+                    final neo =
+                        dialogThemeContext
+                            .surfaceDecorationTokens
+                            .panel
+                            .outlined;
+                    final choiceForeground =
+                        neo
+                            ? tonosForegroundForSurface(
+                              dialogThemeContext,
+                              surfaces.dialogChoice,
+                            )
+                            : null;
+                    final choiceSecondary =
+                        neo
+                            ? tonosSecondaryForegroundForSurface(
+                              dialogThemeContext,
+                              surfaces.dialogChoice,
+                            )
+                            : colors.onSurfaceVariant;
+                    return Dialog(
+                      insetPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 24,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: shapes.sheet),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 380),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: colors.primaryContainer,
+                                      borderRadius: shapes.control,
+                                    ),
+                                    child: Icon(
+                                      Icons.flag_outlined,
+                                      color: colors.onPrimaryContainer,
+                                      size: 21,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      strings.sessionEndQuestion,
+                                      style: textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              child: Icon(
-                                Icons.flag_outlined,
-                                color: colors.onPrimaryContainer,
-                                size: 21,
+                              const SizedBox(height: 18),
+                              WorkoutExitAction(
+                                discard: true,
+                                label: strings.sessionCancelDelete,
+                                onPressed:
+                                    () => Navigator.pop(
+                                      dialogContext,
+                                      _WorkoutExitDecision(
+                                        behavior: WorkoutExitBehavior.discard,
+                                        remember: remember,
+                                      ),
+                                    ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                strings.sessionEndQuestion,
-                                style: textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
+                              const SizedBox(height: 10),
+                              WorkoutExitAction(
+                                label: strings.sessionEndSave,
+                                onPressed:
+                                    () => Navigator.pop(
+                                      dialogContext,
+                                      _WorkoutExitDecision(
+                                        behavior:
+                                            WorkoutExitBehavior.saveCompleted,
+                                        remember: remember,
+                                      ),
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+                              Material(
+                                color: surfaces.dialogChoice,
+                                borderRadius: shapes.dialogChoice,
+                                child: CheckboxListTile(
+                                  value: remember,
+                                  dense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
+                                  title: Text(
+                                    strings.sessionRememberChoice,
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: choiceForeground,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    strings.sessionRememberChoiceBody,
+                                    style: textTheme.bodySmall?.copyWith(
+                                      color: choiceSecondary,
+                                    ),
+                                  ),
+                                  onChanged:
+                                      (value) => setDialogState(
+                                        () => remember = value ?? false,
+                                      ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        OutlinedButton.icon(
-                          onPressed:
-                              () => Navigator.pop(
-                                dialogContext,
-                                _WorkoutExitDecision(
-                                  behavior: WorkoutExitBehavior.discard,
-                                  remember: remember,
-                                ),
-                              ),
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: Text(strings.sessionCancelDelete),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            foregroundColor: colors.error,
-                            side: BorderSide(
-                              color: colors.error.withValues(alpha: 0.7),
-                            ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        FilledButton.icon(
-                          onPressed:
-                              () => Navigator.pop(
-                                dialogContext,
-                                _WorkoutExitDecision(
-                                  behavior: WorkoutExitBehavior.saveCompleted,
-                                  remember: remember,
-                                ),
-                              ),
-                          icon: const Icon(Icons.save_outlined, size: 18),
-                          label: Text(strings.sessionEndSave),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Material(
-                          color: colors.surfaceContainerHighest.withValues(
-                            alpha: 0.45,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          child: CheckboxListTile(
-                            value: remember,
-                            dense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            title: Text(
-                              strings.sessionRememberChoice,
-                              style: textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              strings.sessionRememberChoiceBody,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                            onChanged:
-                                (value) => setDialogState(
-                                  () => remember = value ?? false,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               );
             },

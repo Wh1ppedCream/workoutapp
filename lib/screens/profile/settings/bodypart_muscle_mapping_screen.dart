@@ -4,9 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
+import '../../../services/safe_failure.dart';
+import '../../../utils/localized_body_part_name.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class BodyPartMuscleMappingScreen extends StatefulWidget {
   const BodyPartMuscleMappingScreen({super.key});
@@ -27,7 +33,7 @@ class _BodyPartMuscleMappingScreenState
   bool _isLoading = true;
   bool _isSaving = false;
   bool _editing = false;
-  String? _error;
+  SafeFailure? _failure;
 
   @override
   void initState() {
@@ -36,6 +42,12 @@ class _BodyPartMuscleMappingScreenState
   }
 
   Future<void> _loadLookups() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _failure = null;
+      });
+    }
     try {
       final bodyParts = await _repo.fetchAllBodyPartsFull();
       final muscles = await _repo.fetchAllMusclesFull();
@@ -45,7 +57,7 @@ class _BodyPartMuscleMappingScreenState
         _muscles = muscles;
         _selectedBodyPart = bodyParts.isNotEmpty ? bodyParts.first : null;
         _isLoading = false;
-        _error = null;
+        _failure = null;
       });
       if (_selectedBodyPart != null) {
         await _loadMappings(_selectedBodyPart!.id);
@@ -53,7 +65,7 @@ class _BodyPartMuscleMappingScreenState
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -95,7 +107,9 @@ class _BodyPartMuscleMappingScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).mappingSaveFailed(e.toString()),
+            AppLocalizations.of(context).mappingSaveFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -127,44 +141,26 @@ class _BodyPartMuscleMappingScreenState
       ),
       bottomNavigationBar:
           _editing
-              ? SafeArea(
-                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isSaving ? null : _cancelEditing,
-                        child: Text(strings.commonCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: _isSaving ? null : _saveMappings,
-                        icon:
-                            _isSaving
-                                ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Icon(Icons.save),
-                        label: Text(
-                          _isSaving
-                              ? strings.nutritionSaving
-                              : strings.commonSave,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ? SettingsSaveBar(
+                label: _isSaving ? strings.nutritionSaving : strings.commonSave,
+                onPressed: _isSaving ? null : _saveMappings,
+                cancelLabel: strings.commonCancel,
+                onCancel: _isSaving ? null : _cancelEditing,
+                saveIcon:
+                    _isSaving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.save),
+                decorated: false,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
               : null,
       body: SafeArea(child: _buildBody()),
       floatingActionButton:
-          (!_editing && !_isLoading && _error == null)
+          (!_editing && !_isLoading && _failure == null)
               ? FloatingActionButton.extended(
                 onPressed: _startEditing,
                 icon: const Icon(Icons.edit),
@@ -179,9 +175,11 @@ class _BodyPartMuscleMappingScreenState
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Text(strings.rankingsLoadError(strings.mappingTitle, _error!)),
+    if (_failure != null) {
+      return SafeErrorView(
+        title: strings.safeFailureLoadTitle,
+        failure: _failure!,
+        onRetry: _loadLookups,
       );
     }
 
@@ -206,18 +204,40 @@ class _BodyPartMuscleMappingScreenState
               child: DropdownButtonFormField<BodyPart>(
                 isExpanded: true,
                 value: _selectedBodyPart,
-                decoration: InputDecoration(
-                  labelText: strings.mappingBodyPart,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                dropdownColor: settingsDropdownMenuColor(context),
+                style: settingsInputTextStyle(context),
+                iconEnabledColor: settingsInputForeground(context),
+                iconDisabledColor: settingsInputForeground(
+                  context,
+                  enabled: false,
                 ),
+                decoration: settingsFieldDecoration(
+                  context,
+                  label: strings.mappingBodyPart,
+                ),
+                selectedItemBuilder:
+                    (_) =>
+                        _bodyParts
+                            .map(
+                              (bodyPart) => settingsDropdownTriggerLabel(
+                                context,
+                                Text(
+                                  localizedBodyPartName(context, bodyPart.name),
+                                ),
+                              ),
+                            )
+                            .toList(),
                 items:
                     _bodyParts
                         .map(
                           (bodyPart) => DropdownMenuItem(
                             value: bodyPart,
-                            child: Text(bodyPart.name),
+                            child: settingsDropdownMenuLabel(
+                              context,
+                              Text(
+                                localizedBodyPartName(context, bodyPart.name),
+                              ),
+                            ),
                           ),
                         )
                         .toList(),
@@ -277,8 +297,11 @@ class _BodyPartMuscleMappingScreenState
               }
             });
           },
-          title: Text(
-            muscle.name,
+          title: LocalizedCatalogEntityName(
+            entity: CatalogEntityDisplayName(
+              catalogId: muscle.catalogId,
+              canonicalName: muscle.name,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -306,6 +329,14 @@ class _BodyPartMuscleMappingScreenState
             (muscle) => SettingsActionTile(
               icon: Icons.fitness_center,
               title: muscle.name,
+              titleWidget: LocalizedCatalogEntityName(
+                entity: CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               trailing: const SizedBox.shrink(),
             ),
           )

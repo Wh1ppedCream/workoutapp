@@ -1,0 +1,449 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 217,
+      "exerciseName": "Row - Resistance Band",
+      "slug": "row_resistance_band",
+      "assets": [
+        {
+          "assetId": "row_resistance_band_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_resistance_band/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\row_resistance_band\\v1\\thumb.webp",
+          "title": "Row - Resistance Band thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 220,
+      "exerciseName": "Row - Smith Machine",
+      "slug": "row_smith_machine",
+      "assets": [
+        {
+          "assetId": "row_smith_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_smith_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\row_smith_machine\\v1\\thumb.webp",
+          "title": "Row - Smith Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 225,
+      "exerciseName": "Row - Dumbbell",
+      "slug": "row_dumbbell",
+      "assets": [
+        {
+          "assetId": "row_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/row_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\row_dumbbell\\v1\\thumb.webp",
+          "title": "Row - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 271,
+      "exerciseName": "Squat - Landmine Attachment",
+      "slug": "squat_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "squat_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_landmine_attachment/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\squat_landmine_attachment\\v1\\thumb.webp",
+          "title": "Squat - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 272,
+      "exerciseName": "Squat - Barbell",
+      "slug": "squat_barbell",
+      "assets": [
+        {
+          "assetId": "squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\squat_barbell\\v1\\thumb.webp",
+          "title": "Squat - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 273,
+      "exerciseName": "Squat - Dumbbell",
+      "slug": "squat_dumbbell",
+      "assets": [
+        {
+          "assetId": "squat_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\squat_dumbbell\\v1\\thumb.webp",
+          "title": "Squat - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 280,
+      "exerciseName": "Stiff Leg Deadlift - Barbell",
+      "slug": "stiff_leg_deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "stiff_leg_deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/stiff_leg_deadlift_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\stiff_leg_deadlift_barbell\\v1\\thumb.webp",
+          "title": "Stiff Leg Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 285,
+      "exerciseName": "Tricep Dip",
+      "slug": "tricep_dip",
+      "assets": [
+        {
+          "assetId": "tricep_dip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_dip/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tricep_dip\\v1\\thumb.webp",
+          "title": "Tricep Dip thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 286,
+      "exerciseName": "Tricep Dip - Assisted Dip/Pull-Up Machine",
+      "slug": "tricep_dip_assisted_dip_pull_up_machine",
+      "assets": [
+        {
+          "assetId": "tricep_dip_assisted_dip_pull_up_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_dip_assisted_dip_pull_up_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tricep_dip_assisted_dip_pull_up_machine\\v1\\thumb.webp",
+          "title": "Tricep Dip - Assisted Dip/Pull-Up Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 291,
+      "exerciseName": "Tricep Kickback - Cable Machine",
+      "slug": "tricep_kickback_cable_machine",
+      "assets": [
+        {
+          "assetId": "tricep_kickback_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_kickback_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tricep_kickback_cable_machine\\v1\\thumb.webp",
+          "title": "Tricep Kickback - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 292,
+      "exerciseName": "Tricep Kickback - Dumbbell",
+      "slug": "tricep_kickback_dumbbell",
+      "assets": [
+        {
+          "assetId": "tricep_kickback_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_kickback_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tricep_kickback_dumbbell\\v1\\thumb.webp",
+          "title": "Tricep Kickback - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 293,
+      "exerciseName": "Tricep Pushdown - Cable Machine",
+      "slug": "tricep_pushdown_cable_machine",
+      "assets": [
+        {
+          "assetId": "tricep_pushdown_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tricep_pushdown_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tricep_pushdown_cable_machine\\v1\\thumb.webp",
+          "title": "Tricep Pushdown - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 294,
+      "exerciseName": "Tuck Crunch",
+      "slug": "tuck_crunch",
+      "assets": [
+        {
+          "assetId": "tuck_crunch_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tuck_crunch/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tuck_crunch\\v1\\thumb.webp",
+          "title": "Tuck Crunch thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 295,
+      "exerciseName": "Tuck Crunch - Dumbbell",
+      "slug": "tuck_crunch_dumbbell",
+      "assets": [
+        {
+          "assetId": "tuck_crunch_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/tuck_crunch_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\tuck_crunch_dumbbell\\v1\\thumb.webp",
+          "title": "Tuck Crunch - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 296,
+      "exerciseName": "Turkish Get Up",
+      "slug": "turkish_get_up",
+      "assets": [
+        {
+          "assetId": "turkish_get_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/turkish_get_up/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\turkish_get_up\\v1\\thumb.webp",
+          "title": "Turkish Get Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 297,
+      "exerciseName": "Up-Down Twist - Cable Machine",
+      "slug": "up_down_twist_cable_machine",
+      "assets": [
+        {
+          "assetId": "up_down_twist_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/up_down_twist_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\up_down_twist_cable_machine\\v1\\thumb.webp",
+          "title": "Up-Down Twist - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 298,
+      "exerciseName": "Upright Row - Cable Machine",
+      "slug": "upright_row_cable_machine",
+      "assets": [
+        {
+          "assetId": "upright_row_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\upright_row_cable_machine\\v1\\thumb.webp",
+          "title": "Upright Row - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 299,
+      "exerciseName": "Upright Row - Barbell",
+      "slug": "upright_row_barbell",
+      "assets": [
+        {
+          "assetId": "upright_row_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\upright_row_barbell\\v1\\thumb.webp",
+          "title": "Upright Row - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 300,
+      "exerciseName": "Upright Row - Dumbbell",
+      "slug": "upright_row_dumbbell",
+      "assets": [
+        {
+          "assetId": "upright_row_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/upright_row_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\upright_row_dumbbell\\v1\\thumb.webp",
+          "title": "Upright Row - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 301,
+      "exerciseName": "V Up",
+      "slug": "v_up",
+      "assets": [
+        {
+          "assetId": "v_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/v_up/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\v_up\\v1\\thumb.webp",
+          "title": "V Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 304,
+      "exerciseName": "V Up - Dumbbell",
+      "slug": "v_up_dumbbell",
+      "assets": [
+        {
+          "assetId": "v_up_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/v_up_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\v_up_dumbbell\\v1\\thumb.webp",
+          "title": "V Up - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 305,
+      "exerciseName": "Windshield Wipers",
+      "slug": "windshield_wipers",
+      "assets": [
+        {
+          "assetId": "windshield_wipers_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/windshield_wipers/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\windshield_wipers\\v1\\thumb.webp",
+          "title": "Windshield Wipers thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 308,
+      "exerciseName": "Wrist Curl - Cable Machine",
+      "slug": "wrist_curl_cable_machine",
+      "assets": [
+        {
+          "assetId": "wrist_curl_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\wrist_curl_cable_machine\\v1\\thumb.webp",
+          "title": "Wrist Curl - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 309,
+      "exerciseName": "Wrist Curl - Barbell",
+      "slug": "wrist_curl_barbell",
+      "assets": [
+        {
+          "assetId": "wrist_curl_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\wrist_curl_barbell\\v1\\thumb.webp",
+          "title": "Wrist Curl - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 310,
+      "exerciseName": "Wrist Curl - Dumbbell",
+      "slug": "wrist_curl_dumbbell",
+      "assets": [
+        {
+          "assetId": "wrist_curl_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\wrist_curl_dumbbell\\v1\\thumb.webp",
+          "title": "Wrist Curl - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 311,
+      "exerciseName": "Wrist Curl - Dumbbell (Reverse Grip)",
+      "slug": "wrist_curl_dumbbell_reverse_grip",
+      "assets": [
+        {
+          "assetId": "wrist_curl_dumbbell_reverse_grip_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/wrist_curl_dumbbell_reverse_grip/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_011\\exercises\\wrist_curl_dumbbell_reverse_grip\\v1\\thumb.webp",
+          "title": "Wrist Curl - Dumbbell (Reverse Grip) thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

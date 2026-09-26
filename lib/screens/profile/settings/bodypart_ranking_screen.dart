@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/safe_failure.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
 
 class BodyPartRankingScreen extends StatefulWidget {
   const BodyPartRankingScreen({super.key});
@@ -22,7 +25,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   bool _dirty = false;
-  String? _error;
+  SafeFailure? _failure;
 
   @override
   void initState() {
@@ -31,6 +34,12 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   }
 
   Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _failure = null;
+      });
+    }
     try {
       final parts = await _repo.fetchAllBodyPartsFull();
       final rows = await _repo.getAllBodyPartRanks();
@@ -41,12 +50,12 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
         _sortByRank();
         _isLoading = false;
         _dirty = false;
-        _error = null;
+        _failure = null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _failure = SafeFailure.classify(e);
         _isLoading = false;
       });
     }
@@ -98,7 +107,9 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).rankingsSaveError(e.toString()),
+            AppLocalizations.of(context).rankingsSaveError(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -107,7 +118,6 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
 
     return Scaffold(
@@ -117,38 +127,36 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
       ),
       bottomNavigationBar:
           _dirty
-              ? SafeArea(
-                minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveAll,
-                  icon:
-                      _isSaving
-                          ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.save),
-                  label: Text(
+              ? SettingsSaveBar(
+                label:
                     _isSaving ? strings.nutritionSaving : strings.rankingsSave,
-                  ),
-                ),
+                onPressed: _isSaving ? null : _saveAll,
+                saveIcon:
+                    _isSaving
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.save),
+                decorated: false,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
               : null,
-      body: SafeArea(child: _buildBody(scheme)),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
-  Widget _buildBody(ColorScheme scheme) {
+  Widget _buildBody() {
     final strings = AppLocalizations.of(context);
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(
-        child: Text(
-          strings.rankingsLoadError(strings.anatomyBodyParts, _error!),
-        ),
+    if (_failure != null) {
+      return SafeErrorView(
+        title: strings.safeFailureLoadTitle,
+        failure: _failure!,
+        onRetry: _load,
       );
     }
     if (_parts.isEmpty) {
@@ -175,10 +183,15 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
             itemBuilder: (context, index) {
               final part = _parts[index];
               final rank = _ranks[part.id] ?? index + 1;
-              return _RankingTile(
+              return SettingsRankingTile(
                 key: ValueKey(part.id),
                 index: index,
-                name: part.name,
+                name: Text(
+                  part.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: settingsRankingNameTextStyle(context),
+                ),
                 rank: rank,
                 icon: Icons.accessibility_new,
                 rankLabel: strings.rankingsRank,
@@ -194,86 +207,6 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _RankingTile extends StatelessWidget {
-  final int index;
-  final String name;
-  final int rank;
-  final IconData icon;
-  final String rankLabel;
-  final ValueChanged<String> onRankSubmitted;
-
-  const _RankingTile({
-    super.key,
-    required this.index,
-    required this.name,
-    required this.rank,
-    required this.icon,
-    required this.rankLabel,
-    required this.onRankSubmitted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
-      ),
-      child: Row(
-        children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Icon(Icons.drag_handle, color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(width: 10),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: scheme.primary.withValues(alpha: 0.16),
-            child: Icon(icon, color: scheme.primary, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 58,
-            child: TextFormField(
-              key: ValueKey('rank-$rank'),
-              initialValue: rank.toString(),
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: rankLabel,
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onFieldSubmitted: onRankSubmitted,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/theme_extensions.dart';
 import 'recommended_sets_editor_dialog.dart';
 
 class SetStatChip extends StatelessWidget {
@@ -17,11 +18,18 @@ class SetStatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final foreground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.metricChip)
+            : theme.colorScheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.metricChip,
+        borderRadius: shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +39,9 @@ class SetStatChip extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: neo ? foreground : null,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -41,7 +51,9 @@ class SetStatChip extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: neo ? foreground : null,
+                  ),
                 ),
               ),
               if (onEdit != null) ...[

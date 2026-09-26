@@ -3,8 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../models/models.dart';
+import '../services/catalog_entity_localizer.dart';
+import '../services/safe_failure.dart';
+import '../widgets/localized_catalog_entity_name.dart';
+import '../widgets/safe_error_view.dart';
 
 class ExerciseMusclePercentScreen extends StatefulWidget {
   const ExerciseMusclePercentScreen({super.key});
@@ -25,7 +30,7 @@ class _ExerciseMusclePercentScreenState
 
   bool _isLoading = true;
   bool _isLoadingEntries = false;
-  String? _error;
+  SafeFailure? _failure;
 
   @override
   void initState() {
@@ -34,6 +39,12 @@ class _ExerciseMusclePercentScreenState
   }
 
   Future<void> _initScreen() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _failure = null;
+      });
+    }
     try {
       final defs = await _repo.lookupDefsDetailed();
       if (!mounted) return;
@@ -46,7 +57,7 @@ class _ExerciseMusclePercentScreenState
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString());
+      setState(() => _failure = SafeFailure.classify(e));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -73,7 +84,9 @@ class _ExerciseMusclePercentScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).musclePercentLoadFailed(e.toString()),
+            AppLocalizations.of(context).musclePercentLoadFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -96,9 +109,9 @@ class _ExerciseMusclePercentScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(
-              context,
-            ).musclePercentUpdateFailed(e.toString()),
+            AppLocalizations.of(context).musclePercentUpdateFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -116,7 +129,9 @@ class _ExerciseMusclePercentScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context).musclePercentResetFailed(e.toString()),
+            AppLocalizations.of(context).musclePercentResetFailed(
+              safeFailureMessage(AppLocalizations.of(context), e),
+            ),
           ),
         ),
       );
@@ -129,10 +144,14 @@ class _ExerciseMusclePercentScreenState
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (_error != null) {
+    if (_failure != null) {
       return Scaffold(
         appBar: AppBar(title: Text(strings.musclePercentTitle)),
-        body: Center(child: Text(strings.musclePercentError(_error!))),
+        body: SafeErrorView(
+          title: strings.safeFailureLoadTitle,
+          failure: _failure!,
+          onRetry: _initScreen,
+        ),
       );
     }
     if (_defs.isEmpty) {
@@ -184,17 +203,23 @@ class _ExerciseMusclePercentScreenState
                         itemBuilder: (_, i) {
                           final e = _entries[i];
                           final def = _sel!;
-                          final muscleName =
+                          final muscle =
                               def.muscles
                                   .firstWhere(
                                     (rm) => rm.muscle.id == e.muscleId,
                                   )
-                                  .muscle
-                                  .name;
+                                  .muscle;
                           final isOverride = _overrides.contains(e.muscleId);
 
                           return ListTile(
-                            title: Text(muscleName),
+                            title: LocalizedCatalogEntityName(
+                              entity: CatalogEntityDisplayName(
+                                catalogId: muscle.catalogId,
+                                canonicalName: muscle.name,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

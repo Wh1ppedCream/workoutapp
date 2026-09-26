@@ -135,9 +135,7 @@ class ValueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // pull your themed border color if no override was passed
-    final colors = context.colors;
-    final borderClr = borderColor ?? colors.nutritionTextDetailsBorder!;
+    final borderClr = borderColor ?? context.nutritionTokens.textDetailsBorder;
 
     // base text styles
     final theme = Theme.of(context);

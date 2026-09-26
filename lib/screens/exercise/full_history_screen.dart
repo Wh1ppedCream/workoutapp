@@ -1,11 +1,13 @@
 // File: lib/screens/exercise/full_history_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
+import '../../utils/localized_formatters.dart';
 import 'session_detail_screen.dart';
 
 /// Shows every workout session in a simple scrollable list.
@@ -56,15 +58,19 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, i) {
               final s = sessions[i];
-              final dateStr = DateFormat.yMMMd(
-                Localizations.localeOf(context).toLanguageTag(),
-              ).format(s.date);
-              final durationMin = (s.duration / 60).ceil();
-              return Card(
+              final dateStr = LocalizedFormatters.date(
+                s.calendarDay.toLocalDateTime(),
+                Localizations.localeOf(context),
+              );
+              final duration = formatCompletedWorkoutDuration(
+                strings,
+                s.duration,
+              );
+              return TonosThemeReadyCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(
-                    strings.fullHistorySessionSummary(dateStr, durationMin),
+                    strings.fullHistorySessionSummary(dateStr, duration),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

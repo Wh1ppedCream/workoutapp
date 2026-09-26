@@ -1,7 +1,6 @@
 // File: lib/widgets/past_sessions_list.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
@@ -10,6 +9,10 @@ import '../repositories/app_repository.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
+import '../services/safe_failure.dart';
+import 'safe_error_view.dart';
 
 /// A scrollable, filterable list of past workout sessions.
 class PastSessionsList extends StatefulWidget {
@@ -76,7 +79,8 @@ class _PastSessionsListState extends State<PastSessionsList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final cs = context.cs;
     final strings = AppLocalizations.of(context);
     final optionLabels = <String, String>{
@@ -125,7 +129,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                   IconButton(
                     icon: Icon(
                       Icons.fullscreen,
-                      color: colors.pastSessionsIcon!,
+                      color: dataVisualization.selection,
                     ),
                     tooltip: strings.pastSessionsFullscreen,
                     onPressed: () {
@@ -147,15 +151,16 @@ class _PastSessionsListState extends State<PastSessionsList>
                         !snap.hasData) {
                       return Center(
                         child: CircularProgressIndicator(
-                          color: colors.pastSessionsProgress!,
+                          color: dataVisualization.selection,
                         ),
                       );
                     }
                     if (snap.hasError && !snap.hasData) {
-                      return Center(
-                        child: Text(
-                          strings.pastSessionsError(snap.error.toString()),
-                        ),
+                      return SafeErrorView(
+                        title: strings.safeFailureLoadTitle,
+                        failure: SafeFailure.classify(snap.error!),
+                        onRetry: _reloadSessions,
+                        compact: true,
                       );
                     }
 
@@ -172,16 +177,18 @@ class _PastSessionsListState extends State<PastSessionsList>
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       itemCount: sessions.length,
                       separatorBuilder:
-                          (_, __) => Divider(
-                            height: 1,
-                            color: colors.pastSessionsDivider!,
-                          ),
+                          (_, __) =>
+                              Divider(height: 1, color: surfaces.divider),
                       itemBuilder: (ctx, i) {
                         final ses = sessions[i];
-                        final dateStr = DateFormat.yMMMd(
-                          Localizations.localeOf(context).toString(),
-                        ).format(ses.date);
-                        final durationMin = (ses.duration / 60).ceil();
+                        final dateStr = LocalizedFormatters.date(
+                          ses.calendarDay.toLocalDateTime(),
+                          Localizations.localeOf(context),
+                        );
+                        final duration = formatCompletedWorkoutDuration(
+                          strings,
+                          ses.duration,
+                        );
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -190,7 +197,7 @@ class _PastSessionsListState extends State<PastSessionsList>
                           ),
                           child: ListTile(
                             title: Text(
-                              strings.pastSessionsItem(dateStr, durationMin),
+                              strings.pastSessionsItem(dateStr, duration),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

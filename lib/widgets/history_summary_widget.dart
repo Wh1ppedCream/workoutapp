@@ -8,6 +8,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_surface.dart';
+import '../utils/completed_workout_duration_formatter.dart';
+import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
 
@@ -19,21 +22,11 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
+    final semantic = context.semanticColors;
+    return TonosSurface(
+      variant: TonosSurfaceVariant.compactCard,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: colors.infoCardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: colors.infoCardShadow!,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,7 +37,7 @@ class InfoCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: colors.infoCardValueText,
+              color: semantic.strongContent,
             ),
           ),
           const SizedBox(height: 4),
@@ -52,7 +45,7 @@ class InfoCard extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: colors.infoCardLabelText),
+            style: TextStyle(fontSize: 10, color: semantic.mutedContent),
           ),
         ],
       ),
@@ -180,7 +173,9 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
+    final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final tabLabels = [..._tabLabels, strings.historySummaryAll];
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
@@ -193,7 +188,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
             height: 300,
             child: Center(
               child: CircularProgressIndicator(
-                color: colors.historySummaryProgress!,
+                color: dataVisualization.selection,
               ),
             ),
           );
@@ -215,12 +210,23 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                 Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
+                    color: surfaces.historyPeriodSelector,
+                    borderRadius: shapes.compact,
                   ),
                   child: Row(
                     children: List.generate(tabLabels.length, (i) {
                       final isSelected = i == _selectedIndex;
+                      final tabForeground =
+                          context.surfaceDecorationTokens.panel.outlined
+                              ? tonosForegroundForSurface(
+                                context,
+                                isSelected
+                                    ? theme.colorScheme.primary
+                                    : surfaces.historyPeriodSelector,
+                              )
+                              : isSelected
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.onSurfaceVariant;
                       return Expanded(
                         child: GestureDetector(
                           onTap: () {
@@ -235,16 +241,13 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                                   isSelected
                                       ? theme.colorScheme.primary
                                       : Colors.transparent,
-                              borderRadius: _tabSegmentRadius(i),
+                              borderRadius: _tabSegmentRadius(context, i),
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               tabLabels[i],
                               style: TextStyle(
-                                color:
-                                    isSelected
-                                        ? theme.colorScheme.onPrimary
-                                        : theme.colorScheme.onSurfaceVariant,
+                                color: tabForeground,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -276,11 +279,12 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
   }
 
   Widget _buildLoadedTab(int index, WeightUnit weightUnit) {
-    final colors = context.colors;
+    final dataVisualization = context.dataVisualizationTokens;
+    final surfaces = context.surfaceTokens;
     final data = _tabData[index];
     if (data == null) {
       return Center(
-        child: CircularProgressIndicator(color: colors.historySummaryProgress!),
+        child: CircularProgressIndicator(color: dataVisualization.selection),
       );
     }
     final freqMap = bodyPartFrequencyMapFromNames({
@@ -303,8 +307,8 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
               child: Center(
                 child: BodyHeatmap(
                   frequencyMap: freqMap,
-                  lowColor: colors.historySummaryHeatmapLow!,
-                  highColor: colors.historySummaryHeatmapHigh!,
+                  lowColor: tonosHeatmapLowForSurface(context, surfaces.card),
+                  highColor: tonosHeatmapHighForSurface(context, surfaces.card),
                   width: heatmapSize,
                   height: heatmapSize,
                 ),
@@ -317,12 +321,19 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     InfoCard(
-                      value: data.workoutCount.toString(),
+                      value: LocalizedFormatters.number(
+                        data.workoutCount,
+                        Localizations.localeOf(context),
+                        maximumFractionDigits: 0,
+                      ),
                       label:
                           AppLocalizations.of(context).historySummaryWorkouts,
                     ),
                     InfoCard(
-                      value: _durationLabel(data.totalDurationSeconds),
+                      value: formatCompletedWorkoutDuration(
+                        AppLocalizations.of(context),
+                        data.totalDurationSeconds,
+                      ),
                       label:
                           AppLocalizations.of(context).historySummaryTotalTime,
                     ),
@@ -330,6 +341,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                       value: WeightUnitFormatter.formatVolume(
                         data.totalVolume,
                         weightUnit,
+                        locale: Localizations.localeOf(context),
                       ),
                       label:
                           AppLocalizations.of(
@@ -346,25 +358,20 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
     );
   }
 
-  BorderRadius _tabSegmentRadius(int index) {
+  BorderRadius _tabSegmentRadius(BuildContext context, int index) {
+    final radius = context.shapeTokens.compact;
     if (index == 0) {
-      return const BorderRadius.only(
-        topLeft: Radius.circular(8),
-        bottomLeft: Radius.circular(8),
+      return BorderRadius.only(
+        topLeft: radius.topLeft,
+        bottomLeft: radius.bottomLeft,
       );
     }
     if (index == _tabLabels.length) {
-      return const BorderRadius.only(
-        topRight: Radius.circular(8),
-        bottomRight: Radius.circular(8),
+      return BorderRadius.only(
+        topRight: radius.topRight,
+        bottomRight: radius.bottomRight,
       );
     }
     return BorderRadius.zero;
-  }
-
-  String _durationLabel(int totalSeconds) {
-    final hours = totalSeconds ~/ 3600;
-    final mins = (totalSeconds % 3600) ~/ 60;
-    return AppLocalizations.of(context).historySummaryDuration(hours, mins);
   }
 }

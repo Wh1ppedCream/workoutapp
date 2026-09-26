@@ -30,6 +30,14 @@ void main() {
       )
     ''');
     await db.execute('''
+      CREATE TABLE exercise_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        catalog_id TEXT,
+        legacy_media_id INTEGER
+      )
+    ''');
+    await db.execute('''
       CREATE TABLE exercise_media (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         exercise_def_id INTEGER NOT NULL,
@@ -45,6 +53,11 @@ void main() {
       )
     ''');
     await db.insert('equipment', {'id': 4, 'name': 'Barbell'});
+    await db.insert('exercise_definitions', {
+      'id': 12,
+      'name': 'Bench Press',
+      'legacy_media_id': 12,
+    });
     await ContentDao.ensureTables(db);
   });
 
@@ -71,6 +84,7 @@ void main() {
     'bytes': 12000,
     'width': 512,
     'height': 512,
+    'sha256': List.filled(64, 'a').join(),
   };
 
   test(
@@ -110,6 +124,84 @@ void main() {
     },
   );
 
+  test('maps stable catalog media IDs to the local definition row', () async {
+    await db.delete('exercise_definitions');
+    await db.insert('exercise_definitions', {
+      'id': 91,
+      'name': 'Renamed bench press',
+      'catalog_id': 'tonos.exercise.0012',
+      'legacy_media_id': 12,
+    });
+
+    final stableManifest = ContentManifest.fromJson({
+      'namespace': 'exercise_media',
+      'version': 1,
+      'exercises': [
+        {
+          'exerciseCatalogId': 'tonos.exercise.0012',
+          'exerciseId': 12,
+          'slug': 'bench_press',
+          'assets': [asset('bench_v1', 'https://cdn.example/bench.webp')],
+        },
+      ],
+    });
+
+    await ContentDao.upsertExerciseMediaManifest(db, stableManifest);
+
+    final row = (await db.query('exercise_media')).single;
+    expect(row['exercise_def_id'], 91);
+  });
+
+  test(
+    'rejects media that cannot be mapped to a local catalog definition',
+    () async {
+      final unknownManifest = ContentManifest.fromJson({
+        'namespace': 'exercise_media',
+        'version': 1,
+        'exercises': [
+          {
+            'exerciseCatalogId': 'tonos.exercise.9999',
+            'exerciseId': 9999,
+            'slug': 'unknown',
+            'assets': [asset('unknown_v1', 'https://cdn.example/unknown.webp')],
+          },
+        ],
+      });
+
+      await expectLater(
+        ContentDao.upsertExerciseMediaManifest(db, unknownManifest),
+        throwsA(isA<FormatException>()),
+      );
+      expect(await db.query('exercise_media'), isEmpty);
+    },
+  );
+
+  test(
+    'does not fall back to a legacy ID when a stable catalog ID is wrong',
+    () async {
+      final mismatchedManifest = ContentManifest.fromJson({
+        'namespace': 'exercise_media',
+        'version': 1,
+        'exercises': [
+          {
+            'exerciseCatalogId': 'tonos.exercise.9999',
+            'exerciseId': 12,
+            'slug': 'mismatched',
+            'assets': [
+              asset('mismatch_v1', 'https://cdn.example/mismatch.webp'),
+            ],
+          },
+        ],
+      });
+
+      await expectLater(
+        ContentDao.upsertExerciseMediaManifest(db, mismatchedManifest),
+        throwsA(isA<FormatException>()),
+      );
+      expect(await db.query('exercise_media'), isEmpty);
+    },
+  );
+
   test('tracks local cache paths and access timestamps for an asset', () async {
     await ContentDao.upsertExerciseMediaManifest(
       db,
@@ -137,6 +229,33 @@ void main() {
     expect(updated['local_thumbnail_path'], '/cache/bench.webp');
     expect(updated['downloaded_at'], isNotNull);
     expect(updated['last_accessed_at'], isNotNull);
+
+    await ContentDao.upsertExerciseMediaManifest(
+      db,
+      manifest(
+        version: 2,
+        assets: [asset('bench_v1', 'https://cdn.example/bench.webp')],
+      ),
+    );
+    final resynced = (await db.query('exercise_media')).single;
+    expect(resynced['local_thumbnail_path'], '/cache/bench.webp');
+    expect(resynced['downloaded_at'], isNotNull);
+
+    await ContentDao.upsertExerciseMediaManifest(
+      db,
+      manifest(
+        version: 3,
+        assets: [
+          {
+            ...asset('bench_v1', 'https://cdn.example/bench-v2.webp'),
+            'sha256': List.filled(64, 'b').join(),
+          },
+        ],
+      ),
+    );
+    final replaced = (await db.query('exercise_media')).single;
+    expect(replaced['local_thumbnail_path'], isNull);
+    expect(replaced['downloaded_at'], isNull);
   });
 
   test(
@@ -267,4 +386,47 @@ void main() {
       expect((await db.query('shared_media')), hasLength(1));
     },
   );
+
+  test('clears only environment-scoped cloud content', () async {
+    await db.insert('content_license', {
+      'license_id': 'license-1',
+      'source_name': 'Test source',
+      'license_name': 'Test license',
+    });
+    for (final namespace in [
+      'exercise_media',
+      'shared_media',
+      'nutrition_catalog',
+    ]) {
+      await db.insert('content_manifest', {
+        'namespace': namespace,
+        'version': 1,
+      });
+    }
+    await db.insert('exercise_media', {
+      'exercise_def_id': 12,
+      'asset_id': 'bench_v1',
+      'media_type': 'image',
+      'remote_url': 'https://dev.example/bench.webp',
+      'sort_order': 0,
+    });
+    await db.insert('shared_media', {
+      'entity_type': 'equipment',
+      'entity_id': 4,
+      'asset_id': 'barbell_v1',
+      'media_type': 'thumbnail',
+      'remote_url': 'https://dev.example/barbell.webp',
+      'sort_order': 0,
+    });
+
+    await ContentDao.clearEnvironmentScopedContent(db);
+
+    expect(await db.query('exercise_media'), isEmpty);
+    expect(await db.query('shared_media'), isEmpty);
+    expect(await db.query('content_manifest', columns: ['namespace']), [
+      {'namespace': 'nutrition_catalog'},
+    ]);
+    expect(await db.query('content_license'), hasLength(1));
+    expect(await db.query('exercise_definitions'), hasLength(1));
+  });
 }

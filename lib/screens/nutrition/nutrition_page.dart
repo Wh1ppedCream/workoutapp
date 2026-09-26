@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/nutrition_profile.dart';
+import '../../widgets/safe_error_view.dart';
 import '../../widgets/speed_dial_fab.dart';
 import '../../widgets/nutrition_dash.dart';
 import '../../widgets/health_trends_section.dart';
@@ -11,7 +12,6 @@ import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 import '../../widgets/drawers.dart';
 import '../profile/settings/diet_nutrition_settings_page.dart';
-import '../new_measurement_item_page.dart';
 import 'food_logging_page.dart';
 import 'log_entry_page.dart';
 import 'measured_items_page.dart';
@@ -34,8 +34,12 @@ class NutritionPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (p.error != null) {
-            return Center(
-              child: Text(strings.nutritionDashboardError(p.error!)),
+            return SafeErrorView(
+              title: strings.safeFailureLoadTitle,
+              failure: p.error!,
+              onRetry: () {
+                p.reloadDay();
+              },
             );
           }
 
@@ -70,9 +74,14 @@ class NutritionPage extends StatelessWidget {
                   ),
                 ),
                 const Divider(height: 25),
-                const HealthTrendsSection(),
+                HealthTrendsSection(
+                  refreshToken: p.reloadSequence,
+                  onChanged: () {
+                    p.reloadDay();
+                  },
+                ),
                 const DataRecordsSection(),
-                CurrentMetricsSection(),
+                CurrentMetricsSection(refreshToken: p.reloadSequence),
               ],
             ),
           );
@@ -142,7 +151,7 @@ class NutritionPage extends StatelessWidget {
     navigator.pop();
 
     final changed = await navigator.push<bool>(
-      MaterialPageRoute(builder: (_) => const NewMeasurementItemPage()),
+      MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
     );
     if (changed == true) {
       await profile.reloadDay();

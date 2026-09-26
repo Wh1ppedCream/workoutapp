@@ -69,11 +69,11 @@ class NutritionCircleDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final kcalColor = colors.nutritionCalorieCircle!;
-    final proteinColor = colors.nutritionProteinCircle!;
-    final carbColor = colors.nutritionCarbCircle!;
-    final fatColor = colors.nutritionFatCircle!;
+    final dataVisualization = context.dataVisualizationTokens;
+    final kcalColor = dataVisualization.positive;
+    final proteinColor = dataVisualization.proteinRing;
+    final carbColor = dataVisualization.secondarySeries;
+    final fatColor = dataVisualization.fatRing;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16 * scale),

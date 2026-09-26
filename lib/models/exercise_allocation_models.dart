@@ -11,15 +11,6 @@ enum ExerciseAllocationSource {
   legacy,
 }
 
-extension ExerciseAllocationSourceLabel on ExerciseAllocationSource {
-  String get label => switch (this) {
-    ExerciseAllocationSource.automatic => 'Automatic calculation',
-    ExerciseAllocationSource.creatorDefault => 'Tonos default',
-    ExerciseAllocationSource.personalOverride => 'Your custom allocation',
-    ExerciseAllocationSource.legacy => 'Existing allocation',
-  };
-}
-
 enum ExerciseAllocationDimension { muscle, bodyPart }
 
 extension ExerciseAllocationDimensionStorage on ExerciseAllocationDimension {

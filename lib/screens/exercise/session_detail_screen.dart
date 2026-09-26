@@ -3,7 +3,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -12,9 +11,14 @@ import '../../providers/active_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/catalog_entity_localizer.dart';
+import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_dialog.dart';
 import '../../utils/async_pool.dart';
+import '../../utils/completed_workout_duration_formatter.dart';
+import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/weight_unit_formatter.dart';
 import '../../utils/app_test_keys.dart';
@@ -24,6 +28,8 @@ import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/exercise_media_thumbnail.dart';
 import '../../widgets/focused_sets_list.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
+import '../../widgets/localized_catalog_entity_name.dart';
+import '../../widgets/safe_error_view.dart';
 import '../../widgets/workout_record_badges.dart';
 import 'session_screen.dart';
 
@@ -57,7 +63,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Map<int, WorkoutExerciseRecordBadges> _badgesByExercise =
       const <int, WorkoutExerciseRecordBadges>{};
   _SessionSummary? _summary;
-  Object? _loadError;
+  SafeFailure? _loadFailure;
   bool _isLoading = true;
   bool _hasChanges = false;
   bool _isEditing = false;
@@ -78,7 +84,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Future<void> _loadExercises() async {
     setState(() {
       _isLoading = true;
-      _loadError = null;
+      _loadFailure = null;
     });
 
     try {
@@ -102,7 +108,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _loadError = error;
+        _loadFailure = SafeFailure.classify(error);
         _isLoading = false;
       });
     }
@@ -406,19 +412,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailDeleteTitle),
-            content: Text(strings.workoutDetailDeleteBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(strings.commonDelete),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.workoutDetailDeleteTitle),
+              content: Text(strings.workoutDetailDeleteBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(strings.commonDelete),
+                ),
+              ],
+            ),
           ),
     );
     if (confirm != true) return;
@@ -530,30 +538,34 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final name = await showDialog<String>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailSaveAsPlan),
-            content: TextFormField(
-              key: AppTestKeys.workoutPlanName,
-              initialValue: defaultName,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: strings.workoutDetailPlanName,
+          (context) => TonosDialogFrame(
+            styleFormControls: true,
+            child: AlertDialog(
+              title: Text(strings.workoutDetailSaveAsPlan),
+              content: TextFormField(
+                key: AppTestKeys.workoutPlanName,
+                initialValue: defaultName,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: strings.workoutDetailPlanName,
+                ),
+                textInputAction: TextInputAction.done,
+                onChanged: (value) => planName = value,
+                onFieldSubmitted:
+                    (value) => Navigator.pop(context, value.trim()),
               ),
-              textInputAction: TextInputAction.done,
-              onChanged: (value) => planName = value,
-              onFieldSubmitted: (value) => Navigator.pop(context, value.trim()),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(strings.commonCancel),
+                ),
+                FilledButton(
+                  key: AppTestKeys.workoutPlanSave,
+                  onPressed: () => Navigator.pop(context, planName.trim()),
+                  child: Text(strings.commonSave),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(strings.commonCancel),
-              ),
-              FilledButton(
-                key: AppTestKeys.workoutPlanSave,
-                onPressed: () => Navigator.pop(context, planName.trim()),
-                child: Text(strings.commonSave),
-              ),
-            ],
           ),
     );
     if (name == null || name.trim().isEmpty) return;
@@ -616,10 +628,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             .map((hit) => hit.bodyPart.name)
             .toList();
     if (focusNames.isNotEmpty) return focusNames.join(', ');
+    final locale = Localizations.localeOf(context);
     return AppLocalizations.of(context).workoutDetailDefaultPlanName(
-      DateFormat.MMM(
-        Localizations.localeOf(context).toLanguageTag(),
-      ).format(widget.session.date),
+      LocalizedFormatters.monthShort(
+        widget.session.calendarDay.toLocalDateTime(),
+        locale,
+      ),
     );
   }
 
@@ -635,10 +649,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final definition = await _repo.fetchDefinitionById(defId);
     if (!mounted || definition == null) return;
 
-    await showModalBottomSheet(
+    await ExerciseDetailSheet.show(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => ExerciseDetailSheet(definition: definition, defId: defId),
+      definition: definition,
+      defId: defId,
     );
   }
 
@@ -648,19 +662,21 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final discard = await showDialog<bool>(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text(strings.workoutDetailUnsavedTitle),
-            content: Text(strings.workoutDetailUnsavedBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(strings.commonCancel),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(strings.workoutDetailDiscard),
-              ),
-            ],
+          (context) => TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.workoutDetailUnsavedTitle),
+              content: Text(strings.workoutDetailUnsavedBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(strings.workoutDetailDiscard),
+                ),
+              ],
+            ),
           ),
     );
     return discard == true;
@@ -669,6 +685,8 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final semantic = context.semanticColors;
+    final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
@@ -679,7 +697,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(strings.workoutDetailTitle),
+          title:
+              isSpanish
+                  ? FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(strings.workoutDetailTitle),
+                  )
+                  : Text(strings.workoutDetailTitle),
           actions: [
             IconButton(
               tooltip:
@@ -690,7 +715,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 key: _editTutorialKey,
                 child: Icon(
                   _isEditing ? Icons.check : Icons.edit,
-                  color: _isEditing ? Colors.green : null,
+                  color: _isEditing ? semantic.editingActive : null,
                 ),
               ),
               onPressed: () => setState(() => _isEditing = !_isEditing),
@@ -712,9 +737,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_loadError != null) {
-      return Center(
-        child: Text(AppLocalizations.of(context).workoutDetailLoadFailed),
+    final loadFailure = _loadFailure;
+    if (loadFailure != null) {
+      return SafeErrorView(
+        title: AppLocalizations.of(context).workoutDetailLoadFailed,
+        failure: loadFailure,
+        onRetry: _loadExercises,
       );
     }
     if (_exerciseDetails.isEmpty) {
@@ -732,9 +760,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           child: _SessionSummaryCard(
             session: widget.session,
             summary: _summary!,
-            dateText: DateFormat.yMMMd(
-              Localizations.localeOf(context).toLanguageTag(),
-            ).add_jm().format(widget.session.date),
+            dateText: LocalizedFormatters.dateTime(
+              widget.session.displayDateTime,
+              Localizations.localeOf(context),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -800,7 +829,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
   Widget? _buildBottomBar(BuildContext context) {
-    if (_isLoading || _loadError != null) {
+    if (_isLoading || _loadFailure != null) {
       return null;
     }
 
@@ -895,11 +924,11 @@ class _SessionSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = context.colors;
+    final surfaces = context.surfaceTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    final durationText = _formatDuration(
+    final durationText = formatCompletedWorkoutDuration(
       AppLocalizations.of(context),
-      Duration(seconds: session.duration),
+      session.duration,
     );
 
     return Card(
@@ -939,6 +968,7 @@ class _SessionSummaryCard extends StatelessWidget {
                     value: WeightUnitFormatter.formatVolume(
                       summary.totalVolume,
                       weightUnit,
+                      locale: Localizations.localeOf(context),
                     ),
                   ),
                 ),
@@ -953,7 +983,11 @@ class _SessionSummaryCard extends StatelessWidget {
                 Expanded(
                   child: _SummaryMetricTile(
                     label: AppLocalizations.of(context).workoutDetailExercises,
-                    value: summary.exerciseCount.toString(),
+                    value: LocalizedFormatters.number(
+                      summary.exerciseCount,
+                      Localizations.localeOf(context),
+                      maximumFractionDigits: 0,
+                    ),
                   ),
                 ),
               ],
@@ -974,8 +1008,14 @@ class _SessionSummaryCard extends StatelessWidget {
                     child: Center(
                       child: BodyHeatmap(
                         frequencyMap: summary.frequencyMap,
-                        lowColor: colors.historySummaryHeatmapLow!,
-                        highColor: colors.historySummaryHeatmapHigh!,
+                        lowColor: tonosHeatmapLowForSurface(
+                          context,
+                          surfaces.card,
+                        ),
+                        highColor: tonosHeatmapHighForSurface(
+                          context,
+                          surfaces.card,
+                        ),
                         width: heatmapSize,
                         height: heatmapSize,
                       ),
@@ -1013,11 +1053,25 @@ class _SummaryMetricTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final valueForeground =
+        neo
+            ? tonosForegroundForSurface(context, surfaces.sessionSummary)
+            : null;
+    final labelForeground =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              surfaces.sessionSummary,
+            )
+            : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
+        color: surfaces.sessionSummary,
+        borderRadius: shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1027,7 +1081,7 @@ class _SummaryMetricTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.primary,
+              color: valueForeground ?? theme.colorScheme.primary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1035,9 +1089,7 @@ class _SummaryMetricTile extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: labelForeground),
           ),
         ],
       ),
@@ -1089,6 +1141,17 @@ class _CompletedWeightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _setRows(exercise);
+    final equipment = [
+      if (definition != null)
+        ...definition!.equipmentList
+            .where((item) => item.name.trim().isNotEmpty)
+            .map(
+              (item) => CatalogEntityDisplayName(
+                catalogId: item.catalogId,
+                canonicalName: item.name,
+              ),
+            ),
+    ];
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
@@ -1114,18 +1177,40 @@ class _CompletedWeightCard extends StatelessWidget {
                       ),
                       if (exercise.equipment.trim().isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text(
-                          exercise.equipment,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
+                        if (equipment.isEmpty)
+                          Text(
+                            exercise.equipment,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                        else
+                          LocalizedCatalogEntityNamesBuilder(
+                            entities: equipment,
+                            builder:
+                                (context, names) => Text(
+                                  names.join(', '),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.copyWith(
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                           ),
-                        ),
                       ],
                     ],
                   ),
@@ -1137,7 +1222,7 @@ class _CompletedWeightCard extends StatelessWidget {
                     child: ExerciseMediaThumbnail(
                       definition: definition!,
                       size: 56,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: context.shapeTokens.mediaThumbnail,
                       padding: EdgeInsets.zero,
                       framed: false,
                       onTap: onDetails,
@@ -1233,6 +1318,8 @@ class _CompletedSetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final inheritedTextStyle = DefaultTextStyle.of(context).style;
     final eRm = _epley(row.set);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
@@ -1244,18 +1331,18 @@ class _CompletedSetRow extends StatelessWidget {
             height: 28,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
+              color: surfaces.panelRaised,
               shape: BoxShape.circle,
             ),
             child: Text(
               row.label,
-              style: const TextStyle(fontWeight: FontWeight.w900),
+              style: inheritedTextStyle.copyWith(fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${WeightUnitFormatter.formatWeight(row.set.weight, weightUnit)} x ${row.set.reps}',
+              '${WeightUnitFormatter.formatWeight(row.set.weight, weightUnit, locale: Localizations.localeOf(context))} x ${LocalizedFormatters.number(row.set.reps, Localizations.localeOf(context), maximumFractionDigits: 0)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.titleMedium,
@@ -1263,32 +1350,7 @@ class _CompletedSetRow extends StatelessWidget {
           ),
           if (badges.isNotEmpty) ...[
             const SizedBox(width: 8),
-            if (badges.length == 1)
-              WorkoutRecordBadgeChip(
-                badge: badges.single,
-                width: _recordBadgeWidth,
-                textAlign: TextAlign.center,
-              )
-            else
-              SizedBox(
-                width: _recordBadgeWidth,
-                height: 28,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var index = 0; index < badges.length; index++) ...[
-                      if (index > 0) const SizedBox(height: 2),
-                      WorkoutRecordBadgeChip(
-                        badge: badges[index],
-                        compact: true,
-                        width: _recordBadgeWidth,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+            WorkoutRecordBadgeStack(badges: badges, width: _recordBadgeWidth),
           ],
           const SizedBox(width: 12),
           SizedBox(
@@ -1298,7 +1360,11 @@ class _CompletedSetRow extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 AppLocalizations.of(context).workoutDetailEstimatedOneRm(
-                  WeightUnitFormatter.formatWeight(eRm, weightUnit),
+                  WeightUnitFormatter.formatWeight(
+                    eRm,
+                    weightUnit,
+                    locale: Localizations.localeOf(context),
+                  ),
                 ),
                 maxLines: 1,
                 textAlign: TextAlign.right,
@@ -1441,17 +1507,4 @@ String _typeName(CardType type) {
 
 double _epley(ExerciseSet set) {
   return set.weight * (1 + 0.0333 * set.reps);
-}
-
-String _formatDuration(AppLocalizations strings, Duration duration) {
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  final seconds = duration.inSeconds.remainder(60);
-  if (hours > 0) {
-    return strings.durationHoursMinutes(hours, minutes);
-  }
-  if (minutes > 0) {
-    return strings.durationMinutesSeconds(minutes, seconds);
-  }
-  return strings.durationSeconds(seconds);
 }

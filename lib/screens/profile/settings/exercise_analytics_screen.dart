@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/app_localization_extensions.dart';
 import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/catalog_entity_localizer.dart';
+import '../../../services/safe_failure.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../exercise/exercise_catalog_page.dart';
+import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
+import '../../../widgets/safe_error_view.dart';
+import '../../../utils/localized_body_part_name.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   final ExerciseDefinition? initialDefinition;
@@ -25,7 +32,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   // --- Definitions ---
   ExerciseDefinition? _sel;
   bool _isLoadingDefs = true;
-  String? _defsError;
+  SafeFailure? _definitionsFailure;
 
   // --- Muscles tab ---
   List<ExerciseMusclePercent> _muscleEntries = [];
@@ -83,6 +90,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   }
 
   Future<void> _loadDefinitions() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingDefs = true;
+        _definitionsFailure = null;
+      });
+    }
     try {
       final defs = await _repo.lookupDefsDetailed();
       if (!mounted) return;
@@ -98,7 +111,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       }
       setState(() {
         _sel = initialMatch ?? (defs.isNotEmpty ? defs.first : null);
-        _defsError = null;
+        _definitionsFailure = null;
       });
       if (_sel != null) {
         await Future.wait([_loadMuscleEntries(_sel!), _loadBodyEntries(_sel!)]);
@@ -106,7 +119,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _defsError = e.toString();
+        _definitionsFailure = SafeFailure.classify(e);
       });
     } finally {
       if (mounted) {
@@ -311,7 +324,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
               ? FloatingActionButton.extended(
                 onPressed: _isSavingCredits ? null : _savePendingCredits,
                 backgroundColor: SettingsAccent.advanced,
-                foregroundColor: Colors.white,
+                foregroundColor:
+                    context.surfaceDecorationTokens.panel.outlined
+                        ? tonosForegroundForSurface(
+                          context,
+                          SettingsAccent.advanced,
+                        )
+                        : Colors.white,
                 icon: Icon(
                   _isSavingCredits ? Icons.hourglass_top : Icons.save_outlined,
                 ),
@@ -350,7 +369,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     ),
                   ),
                 ),
-                if (!_isLoadingDefs && _defsError == null && _sel != null) ...[
+                if (!_isLoadingDefs &&
+                    _definitionsFailure == null &&
+                    _sel != null) ...[
                   const SliverToBoxAdapter(child: SizedBox(height: 12)),
                   SliverToBoxAdapter(
                     child: Padding(
@@ -391,12 +412,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_defsError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(_strings.allocationLoadFailed(_defsError!)),
-        ),
+    if (_definitionsFailure != null) {
+      return SafeErrorView(
+        title: _strings.safeFailureLoadTitle,
+        failure: _definitionsFailure!,
+        onRetry: _loadDefinitions,
       );
     }
 
@@ -413,19 +433,38 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget _buildExercisePicker(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final pickerSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final pickerForeground =
+        neo
+            ? tonosForegroundForSurface(context, pickerSurface)
+            : scheme.onSurface;
+    final pickerSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, pickerSurface)
+            : scheme.onSurfaceVariant;
 
     return Material(
-      color: Colors.transparent,
+      color: pickerSurface,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: shapes.settingsPicker,
         onTap: _pickExercise,
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-            borderRadius: BorderRadius.circular(20),
+            color: pickerSurface,
+            borderRadius: shapes.settingsPicker,
             border: Border.all(
-              color: SettingsAccent.advanced.withValues(alpha: 0.42),
+              color:
+                  neo
+                      ? tonosOutlineForSurface(context, pickerSurface)
+                      : SettingsAccent.advanced.withValues(alpha: 0.42),
+              width: shapes.outlineWidth,
             ),
           ),
           child: Row(
@@ -435,11 +474,11 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                 height: 40,
                 decoration: BoxDecoration(
                   color: SettingsAccent.advanced.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: shapes.settingsIcon,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.fitness_center,
-                  color: SettingsAccent.advanced,
+                  color: neo ? pickerForeground : SettingsAccent.advanced,
                   size: 21,
                 ),
               ),
@@ -452,7 +491,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                     Text(
                       _strings.allocationSelectedExercise,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: pickerSecondary,
                       ),
                     ),
                     Text(
@@ -461,12 +500,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: pickerForeground,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right, color: pickerSecondary),
             ],
           ),
         ),
@@ -477,22 +517,45 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget _buildTabBar(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final tabSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final tabForeground =
+        neo ? tonosForegroundForSurface(context, tabSurface) : scheme.onSurface;
+    final tabSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, tabSurface)
+            : scheme.onSurfaceVariant;
 
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
+        color: tabSurface,
+        borderRadius: shapes.profileTile,
+        border:
+            neo
+                ? Border.all(
+                  color: tonosOutlineForSurface(context, tabSurface),
+                  width: shapes.outlineWidth,
+                )
+                : null,
       ),
       child: TabBar(
         controller: _tabController,
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
-          color: SettingsAccent.advanced.withValues(alpha: 0.24),
-          borderRadius: BorderRadius.circular(14),
+          color:
+              neo
+                  ? surfaces.dialogChoice
+                  : SettingsAccent.advanced.withValues(alpha: 0.24),
+          borderRadius: shapes.settingsTabIndicator,
         ),
-        labelColor: SettingsAccent.advanced,
-        unselectedLabelColor: scheme.onSurfaceVariant,
+        labelColor: neo ? tabForeground : SettingsAccent.advanced,
+        unselectedLabelColor: tabSecondary,
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -534,13 +597,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         }
 
         final entry = _muscleEntries[index - 1];
-        final muscleName =
+        final muscle =
             _sel!.muscles
                 .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
-                .muscle
-                .name;
+                .muscle;
         return _MuscleCreditCard(
-          muscleName: muscleName,
+          muscle: muscle,
           source: _muscleSource,
           controller: _muscleCreditControllers[entry.muscleId]!,
           onChanged:
@@ -676,19 +738,11 @@ class _AllocationSectionHeader extends StatelessWidget {
                 ),
             ],
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 2, bottom: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _sourceColor(source).withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Text(
-              source.label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: _sourceColor(source),
-                fontWeight: FontWeight.w800,
-              ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: SettingsAccentPill(
+              label: source.localizedLabel(AppLocalizations.of(context)),
+              color: _sourceColor(source),
             ),
           ),
           const SizedBox(height: 3),
@@ -712,14 +766,14 @@ Color _sourceColor(ExerciseAllocationSource source) => switch (source) {
 };
 
 class _MuscleCreditCard extends StatelessWidget {
-  final String muscleName;
+  final Muscle muscle;
   final ExerciseAllocationSource source;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final Future<void> Function() onSubmitted;
 
   const _MuscleCreditCard({
-    required this.muscleName,
+    required this.muscle,
     required this.source,
     required this.controller,
     required this.onChanged,
@@ -730,22 +784,41 @@ class _MuscleCreditCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
+    final cardSecondary =
+        neo
+            ? tonosSecondaryForegroundForSurface(context, cardSurface)
+            : scheme.onSurfaceVariant;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
+        color: cardSurface,
+        borderRadius: shapes.profileTile,
         border: Border.all(
-          color: (source == ExerciseAllocationSource.personalOverride
-                  ? SettingsAccent.advanced
-                  : scheme.outlineVariant)
-              .withValues(
-                alpha:
-                    source == ExerciseAllocationSource.personalOverride
-                        ? 0.58
-                        : 0.56,
-              ),
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : (source == ExerciseAllocationSource.personalOverride
+                          ? SettingsAccent.advanced
+                          : scheme.outlineVariant)
+                      .withValues(
+                        alpha:
+                            source == ExerciseAllocationSource.personalOverride
+                                ? 0.58
+                                : 0.56,
+                      ),
+          width: neo ? shapes.outlineWidth : 1,
         ),
       ),
       child: Row(
@@ -755,7 +828,7 @@ class _MuscleCreditCard extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: SettingsAccent.advanced.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: shapes.control,
             ),
             child: const Icon(
               Icons.fitness_center,
@@ -768,20 +841,27 @@ class _MuscleCreditCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  muscleName,
+                LocalizedCatalogEntityName(
+                  entity: CatalogEntityDisplayName(
+                    catalogId: muscle.catalogId,
+                    canonicalName: muscle.name,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
+                    color: cardForeground,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  source.label,
+                  source.localizedLabel(AppLocalizations.of(context)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color:
-                        source == ExerciseAllocationSource.personalOverride
+                        neo
+                            ? cardSecondary
+                            : source ==
+                                ExerciseAllocationSource.personalOverride
                             ? SettingsAccent.advanced
                             : scheme.onSurfaceVariant,
                   ),
@@ -798,8 +878,10 @@ class _MuscleCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).allocationCredit,
+              style: settingsInputTextStyle(context),
+              decoration: settingsFieldDecoration(
+                context,
+                label: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),
@@ -831,13 +913,30 @@ class _BodyPartCreditCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final cardSurface =
+        neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+    final cardForeground =
+        neo
+            ? tonosForegroundForSurface(context, cardSurface)
+            : scheme.onSurface;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _sourceColor(source).withValues(alpha: 0.48)),
+        color: cardSurface,
+        borderRadius: shapes.profileTile,
+        border: Border.all(
+          color:
+              neo
+                  ? tonosOutlineForSurface(context, cardSurface)
+                  : _sourceColor(source).withValues(alpha: 0.48),
+          width: neo ? shapes.outlineWidth : 1,
+        ),
       ),
       child: Row(
         children: [
@@ -846,7 +945,7 @@ class _BodyPartCreditCard extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               color: SettingsAccent.training.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: shapes.control,
             ),
             child: const Icon(
               Icons.accessibility_new,
@@ -857,9 +956,10 @@ class _BodyPartCreditCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              bodyPart.name,
+              localizedBodyPartName(context, bodyPart.name),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
+                color: cardForeground,
               ),
             ),
           ),
@@ -872,8 +972,10 @@ class _BodyPartCreditCard extends StatelessWidget {
                 decimal: true,
               ),
               textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).allocationCredit,
+              style: settingsInputTextStyle(context),
+              decoration: settingsFieldDecoration(
+                context,
+                label: AppLocalizations.of(context).allocationCredit,
                 isDense: true,
               ),
               onChanged: (_) => onChanged(),

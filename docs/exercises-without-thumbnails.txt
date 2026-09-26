@@ -1,0 +1,58 @@
+Exercises Without Thumbnails
+==============================
+
+Scope: active exercises in assets/exercises.json.
+Catalog revision: 7.
+Thumbnail source checked: tools/content_pipeline/exercise_media_source.example.json (version 15).
+Comparison: catalog legacyMediaId matched to media-source exerciseId with at least one thumbnail asset.
+Coverage: 253 of 300 exercises have thumbnails; 47 are missing.
+
+Missing entries
+---------------
+1. legacyMediaId=42; catalogId=tonos.exercise.0042; name=Crunch - Dumbbell (Crossbody)
+2. legacyMediaId=44; catalogId=tonos.exercise.0044; name=Crunch - Dumbbell (Seated)
+3. legacyMediaId=45; catalogId=tonos.exercise.0045; name=Cuban Rotation
+4. legacyMediaId=46; catalogId=tonos.exercise.0046; name=Cuban Rotation - Dumbbell
+5. legacyMediaId=106; catalogId=tonos.exercise.0106; name=Incline Chest Press - Barbell
+6. legacyMediaId=107; catalogId=tonos.exercise.0107; name=Incline Chest Press - Dumbbell
+7. legacyMediaId=132; catalogId=tonos.exercise.0132; name=Lat Pulldown - Cable Machine (Close Grip)
+8. legacyMediaId=133; catalogId=tonos.exercise.0133; name=Lat Pulldown - Cable Machine (Wide Grip)
+9. legacyMediaId=134; catalogId=tonos.exercise.0134; name=Lat Pulldown - Cable Machine (Reverse Grip)
+10. legacyMediaId=148; catalogId=tonos.exercise.0148; name=Leg Raise Twist (Lying)
+11. legacyMediaId=153; catalogId=tonos.exercise.0153; name=Lunge - Cable Machine
+12. legacyMediaId=176; catalogId=tonos.exercise.0176; name=Preacher Curl - Barbell (with Preacher Bench)
+13. legacyMediaId=181; catalogId=tonos.exercise.0181; name=Pull Up - Close Grip
+14. legacyMediaId=182; catalogId=tonos.exercise.0182; name=Pull Up - Wide Grip
+15. legacyMediaId=187; catalogId=tonos.exercise.0187; name=Pullover - Dumbbell (Straight Arm)
+16. legacyMediaId=188; catalogId=tonos.exercise.0188; name=Pullover - Dumbbell (Bent Arm)
+17. legacyMediaId=194; catalogId=tonos.exercise.0194; name=Push-up (Wide Grip)
+18. legacyMediaId=199; catalogId=tonos.exercise.0199; name=Reverse Fly - Dumbbell (Seated)
+19. legacyMediaId=208; catalogId=tonos.exercise.0208; name=Reverse Lunge - Landmine Attachment
+20. legacyMediaId=209; catalogId=tonos.exercise.0209; name=Reverse Lunge - Dumbbell
+21. legacyMediaId=211; catalogId=tonos.exercise.0211; name=Reverse Lunge - Kettlebell
+22. legacyMediaId=212; catalogId=tonos.exercise.0212; name=Reverse Lunge - Cable Machine
+23. legacyMediaId=213; catalogId=tonos.exercise.0213; name=Reverse Lunge - Smith Machine
+24. legacyMediaId=223; catalogId=tonos.exercise.0223; name=Row - Dumbbell (Kneeling)
+25. legacyMediaId=224; catalogId=tonos.exercise.0224; name=Row - Dumbbell (Seated)
+26. legacyMediaId=226; catalogId=tonos.exercise.0226; name=Row - Dumbbell (Reverse Grip)
+27. legacyMediaId=240; catalogId=tonos.exercise.0240; name=Side Lunge - Cable Machine
+28. legacyMediaId=242; catalogId=tonos.exercise.0242; name=Side Plank
+29. legacyMediaId=244; catalogId=tonos.exercise.0244; name=Side Plank (Bent Knees)
+30. legacyMediaId=248; catalogId=tonos.exercise.0248; name=Single Arm Row - Dumbbell (Seated)
+31. legacyMediaId=261; catalogId=tonos.exercise.0261; name=Skull Crusher - Dumbbell
+32. legacyMediaId=262; catalogId=tonos.exercise.0262; name=Sled Calf Press
+33. legacyMediaId=265; catalogId=tonos.exercise.0265; name=Snatch
+34. legacyMediaId=266; catalogId=tonos.exercise.0266; name=Split Jerk
+35. legacyMediaId=274; catalogId=tonos.exercise.0274; name=Squat Calf Press
+36. legacyMediaId=275; catalogId=tonos.exercise.0275; name=Straight Arm Lat Pull-down - Lat Pulldown Machine
+37. legacyMediaId=276; catalogId=tonos.exercise.0276; name=Straight Arm Lat Pull-down - Cable Machine
+38. legacyMediaId=277; catalogId=tonos.exercise.0277; name=Step-Up
+39. legacyMediaId=278; catalogId=tonos.exercise.0278; name=Step-Up - Barbell
+40. legacyMediaId=279; catalogId=tonos.exercise.0279; name=Step-Up - Dumbbell
+41. legacyMediaId=281; catalogId=tonos.exercise.0281; name=Swings - Dumbbell
+42. legacyMediaId=282; catalogId=tonos.exercise.0282; name=Thruster - Barbell
+43. legacyMediaId=283; catalogId=tonos.exercise.0283; name=Thruster - Dumbbell
+44. legacyMediaId=284; catalogId=tonos.exercise.0284; name=Toes To Bar
+45. legacyMediaId=302; catalogId=tonos.exercise.0302; name=V Up - Resistance Band
+46. legacyMediaId=303; catalogId=tonos.exercise.0303; name=V Up - Cable Machine
+47. legacyMediaId=306; catalogId=tonos.exercise.0306; name=Windshield Wipers (Straight Knees)

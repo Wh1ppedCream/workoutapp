@@ -1,6 +1,10 @@
 // File: lib/screens/nutrition/food_customization_page.dart
 
 import 'package:flutter/material.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_expansion_tile_scope.dart';
+import '../../theme/widgets/tonos_field.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -432,24 +436,29 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: SafeArea(
         minimum: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            FloatingActionButton.extended(
-              heroTag: 'fab-cancel',
-              onPressed: _onCancel,
-              icon: const Icon(Icons.close),
-              label: Text(strings.commonCancel),
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-            ),
-            FloatingActionButton.extended(
-              heroTag: 'fab-save',
-              onPressed: _onSave,
-              icon: const Icon(Icons.save),
-              label: Text(strings.commonSave),
-            ),
-          ],
+        child: SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              FloatingActionButton.extended(
+                heroTag: 'fab-cancel',
+                onPressed: _onCancel,
+                icon: const Icon(Icons.close),
+                label: Text(strings.commonCancel),
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+              ),
+              FloatingActionButton.extended(
+                heroTag: 'fab-save',
+                onPressed: _onSave,
+                icon: const Icon(Icons.save),
+                label: Text(strings.commonSave),
+              ),
+            ],
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -462,12 +471,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Name & Brand
-              TextFormField(
+              TonosFormField(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: strings.foodCustomizationName,
-                  border: OutlineInputBorder(),
-                ),
+                labelText: strings.foodCustomizationName,
+                border: const OutlineInputBorder(),
                 validator:
                     (v) =>
                         (v == null || v.isEmpty)
@@ -476,12 +483,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              TonosFormField(
                 controller: _brandController,
-                decoration: InputDecoration(
-                  labelText: strings.foodCustomizationBrand,
-                  border: OutlineInputBorder(),
-                ),
+                labelText: strings.foodCustomizationBrand,
+                border: const OutlineInputBorder(),
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 20),
@@ -494,14 +499,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                       children: [
                         Container(
                           height: 100,
-                          color: Colors.grey[200],
+                          color: context.nutritionTokens.photoPlaceholder,
                           child:
                               _foodImagePath == null
-                                  ? const Center(
+                                  ? Center(
                                     child: Icon(
                                       Icons.photo,
                                       size: 40,
-                                      color: Colors.grey,
+                                      color:
+                                          context.nutritionTokens.mutedAction,
                                     ),
                                   )
                                   : Image.network(
@@ -525,14 +531,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                       children: [
                         Container(
                           height: 100,
-                          color: Colors.grey[200],
+                          color: context.nutritionTokens.photoPlaceholder,
                           child:
                               _labelImagePath == null
-                                  ? const Center(
+                                  ? Center(
                                     child: Icon(
                                       Icons.photo,
                                       size: 40,
-                                      color: Colors.grey,
+                                      color:
+                                          context.nutritionTokens.mutedAction,
                                     ),
                                   )
                                   : Image.network(
@@ -575,7 +582,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 ),
                 child: Text(
                   strings.foodCustomizationDensityHelp,
-                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.nutritionTokens.densityHelp,
+                  ),
                 ),
               ),
 
@@ -631,16 +641,14 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     Map<String, TextEditingController>? controllerOverrides,
     bool initiallyExpanded = true, // toggle default here
   }) {
-    final theme = Theme.of(context);
-    return Card(
+    return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        borderRadius: context.nutritionTokens.sectionShape,
+        side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
+      child: TonosExpansionTileScope(
         child: ExpansionTile(
           key: PageStorageKey('group_$groupKey'),
           initiallyExpanded: initiallyExpanded,
@@ -671,17 +679,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         controller ?? _controllerFor(keyPath ?? label);
     return Padding(
       padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
-      child: TextFormField(
+      child: TonosFormField(
         key:
             keyPath != null
                 ? PageStorageKey('field_$keyPath')
                 : null, // ✅ unique per field
         controller: ctrl,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          isDense: true,
-        ),
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         inputFormatters: _numericFormatters,
       ),
@@ -736,22 +742,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required String title,
   }) {
     final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        dividerColor: Colors.transparent,
-        listTileTheme: const ListTileThemeData(
-          dense: true, // ← tighter ListTile
-          minVerticalPadding: 0, // ← remove extra vertical padding
-          contentPadding: EdgeInsets.zero, // ← no horizontal padding
-          visualDensity: VisualDensity(
-            horizontal: 0,
-            vertical: -3, // ← make header shorter (try -2 to -4)
-          ),
-        ),
-        iconTheme: const IconThemeData(
-          size: 18,
-        ), // ← smaller expand/collapse arrow
-      ),
+    return TonosExpansionTileScope.dense(
       child: ExpansionTile(
         key: PageStorageKey(
           'breakdown_$keyPath',
@@ -951,17 +942,15 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   }
 
   Widget _buildPortionCard() {
-    final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    return Card(
+    return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        borderRadius: context.nutritionTokens.sectionShape,
+        side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
+      child: TonosExpansionTileScope(
         child: ExpansionTile(
           key: const PageStorageKey('group_PortionInfo'),
           initiallyExpanded: true,
@@ -1014,17 +1003,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required ValueChanged<int> onDefaultChanged,
     bool initiallyExpanded = false, // ← new param
   }) {
-    final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        dividerColor: Colors.transparent,
-        listTileTheme: const ListTileThemeData(
-          dense: true,
-          visualDensity: VisualDensity(horizontal: 0, vertical: -2),
-          contentPadding: EdgeInsets.zero,
-        ),
-        iconTheme: const IconThemeData(size: 18),
-      ),
+    return TonosExpansionTileScope.compact(
       child: ExpansionTile(
         key: PageStorageKey('portion_list_$groupKey'),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
@@ -1106,9 +1085,11 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     final groupDefaultIndex =
         groupIsUsual ? _usualDefaultIndex : _basisDefaultIndex;
 
-    return Card(
+    return TonosThemeReadyCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(
+        borderRadius: context.nutritionTokens.portionShape,
+      ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
         child: Column(
@@ -1191,15 +1172,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: amountKey,
                     controller: entry.amountCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationAmount,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationAmount,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -1229,15 +1208,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: gramsKey,
                     controller: entry.gramsCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationWeight,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationWeight,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -1246,15 +1223,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: mlKey,
                     controller: entry.mlCtrl,
-                    decoration: InputDecoration(
-                      labelText:
-                          AppLocalizations.of(context).foodCustomizationVolume,
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        AppLocalizations.of(context).foodCustomizationVolume,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),

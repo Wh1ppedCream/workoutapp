@@ -1,0 +1,262 @@
+{
+  "namespace": "exercise_media",
+  "version": 1,
+  "baseUrl": "https://pub-7eb72a1a315f4da3b30100ff6e694651.r2.dev",
+  "exercises": [
+    {
+      "exerciseId": 245,
+      "exerciseName": "Single Arm Row - Landmine Attachment",
+      "slug": "single_arm_row_landmine_attachment",
+      "assets": [
+        {
+          "assetId": "single_arm_row_landmine_attachment_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_arm_row_landmine_attachment/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\single_arm_row_landmine_attachment\\v1\\thumb.webp",
+          "title": "Single Arm Row - Landmine Attachment thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 253,
+      "exerciseName": "Single Leg Deadlift - Barbell",
+      "slug": "single_leg_deadlift_barbell",
+      "assets": [
+        {
+          "assetId": "single_leg_deadlift_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_deadlift_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\single_leg_deadlift_barbell\\v1\\thumb.webp",
+          "title": "Single Leg Deadlift - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 254,
+      "exerciseName": "Single Leg Deadlift - Dumbbell",
+      "slug": "single_leg_deadlift_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_leg_deadlift_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_deadlift_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\single_leg_deadlift_dumbbell\\v1\\thumb.webp",
+          "title": "Single Leg Deadlift - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 255,
+      "exerciseName": "Single Leg Hip Thrust - Dumbbell",
+      "slug": "single_leg_hip_thrust_dumbbell",
+      "assets": [
+        {
+          "assetId": "single_leg_hip_thrust_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_hip_thrust_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\single_leg_hip_thrust_dumbbell\\v1\\thumb.webp",
+          "title": "Single Leg Hip Thrust - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 256,
+      "exerciseName": "Single Leg Hip Thrust - Barbell",
+      "slug": "single_leg_hip_thrust_barbell",
+      "assets": [
+        {
+          "assetId": "single_leg_hip_thrust_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/single_leg_hip_thrust_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\single_leg_hip_thrust_barbell\\v1\\thumb.webp",
+          "title": "Single Leg Hip Thrust - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 257,
+      "exerciseName": "Sit-Up",
+      "slug": "sit_up",
+      "assets": [
+        {
+          "assetId": "sit_up_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sit_up/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\sit_up\\v1\\thumb.webp",
+          "title": "Sit-Up thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 258,
+      "exerciseName": "Sit-Up - Dumbbell",
+      "slug": "sit_up_dumbbell",
+      "assets": [
+        {
+          "assetId": "sit_up_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sit_up_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\sit_up_dumbbell\\v1\\thumb.webp",
+          "title": "Sit-Up - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 259,
+      "exerciseName": "Skull Crusher - Cable Machine",
+      "slug": "skull_crusher_cable_machine",
+      "assets": [
+        {
+          "assetId": "skull_crusher_cable_machine_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/skull_crusher_cable_machine/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\skull_crusher_cable_machine\\v1\\thumb.webp",
+          "title": "Skull Crusher - Cable Machine thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 260,
+      "exerciseName": "Skull Crusher - Barbell",
+      "slug": "skull_crusher_barbell",
+      "assets": [
+        {
+          "assetId": "skull_crusher_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/skull_crusher_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\skull_crusher_barbell\\v1\\thumb.webp",
+          "title": "Skull Crusher - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 263,
+      "exerciseName": "Sled Pull",
+      "slug": "sled_pull",
+      "assets": [
+        {
+          "assetId": "sled_pull_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sled_pull/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\sled_pull\\v1\\thumb.webp",
+          "title": "Sled Pull thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 264,
+      "exerciseName": "Sled Push",
+      "slug": "sled_push",
+      "assets": [
+        {
+          "assetId": "sled_push_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/sled_push/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\sled_push\\v1\\thumb.webp",
+          "title": "Sled Push thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 267,
+      "exerciseName": "Split Squat",
+      "slug": "split_squat",
+      "assets": [
+        {
+          "assetId": "split_squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\split_squat\\v1\\thumb.webp",
+          "title": "Split Squat thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 268,
+      "exerciseName": "Split Squat - Dumbbell",
+      "slug": "split_squat_dumbbell",
+      "assets": [
+        {
+          "assetId": "split_squat_dumbbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat_dumbbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\split_squat_dumbbell\\v1\\thumb.webp",
+          "title": "Split Squat - Dumbbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 269,
+      "exerciseName": "Split Squat - Barbell",
+      "slug": "split_squat_barbell",
+      "assets": [
+        {
+          "assetId": "split_squat_barbell_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/split_squat_barbell/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\split_squat_barbell\\v1\\thumb.webp",
+          "title": "Split Squat - Barbell thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    },
+    {
+      "exerciseId": 270,
+      "exerciseName": "Squat",
+      "slug": "squat",
+      "assets": [
+        {
+          "assetId": "squat_thumb_v1",
+          "type": "thumbnail",
+          "path": "exercises/squat/v1/thumb.webp",
+          "localFile": "build\\content\\exercise_media_batch_013\\exercises\\squat\\v1\\thumb.webp",
+          "title": "Squat thumbnail",
+          "sortOrder": 0,
+          "version": 1,
+          "licenseId": "tonos_owned"
+        }
+      ]
+    }
+  ]
+}

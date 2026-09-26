@@ -2,9 +2,13 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_field.dart';
+import '../../theme/widgets/tonos_theme_ready.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../models/nutrition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../providers/nutrition_profile.dart';
@@ -377,15 +381,18 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         padding: const EdgeInsets.only(right: 8),
                         child: InkWell(
                           onTap: () => Scaffold.of(ctx).openEndDrawer(),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: context.nutritionTokens.compactShape,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.green),
-                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: context.nutritionTokens.addFoodAction,
+                              ),
+                              borderRadius:
+                                  context.nutritionTokens.compactShape,
                             ),
                             child: SizedBox(
                               height: kToolbarHeight - 12,
@@ -524,7 +531,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       clipBehavior: Clip.antiAlias,
                       shape: RoundedRectangleBorder(
                         side: BorderSide(color: borderColor, width: 1.25),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: context.nutritionTokens.sectionShape,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -668,6 +675,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                 Text(strings.foodQuantity),
                                 const SizedBox(width: 8),
                                 _qtyButton(
+                                  context: context,
                                   icon: Icons.remove,
                                   onTap: () {
                                     setState(
@@ -690,6 +698,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   ),
                                 ),
                                 _qtyButton(
+                                  context: context,
                                   icon: Icons.add,
                                   onTap: () {
                                     setState(() => it.qty += 1);
@@ -773,7 +782,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         ),
                         shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: context.nutritionTokens.portionShape,
                             side: BorderSide(
                               color: Theme.of(context).colorScheme.primary,
                               width: 1.25,
@@ -829,8 +838,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       _tabs[idx] = idx == i;
                     }
                   }),
-              borderRadius: BorderRadius.circular(8),
-              selectedColor: Colors.white,
+              borderRadius: context.nutritionTokens.compactShape,
+              selectedColor: context.nutritionTokens.selectedLabel,
               fillColor: Theme.of(context).primaryColor,
               children: [
                 Padding(
@@ -873,26 +882,24 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: TonosField(
                     controller: _searchCtrl,
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).foodSearchHint,
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon:
-                          (_searchCtrl.text.isEmpty)
-                              ? null
-                              : IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchCtrl.clear();
-                                  _kickoffSearch('');
-                                  FocusScope.of(context).unfocus();
-                                  setState(() {}); // refresh suffixIcon state
-                                },
-                              ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    variant: TonosFieldVariant.search,
+                    hintText: AppLocalizations.of(context).foodSearchHint,
+                    suffixIcon:
+                        (_searchCtrl.text.isEmpty)
+                            ? null
+                            : IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchCtrl.clear();
+                                _kickoffSearch('');
+                                FocusScope.of(context).unfocus();
+                                setState(() {}); // refresh suffixIcon state
+                              },
+                            ),
+                    border: OutlineInputBorder(
+                      borderRadius: context.nutritionTokens.compactShape,
                     ),
                     onChanged: (s) {
                       _kickoffSearch(s);
@@ -929,6 +936,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   Widget _buildPrePlanned(BuildContext context) {
     final p = context.watch<NutritionProfile>();
+    final strings = AppLocalizations.of(context);
 
     return FutureBuilder<List<Recipe>>(
       future: p.recentRecipes(limit: 20),
@@ -964,12 +972,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               );
             }
             final r = recipes[i - 1];
-            return Card(
+            return TonosThemeReadyCard(
               child: ListTile(
                 title: Text(r.name),
                 subtitle: Text(AppLocalizations.of(context).foodRecentRecipe),
                 trailing: IconButton(
-                  tooltip: 'Log 1× now',
+                  tooltip: strings.foodAddOne,
                   icon: const Icon(Icons.playlist_add_check),
                   onPressed: () async {
                     final messenger = ScaffoldMessenger.of(context);
@@ -1054,23 +1062,21 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           const SizedBox(height: 16),
 
           // Existing manual fallback
-          TextField(
+          TonosField(
             controller: _barcodeCtrl,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: strings.foodEnterBarcode,
-              hintText: strings.foodEnterBarcodeHint,
-              prefixIcon: const Icon(Icons.qr_code),
-              suffixIcon:
-                  (_barcodeCtrl.text.isEmpty)
-                      ? null
-                      : IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _barcodeCtrl.clear()),
-                      ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+            labelText: strings.foodEnterBarcode,
+            hintText: strings.foodEnterBarcodeHint,
+            prefixIcon: const Icon(Icons.qr_code),
+            suffixIcon:
+                (_barcodeCtrl.text.isEmpty)
+                    ? null
+                    : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _barcodeCtrl.clear()),
+                    ),
+            border: OutlineInputBorder(
+              borderRadius: context.nutritionTokens.compactShape,
             ),
             onChanged: (_) => setState(() {}),
             onSubmitted: (_) => _handleScanAdd(),
@@ -1117,11 +1123,19 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           SnackBar(content: Text(strings.foodBarcodeLogged)),
         );
       } on StateError catch (e) {
-        if (mounted) messenger.showSnackBar(SnackBar(content: Text(e.message)));
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+            ),
+          );
+        }
       } catch (e) {
         if (mounted) {
           messenger.showSnackBar(
-            SnackBar(content: Text(strings.foodFailed(e.toString()))),
+            SnackBar(
+              content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+            ),
           );
         }
       }
@@ -1160,7 +1174,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     } catch (e) {
       if (mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text(strings.foodFailed(e.toString()))),
+          SnackBar(
+            content: Text(strings.foodFailed(safeFailureMessage(strings, e))),
+          ),
         );
       }
     }
@@ -1321,7 +1337,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   }
 
   Widget _foodResultTile(BuildContext context, Food f) {
-    return Card(
+    final strings = AppLocalizations.of(context);
+    return TonosThemeReadyCard(
       child: ListTile(
         title: Text(f.name),
         subtitle: FutureBuilder<_MacroPreview>(
@@ -1341,9 +1358,13 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               selector: (_, p) => p.isFavorite(f.id!),
               builder:
                   (ctx, isFav, _) => IconButton(
-                    tooltip: isFav ? 'Unfavorite' : 'Favorite',
+                    tooltip:
+                        isFav ? strings.foodUnfavorite : strings.foodFavorite,
                     icon: Icon(isFav ? Icons.star : Icons.star_border),
-                    color: isFav ? Colors.amber : Colors.grey,
+                    color:
+                        isFav
+                            ? context.nutritionTokens.favoriteAction
+                            : context.nutritionTokens.mutedAction,
                     visualDensity: VisualDensity.compact,
                     onPressed:
                         () =>
@@ -1351,23 +1372,23 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   ),
             ),
             IconButton(
-              tooltip: 'Customize food',
+              tooltip: strings.foodCustomize,
               icon: const Icon(Icons.settings),
-              color: Colors.grey,
+              color: context.nutritionTokens.mutedAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openCustomizeFood(f),
             ),
             IconButton(
-              tooltip: 'Edit & add',
+              tooltip: strings.foodEditAndAdd,
               icon: const Icon(Icons.edit),
-              color: Colors.amber,
+              color: context.nutritionTokens.favoriteAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _openAddSheet(context, f),
             ),
             IconButton(
-              tooltip: 'Add 1',
+              tooltip: strings.foodAddOne,
               icon: const Icon(Icons.add_circle),
-              color: Colors.green,
+              color: context.nutritionTokens.addFoodAction,
               visualDensity: VisualDensity.compact,
               onPressed: () => _quickAddOne(f),
             ),
@@ -1393,7 +1414,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       itemCount: 1,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, i) {
-        return Card(
+        return TonosThemeReadyCard(
           child: ListTile(
             title: const Text('Add New Food Item'),
             trailing: const Icon(Icons.chevron_right),
@@ -1576,7 +1597,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       const SizedBox(width: 12),
                       SizedBox(
                         width: 100,
-                        child: TextFormField(
+                        child: TonosFormField(
                           initialValue: qty.toStringAsFixed(1),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -1584,10 +1605,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                           onChanged:
                               (s) =>
                                   setB(() => qty = double.tryParse(s) ?? 1.0),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                          ),
+                          isDense: true,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1598,29 +1617,25 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   const SizedBox(height: 12),
 
                   // Note
-                  TextFormField(
+                  TonosFormField(
                     minLines: 1,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Note (optional)',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Note (optional)',
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     onChanged: (s) => note = s.trim().isEmpty ? null : s.trim(),
                   ),
 
                   const SizedBox(height: 12),
 
                   // NEW: Tags (comma-separated)
-                  TextFormField(
+                  TonosFormField(
                     minLines: 1,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText:
-                          'Tags (comma-separated, e.g. "post-workout, high-protein")',
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText:
+                        'Tags (comma-separated, e.g. "post-workout, high-protein")',
+                    isDense: true,
+                    border: const OutlineInputBorder(),
                     onChanged: (s) => tagsText = s,
                   ),
 
@@ -1811,11 +1826,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final strings = AppLocalizations.of(context);
     final prof = context.read<NutritionProfile>();
     final pid = prof.profileId;
     if (pid == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Profile not ready yet.')),
+        SnackBar(content: Text(strings.foodProfileNotReady)),
       );
       if (mounted) setState(() => _logBusy = false);
       return;
@@ -1861,15 +1877,17 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       // Refresh if we're on today (cheap, provider-coalesced)
       await prof.reloadIfToday();
 
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Items logged to diary')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(strings.foodItemsLogged)));
 
       if (closeDrawerToo) navigator.pop(); // close endDrawer
       if (popPageAfter) navigator.pop(true); // optionally leave page
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('Failed to log: $e')));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(strings.foodLogFailed(safeFailureMessage(strings, e))),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _logBusy = false);
     }
@@ -1941,8 +1959,8 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: context.nutritionTokens.foodBorder),
+        borderRadius: context.nutritionTokens.compactShape,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1987,19 +2005,23 @@ class _LineMacros {
   String kcalText() => '${kcal.round()} kcal';
 }
 
-Widget _qtyButton({required IconData icon, required VoidCallback onTap}) {
+Widget _qtyButton({
+  required BuildContext context,
+  required IconData icon,
+  required VoidCallback onTap,
+}) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 6),
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: context.nutritionTokens.quantityShape,
       child: Container(
         width: 36,
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: context.nutritionTokens.foodBorder),
+          borderRadius: context.nutritionTokens.quantityShape,
         ),
         child: Icon(icon, size: 18),
       ),
@@ -2042,7 +2064,7 @@ class _QtyEditorState extends State<_QtyEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return TonosFormField(
       controller: _c,
       textAlign: TextAlign.center,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -2050,11 +2072,9 @@ class _QtyEditorState extends State<_QtyEditor> {
         final v = double.tryParse(s);
         if (v != null) widget.onChanged(v < 0 ? 0 : v);
       },
-      decoration: const InputDecoration(
-        isDense: true,
-        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-        border: OutlineInputBorder(),
-      ),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      border: const OutlineInputBorder(),
     );
   }
 }
