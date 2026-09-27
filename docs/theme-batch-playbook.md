@@ -1,12 +1,139 @@
 # Theming Batch Playbook
 
-## Current Status And Ownership (updated 2026-09-25; development evidence through 2026-09-25)
+## Current Status And Ownership (updated 2026-09-26; development evidence through 2026-09-26)
 
 The [Consolidated Theming Roadmap](theme-consolidated-roadmap.md) is the current
 task/status checklist. This playbook preserves batch scopes and historical
 evidence. Q3 supersedes older pending labels for its accepted scope; later
 refinements still need affected-route verification. Do not restart completed
 batches solely from an older status paragraph below.
+
+2026-09-26 Step 3/7/9/10/18 Exercise Catalog follow-up: added named shape
+roles for the exercise row radius, thumbnail frame radius, and selected-row
+outline width. The existing recipes remain Classic 16px/1.5px and Neo 4px/3px;
+the media frame remains 12px, unselected outlines continue using outlineWidth,
+and Neo depth remains effect-token-owned. Search and filter controls retain
+Material ownership and TonosDialogFrame's existing opted-in dialog theme; no
+primitive, interaction, or ratchet scope was added. The exact rule migrates 13
+remaining screen findings, with the two hardcoded geometry expressions replaced
+by token roles. The new token declarations add eight already-migrated
+theme-system candidates, so total findings rise by six while pending falls by
+15. Four-mode shape/source ownership contracts and the inventory test passed;
+formatting, repository-wide analysis, inventory `--check`, report/enforce for
+all 17 ratchet scopes, `git diff --check`, and all 987 Flutter tests passed.
+Inventory: 279 Dart files / 2,265 candidates (127 allowlisted, 1,899 migrated,
+239 pending; 972 uniquely queued, 1,293 outside, zero overlaps/unassigned).
+The exercise catalog still needs human visual review in Classic/Neo light/dark
+with available and missing media; source/shape contracts are not device approval.
+
+2026-09-26 Step 3/7/9/10/18 Catalog overview follow-up: replaced the three
+remaining embedded Classic radii with dedicated AppShapeTokens roles for the
+exercise-usage row, its media frame, and focus panes. Classic remains 14/12/16px
+and Neo remains 4px; fill, border, optional shadow, Card/TonosSurface wrappers,
+and interactions are unchanged. A seeded four-mode CatalogPage contract checks
+those rendered owners and exercises token copy/interpolation; its exact
+inventory rule covers the three remaining decoration/geometry/shadow findings.
+No new primitive or ratchet scope was added. Focused formatting and
+repository-wide analysis passed; focused token/widget/inventory tests passed
+23 tests, all 984 Flutter tests passed, inventory `--check` passed at 2,259
+candidates (127 allowlisted, 1,878 migrated, 254 pending; 974 uniquely queued,
+1,285 outside queues, zero overlaps or unqueued pending), and all 17 ratchet
+scopes passed report/enforce. Device appearance, real/missing media review, and
+broader Catalog route acceptance remain separate.
+
+2026-09-26 Step 3/7/9/10/18 active-workout owner follow-up: added four-mode
+Session Detail rendering checks for all three token-backed summary metrics and
+the completed-set index surface, and opened the real save-plan dialog to verify
+that its label-only field inherits the existing TonosDialogFrame/Material
+recipe. The active-session timer now also has Neo light/dark typography checks;
+the existing Classic checks remain. Three exact inventory rules cover these
+five findings, bringing the active-workout queue to 50/50 migrated with no
+pending candidates. No production rendering, token, primitive, or ratchet
+scope changed, and these tests do not claim whole-route/device visual
+acceptance. Formatting, repository-wide analysis, and all 979 Flutter tests
+passed. Inventory `--check` reports 2,250 candidates (127 allowlisted, 1,863
+migrated, 260 pending; 977 uniquely queued, 1,273 outside, zero
+overlaps/unassigned). All 17 ratchet scopes passed report/enforce. Dashboard
+editor, Auto Preset add-method dialog, Nutrition form, Neo BodyPartFocusChips,
+and the deferred nested flow-state review remain open for human review.
+
+2026-09-26 Step 3/7/9/10/18 follow-up: the app shell now builds its existing
+transparent status-bar surface and brightness-aware icon colors through one
+tested `SystemUiOverlayStyle` policy. An exact, color-only application-shell
+inventory rule classifies that finding as migrated; a contract pins the rule to
+exactly one source candidate. The focused app-shell/inventory/theme-family
+suite passed 60 tests, repository-wide analysis was clean, and all 973 Flutter
+tests passed. Inventory `--check` reports 2,250 candidates (127 allowlisted,
+1,858 migrated, 265 pending; 977 uniquely queued, 1,273 outside, zero
+overlaps/unassigned); the application-shell and nutrition-workflows queues
+have no pending findings. All 17 ratchet scopes passed report/enforce. No
+status-bar appearance, token, shared primitive, ratchet scope, or device visual
+acceptance changed; remaining broader route and human qualification is open.
+
+2026-09-26 Step 3/7/9/10/18 follow-up: Food Customization's portion-unit
+`DropdownButtonFormField` now has an exact, kind-limited Material-owned
+decoration rule and a production-page test that opens the real popup and checks
+the inherited option ink against the menu surface in Classic/Neo light/dark.
+The inventory contract pins the new ownership rule; no production rendering,
+theme token, primitive, or ratchet scope changed. Focused dropdown, expansion,
+and inventory-contract tests passed 54 cases; repository-wide analysis and all
+970 Flutter tests passed; inventory `--check` reports 2,250 candidates (127
+allowlisted, 1,857 migrated, 266 pending; 977 uniquely queued, 1,273 outside,
+zero overlaps/unassigned); all 17 ratchet scopes passed report/enforce. The
+nutrition-workflows queue now has zero pending findings. This automated
+contrast/ownership evidence does not count as visual acceptance: the Nutrition
+form still needs the listed human review.
+
+Latest Step 3/7/9/10/18 batch (2026-09-26): Log Entry now has four-mode
+rendered assertions for its four ColorScheme meal fills/foregrounds, 0.85
+subtitle alpha, AppNutritionTokens timeline/stat recipes, and emphasized stat
+values. The barcode scanner's fixed camera-overlay contrast is documented as a
+narrow 12-candidate intentional one-off and pinned in Classic/Neo light/dark.
+No production appearance or new token/primitive changed. Formatting and
+repository-wide analysis passed; the focused scanner/log-entry/inventory suite
+passed 64 tests; the full Flutter suite passed 966 tests. Inventory check is
+clean at 2,250 candidates (127 allowlisted, 1,856 migrated, 267 pending; 977
+uniquely queued, 1,273 outside, zero overlaps/unassigned); the nutrition queue
+has one pending Food Customization input decoration. All 17 ratchet scopes
+passed report/enforce. The broader Nutrition form visual review and other
+previously listed human reviews remain open. A final scanner geometry
+assertion was then run across all eight scanner-route tests, and targeted
+analysis remained clean.
+
+2026-09-26 Step 3/7/9/10/18 batch: Food Customization's four-mode
+production-page contract pins the existing section/portion shapes, density-help
+token, Material-owned ExpansionTile divider/density, title hierarchy, and the
+Protein Components disclosure interaction. UI Appearance's light/dark selector
+contract pins the existing Classic and Neo preview surfaces, contrast bars,
+shapes, and Neo shadow. Exact inventory rules migrate nine Food Customization
+geometry/text-style findings and seven UI Appearance color/color-transform/
+decoration/geometry/shadow findings; the Nutrition dropdown decoration remains
+pending for separate form review. Formatting and analysis passed; the combined focused selector,
+nutrition, and inventory batch passed 67 tests; repository-wide analysis was
+clean; inventory check reported 2,250 candidates (115 allowlisted, 1,792
+migrated, 343 pending; 977 uniquely queued, 1,273 outside, zero
+overlaps/unassigned); all 948 Flutter tests passed; and all 17 ratchet scopes
+passed report/enforce. No production style or ratchet scope changed.
+
+2026-09-26 follow-up Step 3/7/9/10/18 batch: Gym Profile now has an exact
+four-mode rendered screen contract for its fields, category/profile surfaces,
+equipment selection frames, empty-search state, save bar, and draft behavior.
+Food Logging's four-mode contract covers search, favorites, portions, all four
+meal selections, plate summary borders, and logging. Its 420px viewport exposed
+two real layout overflows: the plate log-time row now wraps, and the existing
+Material meal ToggleButtons scroll horizontally only when constrained. The
+contracts own 39 Gym Profile and 17 Food Logging findings, all migrated through
+existing roles; no new token, generic primitive, or ratchet scope was added.
+Formatting reported no changes, repository-wide analysis was clean, the focused
+Gym Profile/Food Logging/inventory suite passed 55 tests, and the full Flutter
+suite passed 957 tests. Inventory `--check` passed at 279 Dart files / 2,250
+candidates (115 allowlisted, 1,848 migrated, 287 pending; 977 uniquely queued,
+1,273 outside queues, zero overlaps or unqueued pending). All 17 ratchet scopes
+passed report and enforce. The user accepted the corrected Health Trends
+date-cell outlines and selected-period Workout History card on 2026-09-26.
+Dashboard editor, Auto Preset add-method dialog, Nutrition form, and updated Neo
+BodyPartFocusChips still need the listed human visual checks; nested flow-state
+review remains deferred.
 
 D2 Dashboard/DataRecords source-contract closeout (2026-09-25): added exact,
 kind-limited ownership rules for the eight existing token-backed

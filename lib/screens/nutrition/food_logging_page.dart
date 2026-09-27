@@ -340,6 +340,15 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
   Widget build(BuildContext context) {
     final p = context.watch<NutritionProfile>();
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final selectedTabFill =
+        usesInkRecipe ? colorScheme.primary : theme.primaryColor;
+    final selectedTabInk =
+        usesInkRecipe
+            ? colorScheme.onPrimary
+            : context.nutritionTokens.selectedLabel;
 
     // One-time defaults
     if (!_didInitScanMeal) {
@@ -468,12 +477,19 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   builder: (ctx) {
                     final prof = context.read<NutritionProfile>();
                     final effective = _plateLogAt ?? _defaultLogTimeFor(prof);
-                    return Row(
+                    return Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
-                        const Icon(Icons.schedule, size: 18),
-                        const SizedBox(width: 8),
-                        Text(strings.foodLogTime),
-                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.schedule, size: 18),
+                            const SizedBox(width: 8),
+                            Text(strings.foodLogTime),
+                          ],
+                        ),
                         OutlinedButton(
                           onPressed: () async {
                             final t0 = TimeOfDay(
@@ -503,7 +519,6 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                           },
                           child: Text(_fmtHM(effective)),
                         ),
-                        const Spacer(),
                         if (_plateLogAt != null)
                           TextButton(
                             onPressed: () => setState(() => _plateLogAt = null),
@@ -830,35 +845,38 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           // ─── Tabs ──────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ToggleButtons(
-              isSelected: _tabs,
-              onPressed:
-                  (i) => setState(() {
-                    for (var idx = 0; idx < _tabs.length; idx++) {
-                      _tabs[idx] = idx == i;
-                    }
-                  }),
-              borderRadius: context.nutritionTokens.compactShape,
-              selectedColor: context.nutritionTokens.selectedLabel,
-              fillColor: Theme.of(context).primaryColor,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(AppLocalizations.of(context).foodTabScan),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(AppLocalizations.of(context).foodTabSearch),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(AppLocalizations.of(context).foodTabPlanned),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(AppLocalizations.of(context).foodTabCustom),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ToggleButtons(
+                isSelected: _tabs,
+                onPressed:
+                    (i) => setState(() {
+                      for (var idx = 0; idx < _tabs.length; idx++) {
+                        _tabs[idx] = idx == i;
+                      }
+                    }),
+                borderRadius: context.nutritionTokens.compactShape,
+                selectedColor: selectedTabInk,
+                fillColor: selectedTabFill,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(AppLocalizations.of(context).foodTabScan),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(AppLocalizations.of(context).foodTabSearch),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(AppLocalizations.of(context).foodTabPlanned),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(AppLocalizations.of(context).foodTabCustom),
+                  ),
+                ],
+              ),
             ),
           ),
 

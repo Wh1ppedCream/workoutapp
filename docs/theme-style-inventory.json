@@ -93,6 +93,17 @@
       "rationale": "The theme boundary is the intentional owner of shared visual definitions and recipes."
     },
     {
+      "id": "app-shell-system-status-bar-overlay",
+      "pattern": "lib/main.dart",
+      "kinds": [
+        "color"
+      ],
+      "classification": "application_shell",
+      "status": "migrated",
+      "target": "Theme-aware transparent system status-bar overlay",
+      "rationale": "The app shell owns the transparent status-bar surface and brightness-aware icon contrast through appSystemUiOverlayStyleFor. Its exact color finding is pinned by a unit contract for both brightness modes; this is system-overlay policy, not a user-selectable theme accent or a claim of device visual acceptance."
+    },
+    {
       "id": "application-shell",
       "pattern": "lib/main.dart",
       "classification": "application_shell",
@@ -310,6 +321,81 @@
       "rationale": "A line-by-line audit of the 18 current candidates found profile/plan scope accents owned by AppFlowTokens; Neo section and entry surfaces, foregrounds, outlines, and geometry use AppSurfaceTokens, surface-aware contrast helpers, and AppShapeTokens. Classic retains its established scope accents and ColorScheme surfaces. The user accepted the current Workout Progress Flows appearance; route/residue contracts protect source behavior. This rule covers presentation only and does not close the separately deferred nested persistence/editing-state review. Keep it exact-file and kind-limited."
     },
     {
+      "id": "ui-appearance-theme-family-previews",
+      "pattern": "lib/screens/profile/settings/ui_appearance_settings_page.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Classic and Neo family-preview surface, foreground, shape, and effect recipes",
+      "rationale": "The two compact theme-family thumbnails intentionally preview each family using its own ColorScheme: Classic uses surfaceContainerHighest/onSurface/primary with a 6px radius, while Neo uses primary/onPrimary/secondary with square corners and its 2px hard shadow. A light/dark production-selector contract pins both previews, the 0.72 contrast-bar treatment, and the existing border widths. These seven exact style findings need no extra global token; the test does not claim broader UI Appearance route or device acceptance."
+    },
+    {
+      "id": "gym-profile-four-mode-recipes",
+      "pattern": "lib/screens/exercise/gym_profile_screen.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Existing AppSurfaceTokens, AppShapeTokens, ColorScheme, and settings-field recipes",
+      "rationale": "A four-mode rendered GymProfileScreen contract pins the profile and category surfaces, field fills/shapes, selected and unselected equipment media frames, empty-search state, and fixed save bar. It exercises filtering, select-all, and draft return through the production route. These 39 exact-file findings are owned by existing theme roles; no additional token or generic card primitive is introduced, and the test does not claim device visual acceptance."
+    },
+    {
+      "id": "food-logging-four-mode-recipes",
+      "pattern": "lib/screens/nutrition/food_logging_page.dart",
+      "kinds": [
+        "color_transform",
+        "component_style",
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppNutritionTokens, Material action ownership, and meal-specific ColorScheme accents",
+      "rationale": "The four-mode production-flow contract searches, favorites, selects portions, adds one item for each meal, opens the plate drawer, and logs all entries. It checks all four meal-border roles, nutrition-owned stat/quantity/plate geometry, and the Material log-action recipe. The phone-width run also protects the scrollable tab strip and wrapping log-time controls from overflow. These 17 exact-file findings retain existing token and Material ownership; broader Nutrition form visual review remains separate."
+    },
+    {
+      "id": "nutrition-log-entry-four-mode-recipes",
+      "pattern": "lib/screens/nutrition/log_entry_page.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppNutritionTokens, ColorScheme meal surfaces, and inherited Material typography",
+      "rationale": "The four-mode rendered LogEntryPage contract pins the existing nutrition-owned timeline grid, mini-stat borders/shapes, meal-specific container fills and foregrounds, alpha treatment, chip shape, and emphasized values while retaining date and macro behavior. These eight exact-file findings use current theme roles and add no generic token or primitive. This contract does not claim device review of the broader Nutrition workflow."
+    },
+    {
+      "id": "barcode-scanner-theme-independent-camera-ui",
+      "pattern": "lib/screens/nutrition/barcode_scanner_page.dart",
+      "kinds": [
+        "color",
+        "color_literal",
+        "color_literal_candidate",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "intentional_one_off",
+      "status": "allowlisted",
+      "target": "Camera-preview-independent black canvas, white scanner frame and controls, and readable hint scrim",
+      "rationale": "The scanner overlays a live camera image whose colors and luminance are arbitrary. Keep its black canvas, white frame/controls, and dark hint scrim independent of app theme so the scan target and guidance remain legible across camera feeds and all app families. This exact-file, kind-limited allowlist is covered by a four-mode route contract and does not exempt scanner lifecycle, device behavior, or other Nutrition styling."
+    },
+    {
       "id": "profile-settings",
       "pattern": "lib/screens/profile/settings/**",
       "classification": "structural_theme",
@@ -326,12 +412,78 @@
       "rationale": "Onboarding has high interaction and localization risk, so it needs a deliberate screen-level migration."
     },
     {
+      "id": "dashboard-sections-theme-ownership",
+      "pattern": "lib/widgets/dashboard_sections.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "gradient"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Existing dashboard surface/shape tokens, ColorScheme ownership, and stable accents",
+      "rationale": "The DashboardHero, quick-action surface and controls, recent-workout container/row, and populated exercise-usage row reuse existing dashboardHero/dashboardSection/dashboardAction/dashboardUsage surfaces and shapes, ColorScheme outline/primary/onSurfaceVariant roles, and bounded stable action accents. A four-mode production-widget contract exercises these owners with populated recent-workout and exercise usage data. The exact kind-limited rule covers the current 18 candidates only; device review of the complete dashboard route remains separate."
+    },
+    {
       "id": "dashboard-hotspot",
       "pattern": "lib/widgets/dashboard_sections.dart",
       "classification": "structural_theme",
       "status": "pending",
       "target": "Tonos surfaces/sections plus semantic and visualization tokens",
       "rationale": "Dashboard sections combine application chrome with data and anatomy visuals; mixed ownership must be separated rather than globally recolored."
+    },
+    {
+      "id": "dashboard-editor-category-accents",
+      "pattern": "lib/screens/dashboard_page.dart",
+      "kinds": [
+        "color_transform"
+      ],
+      "classification": "stable_category_data",
+      "status": "allowlisted",
+      "target": "Fixed Dashboard section identity colors with bounded editor border and icon fills",
+      "rationale": "The two transforms in the Dashboard editor apply fixed alpha treatments to the section colors supplied by dashboardSectionDetails; those colors identify section categories rather than app theme or interaction state. A four-mode rendered contract pins the 0.48 outline and 0.16 icon fill while keeping the underlying section palette separate from future user-selectable theme colors. This is a data-color ownership decision only, not approval of the Dashboard route's overall appearance or device states."
+    },
+    {
+      "id": "dashboard-section-identity-colors",
+      "pattern": "lib/widgets/dashboard_section_palette.dart",
+      "kinds": [
+        "color_literal",
+        "color_literal_candidate"
+      ],
+      "classification": "stable_category_data",
+      "status": "allowlisted",
+      "target": "Stable dashboard section, hero, and quick-action identity colors",
+      "rationale": "These eight curated colors identify dashboard section categories and their related hero/quick-action accents; they are intentionally independent of application theme-primary and interaction-state roles. The palette is isolated from widget composition so future user-selectable theme palettes can evolve independently. A four-mode dashboard editor contract preserves every section mapping, while an exact finding-count test prevents unrelated styling kinds or added colors from entering this data-only exception."
+    },
+    {
+      "id": "dashboard-editor-surface-recipes",
+      "pattern": "lib/screens/dashboard_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Dashboard editor/section surface and shape tokens with Material outline ownership",
+      "rationale": "The empty-state card, editable section tile, and editor footer use the existing dashboardSection/dashboardEditor surfaces, dashboardSection/dashboardEditor/dashboardFooter shapes, and ColorScheme.outlineVariant. The one-off 12px category-icon badge and default 1px outlines are component-owned details, not reasons to add a global token or generic surface primitive. Four-mode rendered tests pin the exact recipes, inherited title typography, semantic description/drag/hide ink, and add/hide/reset/reorder behavior. This scope does not close the Dashboard's manual/device review."
+    },
+    {
+      "id": "preset-generation-qa-theme-ownership",
+      "pattern": "lib/screens/exercise/preset_generation_qa.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "gradient",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Preset Generation QA route tokens and inherited Material typography",
+      "rationale": "The generation intro, summary, sections, fields, choice tiles, action bar, and error badge consume the route-specific AppGenerationTokens; remaining font emphasis/size overrides are intentional local hierarchy while other typography inherits Theme.textTheme. TonosExpansionTileScope owns the reused ExpansionTile recipe. Existing token/source contracts pin the recipe and Classic baseline; this exact inventory contract pins candidate kinds/counts. No new primitive or runtime style change is introduced, and this rule does not imply device review of the full QA route."
     },
     {
       "id": "preset-generation-hotspot",
@@ -353,6 +505,29 @@
       "rationale": "The exact local Theme helper scopes onSurface, onSurfaceVariant, and text styles for the Overview Active Plans panel and the Active, Archived, and Premade Plans sections. Four-mode Train panel and archived-empty-state regressions preserve inherited icon roles; the user visually accepted Train in Classic and Neo, light and dark, on 2026-09-25. Classic bypasses the helper and retains its accepted baseline. Do not replace this helper with TonosSurfaceTheme, which owns a different set of surface and icon roles."
     },
     {
+      "id": "train2-tab-selector-recipe",
+      "pattern": "lib/screens/exercise/train2_page.dart",
+      "kinds": [
+        "color",
+        "decoration"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Train2 tab selector surface/shape and transparent button borders",
+      "rationale": "The selector frame uses the existing surfaceContainerHighest and trainTab shape roles; ToggleButtons retains transparent normal/selected borders so its active ColorScheme fill communicates selection without a second outline. A four-mode production-route contract pins the frame and all button colors. This exact recipe owns three current findings only; typography and other Train2 route/state styling remain queued."
+    },
+    {
+      "id": "train2-route-typography",
+      "pattern": "lib/screens/exercise/train2_page.dart",
+      "kinds": [
+        "text_style"
+      ],
+      "classification": "intentional_one_off",
+      "status": "allowlisted",
+      "target": "Train2 route hierarchy and semantic profile-avatar ink",
+      "rationale": "Four route-local TextStyles intentionally set only their existing font sizes or emphasis for dialog help/body labels and the preset heading; their foreground remains inherited from the active page/dialog Theme. The profile monogram uses the existing onTrainProfileAvatar semantic role with bold emphasis. A four-mode production-route contract pins all five styles. Keep these route-specific hierarchy values as one-offs rather than adding global typography tokens; this exact kind-limited allowlist owns five current findings only."
+    },
+    {
       "id": "train-action-bar-recipes",
       "pattern": "lib/screens/exercise/train_page.dart",
       "classification": "structural_theme",
@@ -367,6 +542,89 @@
       ],
       "target": "Train profile contrast and split workout action-bar recipes",
       "rationale": "This exact file/kind rule covers the seven existing Train candidates: the avatar uses onTrainProfileAvatar, and the split action-bar frame, divider, transparent Material, and action labels resolve through the existing shape, effect, surface, semantic, and ColorScheme roles. The four-mode Train regression checks the existing compact horizontal geometry (including its accepted Classic/Neo frame heights), frame border/shadow/clipping/elevation, divider, action colors/text, and enabled action/settings callbacks. The user accepted the Train appearance in all four modes. A contract pins the rule to these seven findings so new styling in the screen is not silently enrolled."
+    },
+    {
+      "id": "food-customization-expansion-recipes",
+      "pattern": "lib/screens/nutrition/food_customization_page.dart",
+      "kinds": [
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Nutrition section/portion shapes, token-backed density help, and inherited ExpansionTile typography",
+      "rationale": "The four section cards and two portion cards use AppNutritionTokens.sectionShape, portionShape, and foodBorder; density help uses the densityHelp token; group/portion title styles set only their intentional font weights and inherit active Material foreground and sizing. Their four-mode production-page contract pins these owners and exercises opening a nutrient ExpansionTile. The nine geometry/text-style findings are exact-file and kind-limited. The portion-unit dropdown has a separate Material-owned decoration contract; neither contract constitutes Nutrition form visual acceptance."
+    },
+    {
+      "id": "food-customization-unit-dropdown-material-recipe",
+      "pattern": "lib/screens/nutrition/food_customization_page.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Material-owned compact portion-unit dropdown decoration and popup roles",
+      "rationale": "The portion-unit DropdownButtonFormField intentionally keeps Material ownership: its explicit decoration supplies only the Unit label, compact density/padding, and outlined shape while active ThemeData supplies fill, border colors, and inherited ink. The four-mode production-page contract opens the real menu and verifies onSurface option ink against the active canvas surface at 4.5:1 or greater. This exact kind-limited rule classifies one existing decoration and does not claim visual acceptance or add a shared dropdown primitive."
+    },
+    {
+      "id": "session-screen-timer-material-typography",
+      "pattern": "lib/screens/exercise/session_screen.dart",
+      "kinds": [
+        "text_style"
+      ],
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Active-session timer typography inherited from ThemeData.textTheme",
+      "rationale": "The timer base is Theme.of(context).textTheme.bodyMedium and the two explicit sizes preserve the existing Material text hierarchy. Classic retains its established 20px title and 48px clock; the Classic regression and a Neo light/dark rendered contract verify the resolved styles. This exact one-finding rule records Material ownership only; it does not qualify the full active-workout route or device appearance."
+    },
+    {
+      "id": "session-screen-completion-sheet-surface",
+      "pattern": "lib/screens/exercise/session_screen.dart",
+      "kinds": [
+        "color"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Completion sheet surface boundary owned by AppSurfaceDecorationTokens",
+      "rationale": "The completion bottom sheet selects a transparent outer Material and zero elevation only when the existing sheet surface recipe is outlined; otherwise it leaves the established Material defaults in place. An exact source-owner contract pins this conditional and the existing SessionCompleteSheet contract covers the inner sheet. This one-finding rule does not qualify completion flow state or device appearance."
+    },
+    {
+      "id": "session-detail-summary-material-and-token-owners",
+      "pattern": "lib/screens/exercise/session_detail_screen.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Session Detail summary/set surfaces and Material-owned save-plan field",
+      "rationale": "The label-only save-plan TextFormField inherits the opted-in TonosDialogFrame form recipe; summary metrics use AppSurfaceTokens.sessionSummary with AppShapeTokens.metric, and completed-set indices use panelRaised in a circular shape. A four-mode production-route contract renders and checks the token-backed surfaces and opens the real save-plan dialog to verify the inherited Material field owner. This exact three-finding rule is presentation ownership only and does not qualify editing, repeat, persistence, or device behavior."
+    },
+    {
+      "id": "catalog-overview-shape-ownership",
+      "pattern": "lib/screens/catalog_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Catalog overview usage-row outline/depth and named geometry roles",
+      "rationale": "The exercise usage row resolves its fill, outline, width, and optional Neo depth through existing surface/effect roles; its row, thumbnail, and focus-pane radii use dedicated AppShapeTokens fields whose Classic values preserve 14/12/16px and Neo values preserve the established 4px recipe. A four-mode rendered CatalogPage test seeds usage data and checks the actual row decoration, outline, shadow, media-frame radius, focus-pane hit regions, and outer Card/TonosSurface ownership. This exact rule covers only the three remaining decoration/geometry/shadow findings; it does not claim device visual acceptance or qualify the linked catalog routes."
+    },
+    {
+      "id": "exercise-catalog-theme-ownership",
+      "pattern": "lib/screens/exercise/exercise_catalog_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "shadow",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Exercise catalog Material controls, family-specific row geometry, and media frame",
+      "rationale": "The search TextField and four filter InputDecorations retain Material ownership; the four DropdownButtonFormFields remain inside TonosDialogFrame's opted-in form theme, and their dark-Neo popup/selected ink keeps its surface-qualified contrast. Catalog rows use AppShapeTokens.exerciseCatalogRow and exerciseCatalogSelectedOutlineWidth with Classic 16px/1.5px and Neo 4px/3px recipes, the existing outlineWidth owns unselected borders, exerciseCatalogMedia preserves the caller's 12px thumbnail frame, and Neo depth remains AppEffectTokens-owned. The exact source/inventory and four-mode token contracts pin these roles and preserve search, filter, selection, tutorial, and detail callbacks. Device review of this route and available/missing media remains separate."
     },
     {
       "id": "release-screens",
@@ -413,7 +671,7 @@
       "classification": "theme_system",
       "status": "migrated",
       "target": "TonosBottomNavigationBar's theme-owned Neo rail, selected fill, outline, and elevation",
-      "rationale": "This exact shared owner has four current candidates: transparent Material fill preserves the selected-segment layer, the frame uses ColorScheme/surface tokens and AppShapeTokens, and its optional shadow is derived from AppEffectTokens. A four-mode widget contract now checks both the Classic Material owner and Neo rail colors, outline, shape, effects, and activation; an inventory contract pins the exact candidate count and kinds. Keep the rule kind-limited and do not generalize it to other navigation widgets."
+      "rationale": "This exact shared owner has four current candidates: transparent Material fill preserves the selected-segment layer, the frame uses ColorScheme/surface tokens and AppShapeTokens, and its optional shadow is derived from AppEffectTokens. A four-mode widget contract checks both the Classic Material owner and Neo rail colors, outline, shape, effects, activation, and the specified 4px selection underline; an inventory contract pins the exact candidate count and kinds. Keep the rule kind-limited and do not generalize it to other navigation widgets."
     },
     {
       "id": "workout-record-badges",
@@ -467,6 +725,21 @@
       "status": "migrated",
       "target": "AppSurfaceTokens.historyPeriodSelector, AppShapeTokens.compact, semantic InfoCard text, and surface-aware selector foregrounds",
       "rationale": "The 10 current candidates are owned by this exact widget: InfoCard uses TonosSurfaceVariant.compactCard and semantic.strongContent/mutedContent while retaining its compact value/label hierarchy; the selector uses surfaces.historyPeriodSelector, theme primary/transparent selected-state fills, tonosForegroundForSurface, and geometry derived from shapes.compact. Existing dashboard/history contracts protect the selector state and lazy range loading, and the user accepted the selected-period Workout History card visually. The inventory contract pins the exact path, kinds, and current count; do not generalize to adjacent history or measurement widgets."
+    },
+    {
+      "id": "workout-history-calendar-recipes",
+      "pattern": "lib/widgets/workout_history_calendar.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "AppSurfaceTokens calendar/selected-period roles, AppShapeTokens, semantic content colors, and surface-aware contrast helpers",
+      "rationale": "The 19 current candidates are owned by this exact calendar: mode rail and selection, date/activity circles and badges, three-month dividers, selected-period summary card, metric-card typography/ink, and session-row title weight. WorkoutHistoryCalendar's four-mode rendered contract checks those role mappings, selected/empty/activity states, period transitions, session callbacks, and Classic Card / Neo TonosSurface ownership. The user accepted the selected-period Workout History appearance; no visual recipe is changed by classification. Keep the rule exact-path and kind-limited so adjacent history and dashboard widgets remain separately reviewed."
     },
     {
       "id": "current-metrics-category-colors",
@@ -556,7 +829,7 @@
         "geometry"
       ],
       "target": "DataRecordsSection today-state meaning, ordinary divider, and calendar-cell structure",
-      "rationale": "D2 records the existing recordTodayContainer, recordTodayBorder, onRecordTodayContainer, and shared divider roles. The progress-records source contract pins those owners and the LogEntryPage tap path. This exact kind-limited rule covers the four current findings only; it does not imply rendered long-range/date/device or full-release qualification."
+      "rationale": "D2 records the existing recordTodayContainer, recordTodayBorder, onRecordTodayContainer, and shared divider roles; Neo dark date cells use the neutralOutline role so their circles remain visible on the dark canvas. The progress-records source contract pins those owners and the LogEntryPage tap path. This exact kind-limited rule covers the four current findings only; it does not imply rendered long-range/date/device or full-release qualification."
     },
     {
       "id": "workout-dashboard-recipes",
@@ -584,6 +857,245 @@
       ],
       "target": "Archived-plan empty-state contrast and progressive Show More action",
       "rationale": "A four-mode rendered contract checks archived empty-state text against its resolved card surface and checks the progressive Show More action's theme-primary ink, token-owned border opacity, scaled shape, and reveal interaction. This exact kind-limited rule covers the six current PresetsLoaded findings only; it does not qualify every plan detail, device condition, or release route."
+    },
+    {
+      "id": "session-completion-recipes",
+      "pattern": "lib/widgets/session_complete_sheet.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "target": "Workout-completion header, metrics, exercise cards, set indicators, and status ink",
+      "rationale": "A rendered contract checks these existing semantic and surface-token recipes in Classic/Neo light/dark: completion header semantics, exercise/set/metric fills and outlines, shape and outline widths, metric icon roles, and Neo-only status ink. The exact kind-limited rule covers the 16 current findings in this file; it does not qualify repository loading, modal/device behavior, localization breadth, or release readiness."
+    },
+    {
+      "id": "flow-screen-dropdown-foreground",
+      "pattern": "lib/widgets/flow_screen_widgets.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "text_style"
+      ],
+      "target": "Flow branch and method dropdown foregrounds",
+      "rationale": "The six explicit dropdown foreground styles resolve from the active ColorScheme.onSurface. A four-mode widget contract pins hint and option ink, the existing dialog-surface popup color, and selection/action behavior. This exact kind-limited rule covers only those six text-style findings; other flow presentation remains assigned to its existing owners."
+    },
+    {
+      "id": "recommended-sets-dialog-controls",
+      "pattern": "lib/widgets/recommended_sets_editor_dialog.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "text_style"
+      ],
+      "target": "Recommended-sets dialog fields and validation ink",
+      "rationale": "The two field decorations inherit the opted-in TonosDialogFrame form-control recipe, and validation ink resolves from ColorScheme.error. A four-mode widget contract checks shared input ownership, field labels/suffixes, validation, and saved values while preserving the Classic Material fallback. This rule owns only the current two decoration and one text-style findings."
+    },
+    {
+      "id": "exercise-definition-info-title",
+      "pattern": "lib/widgets/exercise_definition_info_tile.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "text_style"
+      ],
+      "target": "ListTile title emphasis over inherited Material typography",
+      "rationale": "The exact title style changes only fontWeight to w700; ListTile continues to own font size and foreground in Classic/Neo light/dark. A four-mode rendered contract compares the effective Text style to the active DefaultTextStyle, asserts the bold-only emphasis, and verifies the existing TonosThemeReadyCard boundary (Classic Card, Neo TonosSurface). No new token is warranted for this one-off emphasis."
+    },
+    {
+      "id": "plan-builder-coach-recipes",
+      "pattern": "lib/widgets/onboarding_plan_builder_coach.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "target": "Interactive plan-builder coach surface, icon treatment, and optional effect",
+      "rationale": "A four-mode production-widget contract checks the coach surface against surfaceContainerHighest, its scheme-derived outline and icon fill, tutorial shape roles, transparent Material boundary, icon dimensions/accent, and effects-token shadow. Existing skip/progression tests retain interaction coverage. This exact kind-limited rule owns the six current findings only; it does not qualify onboarding route persistence or the rest of the onboarding screen."
+    },
+    {
+      "id": "stretch-search-dialog-controls",
+      "pattern": "lib/widgets/stretch_search_dialog.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration"
+      ],
+      "target": "Stretch Search body-part and stretch dropdown form controls",
+      "rationale": "Both fields use label-only InputDecoration and inherit the opted-in TonosDialogFrame form recipe. The frame opts into dark-Neo picker surfaces so both real dropdown routes pair a readable foreground with a contrasting surface; a four-mode rendered contract opens both menus and checks option contrast. This exact rule owns the two current decoration findings only and does not qualify other catalog screens."
+    },
+    {
+      "id": "set-stat-chip-surface",
+      "pattern": "lib/widgets/set_stat_chip.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration"
+      ],
+      "target": "Metric-chip surface and shape token ownership",
+      "rationale": "The chip BoxDecoration resolves from AppSurfaceTokens.metricChip and AppShapeTokens.metric. A four-mode rendered contract checks those roles plus inherited typography and surface-qualified foreground ink while retaining the optional edit action behavior. This exact kind-limited rule covers only the single decoration finding; no generic panel wrapper or new token is introduced."
+    },
+    {
+      "id": "past-sessions-filter-label",
+      "pattern": "lib/widgets/past_sessions_list.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "text_style"
+      ],
+      "target": "Past-session filter label foreground",
+      "rationale": "The filter label's explicit foreground resolves from ColorScheme.onSurface while the active DefaultTextStyle continues to own typography. A four-mode rendered contract verifies both the effective Material foreground and inherited text style. This exact rule covers only the single text_style finding; adjacent history surfaces remain under their existing owners."
+    },
+    {
+      "id": "seven-day-focus-tap-recipe",
+      "pattern": "lib/widgets/seven_day_focus_card.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "color",
+        "geometry"
+      ],
+      "target": "Weekly Overview progress track and focused-sets tap surface",
+      "rationale": "The focused-sets panel uses the existing onPrimaryContainer role for progress ink and a 0.22-alpha track; its transparent Material leaves the caller-owned panel visible while a 16px InkWell radius clips the details interaction. The four-mode rendered contract asserts the resolved progress/track colors and exact tap-surface recipe, plus the details action. This exact rule owns only the current three color_transform, color, and geometry findings; no token or production appearance change is introduced."
+    },
+    {
+      "id": "single-bodypart-heatmap-container",
+      "pattern": "lib/widgets/body_heatmap.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "target": "Single-bodypart heatmap container surface and shape",
+      "rationale": "SingleBodyPartHeatmap uses the active ColorScheme.surfaceContainerHighest and its established 14px border radius around a 56px anatomy tile; the low/high path fills resolve for that same surface. A four-mode rendered contract checks the decoration, shape, dimensions, padding, and resolved path colors. This exact rule owns only the current decoration and geometry findings; no shared surface or token is introduced."
+    },
+    {
+      "id": "value-card-nutrition-border",
+      "pattern": "lib/widgets/nutrition_text_details.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "target": "Nutrition ValueCard border and scaled shape",
+      "rationale": "ValueCard's border resolves from the existing AppNutritionTokens.textDetailsBorder role, with its established radius scaling at 8px times the card scale. A four-mode rendered contract verifies the exact BoxDecoration, border, radius, padding, and scaled text styles for Classic/Neo light/dark. This exact rule owns only the three current decoration/geometry findings; it introduces no appearance change or new token."
+    },
+    {
+      "id": "flow-event-dialog-fields",
+      "pattern": "lib/widgets/flow_widgets.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration"
+      ],
+      "target": "FlowChartWidget add-event dialog fields",
+      "rationale": "The two add-event TextFields provide labels only and inherit their input recipe from TonosDialogFrame(styleFormControls: true): Neo receives the shared themed field surface/foreground, while Classic retains its existing Material input decoration theme. A four-mode widget contract checks both localized fields, resolved inherited input styling, and cancellation. This exact rule owns only the two current decoration findings; it does not qualify flow persistence or other state."
+    },
+    {
+      "id": "preset-bar-rename-and-badge",
+      "pattern": "lib/widgets/preset_bar.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "text_style"
+      ],
+      "target": "Preset rename field and automatic-plan badge",
+      "rationale": "The rename TextField provides only a label and inherits the opted-in TonosDialogFrame form recipe; the automatic badge reads existing semantic automaticPlanBadge/onAutomaticPlanBadge roles with its intentional 12px-times-scale bold label. A four-mode widget contract checks both owners, scaled typography, dialog cancel/save callbacks through a fake repository, and the Classic Material input fallback. This exact kind-limited rule owns only the current two findings and does not qualify durable preset persistence or route behavior."
+    },
+    {
+      "id": "cardio-timer-semantic-colors",
+      "pattern": "lib/widgets/cardio_card.dart",
+      "classification": "tonos_semantic",
+      "status": "migrated",
+      "kinds": [
+        "color"
+      ],
+      "target": "Neo positive/negative timer-state roles with unchanged Classic colors",
+      "rationale": "The running and idle timer buttons resolve through AppSemanticColors.positive/negative in Neo while preserving the established Colors.green/Colors.red Classic appearance. A four-mode rendered widget test asserts both states and the TonosFormField boundary. This exact kind-limited rule owns only the two current color candidates; timer behavior and the deferred active-workout flow remain out of scope."
+    },
+    {
+      "id": "stretch-add-semantic-color",
+      "pattern": "lib/widgets/stretch_card.dart",
+      "classification": "tonos_semantic",
+      "status": "migrated",
+      "kinds": [
+        "color"
+      ],
+      "target": "Neo info action role with unchanged Classic blue",
+      "rationale": "The custom-stretch add action resolves through AppSemanticColors.info in Neo while preserving its established Colors.blue Classic appearance. A four-mode rendered widget test asserts the action color, read-only behavior, and TonosFormField boundary. This exact kind-limited rule owns only the current color candidate and does not re-enable the deferred cardio/stretch product flow."
+    },
+    {
+      "id": "bodypart-focus-semantic-status",
+      "pattern": "lib/widgets/bodypart_focus_chips.dart",
+      "classification": "tonos_semantic",
+      "status": "migrated",
+      "kinds": [
+        "color"
+      ],
+      "target": "Neo preferred/avoided semantic colors with unchanged Classic palette",
+      "rationale": "Preferred and avoided chip colors use AppSemanticColors.positive/negative in Neo, while Classic keeps its existing green300/red300 palette. The four-mode widget contract asserts both mappings and the tri-state selection behavior. This kind-limited rule owns only the two current color findings; identity colors and persisted flow state are unrelated."
+    },
+    {
+      "id": "bodypart-focus-chip-recipe",
+      "pattern": "lib/widgets/bodypart_focus_chips.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "geometry",
+        "text_style"
+      ],
+      "target": "RawChip semantic selected fills, on-status ink, outline, and label ownership",
+      "rationale": "The four-mode widget contract verifies opaque Neo positive/negative fills with contrast-qualified on-status foregrounds, Classic's existing alpha-61 selection fill, neutral outline/label ownership, and compact empty-state text style. Material continues to own neutral chip behavior; no shared chip primitive or new token is introduced. This rule owns only the current four geometry/text-style findings."
+    },
+    {
+      "id": "preset-info-card-metric-recipe",
+      "pattern": "lib/widgets/preset_info_card.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "target": "Preset summary metric surface, outline, and shape",
+      "rationale": "The four-mode rendered contract checks AppSurfaceTokens.card, AppShapeTokens.metric, surface-qualified Neo foreground/outline, Classic's existing unoutlined tile, and the outer Classic Card/Neo TonosSurface boundary at compact width. This kind-limited rule owns only the two current decoration/geometry findings; persisted preset behavior and route visuals remain separate."
+    },
+    {
+      "id": "automatic-settings-theme-ownership",
+      "pattern": "lib/widgets/automatic_settings_sheet.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "text_style"
+      ],
+      "target": "Automatic Settings sheet Material color roles and inherited hierarchy",
+      "rationale": "The divider and unselected-tab colors derive from ColorScheme.onSurface, and the four explicit TextStyles contribute bold-only emphasis while retaining inherited size and foreground. The four-mode production-widget contract checks those resolved owners and state paths; its increment fields also use TonosField and retain their existing Material InputDecorationTheme defaults. This exact kind-limited rule covers only the six current color-transform/text-style findings; persistence behavior and device qualification remain separate."
+    },
+    {
+      "id": "exercise-detail-sheet-theme-ownership",
+      "pattern": "lib/widgets/exercise_detail_sheet.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Exercise Detail surface, shape, chart, record, and inherited text ownership",
+      "rationale": "The existing C2 recipe resolves media, detail cards/tags, timeframe, records, metric summaries/lists, state panels, chart grid/area/tooltip, and the drag handle through focused surface/shape/motion tokens and ColorScheme roles. Chart series, tags, and metric accents remain semantic/data colors; transparent Material layers and chart paint are intentional component ownership. The source/role contract pins these consumers and preserved Classic values, and an exact inventory contract pins all current candidate kinds/counts. No runtime styling changes or device-visual acceptance are implied."
     },
     {
       "id": "release-widgets",
@@ -658,6 +1170,7 @@
       "title": "Dashboard, progress, and health trends",
       "patterns": [
         "lib/widgets/dashboard_sections.dart",
+        "lib/widgets/dashboard_section_palette.dart",
         "lib/widgets/exercise_progress_section.dart",
         "lib/widgets/health_trends_section.dart",
         "lib/widgets/workout_metric_chart_card.dart",

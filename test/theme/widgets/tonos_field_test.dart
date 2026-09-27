@@ -4,6 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 
 void main() {
+  testWidgets('passes suffix text through both field wrappers', (tester) async {
+    await tester.pumpWidget(
+      _testApp(
+        const Column(
+          children: [
+            TonosField(suffixText: 'kg'),
+            TonosFormField(suffixText: 'reps'),
+          ],
+        ),
+      ),
+    );
+
+    final fields = tester.widgetList<TextField>(find.byType(TextField));
+    expect(fields, hasLength(2));
+    expect(fields.first.decoration?.suffixText, 'kg');
+    expect(fields.last.decoration?.suffixText, 'reps');
+  });
+
   testWidgets('maps the search recipe to a themed text field', (tester) async {
     await tester.pumpWidget(
       _testApp(

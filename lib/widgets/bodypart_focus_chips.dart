@@ -44,6 +44,7 @@ class BodypartFocusChips extends StatelessWidget {
 
     final neo = context.surfaceDecorationTokens.panel.outlined;
     final surfaces = context.surfaceTokens;
+    final semanticColors = context.semanticColors;
     final chipSurface = surfaces.dialogChoice;
     final chipForeground =
         neo ? tonosForegroundForSurface(context, chipSurface) : null;
@@ -60,24 +61,35 @@ class BodypartFocusChips extends StatelessWidget {
             final isPreferred = preferredBodypartIds.contains(bodyPart.id);
             final isAvoided = blacklistedBodypartIds.contains(bodyPart.id);
             final isSelected = isPreferred || isAvoided;
+            final preferredColor =
+                neo ? semanticColors.positive : Colors.green.shade300;
+            final avoidedColor =
+                neo ? semanticColors.negative : Colors.red.shade300;
             final color =
                 isPreferred
-                    ? Colors.green.shade300
+                    ? preferredColor
                     : isAvoided
-                    ? Colors.red.shade300
+                    ? avoidedColor
                     : null;
+            final statusForeground =
+                isPreferred
+                    ? semanticColors.onPositive
+                    : semanticColors.onNegative;
+            final statusOutline =
+                color == null ? chipOutline : statusForeground;
 
             return RawChip(
               label: Text(localizedBodyPartName(context, bodyPart.name)),
               selected: isSelected,
               backgroundColor: neo ? chipSurface : null,
-              selectedColor:
-                  neo ? color?.withValues(alpha: 0.28) : color?.withAlpha(61),
-              side: BorderSide(color: color ?? chipOutline),
+              selectedColor: neo ? color : color?.withAlpha(61),
+              side: BorderSide(
+                color: neo ? statusOutline : color ?? chipOutline,
+              ),
               labelStyle:
                   neo
                       ? TextStyle(
-                        color: chipForeground,
+                        color: isSelected ? statusForeground : chipForeground,
                         fontWeight: FontWeight.w700,
                       )
                       : color == null
@@ -88,7 +100,7 @@ class BodypartFocusChips extends StatelessWidget {
                       ? null
                       : Icon(
                         isPreferred ? Icons.add_circle_outline : Icons.block,
-                        color: color,
+                        color: neo ? statusForeground : color,
                         size: 18,
                       ),
               onPressed: () => _cycleBodyPart(bodyPart.id),

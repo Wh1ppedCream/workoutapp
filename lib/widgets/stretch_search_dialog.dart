@@ -26,6 +26,7 @@ class StretchSearchDialog {
           builder: (ctx, setState) {
             return TonosDialogFrame(
               styleFormControls: true,
+              styleDarkNeoPickerSurfaces: true,
               child: AlertDialog(
                 title: const Text('Stretch Search'),
                 content: Column(

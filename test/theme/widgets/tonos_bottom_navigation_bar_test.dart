@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
@@ -11,6 +12,50 @@ void main() {
     BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalog'),
     BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Logbook'),
   ];
+
+  for (final family in AppThemeFamily.values) {
+    for (final brightness in Brightness.values) {
+      testWidgets(
+        '${family.name} ${brightness.name} navigation exposes selection semantics',
+        (tester) async {
+          final semanticsHandle = tester.ensureSemantics();
+          try {
+            final theme =
+                brightness == Brightness.light
+                    ? AppThemeFactory.light(family)
+                    : AppThemeFactory.dark(family);
+            await tester.pumpWidget(
+              MaterialApp(
+                theme: theme,
+                home: Scaffold(
+                  bottomNavigationBar: TonosBottomNavigationBar(
+                    items: items,
+                    currentIndex: 0,
+                    onTap: (_) {},
+                  ),
+                ),
+              ),
+            );
+
+            final train =
+                tester
+                    .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
+                    .getSemanticsData();
+            final catalog =
+                tester
+                    .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
+                    .getSemanticsData();
+            expect(train.hasAction(SemanticsAction.tap), isTrue);
+            expect(train.hasFlag(SemanticsFlag.isSelected), isTrue);
+            expect(catalog.hasAction(SemanticsAction.tap), isTrue);
+            expect(catalog.hasFlag(SemanticsFlag.isSelected), isFalse);
+          } finally {
+            semanticsHandle.dispose();
+          }
+        },
+      );
+    }
+  }
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
@@ -117,6 +162,13 @@ void main() {
                   .color,
               context.surfaceTokens.subtleOutline,
             );
+            final underline = tester.widget<ColoredBox>(
+              find.byKey(
+                const ValueKey('tonos-bottom-navigation-selected-underline'),
+              ),
+            );
+            expect(underline.child, isA<SizedBox>());
+            expect((underline.child! as SizedBox).height, 4);
           }
 
           await tester.tap(find.text('Catalog'));

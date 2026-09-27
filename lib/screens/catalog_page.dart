@@ -539,14 +539,13 @@ class _ExerciseUsageBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: rowColor,
-        borderRadius:
-            usesInkRecipe ? shapes.compact : BorderRadius.circular(14),
+        borderRadius: shapes.catalogUsageRow,
         border: Border.all(
           color:
               usesInkRecipe
                   ? tonosOutlineForSurface(context, rowColor)
                   : surfaces.catalogOutline,
-          width: usesInkRecipe ? shapes.outlineWidth : 1,
+          width: shapes.outlineWidth,
         ),
         boxShadow:
             usesInkRecipe
@@ -598,8 +597,7 @@ class _ExerciseUsageBar extends StatelessWidget {
           ExerciseMediaThumbnail(
             definition: summary.definition,
             size: 52,
-            borderRadius:
-                usesInkRecipe ? shapes.compact : BorderRadius.circular(12),
+            borderRadius: shapes.catalogUsageMedia,
             padding: EdgeInsets.zero,
             framed: usesInkRecipe,
           ),
@@ -639,7 +637,7 @@ class _FocusSummaryPane extends StatelessWidget {
               context.surfaceTokens.settingsHero,
             )
             : theme.colorScheme.primary;
-    final radius = usesInkRecipe ? shapes.compact : BorderRadius.circular(16);
+    final radius = shapes.catalogFocusPane;
     final paneForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(

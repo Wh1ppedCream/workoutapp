@@ -25,6 +25,7 @@ import '../theme/theme_extensions.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
+import 'dashboard_section_palette.dart';
 import 'exercise_media_thumbnail.dart';
 import 'localized_catalog_entity_name.dart';
 import 'localized_exercise_name.dart';
@@ -50,7 +51,6 @@ class DashboardHero extends StatelessWidget {
         context.surfaceDecorationTokens.panel.outlined
             ? tonosForegroundForSurface(context, surfaces.dashboardHero)
             : null;
-    const accent = Color(0xFF64B5F6);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
@@ -58,9 +58,12 @@ class DashboardHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [accent.withValues(alpha: 0.25), surfaces.dashboardHero],
+          colors: [
+            dashboardHeroAccent.withValues(alpha: 0.25),
+            surfaces.dashboardHero,
+          ],
         ),
-        border: Border.all(color: accent.withValues(alpha: 0.44)),
+        border: Border.all(color: dashboardHeroAccent.withValues(alpha: 0.44)),
       ),
       child: Row(
         children: [
@@ -68,12 +71,12 @@ class DashboardHero extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.18),
+              color: dashboardHeroAccent.withValues(alpha: 0.18),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.dashboard_customize_outlined,
-              color: accent,
+              color: dashboardHeroAccent,
               size: 22,
             ),
           ),
@@ -149,7 +152,7 @@ class DashboardQuickActions extends StatelessWidget {
                 child: _DashboardActionButton(
                   icon: Icons.add_chart_outlined,
                   title: AppLocalizations.of(context).dashboardMeasurement,
-                  color: const Color(0xFF4DB6AC),
+                  color: dashboardMeasurementActionAccent,
                   onPressed: () async {
                     final changed = await Navigator.of(context).push<bool>(
                       MaterialPageRoute(
@@ -171,7 +174,7 @@ class DashboardQuickActions extends StatelessWidget {
                       workoutActive
                           ? AppLocalizations.of(context).dashboardResumeWorkout
                           : AppLocalizations.of(context).dashboardStartWorkout,
-                  color: const Color(0xFF81C784),
+                  color: dashboardTrainingActionAccent,
                   onPressed: () async {
                     if (!workoutActive) {
                       final started = await activeSession.start();
@@ -1350,145 +1353,4 @@ class _DashboardAnatomyUsage {
     required this.bodyParts,
     required this.muscles,
   });
-}
-
-class DashboardSectionDetails {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color color;
-
-  const DashboardSectionDetails({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.color,
-  });
-}
-
-DashboardSectionDetails dashboardSectionDetails(
-  AppLocalizations strings,
-  String id,
-) {
-  switch (id) {
-    case 'quickActions':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionQuickActionsTitle,
-        description: strings.dashboardSectionQuickActionsBody,
-        icon: Icons.bolt_outlined,
-        color: Color(0xFF64B5F6),
-      );
-    case 'training':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionTrainingTitle,
-        description: strings.dashboardSectionTrainingBody,
-        icon: Icons.fitness_center,
-        color: Color(0xFF81C784),
-      );
-    case 'nutritionDash':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionNutritionTitle,
-        description: strings.dashboardSectionNutritionBody,
-        icon: Icons.restaurant_outlined,
-        color: Color(0xFFFFB74D),
-      );
-    case 'dataRecords':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionDataRecordsTitle,
-        description: strings.dashboardSectionDataRecordsBody,
-        icon: Icons.calendar_month_outlined,
-        color: Color(0xFF64B5F6),
-      );
-    case 'weeklyFocus':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionWeeklyFocusTitle,
-        description: strings.dashboardSectionWeeklyFocusBody,
-        icon: Icons.accessibility_new,
-        color: Color(0xFF4DB6AC),
-      );
-    case 'workoutMetrics':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionWorkoutReportTitle,
-        description: strings.dashboardSectionWorkoutReportBody,
-        icon: Icons.show_chart_outlined,
-        color: Color(0xFF64B5F6),
-      );
-    case 'exerciseProgress':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionExerciseProgressTitle,
-        description: strings.dashboardSectionExerciseProgressBody,
-        icon: Icons.trending_up_rounded,
-        color: Color(0xFFCE93D8),
-      );
-    case 'historySummary':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionHistoryTitle,
-        description: strings.dashboardSectionHistoryBody,
-        icon: Icons.history_rounded,
-        color: Color(0xFF64B5F6),
-      );
-    case 'healthTrends':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionHealthTrendsTitle,
-        description: strings.dashboardSectionHealthTrendsBody,
-        icon: Icons.monitor_heart_outlined,
-        color: Color(0xFF81C784),
-      );
-    case 'recentWorkouts':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionRecentWorkoutsTitle,
-        description: strings.dashboardSectionRecentWorkoutsBody,
-        icon: Icons.event_note_outlined,
-        color: Color(0xFFFFB74D),
-      );
-    case 'activePlans':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionActivePlansTitle,
-        description: strings.dashboardSectionActivePlansBody,
-        icon: Icons.assignment_turned_in_outlined,
-        color: Color(0xFF81C784),
-      );
-    case 'archivedPlans':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionArchivedPlansTitle,
-        description: strings.dashboardSectionArchivedPlansBody,
-        icon: Icons.inventory_2_outlined,
-        color: Color(0xFF90A4AE),
-      );
-    case 'premadePlans':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionPremadePlansTitle,
-        description: strings.dashboardSectionPremadePlansBody,
-        icon: Icons.auto_stories_outlined,
-        color: Color(0xFFCE93D8),
-      );
-    case 'planTools':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionPlanToolsTitle,
-        description: strings.dashboardSectionPlanToolsBody,
-        icon: Icons.add_task_outlined,
-        color: Color(0xFFCE93D8),
-      );
-    case 'exerciseCatalog':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionCatalogTitle,
-        description: strings.dashboardSectionCatalogBody,
-        icon: Icons.menu_book_outlined,
-        color: Color(0xFF64B5F6),
-      );
-    case 'targetAnatomy':
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionAnatomyTitle,
-        description: strings.dashboardSectionAnatomyBody,
-        icon: Icons.bubble_chart_outlined,
-        color: Color(0xFFBA68C8),
-      );
-    default:
-      return DashboardSectionDetails(
-        title: strings.dashboardSectionFallbackTitle,
-        description: strings.dashboardSectionFallbackBody,
-        icon: Icons.dashboard_outlined,
-        color: Color(0xFF9E9E9E),
-      );
-  }
 }

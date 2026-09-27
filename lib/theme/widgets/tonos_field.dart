@@ -17,6 +17,7 @@ class TonosField extends StatelessWidget {
     this.hintText,
     this.helperText,
     this.errorText,
+    this.suffixText,
     this.border,
     this.contentPadding,
     this.prefixIcon,
@@ -41,6 +42,7 @@ class TonosField extends StatelessWidget {
   final String? hintText;
   final String? helperText;
   final String? errorText;
+  final String? suffixText;
   final InputBorder? border;
   final EdgeInsetsGeometry? contentPadding;
   final Widget? prefixIcon;
@@ -64,6 +66,7 @@ class TonosField extends StatelessWidget {
       hintText: hintText,
       helperText: helperText,
       errorText: errorText,
+      suffixText: suffixText,
       border: border,
       contentPadding: contentPadding,
       prefixIcon:
@@ -106,6 +109,7 @@ class TonosFormField extends StatelessWidget {
     this.hintText,
     this.helperText,
     this.errorText,
+    this.suffixText,
     this.border,
     this.isDense = false,
     this.contentPadding,
@@ -136,6 +140,7 @@ class TonosFormField extends StatelessWidget {
   final String? hintText;
   final String? helperText;
   final String? errorText;
+  final String? suffixText;
   final InputBorder? border;
   final bool isDense;
   final EdgeInsetsGeometry? contentPadding;
@@ -169,6 +174,7 @@ class TonosFormField extends StatelessWidget {
         hintText: hintText,
         helperText: helperText,
         errorText: errorText,
+        suffixText: suffixText,
         border: border,
         isDense: isDense,
         contentPadding: contentPadding,
@@ -203,6 +209,7 @@ InputDecoration _tonosInputDecoration({
   String? hintText,
   String? helperText,
   String? errorText,
+  String? suffixText,
   InputBorder? border,
   bool isDense = false,
   EdgeInsetsGeometry? contentPadding,
@@ -213,6 +220,7 @@ InputDecoration _tonosInputDecoration({
   hintText: hintText,
   helperText: helperText,
   errorText: errorText,
+  suffixText: suffixText,
   border: border,
   isDense: isDense,
   contentPadding: contentPadding,

@@ -796,17 +796,20 @@ class _ExerciseCatalogBar extends StatelessWidget {
       final rowForeground = tonosForegroundForSurface(context, rowSurface);
       final rowBorder = tonosOutlineForSurface(context, rowSurface);
       final rowShape = RoundedRectangleBorder(
-        borderRadius: shapes.compact,
+        borderRadius: shapes.exerciseCatalogRow,
         side: BorderSide(
           color: selected ? colorScheme.secondary : rowBorder,
-          width: selected ? 3 : 2,
+          width:
+              selected
+                  ? shapes.exerciseCatalogSelectedOutlineWidth
+                  : shapes.outlineWidth,
         ),
       );
 
       return Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          borderRadius: shapes.compact,
+          borderRadius: shapes.exerciseCatalogRow,
           boxShadow: [
             BoxShadow(
               color: effects.cardShadow,
@@ -842,10 +845,13 @@ class _ExerciseCatalogBar extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       color: selected ? surfaces.catalogSelection : null,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: shapes.exerciseCatalogRow,
         side: BorderSide(
           color: selected ? colorScheme.primary : surfaces.catalogOutline,
-          width: selected ? 1.5 : 1,
+          width:
+              selected
+                  ? shapes.exerciseCatalogSelectedOutlineWidth
+                  : shapes.outlineWidth,
         ),
       ),
       child: InkWell(
@@ -942,7 +948,7 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
       child: ExerciseMediaThumbnail(
         definition: definition,
         size: 64,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: Theme.of(context).shapeTokens.exerciseCatalogMedia,
         padding: EdgeInsets.zero,
         framed: false,
         heatmapSurface: heatmapSurface,

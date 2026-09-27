@@ -22,6 +22,7 @@ void main() {
         FocusedSetHit(bodyPart: BodyPart(3, 'Upper Back'), units: 3),
         FocusedSetHit(bodyPart: BodyPart(4, 'Calves'), units: 2),
       ];
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
 
       Future<void> pumpAt({
         required double width,
@@ -74,6 +75,59 @@ void main() {
         final presentationTheme = tester.widget<Theme>(presentationThemeFinder);
         final usesInkRecipe =
             theme.surfaceDecorationTokens.panelRaised.outlined;
+        final expectedSurfaceInk =
+            usesInkRecipe
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.colorScheme.onSurface;
+        expect(
+          presentationTheme.data.colorScheme.onSurface,
+          expectedSurfaceInk,
+          reason: '$family ${brightness.name} scoped onSurface',
+        );
+        expect(
+          presentationTheme.data.colorScheme.onSurfaceVariant,
+          usesInkRecipe
+              ? expectedSurfaceInk
+              : theme.colorScheme.onSurfaceVariant,
+          reason: '$family ${brightness.name} scoped onSurfaceVariant',
+        );
+        expect(
+          presentationTheme.data.textTheme.bodyMedium?.color,
+          usesInkRecipe
+              ? theme.colorScheme.onPrimaryContainer
+              : theme.textTheme.bodyMedium?.color,
+          reason: '$family ${brightness.name} scoped body text',
+        );
+        expect(
+          presentationTheme.data.textTheme.displayLarge?.color,
+          usesInkRecipe
+              ? theme.colorScheme.onPrimaryContainer
+              : theme.textTheme.displayLarge?.color,
+          reason: '$family ${brightness.name} scoped display text',
+        );
+        final hintColor =
+            usesInkRecipe
+                ? theme.colorScheme.onPrimaryContainer
+                : theme.colorScheme.primary;
+        final hintIcon = tester.widget<Icon>(find.byIcon(Icons.more_horiz));
+        expect(
+          hintIcon.color,
+          hintColor,
+          reason: '$family ${brightness.name} focused-sets hint icon',
+        );
+        final hintText = tester.widget<Text>(
+          find.text(strings.sevenDayFocusMore),
+        );
+        expect(
+          hintText.style?.color,
+          hintColor,
+          reason: '$family ${brightness.name} focused-sets hint text',
+        );
+        expect(
+          hintText.style?.fontWeight,
+          FontWeight.w700,
+          reason: '$family ${brightness.name} focused-sets hint weight',
+        );
         final expectedIndicatorColor =
             usesInkRecipe
                 ? theme.colorScheme.onPrimaryContainer
@@ -91,6 +145,29 @@ void main() {
           presentationTheme.data.progressIndicatorTheme.linearTrackColor,
           expectedTrackColor,
           reason: '$family ${brightness.name} progress track color',
+        );
+        final tapSurface = find.descendant(
+          of: find.byType(SevenDayFocusPresentation),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Material && widget.color == Colors.transparent,
+          ),
+        );
+        expect(
+          tapSurface,
+          findsOneWidget,
+          reason: '$family ${brightness.name} transparent tap surface',
+        );
+        final detailsInkWell = tester.widget<InkWell>(
+          find.descendant(
+            of: find.byType(SevenDayFocusPresentation),
+            matching: find.byType(InkWell),
+          ),
+        );
+        expect(
+          detailsInkWell.borderRadius,
+          BorderRadius.circular(16),
+          reason: '$family ${brightness.name} details tap radius',
         );
         final progressBars = find.byType(LinearProgressIndicator);
         expect(progressBars, findsNWidgets(3));
@@ -123,7 +200,6 @@ void main() {
       );
       expect(find.text('Quads'), findsOneWidget);
 
-      final strings = await AppLocalizations.delegate.load(const Locale('en'));
       await tester.tap(find.text(strings.sevenDayFocusMore));
       expect(detailsTaps, 1);
 

@@ -598,6 +598,12 @@ void main() {
       trainTab: BorderRadius.circular(21),
       trainTabButton: BorderRadius.circular(22),
       mediaThumbnail: BorderRadius.circular(39),
+      catalogUsageRow: BorderRadius.circular(73),
+      catalogUsageMedia: BorderRadius.circular(74),
+      catalogFocusPane: BorderRadius.circular(75),
+      exerciseCatalogRow: BorderRadius.circular(76),
+      exerciseCatalogMedia: BorderRadius.circular(77),
+      exerciseCatalogSelectedOutlineWidth: 4.5,
       compact: BorderRadius.circular(40),
       control: BorderRadius.circular(42),
       card: BorderRadius.circular(44),
@@ -643,6 +649,50 @@ void main() {
       BorderRadius.lerp(base.mediaThumbnail, BorderRadius.circular(39), 0.5),
     );
     expect(target.copyWith().mediaThumbnail, target.mediaThumbnail);
+    expect(target.catalogUsageRow, BorderRadius.circular(73));
+    expect(
+      midpoint.catalogUsageRow,
+      BorderRadius.lerp(base.catalogUsageRow, BorderRadius.circular(73), 0.5),
+    );
+    expect(target.copyWith().catalogUsageRow, target.catalogUsageRow);
+    expect(target.catalogUsageMedia, BorderRadius.circular(74));
+    expect(
+      midpoint.catalogUsageMedia,
+      BorderRadius.lerp(base.catalogUsageMedia, BorderRadius.circular(74), 0.5),
+    );
+    expect(target.copyWith().catalogUsageMedia, target.catalogUsageMedia);
+    expect(target.catalogFocusPane, BorderRadius.circular(75));
+    expect(
+      midpoint.catalogFocusPane,
+      BorderRadius.lerp(base.catalogFocusPane, BorderRadius.circular(75), 0.5),
+    );
+    expect(target.copyWith().catalogFocusPane, target.catalogFocusPane);
+    expect(target.exerciseCatalogRow, BorderRadius.circular(76));
+    expect(
+      midpoint.exerciseCatalogRow,
+      BorderRadius.lerp(
+        base.exerciseCatalogRow,
+        BorderRadius.circular(76),
+        0.5,
+      ),
+    );
+    expect(target.copyWith().exerciseCatalogRow, target.exerciseCatalogRow);
+    expect(target.exerciseCatalogMedia, BorderRadius.circular(77));
+    expect(
+      midpoint.exerciseCatalogMedia,
+      BorderRadius.lerp(
+        base.exerciseCatalogMedia,
+        BorderRadius.circular(77),
+        0.5,
+      ),
+    );
+    expect(target.copyWith().exerciseCatalogMedia, target.exerciseCatalogMedia);
+    expect(target.exerciseCatalogSelectedOutlineWidth, 4.5);
+    expect(midpoint.exerciseCatalogSelectedOutlineWidth, 3.0);
+    expect(
+      target.copyWith().exerciseCatalogSelectedOutlineWidth,
+      target.exerciseCatalogSelectedOutlineWidth,
+    );
     expect(target.compact, BorderRadius.circular(40));
     expect(
       midpoint.compact,
@@ -866,6 +916,24 @@ void main() {
     expect(shapeCopy.trainTabButton, AppShapeTokens.classic.trainTabButton);
     expect(shapeCopy.compact, AppShapeTokens.classic.compact);
     expect(shapeCopy.mediaThumbnail, AppShapeTokens.classic.mediaThumbnail);
+    expect(shapeCopy.catalogUsageRow, AppShapeTokens.classic.catalogUsageRow);
+    expect(
+      shapeCopy.catalogUsageMedia,
+      AppShapeTokens.classic.catalogUsageMedia,
+    );
+    expect(shapeCopy.catalogFocusPane, AppShapeTokens.classic.catalogFocusPane);
+    expect(
+      shapeCopy.exerciseCatalogRow,
+      AppShapeTokens.classic.exerciseCatalogRow,
+    );
+    expect(
+      shapeCopy.exerciseCatalogMedia,
+      AppShapeTokens.classic.exerciseCatalogMedia,
+    );
+    expect(
+      shapeCopy.exerciseCatalogSelectedOutlineWidth,
+      AppShapeTokens.classic.exerciseCatalogSelectedOutlineWidth,
+    );
     expect(shapeCopy.control, AppShapeTokens.classic.control);
     expect(shapeCopy.metric, AppShapeTokens.classic.metric);
     expect(shapeCopy.recordBadge, AppShapeTokens.classic.recordBadge);

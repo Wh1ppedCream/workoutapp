@@ -1,10 +1,13 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('active fills override the SVG inline black fill style', () {
@@ -141,6 +144,71 @@ void main() {
       );
 
       expect(highColor, const Color(0xFF006A72));
+    }
+  });
+
+  testWidgets('single bodypart tile owns its surface and shape in four modes', (
+    tester,
+  ) async {
+    for (final family in AppThemeFamily.values) {
+      for (final brightness in Brightness.values) {
+        final theme =
+            brightness == Brightness.dark
+                ? AppThemeFactory.dark(family)
+                : AppThemeFactory.light(family);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: Center(child: SingleBodyPartHeatmap(bodyPartName: 'Quads')),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+
+        final heatmapFinder = find.byType(SingleBodyPartHeatmap);
+        final container = tester.widget<Container>(
+          find.descendant(of: heatmapFinder, matching: find.byType(Container)),
+        );
+        final decoration = container.decoration! as BoxDecoration;
+        expect(
+          decoration.color,
+          theme.colorScheme.surfaceContainerHighest,
+          reason: '$family ${brightness.name} heatmap tile surface',
+        );
+        expect(
+          decoration.borderRadius,
+          const BorderRadius.all(Radius.circular(14)),
+          reason: '$family ${brightness.name} heatmap tile shape',
+        );
+        expect(container.padding, const EdgeInsets.all(4));
+        expect(
+          container.constraints,
+          const BoxConstraints.tightFor(width: 56, height: 56),
+        );
+
+        final heatmap = tester.widget<BodyHeatmap>(find.byType(BodyHeatmap));
+        final context = tester.element(find.byType(BodyHeatmap));
+        expect(
+          heatmap.lowColor,
+          tonosHeatmapLowForSurface(
+            context,
+            theme.colorScheme.surfaceContainerHighest,
+          ),
+          reason: '$family ${brightness.name} heatmap low color',
+        );
+        expect(
+          heatmap.highColor,
+          tonosHeatmapHighForSurface(
+            context,
+            theme.colorScheme.surfaceContainerHighest,
+          ),
+          reason: '$family ${brightness.name} heatmap high color',
+        );
+      }
     }
   });
 }

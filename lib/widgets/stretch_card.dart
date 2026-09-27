@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_field.dart';
 import '../theme/widgets/tonos_theme_ready.dart';
 import 'stretch_search_dialog.dart';
 
@@ -125,13 +126,11 @@ class _StretchCardState extends State<StretchCard> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: TextFormField(
+                  child: TonosFormField(
                     controller: _stretchCustomController,
                     readOnly: readOnly,
-                    decoration: const InputDecoration(
-                      hintText: 'Custom',
-                      isDense: true,
-                    ),
+                    hintText: 'Custom',
+                    isDense: true,
                     onChanged: readOnly ? null : (_) => setState(() {}),
                   ),
                 ),

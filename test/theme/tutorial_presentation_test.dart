@@ -398,6 +398,98 @@ void main() {
     );
   });
 
+  final planCoachThemes = <String, ThemeData>{
+    'Classic light': ClassicThemeDefinition.light(),
+    'Classic dark': ClassicThemeDefinition.dark(),
+    'Neo light': NeoBrutalismThemeDefinition.light(),
+    'Neo dark': NeoBrutalismThemeDefinition.dark(),
+  };
+  for (final entry in planCoachThemes.entries) {
+    testWidgets('${entry.key} plan-builder coach follows tutorial roles', (
+      tester,
+    ) async {
+      final theme = entry.value;
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(key: key, width: 100, height: 50),
+                ),
+                InteractiveTutorialOverlay(
+                  step: InteractiveTutorialStep(
+                    targetKey: key,
+                    stepNumber: 1,
+                    totalSteps: 1,
+                    icon: Icons.info,
+                    title: 'Coach',
+                    body: 'Body',
+                  ),
+                  onSkip: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+
+      final material = tester
+          .widgetList<Material>(find.byType(Material))
+          .singleWhere(
+            (candidate) =>
+                candidate.color == Colors.transparent &&
+                candidate.child is Container,
+          );
+      final card = material.child! as Container;
+      final cardDecoration = card.decoration! as BoxDecoration;
+      final tutorial = theme.tutorialTokens;
+      expect(card.color, isNull);
+      expect(card.padding, const EdgeInsets.all(14));
+      expect(cardDecoration.color, theme.colorScheme.surfaceContainerHighest);
+      expect(cardDecoration.borderRadius, tutorial.coachShape);
+      expect(
+        cardDecoration.border,
+        Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.65)),
+      );
+      expect(
+        cardDecoration.boxShadow,
+        tutorial.effectsEnabled ? [tutorial.coachShadow] : isEmpty,
+      );
+
+      final iconContainerFinder = find.ancestor(
+        of: find.byIcon(Icons.info),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration! as BoxDecoration).color ==
+                  theme.colorScheme.primary.withValues(alpha: 0.18),
+        ),
+      );
+      final iconContainer = tester.widget<Container>(iconContainerFinder.first);
+      final iconDecoration = iconContainer.decoration! as BoxDecoration;
+      expect(tester.getSize(iconContainerFinder.first), const Size(36, 36));
+      expect(
+        iconDecoration.color,
+        theme.colorScheme.primary.withValues(alpha: 0.18),
+      );
+      expect(iconDecoration.borderRadius, tutorial.coachIconShape);
+      expect(tester.widget<Icon>(find.byIcon(Icons.info)).size, 20);
+      expect(
+        tester.widget<Icon>(find.byIcon(Icons.info)).color,
+        tutorial.accentForeground ?? theme.colorScheme.primary,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('guided focus shadow follows tutorial effect tokens', (
     tester,
   ) async {

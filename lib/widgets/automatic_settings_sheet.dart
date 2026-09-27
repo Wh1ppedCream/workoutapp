@@ -9,6 +9,7 @@ import '../providers/preset_session.dart';
 import '../providers/unit_preference_provider.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_field.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 
@@ -75,14 +76,12 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   }) {
     return SizedBox(
       width: width,
-      child: TextField(
+      child: TonosField(
         controller: controller,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: 'IA',
-          hintText: hintText,
-          border: const OutlineInputBorder(),
-        ),
+        labelText: 'IA',
+        hintText: hintText,
+        border: const OutlineInputBorder(),
       ),
     );
   }
@@ -265,17 +264,15 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                           padding: const EdgeInsets.all(16),
                           children: [
                             const SizedBox(height: 12),
-                            TextField(
+                            TonosField(
                               controller: _globalController,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              decoration: InputDecoration(
-                                labelText: strings.automaticGlobalIncrement,
-                                suffixText: _weightUnit.shortLabel,
-                                border: const OutlineInputBorder(),
-                              ),
+                              labelText: strings.automaticGlobalIncrement,
+                              suffixText: _weightUnit.shortLabel,
+                              border: const OutlineInputBorder(),
                             ),
                             const SizedBox(height: 12),
 

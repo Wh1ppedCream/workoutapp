@@ -15,23 +15,53 @@ void main() {
 
     for (final role in [
       'context.generationTokens',
+      'generation.accent',
       'generation.introGradientStart',
       'generation.introGradientEnd',
       'generation.introBorder',
       'generation.introIconFill',
+      'generation.introShape',
+      'generation.introIconShape',
       'generation.summarySurface',
       'generation.summaryBorder',
+      'generation.summaryPillShape',
       'generation.sectionSurface',
       'generation.sectionBorder',
+      'generation.sectionIconFill',
+      'generation.sectionShape',
+      'generation.sectionIconShape',
+      'generation.fieldLabel',
       'generation.fieldFill',
       'generation.fieldBorder',
+      'generation.fieldShape',
+      'generation.secondaryText',
       'generation.choiceSelectedSurface',
       'generation.choiceUnselectedSurface',
+      'generation.choiceSelectedBorder',
+      'generation.choiceUnselectedBorder',
+      'generation.choiceShape',
       'generation.actionBarSurface',
+      'generation.actionBarBorder',
       'generation.badge',
+      'generation.onBadge',
+      'generation.badgeShape',
     ]) {
       expect(source, contains(role), reason: role);
     }
+
+    expect(source, contains('TonosExpansionTileScope'));
+    expect(
+      source,
+      contains('Theme.of(context).textTheme.titleLarge?.copyWith'),
+    );
+    expect(
+      source,
+      contains('style: const TextStyle(fontWeight: FontWeight.w900)'),
+    );
+    expect(
+      source,
+      contains('style: TextStyle(color: generation.secondaryText'),
+    );
 
     for (final legacyStyle in [
       'scheme.primaryContainer.withValues(alpha: 0.46)',

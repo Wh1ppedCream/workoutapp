@@ -215,6 +215,48 @@ void main() {
     }
   });
 
+  testWidgets('Neo session timer inherits the active Material text hierarchy', (
+    tester,
+  ) async {
+    for (final theme in <ThemeData>[
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
+      });
+      final session = _emptySession();
+      addTearDown(session.dispose);
+      await session.ready;
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: session,
+          child: _localizedApp(
+            theme: theme,
+            scaffold: false,
+            child: const SessionScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      tester.state<ScaffoldState>(find.byType(Scaffold)).openDrawer();
+      await tester.pumpAndSettle();
+      final timerTitle = find.text('Workout Timer', skipOffstage: false);
+      final timerValue = find.text('0:00', skipOffstage: false);
+      final bodyMedium = theme.textTheme.bodyMedium ?? const TextStyle();
+      final titleStyle = tester.widget<Text>(timerTitle).style!;
+      final valueStyle = tester.widget<Text>(timerValue).style!;
+      expect(titleStyle.fontSize, 20);
+      expect(valueStyle.fontSize, 48);
+      expect(titleStyle.color, bodyMedium.color);
+      expect(valueStyle.color, bodyMedium.color);
+      Navigator.of(tester.element(find.byType(Scaffold))).pop();
+      await tester.pumpAndSettle();
+    }
+  });
+
   testWidgets('Classic QuickBar preserves scaled radius and dividers', (
     tester,
   ) async {

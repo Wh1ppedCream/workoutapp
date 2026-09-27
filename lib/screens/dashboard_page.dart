@@ -14,6 +14,7 @@ import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/dashboard_sections.dart';
+import '../widgets/dashboard_section_palette.dart';
 import '../widgets/exercise_progress_section.dart';
 import '../widgets/health_trends_section.dart';
 import '../widgets/nutrition_dash.dart';

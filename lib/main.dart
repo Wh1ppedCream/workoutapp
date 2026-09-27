@@ -139,6 +139,15 @@ Widget buildTonosApp({
   return RepositoryLifecycle(repo: repo, child: app);
 }
 
+/// Builds the app shell's system-bar style for the active theme brightness.
+SystemUiOverlayStyle appSystemUiOverlayStyleFor(Brightness brightness) =>
+    SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness:
+          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      statusBarBrightness: brightness,
+    );
+
 /// Ensures the repository is closed when the app is disposed (hot restart/quit).
 class RepositoryLifecycle extends StatefulWidget {
   final AppRepository repo;
@@ -212,14 +221,7 @@ class MyApp extends StatelessWidget {
             final appChild = child ?? const SizedBox.shrink();
 
             return AnnotatedRegion<SystemUiOverlayStyle>(
-              value: SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness:
-                    Theme.of(context).brightness == Brightness.dark
-                        ? Brightness.light
-                        : Brightness.dark,
-                statusBarBrightness: Theme.of(context).brightness,
-              ),
+              value: appSystemUiOverlayStyleFor(Theme.of(context).brightness),
               child: Stack(
                 fit: StackFit.expand,
                 children: [

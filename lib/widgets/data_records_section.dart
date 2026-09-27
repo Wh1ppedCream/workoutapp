@@ -19,8 +19,14 @@ class DataRecordsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
+    final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final dataVisualization = context.dataVisualizationTokens;
+    final calendarDayBorder =
+        context.surfaceDecorationTokens.panel.outlined &&
+                theme.brightness == Brightness.dark
+            ? surfaces.neutralOutline
+            : surfaces.divider;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
 
@@ -104,7 +110,7 @@ class DataRecordsSection extends StatelessWidget {
                           color:
                               isToday
                                   ? dataVisualization.recordTodayBorder
-                                  : surfaces.divider,
+                                  : calendarDayBorder,
                         ),
                       ),
                       child: Text(

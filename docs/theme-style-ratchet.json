@@ -4,7 +4,7 @@
     {
       "path": "lib/theme/widgets/tonos_expansion_tile_scope.dart",
       "owner": "theme-maintainers",
-      "evidence": "test/theme/widgets/tonos_expansion_tile_scope_test.dart covers standard, compact, and dense recipes, inherited ListTile/Icon fields, and unrelated theme-role preservation across Classic/Neo light/dark. The user accepted the Preset Generation QA and Food Customization ExpansionTiles on 2026-09-24. The September 24 report-only run returned three count-1 fingerprints; each was mapped to its exact lexical statement and reviewed. The 2026-09-24 focused inventory/ratchet/CLI/settings/ExpansionTile suite passed all 52 tests with clean analysis; formatting changed three targeted test files. The current three-scope report/enforce output matches all approved fingerprints.",
+      "evidence": "test/theme/widgets/tonos_expansion_tile_scope_test.dart covers standard, compact, and dense recipes, inherited ListTile/Icon fields, and unrelated theme-role preservation across Classic/Neo light/dark. The user accepted the Preset Generation QA and Food Customization ExpansionTiles on 2026-09-24. The September 24 report-only run returned three count-1 fingerprints; each was mapped to its exact lexical statement and reviewed. The 2026-09-24 focused inventory/ratchet/CLI/settings/ExpansionTile suite passed all 52 tests with clean analysis; formatting changed three targeted test files. At initial enrollment, the then-current three-scope report/enforce output matched all approved fingerprints.",
       "approvals": [
         {
           "fingerprint": "01941e88c6ebd2ec01e2857976243cbc5d8f948f7f08bd954ae56c6c457e92c2",
@@ -108,7 +108,7 @@
     {
       "path": "lib/widgets/workout_record_badges.dart",
       "owner": "theme-maintainers",
-      "evidence": "test/widgets/workout_record_badges_test.dart asserts token-derived first-record, monthly and all-time badge colors, fill and border opacity, shape, compact and regular padding, Classic and Neo density, legend-dot colors, and Neo parent-surface text contrast. The user confirmed the workout-detail badges no longer overflow. The 2026-09-24 five-file focused suite, including the parent-surface contrast regression, passed all 26 tests. Inventory and the current three-scope ratchet report/enforce passed on 2026-09-24; all protected-file fingerprint sets match the manifest. Source reviewed for the current lexer; this is exact-scope protection, not a full styling qualification.",
+      "evidence": "test/widgets/workout_record_badges_test.dart asserts token-derived first-record, monthly and all-time badge colors, fill and border opacity, shape, compact and regular padding, Classic and Neo density, legend-dot colors, and Neo parent-surface text contrast. The user confirmed the workout-detail badges no longer overflow. The 2026-09-24 five-file focused suite, including the parent-surface contrast regression, passed all 26 tests. Inventory and the then-current three-scope ratchet report/enforce passed on 2026-09-24; the protected-file fingerprint sets at that checkpoint matched the manifest. Source reviewed for the current lexer; this is exact-scope protection, not a full styling qualification.",
       "approvals": [
         {
           "fingerprint": "0c00da0153c156fe6d9fb6496208da4fb71bbc8bcee91dfd11faf3e383edda29",
@@ -174,6 +174,529 @@
           "fingerprint": "fd0c85aa6ab48efaa2076d05af9c9763827fc9a8d53771fcbbb3b22105364d31",
           "count": 1,
           "reason": "Reviewed the legend item's Color input, sourced from the monthly or all-time visualization role."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/tonos_bottom_navigation_bar.dart",
+      "owner": "theme-maintainers",
+      "evidence": "The exact shared shell owner is covered by test/theme/widgets/tonos_bottom_navigation_bar_test.dart across Classic/Neo light/dark. Classic retains the unwrapped Material fallback; Neo frame colors, shape, effects, selected and unselected ink, selection segment, 4px underline, and activation are asserted. The user accepted the current 21-item Neo route review, which includes the shared application shell. The report-only fingerprints were mapped statement-by-statement to source before approval.",
+      "approvals": [
+        {
+          "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
+          "count": 1,
+          "reason": "Reviewed the BoxShadow type in the visibility guard; the helper gates the token-derived Neo shadow, and the four-mode widget test asserts the resulting shadow behavior."
+        },
+        {
+          "fingerprint": "0d3601f1da4df264c2aef6eea19f0d4ec9b58ab3e317636c4899a9fa1e6368ed",
+          "count": 1,
+          "reason": "Reviewed the BoxShadow constructed from AppEffectTokens; the four-mode widget contract checks color, blur, offset, and absence when the shadow is not visible."
+        },
+        {
+          "fingerprint": "14547d142c719736f56b7d3720acbc57a76d2cab26fcfbc84647e018dfef3f13",
+          "count": 1,
+          "reason": "Reviewed the active Theme lookup for the inherited bottom-navigation background; the rendered contract checks the theme override/fallback resolution in both Neo brightness modes."
+        },
+        {
+          "fingerprint": "1a02edd38f5a7cbdca6c845fea770194fe16d96816ed81a824420eca77283791",
+          "count": 1,
+          "reason": "Reviewed the structural Border.all outline in the Neo frame; its color and width resolve from surface and shape roles and are asserted in the four-mode contract."
+        },
+        {
+          "fingerprint": "657d2f1738bc0e8c38f4f6a8ef73b0677c2b46aeabdf4aa4f1364b02e9b59e18",
+          "count": 1,
+          "reason": "Reviewed the transparent Material bar fill that lets the shared selected-segment layer show through without painting a second surface; the contract checks transparency and the selected segment."
+        },
+        {
+          "fingerprint": "6e935861fcb507bebb821426e90e2ad6f971d6eda62dd2c5b1cb5df21856e7b4",
+          "count": 1,
+          "reason": "Reviewed the underline Color role passed to the decorative selection layer; its token-derived value and 4px rendered geometry are covered by the four-mode widget test."
+        },
+        {
+          "fingerprint": "9b587dc1a09a54ff64331ff81ad911c56b10d82f645ff4c8565372024455eab3",
+          "count": 1,
+          "reason": "Reviewed the selected-segment Color role passed to the decorative selection layer; the four-mode contract asserts its ColorScheme-derived fill."
+        },
+        {
+          "fingerprint": "c52be0033ea57248051d9176a33f1e9852c22272b83dcfe6cc34a15a9134a59f",
+          "count": 1,
+          "reason": "Reviewed the shared Neo frame BoxDecoration; its background, outline, radius, and optional token-derived shadow are all asserted by the four-mode test."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/tonos_train_tabs.dart",
+      "owner": "theme-maintainers",
+      "evidence": "The migrated tonos-train-tabs inventory rules assign four geometry findings and four surface/effect/color findings to this shared selector. test/theme/widgets/tonos_train_tabs_test.dart asserts rendered frame, button shape, fill, outline, shadow, semantics, tap behavior, and no layout exceptions across Classic/Neo light/dark; a focused Neo 2x text-scale reflow regression also protects the bounded frame. The user accepted Train visually in all four theme/brightness modes. Report-only output was mapped statement-by-statement to the widget source before enrollment; the canonical manifest contract pins all ten fingerprints and their counts.",
+      "approvals": [
+        {
+          "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
+          "count": 1,
+          "reason": "Reviewed the BoxShadow type reference used by the visible-shadow guard; the helper gates the token-backed shadow output, which is asserted by the four-mode frame test."
+        },
+        {
+          "fingerprint": "200cb37f2955432a9ce1d7e5ffac2aaaf07904aa7b56288a3997bc5e7f8856d9",
+          "count": 1,
+          "reason": "Reviewed the shared button shape: radius and outlined side resolve from shape/surface tokens, and the four-mode rendered contract checks both branches."
+        },
+        {
+          "fingerprint": "2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239",
+          "count": 1,
+          "reason": "Reviewed the selector frame decoration; fill, radius, outline, and shadow are selected from theme-family tokens and asserted in rendered tests."
+        },
+        {
+          "fingerprint": "2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea",
+          "count": 1,
+          "reason": "Reviewed the structural frame border; its color and width come from surface and shape tokens and are checked in both Neo brightness modes."
+        },
+        {
+          "fingerprint": "73d044eee9eb451d4267a9aceb5afb59da566cb43ec44d8aecf32259c05fa0f8",
+          "count": 1,
+          "reason": "Reviewed the BoxShadow recipe; color, blur, and offset all come from the effect tokens and are asserted by the four-mode selector test."
+        },
+        {
+          "fingerprint": "92d4cc98d360ce548fc0efe13bc47bc1fe41bda8521363877bd779f2a08d433a",
+          "count": 1,
+          "reason": "Reviewed the Classic frame alpha application; the opacity is supplied by the train-tab surface token and the resulting fill is checked in both Classic modes."
+        },
+        {
+          "fingerprint": "a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96",
+          "count": 2,
+          "reason": "Reviewed both branches of the shared button BorderSide: Neo uses the token-backed outline, while Classic intentionally uses no side; both modes are rendered and asserted."
+        },
+        {
+          "fingerprint": "b97cf83a07f0c34fb40826c6e3f830624906eeecb13bcb315a6187e8499d3e26",
+          "count": 1,
+          "reason": "Reviewed the transparent unselected Classic button fill; selected and Neo fills resolve from the active color scheme and are pinned by the four-mode test."
+        },
+        {
+          "fingerprint": "d52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3",
+          "count": 1,
+          "reason": "Reviewed the button's active text-theme lookup; label styling inherits the current theme typography before applying the deliberate weight and semantic foreground."
+        },
+        {
+          "fingerprint": "ff4cb09888cd128e8d0ee6061d5be12da8189fa081955c553ca2d6402b8eb618",
+          "count": 1,
+          "reason": "Reviewed the responsive-height theme lookup; Neo frame sizing uses the active body text metrics and text scaler, while Classic retains its established compact height."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/flow_screen_widgets.dart",
+      "owner": "theme-maintainers",
+      "evidence": "Four-mode rendered/state contract in test/theme/widgets/flow_and_recommended_sets_theme_test.dart covers all six explicit dropdown hint/option TextStyles, popup surface, selection callbacks, and absence of layout exceptions. The report-only fingerprint set was mapped to the six onSurface declarations and reviewed; this protects exact current syntax, not general widget qualification.",
+      "approvals": [
+        {
+          "fingerprint": "1a9ae9252a12c1064b8145627e4182aded14d79292508875a29873d2040b3fe4",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        },
+        {
+          "fingerprint": "281df9fbfa41048ffcae611b88ee0cb16cb21f0b07cc9c66315886e5504a62af",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        },
+        {
+          "fingerprint": "62c57e450475048ffbe5b6adc18583b61b658e93ca6051ad86687a613840184d",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        },
+        {
+          "fingerprint": "81c9090586f3b8e2f48159f4cb0dd61ad7a0cd50129578e40931475b1f82dd89",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        },
+        {
+          "fingerprint": "c68e3bf790095e80a15b925385453b8da0a36035d555f10297cdd6b6c6012c08",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        },
+        {
+          "fingerprint": "ef4243683c4d7d24ae8af3b8f98817a5356db2acdf8ea84478c9e999f9a2d00f",
+          "count": 1,
+          "reason": "Reviewed one of the six explicit dropdown TextStyle declarations; all use the active onSurface role and the four-mode contract checks rendered hint/menu ink."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/recommended_sets_editor_dialog.dart",
+      "owner": "theme-maintainers",
+      "evidence": "Four-mode rendered/state contract in test/theme/widgets/flow_and_recommended_sets_theme_test.dart covers the shared dialog form-control theme, semantic validation ink, invalid input, valid persistence callback, and Classic decoration pass-through. The report-only fingerprints were mapped to the file's two InputDecoration constructors, inherited title/error Theme lookups, and explicit semantic-error TextStyle, then reviewed; this protects exact current syntax, not general dialog qualification.",
+      "approvals": [
+        {
+          "fingerprint": "07742ce012f762528510a3332c9c2d33a75fd4c7725e2d10bc32b405ccfec814",
+          "count": 2,
+          "reason": "Reviewed the repeated InputDecoration syntax for the minimum/maximum fields; both intentionally inherit the scoped TonosDialogFrame form-control theme and are covered in all four modes."
+        },
+        {
+          "fingerprint": "3d9c1636d8bbd84244c2579b5ccb53316502f73ff19c58daf1af88cb6813da97",
+          "count": 2,
+          "reason": "Reviewed the repeated Theme lookups for inherited dialog title typography and semantic validation ink; the contract asserts error color and theme-specific form roles in all four modes."
+        },
+        {
+          "fingerprint": "7466cd9356fa9cb99b588484eabf03cba1c66faf19452cc6c67e3a9ad0aa6b74",
+          "count": 1,
+          "reason": "Reviewed the explicit validation TextStyle using ColorScheme.error; invalid input renders with semantic error ink in all four theme modes."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/session_complete_sheet.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/session_completion_theme_contract_test.dart covers the production completion presentation and error state in Classic/Neo light/dark, including metric and exercise surfaces, set indicators, border/shape roles, semantic foregrounds, icon roles, and error ink. The exact inventory rule owns the 16 classified style findings. Interpolated strings are tokenized as code expressions while literal segments remain opaque; the report-only fingerprints were mapped to the completion helper, card, set-row, summary-header, and metric statements before approval. This protects the exact lexical style scope, not data loading or release qualification.",
+      "approvals": [
+        {
+          "fingerprint": "c8e28842be3909d2556a2831a72a1f955605a7f7025ec9da3200926756f9ca62",
+          "count": 1,
+          "reason": "Reviewed the Border.all outline in the summary metric decoration; the surface-token border and width are asserted for every metric in all four modes."
+        },
+        {
+          "fingerprint": "1e999f9f6801009aa39e5b4711dd450b5c9892bc77b5fe8702f98352318ed89c",
+          "count": 1,
+          "reason": "Reviewed the deterministic exercise-accent helper, which selects only existing primary, tertiary, secondary, and error scheme roles; its selected role is asserted in the rendered contract."
+        },
+        {
+          "fingerprint": "2b5f88a22b89de2aa81acaa3641ef3752c260f4d3c69208b2c859bb8859ed8f5",
+          "count": 1,
+          "reason": "Reviewed the estimated-max TextStyle recipe; Classic retains its italic 12px default and Neo uses surface-qualified secondary ink, both checked in four modes."
+        },
+        {
+          "fingerprint": "2dd4a9db369a01b649752e2827bed40479e1c2d46dbe9a87468bc38aef9e55a3",
+          "count": 1,
+          "reason": "Reviewed the summary metric border alpha derived from the completion surface token; the test asserts the resolved border for all four metrics in every mode."
+        },
+        {
+          "fingerprint": "023574243d5d5d754f9c2ee3db83ed2997811329273bd478eef5b00eba5e5598",
+          "count": 1,
+          "reason": "Reviewed the summary metric BoxDecoration; fill, radius, border, and width are asserted for each metric across Classic/Neo light/dark."
+        },
+        {
+          "fingerprint": "3a5e4641bfbe15e06cd5a30109a1fba6dc1c4a946551d30d2fd54bee1a244b81",
+          "count": 1,
+          "reason": "Reviewed the optional TextStyle parameter on the metric-line helper; callers pass the active theme's metric typography, and rendered text output is covered in four modes."
+        },
+        {
+          "fingerprint": "44c05dd366fc4488c8e2a7af42ea9ce2617f7870cc19facd34bdc6dcf7881f1a",
+          "count": 1,
+          "reason": "Reviewed the summary-header Theme lookup; the completion accent, surface, shape, and title foreground are asserted from the resolved theme in all four modes."
+        },
+        {
+          "fingerprint": "49b1144f2d27417bddab6ad544d18216fe3a8e217082ee0cd10c0c4f7a8e02e6",
+          "count": 1,
+          "reason": "Reviewed the numbered set-indicator BoxDecoration; its completion fill, outline, and circular shape are asserted in all four modes."
+        },
+        {
+          "fingerprint": "5be8c96cf0a4cc079f2497aaffd5e087d43845df836ddff465311a210ca99760",
+          "count": 1,
+          "reason": "Reviewed the TextStyle type in the set-row helper contract; foreground is injected from the owning completion surface and rendered row text is covered in all four modes."
+        },
+        {
+          "fingerprint": "5e5216888bf64e56c51fa501e7bc87be8722ab846b4e8f0cf4f766095583122c",
+          "count": 1,
+          "reason": "Reviewed the summary-metric Theme lookup; the active text theme and semantic metric colors feed the rendered four-mode metric contract."
+        },
+        {
+          "fingerprint": "636542d048c67818f7ff3e40c69c7ead14b9f1674be934d1523f6af0f11bf3bc",
+          "count": 1,
+          "reason": "Reviewed the summary-header Border.all outline; Neo resolves the surface contrast outline and shape width from tokens, asserted in the four-mode contract."
+        },
+        {
+          "fingerprint": "76ecc4768ec87f1bda2231f8eb062ab6e422c19fe210839ad17eb6527672b886",
+          "count": 1,
+          "reason": "Reviewed the summary metric fill alpha from the completion surface role; each metric's resolved fill is checked in Classic and Neo light/dark."
+        },
+        {
+          "fingerprint": "8ecc0d84adc6e137fd760145fbabed20d4a7b7597053204e7930508fbf8297ec",
+          "count": 1,
+          "reason": "Reviewed the exercise-card outline alpha from the completion surface role; the rendered border and width are checked in all four modes."
+        },
+        {
+          "fingerprint": "926c10b0220dede534e5880e16f456ab05d371f5084e72967be98d8740b202d5",
+          "count": 1,
+          "reason": "Reviewed the exercise-card fill alpha from the completion surface role; the exact resolved fill and shape are asserted across all four modes."
+        },
+        {
+          "fingerprint": "aa0ae7173bebbd1f85f0d6099fa8e9313686d10a9fb440496bdd54b78b25e3eb",
+          "count": 1,
+          "reason": "Reviewed the summary-header BoxDecoration; the family-specific completion fill, contrast outline, and control radius are asserted in every mode."
+        },
+        {
+          "fingerprint": "b4817b0f2bf4e61fdddfb4b70d4c4cfc38bea3c2bc4430307928a4dc4381d3f1",
+          "count": 1,
+          "reason": "Reviewed the set-indicator Border.all recipe; Neo applies the exercise-card outline while Classic keeps its established borderless indicator, both asserted."
+        },
+        {
+          "fingerprint": "b5a9efea62a7b810de1732a3b868861049e460586d09900b8043cea550681bf3",
+          "count": 3,
+          "reason": "Reviewed the three Color role parameters of the set-row helper; accent, outline, and foreground are supplied by the owning card recipe and exercised in four modes."
+        },
+        {
+          "fingerprint": "b863a683a494bab9e5fdc2c23cf5ef4d7707c4b198c771da5cd86264cb141706",
+          "count": 1,
+          "reason": "Reviewed the completion-error TextStyle; Neo uses surface-qualified foreground ink while Classic retains inherited Material error text, asserted in all four modes."
+        },
+        {
+          "fingerprint": "c7d252f7ec610a629afb7830331334b1d41f89f08d93d1e5e62aadc1ded285a1",
+          "count": 1,
+          "reason": "Reviewed the active Theme lookup for set-result typography; the resolved body style and surface foreground are exercised by the four-mode completion-card contract."
+        },
+        {
+          "fingerprint": "d8378b37aa487dbb0a8a5482d440bfab2d3f06d924fa6ce57e2a03dc5ecfdec9",
+          "count": 1,
+          "reason": "Reviewed the set-indicator Theme lookup for label typography; its semantic foreground and rendered indicator are checked across all four modes."
+        },
+        {
+          "fingerprint": "d8d9e8b7fb40a6cca2bb2377c7fade633238bf2717c24bf27c187ca58efe772f",
+          "count": 1,
+          "reason": "Reviewed the set-indicator Border.all recipe and its Classic/Neo branch; the border color, width, and shape are asserted in all four modes."
+        },
+        {
+          "fingerprint": "d8fa843464f61d8d3786b5e87f75ffc3bd4bbc8eb0473de001286cfb7049c3ea",
+          "count": 1,
+          "reason": "Reviewed the set-indicator fill alpha from the completion surface token; the four-mode test asserts the resolved completion state color."
+        },
+        {
+          "fingerprint": "dea40a108da66e90cf29ea2bb09e752e596c8313a11d2337162ff009aaea670c",
+          "count": 1,
+          "reason": "Reviewed the exercise-card Theme lookup; family surface, shape, and contrast roles derive from this active theme and are asserted in the rendered contract."
+        },
+        {
+          "fingerprint": "ec625f52b672045f12ba4ac04045ae236f84f697a83001b9b86e42fd30373bfd",
+          "count": 1,
+          "reason": "Reviewed the divider's secondary-foreground alpha; the Neo inter-set separator color is asserted from the resolved surface recipe."
+        },
+        {
+          "fingerprint": "f79e0b823060c5ac7389a599241c9242f95d4f7d6f1d836572da910198eaa2e0",
+          "count": 1,
+          "reason": "Reviewed the summary-metric Color role parameter; each metric accent is supplied by AppDataVisualizationTokens and its fill/icon output is checked in all four modes."
+        },
+        {
+          "fingerprint": "fc3b4ed7f8396e65c5f82ba115ee85e517d581868e1f081cef979aa9685ef6d7",
+          "count": 1,
+          "reason": "Reviewed the exercise-card BoxDecoration; family-specific fill, radius, border, and width are all asserted by the four-mode rendered contract."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/exercise_definition_info_tile.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/exercise_definition_info_tile_theme_test.dart renders the title in Classic/Neo light/dark, verifies that only w700 emphasis is added over the active DefaultTextStyle, and checks that TonosThemeReadyCard preserves Classic Card and Neo TonosSurface ownership. The exact inventory rule owns the file's single text_style finding; no production appearance or token role changed.",
+      "approvals": [
+        {
+          "fingerprint": "50ab6b853cf46e7e5a0455cb489b8cad5a697e15cf360f716b8a60f851b8e227",
+          "count": 1,
+          "reason": "Reviewed the one bold-only title TextStyle supplied to LocalizedExerciseName; the four-mode rendered contract asserts its effective size and foreground remain inherited from ListTile while weight stays w700."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/set_stat_chip.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/set_stat_chip_theme_test.dart checks the metric-chip surface/shape tokens and resolved foreground in Classic/Neo light/dark. The existing optional edit action remains covered by test/widgets/focused_sets_list_test.dart.",
+      "approvals": [
+        {
+          "fingerprint": "912ba3dfc1570e9ba8f95b5e7350970dc666592e5bd2f4365d3797bc434a5866",
+          "count": 1,
+          "reason": "Reviewed the active Theme lookup supplying the surface, shape, and text roles; the four-mode rendered contract asserts the resolved chip fill, radius, and foreground ink."
+        },
+        {
+          "fingerprint": "cc6fd99f4549991e1418de00a3124f125fac10ae7e05bc80f54afcaaadb8eaa5",
+          "count": 1,
+          "reason": "Reviewed the exact BoxDecoration recipe: metricChip fill and metric radius with no border or shadow. The four-mode widget contract asserts each resolved output."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/past_sessions_list.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/past_sessions_list_theme_test.dart verifies the filter label's resolved ColorScheme.onSurface foreground and inherited DefaultTextStyle across Classic/Neo light/dark. The exact inventory rule owns the file's only style finding; the report-only fingerprint was mapped to that explicit label TextStyle.",
+      "approvals": [
+        {
+          "fingerprint": "bfbac33db1e38873346fa38d2104e929f5cfd79b792d0aa2c6e35cf843baebd3",
+          "count": 1,
+          "reason": "Reviewed the single PastSessionsList filter-label TextStyle; its foreground uses ColorScheme.onSurface and its typography remains inherited, asserted in Classic/Neo light/dark."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/nutrition_text_details.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/nutrition_text_details_theme_test.dart renders ValueCard in Classic/Neo light/dark and checks its active Theme typography, nutrition-token border, caller border override, padding, and scaled radius. The report-only fingerprint details were reviewed against the five exact ValueCard statements. This protects that lexical scope only; outstanding Nutrition form visual acceptance is separate.",
+      "approvals": [
+        {
+          "fingerprint": "70ef76816ec913957345fe31629fa4d10db3d88197f858e0a23ba19250bf7a29",
+          "count": 1,
+          "reason": "Reviewed the ValueCard BoxDecoration in its return Container; the four-mode test checks the resolved border, scaled radius, and surrounding card layout without granting a broader widget exception."
+        },
+        {
+          "fingerprint": "718a863dce6a9c65789b1a4bd3577cc3155adb3dcfd19b878845850ce5d7064c",
+          "count": 1,
+          "reason": "Reviewed the scaled 8px BorderRadius.circular recipe; the four-mode contract asserts the exact resolved radius at scale 1.25."
+        },
+        {
+          "fingerprint": "9b93d7314fdbf72092193b46c552912a20f68b74fa718cc9c1f18d0f423bb5a0",
+          "count": 1,
+          "reason": "Reviewed the ValueCard Theme.of(context) lookup that supplies inherited bodySmall/titleMedium typography; the rendered contract checks the scaled effective text styles in all four modes."
+        },
+        {
+          "fingerprint": "c18d55a4047c052a83f4c73f48a13103cf06c0fc732e13a82669bc80fc81c58e",
+          "count": 1,
+          "reason": "Reviewed the Border.all recipe using the caller override or existing AppNutritionTokens.textDetailsBorder role; the four-mode test asserts both token resolution and the explicit override."
+        },
+        {
+          "fingerprint": "f158d6bbaafe350627e0cb801e5cb16c1ac38cf1218248bc12ad76b0dcd78f6f",
+          "count": 1,
+          "reason": "Reviewed ValueCard's optional Color? borderColor API as the caller-owned override input; its rendered contract verifies that the supplied color is honored without replacing the theme-token default."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/seven_day_focus_card.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/seven_day_focus_presentation_test.dart renders Classic/Neo light/dark and verifies the scoped surface/text/progress roles, focused-sets hint ink, transparent details tap surface, and 16px InkWell radius while retaining responsive reflow and action reachability. The six report-only fingerprints were mapped to exact statements and widget scopes. This is lexical protection for this file, not route-wide visual qualification.",
+      "approvals": [
+        {
+          "fingerprint": "158fb0382b2320120dbc3a07808ceee3f0e913a404fee58254d7989e5f373f51",
+          "count": 1,
+          "reason": "Reviewed the transparent Material tap layer in SevenDayFocusPresentation; the four-mode contract locates and asserts the transparent surface while keeping the focused-sets content visible."
+        },
+        {
+          "fingerprint": "1a589e19d333469209d6dd7598dcf846010ad50c00ee91a1e5c15910704f368b",
+          "count": 1,
+          "reason": "Reviewed the active Theme.of(context) lookup in SevenDayFocusPresentation; the four-mode contract asserts the base and scoped Theme roles used by its content."
+        },
+        {
+          "fingerprint": "36789b54998ceccc9032fa5e455fedeeda3fb8aabf270a1ae1f4a7f1f49d219f",
+          "count": 1,
+          "reason": "Reviewed the 16px details InkWell radius in SevenDayFocusPresentation; the rendered contract asserts this exact hit-target shape in all four modes."
+        },
+        {
+          "fingerprint": "5af65561290bc70f6ceac06eea598028afff67729a38c3b6de66d81d3daa529e",
+          "count": 1,
+          "reason": "Reviewed the scoped Theme recipe in SevenDayFocusPresentation, including onSurface/onSurfaceVariant, body/display text ink, and progress foreground/track alpha; the four-mode contract asserts each resolved role and preserves Classic's existing values."
+        },
+        {
+          "fingerprint": "c1ab889e2b5322df241752d144847bf07716ef779d4981ca96fbc47b75514a67",
+          "count": 1,
+          "reason": "Reviewed the Theme.of(context) lookup in _MoreFocusedSetsHint; the four-mode contract checks the resolved icon/text foreground and bold label weight."
+        },
+        {
+          "fingerprint": "c1e69096be224a5b8c62b9ce57e15da4e9029aa1cf2009760c1a26be6135ef47",
+          "count": 1,
+          "reason": "Reviewed the scoped Theme construction in SevenDayFocusPresentation; its four-mode contract checks the conditional text and progress colors, including the 0.22 track alpha."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/bodypart_focus_chips.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/bodypart_focus_chips_theme_test.dart renders all four modes, verifies the Neo positive/negative roles and unchanged Classic palette, checks selected/neutral RawChip ownership, exercises the complete tri-state cycle, and asserts compact empty-state typography.",
+      "approvals": [
+        {
+          "fingerprint": "560d0babcccb4b59d70cb10aff1591d17058df10af8b60c9762d38c48d47de6d",
+          "count": 2,
+          "reason": "Reviewed both selected-state RawChip TextStyles; four-mode tests assert the palette-defined on-positive/on-negative foregrounds and their contrast against the opaque semantic fills while neutral labels stay Material-owned."
+        },
+        {
+          "fingerprint": "66012b7fec4a4c2ae10b7baf6f5107a1fbf5eb15f9303aa0147a19dba2c194c1",
+          "count": 1,
+          "reason": "Reviewed the status-or-neutral BorderSide on RawChip; selected Neo chips use the corresponding on-status foreground for a contrast-qualified outline, and neutral chips retain the Neo/Classic outline source."
+        },
+        {
+          "fingerprint": "8fd4a725ef130da9b7ed66ec8d44c166dcc7ca696d4910c84b5844d7798c3f93",
+          "count": 1,
+          "reason": "Reviewed the preferred-state color selection; Neo reads AppSemanticColors.positive and Classic retains Colors.green.shade300, both asserted in the four-mode contract."
+        },
+        {
+          "fingerprint": "b381477fa2d5c5bebdda57dd5f0c1184b2244bc9443098e3397acd598c7f7e94",
+          "count": 1,
+          "reason": "Reviewed the neutral chip outline's Neo surface-aware resolver and Classic Theme.dividerColor fallback; the rendered contract checks both branches."
+        },
+        {
+          "fingerprint": "d2f521b65022202eab9f02851635ae690b1dd1681374c272828ec536cb5f4242",
+          "count": 1,
+          "reason": "Reviewed the avoided-state color selection; Neo reads AppSemanticColors.negative and Classic retains Colors.red.shade300, both asserted in the four-mode contract."
+        },
+        {
+          "fingerprint": "eaa62c0622cfbefd44eeab710fd5cf18e9731de377c5b1a3865e9e7649b3cdcd",
+          "count": 1,
+          "reason": "Reviewed the empty-bodypart message's intentional 12px size-only TextStyle; the four-mode contract confirms it does not acquire unrelated family-specific typography or foreground overrides."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/preset_info_card.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/preset_info_card_theme_test.dart renders Classic/Neo light/dark at compact width and checks metric fill, outline, shape, text/icon foreground roles, helper typography, and the outer Card/TonosSurface boundary.",
+      "approvals": [
+        {
+          "fingerprint": "3466d571d6462b44c625266035e181fa6013f488f65b82a520984cb59a7875f7",
+          "count": 1,
+          "reason": "Reviewed PresetInfoCard's active Theme lookup, which supplies the existing helper text style; the four-mode contract asserts the inherited bodySmall role."
+        },
+        {
+          "fingerprint": "59c6a6210067f9e4371c707a9c5dbc611b91ca7755367bb78a5776dd2f7274ba",
+          "count": 1,
+          "reason": "Reviewed the metric tile's conditional Border.all; the four-mode compact-width test checks the resolved surface outline and preserves the Classic no-border fallback."
+        },
+        {
+          "fingerprint": "5ab92f4428f84d48f79e814420a070be0e2f09777217153d9a6ccb98576bac5d",
+          "count": 1,
+          "reason": "Reviewed the metric BoxDecoration's token-backed card fill, metric shape, and conditional outline; the four-mode test asserts the actual decoration values."
+        },
+        {
+          "fingerprint": "f8de1519ee4d0293ed24411bf7a6569df2ec78567d83f571b3f9475aaf61f676",
+          "count": 1,
+          "reason": "Reviewed the metric tile's active Theme lookup; the contract asserts its title/body typography and Classic-primary versus Neo surface-qualified icon/foreground roles."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/cardio_card.dart",
+      "owner": "theme-maintainers",
+      "evidence": "The four-mode CardioCard contract checks its Classic Card/Neo TonosSurface boundary, inherited title/note/countdown typography in editable and read-only states, timer-state colors, and TonosFormField update behavior.",
+      "approvals": [
+        {
+          "fingerprint": "1c8b211f89463240eb3da68edfe41d3d6f7de3dd59ba0257f54af6ca4b818b6b",
+          "count": 1,
+          "reason": "Reviewed the CardioCard subtree's active Theme lookup for inherited title/body/countdown roles and card boundary; four-mode tests assert the rendered title, both note states, countdown, and Card/TonosSurface owner."
+        },
+        {
+          "fingerprint": "27e0b79f80254e475daa3e701aeeffe1126f6e071412f24853ada194c412bd1c",
+          "count": 1,
+          "reason": "Reviewed the GO/countdown subtree's inherited headlineMedium role; the four-mode test asserts the actual countdown style without imposing a custom button text style."
+        },
+        {
+          "fingerprint": "8adf13b40bcd0795af9087d038b65b9c0db8a7343ad5fedc5aeff236708ba8b6",
+          "count": 2,
+          "reason": "Reviewed both running/idle semantic color branches: Neo uses negative/positive roles and Classic preserves red/green. The four-mode test checks Start and Stop states."
+        },
+        {
+          "fingerprint": "e35977c5ccdd21b1a96fd1b7f74eb56f75c6be3130ce549f861c69eb4d41a1c5",
+          "count": 2,
+          "reason": "Reviewed both editable and read-only note labels, which retain inherited bodySmall italic typography. The four-mode contract asserts both rendered states."
+        }
+      ]
+    },
+    {
+      "path": "lib/widgets/stretch_card.dart",
+      "owner": "theme-maintainers",
+      "evidence": "The four-mode StretchCard contract checks its Classic Card/Neo TonosSurface boundary, inherited stretch-name/description typography, semantic add color, custom-entry callbacks, and read-only behavior.",
+      "approvals": [
+        {
+          "fingerprint": "29b8ffb5539032429fbe52493ecd7a014d796d5d7c29280313f72f8da6975651",
+          "count": 2,
+          "reason": "Reviewed inherited bodyLarge stretch-name and bodySmall description typography; the four-mode contract renders and asserts both styles."
+        },
+        {
+          "fingerprint": "81db338f781eee1e67f235d9b13f47a97b8d24394e87a3ca73ee06c4f67489df",
+          "count": 1,
+          "reason": "Reviewed the Neo semantic info add action and unchanged Classic blue fallback; the four-mode contract checks its resolved color and read-only state."
+        },
+        {
+          "fingerprint": "90025390c0c0cc3ecefefcdf78526f85049363c82db21b48e1c7ee42500830c0",
+          "count": 1,
+          "reason": "Reviewed the StretchCard subtree's family-specific card boundary and inherited content typography; four-mode tests assert Classic Card/Neo TonosSurface ownership and rendered text styles."
         }
       ]
     }

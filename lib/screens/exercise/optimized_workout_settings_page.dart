@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_field.dart';
+import '../../utils/tutorial_launcher.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
-import '../../utils/tutorial_launcher.dart';
-import '../../theme/theme_extensions.dart';
 
 enum OptimizedWorkoutSettingsAction { save, startNow }
 
@@ -258,37 +259,31 @@ class _OptimizedWorkoutSettingsPageState
                             ),
                           ),
                           const SizedBox(height: 16),
-                          TextFormField(
+                          TonosFormField(
                             controller: _minutesController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: strings.optimizedWorkoutDuration,
-                              suffixText: strings.unitMinutesShort,
-                              border: const OutlineInputBorder(),
-                            ),
+                            labelText: strings.optimizedWorkoutDuration,
+                            suffixText: strings.unitMinutesShort,
+                            border: const OutlineInputBorder(),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
+                          TonosFormField(
                             controller: _minSetsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: strings.optimizedMinimumSets,
-                              suffixText: strings.unitSets,
-                              border: const OutlineInputBorder(),
-                            ),
+                            labelText: strings.optimizedMinimumSets,
+                            suffixText: strings.unitSets,
+                            border: const OutlineInputBorder(),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
+                          TonosFormField(
                             controller: _maxSetsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.done,
-                            decoration: InputDecoration(
-                              labelText: strings.optimizedMaximumSets,
-                              suffixText: strings.unitSets,
-                              border: const OutlineInputBorder(),
-                            ),
+                            labelText: strings.optimizedMaximumSets,
+                            suffixText: strings.unitSets,
+                            border: const OutlineInputBorder(),
                           ),
                         ],
                       ),
@@ -340,15 +335,13 @@ class _OptimizedWorkoutSettingsPageState
                                     setState(() => _repWeightMode = value),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
+                          TonosFormField(
                             controller: _targetRepsController,
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: strings.optimizedTargetReps,
-                              suffixText: strings.unitReps,
-                              border: const OutlineInputBorder(),
-                            ),
+                            labelText: strings.optimizedTargetReps,
+                            suffixText: strings.unitReps,
+                            border: const OutlineInputBorder(),
                           ),
                           const SizedBox(height: 12),
                           _SettingsChoice<StarterWeightIntensity>(

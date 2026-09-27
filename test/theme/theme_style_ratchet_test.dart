@@ -13,6 +13,20 @@ void main() {
       ),
     );
   });
+  test('fingerprint details identify the normalized candidate statement', () {
+    const source = 'void f() { return Colors.red; }';
+    final details = styleFingerprintDetails(source);
+
+    expect(details.keys, styleFingerprints(source).keys);
+    expect(details.values, hasLength(1));
+    expect(details.values.single['count'], 1);
+    expect(details.values.single['candidate'], 'Colors');
+    expect(
+      (details.values.single['statementTokens'] as List<String>).join(' '),
+      contains('red'),
+    );
+    expect(details.values.single['scope'], isNotEmpty);
+  });
   test('values and duplicate occurrences cannot hide behind an approval', () {
     final base = styleFingerprints('void f() { return Color(0xFF123456); }');
     expect(
@@ -33,9 +47,55 @@ void main() {
     expect(styleFingerprints("var x = r'Colors.red';"), isEmpty);
     expect(styleFingerprints("var x = '''Colors.red''';"), isEmpty);
   });
-  test('interpolation fails closed instead of concealing executable code', () {
+  test('interpolated expressions are tokenized as executable code', () {
+    final red = styleFingerprints(r'var x = "${Colors.red}";');
+    final blue = styleFingerprints(r'var x = "${Colors.blue}";');
+    expect(red, isNotEmpty);
+    expect(red, isNot(blue));
+  });
+  test('interpolation delimiter matching skips comments and nested braces', () {
+    final red = styleFingerprints(r'var x = "${/* } */ build({Colors.red})}";');
+    final blue = styleFingerprints(
+      r'var x = "${/* } */ build({Colors.blue})}";',
+    );
+    expect(red, isNotEmpty);
+    expect(red, isNot(blue));
+  });
+  test(
+    'interpolation delimiter matching ignores braces inside nested strings',
+    () {
+      final red = styleFingerprints(
+        r'''var x = "${build('}', Colors.red)}";''',
+      );
+      final blue = styleFingerprints(
+        r'''var x = "${build('}', Colors.blue)}";''',
+      );
+      expect(red, isNotEmpty);
+      expect(red, isNot(blue));
+    },
+  );
+  test('nested interpolated strings keep expression delimiters balanced', () {
+    final red = styleFingerprints(
+      r'''var x = "${describe("${wrap("}", Colors.red)}")}";''',
+    );
+    final blue = styleFingerprints(
+      r'''var x = "${describe("${wrap("}", Colors.blue)}")}";''',
+    );
+    expect(red, isNotEmpty);
+    expect(red, isNot(blue));
+  });
+  test('literal string text, escaped dollars, and raw strings stay opaque', () {
+    expect(styleFingerprints('var x = "Colors.red";'), isEmpty);
+    expect(styleFingerprints(r'var x = "\$Colors.red";'), isEmpty);
+    expect(styleFingerprints(r'var x = r"${Colors.red}";'), isEmpty);
     expect(
-      () => styleFingerprints(r'var x = "${Colors.red}";'),
+      styleFingerprints(r'var x = TextStyle(fontFamily: "$font");'),
+      isNot(styleFingerprints(r'var x = TextStyle(fontFamily: "$other");')),
+    );
+  });
+  test('unclosed strings and interpolation still fail closed', () {
+    expect(
+      () => styleFingerprints(r'var x = "${Colors.red";'),
       throwsFormatException,
     );
     expect(() => styleFingerprints('/* unclosed'), throwsFormatException);

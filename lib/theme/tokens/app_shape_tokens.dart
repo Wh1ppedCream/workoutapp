@@ -33,6 +33,12 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     this.exerciseDetailChartTooltip = const BorderRadius.all(
       Radius.circular(10),
     ),
+    this.catalogUsageRow = const BorderRadius.all(Radius.circular(14)),
+    this.catalogUsageMedia = const BorderRadius.all(Radius.circular(12)),
+    this.catalogFocusPane = const BorderRadius.all(Radius.circular(16)),
+    this.exerciseCatalogRow = const BorderRadius.all(Radius.circular(16)),
+    this.exerciseCatalogMedia = const BorderRadius.all(Radius.circular(12)),
+    this.exerciseCatalogSelectedOutlineWidth = 1.5,
     required this.compact,
     required this.control,
     required this.metric,
@@ -177,6 +183,12 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   final BorderRadius exerciseDetailState;
   final BorderRadius exerciseDetailChart;
   final BorderRadius exerciseDetailChartTooltip;
+  final BorderRadius catalogUsageRow;
+  final BorderRadius catalogUsageMedia;
+  final BorderRadius catalogFocusPane;
+  final BorderRadius exerciseCatalogRow;
+  final BorderRadius exerciseCatalogMedia;
+  final double exerciseCatalogSelectedOutlineWidth;
   final BorderRadius control;
   final BorderRadius metric;
   final BorderRadius recordBadge;
@@ -250,6 +262,12 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     BorderRadius? exerciseDetailState,
     BorderRadius? exerciseDetailChart,
     BorderRadius? exerciseDetailChartTooltip,
+    BorderRadius? catalogUsageRow,
+    BorderRadius? catalogUsageMedia,
+    BorderRadius? catalogFocusPane,
+    BorderRadius? exerciseCatalogRow,
+    BorderRadius? exerciseCatalogMedia,
+    double? exerciseCatalogSelectedOutlineWidth,
     BorderRadius? compact,
     BorderRadius? control,
     BorderRadius? metric,
@@ -332,6 +350,14 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
       exerciseDetailChart: exerciseDetailChart ?? this.exerciseDetailChart,
       exerciseDetailChartTooltip:
           exerciseDetailChartTooltip ?? this.exerciseDetailChartTooltip,
+      catalogUsageRow: catalogUsageRow ?? this.catalogUsageRow,
+      catalogUsageMedia: catalogUsageMedia ?? this.catalogUsageMedia,
+      catalogFocusPane: catalogFocusPane ?? this.catalogFocusPane,
+      exerciseCatalogRow: exerciseCatalogRow ?? this.exerciseCatalogRow,
+      exerciseCatalogMedia: exerciseCatalogMedia ?? this.exerciseCatalogMedia,
+      exerciseCatalogSelectedOutlineWidth:
+          exerciseCatalogSelectedOutlineWidth ??
+          this.exerciseCatalogSelectedOutlineWidth,
       compact: compact ?? this.compact,
       control: control ?? this.control,
       metric: metric ?? this.metric,
@@ -478,6 +504,25 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
             other.exerciseDetailChartTooltip,
             t,
           )!,
+      catalogUsageRow:
+          BorderRadius.lerp(catalogUsageRow, other.catalogUsageRow, t)!,
+      catalogUsageMedia:
+          BorderRadius.lerp(catalogUsageMedia, other.catalogUsageMedia, t)!,
+      catalogFocusPane:
+          BorderRadius.lerp(catalogFocusPane, other.catalogFocusPane, t)!,
+      exerciseCatalogRow:
+          BorderRadius.lerp(exerciseCatalogRow, other.exerciseCatalogRow, t)!,
+      exerciseCatalogMedia:
+          BorderRadius.lerp(
+            exerciseCatalogMedia,
+            other.exerciseCatalogMedia,
+            t,
+          )!,
+      exerciseCatalogSelectedOutlineWidth: _lerpDouble(
+        exerciseCatalogSelectedOutlineWidth,
+        other.exerciseCatalogSelectedOutlineWidth,
+        t,
+      ),
       compact: BorderRadius.lerp(compact, other.compact, t)!,
       control: BorderRadius.lerp(control, other.control, t)!,
       metric: BorderRadius.lerp(metric, other.metric, t)!,

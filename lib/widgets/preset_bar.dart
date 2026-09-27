@@ -165,40 +165,69 @@ class PresetBar extends StatelessWidget {
       }
     } else if (action == 'rename') {
       final repo = context.read<AppRepository>();
-      final ctl = TextEditingController(text: _planDisplayText(label));
       final newName = await showDialog<String>(
         context: context,
-        builder: (dCtx) {
-          return TonosDialogFrame(
-            styleFormControls: true,
-            child: AlertDialog(
-              title: Text(strings.planRenameTitle),
-              content: TextField(
-                controller: ctl,
-                decoration: InputDecoration(labelText: strings.planNameLabel),
-                autofocus: true,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dCtx),
-                  child: Text(strings.commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(dCtx, ctl.text.trim()),
-                  child: Text(strings.commonRename),
-                ),
-              ],
+        builder:
+            (_) => TonosDialogFrame(
+              styleFormControls: true,
+              child: _PresetRenameDialog(initialName: _planDisplayText(label)),
             ),
-          );
-        },
       );
-      ctl.dispose();
       if (!context.mounted) return;
       if (newName != null && newName.isNotEmpty && newName != label) {
         await repo.updatePresetName(presetId, newName);
         onRefresh();
       }
     }
+  }
+}
+
+class _PresetRenameDialog extends StatefulWidget {
+  const _PresetRenameDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_PresetRenameDialog> createState() => _PresetRenameDialogState();
+}
+
+class _PresetRenameDialogState extends State<_PresetRenameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+
+    return AlertDialog(
+      title: Text(strings.planRenameTitle),
+      content: TextField(
+        controller: _controller,
+        decoration: InputDecoration(labelText: strings.planNameLabel),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(strings.commonCancel),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: Text(strings.commonRename),
+        ),
+      ],
+    );
   }
 }
 

@@ -17,6 +17,7 @@ import '../../services/preset_generation_service.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_field.dart';
 
 import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
@@ -204,26 +205,22 @@ class _Train2PageState extends State<Train2Page> {
                             style: TextStyle(fontSize: 12),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
+                          TonosFormField(
                             initialValue: draftMinutes,
                             keyboardType: TextInputType.number,
                             onChanged: (value) => draftMinutes = value,
-                            decoration: InputDecoration(
-                              labelText: strings.trainWorkoutDuration,
-                              suffixText: strings.trainMinutesShort,
-                              border: OutlineInputBorder(),
-                            ),
+                            labelText: strings.trainWorkoutDuration,
+                            suffixText: strings.trainMinutesShort,
+                            border: const OutlineInputBorder(),
                           ),
                           const SizedBox(height: 12),
-                          TextFormField(
+                          TonosFormField(
                             initialValue: draftMaxSets,
                             keyboardType: TextInputType.number,
                             onChanged: (value) => draftMaxSets = value,
-                            decoration: InputDecoration(
-                              labelText: strings.trainSetsPerExercise,
-                              suffixText: strings.trainSetsShort,
-                              border: OutlineInputBorder(),
-                            ),
+                            labelText: strings.trainSetsPerExercise,
+                            suffixText: strings.trainSetsShort,
+                            border: const OutlineInputBorder(),
                           ),
                           const SizedBox(height: 16),
                           Text(

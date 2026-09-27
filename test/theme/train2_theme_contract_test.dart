@@ -26,5 +26,7 @@ void main() {
     }
 
     expect(source, contains('PresetGenerationQaScreen'));
+    expect(source, contains('TonosFormField('));
+    expect(source, isNot(contains('InputDecoration(')));
   });
 }

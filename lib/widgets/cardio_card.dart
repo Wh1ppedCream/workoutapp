@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_field.dart';
 import '../theme/widgets/tonos_theme_ready.dart';
 
 /// Displays and edits a CardioExercise, including timer controls.
@@ -158,13 +159,11 @@ class _CardioCardState extends State<CardioCard> {
 
             // ─── Note Editor ───
             _isEditingNote
-                ? TextFormField(
+                ? TonosFormField(
                   readOnly: readOnly,
                   initialValue: _note,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    labelText: 'Note',
-                  ),
+                  isDense: true,
+                  labelText: 'Note',
                   onFieldSubmitted:
                       readOnly
                           ? null
@@ -205,12 +204,12 @@ class _CardioCardState extends State<CardioCard> {
               children: [
                 SizedBox(
                   width: 80,
-                  child: TextFormField(
+                  child: TonosFormField(
                     key: ValueKey(widget.exercise),
                     initialValue: '$_cardioMinutes',
                     readOnly: readOnly,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Minutes'),
+                    labelText: 'Minutes',
                     onChanged:
                         readOnly
                             ? null

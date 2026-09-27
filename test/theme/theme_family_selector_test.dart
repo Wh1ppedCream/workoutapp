@@ -71,6 +71,88 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+    testWidgets(
+      'theme-family previews retain their Classic and Neo recipes in ${mode.name}',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.ui_appearance_settings_v1': true,
+          AppThemePreferences.themeModeKey: mode.name,
+        });
+        final themeProvider = ThemeProvider(
+          capabilities: const AppThemeCapabilities(
+            experimentalThemesEnabled: true,
+            isReleaseMode: false,
+          ),
+        );
+        final harness = _AppearanceHarness(themeProvider);
+        addTearDown(harness.dispose);
+        await harness.pump(tester);
+
+        await tester.tap(find.byKey(AppTestKeys.uiAppearanceThemeFamily));
+        await tester.pumpAndSettle();
+
+        void expectPreview(AppThemeFamily family) {
+          final option = find.byKey(
+            AppTestKeys.uiAppearanceThemeFamilyOption(family.code),
+          );
+          final preview = find.descendant(
+            of: option,
+            matching: find.byType(DecoratedBox),
+          );
+          expect(preview, findsOneWidget);
+          final decoration =
+              tester.widget<DecoratedBox>(preview).decoration as BoxDecoration;
+          final neo = family == AppThemeFamily.neoBrutalism;
+          final theme =
+              mode == ThemeMode.dark
+                  ? AppThemeFactory.dark(family)
+                  : AppThemeFactory.light(family);
+          final scheme = theme.colorScheme;
+          final panel = neo ? scheme.primary : scheme.surfaceContainerHighest;
+          final foreground = neo ? scheme.onPrimary : scheme.onSurface;
+          final accent = neo ? scheme.secondary : scheme.primary;
+          final border = decoration.border! as Border;
+
+          expect(decoration.color, panel);
+          expect(border.top.color, foreground);
+          expect(border.top.width, neo ? 1.5 : 1);
+          expect(
+            decoration.borderRadius,
+            neo ? BorderRadius.zero : BorderRadius.circular(6),
+          );
+          if (neo) {
+            expect(decoration.boxShadow, hasLength(1));
+            expect(decoration.boxShadow!.single.color, Colors.black);
+            expect(decoration.boxShadow!.single.offset, const Offset(2, 2));
+          } else {
+            expect(decoration.boxShadow, isNull);
+          }
+
+          final colorBars =
+              tester
+                  .widgetList<ColoredBox>(
+                    find.descendant(
+                      of: option,
+                      matching: find.byType(ColoredBox),
+                    ),
+                  )
+                  .map((box) => box.color)
+                  .toList();
+          expect(colorBars, <Color>[
+            foreground,
+            accent,
+            foreground.withValues(alpha: 0.72),
+          ]);
+        }
+
+        expectPreview(AppThemeFamily.classic);
+        expectPreview(AppThemeFamily.neoBrutalism);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final mode in <ThemeMode>[ThemeMode.light, ThemeMode.dark]) {
     testWidgets('release selector switches and restores Neo in ${mode.name}', (
       tester,

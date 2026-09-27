@@ -24,6 +24,16 @@ void main() {
     () {
       final source =
           File('lib/widgets/exercise_detail_sheet.dart').readAsStringSync();
+      final mediaPreview = _section(
+        source,
+        'class _ExerciseMediaPreviewCard',
+        '/// Exercise Detail Bottom Sheet with tabs: Details, Metrics, Records',
+      );
+      final sheetPresentation = _section(
+        source,
+        'static Future<T?> show<T>',
+        'State<ExerciseDetailSheet> createState',
+      );
       final detailCard = _section(
         source,
         'Widget _buildDetailCard',
@@ -80,6 +90,19 @@ void main() {
         'class _RecordChartBounds',
       );
 
+      expect(mediaPreview, contains('theme.mediaTokens.previewShape'));
+      expect(mediaPreview, contains('theme.surfaceTokens.mediaPlaceholder'));
+      expect(mediaPreview, contains('theme.surfaceTokens.mediaOutline'));
+      expect(mediaPreview, contains('theme.surfaceTokens.media'));
+      expect(mediaPreview, contains('MediaViewingColors.indicator'));
+      expect(
+        sheetPresentation,
+        contains('neoSheet ? Colors.transparent : null'),
+      );
+      expect(
+        sheetPresentation,
+        contains('showDragHandle: neoSheet ? false : null'),
+      );
       expect(detailCard, contains('surfaces.exerciseDetailCard'));
       expect(detailCard, contains('shapes.exerciseDetailCard'));
       expect(detailCard, contains('motion.quick'));
@@ -102,6 +125,8 @@ void main() {
       expect(recordsTab, contains('_exerciseRecordEstimatedSeriesColor'));
       expect(historyCard, contains('surfaces.exerciseDetailRecord'));
       expect(historyCard, contains('shapes.exerciseDetailRecord'));
+      expect(historyCard, contains('recordActionFill'));
+      expect(historyCard, contains('recordForeground'));
       expect(
         historySet,
         contains('surfaces.exerciseDetailRecordSetFillOpacity'),
@@ -118,9 +143,12 @@ void main() {
       expect(chart, contains('surfaces.exerciseDetailChart'));
       expect(chart, contains('surfaces.exerciseDetailChartGridOpacity'));
       expect(chart, contains('surfaces.exerciseDetailTooltip'));
+      expect(chart, contains('shapes.exerciseDetailChartTooltip'));
       expect(chart, contains('motion.exerciseDetailSelection'));
       expect(chart, contains('_exerciseRecordActualSeriesColor'));
       expect(chart, contains('_exerciseRecordEstimatedSeriesColor'));
+      expect(chart, contains('theme.textTheme.labelSmall?.copyWith'));
+      expect(chart, contains('TextStyle('));
       expect(source, contains('tonosEstimatedOneRmForSurface'));
       expect(source, contains('tonosPrimarySeriesForSurface'));
       expect(chart, isNot(contains('Colors.green.shade400')));

@@ -83,6 +83,54 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Neo tabs reflow within the bounded frame at 2x text scale', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+        home: MediaQuery(
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+          child: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 240,
+                child: TonosTrainTabs(
+                  overviewLabel: 'Workout Overview',
+                  plansLabel: 'Saved Plans',
+                  selectedIndex: 0,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final tabs = find.byType(TonosTrainTabs);
+    expect(tester.getSize(tabs).height, 88);
+    final labels =
+        tester
+            .widgetList<Text>(
+              find.descendant(of: tabs, matching: find.byType(Text)),
+            )
+            .toList();
+    expect(labels, hasLength(2));
+    expect(
+      labels.every(
+        (label) =>
+            label.maxLines == 2 && label.overflow == TextOverflow.ellipsis,
+      ),
+      isTrue,
+    );
+    expect(
+      tester.getSize(find.text('Workout Overview')).height,
+      greaterThan(40),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
       testWidgets(
@@ -111,6 +159,15 @@ void main() {
           final surfaces = context.surfaceTokens;
           final effects = context.effectTokens;
           final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+          final expectedHeight = usesInkRecipe ? 48.0 : 44.0;
+          expect(TonosTrainTabs.preferredHeight(context), expectedHeight);
+          expect(TonosTrainTabs.toolbarHeight(context), 56);
+          expect(
+            tester
+                .getSize(find.byKey(const ValueKey('tonos-train-tabs-frame')))
+                .height,
+            expectedHeight,
+          );
           if (usesInkRecipe) {
             expect(shapes.trainTabButton, BorderRadius.circular(3));
           }
