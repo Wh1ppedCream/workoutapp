@@ -627,6 +627,7 @@ void main() {
       hero: BorderRadius.circular(68),
       actionBar: BorderRadius.circular(70),
       dialogChoice: BorderRadius.circular(72),
+      weeklySetRow: BorderRadius.circular(73),
       outlineWidth: 3,
       focusRingWidth: 6,
     );
@@ -843,6 +844,12 @@ void main() {
       BorderRadius.lerp(base.dialogChoice, BorderRadius.circular(72), 0.5),
     );
     expect(target.copyWith().dialogChoice, target.dialogChoice);
+    expect(target.weeklySetRow, BorderRadius.circular(73));
+    expect(
+      midpoint.weeklySetRow,
+      BorderRadius.lerp(base.weeklySetRow, BorderRadius.circular(73), 0.5),
+    );
+    expect(target.copyWith().weeklySetRow, target.weeklySetRow);
     expect(midpoint.outlineWidth, 2);
     expect(midpoint.focusRingWidth, 4);
     expect(base.settingsTabIndicator, BorderRadius.circular(14));
@@ -963,6 +970,7 @@ void main() {
     expect(shapeCopy.hero, AppShapeTokens.classic.hero);
     expect(shapeCopy.actionBar, AppShapeTokens.classic.actionBar);
     expect(shapeCopy.dialogChoice, AppShapeTokens.classic.dialogChoice);
+    expect(shapeCopy.weeklySetRow, AppShapeTokens.classic.weeklySetRow);
     expect(shapeCopy.outlineWidth, AppShapeTokens.classic.outlineWidth);
     expect(shapeCopy.focusRingWidth, AppShapeTokens.classic.focusRingWidth);
     expect(

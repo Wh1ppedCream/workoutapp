@@ -1,16 +1,16 @@
 Theme style inventory (report-only)
 Scanned root: lib
 Dart files: 279
-Style candidates: 2265
+Style candidates: 2264
 
 Candidates by kind:
-- color: 166
+- color: 164
 - color_literal: 256
 - color_literal_candidate: 244
 - color_transform: 388
 - component_style: 28
 - decoration: 285
-- geometry: 720
+- geometry: 721
 - gradient: 6
 - local_theme: 12
 - shadow: 25
@@ -19,30 +19,30 @@ Candidates by classification:
 - application_shell: 1
 - data_visualization: 28
 - illustration_media: 21
-- intentional_one_off: 38
-- material_component: 2
-- release_surface: 83
+- intentional_one_off: 41
+- material_component: 4
+- release_surface: 17
 - stable_category_data: 40
-- structural_theme: 790
-- theme_system: 1257
+- structural_theme: 845
+- theme_system: 1262
 - tonos_semantic: 5
 Candidates by status:
-- allowlisted: 127
-- migrated: 1899
-- pending: 239
+- allowlisted: 130
+- migrated: 1996
+- pending: 138
 
 Pending candidates without a review queue: 0
 Review queue coverage:
-- 972 candidates in exactly one queue
-- 1293 candidates outside configured queues
+- 966 candidates in exactly one queue
+- 1298 candidates outside configured queues
 - 0 candidates in multiple queues
 - application-shell: 43 candidates (allowlisted=7, migrated=36)
-- shared-settings: 239 candidates (allowlisted=16, migrated=146, pending=77)
+- shared-settings: 239 candidates (allowlisted=16, migrated=176, pending=47)
 - active-workout: 50 candidates (migrated=50)
 - catalog-detail: 90 candidates (allowlisted=13, migrated=77)
 - dashboard-progress-health: 157 candidates (allowlisted=16, migrated=141)
 - onboarding-and-development: 120 candidates (allowlisted=10, migrated=31, pending=79)
-- exercise-planning-analytics: 150 candidates (migrated=67, pending=83)
+- exercise-planning-analytics: 144 candidates (allowlisted=3, migrated=129, pending=12)
 - nutrition-workflows: 50 candidates (allowlisted=12, migrated=38)
 - history-measurement-support: 32 candidates (allowlisted=6, migrated=26)
 - shared-flow-controls: 14 candidates (migrated=14)
@@ -80,10 +80,10 @@ Sample findings (first 20):
 - lib/screens/dashboard_page.dart:242 geometry [structural_theme/migrated] border: Border.all(color: scheme.outlineVariant),
 - lib/screens/dashboard_page.dart:279 decoration [structural_theme/migrated] decoration: BoxDecoration(
 - lib/screens/dashboard_page.dart:282 geometry [structural_theme/migrated] border: Border.all(color: scheme.outlineVariant),
-- lib/screens/exercise/analytics_dashboard_screen.dart:383 decoration [release_surface/pending] decoration: BoxDecoration(
-- lib/screens/exercise/analytics_dashboard_screen.dart:384 color_transform [release_surface/pending] color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-- lib/screens/exercise/analytics_dashboard_screen.dart:385 geometry [release_surface/pending] borderRadius: BorderRadius.circular(14),
-- lib/screens/exercise/analytics_dashboard_screen.dart:508 color [release_surface/pending] color: Colors.transparent,
-- lib/screens/exercise/analytics_dashboard_screen.dart:510 geometry [release_surface/pending] borderRadius: BorderRadius.circular(18),
-- lib/screens/exercise/analytics_dashboard_screen.dart:514 decoration [release_surface/pending] decoration: BoxDecoration(
-- ... 2245 more; use --format json for all.
+- lib/screens/exercise/analytics_dashboard_screen.dart:383 decoration [structural_theme/migrated] decoration: BoxDecoration(
+- lib/screens/exercise/analytics_dashboard_screen.dart:384 color_transform [structural_theme/migrated] color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+- lib/screens/exercise/analytics_dashboard_screen.dart:514 decoration [structural_theme/migrated] decoration: BoxDecoration(
+- lib/screens/exercise/analytics_dashboard_screen.dart:517 geometry [structural_theme/migrated] border: Border.all(
+- lib/screens/exercise/analytics_dashboard_screen.dart:574 decoration [structural_theme/migrated] decoration: BoxDecoration(
+- lib/screens/exercise/analytics_dashboard_screen.dart:575 color_transform [structural_theme/migrated] color: theme.colorScheme.primaryContainer.withValues(alpha: 0.55),
+- ... 2244 more; use --format json for all.

@@ -346,13 +346,15 @@ class _InteractiveTutorialCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(step.body, style: theme.textTheme.bodySmall),
                   const SizedBox(height: 6),
-                  Row(
+                  OverflowBar(
+                    alignment: MainAxisAlignment.end,
+                    spacing: 8,
+                    overflowAlignment: OverflowBarAlignment.end,
                     children: [
                       TextButton(
                         onPressed: onSkip,
                         child: Text(strings.planCoachSkipGuide),
                       ),
-                      const Spacer(),
                       if (step.onContinue != null)
                         FilledButton.tonal(
                           onPressed: step.onContinue,

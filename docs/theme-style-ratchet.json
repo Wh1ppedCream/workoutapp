@@ -699,6 +699,58 @@
           "reason": "Reviewed the StretchCard subtree's family-specific card boundary and inherited content typography; four-mode tests assert Classic Card/Neo TonosSurface ownership and rendered text styles."
         }
       ]
+    },
+    {
+      "path": "lib/widgets/data_records_section.dart",
+      "owner": "theme-maintainers",
+      "evidence": "test/theme/widgets/data_records_section_theme_test.dart verifies all 28 date-cell outlines, today fill/border roles, and Neo-dark contrast across Classic/Neo light/dark. The user accepted the corrected Health Trends date-cell appearance on 2026-09-27. The exact inventory rule owns the widget's color, color_transform, decoration, and geometry findings.",
+      "approvals": [
+        {
+          "fingerprint": "11ead75329a5f7ba629ad1550e99b3641fabc4e957a0f76efa659920f36f564f",
+          "count": 1,
+          "reason": "Reviewed the active Theme lookup that supplies the section's family and brightness-specific text and surface roles."
+        },
+        {
+          "fingerprint": "1cf5fa259126054327a3ecd006fad4a99afc3de122cc5224922c8d8e435adce7",
+          "count": 1,
+          "reason": "Reviewed the date-cell border recipe, which switches between the today data-visualization role and the contrast-qualified unselected-day outline; the four-mode test checks every date cell."
+        },
+        {
+          "fingerprint": "3aeaf49868b340b3d3d68b475e2d18bb4fcdfd35b18906bf685583c5cdb60f23",
+          "count": 1,
+          "reason": "Reviewed the root Theme lookup for section headings and calendar labels; the user accepted the rendered Health Trends section after the date-outline correction."
+        },
+        {
+          "fingerprint": "42ad97fd0c17bb28e297844a614644d8e034b283255eb7c4a3add8dacf7e99d4",
+          "count": 2,
+          "reason": "Reviewed the two summary labels' inherited bodySmall typography; the accepted four-mode section retains Material text ownership."
+        },
+        {
+          "fingerprint": "5bb58bfa504cc1d5eb0210a8b10b2c74204f18e37d776867125156847fc93edf",
+          "count": 1,
+          "reason": "Reviewed the weekday label's inherited bodySmall style; the calendar header remains family- and brightness-aware."
+        },
+        {
+          "fingerprint": "96307d05652af3c069e7c15a04d96135b0a463295a7f2ab0608f0de0d5793227",
+          "count": 1,
+          "reason": "Reviewed the date-cell BoxDecoration: its circular shape and today/unselected roles are asserted for all 28 dates in all four theme modes."
+        },
+        {
+          "fingerprint": "acb3263f6faec3bd0578931310ba08f097405f5971de7496952df6314ed75ab1",
+          "count": 1,
+          "reason": "Reviewed the summary chevron's data-visualization label opacity; the color remains sourced from the active data-visualization extension."
+        },
+        {
+          "fingerprint": "d9308d8df55d2eb124b654664013611f25915f6e7b8c14d56384af1b7d36d5c9",
+          "count": 1,
+          "reason": "Reviewed the transparent fill for unselected day cells; their visible boundary is supplied by the separately asserted date-cell outline."
+        },
+        {
+          "fingerprint": "e7e8fe6c59d5aff692604fa548f02de37c4856722a59d5b21a72b57f1ac769e1",
+          "count": 1,
+          "reason": "Reviewed date-number typography and its selected-day foreground override; the widget test verifies the today foreground and all day-cell fills/borders in every theme mode."
+        }
+      ]
     }
   ]
 }

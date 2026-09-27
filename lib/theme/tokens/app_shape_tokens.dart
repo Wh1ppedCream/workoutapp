@@ -85,6 +85,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     required this.dashboardAction,
     required this.dashboardUsage,
     required this.dashboardRow,
+    this.weeklySetRow = const BorderRadius.all(Radius.circular(18)),
     required this.dashboardFooter,
     required this.historySelectedPeriod,
     required this.outlineWidth,
@@ -155,6 +156,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     dashboardAction: BorderRadius.all(Radius.circular(16)),
     dashboardUsage: BorderRadius.all(Radius.circular(13)),
     dashboardRow: BorderRadius.all(Radius.circular(14)),
+    weeklySetRow: BorderRadius.all(Radius.circular(18)),
     dashboardFooter: BorderRadius.all(Radius.circular(22)),
     historySelectedPeriod: BorderRadius.all(Radius.circular(18)),
     outlineWidth: 1,
@@ -234,6 +236,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
   final BorderRadius dashboardAction;
   final BorderRadius dashboardUsage;
   final BorderRadius dashboardRow;
+  final BorderRadius weeklySetRow;
   final BorderRadius dashboardFooter;
   final BorderRadius historySelectedPeriod;
   final double outlineWidth;
@@ -314,6 +317,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
     BorderRadius? dashboardAction,
     BorderRadius? dashboardUsage,
     BorderRadius? dashboardRow,
+    BorderRadius? weeklySetRow,
     BorderRadius? dashboardFooter,
     BorderRadius? historySelectedPeriod,
     double? outlineWidth,
@@ -408,6 +412,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
       dashboardAction: dashboardAction ?? this.dashboardAction,
       dashboardUsage: dashboardUsage ?? this.dashboardUsage,
       dashboardRow: dashboardRow ?? this.dashboardRow,
+      weeklySetRow: weeklySetRow ?? this.weeklySetRow,
       dashboardFooter: dashboardFooter ?? this.dashboardFooter,
       historySelectedPeriod:
           historySelectedPeriod ?? this.historySelectedPeriod,
@@ -634,6 +639,7 @@ class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
       dashboardUsage:
           BorderRadius.lerp(dashboardUsage, other.dashboardUsage, t)!,
       dashboardRow: BorderRadius.lerp(dashboardRow, other.dashboardRow, t)!,
+      weeklySetRow: BorderRadius.lerp(weeklySetRow, other.weeklySetRow, t)!,
       dashboardFooter:
           BorderRadius.lerp(dashboardFooter, other.dashboardFooter, t)!,
       historySelectedPeriod:

@@ -10,7 +10,7 @@ void main() {
         jsonDecode(File('docs/theme-style-ratchet.json').readAsStringSync())
             as Map<String, dynamic>;
     final files = manifest['files'] as List<dynamic>;
-    expect(files, hasLength(17));
+    expect(files, hasLength(18));
     final paths =
         files.cast<Map<String, dynamic>>().map((file) => file['path']).toSet();
     expect(
@@ -33,7 +33,38 @@ void main() {
         'lib/widgets/preset_info_card.dart',
         'lib/widgets/cardio_card.dart',
         'lib/widgets/stretch_card.dart',
+        'lib/widgets/data_records_section.dart',
       ]),
+    );
+    final dataRecordsScope = files.cast<Map<String, dynamic>>().singleWhere(
+      (file) => file['path'] == 'lib/widgets/data_records_section.dart',
+    );
+    final dataRecordsApprovals =
+        (dataRecordsScope['approvals'] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+    expect(dataRecordsApprovals, hasLength(9));
+    expect(
+      {
+        for (final approval in dataRecordsApprovals)
+          approval['fingerprint']: approval['count'],
+      },
+      {
+        '11ead75329a5f7ba629ad1550e99b3641fabc4e957a0f76efa659920f36f564f': 1,
+        '1cf5fa259126054327a3ecd006fad4a99afc3de122cc5224922c8d8e435adce7': 1,
+        '3aeaf49868b340b3d3d68b475e2d18bb4fcdfd35b18906bf685583c5cdb60f23': 1,
+        '42ad97fd0c17bb28e297844a614644d8e034b283255eb7c4a3add8dacf7e99d4': 2,
+        '5bb58bfa504cc1d5eb0210a8b10b2c74204f18e37d776867125156847fc93edf': 1,
+        '96307d05652af3c069e7c15a04d96135b0a463295a7f2ab0608f0de0d5793227': 1,
+        'acb3263f6faec3bd0578931310ba08f097405f5971de7496952df6314ed75ab1': 1,
+        'd9308d8df55d2eb124b654664013611f25915f6e7b8c14d56384af1b7d36d5c9': 1,
+        'e7e8fe6c59d5aff692604fa548f02de37c4856722a59d5b21a72b57f1ac769e1': 1,
+      },
+    );
+    expect(
+      dataRecordsApprovals.every(
+        (approval) => (approval['reason'] as String).trim().isNotEmpty,
+      ),
+      isTrue,
     );
     final valueCardScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/nutrition_text_details.dart',

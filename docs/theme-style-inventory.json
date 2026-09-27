@@ -77,6 +77,168 @@
   ],
   "pathRules": [
     {
+      "id": "anatomy-bodypart-detail-recipes",
+      "pattern": "lib/screens/exercise/definitions_by_bodypart_page.dart",
+      "kinds": [
+        "color",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "ColorScheme primary ink, semantic positive ink, and transparent heatmap fallback",
+      "rationale": "A four-mode production-route contract renders both empty and populated exercise metadata branches, pins equipment labels to ColorScheme.primary and positive labels to the existing Classic green / Neo semantic-positive recipe, and verifies the detail heatmap remains transparent. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
+    },
+    {
+      "id": "anatomy-muscle-detail-recipes",
+      "pattern": "lib/screens/exercise/definitions_by_muscle_page.dart",
+      "kinds": [
+        "color",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "ColorScheme primary ink and semantic positive rank labels",
+      "rationale": "A four-mode production-route contract exercises both empty and populated equipment metadata plus the rendered rank label, confirming equipment uses ColorScheme.primary and rank ink retains the existing Classic green / Neo semantic-positive recipe. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
+    },
+    {
+      "id": "anatomy-filter-material-search",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Material-owned anatomy search input decoration",
+      "rationale": "The four-mode production-route contract verifies the anatomy search remains a Material TextField with its outlined InputDecoration. Theme-family styling is inherited from Material rather than recreated as a one-off field recipe. Device visual acceptance remains separate."
+    },
+    {
+      "id": "anatomy-filter-fallback-artwork",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "color",
+        "geometry"
+      ],
+      "classification": "intentional_one_off",
+      "status": "allowlisted",
+      "target": "Anatomy silhouette and circular muscle fallback artwork",
+      "rationale": "The exact fallback artwork intentionally leaves the body-part silhouette transparent and square while presenting the 44px muscle icon in a circular, primary-colored thumbnail with onPrimary ink. A four-mode route contract pins those values. This artwork-only exception does not cover the search field or other route styling."
+    },
+    {
+      "id": "navigation-settings-theme-recipes",
+      "pattern": "lib/screens/profile/settings/nav_bar_settings_page.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Navigation settings icon badges and transparent reorder proxy",
+      "rationale": "A four-mode production-route contract checks the active navigation icon badge's ColorScheme primary fill, alpha, shape, and icon ink, then invokes the real ReorderableListView proxy decorator and verifies its Material remains transparent. This exact rule owns three findings; reorder/save behavior and device review are not implied."
+    },
+    {
+      "id": "gym-exercise-settings-dialog-ink",
+      "pattern": "lib/screens/profile/settings/gym_exercise_settings_page.dart",
+      "kinds": [
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Workout-exit choice dialog title and subtitle foregrounds",
+      "rationale": "A four-mode contract opens the production workout-exit dialog through TonosDialogFrame and verifies RadioListTile title and subtitle ink inherits Classic Material behavior while Neo uses onPrimaryContainer. The exact one-file rule owns only the two dialog text-style findings; exit-preference persistence and device review remain separate."
+    },
+    {
+      "id": "exercise-analytics-theme-recipes",
+      "pattern": "lib/screens/profile/settings/exercise_analytics_screen.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Exercise allocation picker, tabs, cards, input, and save action",
+      "rationale": "A four-mode rendered route contract seeds an exercise with muscle/body-part allocations and verifies the picker and card surfaces, foregrounds, borders, shape roles, tab indicator and inherited Material divider, shared settings-field input style/decoration, and dirty-state save action. Classic keeps its existing Material surfaces and white action ink; Neo uses surface-aware foreground/outline resolution. Additional four-mode tests exercise definition-load retry, allocation loading, invalid-credit rejection, and failed/successful save-state transitions with a fake repository. The route consumes existing semantic, surface, shape, and settings-field roles without changing production rendering. This exact kind-limited rule owns 25 current findings; durable database persistence and device visual review remain separate."
+    },
+    {
+      "id": "auto-preset-flow-control-recipes",
+      "pattern": "lib/screens/exercise/auto_preset_flow_screen.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Flow Methods control-card surfaces, Material/Neo dropdown ownership, and disabled actions",
+      "rationale": "A four-mode production-screen contract pins the flow-card surface, accent alpha, shape, inherited Classic text/icon behavior, Neo contrast foregrounds, settings-input decoration, dropdown options, and disabled branch/action/error-control styles. The controls consume existing flow, surface, shape, semantic, and ColorScheme roles; the Add New Action route is verified through TonosDialogFrame and TonosField. The user accepted the Flow Methods appearance. The test uses a fake repository and cancels the dialog without saving; graph editing and persistence review remain deferred. This exact kind-limited rule owns 32 current findings only."
+    },
+    {
+      "id": "weekly-set-analytics-theme-recipes",
+      "pattern": "lib/screens/exercise/analytics_dashboard_screen.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Weekly Set Analytics theme-token, surface, and status decoration ownership",
+      "rationale": "A four-mode production-screen contract verifies the summary/icon surfaces, data-visualization positive status role, token-owned row/stat/icon geometry, outline width, transparent Material ink surface, and boundary-status transforms. Classic keeps its 14px/18px radii and 1px border while Neo uses its 4px/2px angular treatment. This exact kind-limited rule covers the eight current inventory findings; device visual review of this screen remains separate."
+    },
+    {
+      "id": "plan-management-theme-recipes",
+      "pattern": "lib/screens/exercise/plan_management_page.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "release_surface",
+      "status": "migrated",
+      "target": "Active and archived plan cards, status markers, and count pills",
+      "rationale": "A four-mode production-route contract renders active and archived plans, checking their AppSurfaceTokens/AppShapeTokens card recipe, ColorScheme outline and status colors, status alpha, and ColorScheme count-pill ink. It also verifies the screen keeps its Material OutlinedButton actions. This exact rule owns the five current findings and qualifies presentation ownership only; active-plan persistence and device visual review remain separate."
+    },
+    {
+      "id": "exercise-muscle-percent-material-input",
+      "pattern": "lib/screens/exercise_muscle_percent_screen.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Material-owned exercise muscle percentage field",
+      "rationale": "A four-mode production-route contract verifies the populated percentage editor renders its localized label while leaving border, fill, and padding unspecified so the shared Material input recipe owns the appearance. This exact rule covers only the field decoration; data editing persistence and device review remain separate."
+    },
+    {
+      "id": "preset-detail-plan-name-field",
+      "pattern": "lib/screens/exercise/preset_detail_screen.dart",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Preset editor plan-name field and onboarding focus border",
+      "rationale": "A four-mode production-screen contract opens a new plan in the guided naming step and verifies its InputDecoration uses the ColorScheme primary underline at the specified focus width while the name uses the established 20px bold title style. This exact rule covers only the name field; plan editing, persistence, and device review remain separate."
+    },
+    {
+      "id": "swap-exercise-secondary-equipment-ink",
+      "pattern": "lib/widgets/swap_exercise_sheet.dart",
+      "kinds": [
+        "color_transform"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Secondary equipment label contrast on the swap sheet",
+      "rationale": "A four-mode production-sheet contract loads matching exercises from a fake repository and verifies each inline equipment subtitle derives its ink from bodySmall color attenuated by AppSurfaceTokens.swapSecondaryTextOpacity. This exact rule owns only the subtitle transform; replacement behavior and device visual acceptance remain separate."
+    },
+    {
       "id": "generated-localization",
       "pattern": "lib/l10n/generated/**",
       "classification": "generated",

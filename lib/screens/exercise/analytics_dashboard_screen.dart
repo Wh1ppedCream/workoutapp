@@ -382,7 +382,7 @@ class _SummaryStatBox extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: theme.shapeTokens.dashboardRow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,16 +505,19 @@ class _SetOverviewRow extends StatelessWidget {
     final tint = _tintForBoundaryStatus(theme, _boundaryStatus(count, bounds));
 
     return Material(
-      color: Colors.transparent,
+      type: MaterialType.transparency,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: theme.shapeTokens.weeklySetRow,
         onTap: onTap,
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
             color: tint.background,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: tint.border),
+            borderRadius: theme.shapeTokens.weeklySetRow,
+            border: Border.all(
+              color: tint.border,
+              width: theme.shapeTokens.outlineWidth,
+            ),
           ),
           child: Row(
             children: [
@@ -570,7 +573,7 @@ class _MuscleLeadingIcon extends StatelessWidget {
       height: 52,
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: theme.shapeTokens.dashboardRow,
       ),
       child: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
     );
@@ -596,7 +599,7 @@ _BoundaryStatus _boundaryStatus(double count, VolumeBoundaries? bounds) {
 _StatusTint _tintForBoundaryStatus(ThemeData theme, _BoundaryStatus status) {
   final colorScheme = theme.colorScheme;
   final base = switch (status) {
-    _BoundaryStatus.within => Colors.green,
+    _BoundaryStatus.within => theme.dataVisualizationTokens.positive,
     _BoundaryStatus.over => colorScheme.error,
     _BoundaryStatus.under => colorScheme.surfaceContainerHighest,
     _BoundaryStatus.unset => colorScheme.surfaceContainerHighest,

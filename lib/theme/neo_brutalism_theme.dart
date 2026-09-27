@@ -963,6 +963,7 @@ abstract final class NeoBrutalismThemeDefinition {
       dashboardAction: _radius(4),
       dashboardUsage: _radius(4),
       dashboardRow: _radius(4),
+      weeklySetRow: _radius(4),
       dashboardFooter: _radius(8),
       historySelectedPeriod: _radius(4),
       outlineWidth: 2,
