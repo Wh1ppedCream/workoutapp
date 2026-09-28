@@ -185,7 +185,7 @@ class _UserInformationSettingsPageState
     final strings = AppLocalizations.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final dropdownInk = usesInkRecipe ? context.cs.onPrimaryContainer : null;
     final inputTextStyle = settingsInputTextStyle(context);
     final dropdownStyle =

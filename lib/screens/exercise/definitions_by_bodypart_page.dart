@@ -486,7 +486,7 @@ class _ExerciseMetadata extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color:
-                    context.surfaceDecorationTokens.panel.outlined
+                    context.usesNeoPresentation
                         ? context.semanticColors.positive
                         : Colors.green.shade600,
                 fontWeight: FontWeight.w500,
@@ -501,7 +501,7 @@ class _ExerciseMetadata extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color:
-                          context.surfaceDecorationTokens.panel.outlined
+                          context.usesNeoPresentation
                               ? context.semanticColors.positive
                               : Colors.green.shade600,
                       fontWeight: FontWeight.w500,

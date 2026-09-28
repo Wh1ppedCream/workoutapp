@@ -26,7 +26,7 @@ class DebugThemeActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final iconButton = IconButton(
       constraints: const BoxConstraints.tightFor(width: 48, height: 48),
       padding: EdgeInsets.zero,

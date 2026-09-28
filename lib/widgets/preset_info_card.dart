@@ -318,7 +318,7 @@ class _PresetInfoCardState extends State<PresetInfoCard>
                   ),
         );
 
-        if (context.surfaceDecorationTokens.card.outlined) {
+        if (context.usesNeoPresentation) {
           return TonosSurface(
             variant: TonosSurfaceVariant.panelRaised,
             margin: const EdgeInsets.only(bottom: 16),
@@ -359,7 +359,8 @@ class _PresetMetricTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final semantic = context.semanticColors;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
+    final outlined = context.surfaceDecorationTokens.card.outlined;
     final foreground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.card)
@@ -378,7 +379,7 @@ class _PresetMetricTile extends StatelessWidget {
             color: surfaces.card,
             borderRadius: shapes.metric,
             border:
-                usesInkRecipe
+                outlined
                     ? Border.all(
                       color: tonosOutlineForSurface(context, surfaces.card),
                       width: shapes.outlineWidth,

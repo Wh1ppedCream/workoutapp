@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="470" height="1019" viewBox="0 0 470 1019"><rect x="0" y="0" width="470" height="1019" rx="0" fill="#17121D"/>
+<text x="28" y="37" font-family="sans-serif" font-size="16" font-weight="750" fill="#F7F0FA" text-anchor="start" letter-spacing="0">11:32</text>
+<text x="86" y="36" font-family="sans-serif" font-size="14" font-weight="600" fill="#F7F0FA" text-anchor="start" letter-spacing="0">✉</text>
+<circle cx="112" cy="31" r="7" fill="#FFB68F"/>
+<text x="342" y="37" font-family="sans-serif" font-size="17" font-weight="650" fill="#F7F0FA" text-anchor="middle" letter-spacing="0">ᛒ</text>
+<rect x="360" y="25" width="3" height="10" rx="1" fill="#AA9CB0"/>
+<rect x="367" y="21" width="3" height="14" rx="1" fill="#AA9CB0"/>
+<rect x="374" y="18" width="3" height="17" rx="1" fill="#AA9CB0"/>
+<path d="M386 25q10-9 20 0M390 30q6-5 12 0" fill="none" opacity="1" stroke="#F7F0FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="414" y="21" width="30" height="15" rx="4" fill="none" stroke="#F7F0FA" stroke-width="1.2"/>
+<rect x="417" y="24" width="21" height="9" rx="2" fill="#41CA6B"/>
+<rect x="445" y="25" width="3" height="7" rx="1" fill="#F7F0FA"/>
+<text x="427" y="32" font-family="sans-serif" font-size="10" font-weight="800" fill="#07140B" text-anchor="middle" letter-spacing="0">80</text>
+<rect x="177" y="1002" width="116" height="5" rx="3" fill="#D2C4D8"/>
+<g transform="translate(30 72) scale(1.125)" fill="none" stroke="#F7F0FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6M20 12H9"/></g>
+<path d="M70 114 H433 Q450 114 450 131 V203 Q450 243 410 243 H38 Q20 243 20 225 V164 Q20 114 70 114 Z" fill="#D8B9FF"/>
+<path d="M72 138 H88 Q105 138 105 155 V171 Q105 206 70 206 H56 Q38 206 38 188 V172 Q38 138 72 138 Z" fill="#FFB68F"/>
+<g transform="translate(58 157) scale(1.1666666666666667)" fill="none" stroke="#4C1E00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.2-3.6 1.4 1.4 0 0 1 .8-2.5H17a4 4 0 0 0 4-4c0-4.4-4-7.9-9-7.9ZM7.5 11h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></g>
+<text x="122" y="164" font-family="sans-serif" font-size="28" font-weight="900" fill="#3B2058" text-anchor="start" letter-spacing="0">UI &amp; Appearance</text>
+<text x="123" y="190" font-family="sans-serif" font-size="12.5" font-weight="500" fill="#3B2058" text-anchor="start" letter-spacing="0">Control the way Tonos looks and</text>
+<text x="123" y="208" font-family="sans-serif" font-size="12.5" font-weight="500" fill="#3B2058" text-anchor="start" letter-spacing="0">how the bottom tabs behave.</text>
+<rect x="30" y="252" width="5" height="34" rx="3" fill="#D8B9FF"/>
+<text x="51" y="275" font-family="sans-serif" font-size="18" font-weight="850" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Display</text>
+<text x="51" y="297" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Quick visual preferences.</text>
+<path d="M58 313 H436 Q450 313 450 327 V705 Q450 741 414 741 H37 Q20 741 20 724 V351 Q20 313 58 313 Z" fill="#2A2233"/>
+<text x="88" y="345" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Theme family</text>
+<text x="88" y="367" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Choose the visual family</text>
+<text x="88" y="382" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">independently of light or dark mode.</text>
+<path d="M57 327 H70 Q82 327 82 339 V354 Q82 374 62 374 H48 Q35 374 35 361 V349 Q35 327 57 327 Z" fill="#352A40"/>
+<g transform="translate(46 338) scale(1.0416666666666667)" fill="none" stroke="#D8B9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.2-3.6 1.4 1.4 0 0 1 .8-2.5H17a4 4 0 0 0 4-4c0-4.4-4-7.9-9-7.9ZM7.5 11h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></g>
+<text x="430" y="354" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#D8B9FF" text-anchor="end" letter-spacing="0">Classic</text>
+<path d="M98 386 L424 386" fill="none" stroke="#594A63" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+<text x="88" y="417" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Dark Mode</text>
+<text x="88" y="439" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Use the darker app theme.</text>
+<path d="M57 399 H70 Q82 399 82 411 V426 Q82 446 62 446 H48 Q35 446 35 433 V421 Q35 399 57 399 Z" fill="#352A40"/>
+<g transform="translate(46 410) scale(1.0416666666666667)" fill="none" stroke="#D8B9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 15.2A8.5 8.5 0 0 1 8.8 4.5 8.7 8.7 0 1 0 19.5 15.2Z"/></g>
+<path d="M390 404 H422 Q434 404 434 416 V421 Q434 439 416 439 H384 Q372 439 372 427 V422 Q372 404 390 404 Z" fill="#43334F"/>
+<circle cx="390" cy="421" r="12" fill="#211A29"/>
+<path d="M98 449 L424 449" fill="none" stroke="#594A63" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+<text x="88" y="480" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Replay Onboarding</text>
+<text x="88" y="502" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Turn this on to open setup again.</text>
+<text x="88" y="517" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">It turns off after completion.</text>
+<path d="M57 462 H70 Q82 462 82 474 V489 Q82 509 62 509 H48 Q35 509 35 496 V484 Q35 462 57 462 Z" fill="#352A40"/>
+<g transform="translate(46 473) scale(1.0416666666666667)" fill="none" stroke="#D8B9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></g>
+<path d="M390 467 H422 Q434 467 434 479 V484 Q434 502 416 502 H384 Q372 502 372 490 V485 Q372 467 390 467 Z" fill="#43334F"/>
+<circle cx="390" cy="484" r="12" fill="#211A29"/>
+<path d="M98 520 L424 520" fill="none" stroke="#594A63" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+<text x="88" y="551" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Weight Units</text>
+<text x="88" y="573" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Show workout weights and</text>
+<text x="88" y="588" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">volume in lbs.</text>
+<path d="M57 533 H70 Q82 533 82 545 V560 Q82 580 62 580 H48 Q35 580 35 567 V555 Q35 533 57 533 Z" fill="#352A40"/>
+<g transform="translate(46 544) scale(1.0416666666666667)" fill="none" stroke="#D8B9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l1.2 12H3.8L5 8Zm3 0a4 4 0 0 1 8 0M12 12v3"/></g>
+<text x="430" y="560" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#D8B9FF" text-anchor="end" letter-spacing="0">Pounds</text>
+<path d="M98 591 L424 591" fill="none" stroke="#594A63" stroke-width="0.7" stroke-linecap="round" opacity="0.35"/>
+<text x="88" y="622" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Language</text>
+<text x="88" y="644" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Choose the language</text>
+<text x="88" y="659" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Tonos uses.</text>
+<path d="M57 604 H70 Q82 604 82 616 V631 Q82 651 62 651 H48 Q35 651 35 638 V626 Q35 604 57 604 Z" fill="#352A40"/>
+<g transform="translate(46 615) scale(1.0416666666666667)" fill="none" stroke="#D8B9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18ZM3 12h18M12 3c2.3 2.3 3.4 5.3 3.4 9s-1.1 6.7-3.4 9c-2.3-2.3-3.4-5.3-3.4-9S9.7 5.3 12 3Z"/></g>
+<text x="430" y="631" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#D8B9FF" text-anchor="end" letter-spacing="0">System default</text>
+<rect x="30" y="762" width="5" height="34" rx="3" fill="#2486D1"/>
+<text x="51" y="785" font-family="sans-serif" font-size="18" font-weight="850" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Navigation</text>
+<text x="51" y="807" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Choose which bottom tabs show up and in what order.</text>
+<path d="M50 822 H436 Q450 822 450 836 V878 Q450 909 419 909 H35 Q20 909 20 894 V852 Q20 822 50 822 Z" fill="#183653"/>
+<path d="M58 841 H71 Q83 841 83 853 V868 Q83 888 63 888 H49 Q36 888 36 875 V863 Q36 841 58 841 Z" fill="#214A6B"/>
+<g transform="translate(47 852) scale(1.0416666666666667)" fill="none" stroke="#71C3FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 4l9 7M5.5 10v10h13V10M9 20v-6h6v6"/></g>
+<text x="98" y="857" font-family="sans-serif" font-size="16" font-weight="800" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Edit Bottom Tabs</text>
+<text x="98" y="879" font-family="sans-serif" font-size="12" font-weight="450" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Reorder your app destinations.</text>
+<path d="M420 851l7 7-7 7" fill="none" opacity="1" stroke="#AA9CB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="177" y="1002" width="116" height="5" rx="3" fill="#D2C4D8"/>
+<rect x="0" y="0" width="470" height="1019" rx="0" fill="#08060B" opacity="0.5"/>
+<path d="M89 363 H416 Q433 363 433 380 V615 Q433 663 385 663 H58 Q37 663 37 642 V415 Q37 363 89 363 Z" fill="#211A29"/>
+<text x="69" y="415" font-family="sans-serif" font-size="29" font-weight="850" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Weight Units</text>
+<path d="M91 461 H401 Q415 461 415 475 V512 Q415 544 383 544 H71 Q55 544 55 528 V497 Q55 461 91 461 Z" fill="#593778"/>
+<circle cx="86" cy="502" r="12" fill="none" stroke="#D8B9FF" stroke-width="2"/>
+<circle cx="86" cy="502" r="6" fill="#D8B9FF"/>
+<text x="118" y="496" font-family="sans-serif" font-size="18" font-weight="800" fill="#F1DFFF" text-anchor="start" letter-spacing="0">Pounds</text>
+<text x="118" y="521" font-family="sans-serif" font-size="12.5" font-weight="600" fill="#F1DFFF" text-anchor="start" letter-spacing="0">lbs</text>
+<path d="M83 557 H401 Q412 557 412 568 V608 Q412 632 388 632 H71 Q58 632 58 619 V582 Q58 557 83 557 Z" fill="#2A2233"/>
+<circle cx="87" cy="594" r="11" fill="none" stroke="#AA9CB0" stroke-width="1.8"/>
+<text x="119" y="590" font-family="sans-serif" font-size="17" font-weight="700" fill="#F7F0FA" text-anchor="start" letter-spacing="0">Kilograms</text>
+<text x="119" y="612" font-family="sans-serif" font-size="12" font-weight="500" fill="#D2C4D8" text-anchor="start" letter-spacing="0">kg</text>
+</svg>

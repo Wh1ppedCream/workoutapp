@@ -867,8 +867,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final tagColor =
-        context.surfaceDecorationTokens.panel.outlined &&
-                theme.brightness == Brightness.light
+        context.usesNeoPresentation && theme.brightness == Brightness.light
             ? _vividLightNeoTagColor(color)
             : color;
     final tagSurface = tagColor.withValues(
@@ -1140,7 +1139,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final selectedSurface =
         neo ? surfaces.settingsHero : theme.colorScheme.primary;
     final selectedForeground =
@@ -1602,7 +1601,7 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final recordForeground =
         neo
             ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
@@ -1749,7 +1748,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final surfaces = theme.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final recordForeground =
         neo
             ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
@@ -2122,7 +2121,7 @@ class _MetricsStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
     final cardForeground =
@@ -2254,7 +2253,7 @@ class _ExerciseRecordPoint {
 
 Color _exerciseRecordActualSeriesColor(BuildContext context) {
   final theme = Theme.of(context);
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return theme.colorScheme.primary;
   }
   return tonosPrimarySeriesForSurface(
@@ -2287,7 +2286,7 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final chartForeground =
         neo
             ? tonosForegroundForSurface(context, surfaces.exerciseDetailChart)

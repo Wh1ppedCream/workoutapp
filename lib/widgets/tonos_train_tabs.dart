@@ -28,10 +28,18 @@ class TonosTrainTabs extends StatelessWidget {
   /// The extra AppBar room is supplied separately so the Neo hard shadow is
   /// not clipped by the toolbar's title bounds.
   static double preferredHeight(BuildContext context) {
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
-    if (!usesInkRecipe) return 44;
+    if (context.usesClassicPresentation) return 44;
 
     final theme = Theme.of(context);
+    if (!theme.usesNeoPresentation) {
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
+      final fontSize = theme.textTheme.labelLarge?.fontSize ?? 14;
+      final lineHeight = theme.textTheme.labelLarge?.height ?? 1.43;
+      final lineCount = textScale > 1.15 ? 2 : 1;
+      final contentHeight = fontSize * lineHeight * textScale * lineCount + 16;
+      return contentHeight.clamp(48.0, 88.0).toDouble();
+    }
+
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final fontSize = theme.textTheme.bodyMedium?.fontSize ?? 14;
     final lineHeight = theme.textTheme.bodyMedium?.height ?? 1.4;
@@ -41,17 +49,21 @@ class TonosTrainTabs extends StatelessWidget {
   }
 
   static double toolbarHeight(BuildContext context) {
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
-    return usesInkRecipe ? preferredHeight(context) + 8 : kToolbarHeight;
+    return context.usesNeoPresentation
+        ? preferredHeight(context) + 8
+        : kToolbarHeight;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!context.usesNeoPresentation && !context.usesClassicPresentation) {
+      return _buildMaterialFallback(context);
+    }
+
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final effects = context.effectTokens;
-    final decorations = context.surfaceDecorationTokens;
-    final usesInkRecipe = decorations.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final tabRadius = usesInkRecipe ? shapes.trainTab : shapes.pill;
 
     final shadow = BoxShadow(
@@ -105,6 +117,47 @@ class TonosTrainTabs extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildMaterialFallback(BuildContext context) {
+    final selected = selectedIndex.clamp(0, 1).toInt();
+    return Container(
+      key: const ValueKey('tonos-train-tabs-frame'),
+      height: preferredHeight(context),
+      constraints: const BoxConstraints(maxWidth: 320),
+      alignment: Alignment.center,
+      child: SegmentedButton<int>(
+        segments: [
+          ButtonSegment<int>(
+            value: 0,
+            label: KeyedSubtree(
+              key: overviewKey,
+              child: Text(
+                overviewLabel,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          ButtonSegment<int>(
+            value: 1,
+            label: KeyedSubtree(
+              key: plansKey,
+              child: Text(
+                plansLabel,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+        selected: {selected},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) => onChanged(selection.single),
+      ),
+    );
+  }
 }
 
 class _TonosTrainTabButton extends StatelessWidget {
@@ -123,7 +176,7 @@ class _TonosTrainTabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = context.cs;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final textTheme = Theme.of(context).textTheme;
     final buttonRadius = usesInkRecipe ? shapes.trainTabButton : shapes.pill;
     final buttonShape = RoundedRectangleBorder(

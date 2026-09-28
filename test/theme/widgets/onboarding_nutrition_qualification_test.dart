@@ -748,7 +748,7 @@ void _expectSwitchCardSurface(
   Finder titleFinder,
 ) {
   final context = tester.element(titleFinder);
-  final neo = context.surfaceDecorationTokens.panel.outlined;
+  final neo = context.usesNeoPresentation;
   final surface =
       neo ? context.surfaceTokens.settingsInput : theme.colorScheme.surface;
   final cardFinder =
@@ -779,7 +779,7 @@ Color _switchForeground(
   Finder titleFinder,
 ) {
   final context = tester.element(titleFinder);
-  return context.surfaceDecorationTokens.panel.outlined
+  return context.usesNeoPresentation
       ? tonosForegroundForSurface(context, context.surfaceTokens.settingsInput)
       : theme.colorScheme.onSurface;
 }

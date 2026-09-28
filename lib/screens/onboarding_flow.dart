@@ -919,7 +919,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final strings = _strings;
     final language = context.watch<LocalePreferenceProvider>().preference;
     final theme = Theme.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final cardForeground =
         neo
@@ -1910,7 +1910,7 @@ class _OnboardingHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final progressSurface =
         neo ? surfaces.settingsSection : scheme.surfaceContainerHighest;
@@ -2051,7 +2051,7 @@ class _OnboardingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface =
@@ -2145,7 +2145,7 @@ class _TextInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -2185,7 +2185,7 @@ class _ActionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final decoration =
         neo
             ? settingsFieldDecoration(
@@ -2227,7 +2227,7 @@ class _IntentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final selected = enabled && value;
@@ -2378,7 +2378,7 @@ class _SwitchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface = neo ? surfaces.settingsInput : scheme.surface;
@@ -2436,7 +2436,7 @@ class _ChoiceGroup<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
 
@@ -2588,7 +2588,7 @@ class _MetricPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final cardSurface = neo ? surfaces.dialogChoice : scheme.surface;
     final cardForeground =
@@ -2653,7 +2653,7 @@ class _SliderPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final panelSurface = neo ? surfaces.settingsSection : scheme.surface;
@@ -2740,7 +2740,7 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final statSurface = neo ? surfaces.dialogChoice : scheme.surface;
@@ -2804,7 +2804,7 @@ class _FeatureRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final featureSurface = neo ? surfaces.settingsSection : scheme.surface;
     final featureForeground =
@@ -2859,7 +2859,7 @@ class _SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final summarySurface = neo ? surfaces.settingsSection : scheme.surface;
     final summarySecondary =
@@ -2921,7 +2921,7 @@ class _OnboardingSummaryCallout extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final calloutSurface = neo ? surfaces.dialogChoice : scheme.surface;
     final calloutForeground =
@@ -2999,7 +2999,7 @@ class _OnboardingSummarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final sectionSurface = neo ? surfaces.settingsInput : scheme.surface;
     final sectionForeground =
@@ -3068,7 +3068,7 @@ class _PageDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final activeColor = neo ? surfaces.settingsHero : scheme.primary;
     final inactiveColor =
@@ -3293,7 +3293,7 @@ class _OnboardingPlanOverviewListState
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final surface =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? context.surfaceTokens.settingsSection
             : scheme.surface;
     final strings = AppLocalizations.of(context);
@@ -3448,7 +3448,7 @@ class _GymSpaceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = template.highlighted ? scheme.tertiary : scheme.primary;
@@ -3616,7 +3616,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = scheme.primary;
@@ -3730,7 +3730,7 @@ class _OnboardingInfoCallout extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final calloutSurface = scheme.primary.withValues(alpha: 0.12);
     final parentSurface =
         neo ? context.surfaceTokens.settingsSection : scheme.surface;

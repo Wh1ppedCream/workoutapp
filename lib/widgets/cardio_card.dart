@@ -112,7 +112,7 @@ class _CardioCardState extends State<CardioCard> {
   Widget build(BuildContext context) {
     final readOnly = widget.readOnlyMode;
     final timerColor =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? ((_cardioTimer?.isActive ?? false)
                 ? context.semanticColors.negative
                 : context.semanticColors.positive)

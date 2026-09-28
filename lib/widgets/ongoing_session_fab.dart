@@ -162,11 +162,7 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                     final textTheme = theme.textTheme;
                     final shapes = dialogThemeContext.shapeTokens;
                     final surfaces = dialogThemeContext.surfaceTokens;
-                    final neo =
-                        dialogThemeContext
-                            .surfaceDecorationTokens
-                            .panel
-                            .outlined;
+                    final neo = dialogThemeContext.usesNeoPresentation;
                     final choiceForeground =
                         neo
                             ? tonosForegroundForSurface(

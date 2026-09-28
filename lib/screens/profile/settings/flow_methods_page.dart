@@ -475,7 +475,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final shapes = context.shapeTokens;
     final color = _methodTypeColor(m.type, context);
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final tileSurface = context.surfaceTokens.dialogChoice;
     final tileForeground =
         neo ? tonosForegroundForSurface(context, tileSurface) : null;
@@ -865,7 +865,7 @@ class _RuleScopeCard extends StatelessWidget {
     final shapes = context.shapeTokens;
     final padding = compact ? 12.0 : 14.0;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final cardSurface =
         neo
             ? surfaces.settingsSection
@@ -999,7 +999,7 @@ class _NestedHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final foreground =
         neo
             ? tonosForegroundForSurface(
@@ -1034,7 +1034,7 @@ class _EmptyRuleState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surface = context.surfaceTokens.settingsSection;
     final foreground =
         neo
@@ -1077,7 +1077,7 @@ class _AddRuleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final shapes = context.shapeTokens;
     final actionForeground =
         neo ? tonosForegroundForSurface(context, color) : color;
@@ -1128,7 +1128,7 @@ class _EmptyProfilesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surface = neo ? context.surfaceTokens.settingsSection : null;
     final secondary =
         neo && surface != null

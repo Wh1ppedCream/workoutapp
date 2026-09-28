@@ -66,8 +66,7 @@ class _RecordBadgeVisual extends StatelessWidget {
     final shapes = context.shapeTokens;
     final fill = color.withValues(alpha: fillOpacity);
     final foreground =
-        context.surfaceDecorationTokens.panel.outlined &&
-                foregroundSurface != null
+        context.usesNeoPresentation && foregroundSurface != null
             ? tonosForegroundForSurface(
               context,
               fill,

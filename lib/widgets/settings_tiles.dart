@@ -34,7 +34,7 @@ class SettingsValueText extends StatelessWidget {
     final theme = Theme.of(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final foreground =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? theme.colorScheme.onSurface
             : theme.colorScheme.primary;
     return Text(
@@ -68,7 +68,7 @@ class SettingsStatusBadge extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final badgeForeground =
         foregroundColor ??
         (usesInkRecipe
@@ -137,7 +137,7 @@ class SettingsAccentPill extends StatelessWidget {
         label,
         style: theme.textTheme.labelSmall?.copyWith(
           color:
-              context.surfaceDecorationTokens.panel.outlined
+              context.usesNeoPresentation
                   ? tonosForegroundForSurface(
                     context,
                     color.withValues(alpha: backgroundAlpha),
@@ -164,7 +164,7 @@ class SettingsLegendChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final chipSurface = color.withValues(alpha: neo ? 0.18 : 0.12);
     final foreground =
         neo ? tonosForegroundForSurface(context, chipSurface) : color;
@@ -215,7 +215,7 @@ class SettingsCountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final badgeSurface = color.withValues(alpha: neo ? 0.22 : 0.16);
     final foreground =
         neo ? tonosForegroundForSurface(context, badgeSurface) : color;
@@ -283,7 +283,7 @@ InputDecoration settingsInputDecoration(
 }) {
   final shapes = context.shapeTokens;
   final surfaces = context.surfaceTokens;
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -351,7 +351,7 @@ InputDecoration settingsInputDecoration(
 /// choose ink from the field surface so dark mode cannot leak canvas text onto
 /// a bright field.
 TextStyle? settingsInputTextStyle(BuildContext context, {bool enabled = true}) {
-  if (!context.surfaceDecorationTokens.panel.outlined) return null;
+  if (!context.usesNeoPresentation) return null;
   return Theme.of(context).textTheme.bodyLarge?.copyWith(
     color: settingsInputForeground(context, enabled: enabled),
   );
@@ -359,7 +359,7 @@ TextStyle? settingsInputTextStyle(BuildContext context, {bool enabled = true}) {
 
 /// Resolves enabled or disabled foreground ink for a colored settings field.
 Color? settingsInputForeground(BuildContext context, {bool enabled = true}) {
-  if (!context.surfaceDecorationTokens.panel.outlined) return null;
+  if (!context.usesNeoPresentation) return null;
   final fieldInk = _settingsInputInk(context);
   return enabled ? fieldInk : fieldInk.withValues(alpha: 0.38);
 }
@@ -367,13 +367,13 @@ Color? settingsInputForeground(BuildContext context, {bool enabled = true}) {
 /// Resolves a neutral popup surface for selectors whose trigger is a bright
 /// settings field. The popup keeps its independent surface/foreground pairing.
 Color? settingsDropdownMenuColor(BuildContext context) {
-  if (!context.surfaceDecorationTokens.panel.outlined) return null;
+  if (!context.usesNeoPresentation) return null;
   return Theme.of(context).colorScheme.surfaceContainerHighest;
 }
 
 /// Gives Neo dropdown entries the foreground of their neutral popup surface.
 Widget settingsDropdownMenuLabel(BuildContext context, Widget child) {
-  if (!context.surfaceDecorationTokens.panel.outlined) return child;
+  if (!context.usesNeoPresentation) return child;
   final theme = Theme.of(context);
   final foreground = theme.colorScheme.onSurface;
   return DefaultTextStyle.merge(
@@ -414,7 +414,7 @@ InputDecoration settingsFieldDecoration(
   bool isDense = false,
 }) {
   final shapes = context.shapeTokens;
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
@@ -427,7 +427,7 @@ InputDecoration settingsFieldDecoration(
   final surfaces = context.surfaceTokens;
   final fieldInk = _settingsInputInk(context);
   final usesDarkNeoValidationInk =
-      context.surfaceDecorationTokens.panel.outlined &&
+      context.usesNeoPresentation &&
       Theme.of(context).brightness == Brightness.dark;
   final errorColor =
       usesDarkNeoValidationInk
@@ -804,7 +804,7 @@ class SettingsSection extends StatelessWidget {
       context,
       resolvedSurface,
     );
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
 
     final sectionContents = Column(children: children);
     final sectionChild =
@@ -1017,7 +1017,7 @@ class SettingsExpansionSection extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final controlForeground = tonosForegroundForSurface(
       context,
       surfaces.settingsSection,
@@ -1121,7 +1121,7 @@ TextStyle? settingsRankingNameTextStyle(BuildContext context) {
   return theme.textTheme.titleSmall?.copyWith(
     fontWeight: FontWeight.w900,
     color:
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? tonosForegroundForSurface(
               context,
               context.surfaceTokens.settingsSection,
@@ -1156,7 +1156,7 @@ class SettingsRankingTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final rowForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.settingsSection)
@@ -1275,7 +1275,7 @@ class SettingsActionTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final presentation = context.settingsPresentationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final controlForeground = scheme.onSurface;
     final resolvedIconColor = iconColor ?? scheme.primary;
@@ -1455,7 +1455,7 @@ class SettingsInfoCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
     final resolvedIconColor = iconColor ?? scheme.primary;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final foreground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.settingsSection)

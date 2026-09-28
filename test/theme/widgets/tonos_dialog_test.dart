@@ -328,6 +328,105 @@ void main() {
     expect(dialogTheme.popupMenuTheme.color, theme.popupMenuTheme.color);
   });
 
+  testWidgets(
+    'generic Material with Neo-looking tokens gets no dialog recipe',
+    (tester) async {
+      final neo = AppThemeFactory.dark(AppThemeFamily.neoBrutalism);
+      final genericTheme = _genericThemeWithNeoTokens(neo);
+      late ThemeData dialogTheme;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: genericTheme,
+          home: Scaffold(
+            body: TonosDialogFrame(
+              styleFormControls: true,
+              styleDarkNeoPickerSurfaces: true,
+              child: Builder(
+                builder: (context) {
+                  dialogTheme = Theme.of(context);
+                  return AlertDialog(
+                    title: const Text('Generic Material dialog'),
+                    content: TonosDialogDropdownButton<String>(
+                      value: 'weight',
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'weight',
+                          child: Text('Weight'),
+                        ),
+                        DropdownMenuItem(value: 'reps', child: Text('Reps')),
+                      ],
+                      onChanged: (_) {},
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(dialogTheme.colorScheme, genericTheme.colorScheme);
+      expect(
+        dialogTheme.inputDecorationTheme,
+        genericTheme.inputDecorationTheme,
+      );
+      expect(dialogTheme.canvasColor, genericTheme.canvasColor);
+      expect(dialogTheme.popupMenuTheme, genericTheme.popupMenuTheme);
+      expect(dialogTheme.dialogTheme, genericTheme.dialogTheme);
+      expect(
+        find.descendant(
+          of: find.byType(TonosDialogFrame),
+          matching: find.byType(Theme),
+        ),
+        findsNothing,
+      );
+      final dropdown = tester.widget<DropdownButton<String>>(
+        find.byType(DropdownButton<String>),
+      );
+      expect(dropdown.style?.color, isNull);
+      expect(dropdown.dropdownColor, isNull);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Material && widget.shape is TonosDialogShadowBorder,
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('generic Material with Neo-looking tokens gets no choice ink', (
+    tester,
+  ) async {
+    final neo = AppThemeFactory.dark(AppThemeFamily.neoBrutalism);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: _genericThemeWithNeoTokens(neo),
+        home: Scaffold(
+          body: TonosChoiceDialog<String>(
+            title: 'Theme',
+            values: ['Classic', 'Neo'],
+            selected: 'Neo',
+            label: _choiceLabel,
+            subtitle: _choiceLabel,
+          ),
+        ),
+      ),
+    );
+
+    final choices = tester.widgetList<RadioListTile<String>>(
+      find.byType(RadioListTile<String>),
+    );
+    for (final choice in choices) {
+      expect(choice.tileColor, isNull);
+      expect(choice.fillColor, isNull);
+      expect(choice.shape, isNull);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
       testWidgets(
@@ -457,3 +556,21 @@ void main() {
     }
   });
 }
+
+ThemeData _genericThemeWithNeoTokens(ThemeData neo) => ThemeData(
+  brightness: neo.brightness,
+  colorScheme: neo.colorScheme,
+  dialogTheme: neo.dialogTheme,
+  inputDecorationTheme: neo.inputDecorationTheme,
+  canvasColor: neo.canvasColor,
+  popupMenuTheme: neo.popupMenuTheme,
+  extensions: <ThemeExtension<dynamic>>[
+    neo.shapeTokens,
+    neo.surfaceTokens,
+    neo.surfaceDecorationTokens,
+    neo.effectTokens,
+    neo.semanticColors,
+  ],
+);
+
+String _choiceLabel(String value) => value;

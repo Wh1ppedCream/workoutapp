@@ -1055,7 +1055,7 @@ class _SummaryMetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final valueForeground =
         neo
             ? tonosForegroundForSurface(context, surfaces.sessionSummary)

@@ -13,7 +13,7 @@ Widget tonosWithPrimaryActionDepth(
   required bool enabled,
   BorderRadiusGeometry? borderRadius,
 }) {
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return child;
   }
 

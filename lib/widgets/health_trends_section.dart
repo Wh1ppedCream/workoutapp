@@ -29,7 +29,7 @@ Widget _withHealthCardForeground(BuildContext context, Widget child) {
 }
 
 Color _healthTrendCardSurface(BuildContext context) {
-  if (context.surfaceDecorationTokens.panel.outlined) {
+  if (context.usesNeoPresentation) {
     return context.surfaceTokens.catalogSelection;
   }
   return context.progressColors.healthCard;
@@ -207,7 +207,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     super.build(context);
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
 
     final header = Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -324,7 +324,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         }
 
         final shadowBottom =
-            context.surfaceDecorationTokens.panel.outlined
+            context.usesNeoPresentation
                 ? math.max(0.0, context.effectTokens.cardShadowOffset.dy)
                 : 0.0;
         return SizedBox(
@@ -690,7 +690,7 @@ class _TrendTile extends StatelessWidget {
     final latest = trend.latest;
     final delta = trend.delta;
     final deltaColor = _deltaColor(context, delta);
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final cardSurface = _healthTrendCardSurface(context);
     final cardForeground =
         usesInkRecipe ? tonosForegroundForSurface(context, cardSurface) : null;
@@ -834,7 +834,7 @@ class _AddTrendTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final dataVisualization = context.dataVisualizationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final fill = usesInkRecipe ? context.cs.primary : Colors.transparent;
     final foreground =
         usesInkRecipe
@@ -1110,7 +1110,7 @@ class _MeasurementChartCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
           decoration: BoxDecoration(
             color:
-                context.surfaceDecorationTokens.panel.outlined
+                context.usesNeoPresentation
                     ? context.surfaceTokens.card
                     : context.progressColors.healthCard,
             borderRadius: shapes.healthTrendCard,
@@ -1310,7 +1310,7 @@ class _HealthTrendMessageCard extends StatelessWidget {
 
     final shapes = context.shapeTokens;
     final foreground =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? tonosForegroundForSurface(
               context,
               _healthTrendCardSurface(context),
@@ -1347,7 +1347,7 @@ class _HealthTrendMessageCard extends StatelessWidget {
                       message,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
-                            context.surfaceDecorationTokens.panel.outlined
+                            context.usesNeoPresentation
                                 ? tonosSecondaryForegroundForSurface(
                                   context,
                                   _healthTrendCardSurface(context),

@@ -131,6 +131,66 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('identity-less Material theme uses its segmented control', (
+    tester,
+  ) async {
+    final semanticsHandle = tester.ensureSemantics();
+    try {
+      final theme = ThemeData(useMaterial3: true);
+      var selectedIndex = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: StatefulBuilder(
+            builder:
+                (context, setState) => Scaffold(
+                  body: TonosTrainTabs(
+                    overviewLabel: 'Overview',
+                    plansLabel: 'Plans',
+                    overviewKey: const ValueKey('overview-tab'),
+                    plansKey: const ValueKey('plans-tab'),
+                    selectedIndex: selectedIndex,
+                    onChanged:
+                        (index) => setState(() {
+                          selectedIndex = index;
+                        }),
+                  ),
+                ),
+          ),
+        ),
+      );
+
+      final context = tester.element(find.byType(TonosTrainTabs));
+      expect(context.appThemeFamilyIdentity, isNull);
+      expect(context.usesClassicPresentation, isFalse);
+      expect(context.usesNeoPresentation, isFalse);
+      expect(TonosTrainTabs.preferredHeight(context), 48);
+      expect(TonosTrainTabs.toolbarHeight(context), kToolbarHeight);
+      expect(find.byType(SegmentedButton<int>), findsOneWidget);
+      expect(find.byKey(const ValueKey('overview-tab')), findsOneWidget);
+      expect(find.byKey(const ValueKey('plans-tab')), findsOneWidget);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel(RegExp(r'^Overview')))
+            .hasFlag(SemanticsFlag.isChecked),
+        isTrue,
+      );
+
+      await tester.tap(find.text('Plans'));
+      await tester.pump();
+      expect(selectedIndex, 1);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel(RegExp(r'^Plans')))
+            .hasFlag(SemanticsFlag.isChecked),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    } finally {
+      semanticsHandle.dispose();
+    }
+  });
+
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
       testWidgets(
@@ -158,7 +218,10 @@ void main() {
           final shapes = context.shapeTokens;
           final surfaces = context.surfaceTokens;
           final effects = context.effectTokens;
-          final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+          final usesNeoRecipe = context.usesNeoPresentation;
+          final usesClassicRecipe = context.usesClassicPresentation;
+          expect(usesNeoRecipe || usesClassicRecipe, isTrue);
+          final usesInkRecipe = usesNeoRecipe;
           final expectedHeight = usesInkRecipe ? 48.0 : 44.0;
           expect(TonosTrainTabs.preferredHeight(context), expectedHeight);
           expect(TonosTrainTabs.toolbarHeight(context), 56);

@@ -51,7 +51,7 @@ class PresetBar extends StatelessWidget {
             : strings.planDefaultName(index + 1);
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
-    final usesInkRecipe = context.surfaceDecorationTokens.compactCard.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final trailingColor =
         usesInkRecipe ? context.cs.onPrimaryContainer : accent;
 

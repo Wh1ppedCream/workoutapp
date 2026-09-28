@@ -17,7 +17,40 @@ import 'tokens/app_media_tokens.dart';
 import 'tokens/app_progress_colors.dart';
 import 'tokens/app_tutorial_tokens.dart';
 
+enum AppThemeFamilyIdentity { classic, neoBrutalism }
+
+@immutable
+class AppThemeIdentity extends ThemeExtension<AppThemeIdentity> {
+  const AppThemeIdentity({required this.family});
+
+  final AppThemeFamilyIdentity family;
+
+  @override
+  AppThemeIdentity copyWith({AppThemeFamilyIdentity? family}) {
+    return AppThemeIdentity(family: family ?? this.family);
+  }
+
+  @override
+  AppThemeIdentity lerp(
+    covariant ThemeExtension<AppThemeIdentity>? other,
+    double t,
+  ) {
+    if (other is! AppThemeIdentity || t < 0.5) return this;
+    return other;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is AppThemeIdentity && other.family == family;
+
+  @override
+  int get hashCode => family.hashCode;
+}
+
 extension AppThemeDataX on ThemeData {
+  AppThemeFamilyIdentity? get appThemeFamilyIdentity =>
+      extension<AppThemeIdentity>()?.family;
+
   AppTutorialTokens get tutorialTokens =>
       extension<AppTutorialTokens>() ?? AppTutorialTokens.classic;
   AppProgressColors get progressColors =>
@@ -39,12 +72,10 @@ extension AppThemeDataX on ThemeData {
       extension<AppSurfaceDecorationTokens>() ??
       AppSurfaceDecorationTokens.classic;
 
-  /// Only registered Classic themes opt into baseline presentation branches.
-  /// Generic Material themes use the adaptive component defaults instead.
-  bool get usesClassicPresentation {
-    final decorations = extension<AppSurfaceDecorationTokens>();
-    return decorations != null && !decorations.panel.outlined;
-  }
+  bool get usesClassicPresentation =>
+      appThemeFamilyIdentity == AppThemeFamilyIdentity.classic;
+  bool get usesNeoPresentation =>
+      appThemeFamilyIdentity == AppThemeFamilyIdentity.neoBrutalism;
 
   AppSettingsPresentationTokens get settingsPresentationTokens =>
       extension<AppSettingsPresentationTokens>() ??
@@ -83,7 +114,10 @@ extension AppThemeX on BuildContext {
   AppSurfaceTokens get surfaceTokens => Theme.of(this).surfaceTokens;
   AppSurfaceDecorationTokens get surfaceDecorationTokens =>
       Theme.of(this).surfaceDecorationTokens;
+  AppThemeFamilyIdentity? get appThemeFamilyIdentity =>
+      Theme.of(this).appThemeFamilyIdentity;
   bool get usesClassicPresentation => Theme.of(this).usesClassicPresentation;
+  bool get usesNeoPresentation => Theme.of(this).usesNeoPresentation;
   AppSettingsPresentationTokens get settingsPresentationTokens =>
       Theme.of(this).settingsPresentationTokens;
   AppMotionTokens get motionTokens => Theme.of(this).motionTokens;
@@ -120,7 +154,7 @@ Color tonosForegroundForSurface(
   Color? parentSurface,
 }) {
   final theme = Theme.of(context);
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return theme.colorScheme.onSurface;
   }
 
@@ -150,7 +184,7 @@ Color tonosSecondaryForegroundForSurface(
   Color? parentSurface,
 }) {
   final theme = Theme.of(context);
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return theme.colorScheme.onSurfaceVariant;
   }
 
@@ -186,7 +220,7 @@ Color tonosOutlineForSurface(
 }) {
   final surfaces = context.surfaceTokens;
   if (neutral == true) return surfaces.neutralOutline;
-  if (!context.surfaceDecorationTokens.panel.outlined) {
+  if (!context.usesNeoPresentation) {
     return surfaces.subtleOutline;
   }
 
@@ -199,7 +233,7 @@ Color tonosOutlineForSurface(
 /// contain the diagram. Bright Neo panels need a darker inactive silhouette
 /// than the charcoal canvas, while the intensity ordering remains unchanged.
 Color tonosHeatmapLowForSurface(BuildContext context, Color surface) {
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       _isKnownNeutralSurface(context, surface)) {
     return context.dataVisualizationTokens.heatmapLow;
   }
@@ -220,7 +254,7 @@ Color tonosHeatmapLowForSurface(BuildContext context, Color surface) {
 /// structural chart colors so lines and points remain visible in both modes.
 Color tonosPrimarySeriesForSurface(BuildContext context, Color surface) {
   final data = context.dataVisualizationTokens;
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       !_isKnownBrightSurface(context, surface)) {
     return data.primarySeries;
   }
@@ -234,7 +268,7 @@ Color tonosPrimarySeriesForSurface(BuildContext context, Color surface) {
 /// Resolves the secondary chart stroke for its actual painted surface.
 Color tonosSecondarySeriesForSurface(BuildContext context, Color surface) {
   final data = context.dataVisualizationTokens;
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       !_isKnownBrightSurface(context, surface)) {
     return data.secondarySeries;
   }
@@ -269,7 +303,7 @@ Color tonosSettingsValidationErrorForSurface(
   BuildContext context,
   Color surface,
 ) {
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       Theme.of(context).brightness != Brightness.dark) {
     return tonosErrorForSurface(context, surface);
   }
@@ -333,7 +367,7 @@ Color tonosWorkoutDecreaseForSurface(BuildContext context, Color surface) {
 /// Resolves a neutral workout trend against its bright Neo stat-tile surface.
 Color tonosWorkoutNeutralForSurface(BuildContext context, Color surface) {
   final fallback = context.progressColors.neutral;
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       !_isKnownBrightSurface(context, surface)) {
     return fallback;
   }
@@ -345,7 +379,7 @@ Color _tonosPositiveForSurface(
   Color surface, {
   required Color fallback,
 }) {
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       !_isKnownBrightSurface(context, surface)) {
     return fallback;
   }
@@ -367,7 +401,7 @@ Color _tonosNegativeForSurface(
   required Color fallback,
   required List<Color> candidates,
 }) {
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       !_isKnownBrightSurface(context, surface)) {
     return fallback;
   }
@@ -382,7 +416,7 @@ Color _tonosNegativeForSurface(
 /// Resolves the high-intensity anatomy color for its actual painted surface.
 Color tonosHeatmapHighForSurface(BuildContext context, Color surface) {
   final data = context.dataVisualizationTokens;
-  if (!context.surfaceDecorationTokens.panel.outlined ||
+  if (!context.usesNeoPresentation ||
       _isKnownNeutralSurface(context, surface) ||
       !_isKnownBrightSurface(context, surface)) {
     return data.heatmapHigh;

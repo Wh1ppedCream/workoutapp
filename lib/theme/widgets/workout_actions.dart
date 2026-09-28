@@ -107,7 +107,7 @@ class WorkoutEquipmentFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final filterSurface = surfaces.planFilter;
     final filterForeground =
         usesInkRecipe

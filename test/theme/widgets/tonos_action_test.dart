@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/theme/tokens/app_semantic_colors.dart';
 import 'package:env_test/theme/widgets/tonos_action.dart';
+import 'package:env_test/theme/widgets/tonos_action_depth.dart';
 
 const _testSemanticColors = AppSemanticColors(
   positive: Color(0xFF008000),
@@ -161,6 +166,73 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets(
+    'Neo action depth uses explicit identity and configured effects',
+    (tester) async {
+      final neo = AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+      const shadowColor = Color(0xCC123456);
+      const shadowOffset = Offset(7, 5);
+      final effects = neo.effectTokens.copyWith(
+        cardShadow: shadowColor,
+        primaryActionShadowOffset: shadowOffset,
+      );
+      final theme = neo.copyWith(
+        extensions: [
+          ...neo.extensions.values.where(
+            (extension) => extension is! AppEffectTokens,
+          ),
+          effects,
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const Scaffold(
+            body: TonosAction(label: 'Save', onPressed: _noop),
+          ),
+        ),
+      );
+
+      final localTheme = Theme.of(tester.element(find.byType(FilledButton)));
+      final shape = localTheme.filledButtonTheme.style!.shape!.resolve(
+        const <WidgetState>{},
+      );
+      expect(shape, isA<TonosActionShadowBorder>());
+      final shadow = shape! as TonosActionShadowBorder;
+      expect(shadow.color, shadowColor);
+      expect(shadow.offset, shadowOffset);
+    },
+  );
+
+  testWidgets('generic Material with Neo-looking tokens gets no action depth', (
+    tester,
+  ) async {
+    final neo = AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+    final genericTheme = ThemeData(
+      colorScheme: neo.colorScheme,
+      extensions: <ThemeExtension<dynamic>>[
+        neo.shapeTokens,
+        neo.surfaceTokens,
+        neo.effectTokens,
+        neo.surfaceDecorationTokens,
+        neo.semanticColors,
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: genericTheme,
+        home: const Scaffold(
+          body: TonosAction(label: 'Save', onPressed: _noop),
+        ),
+      ),
+    );
+
+    final localTheme = Theme.of(tester.element(find.byType(FilledButton)));
+    expect(localTheme.filledButtonTheme.style?.shape, isNull);
   });
 }
 

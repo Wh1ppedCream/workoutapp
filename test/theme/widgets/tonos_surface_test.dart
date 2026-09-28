@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_decoration_tokens.dart';
@@ -174,14 +176,15 @@ void main() {
   testWidgets('scopes Neo inherited foreground roles to its surface', (
     tester,
   ) async {
+    final theme = AppThemeFactory.dark(AppThemeFamily.neoBrutalism);
     await tester.pumpWidget(
-      _testApp(
-        TonosSurfaceTheme(
-          surface: _testSurfaces.settingsSection,
-          child: const Text('Scoped content'),
-        ),
-        decorations: _testDecorations.copyWith(
-          panel: AppSurfaceDecoration.outlinedOnly,
+      MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: TonosSurfaceTheme(
+            surface: _testSurfaces.settingsSection,
+            child: const Text('Scoped content'),
+          ),
         ),
       ),
     );
@@ -203,14 +206,18 @@ void main() {
     );
   });
 
-  testWidgets('leaves Classic inherited Material theme unchanged', (
+  testWidgets('leaves explicit Classic inherited Material theme unchanged', (
     tester,
   ) async {
+    final theme = AppThemeFactory.light(AppThemeFamily.classic);
     await tester.pumpWidget(
-      _testApp(
-        TonosSurfaceTheme(
-          surface: _testSurfaces.settingsSection,
-          child: const Text('Classic content'),
+      MaterialApp(
+        theme: theme,
+        home: Scaffold(
+          body: TonosSurfaceTheme(
+            surface: _testSurfaces.settingsSection,
+            child: const Text('Classic content'),
+          ),
         ),
       ),
     );
@@ -223,6 +230,31 @@ void main() {
       findsNothing,
     );
     expect(find.text('Classic content'), findsOneWidget);
+  });
+
+  testWidgets('generic Material with Neo-looking decorations gets no Neo ink', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _testApp(
+        TonosSurfaceTheme(
+          surface: _testSurfaces.settingsSection,
+          child: const Text('Generic content'),
+        ),
+        decorations: _testDecorations.copyWith(
+          panel: AppSurfaceDecoration.outlinedOnly,
+        ),
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byType(TonosSurfaceTheme),
+        matching: find.byType(Theme),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Generic content'), findsOneWidget);
   });
 
   testWidgets('renders an injected outline and explicit shadow policy', (
@@ -243,7 +275,7 @@ void main() {
 
     final material = _materialFor(tester, 'outlined-panel');
     final shape = material.shape! as RoundedRectangleBorder;
-    expect(shape.side.color, _testSurfaces.neutralOutline);
+    expect(shape.side.color, _testSurfaces.subtleOutline);
     expect(shape.side.width, _testShapes.outlineWidth);
     expect(material.elevation, 0);
 
@@ -406,7 +438,7 @@ void main() {
       final material = _materialFor(tester, 'custom-card');
       final materialShape = material.shape! as RoundedRectangleBorder;
       expect(materialShape.borderRadius, customShape.borderRadius);
-      expect(materialShape.side.color, _testSurfaces.neutralOutline);
+      expect(materialShape.side.color, _testSurfaces.subtleOutline);
       expect(materialShape.side.width, _testShapes.outlineWidth);
 
       final decorated = tester.widget<DecoratedBox>(

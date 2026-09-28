@@ -25,7 +25,7 @@ class TonosDialogFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final effects = context.effectTokens;
-    if (!context.surfaceDecorationTokens.panel.outlined) {
+    if (!context.usesNeoPresentation) {
       return child;
     }
     final hasDepth =
@@ -146,7 +146,7 @@ class TonosDialogFrame extends StatelessWidget {
 /// Applies the dialog's surface and readable foreground to dropdown controls.
 ///
 /// Use inside [TonosDialogFrame] so Neo popup routes inherit the same contrast
-/// recipe as the dialog. Classic leaves the Material defaults untouched.
+/// recipe as the dialog. Classic and generic Material keep their defaults.
 class TonosDialogDropdownButton<T> extends StatelessWidget {
   const TonosDialogDropdownButton({
     super.key,
@@ -164,11 +164,11 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final usesOutlinedDialog = context.surfaceDecorationTokens.panel.outlined;
+    final usesNeoDialog = context.usesNeoPresentation;
     final dialogSurface =
         theme.dialogTheme.backgroundColor ?? context.surfaceTokens.dialog;
     final foreground =
-        usesOutlinedDialog
+        usesNeoDialog
             ? tonosForegroundForSurface(context, dialogSurface)
             : null;
 
@@ -178,7 +178,7 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
       onChanged: onChanged,
       isExpanded: isExpanded,
       style: foreground == null ? null : TextStyle(color: foreground),
-      dropdownColor: usesOutlinedDialog ? dialogSurface : null,
+      dropdownColor: usesNeoDialog ? dialogSurface : null,
       iconEnabledColor: foreground,
     );
   }
@@ -295,7 +295,7 @@ class TonosChoiceDialog<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final ink = context.cs.onPrimaryContainer;

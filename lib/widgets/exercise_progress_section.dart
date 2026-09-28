@@ -249,7 +249,7 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
     super.build(context);
     final theme = Theme.of(context);
     final dataVisualization = context.dataVisualizationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final sectionForeground =
         usesInkRecipe
@@ -581,7 +581,7 @@ class _ExerciseProgressHero extends StatelessWidget {
       context,
       surfaces.exerciseProgressHero,
     );
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final tooltipForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(
@@ -894,7 +894,7 @@ class _ExerciseProgressStatBox extends StatelessWidget {
     final shapes = context.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final icon = _deltaIcon(delta);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final foreground = tonosForegroundForSurface(
       context,
       surfaces.exerciseProgressStat,
@@ -1012,7 +1012,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
     final latest = tile.latestPoint;
     final delta = _deltaFromPrevious(tile.points);
     final accent = progressColors.accent;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final selectedFill = accent.withValues(alpha: 0.14);
     final tileFill =
         isSelected ? selectedFill : surfaces.exerciseProgressSelector;
@@ -1481,7 +1481,7 @@ class _ExerciseProgressEmptyHero extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final foreground = tonosForegroundForSurface(
       context,
       surfaces.exerciseProgressHero,

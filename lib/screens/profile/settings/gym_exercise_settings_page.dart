@@ -104,7 +104,7 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
     final selected = await showDialog<WorkoutExitBehavior>(
       context: context,
       builder: (dialogContext) {
-        final neo = context.surfaceDecorationTokens.panel.outlined;
+        final neo = context.usesNeoPresentation;
         final ink = context.cs.onPrimaryContainer;
         return TonosDialogFrame(
           child: SimpleDialog(

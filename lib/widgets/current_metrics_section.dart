@@ -284,7 +284,7 @@ class _MetricsMessage extends StatelessWidget {
 }
 
 Color _metricColor(BuildContext context, MeasurementType type) {
-  if (context.surfaceDecorationTokens.panel.outlined) {
+  if (context.usesNeoPresentation) {
     final data = context.dataVisualizationTokens;
     return switch (type) {
       MeasurementType.BodyWeight => data.positive,

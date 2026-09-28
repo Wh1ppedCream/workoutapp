@@ -186,8 +186,8 @@ class TonosSurface extends StatelessWidget {
 }
 
 /// Scopes inherited foreground roles to the actual surface beneath content.
-/// Classic keeps its existing Material theme; outlined Neo surfaces receive
-/// contrast-checked text, icon, and surface roles for nested Material widgets.
+/// Neo themes receive contrast-checked text, icon, and surface roles for
+/// nested Material widgets; Classic and generic Material keep their theme.
 class TonosSurfaceTheme extends StatelessWidget {
   const TonosSurfaceTheme({
     super.key,
@@ -200,7 +200,7 @@ class TonosSurfaceTheme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.surfaceDecorationTokens.panel.outlined) return child;
+    if (!context.usesNeoPresentation) return child;
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;

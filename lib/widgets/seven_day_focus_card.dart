@@ -124,7 +124,7 @@ class SevenDayFocusPresentation extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panelRaised.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = Theme(
       data:
@@ -314,7 +314,7 @@ class _MoreFocusedSetsHint extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final foreground =
-        context.surfaceDecorationTokens.panelRaised.outlined
+        context.usesNeoPresentation
             ? theme.colorScheme.onPrimaryContainer
             : theme.colorScheme.primary;
     return Padding(

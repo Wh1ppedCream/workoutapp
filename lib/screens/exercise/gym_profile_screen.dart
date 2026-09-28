@@ -515,7 +515,7 @@ class _ProfileSetupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface =
@@ -639,7 +639,7 @@ class _EquipmentSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final fieldSurface =
@@ -780,7 +780,7 @@ class _EquipmentCategorySection extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final sectionSurface =
@@ -929,7 +929,7 @@ class _EquipmentTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final tileSurface = neo ? surfaces.dialogChoice : scheme.surface;
     final tileForeground =
@@ -1046,7 +1046,7 @@ class _SaveProfileBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
 
@@ -1102,7 +1102,7 @@ class _EmptyEquipmentSearch extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final emptySurface =
         neo

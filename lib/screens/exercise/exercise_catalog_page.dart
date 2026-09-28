@@ -342,7 +342,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final isDarkNeo = usesInkRecipe && theme.brightness == Brightness.dark;
     final fieldForeground =
         usesInkRecipe
@@ -779,7 +779,7 @@ class _ExerciseCatalogBar extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final effects = context.effectTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final equipment = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(

@@ -350,7 +350,7 @@ class _PlanManagementTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final planForeground =
         neo ? tonosForegroundForSurface(context, surfaces.planCard) : null;
     final planSecondary =

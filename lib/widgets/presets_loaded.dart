@@ -282,8 +282,7 @@ class _PresetsLoadedState extends State<PresetsLoaded>
               widget.emptyMessage == PresetsLoaded.defaultEmptyMessage
                   ? strings.presetsNoPlans
                   : widget.emptyMessage;
-          if (context.surfaceDecorationTokens.panel.outlined &&
-              widget.excludedPresetIds != null) {
+          if (context.usesNeoPresentation && widget.excludedPresetIds != null) {
             final surfaces = context.surfaceTokens;
             final foreground = tonosForegroundForSurface(
               context,

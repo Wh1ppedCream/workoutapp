@@ -12,6 +12,7 @@ import 'package:env_test/services/workout_exit_preferences.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_segmented_action_bar.dart';
 import 'package:env_test/utils/app_test_keys.dart';
@@ -388,6 +389,71 @@ void main() {
       await tester.pumpAndSettle();
     }
   });
+
+  testWidgets(
+    'identity-less outlined themes keep completed-work dialog foregrounds Material-owned',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'workout_exit_behavior': WorkoutExitBehavior.askEveryTime.name,
+      });
+      final session = _emptySession();
+      addTearDown(session.dispose);
+      await session.ready;
+      session.exercises.add(
+        WeightExercise(
+          name: 'Squat',
+          equipment: 'Barbell',
+          sets: [ExerciseSet(), ExerciseSet()],
+          completedParents: <int>{0, 1},
+        ),
+      );
+      session.cardTypes.add(CardType.weight);
+
+      final neoTheme = AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+      final baseScheme = neoTheme.colorScheme;
+      final genericTheme = neoTheme.copyWith(
+        colorScheme: baseScheme.copyWith(
+          onSurface: Colors.purple,
+          onSurfaceVariant: Colors.orange,
+        ),
+        textTheme: neoTheme.textTheme.copyWith(
+          bodyMedium: neoTheme.textTheme.bodyMedium?.copyWith(
+            color: Colors.teal,
+          ),
+        ),
+        extensions:
+            neoTheme.extensions.values
+                .where((extension) => extension is! AppThemeIdentity)
+                .toList(),
+      );
+      expect(genericTheme.appThemeFamilyIdentity, isNull);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: session,
+          child: _localizedApp(
+            theme: genericTheme,
+            scaffold: false,
+            child: const Scaffold(
+              body: SizedBox.shrink(),
+              floatingActionButton: OngoingSessionFab(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(AppTestKeys.ongoingSessionMenu));
+      await tester.pump();
+      await tester.tap(find.byKey(AppTestKeys.ongoingSessionExit));
+      await tester.pumpAndSettle();
+
+      final rememberChoice = tester.widget<CheckboxListTile>(
+        find.byType(CheckboxListTile, skipOffstage: false),
+      );
+      expect((rememberChoice.title as Text).style?.color, Colors.teal);
+      expect((rememberChoice.subtitle as Text).style?.color, Colors.orange);
+    },
+  );
 }
 
 List<ThemeData> _classicThemes() => <ThemeData>[

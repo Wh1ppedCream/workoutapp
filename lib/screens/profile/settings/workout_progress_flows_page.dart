@@ -313,7 +313,7 @@ class _FlowScopeCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final cardSurface =
         neo
             ? surfaces.settingsSection
@@ -468,7 +468,7 @@ class _FlowEntryTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final tileSurface = neo ? surfaces.dialogChoice : null;
     final tileForeground =
         neo && tileSurface != null
@@ -600,7 +600,7 @@ class _EmptyFlowsCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final emptySurface = neo ? surfaces.panel : null;
     final foreground =
         neo && emptySurface != null

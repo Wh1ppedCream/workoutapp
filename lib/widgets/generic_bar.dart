@@ -55,7 +55,7 @@ class GenericBar extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final effects = context.effectTokens;
     final decoration = context.surfaceDecorationTokens.compactCard;
-    final usesInkRecipe = decoration.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final foreground =
         usesInkRecipe
             ? foregroundColor ?? context.cs.onPrimaryContainer

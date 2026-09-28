@@ -60,7 +60,7 @@ void main() {
           final strings = AppLocalizations.of(
             tester.element(find.byType(TrainPage)),
           );
-          final usesInkRecipe = theme.surfaceDecorationTokens.panel.outlined;
+          final usesInkRecipe = theme.usesNeoPresentation;
           final surfaceInk = theme.colorScheme.onPrimaryContainer;
           _expectSplitWorkoutBar(tester, theme, strings);
           _expectPanelText(
@@ -207,7 +207,7 @@ void main() {
             reason: '${family.name} ${theme.brightness}',
           );
           final text = tester.widget<Text>(message);
-          if (theme.surfaceDecorationTokens.panel.outlined) {
+          if (theme.usesNeoPresentation) {
             final context = tester.element(message);
             expect(
               text.style?.color,
@@ -427,11 +427,11 @@ void _expectSplitWorkoutBar(
   expect(startInkWell.onTap, isNotNull);
 
   final optimizeAction =
-      theme.surfaceDecorationTokens.panel.outlined
+      theme.usesNeoPresentation
           ? theme.surfaceTokens.optimizedAction
           : theme.colorScheme.primaryContainer;
   final optimizeForeground =
-      theme.surfaceDecorationTokens.panel.outlined
+      theme.usesNeoPresentation
           ? theme.colorScheme.onSecondaryContainer
           : theme.colorScheme.onPrimaryContainer;
   final optimizeLabel = find.text(strings.trainOptimize);

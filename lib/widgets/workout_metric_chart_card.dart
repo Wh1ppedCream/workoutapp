@@ -151,7 +151,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final dataVisualization = context.dataVisualizationTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shellForeground =
         usesInkRecipe
@@ -340,7 +340,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                     final usesLocalizedLayout =
                         Localizations.localeOf(context).languageCode != 'en';
                     final useTwoRows =
-                        context.surfaceDecorationTokens.panel.outlined
+                        context.usesNeoPresentation
                             ? MediaQuery.textScalerOf(context).scale(1) >
                                     1.15 ||
                                 (usesLocalizedLayout &&
@@ -785,7 +785,7 @@ class _ReportStat extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final unselectedFill =
         usesInkRecipe
             ? surfaces.workoutMetricRange
@@ -1235,7 +1235,7 @@ class _RangeSelector extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final selectedFill = progressColors.accent;
     final unselectedForeground =
         usesInkRecipe
@@ -1423,7 +1423,7 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

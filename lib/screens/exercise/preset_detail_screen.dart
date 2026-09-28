@@ -444,8 +444,6 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       onPressed: onPressed,
       child: Text(label),
     );
-    if (!context.surfaceDecorationTokens.panel.outlined) return button;
-
     return tonosWithPrimaryActionDepth(context, button, enabled: true);
   }
 

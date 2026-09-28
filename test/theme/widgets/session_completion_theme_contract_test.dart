@@ -41,7 +41,7 @@ void main() {
           ),
         );
 
-        final isNeo = !context.usesClassicPresentation;
+        final isNeo = context.usesNeoPresentation;
         final surfaces = context.surfaceTokens;
         final shapes = context.shapeTokens;
         final semantic = context.semanticColors;

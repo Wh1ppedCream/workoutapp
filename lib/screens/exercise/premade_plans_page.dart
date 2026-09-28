@@ -777,7 +777,7 @@ class OnboardingPlanActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final actionForeground =
         neo ? tonosForegroundForSurface(context, surfaces.planActionBar) : null;
     final actionDisabledForeground =
@@ -940,7 +940,7 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final filterForeground =
         neo ? tonosForegroundForSurface(context, surfaces.planFilter) : null;
     final filterSecondary =
@@ -1069,7 +1069,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final shapes = context.shapeTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final durationForeground =
         neo ? tonosForegroundForSurface(context, surfaces.planDuration) : null;
     final isTwoHour = durationMinutes == 120;
@@ -1256,7 +1256,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final planCount = plans.length;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final groupForeground =
         neo ? tonosForegroundForSurface(context, surfaces.planGroup) : null;
     final groupSecondary =

@@ -749,7 +749,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final tabSurface =
         neo
             ? surfaces.settingsSection
@@ -1046,7 +1046,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final headerSurface =
         neo
             ? surfaces.settingsSection
@@ -1165,7 +1165,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   }) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surface =
         neo
             ? context.surfaceTokens.settingsSection

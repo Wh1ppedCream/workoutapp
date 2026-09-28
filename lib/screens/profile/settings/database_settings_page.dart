@@ -761,7 +761,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                         tooltip: strings.databaseChangeEnvironment,
                         icon: const Icon(Icons.swap_horiz),
                         color:
-                            context.surfaceDecorationTokens.panel.outlined
+                            context.usesNeoPresentation
                                 ? Theme.of(context).colorScheme.onSurface
                                 : theme.colorScheme.primary,
                         onPressed:
@@ -791,7 +791,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                   tooltip: strings.databaseOverrideUrl,
                   icon: const Icon(Icons.edit),
                   color:
-                      context.surfaceDecorationTokens.panel.outlined
+                      context.usesNeoPresentation
                           ? Theme.of(context).colorScheme.onSurface
                           : theme.colorScheme.primary,
                   onPressed: _contentActionRunning ? null : _editManifestUrl,

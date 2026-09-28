@@ -82,7 +82,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shellForeground =
         usesInkRecipe
@@ -510,7 +510,7 @@ class _CalendarModeTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final selectedFill =
@@ -1055,7 +1055,7 @@ class _PeriodCircleButton extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionCount == 0
@@ -1297,7 +1297,7 @@ class _CalendarDayButton extends StatelessWidget {
     final cs = context.cs;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final hasWorkout = sessionCount > 0;
     final intensity =
         maxSessionsPerDay == 0
@@ -1569,7 +1569,7 @@ class _CalendarMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final semantic = context.semanticColors;
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final metricSurface =
         usesInkRecipe ? surfaces.workoutMetricRange : surfaces.card;
     final valueColor =
@@ -1640,7 +1640,7 @@ class _SelectedPeriodSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final periodSurface =
         usesInkRecipe
             ? surfaces.catalogSelection

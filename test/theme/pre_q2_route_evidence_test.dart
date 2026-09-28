@@ -103,7 +103,7 @@ void main() {
 
     final semanticConsumers = <String, String>{
       'lib/widgets/current_metrics_section.dart': 'dataVisualizationTokens',
-      'lib/widgets/nutrition_bar_details.dart': 'surfaceDecorationTokens',
+      'lib/widgets/nutrition_bar_details.dart': 'usesNeoPresentation',
     };
     semanticConsumers.forEach((path, token) {
       expect(

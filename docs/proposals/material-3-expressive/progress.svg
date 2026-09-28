@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1020" viewBox="0 0 1320 1020">
+<defs><filter id="shadowprogress" x="-20%" y="-20%" width="140%" height="150%"><feGaussianBlur in="SourceAlpha" stdDeviation="8" result="b"/><feOffset dy="10" result="o"/><feComponentTransfer><feFuncA type="linear" slope="0.18"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="clipprogressL"><rect x="0" y="0" width="390" height="844" rx="38"/></clipPath><clipPath id="clipprogressR"><rect x="0" y="0" width="390" height="844" rx="38"/></clipPath></defs>
+<rect width="1320" height="1020" fill="#E8EDEA"/>
+<text x="54" y="43" font-family="sans-serif" font-size="11" font-weight="700" fill="#47605A" text-anchor="start" letter-spacing="1.35">TONOS  /  MATERIAL 3 EXPRESSIVE</text>
+<text x="54" y="78" font-family="sans-serif" font-size="27" font-weight="750" fill="#17201D" text-anchor="start" letter-spacing="0">Progress</text>
+<text x="1266" y="75" font-family="sans-serif" font-size="10" font-weight="600" fill="#60716B" text-anchor="end" letter-spacing="0.45">SAME CONTENT  ·  LIGHT / DARK</text>
+<text x="365" y="111" font-family="sans-serif" font-size="10" font-weight="800" fill="#4F625B" text-anchor="middle" letter-spacing="1">LIGHT</text>
+<text x="955" y="111" font-family="sans-serif" font-size="10" font-weight="800" fill="#4F625B" text-anchor="middle" letter-spacing="1">DARK</text>
+<rect x="158" y="126" width="414" height="868" fill="#111917" rx="44" stroke="#27312E" stroke-width="1"/>
+<g transform="translate(170 138)" clip-path="url(#clipprogressL)">
+<rect x="0" y="0" width="390" height="844" fill="#F3F6F4" rx="0"/>
+<text x="27" y="20" font-family="sans-serif" font-size="12" font-weight="700" fill="#191E1C" text-anchor="start" letter-spacing="0">9:41</text>
+<path d="M324 17h2v4h-2ZM328 14h2v7h-2ZM332 11h2v10h-2Z" fill="none" opacity="1" stroke="#191E1C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M340 16c4-4 9-4 13 0M343 19c2-2 5-2 7 0" fill="none" opacity="1" stroke="#191E1C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="359" y="10" width="20" height="11" fill="none" rx="3" stroke="#191E1C" stroke-width="1"/>
+<rect x="361" y="12" width="14" height="7" fill="#006B62" rx="1"/>
+<rect x="380" y="13" width="2" height="5" fill="#191E1C" rx="1"/>
+<rect x="12" y="34" width="366" height="505" fill="#FAFCFA" rx="24"/>
+<text x="195" y="66" font-family="sans-serif" font-size="20" font-weight="800" fill="#191E1C" text-anchor="middle" letter-spacing="0">Workout Report</text>
+<rect x="26" y="82" width="103" height="62" fill="#B8F0E7" rx="16"/>
+<text x="77.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#00201C" text-anchor="middle" letter-spacing="0">Workouts</text>
+<text x="77.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#00201C" text-anchor="middle" letter-spacing="0">28</text>
+<rect x="139" y="82" width="103" height="62" fill="#EEF3F0" rx="16"/>
+<text x="190.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#191E1C" text-anchor="middle" letter-spacing="0">Time</text>
+<text x="190.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#191E1C" text-anchor="middle" letter-spacing="0">16h 20m</text>
+<rect x="252" y="82" width="103" height="62" fill="#EEF3F0" rx="16"/>
+<text x="303.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#191E1C" text-anchor="middle" letter-spacing="0">Volume</text>
+<text x="303.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#191E1C" text-anchor="middle" letter-spacing="0">42.8k</text>
+<rect x="26" y="158" width="338" height="224" fill="#EEF3F0" rx="19"/>
+<text x="42" y="182" font-family="sans-serif" font-size="13" font-weight="700" fill="#191E1C" text-anchor="start" letter-spacing="0">Workouts (All)</text>
+<path d="M51 200 L345 200" fill="none" stroke="#AEBAB4" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 234 L345 234" fill="none" stroke="#AEBAB4" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 268 L345 268" fill="none" stroke="#AEBAB4" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 302 L345 302" fill="none" stroke="#AEBAB4" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<text x="43" y="204" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="start" letter-spacing="0">8</text>
+<text x="43" y="272" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="start" letter-spacing="0">4</text>
+<text x="43" y="340" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="start" letter-spacing="0">0</text>
+<path d="M60 310 L103 279 L146 295 L189 246 L232 263 L275 225 L324 237" fill="none" opacity="1" stroke="#6200EE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60" cy="310" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="103" cy="279" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="146" cy="295" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="189" cy="246" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="232" cy="263" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="275" cy="225" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<circle cx="324" cy="237" r="4" fill="#6200EE" stroke="#EEF3F0" stroke-width="2"/>
+<text x="63" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Jan</text>
+<text x="115" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Mar</text>
+<text x="167" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">May</text>
+<text x="219" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Jul</text>
+<text x="271" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Sep</text>
+<text x="323" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Nov</text>
+<rect x="26" y="393" width="338" height="48" fill="#E7EEEA" rx="16"/>
+<text x="55.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">1W</text>
+<text x="110.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">1M</text>
+<text x="166.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">3M</text>
+<text x="221.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">6M</text>
+<text x="277.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">1Y</text>
+<rect x="306.5" y="397" width="52" height="40" fill="#006B62" rx="13"/>
+<text x="332.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">All</text>
+<text x="42" y="474" font-family="sans-serif" font-size="12" font-weight="650" fill="#191E1C" text-anchor="start" letter-spacing="0">Additional Details</text>
+<path d="M341 464l6 6 6-6" fill="none" opacity="1" stroke="#69746F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28 488 L362 488" fill="none" stroke="#AEBAB4" stroke-width="0.7" opacity="0.28" stroke-linecap="round"/>
+<rect x="16" y="547" width="358" height="314" fill="#DCE6E1" rx="22"/>
+<text x="195" y="578" font-family="sans-serif" font-size="18" font-weight="800" fill="#191E1C" text-anchor="middle" letter-spacing="0">Exercise Progress</text>
+<rect x="32" y="590" width="326" height="226" fill="#FAFCFA" rx="18"/>
+<text x="46" y="617" font-family="sans-serif" font-size="14" font-weight="750" fill="#191E1C" text-anchor="start" letter-spacing="0">Bench Press</text>
+<path d="M338 607l5 5-5 5" fill="none" opacity="1" stroke="#69746F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M48 647 L225 647" fill="none" stroke="#AEBAB4" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M48 676 L225 676" fill="none" stroke="#AEBAB4" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M48 705 L225 705" fill="none" stroke="#AEBAB4" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M52 710 L88 691 L125 700 L165 671 L213 659" fill="none" opacity="1" stroke="#6200EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M52 716 L88 699 L125 705 L165 680 L213 670" fill="none" opacity="1" stroke="#1E88E5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="52" cy="710" r="3" fill="#6200EE"/>
+<circle cx="88" cy="691" r="3" fill="#6200EE"/>
+<circle cx="125" cy="700" r="3" fill="#6200EE"/>
+<circle cx="165" cy="671" r="3" fill="#6200EE"/>
+<circle cx="213" cy="659" r="3" fill="#6200EE"/>
+<rect x="236" y="634" width="108" height="76" fill="#EEF3F0" rx="13"/>
+<text x="245" y="653" font-family="sans-serif" font-size="8.5" font-weight="600" fill="#69746F" text-anchor="start" letter-spacing="0">Actual 1RM</text>
+<text x="245" y="674" font-family="sans-serif" font-size="13" font-weight="750" fill="#191E1C" text-anchor="start" letter-spacing="0">185 lb</text>
+<text x="245" y="696" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#2D7156" text-anchor="start" letter-spacing="0">+5 lb</text>
+<rect x="236" y="718" width="108" height="76" fill="#EEF3F0" rx="13"/>
+<text x="245" y="737" font-family="sans-serif" font-size="8.5" font-weight="600" fill="#69746F" text-anchor="start" letter-spacing="0">Estimated</text>
+<text x="245" y="758" font-family="sans-serif" font-size="13" font-weight="750" fill="#191E1C" text-anchor="start" letter-spacing="0">197 lb</text>
+<rect x="0" y="748" width="390" height="96" fill="#FAFCFA" rx="0"/>
+<path d="M0 748 L390 748" fill="none" stroke="#AEBAB4" stroke-width="0.8" opacity="0.32" stroke-linecap="round"/>
+<g transform="translate(28 760) scale(0.9166666666666666)" fill="none" stroke="#69746F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 7v10M8 10v4M16 10v4M18 7v10M21 9v6M8 12h8"/></g>
+<text x="39" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(106 760) scale(0.9166666666666666)" fill="none" stroke="#69746F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1.1 8 1v14c-2-2.1-5-2.5-8-1V5Zm16 0c-3-1.5-6-1.1-8 1v14c2-2.1 5-2.5 8-1V5Z"/></g>
+<text x="117" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(184 760) scale(0.9166666666666666)" fill="none" stroke="#69746F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3 4v5h5M12 7v5l3.2 2"/></g>
+<text x="195" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Logbook</text>
+<rect x="246" y="756" width="54" height="30" fill="#B8F0E7" rx="15"/>
+<g transform="translate(262 760) scale(0.9166666666666666)" fill="none" stroke="#00201C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9M15 6h6v6"/></g>
+<text x="273" y="809" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#191E1C" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(340 760) scale(0.9166666666666666)" fill="none" stroke="#69746F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.6-4 3.3-6 8-6s7.4 2 8 6"/></g>
+<text x="351" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#69746F" text-anchor="middle" letter-spacing="0">Profile</text>
+</g>
+<rect x="170" y="138" width="390" height="844" fill="none" rx="38" stroke="#56615C" stroke-width="1"/>
+<rect x="748" y="126" width="414" height="868" fill="#111917" rx="44" stroke="#27312E" stroke-width="1"/>
+<g transform="translate(760 138)" clip-path="url(#clipprogressR)">
+<rect x="0" y="0" width="390" height="844" fill="#101514" rx="0"/>
+<text x="27" y="20" font-family="sans-serif" font-size="12" font-weight="700" fill="#E1E8E5" text-anchor="start" letter-spacing="0">9:41</text>
+<path d="M324 17h2v4h-2ZM328 14h2v7h-2ZM332 11h2v10h-2Z" fill="none" opacity="1" stroke="#E1E8E5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M340 16c4-4 9-4 13 0M343 19c2-2 5-2 7 0" fill="none" opacity="1" stroke="#E1E8E5" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="359" y="10" width="20" height="11" fill="none" rx="3" stroke="#E1E8E5" stroke-width="1"/>
+<rect x="361" y="12" width="14" height="7" fill="#62D8CA" rx="1"/>
+<rect x="380" y="13" width="2" height="5" fill="#E1E8E5" rx="1"/>
+<rect x="12" y="34" width="366" height="505" fill="#171E1D" rx="24"/>
+<text x="195" y="66" font-family="sans-serif" font-size="20" font-weight="800" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">Workout Report</text>
+<rect x="26" y="82" width="103" height="62" fill="#00534C" rx="16"/>
+<text x="77.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#A8F2E9" text-anchor="middle" letter-spacing="0">Workouts</text>
+<text x="77.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#A8F2E9" text-anchor="middle" letter-spacing="0">28</text>
+<rect x="139" y="82" width="103" height="62" fill="#1B2322" rx="16"/>
+<text x="190.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">Time</text>
+<text x="190.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">16h 20m</text>
+<rect x="252" y="82" width="103" height="62" fill="#1B2322" rx="16"/>
+<text x="303.5" y="103" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">Volume</text>
+<text x="303.5" y="127" font-family="sans-serif" font-size="15" font-weight="750" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">42.8k</text>
+<rect x="26" y="158" width="338" height="224" fill="#1B2322" rx="19"/>
+<text x="42" y="182" font-family="sans-serif" font-size="13" font-weight="700" fill="#E1E8E5" text-anchor="start" letter-spacing="0">Workouts (All)</text>
+<path d="M51 200 L345 200" fill="none" stroke="#46524E" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 234 L345 234" fill="none" stroke="#46524E" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 268 L345 268" fill="none" stroke="#46524E" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<path d="M51 302 L345 302" fill="none" stroke="#46524E" stroke-width="0.75" opacity="0.38" stroke-linecap="round"/>
+<text x="43" y="204" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="start" letter-spacing="0">8</text>
+<text x="43" y="272" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="start" letter-spacing="0">4</text>
+<text x="43" y="340" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="start" letter-spacing="0">0</text>
+<path d="M60 310 L103 279 L146 295 L189 246 L232 263 L275 225 L324 237" fill="none" opacity="1" stroke="#BB86FC" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="60" cy="310" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="103" cy="279" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="146" cy="295" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="189" cy="246" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="232" cy="263" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="275" cy="225" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<circle cx="324" cy="237" r="4" fill="#BB86FC" stroke="#1B2322" stroke-width="2"/>
+<text x="63" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Jan</text>
+<text x="115" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Mar</text>
+<text x="167" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">May</text>
+<text x="219" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Jul</text>
+<text x="271" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Sep</text>
+<text x="323" y="365" font-family="sans-serif" font-size="8.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Nov</text>
+<rect x="26" y="393" width="338" height="48" fill="#222B29" rx="16"/>
+<text x="55.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">1W</text>
+<text x="110.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">1M</text>
+<text x="166.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">3M</text>
+<text x="221.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">6M</text>
+<text x="277.0" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">1Y</text>
+<rect x="306.5" y="397" width="52" height="40" fill="#62D8CA" rx="13"/>
+<text x="332.5" y="422" font-family="sans-serif" font-size="10" font-weight="700" fill="#003731" text-anchor="middle" letter-spacing="0">All</text>
+<text x="42" y="474" font-family="sans-serif" font-size="12" font-weight="650" fill="#E1E8E5" text-anchor="start" letter-spacing="0">Additional Details</text>
+<path d="M341 464l6 6 6-6" fill="none" opacity="1" stroke="#8F9C97" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28 488 L362 488" fill="none" stroke="#46524E" stroke-width="0.7" opacity="0.28" stroke-linecap="round"/>
+<rect x="16" y="547" width="358" height="314" fill="#2B3532" rx="22"/>
+<text x="195" y="578" font-family="sans-serif" font-size="18" font-weight="800" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">Exercise Progress</text>
+<rect x="32" y="590" width="326" height="226" fill="#171E1D" rx="18"/>
+<text x="46" y="617" font-family="sans-serif" font-size="14" font-weight="750" fill="#E1E8E5" text-anchor="start" letter-spacing="0">Bench Press</text>
+<path d="M338 607l5 5-5 5" fill="none" opacity="1" stroke="#8F9C97" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M48 647 L225 647" fill="none" stroke="#46524E" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M48 676 L225 676" fill="none" stroke="#46524E" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M48 705 L225 705" fill="none" stroke="#46524E" stroke-width="0.65" opacity="0.32" stroke-linecap="round"/>
+<path d="M52 710 L88 691 L125 700 L165 671 L213 659" fill="none" opacity="1" stroke="#BB86FC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M52 716 L88 699 L125 705 L165 680 L213 670" fill="none" opacity="1" stroke="#42A5F5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="52" cy="710" r="3" fill="#BB86FC"/>
+<circle cx="88" cy="691" r="3" fill="#BB86FC"/>
+<circle cx="125" cy="700" r="3" fill="#BB86FC"/>
+<circle cx="165" cy="671" r="3" fill="#BB86FC"/>
+<circle cx="213" cy="659" r="3" fill="#BB86FC"/>
+<rect x="236" y="634" width="108" height="76" fill="#1B2322" rx="13"/>
+<text x="245" y="653" font-family="sans-serif" font-size="8.5" font-weight="600" fill="#8F9C97" text-anchor="start" letter-spacing="0">Actual 1RM</text>
+<text x="245" y="674" font-family="sans-serif" font-size="13" font-weight="750" fill="#E1E8E5" text-anchor="start" letter-spacing="0">185 lb</text>
+<text x="245" y="696" font-family="sans-serif" font-size="8.5" font-weight="700" fill="#A6D8BD" text-anchor="start" letter-spacing="0">+5 lb</text>
+<rect x="236" y="718" width="108" height="76" fill="#1B2322" rx="13"/>
+<text x="245" y="737" font-family="sans-serif" font-size="8.5" font-weight="600" fill="#8F9C97" text-anchor="start" letter-spacing="0">Estimated</text>
+<text x="245" y="758" font-family="sans-serif" font-size="13" font-weight="750" fill="#E1E8E5" text-anchor="start" letter-spacing="0">197 lb</text>
+<rect x="0" y="748" width="390" height="96" fill="#171E1D" rx="0"/>
+<path d="M0 748 L390 748" fill="none" stroke="#46524E" stroke-width="0.8" opacity="0.32" stroke-linecap="round"/>
+<g transform="translate(28 760) scale(0.9166666666666666)" fill="none" stroke="#8F9C97" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 7v10M8 10v4M16 10v4M18 7v10M21 9v6M8 12h8"/></g>
+<text x="39" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(106 760) scale(0.9166666666666666)" fill="none" stroke="#8F9C97" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1.1 8 1v14c-2-2.1-5-2.5-8-1V5Zm16 0c-3-1.5-6-1.1-8 1v14c2-2.1 5-2.5 8-1V5Z"/></g>
+<text x="117" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(184 760) scale(0.9166666666666666)" fill="none" stroke="#8F9C97" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6M3 4v5h5M12 7v5l3.2 2"/></g>
+<text x="195" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Logbook</text>
+<rect x="246" y="756" width="54" height="30" fill="#00534C" rx="15"/>
+<g transform="translate(262 760) scale(0.9166666666666666)" fill="none" stroke="#A8F2E9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9M15 6h6v6"/></g>
+<text x="273" y="809" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#E1E8E5" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(340 760) scale(0.9166666666666666)" fill="none" stroke="#8F9C97" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.6-4 3.3-6 8-6s7.4 2 8 6"/></g>
+<text x="351" y="809" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#8F9C97" text-anchor="middle" letter-spacing="0">Profile</text>
+</g>
+<rect x="760" y="138" width="390" height="844" fill="none" rx="38" stroke="#56615C" stroke-width="1"/>
+<text x="660" y="1004" font-family="sans-serif" font-size="9.5" font-weight="500" fill="#60716B" text-anchor="middle" letter-spacing="0">Illustrative content values; current production hierarchy preserved.</text>
+</svg>

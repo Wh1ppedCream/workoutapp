@@ -1147,7 +1147,7 @@ class _FlowControlDeck extends StatelessWidget {
     final success = flow.success;
     final failure = flow.failure;
     final shapes = context.shapeTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final controlSurface = surfaces.settingsInput;
     final controlForeground =
         neo
@@ -1483,7 +1483,7 @@ class _FlowControlCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final foreground =
         neo
             ? tonosForegroundForSurface(context, surfaces.flowControl)

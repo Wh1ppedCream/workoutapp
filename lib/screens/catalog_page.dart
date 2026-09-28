@@ -286,7 +286,7 @@ class _ExerciseCatalogCard extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final panelForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(
@@ -379,7 +379,7 @@ class _TargetAnatomyCard extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final panelColor = usesInkRecipe ? surfaces.settingsHero : surfaces.card;
     final panelForeground =
         usesInkRecipe
@@ -511,7 +511,7 @@ class _ExerciseUsageBar extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final rowColor =
         usesInkRecipe ? surfaces.catalogSelection : surfaces.catalogUsage;
     final rowForeground =
@@ -628,7 +628,7 @@ class _FocusSummaryPane extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final shapes = context.shapeTokens;
     final iconColor =
         usesInkRecipe
@@ -715,7 +715,7 @@ class _FocusUsageRow extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final nameForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(

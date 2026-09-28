@@ -4,6 +4,7 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:flutter/material.dart';
@@ -331,6 +332,84 @@ void main() {
     for (final label in rangeLabels) {
       expect(tester.getTopLeft(find.text(label)).dy, closeTo(rangeTop, 0.1));
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('identity-less outlined themes keep generic report scaling', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final units = UnitPreferenceProvider();
+    addTearDown(units.dispose);
+    await units.ready;
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(700, 1400));
+    final strings = await AppLocalizations.delegate.load(const Locale('en'));
+    final neoTheme = AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+    final genericTheme = neoTheme.copyWith(
+      extensions:
+          neoTheme.extensions.values
+              .where((extension) => extension is! AppThemeIdentity)
+              .toList(),
+    );
+    expect(genericTheme.appThemeFamilyIdentity, isNull);
+    expect(genericTheme.surfaceDecorationTokens.panel.outlined, isTrue);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: _ReportRepository()),
+          ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+        ],
+        child: MaterialApp(
+          theme: genericTheme,
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: const [Locale('en')],
+          builder:
+              (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(2)),
+                child: child!,
+              ),
+          home: const Scaffold(
+            body: SingleChildScrollView(child: WorkoutMetricChartCard()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle(
+      const Duration(milliseconds: 100),
+      EnginePhase.sendSemanticsUpdate,
+      const Duration(seconds: 5),
+    );
+
+    Finder tile(String label) => find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics &&
+          widget.properties.label ==
+              strings.workoutReportMetricSemantics(label),
+    );
+    final metricTiles = [
+      tile(strings.workoutReportWorkouts),
+      tile(strings.workoutReportTime),
+      tile(strings.workoutReportVolume),
+    ];
+    var commonRows =
+        find
+            .ancestor(of: metricTiles.first, matching: find.byType(Row))
+            .evaluate()
+            .toSet();
+    for (final metricTile in metricTiles.skip(1)) {
+      commonRows = commonRows.intersection(
+        find
+            .ancestor(of: metricTile, matching: find.byType(Row))
+            .evaluate()
+            .toSet(),
+      );
+    }
+    expect(commonRows, isNotEmpty);
     expect(tester.takeException(), isNull);
   });
 

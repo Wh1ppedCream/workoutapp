@@ -875,7 +875,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -1139,7 +1139,7 @@ class _PresetSectionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -1196,7 +1196,7 @@ class _PremadePlansCard extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -1313,7 +1313,7 @@ class _SplitWorkoutBar extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final effects = context.effectTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final textTheme = Theme.of(context).textTheme;
     final strings = AppLocalizations.of(context);
     final startWorkoutAction = semantic.startWorkoutAction;

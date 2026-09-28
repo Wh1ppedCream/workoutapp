@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="470" height="1019" viewBox="0 0 470 1019"><rect x="0" y="0" width="470" height="1019" rx="0" fill="#F4F1EE"/>
+<text x="28" y="37" font-family="sans-serif" font-size="16" font-weight="750" fill="#211625" text-anchor="start" letter-spacing="0">11:31</text>
+<text x="86" y="36" font-family="sans-serif" font-size="14" font-weight="600" fill="#211625" text-anchor="start" letter-spacing="0">✉</text>
+<circle cx="112" cy="31" r="7" fill="#A74717"/>
+<text x="342" y="37" font-family="sans-serif" font-size="17" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">ᛒ</text>
+<rect x="360" y="25" width="3" height="10" rx="1" fill="#74677B"/>
+<rect x="367" y="21" width="3" height="14" rx="1" fill="#74677B"/>
+<rect x="374" y="18" width="3" height="17" rx="1" fill="#74677B"/>
+<path d="M386 25q10-9 20 0M390 30q6-5 12 0" fill="none" opacity="1" stroke="#211625" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="414" y="21" width="30" height="15" rx="4" fill="none" stroke="#211625" stroke-width="1.2"/>
+<rect x="417" y="24" width="21" height="9" rx="2" fill="#41CA6B"/>
+<rect x="445" y="25" width="3" height="7" rx="1" fill="#211625"/>
+<text x="427" y="32" font-family="sans-serif" font-size="10" font-weight="800" fill="#07140B" text-anchor="middle" letter-spacing="0">80</text>
+<rect x="177" y="1002" width="116" height="5" rx="3" fill="#211625"/>
+<path d="M60 70 H434 Q452 70 452 88 V620 Q452 658 414 658 H36 Q18 658 18 640 V112 Q18 70 60 70 Z" fill="#FFFCFA"/>
+<text x="39" y="117" font-family="sans-serif" font-size="27" font-weight="900" fill="#211625" text-anchor="start" letter-spacing="0">Workout Report</text>
+<path d="M66 137 H213 Q224 137 224 148 V249 Q224 277 196 277 H47 Q34 277 34 264 V169 Q34 137 66 137 Z" fill="#006B58"/>
+<text x="49" y="164" font-family="sans-serif" font-size="13" font-weight="750" fill="#FFFFFF" text-anchor="start" letter-spacing="0">Workouts</text>
+<text x="49" y="226" font-family="sans-serif" font-size="48" font-weight="900" fill="#FFFFFF" text-anchor="start" letter-spacing="0">6</text>
+<path d="M57 245 H206 Q213 245 213 252 V255 Q213 267 201 267 H52 Q45 267 45 260 V257 Q45 245 57 245 Z" fill="#F9DEDC"/>
+<text x="52" y="261" font-family="sans-serif" font-size="10" font-weight="750" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 6 workouts</text>
+<text x="82" y="226" font-family="sans-serif" font-size="12" font-weight="550" fill="#FFFFFF" text-anchor="start" letter-spacing="0">total</text>
+<path d="M257 137 H421 Q432 137 432 148 V199 Q432 217 414 217 H247 Q237 217 237 207 V157 Q237 137 257 137 Z" fill="#F1EBF4"/>
+<text x="252" y="156" font-family="sans-serif" font-size="11" font-weight="750" fill="#694097" text-anchor="start" letter-spacing="0">Time</text>
+<text x="252" y="182" font-family="sans-serif" font-size="23" font-weight="900" fill="#694097" text-anchor="start" letter-spacing="0">1m 54s</text>
+<text x="252" y="209" font-family="sans-serif" font-size="9.5" font-weight="750" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 1m 54s</text>
+<path d="M257 225 H421 Q432 225 432 236 V287 Q432 305 414 305 H247 Q237 305 237 295 V245 Q237 225 257 225 Z" fill="#F3EAE3"/>
+<text x="252" y="244" font-family="sans-serif" font-size="11" font-weight="750" fill="#A74717" text-anchor="start" letter-spacing="0">Volume</text>
+<text x="252" y="270" font-family="sans-serif" font-size="23" font-weight="900" fill="#A74717" text-anchor="start" letter-spacing="0">15k lbs</text>
+<text x="252" y="297" font-family="sans-serif" font-size="9.5" font-weight="750" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 15k lbs</text>
+<path d="M64 318 H419 Q432 318 432 331 V499 Q432 529 402 529 H47 Q34 529 34 516 V348 Q34 318 64 318 Z" fill="#E8E2EA"/>
+<text x="52" y="349" font-family="sans-serif" font-size="18" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">Workouts (All)</text>
+<path d="M79 376.0 L405 376.0" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<text x="63" y="380.0" font-family="sans-serif" font-size="9.5" font-weight="500" fill="#74677B" text-anchor="end" letter-spacing="0">6</text>
+<path d="M79 393.3333333333333 L405 393.3333333333333" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<path d="M79 410.6666666666667 L405 410.6666666666667" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<text x="63" y="414.6666666666667" font-family="sans-serif" font-size="9.5" font-weight="500" fill="#74677B" text-anchor="end" letter-spacing="0">4</text>
+<path d="M79 428.0 L405 428.0" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<path d="M79 445.3333333333333 L405 445.3333333333333" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<text x="63" y="449.3333333333333" font-family="sans-serif" font-size="9.5" font-weight="500" fill="#74677B" text-anchor="end" letter-spacing="0">2</text>
+<path d="M79 462.66666666666663 L405 462.66666666666663" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<path d="M79 480.0 L405 480.0" fill="none" stroke="#C9B8D1" stroke-width="0.8" stroke-linecap="round" opacity="0.38" stroke-dasharray="3 5"/>
+<text x="63" y="484.0" font-family="sans-serif" font-size="9.5" font-weight="500" fill="#74677B" text-anchor="end" letter-spacing="0">0</text>
+<path d="M96 379 L394 480 L394 480 L96 480 Z" fill="#7700E8" opacity="0.13"/>
+<path d="M96 379 L394 480" fill="none" opacity="1" stroke="#7700E8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="96" cy="379" r="5" fill="#7700E8"/>
+<circle cx="394" cy="480" r="5" fill="#7700E8"/>
+<text x="96" y="507" font-family="sans-serif" font-size="10" font-weight="650" fill="#74677B" text-anchor="middle" letter-spacing="0">21 SEP</text>
+<text x="394" y="507" font-family="sans-serif" font-size="10" font-weight="650" fill="#74677B" text-anchor="middle" letter-spacing="0">28 SEP</text>
+<path d="M59 542 H420 Q432 542 432 554 V566 Q432 591 407 591 H46 Q34 591 34 579 V567 Q34 542 59 542 Z" fill="#F0ECE9"/>
+<text x="67" y="573" font-family="sans-serif" font-size="13" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">1W</text>
+<text x="134" y="573" font-family="sans-serif" font-size="13" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">1M</text>
+<text x="201" y="573" font-family="sans-serif" font-size="13" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">3M</text>
+<text x="268" y="573" font-family="sans-serif" font-size="13" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">6M</text>
+<text x="335" y="573" font-family="sans-serif" font-size="13" font-weight="650" fill="#211625" text-anchor="middle" letter-spacing="0">1Y</text>
+<path d="M397 546 H423 Q433 546 433 556 V564 Q433 587 410 587 H384 Q372 587 372 575 V571 Q372 546 397 546 Z" fill="#EBD8FF"/>
+<text x="402" y="573" font-family="sans-serif" font-size="13" font-weight="850" fill="#30104D" text-anchor="middle" letter-spacing="0">All</text>
+<text x="48" y="631" font-family="sans-serif" font-size="15" font-weight="750" fill="#211625" text-anchor="start" letter-spacing="0">Additional Details</text>
+<path d="M404 624l7 7 7-7" fill="none" opacity="1" stroke="#694097" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M60 676 H436 Q452 676 452 692 V911 Q452 949 414 949 H36 Q18 949 18 931 V718 Q18 676 60 676 Z" fill="#F0ECE9"/>
+<text x="40" y="720" font-family="sans-serif" font-size="25" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">Exercise progress</text>
+<path d="M61 737 H421 Q434 737 434 750 V896 Q434 924 406 924 H47 Q34 924 34 911 V764 Q34 737 61 737 Z" fill="#FFFCFA"/>
+<text x="52" y="774" font-family="sans-serif" font-size="17" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">Barbell Squat</text>
+<path d="M405 761l7 7-7 7" fill="none" opacity="1" stroke="#74677B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M56 804 L255 804" fill="none" stroke="#C9B8D1" stroke-width="0.7" stroke-linecap="round" opacity="0.36"/>
+<path d="M56 836 L255 836" fill="none" stroke="#C9B8D1" stroke-width="0.7" stroke-linecap="round" opacity="0.36"/>
+<path d="M56 868 L255 868" fill="none" stroke="#C9B8D1" stroke-width="0.7" stroke-linecap="round" opacity="0.36"/>
+<path d="M61 862 L136 845 L239 803" fill="none" opacity="1" stroke="#268DE0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/>
+<circle cx="136" cy="845" r="4" fill="#268DE0"/>
+<circle cx="239" cy="803" r="4" fill="#268DE0"/>
+<path d="M298 789 H406 Q417 789 417 800 V832 Q417 851 398 851 H289 Q278 851 278 840 V809 Q278 789 298 789 Z" fill="#E8E2EA"/>
+<text x="291" y="811" font-family="sans-serif" font-size="10" font-weight="650" fill="#74677B" text-anchor="start" letter-spacing="0">1 Rep Max</text>
+<text x="291" y="839" font-family="sans-serif" font-size="16" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">--   --</text>
+<path d="M296 861 H407 Q417 861 417 871 V891 Q417 909 399 909 H288 Q278 909 278 899 V879 Q278 861 296 861 Z" fill="#E8E2EA"/>
+<text x="291" y="880" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#74677B" text-anchor="start" letter-spacing="0">Est. 1RM</text>
+<text x="291" y="901" font-family="sans-serif" font-size="14" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">--</text>
+<rect x="0" y="891" width="470" height="99" rx="0" fill="#F1ECEB"/>
+<path d="M0 891 L470 891" fill="none" stroke="#C9B8D1" stroke-width="1" stroke-linecap="round" opacity="0.36"/>
+<g transform="translate(34 909) scale(1.0833333333333333)" fill="none" stroke="#74677B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="47" y="964" font-family="sans-serif" font-size="12" font-weight="500" fill="#74677B" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(128 909) scale(1.0833333333333333)" fill="none" stroke="#74677B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1 8 1v13c-2-2-5-2.4-8-1V5Zm16 0c-3-1.5-6-1-8 1v13c2-2 5-2.4 8-1V5Z"/></g>
+<text x="141" y="964" font-family="sans-serif" font-size="12" font-weight="500" fill="#74677B" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(222 909) scale(1.0833333333333333)" fill="none" stroke="#74677B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a8 8 0 1 1-1 5M4 4v5h5M12 7v5l3 2"/></g>
+<text x="235" y="964" font-family="sans-serif" font-size="12" font-weight="500" fill="#74677B" text-anchor="middle" letter-spacing="0">Logbook</text>
+<path d="M320 900 H351 Q364 900 364 913 V919 Q364 943 340 943 H309 Q294 943 294 928 V926 Q294 900 320 900 Z" fill="#EBD8FF"/>
+<g transform="translate(316 909) scale(1.0833333333333333)" fill="none" stroke="#30104D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="329" y="964" font-family="sans-serif" font-size="12" font-weight="800" fill="#694097" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(410 909) scale(1.0833333333333333)" fill="none" stroke="#74677B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="423" y="964" font-family="sans-serif" font-size="12" font-weight="500" fill="#74677B" text-anchor="middle" letter-spacing="0">Profile</text>
+</svg>

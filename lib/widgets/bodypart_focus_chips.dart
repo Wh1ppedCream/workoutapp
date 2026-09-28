@@ -42,7 +42,7 @@ class BodypartFocusChips extends StatelessWidget {
       return Text(emptyText, style: const TextStyle(fontSize: 12));
     }
 
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final semanticColors = context.semanticColors;
     final chipSurface = surfaces.dialogChoice;

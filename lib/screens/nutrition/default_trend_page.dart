@@ -30,7 +30,7 @@ class _DefaultTrendPageState extends State<DefaultTrendPage> {
   @override
   Widget build(BuildContext context) {
     final seriesColor =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? context.dataVisualizationTokens.primarySeries
             : Theme.of(context).primaryColor;
     return Scaffold(

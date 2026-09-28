@@ -342,7 +342,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final selectedTabFill =
         usesInkRecipe ? colorScheme.primary : theme.primaryColor;
     final selectedTabInk =

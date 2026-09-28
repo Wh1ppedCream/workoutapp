@@ -55,9 +55,7 @@ class _StretchCardState extends State<StretchCard> {
     final readOnly = widget.readOnlyMode;
     final stretchList = widget.exercise.stretchInstances;
     final addActionColor =
-        context.surfaceDecorationTokens.panel.outlined
-            ? context.semanticColors.info
-            : Colors.blue;
+        context.usesNeoPresentation ? context.semanticColors.info : Colors.blue;
 
     return TonosThemeReadyCard(
       margin: const EdgeInsets.only(bottom: 16),

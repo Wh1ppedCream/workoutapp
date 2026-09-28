@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
@@ -81,7 +82,7 @@ void main() {
           );
 
           final context = tester.element(find.byType(TonosBottomNavigationBar));
-          final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+          final usesInkRecipe = context.usesNeoPresentation;
           final navigation = tester.widget<BottomNavigationBar>(
             find.byType(BottomNavigationBar),
           );
@@ -179,4 +180,138 @@ void main() {
       );
     }
   }
+
+  Future<void> verifyLocalizedNavigationScaling(
+    WidgetTester tester, {
+    required ThemeData theme,
+    required double expectedScale,
+  }) async {
+    final semanticsHandle = tester.ensureSemantics();
+    try {
+      var observedScale = -1.0;
+      var selectedIndex = 0;
+      final tappedIndexes = <int>[];
+      Widget scaleProbeIcon(IconData icon) => Builder(
+        builder: (context) {
+          observedScale = MediaQuery.textScalerOf(context).scale(1);
+          return Icon(icon);
+        },
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          locale: const Locale('fr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
+            child: StatefulBuilder(
+              builder:
+                  (context, setState) => Scaffold(
+                    bottomNavigationBar: TonosBottomNavigationBar(
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: scaleProbeIcon(Icons.fitness_center),
+                          label: 'Train',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: scaleProbeIcon(Icons.menu_book),
+                          label: 'Catalog',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: scaleProbeIcon(Icons.history),
+                          label: 'Logbook',
+                        ),
+                      ],
+                      currentIndex: selectedIndex,
+                      onTap: (index) {
+                        tappedIndexes.add(index);
+                        setState(() => selectedIndex = index);
+                      },
+                    ),
+                  ),
+            ),
+          ),
+        ),
+      );
+
+      final navigation = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
+      expect(observedScale, expectedScale);
+      expect(navigation.items.map((item) => item.label), [
+        'Train',
+        'Catalog',
+        'Logbook',
+      ]);
+      expect(navigation.items, hasLength(3));
+      expect(navigation.currentIndex, 0);
+      expect(navigation.onTap, isNotNull);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
+            .hasFlag(SemanticsFlag.isSelected),
+        isTrue,
+      );
+      for (final label in ['Train', 'Catalog', 'Logbook']) {
+        expect(
+          tester
+              .getSemantics(find.bySemanticsLabel(RegExp('^$label')))
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isTrue,
+        );
+      }
+
+      await tester.tap(find.text('Catalog'));
+      await tester.pump();
+      expect(tappedIndexes, [1]);
+      expect(
+        tester
+            .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
+            .currentIndex,
+        1,
+      );
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
+            .hasFlag(SemanticsFlag.isSelected),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    } finally {
+      semanticsHandle.dispose();
+    }
+  }
+
+  testWidgets('Classic localized navigation owns text scaling and selection', (
+    tester,
+  ) async {
+    await verifyLocalizedNavigationScaling(
+      tester,
+      theme: AppThemeFactory.light(AppThemeFamily.classic),
+      expectedScale: 1,
+    );
+  });
+
+  testWidgets('Neo localized navigation owns text scaling and selection', (
+    tester,
+  ) async {
+    await verifyLocalizedNavigationScaling(
+      tester,
+      theme: AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      expectedScale: 1,
+    );
+  });
+
+  testWidgets('identity-less Material navigation keeps text scaling', (
+    tester,
+  ) async {
+    await verifyLocalizedNavigationScaling(
+      tester,
+      theme: ThemeData(useMaterial3: true),
+      expectedScale: 1.5,
+    );
+  });
 }

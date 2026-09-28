@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_material_theme.dart';
+import 'theme_extensions.dart';
 import 'tokens/app_data_visualization_tokens.dart';
 import 'tokens/app_effect_tokens.dart';
 import 'tokens/app_flow_tokens.dart';
@@ -47,6 +48,7 @@ abstract final class ClassicThemeDefinition {
     final nutritionTokens = AppNutritionTokens.classic(lightBase.brightness);
     return lightBase.copyWith(
       extensions: <ThemeExtension<dynamic>>[
+        const AppThemeIdentity(family: AppThemeFamilyIdentity.classic),
         semanticColors,
         AppProgressColors.fromTheme(lightBase),
         AppTutorialTokens.classic,
@@ -86,6 +88,7 @@ abstract final class ClassicThemeDefinition {
     final nutritionTokens = AppNutritionTokens.classic(darkBase.brightness);
     return darkBase.copyWith(
       extensions: <ThemeExtension<dynamic>>[
+        const AppThemeIdentity(family: AppThemeFamilyIdentity.classic),
         semanticColors,
         AppProgressColors.fromTheme(darkBase),
         AppTutorialTokens.classic,

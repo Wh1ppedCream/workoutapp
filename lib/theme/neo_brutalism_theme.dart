@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'theme_extensions.dart';
 import 'tokens/app_data_visualization_tokens.dart';
 import 'tokens/app_effect_tokens.dart';
 import 'tokens/app_flow_tokens.dart';
@@ -703,6 +704,7 @@ abstract final class NeoBrutalismThemeDefinition {
         stopIndicatorColor: yellow,
       ),
       extensions: <ThemeExtension<dynamic>>[
+        const AppThemeIdentity(family: AppThemeFamilyIdentity.neoBrutalism),
         semanticColors,
         progressColors,
         tutorialTokens,

@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2200" height="1820" viewBox="0 0 2200 1820"><rect x="0" y="0" width="2200" height="1820" rx="0" fill="#E7E2DF"/>
+<text x="54" y="68" font-family="sans-serif" font-size="40" font-weight="900" fill="#20162B" text-anchor="start" letter-spacing="0">Tonos · Material 3 Expressive</text>
+<text x="58" y="104" font-family="sans-serif" font-size="16" font-weight="500" fill="#5B4D62" text-anchor="start" letter-spacing="0">Visual implementation contract · Training Jade / Iris / Apricot · system font · data semantics remain independent</text>
+<path d="M70 132 H2151 Q2166 132 2166 147 V462 Q2166 497 2131 497 H50 Q34 497 34 481 V168 Q34 132 70 132 Z" fill="#F8F5F2"/>
+<text x="58" y="170" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">01   Color ownership · theme accents do not replace meaning</text>
+<path d="M80 192 H537 Q548 192 548 203 V248 Q548 268 528 268 H70 Q58 268 58 256 V214 Q58 192 80 192 Z" fill="#FFFCFA" stroke="#D8CFCC" stroke-width="0.8"/>
+<circle cx="81" cy="216" r="8" fill="#006B58"/>
+<circle cx="102" cy="216" r="8" fill="#66E0C1"/>
+<text x="120" y="219" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">JADE · PRIMARY / ACTION</text>
+<text x="120" y="244" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">L #006B58   ·   D #66E0C1</text>
+<text x="310" y="244" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Primary actions and limited focal emphasis</text>
+<path d="M600 192 H1057 Q1068 192 1068 203 V248 Q1068 268 1048 268 H590 Q578 268 578 256 V214 Q578 192 600 192 Z" fill="#FFFCFA" stroke="#D8CFCC" stroke-width="0.8"/>
+<circle cx="601" cy="216" r="8" fill="#694097"/>
+<circle cx="622" cy="216" r="8" fill="#D8B9FF"/>
+<text x="640" y="219" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">IRIS · STRUCTURE / SELECTION</text>
+<text x="640" y="244" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">L #694097   ·   D #D8B9FF</text>
+<text x="830" y="244" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Hierarchy, selection, focused context</text>
+<path d="M1120 192 H1577 Q1588 192 1588 203 V248 Q1588 268 1568 268 H1110 Q1098 268 1098 256 V214 Q1098 192 1120 192 Z" fill="#FFFCFA" stroke="#D8CFCC" stroke-width="0.8"/>
+<circle cx="1121" cy="216" r="8" fill="#A74717"/>
+<circle cx="1142" cy="216" r="8" fill="#FFB68F"/>
+<text x="1160" y="219" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">APRICOT · TERTIARY</text>
+<text x="1160" y="244" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">L #A74717   ·   D #FFB68F</text>
+<text x="1350" y="244" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Sparse warm accent and tertiary distinction</text>
+<path d="M1640 192 H2097 Q2108 192 2108 203 V248 Q2108 268 2088 268 H1630 Q1618 268 1618 256 V214 Q1618 192 1640 192 Z" fill="#FFFCFA" stroke="#D8CFCC" stroke-width="0.8"/>
+<circle cx="1641" cy="216" r="8" fill="#2E754C"/>
+<circle cx="1662" cy="216" r="8" fill="#A4E7B8"/>
+<text x="1680" y="219" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">SEMANTIC STATES</text>
+<text x="1680" y="244" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">L #2E754C   ·   D #A4E7B8</text>
+<text x="1870" y="244" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Success ≠ Jade · errors and warnings stay separate.</text>
+<path d="M79 280 H538 Q548 280 548 290 V335 Q548 356 527 356 H69 Q58 356 58 345 V301 Q58 280 79 280 Z" fill="#F0ECE9"/>
+<circle cx="81" cy="304" r="8" fill="#7700E8"/>
+<circle cx="102" cy="304" r="8" fill="#268DE0"/>
+<text x="120" y="307" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">CHART SERIES</text>
+<text x="120" y="332" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">A #7700E8 / B #268DE0</text>
+<text x="310" y="332" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Purple + blue remain chart-owned.</text>
+<path d="M599 280 H1058 Q1068 280 1068 290 V335 Q1068 356 1047 356 H589 Q578 356 578 345 V301 Q578 280 599 280 Z" fill="#F0ECE9"/>
+<circle cx="601" cy="304" r="8" fill="#287AD2"/>
+<circle cx="622" cy="304" r="8" fill="#398AE7"/>
+<text x="640" y="307" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">BODY HEATMAP</text>
+<text x="640" y="332" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">#287AD2 → #398AE7</text>
+<text x="830" y="332" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Blue activity scale stays data-owned.</text>
+<path d="M1119 280 H1578 Q1588 280 1588 290 V335 Q1588 356 1567 356 H1109 Q1098 356 1098 345 V301 Q1098 280 1119 280 Z" fill="#F0ECE9"/>
+<circle cx="1121" cy="304" r="8" fill="#087CC4"/>
+<circle cx="1142" cy="304" r="8" fill="#AD5100"/>
+<text x="1160" y="307" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">PLAN IDENTITIES</text>
+<text x="1160" y="332" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">Blue #087CC4 / orange #AD5100</text>
+<text x="1350" y="332" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Full Body blue · Upper 1 orange.</text>
+<path d="M1639 280 H2098 Q2108 280 2108 290 V335 Q2108 356 2087 356 H1629 Q1618 356 1618 345 V301 Q1618 280 1639 280 Z" fill="#F0ECE9"/>
+<circle cx="1641" cy="304" r="8" fill="none" stroke="#74677B" stroke-width="1.5"/>
+<circle cx="1662" cy="304" r="8" fill="none" stroke="#74677B" stroke-width="1.5"/>
+<text x="1680" y="307" font-family="sans-serif" font-size="12" font-weight="850" fill="#33263D" text-anchor="start" letter-spacing="0">PROFILE / GYM / NUTRITION</text>
+<text x="1680" y="332" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#6A5D70" text-anchor="start" letter-spacing="0">Domain-owned colors</text>
+<text x="1870" y="332" font-family="sans-serif" font-size="10.5" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">No theme color substitution.</text>
+<text x="58" y="406" font-family="sans-serif" font-size="11" font-weight="850" fill="#694097" text-anchor="start" letter-spacing="0.7">OWNERSHIP RULE</text>
+<text x="58" y="432" font-family="sans-serif" font-size="15" font-weight="650" fill="#4F4552" text-anchor="start" letter-spacing="0">Theme color supports hierarchy; success, error, warning, chart, heatmap, plan, profile, gym, and nutrition colors retain their domain meaning.</text>
+<path d="M70 510 H2151 Q2166 510 2166 525 V787 Q2166 822 2131 822 H50 Q34 822 34 806 V546 Q34 510 70 510 Z" fill="#F8F5F2"/>
+<text x="58" y="548" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">02   Surface ladders · light relationships stay neutral; dark relationships stay plum / iris</text>
+<text x="58" y="575" font-family="sans-serif" font-size="13" font-weight="850" fill="#694097" text-anchor="start" letter-spacing="0.8">LIGHT</text>
+<path d="M83 591 H225 Q236 591 236 602 V645 Q236 669 212 669 H70 Q58 669 58 657 V616 Q58 591 83 591 Z" fill="#F4F1EE" stroke="#D7CECC" stroke-width="0.8"/>
+<text x="147" y="638" font-family="sans-serif" font-size="13" font-weight="750" fill="#30253A" text-anchor="middle" letter-spacing="0">Canvas</text>
+<text x="147" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#62566A" text-anchor="middle" letter-spacing="0">#F4F1EE</text>
+<path d="M281 591 H423 Q434 591 434 602 V645 Q434 669 410 669 H268 Q256 669 256 657 V616 Q256 591 281 591 Z" fill="#F0ECE9" stroke="#D7CECC" stroke-width="0.8"/>
+<text x="345" y="638" font-family="sans-serif" font-size="13" font-weight="750" fill="#30253A" text-anchor="middle" letter-spacing="0">Low container</text>
+<text x="345" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#62566A" text-anchor="middle" letter-spacing="0">#F0ECE9</text>
+<path d="M479 591 H621 Q632 591 632 602 V645 Q632 669 608 669 H466 Q454 669 454 657 V616 Q454 591 479 591 Z" fill="#E8E2EA" stroke="#D7CECC" stroke-width="0.8"/>
+<text x="543" y="638" font-family="sans-serif" font-size="13" font-weight="750" fill="#30253A" text-anchor="middle" letter-spacing="0">Section container</text>
+<text x="543" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#62566A" text-anchor="middle" letter-spacing="0">#E8E2EA</text>
+<path d="M677 591 H819 Q830 591 830 602 V645 Q830 669 806 669 H664 Q652 669 652 657 V616 Q652 591 677 591 Z" fill="#EBD8FF" stroke="#D7CECC" stroke-width="0.8"/>
+<text x="741" y="638" font-family="sans-serif" font-size="13" font-weight="750" fill="#30253A" text-anchor="middle" letter-spacing="0">Selected container</text>
+<text x="741" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#62566A" text-anchor="middle" letter-spacing="0">#EBD8FF</text>
+<path d="M875 591 H1017 Q1028 591 1028 602 V645 Q1028 669 1004 669 H862 Q850 669 850 657 V616 Q850 591 875 591 Z" fill="#FFFCFA" stroke="#D7CECC" stroke-width="0.8"/>
+<text x="939" y="638" font-family="sans-serif" font-size="13" font-weight="750" fill="#30253A" text-anchor="middle" letter-spacing="0">Lifted / modal</text>
+<text x="939" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#62566A" text-anchor="middle" letter-spacing="0">#FFFCFA</text>
+<text x="1100" y="575" font-family="sans-serif" font-size="13" font-weight="850" fill="#694097" text-anchor="start" letter-spacing="0.8">DARK</text>
+<path d="M1125 591 H1243 Q1254 591 1254 602 V645 Q1254 669 1230 669 H1112 Q1100 669 1100 657 V616 Q1100 591 1125 591 Z" fill="#17121D"/>
+<text x="1177" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">Canvas</text>
+<text x="1177" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">#17121D</text>
+<path d="M1299 591 H1417 Q1428 591 1428 602 V645 Q1428 669 1404 669 H1286 Q1274 669 1274 657 V616 Q1274 591 1299 591 Z" fill="#211A29"/>
+<text x="1351" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">Surface</text>
+<text x="1351" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">#211A29</text>
+<path d="M1473 591 H1591 Q1602 591 1602 602 V645 Q1602 669 1578 669 H1460 Q1448 669 1448 657 V616 Q1448 591 1473 591 Z" fill="#352A40"/>
+<text x="1525" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">Container</text>
+<text x="1525" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#F7EFFA" text-anchor="middle" letter-spacing="0">#352A40</text>
+<path d="M1647 591 H1765 Q1776 591 1776 602 V645 Q1776 669 1752 669 H1634 Q1622 669 1622 657 V616 Q1622 591 1647 591 Z" fill="#593778"/>
+<text x="1699" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#F1DFFF" text-anchor="middle" letter-spacing="0">Selected</text>
+<text x="1699" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#F1DFFF" text-anchor="middle" letter-spacing="0">#593778</text>
+<path d="M1821 591 H1939 Q1950 591 1950 602 V645 Q1950 669 1926 669 H1808 Q1796 669 1796 657 V616 Q1796 591 1821 591 Z" fill="#66E0C1"/>
+<text x="1873" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#00382D" text-anchor="middle" letter-spacing="0">Primary action</text>
+<text x="1873" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#00382D" text-anchor="middle" letter-spacing="0">#66E0C1</text>
+<path d="M1995 591 H2113 Q2124 591 2124 602 V645 Q2124 669 2100 669 H1982 Q1970 669 1970 657 V616 Q1970 591 1995 591 Z" fill="#FFB68F"/>
+<text x="2047" y="638" font-family="sans-serif" font-size="12" font-weight="750" fill="#4C1E00" text-anchor="middle" letter-spacing="0">Tertiary signal</text>
+<text x="2047" y="657" font-family="sans-serif" font-size="11" font-weight="550" fill="#4C1E00" text-anchor="middle" letter-spacing="0">#FFB68F</text>
+<text x="58" y="704" font-family="sans-serif" font-size="14" font-weight="650" fill="#5E535F" text-anchor="start" letter-spacing="0">Light: warm tonal canvas → low group → section → Iris selection → lifted surface.</text>
+<text x="1100" y="704" font-family="sans-serif" font-size="14" font-weight="650" fill="#5E535F" text-anchor="start" letter-spacing="0">Dark: deep plum-black canvas → lifted plum surfaces → Iris selection; Jade and Apricot stay role-specific.</text>
+<path d="M70 839 H1037 Q1052 839 1052 854 V1157 Q1052 1192 1017 1192 H50 Q34 1192 34 1176 V875 Q34 839 70 839 Z" fill="#F8F5F2"/>
+<text x="58" y="877" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">03   Shape roles · visible on the route mockups</text>
+<path d="M100 908 H173 Q190 908 190 925 V964 Q190 1002 152 1002 H77 Q58 1002 58 983 V950 Q58 908 100 908 Z" fill="#694097"/>
+<text x="124" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Hero</text>
+<text x="124" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">42 / 17 / 38 / 19</text>
+<path d="M252 908 H334 Q348 908 348 922 V968 Q348 1002 314 1002 H233 Q216 1002 216 985 V944 Q216 908 252 908 Z" fill="#E8E2EA"/>
+<text x="282" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#33243D" text-anchor="middle" letter-spacing="0">Section</text>
+<text x="282" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">36 / 14 / 34 / 17</text>
+<path d="M406 908 H495 Q506 908 506 919 V974 Q506 1002 478 1002 H387 Q374 1002 374 989 V940 Q374 908 406 908 Z" fill="#EBD8FF"/>
+<text x="440" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#33243D" text-anchor="middle" letter-spacing="0">Metric</text>
+<text x="440" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">32 / 11 / 28 / 13</text>
+<path d="M568 908 H650 Q664 908 664 922 V971 Q664 1002 633 1002 H551 Q532 1002 532 983 V944 Q532 908 568 908 Z" fill="#006B58"/>
+<text x="598" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Action</text>
+<text x="598" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">36 / 14 / 31 / 19</text>
+<path d="M717 908 H812 Q822 908 822 918 V978 Q822 1002 798 1002 H703 Q690 1002 690 989 V935 Q690 908 717 908 Z" fill="#593778"/>
+<text x="756" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Selection</text>
+<text x="756" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">27 / 10 / 24 / 13</text>
+<path d="M869 908 H971 Q980 908 980 917 V983 Q980 1002 961 1002 H858 Q848 1002 848 992 V929 Q848 908 869 908 Z" fill="#EAF2E9"/>
+<text x="914" y="963" font-family="sans-serif" font-size="14" font-weight="800" fill="#33243D" text-anchor="middle" letter-spacing="0">Status</text>
+<text x="914" y="1024" font-family="sans-serif" font-size="11" font-weight="600" fill="#6B5B72" text-anchor="middle" letter-spacing="0">21 / 9 / 19 / 10</text>
+<path d="M94 1061 H1013 Q1027 1061 1027 1075 V1111 Q1027 1145 993 1145 H75 Q58 1145 58 1128 V1097 Q58 1061 94 1061 Z" fill="#E8E2EA"/>
+<text x="82" y="1097" font-family="sans-serif" font-size="15" font-weight="700" fill="#36263E" text-anchor="start" letter-spacing="0">Hero scale stays rare; repeated rows and controls stay compact.</text>
+<text x="82" y="1123" font-family="sans-serif" font-size="13" font-weight="550" fill="#6A5D70" text-anchor="start" letter-spacing="0">Shape signals role, not decoration. No universal capsule rule.</text>
+<path d="M1106 839 H2151 Q2166 839 2166 854 V1157 Q2166 1192 2131 1192 H1086 Q1070 1192 1070 1176 V875 Q1070 839 1106 839 Z" fill="#30253A"/>
+<text x="1094" y="877" font-family="sans-serif" font-size="18" font-weight="850" fill="#F7EFFA" text-anchor="start" letter-spacing="0">04   Typography roles · current/system sans</text>
+<path d="M1116 902 H1406 Q1416 902 1416 912 V979 Q1416 1000 1395 1000 H1105 Q1094 1000 1094 989 V924 Q1094 902 1116 902 Z" fill="#3B2F45"/>
+<text x="1111" y="927" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">HERO · 30 / 850</text>
+<text x="1111" y="970" font-family="sans-serif" font-size="30" font-weight="850" fill="#F7EFFA" text-anchor="start" letter-spacing="0">Profile</text>
+<path d="M1462 902 H1752 Q1762 902 1762 912 V979 Q1762 1000 1741 1000 H1451 Q1440 1000 1440 989 V924 Q1440 902 1462 902 Z" fill="#3B2F45"/>
+<text x="1457" y="927" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">SECTION · 20 / 750</text>
+<text x="1457" y="970" font-family="sans-serif" font-size="20" font-weight="750" fill="#D8B9FF" text-anchor="start" letter-spacing="0">Active Plans</text>
+<path d="M1808 902 H2098 Q2108 902 2108 912 V979 Q2108 1000 2087 1000 H1797 Q1786 1000 1786 989 V924 Q1786 902 1808 902 Z" fill="#3B2F45"/>
+<text x="1803" y="927" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">CARD · 17 / 700</text>
+<text x="1803" y="970" font-family="sans-serif" font-size="17" font-weight="700" fill="#F7EFFA" text-anchor="start" letter-spacing="0">Bench Press</text>
+<path d="M1116 1019 H1406 Q1416 1019 1416 1029 V1096 Q1416 1117 1395 1117 H1105 Q1094 1117 1094 1106 V1041 Q1094 1019 1116 1019 Z" fill="#3B2F45"/>
+<text x="1111" y="1044" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">METRIC · 44 / 900</text>
+<text x="1111" y="1087" font-family="sans-serif" font-size="44" font-weight="900" fill="#66E0C1" text-anchor="start" letter-spacing="0">6</text>
+<path d="M1462 1019 H1752 Q1762 1019 1762 1029 V1096 Q1762 1117 1741 1117 H1451 Q1440 1117 1440 1106 V1041 Q1440 1019 1462 1019 Z" fill="#3B2F45"/>
+<text x="1457" y="1044" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">BODY · 14 / 500</text>
+<text x="1457" y="1087" font-family="sans-serif" font-size="14" font-weight="500" fill="#D2C4D8" text-anchor="start" letter-spacing="0">Weight · 115</text>
+<path d="M1808 1019 H2098 Q2108 1019 2108 1029 V1096 Q2108 1117 2087 1117 H1797 Q1786 1117 1786 1106 V1041 Q1786 1019 1808 1019 Z" fill="#3B2F45"/>
+<text x="1803" y="1044" font-family="sans-serif" font-size="11.5" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0">METADATA · 13 / 500</text>
+<text x="1803" y="1087" font-family="sans-serif" font-size="13" font-weight="500" fill="#AA9CB0" text-anchor="start" letter-spacing="0">1/2 done · today</text>
+<text x="1094" y="1148" font-family="sans-serif" font-size="14" font-weight="550" fill="#E4D9E8" text-anchor="start" letter-spacing="0">Scale and color share the hierarchy; weight alone does not.</text>
+<path d="M70 1208 H671 Q686 1208 686 1223 V1743 Q686 1778 651 1778 H50 Q34 1778 34 1762 V1244 Q34 1208 70 1208 Z" fill="#F8F5F2"/>
+<text x="58" y="1246" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">05   Action hierarchy</text>
+<text x="58" y="1270" font-family="sans-serif" font-size="12" font-weight="800" fill="#6B5B72" text-anchor="start" letter-spacing="0.8">PRIMARY · JADE</text>
+<path d="M94 1284 H644 Q658 1284 658 1298 V1321 Q658 1352 627 1352 H76 Q58 1352 58 1334 V1320 Q58 1284 94 1284 Z" fill="#006B58"/>
+<g transform="translate(83 1306) scale(1.0416666666666667)" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="361" y="1327" font-family="sans-serif" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Start / Finish Workout</text>
+<text x="58" y="1382" font-family="sans-serif" font-size="12" font-weight="800" fill="#6B5B72" text-anchor="start" letter-spacing="0.8">SECONDARY · IRIS</text>
+<path d="M84 1394 H305 Q316 1394 316 1405 V1423 Q316 1447 292 1447 H70 Q58 1447 58 1435 V1420 Q58 1394 84 1394 Z" fill="#EBD8FF"/>
+<text x="187" y="1428" font-family="sans-serif" font-size="15" font-weight="800" fill="#30104D" text-anchor="middle" letter-spacing="0">Optimize</text>
+<text x="331" y="1428" font-family="sans-serif" font-size="13" font-weight="550" fill="#62566A" text-anchor="start" letter-spacing="0">Lower-priority action stays quieter.</text>
+<text x="58" y="1476" font-family="sans-serif" font-size="12" font-weight="800" fill="#6B5B72" text-anchor="start" letter-spacing="0.8">TERTIARY / SUPPORTING · APRICOT</text>
+<path d="M80 1488 H348 Q358 1488 358 1498 V1518 Q358 1538 338 1538 H69 Q58 1538 58 1527 V1510 Q58 1488 80 1488 Z" fill="#F0ECE9" stroke="#A74717" stroke-width="1.2"/>
+<g transform="translate(78 1502) scale(0.875)" fill="none" stroke="#A74717" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></g>
+<text x="226" y="1520" font-family="sans-serif" font-size="13" font-weight="700" fill="#8F421C" text-anchor="middle" letter-spacing="0">Browse Premade Plans</text>
+<text x="58" y="1575" font-family="sans-serif" font-size="12" font-weight="750" fill="#D2C4D8" text-anchor="start" letter-spacing="0.5">FIVE-DESTINATION NAVIGATION · TRAIN SELECTED</text>
+<rect x="58" y="1589" width="600" height="150" rx="26" fill="#352A40"/>
+<path d="M110 1604 H140 Q152 1604 152 1616 V1634 Q152 1657 129 1657 H98 Q84 1657 84 1643 V1630 Q84 1604 110 1604 Z" fill="#593778"/>
+<g transform="translate(106 1616) scale(1.0)" fill="none" stroke="#F1DFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="118" y="1684" font-family="sans-serif" font-size="13" font-weight="800" fill="#F1DFFF" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(225 1616) scale(1.0)" fill="none" stroke="#D2C4D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1 8 1v13c-2-2-5-2.4-8-1V5Zm16 0c-3-1.5-6-1-8 1v13c2-2 5-2.4 8-1V5Z"/></g>
+<text x="237" y="1684" font-family="sans-serif" font-size="13" font-weight="500" fill="#AA9CB0" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(344 1616) scale(1.0)" fill="none" stroke="#D2C4D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a8 8 0 1 1-1 5M4 4v5h5M12 7v5l3 2"/></g>
+<text x="356" y="1684" font-family="sans-serif" font-size="13" font-weight="500" fill="#AA9CB0" text-anchor="middle" letter-spacing="0">Logbook</text>
+<g transform="translate(463 1616) scale(1.0)" fill="none" stroke="#D2C4D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="475" y="1684" font-family="sans-serif" font-size="13" font-weight="500" fill="#AA9CB0" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(582 1616) scale(1.0)" fill="none" stroke="#D2C4D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="594" y="1684" font-family="sans-serif" font-size="13" font-weight="500" fill="#AA9CB0" text-anchor="middle" letter-spacing="0">Profile</text>
+<text x="58" y="1760" font-family="sans-serif" font-size="12.5" font-weight="500" fill="#62566A" text-anchor="start" letter-spacing="0">Default five shown · destination count remains configurable.</text>
+<path d="M740 1208 H1475 Q1490 1208 1490 1223 V1743 Q1490 1778 1455 1778 H720 Q704 1778 704 1762 V1244 Q704 1208 740 1208 Z" fill="#F8F5F2"/>
+<text x="728" y="1246" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">06   Workout state hierarchy</text>
+<path d="M768 1274 H1451 Q1464 1274 1464 1287 V1316 Q1464 1347 1433 1347 H746 Q730 1347 730 1331 V1312 Q730 1274 768 1274 Z" fill="#EBD8FF"/>
+<path d="M738 1274 H738 Q738 1274 738 1274 V1339 Q738 1347 730 1347 H730 Q730 1347 730 1347 V1282 Q730 1274 738 1274 Z" fill="#694097"/>
+<text x="757" y="1305" font-family="sans-serif" font-size="17" font-weight="850" fill="#694097" text-anchor="start" letter-spacing="0">Arnold Press · active</text>
+<text x="757" y="1332" font-family="sans-serif" font-size="13" font-weight="600" fill="#4F3B5B" text-anchor="start" letter-spacing="0">1/2 done · Iris edge marks current work</text>
+<path d="M754 1358 H1453 Q1464 1358 1464 1369 V1404 Q1464 1426 1442 1426 H742 Q730 1426 730 1414 V1382 Q730 1358 754 1358 Z" fill="#EAF2E9"/>
+<circle cx="757" cy="1392" r="11" fill="#2E754C"/>
+<g transform="translate(750 1385) scale(0.5833333333333334)" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></g>
+<text x="779" y="1398" font-family="sans-serif" font-size="14" font-weight="750" fill="#254E35" text-anchor="start" letter-spacing="0">Barbell Squat · completed · 2/2</text>
+<path d="M752 1437 H1454 Q1464 1437 1464 1447 V1470 Q1464 1490 1444 1490 H741 Q730 1490 730 1479 V1459 Q730 1437 752 1437 Z" fill="#EAF2E9"/>
+<rect x="751" y="1452" width="22" height="22" rx="6" fill="#2E754C"/>
+<g transform="translate(754 1455) scale(0.6666666666666666)" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></g>
+<text x="790" y="1472" font-family="sans-serif" font-size="13" font-weight="700" fill="#254E35" text-anchor="start" letter-spacing="0">Set 1 · 115 lb × 10 · completed</text>
+<path d="M752 1501 H1454 Q1464 1501 1464 1511 V1536 Q1464 1556 1444 1556 H741 Q730 1556 730 1545 V1523 Q730 1501 752 1501 Z" fill="#F0ECE9"/>
+<rect x="751" y="1517" width="22" height="22" rx="6" fill="#FFFCFA" stroke="#74677B" stroke-width="1.4"/>
+<text x="790" y="1537" font-family="sans-serif" font-size="13" font-weight="650" fill="#33263D" text-anchor="start" letter-spacing="0">Set 2 · 115 lb × 10 · incomplete</text>
+<path d="M765 1567 H1450 Q1464 1567 1464 1581 V1603 Q1464 1634 1433 1634 H748 Q730 1634 730 1616 V1602 Q730 1567 765 1567 Z" fill="#006B58"/>
+<g transform="translate(947 1589) scale(0.9166666666666666)" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></g>
+<text x="1125" y="1612" font-family="sans-serif" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Finish Workout</text>
+<text x="730" y="1666" font-family="sans-serif" font-size="14" font-weight="600" fill="#62566A" text-anchor="start" letter-spacing="0">Completed surfaces are quieter than the active exercise and page action.</text>
+<text x="730" y="1692" font-family="sans-serif" font-size="13" font-weight="500" fill="#6A5D70" text-anchor="start" letter-spacing="0">Set completion stays compact and semantically green, separate from Jade.</text>
+<path d="M1544 1208 H2151 Q2166 1208 2166 1223 V1743 Q2166 1778 2131 1778 H1524 Q1508 1778 1508 1762 V1244 Q1508 1208 1544 1208 Z" fill="#F8F5F2"/>
+<text x="1532" y="1246" font-family="sans-serif" font-size="18" font-weight="850" fill="#33233E" text-anchor="start" letter-spacing="0">07   Weight Units · modal selection</text>
+<path d="M1570 1279 H2126 Q2140 1279 2140 1293 V1666 Q2140 1700 2106 1700 H1550 Q1534 1700 1534 1684 V1315 Q1534 1279 1570 1279 Z" fill="#E8E2EA"/>
+<path d="M1620 1322 H2082 Q2097 1322 2097 1337 V1611 Q2097 1652 2056 1652 H1594 Q1577 1652 1577 1635 V1365 Q1577 1322 1620 1322 Z" fill="#FFFCFA" stroke="#D8CFCC" stroke-width="0.9"/>
+<text x="1610" y="1370" font-family="sans-serif" font-size="26" font-weight="850" fill="#211625" text-anchor="start" letter-spacing="0">Weight Units</text>
+<path d="M1630 1392 H2064 Q2076 1392 2076 1404 V1454 Q2076 1483 2047 1483 H1613 Q1598 1483 1598 1468 V1424 Q1598 1392 1630 1392 Z" fill="#EBD8FF"/>
+<circle cx="1630" cy="1437" r="12" fill="none" stroke="#694097" stroke-width="2"/>
+<circle cx="1630" cy="1437" r="6" fill="#694097"/>
+<text x="1660" y="1434" font-family="sans-serif" font-size="17" font-weight="800" fill="#30104D" text-anchor="start" letter-spacing="0">Pounds</text>
+<text x="1660" y="1457" font-family="sans-serif" font-size="13" font-weight="550" fill="#4F3B5B" text-anchor="start" letter-spacing="0">lbs · selected</text>
+<path d="M1626 1495 H2062 Q2072 1495 2072 1505 V1551 Q2072 1573 2050 1573 H1614 Q1602 1573 1602 1561 V1519 Q1602 1495 1626 1495 Z" fill="#F0ECE9"/>
+<circle cx="1631" cy="1534" r="11" fill="none" stroke="#74677B" stroke-width="1.6"/>
+<text x="1660" y="1531" font-family="sans-serif" font-size="16" font-weight="700" fill="#30253A" text-anchor="start" letter-spacing="0">Kilograms</text>
+<text x="1660" y="1553" font-family="sans-serif" font-size="13" font-weight="500" fill="#62566A" text-anchor="start" letter-spacing="0">kg · available</text>
+<text x="1534" y="1736" font-family="sans-serif" font-size="13" font-weight="550" fill="#62566A" text-anchor="start" letter-spacing="0">Iris selection · warm lifted surface · neutral alternative.</text>
+<text x="58" y="1802" font-family="sans-serif" font-size="15" font-weight="700" fill="#4E4352" text-anchor="start" letter-spacing="0">Tonos M3E uses hierarchy, role-owned color, scale and geometry to clarify the existing workflow.</text>
+</svg>

@@ -65,7 +65,7 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final usesClassicPresentation = context.usesClassicPresentation;
     final panelForeground =
         usesInkRecipe
@@ -380,7 +380,7 @@ class WorkoutCompletionStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.sheet.outlined;
+    final neo = context.usesNeoPresentation;
     final foreground = tonosForegroundForSurface(
       context,
       context.surfaceTokens.sheet,
@@ -577,7 +577,7 @@ class WorkoutCompletionPresentation extends StatelessWidget {
     final theme = Theme.of(context);
     final semantic = context.semanticColors;
     final completionColor = semantic.completionAccent;
-    final usesInkRecipe = context.surfaceDecorationTokens.sheet.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final shapes = context.shapeTokens;
     final celebrationTextStyle = DefaultTextStyle.of(
       context,
@@ -705,7 +705,7 @@ class WorkoutCompletionPresentation extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final shapes = context.shapeTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.sheet.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final preservesClassicDensity =
         context.usesClassicPresentation &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.15;

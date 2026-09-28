@@ -254,7 +254,7 @@ class _WeightCardState extends State<WeightCard> {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final effects = context.effectTokens;
-    final usesInkRecipe = context.surfaceDecorationTokens.card.outlined;
+    final usesInkRecipe = context.usesNeoPresentation;
     final we = widget.exercise;
     final sets = we.sets;
     final readOnly = widget.readOnlyMode;

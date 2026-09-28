@@ -217,7 +217,7 @@ class HistorySummaryWidgetState extends State<HistorySummaryWidget>
                     children: List.generate(tabLabels.length, (i) {
                       final isSelected = i == _selectedIndex;
                       final tabForeground =
-                          context.surfaceDecorationTokens.panel.outlined
+                          context.usesNeoPresentation
                               ? tonosForegroundForSurface(
                                 context,
                                 isSelected

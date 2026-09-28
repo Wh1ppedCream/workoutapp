@@ -400,10 +400,7 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: pages),
-      bottomNavigationBar:
-          Localizations.localeOf(context).languageCode == 'en'
-              ? bottomNavigationBar
-              : MediaQuery.withNoTextScaling(child: bottomNavigationBar),
+      bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: Consumer<ActiveSession>(
         builder:
             (_, session, __) =>

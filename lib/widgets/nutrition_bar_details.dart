@@ -125,7 +125,7 @@ class NutritionBarDetails extends StatelessWidget {
         final fullWidth = constraints.maxWidth;
         final filledWidth = fullWidth * factor;
         final foreground =
-            context.surfaceDecorationTokens.panel.outlined
+            context.usesNeoPresentation
                 ? tonosForegroundForSurface(context, color)
                 : Colors.white;
 
@@ -208,7 +208,7 @@ class NutritionBarDetails extends StatelessWidget {
     final trackColor = color.withValues(alpha: 0.3);
     final remaining = target - consumed;
     final foreground =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? tonosForegroundForSurface(context, color)
             : Colors.white;
 

@@ -48,7 +48,7 @@ class DashboardHero extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final heroForeground =
-        context.surfaceDecorationTokens.panel.outlined
+        context.usesNeoPresentation
             ? tonosForegroundForSurface(context, surfaces.dashboardHero)
             : null;
     return Container(
@@ -1157,7 +1157,7 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final usageForeground =
         neo
             ? tonosForegroundForSurface(context, surfaces.dashboardUsage)

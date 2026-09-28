@@ -451,8 +451,7 @@ void main() {
 
         final baseTheme = Theme.of(outerContext);
         final presentation = outerContext.settingsPresentationTokens;
-        final usesInkRecipe =
-            outerContext.surfaceDecorationTokens.panel.outlined;
+        final usesInkRecipe = outerContext.usesNeoPresentation;
         final sectionSurface = outerContext.surfaceTokens.settingsSection;
         final foreground = tonosForegroundForSurface(
           outerContext,
@@ -628,8 +627,7 @@ void main() {
 
         final baseTheme = Theme.of(outerContext);
         final presentation = outerContext.settingsPresentationTokens;
-        final usesInkRecipe =
-            outerContext.surfaceDecorationTokens.panel.outlined;
+        final usesInkRecipe = outerContext.usesNeoPresentation;
         final sectionSurface = outerContext.surfaceTokens.settingsSection;
         final foreground = tonosForegroundForSurface(
           outerContext,
@@ -1280,7 +1278,7 @@ void main() {
       AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
     ]) {
       late List<InputDecoration> decorations;
-      final isNeo = theme.surfaceDecorationTokens.panel.outlined;
+      final isNeo = theme.usesNeoPresentation;
       final expectedError =
           theme.brightness == Brightness.dark
               ? const Color(0xFF5C102C)

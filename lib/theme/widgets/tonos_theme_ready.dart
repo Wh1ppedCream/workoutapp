@@ -28,7 +28,7 @@ class TonosThemeReadyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.surfaceDecorationTokens.card.outlined) {
+    if (!context.usesNeoPresentation) {
       return Card(
         margin: margin,
         color: color,

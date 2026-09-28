@@ -20,21 +20,36 @@ class TonosBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final usesInkRecipe = context.surfaceDecorationTokens.panel.outlined;
-    if (!usesInkRecipe) {
-      return BottomNavigationBar(
-        items: items,
-        currentIndex: currentIndex,
-        onTap: onTap,
-      );
-    }
-
-    return _NeoBottomNavigationBar(
+    final materialNavigation = BottomNavigationBar(
       items: items,
       currentIndex: currentIndex,
       onTap: onTap,
     );
+
+    if (context.usesNeoPresentation) {
+      return _withCurrentFamilyLocaleScaling(
+        context,
+        _NeoBottomNavigationBar(
+          items: items,
+          currentIndex: currentIndex,
+          onTap: onTap,
+        ),
+      );
+    }
+
+    if (context.usesClassicPresentation) {
+      return _withCurrentFamilyLocaleScaling(context, materialNavigation);
+    }
+
+    // An identity-less ThemeData keeps the ordinary Material component.
+    return materialNavigation;
   }
+}
+
+Widget _withCurrentFamilyLocaleScaling(BuildContext context, Widget child) {
+  return Localizations.localeOf(context).languageCode == 'en'
+      ? child
+      : MediaQuery.withNoTextScaling(child: child);
 }
 
 /// The Neo rail is intentionally a single navigation surface. The selected

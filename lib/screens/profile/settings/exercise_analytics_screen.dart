@@ -325,7 +325,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                 onPressed: _isSavingCredits ? null : _savePendingCredits,
                 backgroundColor: SettingsAccent.advanced,
                 foregroundColor:
-                    context.surfaceDecorationTokens.panel.outlined
+                    context.usesNeoPresentation
                         ? tonosForegroundForSurface(
                           context,
                           SettingsAccent.advanced,
@@ -435,7 +435,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final pickerSurface =
         neo
             ? surfaces.settingsSection
@@ -519,7 +519,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final tabSurface =
         neo
             ? surfaces.settingsSection
@@ -786,7 +786,7 @@ class _MuscleCreditCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final cardSurface =
         neo
             ? surfaces.settingsSection
@@ -915,7 +915,7 @@ class _BodyPartCreditCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final cardSurface =
         neo
             ? surfaces.settingsSection

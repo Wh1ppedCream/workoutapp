@@ -599,8 +599,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }) {
     final generation = context.generationTokens;
     final selected = value == groupValue;
-    final coloredSelection =
-        selected && context.surfaceDecorationTokens.panel.outlined;
+    final coloredSelection = selected && context.usesNeoPresentation;
     final selectedInk = context.cs.onPrimaryContainer;
     final shape = RoundedRectangleBorder(
       borderRadius: generation.choiceShape,
@@ -1092,7 +1091,7 @@ class _OnboardingPlanActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final generation = context.generationTokens;
     final strings = AppLocalizations.of(context);
-    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final neo = context.usesNeoPresentation;
     final actionForeground =
         neo
             ? tonosForegroundForSurface(context, generation.actionBarSurface)
