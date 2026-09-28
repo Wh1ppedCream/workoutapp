@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="470" height="1019" viewBox="0 0 470 1019"><rect x="0" y="0" width="470" height="1019" rx="0" fill="#FFF8FD"/>
+<text x="28" y="37" font-family="sans-serif" font-size="16" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">11:32</text>
+<text x="86" y="36" font-family="sans-serif" font-size="14" font-weight="600" fill="#1D1B20" text-anchor="start" letter-spacing="0">✉</text>
+<circle cx="112" cy="31" r="7" fill="#7D5260"/>
+<text x="342" y="37" font-family="sans-serif" font-size="17" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">ᛒ</text>
+<rect x="360" y="25" width="3" height="10" rx="1" fill="#625B71"/>
+<rect x="367" y="21" width="3" height="14" rx="1" fill="#625B71"/>
+<rect x="374" y="18" width="3" height="17" rx="1" fill="#625B71"/>
+<path d="M386 25q10-9 20 0M390 30q6-5 12 0" fill="none" opacity="1" stroke="#1D1B20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="414" y="21" width="30" height="15" rx="4" fill="none" stroke="#1D1B20" stroke-width="1.2"/>
+<rect x="417" y="24" width="21" height="9" rx="2" fill="#41CA6B"/>
+<rect x="445" y="25" width="3" height="7" rx="1" fill="#1D1B20"/>
+<text x="427" y="32" font-family="sans-serif" font-size="10" font-weight="800" fill="#07140B" text-anchor="middle" letter-spacing="0">80</text>
+<rect x="177" y="1002" width="116" height="5" rx="3" fill="#1D1B20"/>
+<rect x="22" y="74" width="421" height="140" rx="42" fill="#F4ECFA"/>
+<circle cx="72" cy="144" r="30" fill="#EADDFF"/>
+<g transform="translate(59 131) scale(1.0833333333333333)" fill="#6750A4" stroke="#6750A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="118" y="130" font-family="sans-serif" font-size="31" font-weight="900" fill="#1D1B20" text-anchor="start" letter-spacing="0">Profile</text>
+<text x="119" y="161" font-family="sans-serif" font-size="14" font-weight="450" fill="#49454F" text-anchor="start" letter-spacing="0">Personalize Tonos, manage training</text>
+<text x="119" y="181" font-family="sans-serif" font-size="14" font-weight="450" fill="#49454F" text-anchor="start" letter-spacing="0">defaults, and keep your data healthy.</text>
+<rect x="27" y="231" width="5" height="38" rx="3" fill="#B39DDB"/>
+<text x="42" y="254" font-family="sans-serif" font-size="18" font-weight="800" fill="#B39DDB" text-anchor="start" letter-spacing="0">Account</text>
+<text x="41" y="279" font-family="sans-serif" font-size="12" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Your identity and app-level appearance.</text>
+<rect x="22" y="295" width="421" height="301" rx="20" fill="#F4EDF6" stroke="#E3DCE8" stroke-width="0.8"/>
+<rect x="38" y="327.5" width="46" height="46" rx="16" fill="#F4ECFA"/>
+<g transform="translate(48.5 338.0) scale(1.0416666666666667)" fill="none" stroke="#B39DDB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 14.5 5l3.2-.2.8 3 2.5 2-1.4 2.9.4 3.2-3 1-1.8 2.6-3.1-1.1-3.1 1.1-1.8-2.6-3-1 .4-3.2L3 9.8l2.5-2 .8-3 3.2.2L12 3Z"/></g>
+<text x="103" y="334" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">User Information</text>
+<text x="103" y="356" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Name, body details, and activity</text>
+<text x="103" y="372" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">profile.</text>
+<path d="M102 397 L424 397" fill="none" stroke="#79747E" stroke-width="0.7" stroke-linecap="round" opacity="0.25"/>
+<path d="M416 341l6 6-6 6" fill="none" opacity="1" stroke="#49454F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="38" y="421.5" width="46" height="46" rx="16" fill="#F4ECFA"/>
+<g transform="translate(48.5 432.0) scale(1.0416666666666667)" fill="none" stroke="#CE93D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.2-3.6 1.4 1.4 0 0 1 .8-2.5H17a4 4 0 0 0 4-4c0-4.4-4-7.9-9-7.9ZM7.5 11h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></g>
+<text x="103" y="428" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">UI &amp; Appearance</text>
+<text x="103" y="450" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Theme, onboarding, and bottom tab</text>
+<text x="103" y="466" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">setup.</text>
+<path d="M102 491 L424 491" fill="none" stroke="#79747E" stroke-width="0.7" stroke-linecap="round" opacity="0.25"/>
+<path d="M416 435l6 6-6 6" fill="none" opacity="1" stroke="#49454F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="38" y="515.5" width="46" height="46" rx="16" fill="#F4ECFA"/>
+<g transform="translate(48.5 526.0) scale(1.0416666666666667)" fill="none" stroke="#CE93D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3 20c.5-3.4 2.5-5 6-5s5.5 1.6 6 5M16 5.2a3.5 3.5 0 0 1 0 6.5M17 15c2.4.4 3.7 2 4 5"/></g>
+<text x="103" y="522" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">Guided Tutorials</text>
+<text x="103" y="544" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Replay walkthroughs and reset guided</text>
+<text x="103" y="560" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">help.</text>
+<path d="M416 529l6 6-6 6" fill="none" opacity="1" stroke="#49454F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="27" y="606" width="5" height="38" rx="3" fill="#4DB6AC"/>
+<text x="42" y="629" font-family="sans-serif" font-size="18" font-weight="800" fill="#4DB6AC" text-anchor="start" letter-spacing="0">Training</text>
+<text x="41" y="654" font-family="sans-serif" font-size="12" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Exercise defaults and progress-related controls.</text>
+<rect x="22" y="678" width="421" height="199" rx="20" fill="#F4EDF6" stroke="#E3DCE8" stroke-width="0.8"/>
+<rect x="38" y="710.0" width="46" height="46" rx="16" fill="#E0F2F1"/>
+<g transform="translate(48.5 720.5) scale(1.0416666666666667)" fill="none" stroke="#4DB6AC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="103" y="715" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">Gym &amp; Workout Settings</text>
+<text x="103" y="737" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Workout generation, rankings, flows,</text>
+<text x="103" y="753" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">and equipment logic.</text>
+<path d="M102 781 L424 781" fill="none" stroke="#79747E" stroke-width="0.7" stroke-linecap="round" opacity="0.25"/>
+<path d="M416 723l6 6-6 6" fill="none" opacity="1" stroke="#49454F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="38" y="802.5" width="46" height="46" rx="16" fill="#E8F5E9"/>
+<g transform="translate(48.5 813.0) scale(1.0416666666666667)" fill="none" stroke="#81C784" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="103" y="811" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">Progress Settings</text>
+<text x="103" y="833" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Measurement and trend tracking</text>
+<text x="103" y="849" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">setup.</text>
+<path d="M416 816l6 6-6 6" fill="none" opacity="1" stroke="#49454F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="27" y="885" width="5" height="38" rx="3" fill="#64B5F6"/>
+<text x="42" y="908" font-family="sans-serif" font-size="18" font-weight="800" fill="#64B5F6" text-anchor="start" letter-spacing="0">Data</text>
+<text x="41" y="933" font-family="sans-serif" font-size="12" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Storage, privacy, and export controls.</text>
+<rect x="0" y="927" width="470" height="63" rx="0" fill="#FFFBFF"/>
+<path d="M0 927 L470 927" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.25"/>
+<g transform="translate(36 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="47" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(130 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1 8 1v13c-2-2-5-2.4-8-1V5Zm16 0c-3-1.5-6-1-8 1v13c2-2 5-2.4 8-1V5Z"/></g>
+<text x="141" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(224 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a8 8 0 1 1-1 5M4 4v5h5M12 7v5l3 2"/></g>
+<text x="235" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Logbook</text>
+<g transform="translate(318 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="329" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Progress</text>
+<rect x="399" y="932" width="48" height="28" rx="14" fill="#EADDFF"/>
+<g transform="translate(412 934) scale(0.9166666666666666)" fill="#21005D" stroke="#21005D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="423" y="978" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#6750A4" text-anchor="middle" letter-spacing="0">Profile</text>
+</svg>

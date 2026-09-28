@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="470" height="1019" viewBox="0 0 470 1019"><rect x="0" y="0" width="470" height="1019" rx="0" fill="#FFF8FD"/>
+<text x="28" y="37" font-family="sans-serif" font-size="16" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">11:31</text>
+<text x="86" y="36" font-family="sans-serif" font-size="14" font-weight="600" fill="#1D1B20" text-anchor="start" letter-spacing="0">✉</text>
+<circle cx="112" cy="31" r="7" fill="#7D5260"/>
+<text x="342" y="37" font-family="sans-serif" font-size="17" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">ᛒ</text>
+<rect x="360" y="25" width="3" height="10" rx="1" fill="#625B71"/>
+<rect x="367" y="21" width="3" height="14" rx="1" fill="#625B71"/>
+<rect x="374" y="18" width="3" height="17" rx="1" fill="#625B71"/>
+<path d="M386 25q10-9 20 0M390 30q6-5 12 0" fill="none" opacity="1" stroke="#1D1B20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="414" y="21" width="30" height="15" rx="4" fill="none" stroke="#1D1B20" stroke-width="1.2"/>
+<rect x="417" y="24" width="21" height="9" rx="2" fill="#41CA6B"/>
+<rect x="445" y="25" width="3" height="7" rx="1" fill="#1D1B20"/>
+<text x="427" y="32" font-family="sans-serif" font-size="10" font-weight="800" fill="#07140B" text-anchor="middle" letter-spacing="0">80</text>
+<rect x="177" y="1002" width="116" height="5" rx="3" fill="#1D1B20"/>
+<rect x="20" y="78" width="430" height="586" rx="18" fill="#FFFBFF" stroke="#E3DCE8" stroke-width="0.8"/>
+<text x="235" y="123" font-family="sans-serif" font-size="25" font-weight="800" fill="#1D1B20" text-anchor="middle" letter-spacing="0">Workout Report</text>
+<rect x="39" y="146" width="124" height="117" rx="21" fill="#EADDFF" stroke="#6750A4" stroke-width="1.6"/>
+<text x="53" y="177" font-family="sans-serif" font-size="14.5" font-weight="800" fill="#21005D" text-anchor="start" letter-spacing="0">Workouts</text>
+<text x="53" y="218" font-family="sans-serif" font-size="30" font-weight="850" fill="#21005D" text-anchor="start" letter-spacing="0">6</text>
+<text x="112" y="218" font-family="sans-serif" font-size="10" font-weight="450" fill="#21005D" text-anchor="start" letter-spacing="0">total</text>
+<text x="53" y="247" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 6 workouts</text>
+<rect x="174" y="146" width="124" height="117" rx="18" fill="#F4EDF6" stroke="#E3DCE8" stroke-width="0.8"/>
+<text x="188" y="177" font-family="sans-serif" font-size="14" font-weight="650" fill="#1D1B20" text-anchor="start" letter-spacing="0">Time</text>
+<text x="188" y="218" font-family="sans-serif" font-size="23" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">1m 54s</text>
+<text x="188" y="247" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 1m 54s</text>
+<rect x="309" y="146" width="124" height="117" rx="18" fill="#F4EDF6" stroke="#E3DCE8" stroke-width="0.8"/>
+<text x="323" y="177" font-family="sans-serif" font-size="14" font-weight="650" fill="#1D1B20" text-anchor="start" letter-spacing="0">Volume</text>
+<text x="323" y="218" font-family="sans-serif" font-size="23" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">15k lbs</text>
+<text x="323" y="247" font-family="sans-serif" font-size="10.5" font-weight="650" fill="#B3261E" text-anchor="start" letter-spacing="0">↓ 15k lbs</text>
+<rect x="39" y="281" width="395" height="245" rx="22" fill="#ECE5F1"/>
+<text x="57" y="314" font-family="sans-serif" font-size="17" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">Workouts (All)</text>
+<path d="M94 346.0 L414 346.0" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="350.0" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">6</text>
+<path d="M94 368.5 L414 368.5" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="372.5" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">5</text>
+<path d="M94 391.0 L414 391.0" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="395.0" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">4</text>
+<path d="M94 413.5 L414 413.5" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<path d="M94 436.0 L414 436.0" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="440.0" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">2</text>
+<path d="M94 458.5 L414 458.5" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="462.5" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">1</text>
+<path d="M94 481.0 L414 481.0" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28" stroke-dasharray="4 7"/>
+<text x="79" y="485.0" font-family="sans-serif" font-size="10" font-weight="450" fill="#625B71" text-anchor="end" letter-spacing="0">0</text>
+<path d="M94 346 L414 481 L414 481 L94 481 Z" fill="#6200EE" opacity="0.1"/>
+<path d="M94 346 L414 481" fill="none" opacity="1" stroke="#6200EE" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="94" cy="346" r="4.5" fill="#6200EE"/>
+<circle cx="414" cy="481" r="4.5" fill="#6200EE"/>
+<text x="75" y="336" font-family="sans-serif" font-size="10" font-weight="600" fill="#1D1B20" text-anchor="middle" letter-spacing="0">6</text>
+<text x="75" y="484" font-family="sans-serif" font-size="10" font-weight="500" fill="#1D1B20" text-anchor="middle" letter-spacing="0">0</text>
+<text x="94" y="507" font-family="sans-serif" font-size="10" font-weight="550" fill="#49454F" text-anchor="middle" letter-spacing="0">21</text>
+<text x="414" y="507" font-family="sans-serif" font-size="10" font-weight="550" fill="#49454F" text-anchor="middle" letter-spacing="0">28</text>
+<text x="94" y="520" font-family="sans-serif" font-size="9" font-weight="500" fill="#49454F" text-anchor="middle" letter-spacing="0">SEP</text>
+<text x="414" y="520" font-family="sans-serif" font-size="9" font-weight="500" fill="#49454F" text-anchor="middle" letter-spacing="0">SEP</text>
+<rect x="39" y="539" width="395" height="47" rx="22" fill="#ECE5F1"/>
+<text x="70" y="569" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">1W</text>
+<text x="137" y="569" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">1M</text>
+<text x="204" y="569" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">3M</text>
+<text x="271" y="569" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">6M</text>
+<text x="338" y="569" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="middle" letter-spacing="0">1Y</text>
+<rect x="376" y="543" width="59" height="39" rx="18" fill="#6750A4"/>
+<text x="405" y="569" font-family="sans-serif" font-size="12.5" font-weight="750" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">All</text>
+<rect x="39" y="594" width="395" height="51" rx="17" fill="#F4EDF6" stroke="#E3DCE8" stroke-width="0.8"/>
+<text x="54" y="625" font-family="sans-serif" font-size="14" font-weight="700" fill="#1D1B20" text-anchor="start" letter-spacing="0">Additional Details</text>
+<path d="M407 615l7 7 7-7" fill="none" opacity="1" stroke="#49454F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="20" y="685" width="430" height="265" rx="18" fill="#F4EDF6"/>
+<text x="235" y="729" font-family="sans-serif" font-size="24" font-weight="800" fill="#1D1B20" text-anchor="middle" letter-spacing="0">Exercise progress</text>
+<rect x="40" y="752" width="390" height="188" rx="20" fill="#FFFBFF"/>
+<text x="58" y="786" font-family="sans-serif" font-size="17" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">Barbell Squat</text>
+<path d="M404 772l7 7-7 7" fill="none" opacity="1" stroke="#49454F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M88 822 L277 822" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28"/>
+<path d="M88 854 L277 854" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28"/>
+<path d="M88 886 L277 886" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.28"/>
+<path d="M156 908 L226 876 L295 822" fill="none" opacity="1" stroke="#1E88E5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5"/>
+<circle cx="156" cy="908" r="3.5" fill="#1E88E5"/>
+<circle cx="295" cy="822" r="3.5" fill="#1E88E5"/>
+<rect x="308" y="765" width="106" height="68" rx="17" fill="#F4EDF6"/>
+<text x="321" y="791" font-family="sans-serif" font-size="10" font-weight="550" fill="#625B71" text-anchor="start" letter-spacing="0">1 Rep Max</text>
+<text x="321" y="816" font-family="sans-serif" font-size="17" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">--</text>
+<rect x="308" y="842" width="106" height="69" rx="17" fill="#F4EDF6"/>
+<text x="321" y="869" font-family="sans-serif" font-size="10" font-weight="550" fill="#625B71" text-anchor="start" letter-spacing="0">Est. 1RM</text>
+<text x="321" y="894" font-family="sans-serif" font-size="17" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">--</text>
+<rect x="0" y="927" width="470" height="63" rx="0" fill="#FFFBFF"/>
+<path d="M0 927 L470 927" fill="none" stroke="#79747E" stroke-width="0.8" stroke-linecap="round" opacity="0.25"/>
+<g transform="translate(36 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="47" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(130 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1 8 1v13c-2-2-5-2.4-8-1V5Zm16 0c-3-1.5-6-1-8 1v13c2-2 5-2.4 8-1V5Z"/></g>
+<text x="141" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(224 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a8 8 0 1 1-1 5M4 4v5h5M12 7v5l3 2"/></g>
+<text x="235" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Logbook</text>
+<rect x="305" y="932" width="48" height="28" rx="14" fill="#EADDFF"/>
+<g transform="translate(318 934) scale(0.9166666666666666)" fill="none" stroke="#21005D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="329" y="978" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#6750A4" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(412 934) scale(0.9166666666666666)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="423" y="978" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Profile</text>
+</svg>

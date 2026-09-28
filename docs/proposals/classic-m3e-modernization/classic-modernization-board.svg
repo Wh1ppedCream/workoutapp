@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2200" height="1600" viewBox="0 0 2200 1600"><rect x="0" y="0" width="2200" height="1600" rx="0" fill="#EAE6EE"/>
+<text x="52" y="65" font-family="sans-serif" font-size="39" font-weight="850" fill="#24202B" text-anchor="start" letter-spacing="0">Tonos Classic · visual contract</text>
+<text x="56" y="100" font-family="sans-serif" font-size="16" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">Classic remains Tonos’s Material theme, refined selectively with useful Material 3 Expressive ideas.</text>
+<rect x="52" y="126" width="500" height="124" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="72" y="158" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#6750A4" text-anchor="start" letter-spacing="0.5">CLASSIC IDENTITY</text>
+<text x="72" y="188" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Deep-purple Material, familiar Tonos</text>
+<text x="72" y="206" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">surfaces, and the current light/dark</text>
+<text x="72" y="224" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">character remain the foundation.</text>
+<rect x="580" y="126" width="500" height="124" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="600" y="158" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#6750A4" text-anchor="start" letter-spacing="0.5">TONOS STRUCTURE</text>
+<text x="600" y="188" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Current screens, controls, navigation,</text>
+<text x="600" y="206" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">workout density, and information order</text>
+<text x="600" y="224" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">remain in place.</text>
+<rect x="1108" y="126" width="500" height="124" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="1128" y="158" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#6750A4" text-anchor="start" letter-spacing="0.5">SEMANTIC OWNERSHIP</text>
+<text x="1128" y="188" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Green means success and completion.</text>
+<text x="1128" y="206" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Plan, chart, heatmap, and settings</text>
+<text x="1128" y="224" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">colors keep their existing owners.</text>
+<rect x="1636" y="126" width="500" height="124" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="1656" y="158" font-family="sans-serif" font-size="12.5" font-weight="800" fill="#6750A4" text-anchor="start" letter-spacing="0.5">EXPRESSIVE, RESTRAINED</text>
+<text x="1656" y="188" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Strengthen useful hierarchy and selection.</text>
+<text x="1656" y="206" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">Evaluate morphs and motion separately</text>
+<text x="1656" y="224" font-family="sans-serif" font-size="13" font-weight="500" fill="#39343F" text-anchor="start" letter-spacing="0">during implementation prototyping.</text>
+<rect x="52" y="270" width="2096" height="202" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="76" y="303" font-family="sans-serif" font-size="15" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">LIGHT · warm near-white with clearer tonal steps</text>
+<text x="1120" y="303" font-family="sans-serif" font-size="15" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">DARK · familiar deep surfaces, unchanged</text>
+<rect x="76" y="322" width="178" height="94" rx="16" fill="#FFF8FD" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="165" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#29252E" text-anchor="middle" letter-spacing="0">Canvas</text>
+<text x="165" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#29252E" text-anchor="middle" letter-spacing="0">#FFF8FD</text>
+<rect x="274" y="322" width="178" height="94" rx="16" fill="#ECE5F1" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="363" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#29252E" text-anchor="middle" letter-spacing="0">Grouped</text>
+<text x="363" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#29252E" text-anchor="middle" letter-spacing="0">#ECE5F1</text>
+<rect x="472" y="322" width="178" height="94" rx="16" fill="#F4EDF6" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="561" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#29252E" text-anchor="middle" letter-spacing="0">Card</text>
+<text x="561" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#29252E" text-anchor="middle" letter-spacing="0">#F4EDF6</text>
+<rect x="670" y="322" width="178" height="94" rx="16" fill="#EADDFF" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="759" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#29252E" text-anchor="middle" letter-spacing="0">Selected</text>
+<text x="759" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#29252E" text-anchor="middle" letter-spacing="0">#EADDFF</text>
+<rect x="868" y="322" width="178" height="94" rx="16" fill="#FFFBFF" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="957" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#29252E" text-anchor="middle" letter-spacing="0">Raised / dialog</text>
+<text x="957" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#29252E" text-anchor="middle" letter-spacing="0">#FFFBFF</text>
+<rect x="1120" y="322" width="178" height="94" rx="16" fill="#141218" stroke="#4C4652" stroke-width="0.8"/>
+<text x="1209" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">Canvas</text>
+<text x="1209" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">#141218</text>
+<rect x="1318" y="322" width="178" height="94" rx="16" fill="#2C2932" stroke="#4C4652" stroke-width="0.8"/>
+<text x="1407" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">Grouped</text>
+<text x="1407" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">#2C2932</text>
+<rect x="1516" y="322" width="178" height="94" rx="16" fill="#25232A" stroke="#4C4652" stroke-width="0.8"/>
+<text x="1605" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">Card</text>
+<text x="1605" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">#25232A</text>
+<rect x="1714" y="322" width="178" height="94" rx="16" fill="#4F378B" stroke="#4C4652" stroke-width="0.8"/>
+<text x="1803" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">Selected</text>
+<text x="1803" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">#4F378B</text>
+<rect x="1912" y="322" width="178" height="94" rx="16" fill="#1C1B20" stroke="#4C4652" stroke-width="0.8"/>
+<text x="2001" y="359" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">Raised / dialog</text>
+<text x="2001" y="389" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#F2EDF6" text-anchor="middle" letter-spacing="0">#1C1B20</text>
+<text x="76" y="447" font-family="sans-serif" font-size="11" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">Only light-mode steps were separated slightly; the established dark palette is preserved.</text>
+<rect x="52" y="492" width="690" height="372" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="76" y="530" font-family="sans-serif" font-size="17" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">Action hierarchy · placement stays current</text>
+<text x="76" y="559" font-family="sans-serif" font-size="10.5" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">PRIMARY · CLASSIC MATERIAL PURPLE</text>
+<rect x="76" y="572" width="246" height="48" rx="18" fill="#6750A4"/>
+<text x="199" y="602" font-family="sans-serif" font-size="14" font-weight="750" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Start Workout</text>
+<rect x="336" y="572" width="376" height="48" rx="18" fill="#6750A4"/>
+<text x="524" y="602" font-family="sans-serif" font-size="14" font-weight="750" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Finish Workout</text>
+<text x="76" y="649" font-family="sans-serif" font-size="10.5" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">SUPPORTING</text>
+<rect x="76" y="661" width="164" height="42" rx="17" fill="#EADDFF"/>
+<text x="158" y="687" font-family="sans-serif" font-size="13" font-weight="700" fill="#21005D" text-anchor="middle" letter-spacing="0">Optimize</text>
+<g transform="translate(273 672) scale(0.6666666666666666)" fill="none" stroke="#6750A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></g>
+<text x="296" y="688" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#6750A4" text-anchor="start" letter-spacing="0">Add Set</text>
+<text x="436" y="649" font-family="sans-serif" font-size="10.5" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">UTILITY</text>
+<rect x="436" y="661" width="42" height="42" rx="15" fill="#EADDFF"/>
+<g transform="translate(446 671) scale(0.9166666666666666)" fill="none" stroke="#21005D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></g>
+<text x="490" y="687" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#625B69" text-anchor="start" letter-spacing="0">Add exercise</text>
+<text x="76" y="733" font-family="sans-serif" font-size="10.5" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">SEMANTIC COMPLETION · GREEN</text>
+<rect x="76" y="745" width="636" height="61" rx="15" fill="#E8F3E9"/>
+<circle cx="101" cy="775" r="9" fill="#388E3C"/>
+<g transform="translate(94 768) scale(0.5833333333333334)" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></g>
+<text x="123" y="781" font-family="sans-serif" font-size="14" font-weight="700" fill="#17441E" text-anchor="start" letter-spacing="0">Set 1 complete · 1/1 done</text>
+<text x="76" y="837" font-family="sans-serif" font-size="11" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">Start/Finish use primary; success green is reserved for completed work.</text>
+<rect x="765" y="492" width="680" height="372" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="789" y="530" font-family="sans-serif" font-size="17" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">Selection · clear, calm, and familiar</text>
+<text x="789" y="558" font-family="sans-serif" font-size="10" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">TRAIN TABS</text>
+<rect x="789" y="570" width="632" height="40" rx="20" fill="#ECE5F1"/>
+<rect x="793" y="574" width="306" height="32" rx="16" fill="#EADDFF"/>
+<text x="946" y="595" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#21005D" text-anchor="middle" letter-spacing="0">Overview</text>
+<text x="1262" y="595" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#49454F" text-anchor="middle" letter-spacing="0">Plans</text>
+<text x="789" y="636" font-family="sans-serif" font-size="10" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">PROGRESS RANGE</text>
+<text x="828" y="668" font-family="sans-serif" font-size="11.5" font-weight="550" fill="#39343F" text-anchor="middle" letter-spacing="0">1W</text>
+<text x="931" y="668" font-family="sans-serif" font-size="11.5" font-weight="550" fill="#39343F" text-anchor="middle" letter-spacing="0">1M</text>
+<text x="1034" y="668" font-family="sans-serif" font-size="11.5" font-weight="550" fill="#39343F" text-anchor="middle" letter-spacing="0">3M</text>
+<text x="1137" y="668" font-family="sans-serif" font-size="11.5" font-weight="550" fill="#39343F" text-anchor="middle" letter-spacing="0">6M</text>
+<text x="1240" y="668" font-family="sans-serif" font-size="11.5" font-weight="550" fill="#39343F" text-anchor="middle" letter-spacing="0">1Y</text>
+<rect x="1305" y="646" width="76" height="34" rx="17" fill="#6750A4"/>
+<text x="1343" y="668" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">All</text>
+<text x="789" y="708" font-family="sans-serif" font-size="10" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">FIVE-DESTINATION NAVIGATION</text>
+<rect x="789" y="718" width="632" height="55" rx="14" fill="#FFFBFF" stroke="#E3DCE8" stroke-width="0.8"/>
+<g transform="translate(841 725) scale(0.75)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6M6 6v12M8 10v4M16 10v4M18 6v12M21 9v6M8 12h8"/></g>
+<text x="850" y="764" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Train</text>
+<g transform="translate(960 725) scale(0.75)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5c3-1.5 6-1 8 1v13c-2-2-5-2.4-8-1V5Zm16 0c-3-1.5-6-1-8 1v13c2-2 5-2.4 8-1V5Z"/></g>
+<text x="969" y="764" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Catalog</text>
+<g transform="translate(1079 725) scale(0.75)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a8 8 0 1 1-1 5M4 4v5h5M12 7v5l3 2"/></g>
+<text x="1088" y="764" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Logbook</text>
+<rect x="1184" y="723" width="46" height="25" rx="13" fill="#EADDFF"/>
+<g transform="translate(1198 725) scale(0.75)" fill="none" stroke="#21005D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-6 4 4 8-9M15 7h6v6"/></g>
+<text x="1207" y="764" font-family="sans-serif" font-size="9.5" font-weight="650" fill="#6750A4" text-anchor="middle" letter-spacing="0">Progress</text>
+<g transform="translate(1317 725) scale(0.75)" fill="none" stroke="#79747E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21c.7-4 3.4-6 8-6s7.3 2 8 6"/></g>
+<text x="1326" y="764" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#79747E" text-anchor="middle" letter-spacing="0">Profile</text>
+<text x="789" y="801" font-family="sans-serif" font-size="10" font-weight="750" fill="#625B69" text-anchor="start" letter-spacing="0.4">DIALOG ROW</text>
+<rect x="789" y="811" width="632" height="42" rx="14" fill="#EADDFF"/>
+<circle cx="812" cy="832" r="7.5" fill="none" stroke="#6750A4" stroke-width="1.8"/>
+<circle cx="812" cy="832" r="3.6" fill="#6750A4"/>
+<text x="832" y="836" font-family="sans-serif" font-size="12.5" font-weight="650" fill="#1D1B20" text-anchor="start" letter-spacing="0">Pounds</text>
+<text x="1389" y="836" font-family="sans-serif" font-size="10.5" font-weight="450" fill="#49454F" text-anchor="end" letter-spacing="0">lbs</text>
+<rect x="1468" y="492" width="680" height="372" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="1492" y="530" font-family="sans-serif" font-size="17" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">Semantic color ownership</text>
+<rect x="1492" y="550" width="632" height="50" rx="12" fill="#F4EDF6"/>
+<text x="1508" y="571" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#29252E" text-anchor="start" letter-spacing="0">Material primary</text>
+<text x="1508" y="589" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#625B69" text-anchor="start" letter-spacing="0">General Start / Finish actions</text>
+<circle cx="2055" cy="575" r="6.5" fill="#6750A4"/>
+<rect x="1492" y="607" width="632" height="50" rx="12" fill="#F4EDF6"/>
+<text x="1508" y="628" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#29252E" text-anchor="start" letter-spacing="0">Success / completion</text>
+<text x="1508" y="646" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#625B69" text-anchor="start" letter-spacing="0">Completed exercises and sets</text>
+<circle cx="2055" cy="632" r="6.5" fill="#388E3C"/>
+<circle cx="2073" cy="632" r="6.5" fill="#81C784"/>
+<rect x="1492" y="664" width="632" height="50" rx="12" fill="#F4EDF6"/>
+<text x="1508" y="685" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#29252E" text-anchor="start" letter-spacing="0">Plan identity</text>
+<text x="1508" y="703" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#625B69" text-anchor="start" letter-spacing="0">Full Body blue · Upper 1 orange</text>
+<circle cx="2055" cy="689" r="6.5" fill="#2196F3"/>
+<circle cx="2073" cy="689" r="6.5" fill="#FF9800"/>
+<rect x="1492" y="721" width="632" height="50" rx="12" fill="#F4EDF6"/>
+<text x="1508" y="742" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#29252E" text-anchor="start" letter-spacing="0">Chart / heatmap data</text>
+<text x="1508" y="760" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#625B69" text-anchor="start" letter-spacing="0">Series and training intensity stay owned</text>
+<circle cx="2055" cy="746" r="6.5" fill="#6200EE"/>
+<circle cx="2073" cy="746" r="6.5" fill="#1E88E5"/>
+<circle cx="2091" cy="746" r="6.5" fill="#1565C0"/>
+<rect x="1492" y="778" width="632" height="50" rx="12" fill="#F4EDF6"/>
+<text x="1508" y="799" font-family="sans-serif" font-size="12.5" font-weight="700" fill="#29252E" text-anchor="start" letter-spacing="0">Settings categories</text>
+<text x="1508" y="817" font-family="sans-serif" font-size="9.5" font-weight="450" fill="#625B69" text-anchor="start" letter-spacing="0">Account · Training · Progress · Data</text>
+<circle cx="2055" cy="803" r="6.5" fill="#B39DDB"/>
+<circle cx="2073" cy="803" r="6.5" fill="#4DB6AC"/>
+<circle cx="2091" cy="803" r="6.5" fill="#81C784"/>
+<circle cx="2109" cy="803" r="6.5" fill="#64B5F6"/>
+<text x="1492" y="846" font-family="sans-serif" font-size="10.5" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">Only general actions move to purple; semantic and data meanings do not.</text>
+<rect x="52" y="884" width="1004" height="640" rx="20" fill="#FBF8FC" stroke="#D8D2DD" stroke-width="0.8"/>
+<text x="76" y="922" font-family="sans-serif" font-size="17" font-weight="750" fill="#39343F" text-anchor="start" letter-spacing="0">Typography · easier scanning, not louder</text>
+<text x="78" y="981" font-family="sans-serif" font-size="10" font-weight="750" fill="#6750A4" text-anchor="start" letter-spacing="0.4">PAGE TITLE</text>
+<text x="275" y="984" font-family="sans-serif" font-size="25" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">Workout Report</text>
+<path d="M78 1003 L1028 1003" fill="none" stroke="#E3DCE8" stroke-width="0.8" stroke-linecap="round" opacity="1"/>
+<text x="78" y="1045" font-family="sans-serif" font-size="10" font-weight="750" fill="#6750A4" text-anchor="start" letter-spacing="0.4">SECTION</text>
+<text x="275" y="1048" font-family="sans-serif" font-size="20" font-weight="750" fill="#1D1B20" text-anchor="start" letter-spacing="0">Exercise progress</text>
+<path d="M78 1067 L1028 1067" fill="none" stroke="#E3DCE8" stroke-width="0.8" stroke-linecap="round" opacity="1"/>
+<text x="78" y="1106" font-family="sans-serif" font-size="10" font-weight="750" fill="#6750A4" text-anchor="start" letter-spacing="0.4">ROW TITLE</text>
+<text x="275" y="1109" font-family="sans-serif" font-size="16.5" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">Gym &amp; Workout Settings</text>
+<path d="M78 1128 L1028 1128" fill="none" stroke="#E3DCE8" stroke-width="0.8" stroke-linecap="round" opacity="1"/>
+<text x="78" y="1160" font-family="sans-serif" font-size="10" font-weight="750" fill="#6750A4" text-anchor="start" letter-spacing="0.4">SUPPORTING</text>
+<text x="275" y="1163" font-family="sans-serif" font-size="12.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Measurement and trend tracking setup.</text>
+<path d="M78 1182 L1028 1182" fill="none" stroke="#E3DCE8" stroke-width="0.8" stroke-linecap="round" opacity="1"/>
+<text x="78" y="1243" font-family="sans-serif" font-size="10" font-weight="750" fill="#6750A4" text-anchor="start" letter-spacing="0.4">METRIC</text>
+<text x="275" y="1273" font-family="sans-serif" font-size="39" font-weight="900" fill="#6750A4" text-anchor="start" letter-spacing="0">6</text>
+<text x="316" y="1271" font-family="sans-serif" font-size="13" font-weight="550" fill="#49454F" text-anchor="start" letter-spacing="0">Workouts</text>
+<text x="78" y="1330" font-family="sans-serif" font-size="12" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">System sans; larger type is reserved for page titles and focal metrics.</text>
+<text x="78" y="1360" font-family="sans-serif" font-size="12" font-weight="500" fill="#625B69" text-anchor="start" letter-spacing="0">Settings row titles gain a little weight; supporting copy stays compact and muted.</text>
+<rect x="78" y="1400" width="950" height="79" rx="14" fill="#F4EDF6"/>
+<circle cx="108" cy="1439" r="20" fill="#F4ECFA"/>
+<g transform="translate(96 1427) scale(1.0)" fill="none" stroke="#CE93D8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 1.2-3.6 1.4 1.4 0 0 1 .8-2.5H17a4 4 0 0 0 4-4c0-4.4-4-7.9-9-7.9ZM7.5 11h.01M10 7.5h.01M15 7.5h.01M17 11h.01"/></g>
+<text x="143" y="1434" font-family="sans-serif" font-size="15" font-weight="800" fill="#1D1B20" text-anchor="start" letter-spacing="0">UI &amp; Appearance</text>
+<text x="143" y="1457" font-family="sans-serif" font-size="11.5" font-weight="450" fill="#625B71" text-anchor="start" letter-spacing="0">Theme, onboarding, and bottom tab setup.</text>
+<text x="1005" y="1447" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#CE93D8" text-anchor="end" letter-spacing="0">Classic</text>
+<rect x="1080" y="884" width="1068" height="640" rx="20" fill="#302B36"/>
+<text x="1104" y="922" font-family="sans-serif" font-size="17" font-weight="750" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Tonos boundaries · no layout redesign</text>
+<rect x="1104" y="957" width="1019" height="48" rx="12" fill="#3A3541"/>
+<text x="1122" y="984" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Deep-purple Material identity</text>
+<text x="2100" y="984" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">retained</text>
+<text x="1122" y="1044" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Current screens, order, controls, and five destinations</text>
+<text x="2100" y="1044" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">retained</text>
+<rect x="1104" y="1077" width="1019" height="48" rx="12" fill="#3A3541"/>
+<text x="1122" y="1104" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Dense workout logging and Progress data colors</text>
+<text x="2100" y="1104" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">retained</text>
+<text x="1122" y="1164" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Plan, completion, heatmap, and settings accents</text>
+<text x="2100" y="1164" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">retain ownership</text>
+<rect x="1104" y="1197" width="1019" height="48" rx="12" fill="#3A3541"/>
+<text x="1122" y="1224" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Material 3 themeable controls</text>
+<text x="2100" y="1224" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">near-term foundation</text>
+<text x="1122" y="1284" font-family="sans-serif" font-size="12.5" font-weight="550" fill="#F4EFF8" text-anchor="start" letter-spacing="0">Shape morphs, spring motion, and transitions</text>
+<text x="2100" y="1284" font-family="sans-serif" font-size="11.5" font-weight="650" fill="#D0BCFF" text-anchor="end" letter-spacing="0">prototype later</text>
+<rect x="1104" y="1376" width="1019" height="72" rx="18" fill="#4F378B"/>
+<text x="1130" y="1408" font-family="sans-serif" font-size="11" font-weight="800" fill="#EADDFF" text-anchor="start" letter-spacing="0.6">CLASSIC, REFINED</text>
+<text x="1130" y="1431" font-family="sans-serif" font-size="12.5" font-weight="500" fill="#F4EFF8" text-anchor="start" letter-spacing="0">A single existing family, made clearer through theme roles and measured emphasis.</text>
+<text x="1104" y="1490" font-family="sans-serif" font-size="11" font-weight="500" fill="#D7D0DC" text-anchor="start" letter-spacing="0">Interaction behavior is evaluated during Flutter / material_ui prototyping, not implied here.</text>
+</svg>
