@@ -1216,7 +1216,6 @@ class _DatabaseHealthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
 
     return Padding(
@@ -1232,17 +1231,17 @@ class _DatabaseHealthCard extends StatelessWidget {
             ),
             healthy: health.isSchemaCurrent,
           ),
-          _HealthDivider(color: scheme.outlineVariant),
+          const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthSize,
             value: formatBytes(health.totalBytes),
           ),
-          _HealthDivider(color: scheme.outlineVariant),
+          const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthJournal,
             value: health.journalMode,
           ),
-          _HealthDivider(color: scheme.outlineVariant),
+          const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthTables,
             value: strings.databaseHealthTablesValue(
@@ -1251,7 +1250,7 @@ class _DatabaseHealthCard extends StatelessWidget {
               health.triggerCount,
             ),
           ),
-          _HealthDivider(color: scheme.outlineVariant),
+          const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthFoodSearch,
             value: strings.databaseHealthFoodSearchValue(
@@ -1260,7 +1259,7 @@ class _DatabaseHealthCard extends StatelessWidget {
             ),
             healthy: health.isFoodSearchAligned,
           ),
-          _HealthDivider(color: scheme.outlineVariant),
+          const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthPath,
             value: health.path,
@@ -1269,17 +1268,6 @@ class _DatabaseHealthCard extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _HealthDivider extends StatelessWidget {
-  final Color color;
-
-  const _HealthDivider({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Divider(height: 1, color: color.withValues(alpha: 0.42));
   }
 }
 

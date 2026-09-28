@@ -100,7 +100,12 @@ class ThemeStyleInventoryRule {
     required this.target,
     required this.rationale,
     this.kinds = const <String>[],
-  }) : _pathExpression = _globToRegExp(pattern);
+    this.sourcePattern,
+  }) : _pathExpression = _globToRegExp(pattern),
+       _sourceExpression =
+           sourcePattern == null
+               ? null
+               : _sourcePatternExpression(sourcePattern);
 
   final String id;
   final String pattern;
@@ -109,9 +114,15 @@ class ThemeStyleInventoryRule {
   final String status;
   final String target;
   final String rationale;
+  final String? sourcePattern;
   final RegExp _pathExpression;
+  final RegExp? _sourceExpression;
 
   factory ThemeStyleInventoryRule.fromJson(Map<String, dynamic> json) {
+    final rawSourcePattern = json['sourcePattern'];
+    if (rawSourcePattern != null && rawSourcePattern is! String) {
+      throw const FormatException('Rule sourcePattern must be a string.');
+    }
     final rawKinds = json['kinds'];
     final kinds = <String>[];
     if (rawKinds != null) {
@@ -140,6 +151,7 @@ class ThemeStyleInventoryRule {
       status: _requiredString(json, 'status', context: 'path rule'),
       target: _requiredString(json, 'target', context: 'path rule'),
       rationale: _requiredString(json, 'rationale', context: 'path rule'),
+      sourcePattern: rawSourcePattern as String?,
     );
   }
 
@@ -150,6 +162,29 @@ class ThemeStyleInventoryRule {
     }
     return kinds.isEmpty || (kind != null && kinds.contains(kind));
   }
+
+  bool matchesSource(String? source, int? candidateOffset) {
+    final expression = _sourceExpression;
+    if (expression == null) return true;
+    if (source == null || candidateOffset == null) return false;
+    return expression
+        .allMatches(source)
+        .any(
+          (match) =>
+              match.start <= candidateOffset && candidateOffset < match.end,
+        );
+  }
+}
+
+RegExp _sourcePatternExpression(String pattern) {
+  if (pattern.trim().isEmpty) {
+    throw const FormatException('Rule sourcePattern must not be empty.');
+  }
+  final expression = RegExp(pattern, multiLine: true);
+  if (expression.hasMatch('')) {
+    throw const FormatException('Rule sourcePattern must consume source code.');
+  }
+  return expression;
 }
 
 class ThemeStyleReviewItem {
@@ -356,9 +391,15 @@ class ThemeStyleInventory {
     }
   }
 
-  ThemeStyleInventoryRule? ruleFor(String path, String kind) {
+  ThemeStyleInventoryRule? ruleFor(
+    String path,
+    String kind, {
+    String? source,
+    int? candidateOffset,
+  }) {
     for (final rule in pathRules) {
-      if (rule.matches(path, kind)) {
+      if (rule.matches(path, kind) &&
+          rule.matchesSource(source, candidateOffset)) {
         return rule;
       }
     }
@@ -607,7 +648,12 @@ ThemeStyleInventoryReport scanThemeStyleInventory({
     final searchableSource = _maskNonCode(source);
     for (final candidate in _candidatePatterns) {
       for (final match in candidate.expression.allMatches(searchableSource)) {
-        final rule = inventory.ruleFor(relativePath, candidate.kind);
+        final rule = inventory.ruleFor(
+          relativePath,
+          candidate.kind,
+          source: searchableSource,
+          candidateOffset: match.start,
+        );
         findings.add(
           ThemeStyleFinding(
             file: relativePath,

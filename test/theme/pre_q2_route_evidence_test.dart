@@ -55,12 +55,14 @@ void main() {
     expect(analyticsSettings, contains('ExerciseAnalyticsScreen'));
     expect(exerciseAnalytics, contains('tonosForegroundForSurface'));
     expect(databaseSettings, contains('TonosDialogFrame'));
-    expect(exerciseEditor, contains('context.mediaTokens'));
+    expect(exerciseEditor, contains('SettingsActionTile'));
+    expect(exerciseEditor, contains('TonosFormField'));
     expect(exerciseEditor, contains('TonosDialogFrame'));
     expect(flowMethods, contains('TonosDialogFrame'));
     expect(gymSettings, contains('TonosDialogFrame'));
     expect(gymSettings, contains('context.cs.onPrimaryContainer'));
-    expect(gymSettings, contains('fillColor'));
+    expect(gymSettings, contains('RadioListTile<WorkoutExitBehavior>'));
+    expect(gymSettings, isNot(contains('fillColor:')));
     expect(gymSettings, contains('WorkoutExitBehavior'));
   });
 

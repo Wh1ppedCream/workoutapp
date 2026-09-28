@@ -13,6 +13,27 @@ import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/shared_entity_media_thumbnail.dart';
 
+ToggleablePainter _toggleablePainter(WidgetTester tester, Finder control) {
+  final paintFinder = find.descendant(
+    of: control,
+    matching: find.byWidgetPredicate(
+      (widget) => widget is CustomPaint && widget.painter is ToggleablePainter,
+    ),
+  );
+  expect(paintFinder, findsOneWidget);
+  return tester.widget<CustomPaint>(paintFinder).painter! as ToggleablePainter;
+}
+
+void _focusToggleable(WidgetTester tester, Finder control) {
+  final paintFinder = find.descendant(
+    of: control,
+    matching: find.byWidgetPredicate(
+      (widget) => widget is CustomPaint && widget.painter is ToggleablePainter,
+    ),
+  );
+  Focus.of(tester.element(paintFinder)).requestFocus();
+}
+
 void main() {
   final themes = <String, ThemeData>{
     'Classic light': ClassicThemeDefinition.light(),
@@ -25,6 +46,12 @@ void main() {
     testWidgets('${entry.key} gym profile recipes and draft behavior', (
       tester,
     ) async {
+      final previousHighlightStrategy = FocusManager.instance.highlightStrategy;
+      FocusManager.instance.highlightStrategy =
+          FocusHighlightStrategy.alwaysTraditional;
+      addTearDown(() {
+        FocusManager.instance.highlightStrategy = previousHighlightStrategy;
+      });
       await tester.binding.setSurfaceSize(const Size(420, 980));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       SharedPreferences.setMockInitialValues({
@@ -203,11 +230,63 @@ void main() {
         thumbnails.map((thumbnail) => thumbnail.borderRadius),
         everyElement(BorderRadius.circular(11)),
       );
+      final checkboxFinder = find.byType(Checkbox);
+      final checkboxes = tester.widgetList<Checkbox>(checkboxFinder).toList();
+      expect(checkboxes.map((box) => box.value), [true, false, false]);
+      expect(checkboxes.every((box) => box.onChanged != null), isTrue);
+      final neoCheckboxFill = tonosForegroundForSurface(
+        pageContext,
+        surfaces.dialogChoice,
+      );
+      if (neo) {
+        final sharedCheckboxFill =
+            Theme.of(pageContext).checkboxTheme.fillColor!;
+        expect(
+          sharedCheckboxFill.resolve({WidgetState.selected}),
+          isNot(neoCheckboxFill),
+        );
+        expect(
+          sharedCheckboxFill.resolve(const <WidgetState>{}),
+          Colors.transparent,
+        );
+      }
+      for (var index = 0; index < checkboxes.length; index++) {
+        final checkbox = checkboxes[index];
+        final painter = _toggleablePainter(tester, checkboxFinder.at(index));
+        expect(painter.position.value, checkbox.value == true ? 1 : 0);
+        expect(painter.activeColor, neo ? neoCheckboxFill : scheme.primary);
+        expect(
+          painter.inactiveColor,
+          neo ? neoCheckboxFill : Colors.transparent,
+        );
+        if (neo) {
+          expect(
+            checkbox.fillColor?.resolve({WidgetState.selected}),
+            neoCheckboxFill,
+          );
+          expect(
+            checkbox.fillColor?.resolve(const <WidgetState>{}),
+            neoCheckboxFill,
+          );
+          expect(checkbox.checkColor, surfaces.dialogChoice);
+        } else {
+          expect(checkbox.fillColor, isNull);
+          expect(checkbox.checkColor, isNull);
+        }
+      }
+
+      final focusedCheckbox = checkboxFinder.at(0);
+      _focusToggleable(tester, focusedCheckbox);
+      await tester.pumpAndSettle();
+      final focusedPainter = _toggleablePainter(tester, focusedCheckbox);
+      expect(focusedPainter.isFocused, isTrue);
       expect(
-        tester
-            .widgetList<Checkbox>(find.byType(Checkbox))
-            .map((box) => box.value),
-        [true, false, false],
+        focusedPainter.activeColor,
+        neo ? neoCheckboxFill : scheme.primary,
+      );
+      expect(
+        focusedPainter.inactiveColor,
+        neo ? neoCheckboxFill : Colors.transparent,
       );
 
       final saveSurface =

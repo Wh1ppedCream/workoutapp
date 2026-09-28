@@ -47,6 +47,142 @@ void main() {
     );
   });
 
+  test('qualified onboarding and editor recipes stay source-limited', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    const onboarding = 'lib/screens/onboarding_flow.dart';
+    const editor = 'lib/screens/profile/settings/exercise_editor_screen.dart';
+    const expectedKinds = <String, Map<String, int>>{
+      'onboarding-form-ownership': {'decoration': 2},
+      'onboarding-qualified-route-recipes': {
+        'color_transform': 18,
+        'decoration': 12,
+        'geometry': 8,
+        'text_style': 1,
+      },
+      'onboarding-equipment-summary-recipe': {
+        'color_transform': 1,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'onboarding-weight-history-switch-recipe': {
+        'color_transform': 2,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'onboarding-body-fat-frame-recipe': {'decoration': 1, 'geometry': 1},
+      'onboarding-body-fat-media-overlay': {
+        'color': 2,
+        'color_transform': 1,
+        'text_style': 1,
+      },
+      'onboarding-goal-metric-preview-recipe': {
+        'color_transform': 1,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'onboarding-goal-slider-panel-recipe': {
+        'color_transform': 2,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'onboarding-goal-mini-stat-recipe': {
+        'color_transform': 2,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'onboarding-plan-overview-error-ink': {'text_style': 1},
+      'onboarding-plan-overview-empty-ink': {'text_style': 1},
+      'onboarding-post-plan-info-recipe': {
+        'color_transform': 2,
+        'decoration': 1,
+        'geometry': 1,
+      },
+      'exercise-editor-dialog-label-ownership': {'decoration': 3},
+      'exercise-editor-qualified-recipes': {
+        'color_transform': 12,
+        'decoration': 9,
+        'geometry': 3,
+        'gradient': 1,
+        'text_style': 1,
+      },
+    };
+    for (final entry in expectedKinds.entries) {
+      final rule = inventory.pathRules.singleWhere(
+        (rule) => rule.id == entry.key,
+      );
+      final path = entry.key.startsWith('onboarding-') ? onboarding : editor;
+      expect(rule.pattern, path);
+      expect(rule.sourcePattern, isNotNull);
+      expect(rule.kinds.toSet(), entry.value.keys.toSet());
+      // A path and kind alone cannot qualify an unreviewed expression.
+      expect(inventory.ruleFor(path, rule.kinds.first)?.status, 'pending');
+      final findings = report.findings.where(
+        (finding) => finding.ruleId == entry.key,
+      );
+      final counts = <String, int>{};
+      for (final finding in findings) {
+        expect(finding.file, path);
+        expect(finding.status, 'migrated');
+        counts.update(finding.kind, (count) => count + 1, ifAbsent: () => 1);
+      }
+      expect(counts, entry.value, reason: entry.key);
+    }
+
+    expect(
+      report.findings.where((finding) => finding.status == 'pending'),
+      isEmpty,
+    );
+    const finalQualificationRules = <String>{
+      'onboarding-weight-history-switch-recipe',
+      'onboarding-body-fat-frame-recipe',
+      'onboarding-body-fat-media-overlay',
+      'onboarding-goal-metric-preview-recipe',
+      'onboarding-goal-slider-panel-recipe',
+      'onboarding-goal-mini-stat-recipe',
+      'onboarding-plan-overview-error-ink',
+      'onboarding-plan-overview-empty-ink',
+      'onboarding-post-plan-info-recipe',
+    };
+    final qualified = report.findings.where(
+      (finding) => finalQualificationRules.contains(finding.ruleId),
+    );
+    expect(qualified, hasLength(27));
+    final lines = File(onboarding).readAsLinesSync();
+    final ownerPattern = RegExp(r'^class\s+(\w+)\b');
+    final qualifiedOwners = <String, int>{};
+    for (final finding in qualified) {
+      final owner =
+          lines
+              .take(finding.line)
+              .map(ownerPattern.firstMatch)
+              .whereType<RegExpMatch>()
+              .last
+              .group(1)!;
+      qualifiedOwners.update(owner, (count) => count + 1, ifAbsent: () => 1);
+    }
+    expect(qualifiedOwners, <String, int>{
+      '_SwitchCard': 4,
+      '_BodyFatTile': 6,
+      '_MetricPreviewCard': 3,
+      '_SliderPanel': 4,
+      '_MiniStat': 4,
+      '_OnboardingPlanOverviewListState': 2,
+      '_OnboardingInfoCallout': 4,
+    });
+    expect(
+      report.findings.where(
+        (finding) => finding.file == editor && finding.status == 'pending',
+      ),
+      isEmpty,
+    );
+  });
+
   test('app-shell status bar policy has exact migrated ownership', () {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
@@ -1570,17 +1706,39 @@ void main() {
     );
   });
 
-  test('exercise editor hotspot precedes the broad settings rule', () {
+  test('exercise editor tab divider has one exact migrated owner', () {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
     );
-    final rule = inventory.ruleFor(
+    final dividerRule = inventory.ruleFor(
+      'lib/screens/profile/settings/exercise_editor_screen.dart',
+      'color',
+    );
+    expect(dividerRule?.id, 'exercise-editor-transparent-tab-divider');
+    expect(dividerRule?.classification, 'structural_theme');
+    expect(dividerRule?.status, 'migrated');
+    expect(dividerRule?.kinds, unorderedEquals(<String>['color']));
+
+    final pendingRule = inventory.ruleFor(
       'lib/screens/profile/settings/exercise_editor_screen.dart',
       'decoration',
     );
 
-    expect(rule?.id, 'exercise-editor-hotspot');
-    expect(rule?.status, 'pending');
+    expect(pendingRule?.id, 'exercise-editor-hotspot');
+    expect(pendingRule?.status, 'pending');
+
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final dividerFindings =
+        report.findings
+            .where((finding) => finding.ruleId == dividerRule?.id)
+            .toList();
+    expect(dividerFindings, hasLength(1));
+    expect(dividerFindings.single.kind, 'color');
+    expect(dividerFindings.single.snippet, contains('dividerColor:'));
+    expect(dividerFindings.single.status, 'migrated');
   });
 
   test('flow event fields use the opted-in dialog form recipe', () {
@@ -1988,6 +2146,49 @@ void main() {
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
 
+  test('premade plan route findings have an exact four-mode owner', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final rule = inventory.ruleFor(
+      'lib/screens/exercise/premade_plans_page.dart',
+      'decoration',
+    );
+
+    expect(rule?.id, 'premade-plans-route-ownership');
+    expect(rule?.classification, 'structural_theme');
+    expect(rule?.status, 'migrated');
+    expect(
+      rule?.kinds,
+      unorderedEquals(<String>[
+        'color_transform',
+        'decoration',
+        'geometry',
+        'text_style',
+      ]),
+    );
+    expect(rule?.rationale, contains('four-mode rendered contract'));
+    expect(rule?.rationale, contains('adds no ratchet scope'));
+    expect(
+      inventory
+          .ruleFor(
+            'lib/screens/exercise/premade_plans_page.dart',
+            'color_transform',
+          )
+          ?.id,
+      rule?.id,
+    );
+
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final findings =
+        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    expect(findings, hasLength(12));
+    expect(findings.every((finding) => finding.status == 'migrated'), isTrue);
+  });
+
   test('every production style candidate has a measurable destination', () {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
@@ -2029,8 +2230,24 @@ void main() {
     expect(exerciseEditorFindings, isNotEmpty);
     expect(
       exerciseEditorFindings.every(
-        (finding) => finding.ruleId == 'exercise-editor-hotspot',
+        (finding) =>
+            finding.ruleId == 'exercise-editor-qualified-recipes' ||
+            finding.ruleId == 'exercise-editor-dialog-label-ownership' ||
+            finding.ruleId == 'exercise-editor-transparent-tab-divider',
       ),
+      isTrue,
+    );
+    expect(
+      exerciseEditorFindings
+          .where(
+            (finding) =>
+                finding.ruleId == 'exercise-editor-transparent-tab-divider',
+          )
+          .toList(),
+      hasLength(1),
+    );
+    expect(
+      exerciseEditorFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
     );
 

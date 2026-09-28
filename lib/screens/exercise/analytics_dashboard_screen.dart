@@ -568,14 +568,22 @@ class _MuscleLeadingIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // Keep primary-colored icons except when a light palette makes the
+    // primary foreground identical to its container fill.
+    final iconColor =
+        theme.brightness == Brightness.light &&
+                scheme.primary == scheme.primaryContainer
+            ? scheme.onPrimaryContainer
+            : scheme.primary;
     return Container(
       width: 52,
       height: 52,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.55),
+        color: scheme.primaryContainer.withValues(alpha: 0.55),
         borderRadius: theme.shapeTokens.dashboardRow,
       ),
-      child: Icon(Icons.fitness_center, color: theme.colorScheme.primary),
+      child: Icon(Icons.fitness_center, color: iconColor),
     );
   }
 }

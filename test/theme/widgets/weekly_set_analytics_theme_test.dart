@@ -186,6 +186,15 @@ void main() {
                   decoration.color == iconFill;
             }).toList();
         expect(iconContainers, hasLength(4));
+        final expectedIconColor =
+            family == AppThemeFamily.neoBrutalism &&
+                    brightness == Brightness.light
+                ? scheme.onPrimaryContainer
+                : scheme.primary;
+        expect(
+          iconContainers.map((box) => (box.child! as Icon).color),
+          everyElement(expectedIconColor),
+        );
         expect(
           iconContainers.map(
             (box) => (box.decoration! as BoxDecoration).borderRadius,

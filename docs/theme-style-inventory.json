@@ -448,6 +448,45 @@
       "rationale": "SevenDayFocusPresentation keeps Classic's inherited Material theme and scopes Neo foreground and progress-indicator foreground/track roles to the raised dashboard surface. The four-mode presentation contract renders the focused-set LinearProgressIndicators and verifies their inherited roles. This exact rule covers only the local Theme candidate; other widget styles remain in their existing inventory scopes."
     },
     {
+      "id": "exercise-editor-transparent-tab-divider",
+      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "kinds": [
+        "color"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Exercise Editor TabBar divider and its route-owned container recipe",
+      "rationale": "The sole current color candidate in this file is the intentional transparent TabBar divider inside the bordered tab container. The four-mode production route contract asserts the divider, indicator, labels, and route-owned shape. This exact-file, single-kind rule qualifies only that current color finding; all other route findings remain in their pending review scope."
+    },
+    {
+      "id": "exercise-editor-dialog-label-ownership",
+      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "sourcePattern": "InputDecoration\\(\\s*labelText:\\s*_strings\\.(?:exerciseEditorExerciseName|exerciseEditorEquipment|exerciseEditorMediaType),\\s*\\)",
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Three label-only Exercise Editor decorations inherited from TonosDialogFrame and Material",
+      "rationale": "The source selector covers only the custom-exercise name, equipment, and media-type labels. These three decorations supply localized labels and no local border, surface, or state override. The four-mode production-route contract renders the dialogs and checks field/selection ownership; the shared dialog contracts cover the recipe. This is an ownership classification, not a new source migration. Device focus/hint and dropdown visual acceptance remains a separate gate."
+    },
+    {
+      "id": "exercise-editor-qualified-recipes",
+      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "gradient",
+        "text_style"
+      ],
+      "sourcePattern": "\\bWidget\\s+(?:_buildEditor|_buildTitleCard|_buildEditorHeader|_buildAllocationShortcut|_buildMuscleTile|_buildBodyPartTile|_buildEquipmentTile)\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n  \\}",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Seven rendered Exercise Editor recipes using established settings surfaces, shapes, category accents, and Material typography",
+      "rationale": "The exact named-member selector covers 26 current findings only: tabs, hero/header/rating, allocation shortcut, and muscle/bodypart/equipment badges. The four-mode production-route contract renders each recipe and checks its resolved fills, gradient, outlines, radii, and text emphasis. The route composes existing roles; this classification records already-owned styling without claiming a production migration or human visual acceptance. New unreviewed members or candidate kinds retain the pending fallback."
+    },
+    {
       "id": "exercise-editor-hotspot",
       "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
       "classification": "structural_theme",
@@ -566,12 +605,188 @@
       "rationale": "Profile settings contain repeated controls and local theme overrides; the first UI Appearance, User Information, bottom-tab editor, and deferred-feature badge recipes have migrated while the broader subtree and local overrides remain pending."
     },
     {
+      "id": "onboarding-form-ownership",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "sourcePattern": "\\bInputDecoration\\s+_onboardingInputDecoration\\([\\s\\S]*?\\n\\}\\r?(?=\\n)|InputDecoration\\(\\s*prefixIcon:\\s*const\\s+Icon\\(Icons\\.language_outlined\\)",
+      "classification": "material_component",
+      "status": "migrated",
+      "target": "Existing onboarding field helper and inherited Material language input",
+      "rationale": "Exactly two decorations are covered: the shared route-local input helper consumes existing Classic tutorial shapes or the Neo settings-field recipe, and the language input leaves border/state ownership to Material. Four-mode production onboarding tests verify the rendered field/decorator owners. These are classifications of existing owners; no new production migration or human visual acceptance is claimed."
+    },
+    {
+      "id": "onboarding-qualified-route-recipes",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "sourcePattern": "\\bclass\\s+(?:_OnboardingCard|_IntentTile|_ChoiceGroup|_OnboardingSummaryCallout|_OnboardingSummarySection|_PageDots|_GymSpaceTile|_GymEquipmentLoadError|_WorkoutPlanSetupTile)\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Nine verified onboarding compositions using existing tutorial shapes, theme surfaces, state ink, and Material typography",
+      "rationale": "The exact named-class selector covers 39 findings in the card, enabled/disabled intent choices, weight-unit chip adaptation, summary panels, page dots, gym/plan selection tiles and icon badges, and equipment-error callout. Four-mode production tests render the relevant selected, unselected, disabled, empty-equipment, and error states and pin their existing owners. Nutrition-only classes, plan-query status labels, and the plan-info callout are excluded here and require their own count-pinned rendered ownership rules. No token or primitive is introduced and visual acceptance remains separate."
+    },
+    {
+      "id": "onboarding-equipment-summary-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bWidget\\s+_buildGymEquipmentPage\\(\\)\\s*\\{[\\s\\S]*?\\n  \\}",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Included-equipment summary panel using ColorScheme and the existing tutorial section shape",
+      "rationale": "Exactly three candidates in the named equipment-review builder belong to its included-equipment panel: scheme surface tint, outline, and tutorial section shape. Four-mode production tests render the panel with empty equipment selection and verify these owners. Other onboarding members are not covered, and device visual acceptance is not implied."
+    },
+    {
+      "id": "onboarding-weight-history-switch-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_SwitchCard\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Retained weight-history choice surface; inherited Material Switch states",
+      "rationale": "Exactly four findings belong to the retained weight-history card surface and outline. Actual widgets rendered inside the actual onboarding card in four modes verify Classic ColorScheme/tutorial shapes, Neo settings-input surface/shape/foreground, selected/unselected switch semantics, focus and keyboard activation. Nutrition setup remains deliberately paused; this qualifies widget ownership without enabling the feature or claiming future flow/device acceptance."
+    },
+    {
+      "id": "onboarding-body-fat-frame-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_BodyFatTile\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Body-fat artwork selection frame using ColorScheme and tutorial input shape",
+      "rationale": "Exactly two findings own the media tile frame, not its fixed artwork overlay. Four-mode actual-widget tests verify selected/unselected primary/outlineVariant borders, tutorial input shape, tap selection, label semantics and reduced-motion duration. The retained paused-feature builder still references the tile; its disabled route status alone is not qualification evidence."
+    },
+    {
+      "id": "onboarding-body-fat-media-overlay",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color",
+        "color_transform",
+        "text_style"
+      ],
+      "sourcePattern": "\\bclass\\s+_BodyFatTile\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "illustration_media",
+      "status": "migrated",
+      "target": "Fixed black artwork scrim and white body-fat label; theme-owned missing-image fallback",
+      "rationale": "Exactly four findings retain the invariant artwork readability recipe: a 0.58 black scrim and white label, not application chrome or status ink. Four-mode actual tile tests render a real bundled image and missing-image fallback, resolve the label paragraph, and require at least 4.5:1 even over worst-case white artwork. Frame decoration/geometry are owned by the separate frame rule. Migrated records qualified existing ownership, not a new color migration or allowlist expansion."
+    },
+    {
+      "id": "onboarding-goal-metric-preview-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_MetricPreviewCard\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Retained Nutrition goal preview using existing ColorScheme, tutorial and Neo dialog-choice roles",
+      "rationale": "Exactly three surface/outline findings belong to the two goal previews. Four-mode actual-widget tests render the real onboarding card, pin shape/fill ownership, and verify resolved value/label ink against composed backgrounds with production localized labels at 320px and 2x text. This is widget qualification for intentional paused UI, not restoration of Nutrition onboarding."
+    },
+    {
+      "id": "onboarding-goal-slider-panel-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_SliderPanel\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Retained goal slider composition; existing panel roles and Material Slider interaction",
+      "rationale": "Exactly four findings own the panel fill/outline, while Slider control states stay Material-owned. Four-mode actual-widget tests verify composed label/value contrast, real focus/keyboard and pointer value changes, 320px/2x localized header reflow, and unchanged horizontal headers at 390px/1.15x. The evidence found and fixed a local large-text overflow; no new shared role or primitive was warranted."
+    },
+    {
+      "id": "onboarding-goal-mini-stat-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_MiniStat\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Retained weekly/monthly goal statistics using existing surface, input shape and secondary ink",
+      "rationale": "Exactly four findings belong to the goal summary cells, distinct from interactive sliders and metric previews. Four-mode actual-widget tests render both cells with the actual parent card, verify existing ColorScheme/tutorial or Neo dialog-choice owners, and check resolved value/label contrast and large-text layout. Paused feature status does not suppress other kinds or other widgets."
+    },
+    {
+      "id": "onboarding-plan-overview-error-ink",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "text_style"
+      ],
+      "sourcePattern": "TextStyle\\(color:\\s*tonosErrorForSurface\\(context, surface\\)\\)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Reachable plan-query failure label using existing surface-aware Material error role",
+      "rationale": "Exactly one TextStyle expression belongs to the actual plan-summary failure state. Four-mode tests drive the real list from loading to a repository error and then reload to empty, resolve paragraph ink against the actual onboarding card, and require at least 4.5:1. The existing tonosErrorForSurface owner fixes Neo contrast while preserving Classic ink. Other text styles fall through to separate ownership or review."
+    },
+    {
+      "id": "onboarding-plan-overview-empty-ink",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "text_style"
+      ],
+      "sourcePattern": "TextStyle\\(\\s*color:\\s*tonosSecondaryForegroundForSurface\\(context, surface\\),\\s*\\)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Reachable empty plan-query label using existing surface-aware secondary foreground",
+      "rationale": "Exactly one TextStyle expression belongs to the localized empty result after a real repository query/reload with retained plan IDs. Four-mode actual list/card tests verify resolved secondary ink, composed contrast at least 4.5:1, loading/reload behavior and no unhandled asynchronous errors. The existing owner preserves Classic and corrects Neo dark; this does not classify other TextStyle expressions in the route."
+    },
+    {
+      "id": "onboarding-post-plan-info-recipe",
+      "pattern": "lib/screens/onboarding_flow.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "sourcePattern": "\\bclass\\s+_OnboardingInfoCallout\\b[\\s\\S]*?\\n\\}\\r?(?=\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Post-plan information tint, outline and tutorial input shape; surface-aware Neo text/icon ink",
+      "rationale": "Exactly four findings own the plan-added and plans-ready callout recipe. Both current callsites are reachable after plans are added. Four-mode actual callout/card tests verify tint, border and shape, resolved text/icon owners, composed contrast of at least 4.5:1/3:1 and 320px/2x reflow. Existing surface-aware helpers correct Neo message/icon contrast; Classic tint, geometry and ink stay unchanged. No new shared primitive is justified and affected manual visual acceptance remains separate."
+    },
+    {
       "id": "onboarding-hotspot",
       "pattern": "lib/screens/onboarding_flow.dart",
       "classification": "structural_theme",
       "status": "pending",
       "target": "Tonos fields/sections/actions and shared Material component themes",
       "rationale": "Onboarding has high interaction and localization risk, so it needs a deliberate screen-level migration."
+    },
+    {
+      "id": "premade-plans-route-ownership",
+      "pattern": "lib/screens/exercise/premade_plans_page.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Existing plan-action, duration, ColorScheme, and plan-detail theme ownership",
+      "rationale": "All 12 current findings have a verified owner in the existing route: AppSurfaceTokens/AppShapeTokens own action-bar and duration surfaces, ColorScheme owns separator, badge, and text roles, and the remaining text hierarchy stays route-local while inheriting theme ink. A four-mode rendered contract checks the non-busy/busy action bar, narrow-width duration switch, plan detail swap badge, and exercise metadata. This exact kind-limited rule qualifies current ownership only; it adds no ratchet scope and makes no new visual-acceptance claim."
     },
     {
       "id": "dashboard-sections-theme-ownership",

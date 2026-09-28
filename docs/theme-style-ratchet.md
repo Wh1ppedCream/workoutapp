@@ -1,12 +1,18 @@
 # Theme Style Ratchet
 
-Status: seventeen exact production scopes are listed for enforcement. Their
-manifest contains 116 approval entries (114 unique fingerprint hashes) and 127
-approved occurrences, all mapped in the manifest. The latest 2026-09-26
-verification passed all 987 Flutter tests, repository-wide `dart analyze`,
-inventory `--check` (279 Dart files / 2,265 candidates), and report/enforcement
-for all 17 scopes. The Exercise Catalog ownership follow-up did not add a
-ratchet scope. The preceding 940-test checkpoint followed the Exercise
+Status: eighteen exact production scopes are listed for enforcement. Their
+manifest contains 125 approval entries (123 unique fingerprint hashes) and 137
+approved occurrences, all mapped in the manifest. The latest 2026-09-27
+verification passed all 1,137 Flutter tests (exit 0), repository-wide
+`dart analyze`, inventory `--check` (279 Dart files / 2,239 candidates;
+130 allowlisted, 2,109 migrated/classified, zero pending), and detailed
+report/enforcement for all 18 scopes. Final onboarding qualification used
+existing owners and narrow inventory rules, not ratchet enrollment. No scope,
+approval, or manifest bytes changed in that pass; zero pending is not an
+enrollment gate. Human visual acceptance remains separate in the consolidated
+roadmap. The Exercise Catalog ownership follow-up likewise did not add a
+ratchet scope. The preceding 1,072-test/2,259-candidate and 940-test checkpoints
+are historical. The 940-test checkpoint followed the Exercise
 Detail/Preset Generation ownership update. Those inventory contracts did not
 add ratchet scopes because broader file/device qualification remains open.
 The prior 15-scope checkpoint
@@ -14,15 +20,15 @@ had 110 approval entries and 118 occurrences; CardioCard adds four entries/six
 occurrences, and StretchCard adds three entries/four occurrences. The previous
 full Flutter suite passed 907 tests. The latest review follow-up passed
 formatting, targeted analysis, the focused widget/inventory/ratchet batch,
-inventory `--check`, and 17-scope report/enforce. The updated Neo
-BodyPartFocusChips appearance still requires human visual review; automated
-lexical protection and widget contracts do not replace that acceptance.
+inventory `--check`, and 17-scope report/enforce. The user subsequently
+accepted the updated Neo BodyPartFocusChips appearance; automated lexical
+protection and widget contracts remain distinct from that visual acceptance.
 
 Earlier ValueCard detailed-report follow-up added statement context to report
 mode and mapped all five fingerprints to exact lexical scopes/statements. Its
 four-mode contract covers the token border, caller override, scaled shape, and
-inherited typography. Nutrition form visual acceptance remains a separate open
-item.
+inherited typography. That contract's visual acceptance is tracked separately
+from its lexical protection.
 The subsequent review fixed a delimiter-matching edge case when a nested
 interpolated string contains a quoted closing brace. The scanner now recursively
 skips nested interpolation expressions while finding quoted-string boundaries;

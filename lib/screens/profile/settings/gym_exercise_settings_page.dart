@@ -114,7 +114,6 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
                 RadioListTile<WorkoutExitBehavior>(
                   value: behavior,
                   groupValue: current,
-                  fillColor: neo ? WidgetStatePropertyAll<Color?>(ink) : null,
                   title: Text(switch (behavior) {
                     WorkoutExitBehavior.askEveryTime => strings.gymExitAsk,
                     WorkoutExitBehavior.discard => strings.gymExitDiscard,

@@ -12,6 +12,7 @@ import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_field.dart';
 import '../../../utils/localized_body_part_name.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
@@ -77,8 +78,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   // Notes & media metadata. Remote URLs are durable; local cache paths are optional.
   List<ExerciseMediaItem> _mediaItems = [];
 
-  // Retained for the legacy form kept during this screen's staged migration.
-  int _rating = 0;
   bool _multiplyByRating = false;
 
   late final TextEditingController _setupController;
@@ -243,7 +242,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                   },
                 )
                 .toList();
-        _rating = def.rating;
         _mediaItems = mediaItems;
         _primaryEquipmentId = def.equipmentId;
       });
@@ -762,6 +760,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         neo
             ? tonosSecondaryForegroundForSurface(context, tabSurface)
             : scheme.onSurfaceVariant;
+    final tabLabelStyle = theme.textTheme.labelLarge?.copyWith(fontSize: 14);
     return ListView(
       padding: const EdgeInsets.only(bottom: 112),
       children: [
@@ -784,6 +783,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             onTap: (index) => setState(() => _activeTabIndex = index),
             dividerColor: Colors.transparent,
             indicatorSize: TabBarIndicatorSize.tab,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+            labelStyle: tabLabelStyle,
+            unselectedLabelStyle: tabLabelStyle,
             indicator: BoxDecoration(
               color:
                   neo
@@ -859,6 +861,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                   mediaQuery.size.height - mediaQuery.viewInsets.bottom;
               return TonosDialogFrame(
                 styleFormControls: true,
+                styleDarkNeoPickerSurfaces: true,
                 child: AlertDialog(
                   title: Text(_strings.exerciseEditorCreateCustomTitle),
                   content: ConstrainedBox(
@@ -1546,89 +1549,6 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     );
   }
 
-  // ignore: unused_element
-  Widget _buildManualBodyparts() {
-    return ListView.builder(
-      itemCount: _bodyManualEntries.length,
-      itemBuilder: (_, i) {
-        final entry = _bodyManualEntries[i];
-        final name = entry['name'] as String;
-        final displayName = localizedBodyPartName(context, name);
-        final count = entry['count'] as double;
-
-        return ListTile(
-          leading:
-              _isEditing
-                  ? IconButton(
-                    tooltip: _strings.exerciseEditorRemoveBodypart,
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder:
-                            (_) => TonosDialogFrame(
-                              child: AlertDialog(
-                                title: Text(
-                                  _strings.exerciseEditorRemoveItemTitle(
-                                    _strings.exerciseEditorBodypartItem,
-                                  ),
-                                ),
-                                content: Text(
-                                  _strings.exerciseEditorRemoveItemBody(
-                                    displayName,
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.of(context).pop(false),
-                                    child: Text(_strings.commonCancel),
-                                  ),
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.of(context).pop(true),
-                                    child: Text(_strings.commonRemove),
-                                  ),
-                                ],
-                              ),
-                            ),
-                      );
-                      if (confirm != true) return;
-                      setState(() {
-                        _bodyManualEntries.removeAt(i);
-                      });
-                    },
-                  )
-                  : null,
-          title: Text(displayName),
-          trailing: SizedBox(
-            width: 80,
-            child: TextFormField(
-              // this key changes whenever `count` changes,
-              // forcing Flutter to rebuild the field with the new initialValue
-              key: ValueKey('${entry['id']}_$count'),
-              enabled: _isEditing && _useManualBody,
-              initialValue: count.toString(),
-              decoration: InputDecoration(
-                suffixText: _strings.sessionMetricSets,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              // AFTER  ─ copies it on every keystroke / focus change
-              onChanged: (val) {
-                final parsed = double.tryParse(val);
-                if (parsed != null) {
-                  entry['count'] = parsed; // just mutate—no setState
-                }
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildEquipmentTab() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1779,6 +1699,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           builder: (ctx2, setDialogState) {
             return TonosDialogFrame(
               styleFormControls: true,
+              styleDarkNeoPickerSurfaces: true,
               child: AlertDialog(
                 title: Text(
                   initial == null
@@ -1814,30 +1735,24 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                         ),
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      TonosFormField(
                         initialValue: titleValue,
-                        decoration: InputDecoration(
-                          labelText: _strings.exerciseEditorMediaTitle,
-                          hintText: _strings.exerciseEditorMediaTitleHint,
-                        ),
+                        labelText: _strings.exerciseEditorMediaTitle,
+                        hintText: _strings.exerciseEditorMediaTitleHint,
                         onChanged: (value) => titleValue = value,
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      TonosFormField(
                         initialValue: remoteUrlValue,
-                        decoration: InputDecoration(
-                          labelText: _strings.exerciseEditorMediaRemoteUrl,
-                          hintText: 'https://...',
-                        ),
+                        labelText: _strings.exerciseEditorMediaRemoteUrl,
+                        hintText: 'https://...',
                         onChanged: (value) => remoteUrlValue = value,
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      TonosFormField(
                         initialValue: thumbnailUrlValue,
-                        decoration: InputDecoration(
-                          labelText: _strings.exerciseEditorMediaThumbnailUrl,
-                          hintText: _strings.exerciseEditorMediaThumbnailHint,
-                        ),
+                        labelText: _strings.exerciseEditorMediaThumbnailUrl,
+                        hintText: _strings.exerciseEditorMediaThumbnailHint,
                         onChanged: (value) => thumbnailUrlValue = value,
                       ),
                     ],
@@ -2050,190 +1965,5 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       default:
         return _strings.exerciseEditorMediaLink;
     }
-  }
-
-  // ignore: unused_element
-  Widget _buildLegacyNotesMediaTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ─── RATING EDITOR ──────────────────────
-          Row(
-            children: [
-              Text(
-                '${AppLocalizations.of(context).exerciseEditorRating}:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 70,
-                child: TextFormField(
-                  key: ValueKey(_rating),
-                  enabled: _isEditing,
-                  initialValue: _rating.toString(),
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(suffixText: '/100'),
-                  onFieldSubmitted: (val) {
-                    final parsed = int.tryParse(val);
-                    if (parsed != null && parsed >= 0 && parsed <= 100) {
-                      setState(() => _rating = parsed);
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-
-          // ─── MULTIPLY CHECKBOX (UI‐ONLY) ────────
-          Row(
-            children: [
-              Checkbox(
-                value: _multiplyByRating,
-                onChanged:
-                    _isEditing
-                        ? (v) => setState(() => _multiplyByRating = v!)
-                        : null,
-              ),
-              Expanded(child: Text(_strings.exerciseEditorScaleCreditByRating)),
-            ],
-          ),
-
-          const Divider(height: 32),
-          Text(
-            _strings.exerciseEditorSetUp,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            enabled: _isEditing,
-            controller: _setupController,
-            maxLines: null, // ← allow multiple lines
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _strings.exerciseEditorHowToPerform,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-
-          TextField(
-            enabled: _isEditing,
-            controller: _executionController,
-            maxLines: null, // ← allow multiple lines
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _strings.exerciseEditorCoachingTips,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-
-          TextField(
-            enabled: _isEditing,
-            controller: _tipsController,
-            maxLines: null, // ← allow multiple lines
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-          ),
-
-          const SizedBox(height: 24),
-          Text(
-            _strings.exerciseEditorReferenceMedia,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 1.15,
-            ),
-            itemCount: _mediaItems.length + (_isEditing ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (_isEditing && index == _mediaItems.length) {
-                return GestureDetector(
-                  onTap: _openAddMediaDialog,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.mediaTokens.editorAddSurface,
-                      borderRadius: context.mediaTokens.editorShape,
-                    ),
-                    child: const Icon(Icons.add),
-                  ),
-                );
-              }
-              final media = _mediaItems[index];
-              return Stack(
-                children: [
-                  InkWell(
-                    onTap: _isEditing ? () => _editMediaItem(index) : null,
-                    borderRadius: context.mediaTokens.editorShape,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: context.mediaTokens.editorItemSurface,
-                        borderRadius: context.mediaTokens.editorShape,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            _mediaIcon(media.mediaType),
-                            size: 28,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _mediaLabel(media),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            media.mediaType.toUpperCase(),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const Spacer(),
-                          if ((media.localCachePath ??
-                                  media.localThumbnailPath) !=
-                              null)
-                            Text(
-                              AppLocalizations.of(
-                                context,
-                              ).exerciseEditorCachedLocally,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_isEditing)
-                    Positioned(
-                      top: 2,
-                      right: 2,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _mediaItems.removeAt(index);
-                          });
-                        },
-                        child: const Icon(Icons.close, size: 20),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
   }
 }

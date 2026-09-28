@@ -308,7 +308,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                               CheckboxListTile(
                                 title: Text(strings.automaticSkipFirstSet),
                                 value: _skipFirst,
-                                activeColor: cs.primary,
                                 onChanged: (checked) {
                                   if (checked == null) return;
                                   setState(() => _skipFirst = checked);
@@ -472,7 +471,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                                       _setSelections[setId] =
                                                           v!,
                                                 ),
-                                            activeColor: cs.primary,
                                           ),
                                           label: AppLocalizations.of(
                                             context,
@@ -513,7 +511,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                                                           _setSelections[cid] =
                                                               v!,
                                                     ),
-                                                activeColor: cs.primary,
                                               ),
                                               label: AppLocalizations.of(
                                                 context,
@@ -549,7 +546,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                             CheckboxListTile(
                               title: Text(strings.automaticWeightTarget),
                               value: widget.preset.weightCheck,
-                              activeColor: cs.primary,
                               onChanged:
                                   (b) => setState(
                                     () => widget.preset.weightCheck = b!,
@@ -558,7 +554,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                             CheckboxListTile(
                               title: Text(strings.automaticRepsTarget),
                               value: widget.preset.repCheck,
-                              activeColor: cs.primary,
                               onChanged:
                                   (b) => setState(
                                     () => widget.preset.repCheck = b!,
@@ -567,7 +562,6 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                             CheckboxListTile(
                               title: Text(strings.automaticVolumeTarget),
                               value: widget.preset.volumeCheck,
-                              activeColor: cs.primary,
                               onChanged:
                                   (b) => setState(
                                     () => widget.preset.volumeCheck = b!,

@@ -21,6 +21,7 @@ import '../utils/localized_digit_formatter.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/weight_unit_formatter.dart';
 import '../widgets/body_heatmap.dart';
+import '../widgets/identity_color_palettes.dart';
 import '../widgets/localized_catalog_entity_name.dart';
 import '../widgets/preset_bar.dart';
 import '../widgets/settings_tiles.dart';
@@ -29,6 +30,22 @@ import 'exercise/premade_plans_page.dart';
 import 'exercise/preset_detail_screen.dart';
 import 'exercise/preset_generation_qa.dart';
 
+InputDecoration _onboardingInputDecoration(
+  BuildContext context, {
+  required String label,
+  IconData? icon,
+  String? hint,
+  String? suffixText,
+}) {
+  return InputDecoration(
+    labelText: label,
+    hintText: hint,
+    suffixText: suffixText,
+    prefixIcon: icon == null ? null : Icon(icon),
+    border: OutlineInputBorder(borderRadius: context.tutorialTokens.inputShape),
+  );
+}
+
 /// Initial setup flow for basic user details plus optional workout and
 /// nutrition personalization.
 class OnboardingFlow extends StatefulWidget {
@@ -36,6 +53,73 @@ class OnboardingFlow extends StatefulWidget {
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
+}
+
+/// Exposes the actual route widgets for qualification without enabling paused
+/// Nutrition pages or adding test-only state branches to onboarding.
+@visibleForTesting
+abstract final class OnboardingStyleHarness {
+  static Widget card({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required List<Widget> children,
+  }) => _OnboardingCard(
+    icon: icon,
+    title: title,
+    subtitle: subtitle,
+    children: children,
+  );
+
+  static Widget switchCard({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) => _SwitchCard(title: title, value: value, onChanged: onChanged);
+
+  static Widget bodyFatTile({
+    required String label,
+    required String assetPath,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) => _BodyFatTile(
+    label: label,
+    assetPath: assetPath,
+    isSelected: isSelected,
+    onTap: onTap,
+  );
+
+  static Widget metricPreviewCard({
+    required IconData icon,
+    required String value,
+    required String label,
+  }) => _MetricPreviewCard(icon: icon, value: value, label: label);
+
+  static Widget sliderPanel({
+    required String title,
+    required String valueLabel,
+    required Widget child,
+  }) => _SliderPanel(title: title, valueLabel: valueLabel, child: child);
+
+  static Widget miniStat({required String label, required String value}) =>
+      _MiniStat(label: label, value: value);
+
+  static Widget planOverviewList({
+    required AppRepository repository,
+    required int? profileId,
+    required Set<int> planIds,
+    required int refreshToken,
+    required VoidCallback onChanged,
+  }) => _OnboardingPlanOverviewList(
+    repository: repository,
+    profileId: profileId,
+    planIds: planIds,
+    refreshToken: refreshToken,
+    onChanged: onChanged,
+  );
+
+  static Widget infoCallout({required IconData icon, required String text}) =>
+      _OnboardingInfoCallout(icon: icon, text: text);
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
@@ -932,7 +1016,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         DropdownButtonFormField<String>(
           isExpanded: true,
           value: _gender,
-          decoration: _inputDecoration(
+          decoration: _onboardingInputDecoration(
+            context,
             label: strings.onboardingGenderLabel,
             icon: Icons.wc_outlined,
           ),
@@ -1161,7 +1246,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         DropdownButtonFormField<String>(
           isExpanded: true,
           value: _preferredDiet,
-          decoration: _inputDecoration(
+          decoration: _onboardingInputDecoration(
+            context,
             label: strings.onboardingPreferredDiet,
             icon: Icons.restaurant_menu,
           ),
@@ -1388,12 +1474,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           controller: _gymProfileNameController,
           textInputAction: TextInputAction.done,
           onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            labelText: strings.onboardingProfileNameLabel,
-            prefixIcon: const Icon(Icons.edit_outlined),
-            border: OutlineInputBorder(
-              borderRadius: context.tutorialTokens.inputShape,
-            ),
+          decoration: _onboardingInputDecoration(
+            context,
+            label: strings.onboardingProfileNameLabel,
+            icon: Icons.edit_outlined,
           ),
         ),
         const SizedBox(height: 16),
@@ -1789,21 +1873,6 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     };
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    IconData? icon,
-    String? hint,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: icon == null ? null : Icon(icon),
-      border: OutlineInputBorder(
-        borderRadius: context.tutorialTokens.inputShape,
-      ),
-    );
-  }
-
   String _formatDate(DateTime date) {
     return preserveWesternDigits(
       MaterialLocalizations.of(context).formatMediumDate(date),
@@ -2090,14 +2159,12 @@ class _TextInput extends StatelessWidget {
                 hint: hint,
                 suffixText: suffixText,
               ).copyWith(prefixIcon: Icon(icon))
-              : InputDecoration(
-                labelText: label,
-                hintText: hint,
-                prefixIcon: Icon(icon),
+              : _onboardingInputDecoration(
+                context,
+                label: label,
+                hint: hint,
+                icon: icon,
                 suffixText: suffixText,
-                border: OutlineInputBorder(
-                  borderRadius: context.tutorialTokens.inputShape,
-                ),
               ),
     );
   }
@@ -2125,13 +2192,7 @@ class _ActionField extends StatelessWidget {
               context,
               label: label,
             ).copyWith(prefixIcon: Icon(icon))
-            : InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(icon),
-              border: OutlineInputBorder(
-                borderRadius: context.tutorialTokens.inputShape,
-              ),
-            );
+            : _onboardingInputDecoration(context, label: label, icon: icon);
     return InkWell(
       borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
@@ -2600,6 +2661,16 @@ class _SliderPanel extends StatelessWidget {
         neo
             ? tonosForegroundForSurface(context, panelSurface)
             : scheme.onSurface;
+    final titleStyle = theme.textTheme.titleSmall?.copyWith(
+      color: neo ? panelForeground : null,
+      fontWeight: FontWeight.w900,
+    );
+    final valueStyle = theme.textTheme.titleSmall?.copyWith(
+      color: neo ? panelForeground : scheme.primary,
+      fontWeight: FontWeight.w900,
+    );
+    final titleWidget = Text(title, style: titleStyle);
+    final valueWidget = Text(valueLabel, style: valueStyle);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -2616,25 +2687,42 @@ class _SliderPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: neo ? panelForeground : null,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              Text(
-                valueLabel,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: neo ? panelForeground : scheme.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final valuePainter = TextPainter(
+                text: TextSpan(text: valueLabel, style: valueStyle),
+                textDirection: Directionality.of(context),
+                textScaler: MediaQuery.textScalerOf(context),
+                maxLines: 1,
+              );
+              valuePainter.layout();
+              final titlePainter = TextPainter(
+                text: TextSpan(text: title, style: titleStyle),
+                textDirection: Directionality.of(context),
+                textScaler: MediaQuery.textScalerOf(context),
+              );
+              titlePainter.layout();
+              // Keep the original row while a complete title word still fits.
+              final stackHeader =
+                  valuePainter.width + titlePainter.minIntrinsicWidth >
+                  constraints.maxWidth;
+              valuePainter.dispose();
+              titlePainter.dispose();
+              if (stackHeader) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    titleWidget,
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: valueWidget,
+                    ),
+                  ],
+                );
+              }
+              return Row(children: [Expanded(child: titleWidget), valueWidget]);
+            },
           ),
           child,
         ],
@@ -3054,14 +3142,6 @@ class _OnboardingPlanOverviewListState
   int? _loadedRefreshToken;
   Set<int> _loadedPlanIds = const <int>{};
 
-  static const _palette = [
-    Colors.blue,
-    Colors.orange,
-    Colors.green,
-    Colors.purple,
-    Colors.teal,
-  ];
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -3212,6 +3292,10 @@ class _OnboardingPlanOverviewListState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final surface =
+        context.surfaceDecorationTokens.panel.outlined
+            ? context.surfaceTokens.settingsSection
+            : scheme.surface;
     final strings = AppLocalizations.of(context);
     return FutureBuilder<List<_OnboardingPlanItem>>(
       future: _plansFuture,
@@ -3222,7 +3306,7 @@ class _OnboardingPlanOverviewListState
         if (snapshot.hasError) {
           return Text(
             strings.onboardingPlanOverviewLoadError,
-            style: TextStyle(color: scheme.error),
+            style: TextStyle(color: tonosErrorForSurface(context, surface)),
           );
         }
 
@@ -3230,7 +3314,9 @@ class _OnboardingPlanOverviewListState
         if (plans.isEmpty) {
           return Text(
             strings.onboardingNoAddedPlans,
-            style: TextStyle(color: scheme.onSurfaceVariant),
+            style: TextStyle(
+              color: tonosSecondaryForegroundForSurface(context, surface),
+            ),
           );
         }
 
@@ -3242,7 +3328,9 @@ class _OnboardingPlanOverviewListState
                 child: PresetBar(
                   presetId: plan.presetId,
                   label: plan.name,
-                  color: _palette[plan.listIndex % _palette.length],
+                  color:
+                      PlanIdentityPalette.colors[plan.listIndex %
+                          PlanIdentityPalette.colors.length],
                   index: plan.listIndex,
                   isAutomatic: plan.isAutomatic,
                   focusFrequencyMap: plan.focusFrequencyMap,
@@ -3642,23 +3730,43 @@ class _OnboardingInfoCallout extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final neo = context.surfaceDecorationTokens.panel.outlined;
+    final calloutSurface = scheme.primary.withValues(alpha: 0.12);
+    final parentSurface =
+        neo ? context.surfaceTokens.settingsSection : scheme.surface;
+    final iconInk =
+        neo
+            ? tonosForegroundForSurface(
+              context,
+              calloutSurface,
+              parentSurface: parentSurface,
+            )
+            : scheme.primary;
+    final messageInk =
+        neo
+            ? tonosSecondaryForegroundForSurface(
+              context,
+              calloutSurface,
+              parentSurface: parentSurface,
+            )
+            : scheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.12),
+        color: calloutSurface,
         borderRadius: context.tutorialTokens.inputShape,
         border: Border.all(color: scheme.primary.withValues(alpha: 0.28)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: scheme.primary),
+          Icon(icon, color: iconInk),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+                color: messageInk,
                 fontWeight: FontWeight.w700,
               ),
             ),
