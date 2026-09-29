@@ -164,14 +164,16 @@ Build one small, isolated interaction gallery using real Tonos wrappers and repr
 
 Weight Units remains the standard-dialog reference rather than a separate package-first experiment: its current `TonosChoiceDialog` already exposes a selected radio row and one-step choice/close behavior.
 
-## Roadmap and next task
+## Roadmap and next task (2026-09-28 audit snapshot)
+
+> Status note (2026-09-29): The roadmap below was prospective at this audit snapshot and is now superseded by completed work. The `material_ui` migration, package comparison, seven-prototype review, and productionization of three standard Flutter/Tonos interactions are complete. The package decision is NO, and the three production changes have user approval. See the [interaction results and final consolidation](classic-m3e-interaction-prototype-results.md#final-consolidation-production-approved-classic-interaction-set) for current status.
 
 1. **Next task — isolated Flutter 3.47+ / Dart 3.13+ `material_ui` migration spike.** Do not change Classic appearance or add M3E widgets in that spike. Establish an isolated toolchain baseline, migrate the Material import/localization boundary, identify dependencies with SDK Material types in public APIs, and validate platform/build/test/CI compatibility. Confirm whether the compatibility bridge is needed and document any blockers.
 2. **Recheck package/API facts after the spike.** Resolve the actual compatible `material_ui` and `material_3_expressive` versions, read their changelogs/API docs, run their examples or a minimal isolated gallery, and verify reduced-motion support, target sizes, keyboard behavior, localization, and dependency cost.
 3. **Run the seven small prototypes.** Keep one source of truth for colors/content/layout and compare only component behavior. Record accessibility, density, focus, repeated logging speed, reduced motion, and maintenance cost.
 4. **Choose only proven improvements.** Implement the smallest shared Tonos-boundary changes for Tier 1, with no new family, broad palette, global route effect, or card system. Re-evaluate Tier 2 from prototype evidence.
 
-The migration spike is the next recommended task. **It is not started by this document.**
+At this snapshot, the migration spike was the next recommended task. **It was not started by this document.**
 
 ## Explicit non-goals
 

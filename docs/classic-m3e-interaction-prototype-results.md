@@ -4,7 +4,7 @@
 **Branch:** `feature/classic-m3e`
 **Decision:** **NO — standard Material/Tonos is sufficient.**
 
-Classic remains the visual and interaction baseline. The prototypes tested whether a package-backed Material 3 Expressive component improves real Tonos tasks enough to justify another permanent dependency. The package was useful for comparison, but none of the tested results requires it. A small number of behaviors are worth keeping as standard Material/Tonos implementation candidates.
+Classic remains the visual and interaction baseline. The original prototype phase tested whether a package-backed Material 3 Expressive component improves real Tonos tasks enough to justify another permanent dependency. That comparison concluded that the package was not needed. The production follow-ups below subsequently adopted three standard Flutter/Tonos interaction improvements, which the user reviewed and approved on 2026-09-29.
 
 ## Package and toolchain audit
 
@@ -65,9 +65,9 @@ The plan groups Add Set with set completion. This pass isolated completion feedb
 - Pixel 7: the earlier package-backed A/B interactions and reduced-motion comparison were captured on device. The final package-free APK launch was confirmed, but the screen could not be rechecked because the device remained locked; no unlock credentials were entered.
 - `git diff --check`: passed. Source search found no `material_3_expressive` dependency or M3E prototype references in `lib/`, `test/`, `pubspec.yaml`, or `pubspec.lock`.
 
-## Decision boundary
+## Prototype-phase decision boundary (2026-09-28)
 
-This artifact recommends only the small standard Material/Tonos candidates above. It does **not** approve production adoption or change the Classic/Neo theme architecture. The next work, if approved separately, is to productionize one candidate at a time behind its existing Tonos component boundary, beginning with controlled exercise expansion and its auto-collapse/reduced-motion behavior.
+At this prototype checkpoint, production adoption had not yet been approved. That temporary boundary was superseded by the production follow-ups below: controlled WeightCard expansion, the 48 dp set-completion target, and the WeightCard MenuAnchor are now production-adopted and user-approved. The package decision remains **NO — standard Material/Tonos is sufficient**; the three changes do not create a separate M3E theme or require `material_3_expressive`.
 
 ## Production follow-up: controlled WeightCard expansion
 
@@ -140,7 +140,31 @@ On Pixel 7 (`28021FDH200228`, `Pixel_7` / `panther`, 1080×2400 at 420 dpi), `fl
 
 - Flutter **3.47.5** / bundled Dart **3.13.4**.
 - Focused menu and WeightCard theme-scope batch: **17 passed**. Coverage includes action order, keyboard activation and Escape focus return, callback behavior, remove confirmation, read-only state, outside-tap handling, Android Back, semantics labels/actions, compact-width 2× text, and Classic/Neo light/dark menu contrast.
-- Full Flutter suite: **1,198 passed, 0 failed, 0 skipped**, exit code 0, uninterrupted (**9m36.2s**).
+- Full Flutter suite on the production implementation commit `8618328`: **1,198 passed, 0 failed, 0 skipped**, exit code 0, uninterrupted (**9m36.2s**).
 - `dart analyze`: exit code **0**, **0 errors, 0 warnings, 0 hints, 84 informational diagnostics**; no diagnostics were reported in the changed Dart files.
 - Android debug APK built successfully with `flutter build apk --debug --no-pub` in **81.0 seconds** (Gradle task: **69.9 seconds**). Flutter reported upcoming support cutoffs for the existing Gradle **8.14.5**, Android Gradle Plugin **8.11.1**, and Kotlin **2.2.21** versions; this task made no build-tool changes.
 - `git diff --check`: passed. Theme inventory and style ratchet were not applicable because no theme recipes or static styles changed.
+
+The follow-up commit `af28641` only strengthened the Android Back widget test to use a real two-route test stack. After that test-only change, `weight_card_menu_anchor_test.dart` passed **8/8**; the route assertion verifies that the first Back dismisses the menu without popping Workout Session and that the second Back pops the test route. A direct isolated Pixel 7 check likewise showed the first Back keeping Workout Session open and the second returning to Train. No full-suite rerun was needed because production code was unchanged.
+
+## Final consolidation: production-approved Classic interaction set
+
+The user reviewed the three production changes together and approved them on **2026-09-29**, including the real-device WeightCard menu check. They are accepted Classic behavior, not open prototypes.
+
+| Original plan candidate | Current status | Production behavior |
+|---|---|---|
+| Primary-action feedback | **KEEP CURRENT** | Existing Start/Finish action treatment remains. The expressive press treatment did not improve repeated use enough to justify changing it. |
+| Train Overview/Plans tabs | **KEEP CURRENT** | Keep the compact two-tab control and its current location. |
+| Exercise expansion | **PRODUCTION ADOPTED + USER APPROVED** | Classic workout sessions use WeightCard's controlled, quick-motion height reveal (about 180 ms), with no spring or bounce. Reduced motion is immediate; existing state ownership and final-set auto-collapse remain. |
+| Set completion | **PRODUCTION ADOPTED + USER APPROVED** | The standard Material checkbox keeps its visual size and semantic completion green while providing a 48×48 dp hit target. Tested normal, compact, and 2× text layouts showed no target-caused row-height increase. |
+| Anchored exercise menu | **PRODUCTION ADOPTED + USER APPROVED** | WeightCard uses standard `MenuAnchor`; action order and remove confirmation remain. Outside tap, Escape, and Android Back dismiss the menu; Back on the Pixel 7 was verified to leave the workout only on the next press. |
+| Progress selection | **KEEP CURRENT** | Preserve the current six-range selector, chart interaction, and data-color ownership. No package alternative improved the full interaction enough to adopt. |
+| Route transition | **KEEP CURRENT** | Retain platform Material route transitions; the scoped fade/slide did not improve orientation enough to replace them. |
+
+Together these changes establish the Classic interaction rule: keep the static Tonos appearance and dense workout layout familiar; use short, local motion only when it clarifies a state change; respect reduced motion; enlarge the interactive area instead of the repeated control artwork; and use standard Material anchoring for actions already attached to a control. Completion green remains semantic. This is selective Classic modernization, not a separate M3E identity.
+
+The package conclusion is final: **do not retain `material_3_expressive`**. `material_ui` remains the Material foundation, with Tonos-owned state, semantics, colors, and behavior.
+
+Two separate, non-blocking observations remain documented: at approximately 2× text the visible fixed-width `Set N` label can ellipsize while its semantic label remains complete; and collapsing at an extreme scroll limit can shift the preceding content by about 15 dp as the viewport clamps. Neither was introduced by the approved target change or judged a reason to reopen the adopted interactions. The set-label issue remains a separate accessibility/responsive follow-up.
+
+**Recommendation: PAUSE INTERACTION MODERNIZATION.** The three highest-value interaction candidates are complete and approved; the other four original candidates remain `KEEP CURRENT`, with no unresolved evidence justifying more interaction polish. Revisit the area only if a concrete usability problem appears.
