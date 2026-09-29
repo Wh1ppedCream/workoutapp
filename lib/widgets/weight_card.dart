@@ -627,7 +627,7 @@ class _WeightCardState extends State<WeightCard> {
                               final usesLocalizedLayout =
                                   Localizations.localeOf(context).languageCode !=
                                   'en';
-                              final checkboxWidth = compact ? 34.0 : 40.0;
+                              final checkboxWidth = 48.0;
                               final setLabelWidth =
                                   usesLocalizedLayout
                                       ? (compact ? 62.0 : 76.0)
@@ -737,7 +737,9 @@ class _WeightCardState extends State<WeightCard> {
                                           index + 1,
                                         ),
                                         activeColor: completedCheckboxColor,
-                                        visualDensity: VisualDensity.compact,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.padded,
+                                        visualDensity: VisualDensity.standard,
                                         onChanged:
                                             readOnly
                                                 ? null

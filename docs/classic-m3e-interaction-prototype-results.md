@@ -89,3 +89,36 @@ Reduced motion was verified by the focused widget test with `MediaQuery.disableA
 - `flutter analyze --no-pub`: **0 errors, 0 warnings, 115 informational deprecation notices** in existing files; analyzer exit code 1 reflects the repository's informational-only findings. None are in the changed Dart files.
 - Android debug APK: built successfully in **42.4 seconds**. Flutter reported upcoming support cutoffs for the existing Gradle 8.14.5, Android Gradle Plugin 8.11.1, and Kotlin 2.2.21 versions; this build succeeded without changing those versions.
 - `git diff --check`: passed. Theme inventory and style ratchet were not applicable because no theme recipes or static styles changed.
+
+## Production follow-up: set-completion touch target
+
+- **Evaluation date:** 2026-09-29
+- **Branch:** `feature/classic-m3e`
+- **Starting commit:** `fe0dc174adb98c3ceeddad5dfebe07cf3f6c50f7`
+- **Decision:** **ADOPT.**
+
+The real control is the standard Flutter `Checkbox` rendered in each set row by `WeightCard` (`lib/widgets/weight_card.dart`), reached in the active logger through `SessionScreen` and `ExerciseCard`. `WeightCard` owns its `_completedSets` view state, mirrors completion into `exercise.completedParents`, and calls the session refresh callback. Its existing final-set rule still sets `_isCollapsed` when every required parent set is complete. Completion green continues to come from Tonos's semantic completion color.
+
+The production checkbox keeps Flutter's 18 dp visual square and familiar checked/unchecked appearance. Before this change, its measured interactive box was **40×40 dp** at a regular 393 dp row width and **34×40 dp** in the compact 320 dp layout. It now measures **48×48 dp** at both widths, using the padded standard tap target and standard visual density. The checkbox's visible artwork and the row's completion color were not enlarged or recolored.
+
+| Layout | Before row height | After row height | Delta |
+|---|---:|---:|---:|
+| 393 dp wide, 1× text | 80 dp | 80 dp | 0 dp |
+| 320 dp wide, 1× text | 80 dp | 80 dp | 0 dp |
+| 393 dp wide, 2× text | 222 dp | 222 dp | 0 dp |
+| 320 dp wide, 2× text | 218 dp | 218 dp | 0 dp |
+
+At 2× text, the weight and reps fields stack vertically as they already do under the current scale threshold. The fixed set-label slot ellipsizes at that scale; this target change leaves that slot's width and text style unchanged. Widget geometry tests confirm that the checkbox region does not overlap either input at compact or regular width, and each six-row fixture retains the measured per-row height. The checkbox semantics continue to expose one `Set N` control with its checked state and tap action together.
+
+On Pixel 7 (`28021FDH200228`, 1080×2400 at 420 dpi), the isolated `com.tonos.internal.setcompletionvalidation` build used the separate `tonos_set_completion_validation_20260929.db`. In a real five-set Barbell Squat session, an edge-area tap on the checkbox toggled only its intended set; rapid distinct taps produced one state change per tap. A nonfinal completion kept the card expanded. Completing set 5 changed the header to 5/5, auto-collapsed the card, and dismissed the numeric keyboard; reopening showed all five checks retained. The weight field accepted a typed value while the numeric keyboard was open. Marking a nonfinal set complete retained field focus and the keyboard; marking the final set complete collapsed the card and dismissed the keyboard. The target felt more forgiving, while the checkbox drawing and repeated-row density looked unchanged.
+
+The device font scale was temporarily raised from its original **1.15** to **2.0** for inspection, then restored to **1.15**. The enlarged-text device view showed the expected stacked fields and taller rows; the focused geometry test measured no target-caused row-height increase at either width. Completion semantics and touch behavior remained clear. No completion animation or reduced-motion behavior was changed.
+
+### Set-completion validation
+
+- Flutter **3.47.5** / bundled Dart **3.13.4**.
+- Focused `weight_card_expansion_test.dart`: **6 passed**. Coverage includes 48 dp target bounds, six rows at compact and regular widths, 1×/2× text geometry, field non-overlap/input/focus, edge and repeated taps, semantics, and the existing nonfinal/final collapse contract.
+- Full Flutter suite: **1,190 passed, 0 failed, 0 skipped**, exit code 0, uninterrupted (**8m09s**).
+- `flutter analyze --no-pub`: **0 errors, 0 warnings, 83 informational notices**; exit code 1 because the repository reports informational deprecation notices as a nonzero analyzer result. No new analyzer error or warning was present in the changed Dart files.
+- Android debug APK built and launched with `flutter run` against the isolated package/database; the normal Tonos installs and data were left untouched.
+- `git diff --check`: passed. Theme inventory and style ratchet were not applicable; no theme ownership or token changed.
