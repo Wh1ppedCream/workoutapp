@@ -81,7 +81,7 @@ Before expanding production screens, classify affected identity branches by visu
 - Review app-theme selection, both identity registries, capability/release gates, UI Appearance labels and localized descriptions, Theme Lab previews, debug controls, and exhaustive family tests. The current release opt-in is Neo-specific; do not reuse TONOS_ENABLE_NEO_RELEASE to expose Expressive.
 - Preserve current Classic and Neo builder outputs and their availability rules.
 - Keep family identity explicit. Do not infer Expressive identity from border, elevation, or shape style.
-- Account for app-wide scope: MyApp applies the selected family to MaterialApp.theme and darkTheme, and both UI Appearance and Theme Lab currently consume AppThemeCapabilities.availableFamilies. Do not add Expressive to that shared list for the experiment. Give Theme Lab a separate development-only “Open Expressive preview” path that constructs the paired theme without writing AppThemeSelection preferences. Host the slice in a preview-owned nested Navigator under the Expressive Theme; route all in-slice navigation and overlays through that navigator, and intercept out-of-slice destinations rather than silently pushing them onto the root Navigator under Classic. This keeps UI Appearance, persisted selection, and the rest of MyApp unchanged while the preview remains coherent.
+- Account for app-wide scope: MyApp applies the selected family to MaterialApp.theme and darkTheme, and both UI Appearance and Theme Lab currently consume AppThemeCapabilities.availableFamilies. Do not add Expressive to that shared list for the experiment. Give Theme Lab a separate development-only “Open Expressive preview” path that constructs the paired theme without writing AppThemeSelection preferences. Host the slice in a preview-owned nested Navigator under the Expressive Theme; target all in-slice pushes, dialogs, and sheets at that navigator (for example, avoid root-navigator overlay defaults) or explicitly theme their route builders. Intercept out-of-slice destinations rather than silently pushing them onto the root Navigator under Classic. This keeps UI Appearance, persisted selection, and the rest of MyApp unchanged while the preview remains coherent.
 
 The older [Step 16 design brief](theme-step-16-design-brief.md) remains useful historical exploration, but its usesClassicPresentation description and earlier source counts are stale. The current implementation uses explicit AppThemeIdentity; verify current code rather than copying those passages.
 
@@ -224,7 +224,7 @@ Make selected state unmistakable through at least two cues where practical (for 
 
 **Keep:** all metric totals, order, range choices, actual/estimated distinction, drilldowns, chart ownership, and health-measurement identity. Preserve chart-series and heatmap colors. Do not count up metrics or tween a data line between different ranges; keep values immediately correct and use motion only to show which metric/range/point is selected. The existing WorkoutMetricChartCard range animation uses a fixed 160 ms AnimatedContainer; if touched, bring it under the existing reduced-motion helper.
 
-**Known accessibility debt:** the custom exercise-progress chart responds to touch, but its plotted points do not have an obvious screen-reader/keyboard interaction or a textual point summary. Both Workout Report and Exercise Progress painters draw fixed 10/11sp labels without a TextScaler. Health Trends has a localized chart summary in the current working tree, but that source file is already modified locally; verify its committed/current status before treating it as a baseline contract. Include chart description, label scaling, and reduced-motion checks in the slice rather than assuming themed surfaces solve them.
+**Known accessibility debt:** the custom exercise-progress chart responds to touch, but its plotted points do not have an obvious screen-reader/keyboard interaction or a textual point summary. Both Workout Report and Exercise Progress painters draw fixed 10/11sp labels without a TextScaler. Health Trends has a localized chart summary in the current working tree, but that source file is already modified locally; verify its committed/current status before treating it as a baseline contract. Track point descriptions and label scaling as a separate accessibility follow-up. In this slice preserve current chart summaries and controls, verify no semantic regression, and do not add expressive point interactions until that follow-up is complete.
 
 ## 11. App shell and navigation
 
@@ -255,7 +255,7 @@ Keep the Train app bar’s tabs/profile control, Profile/settings back bars, and
 | Sheets — TonosSheet plus direct Material sheets | Coordinated modal surfaces/handles/action hierarchy. | Density: low. Access: safe area, drag/back, semantics. | Medium; shared boundary adoption is uneven. | **Later.** Do not migrate every sheet for visual uniformity alone. |
 | Snackbars and feedback | Consistent success/error/info hierarchy without changing message timing. | Density: low. Access: announce meaningful messages; no color-only meaning. | Low; theme-level. | **Supporting.** Keep success/error semantics. |
 | Progress indicators and loading states | Clear real progress and quiet loading containers. | Density: low. Access: progress labels and status semantics. | Low/medium; shared and operation-specific. | **Keep restrained.** No wavy/decorative loader by default. |
-| Workout charts and exercise trend charts | Expressive framing, point focus, and selected state improve interpretation. | Density: medium. Access: custom-painted chart descriptions and keyboard point selection. | Medium/high; chart owners. | **Slice framing/selection only.** Preserve series; audit custom chart semantics separately. |
+| Workout charts and exercise trend charts | Expressive framing and clearer treatment of existing selected-point state improve interpretation. | Density: medium. Access: custom-painted chart descriptions and keyboard point selection. | Medium/high; chart owners. | **Slice framing/existing selection only.** Preserve series; defer new point interactions until the separate chart-accessibility follow-up. |
 | Metric cards — workout report and health summaries | Selected metric becomes focal; support values stay compact. | Density: high in three-up summaries. Access: reading order, selected name/value/action. | Medium; metric card and chart owner. | **Slice.** No number-count animation. |
 | Forms and fields — TonosField, TonosFormField, workout fields | Tonal focus/filled/error treatment communicates state with familiar entry. | Density: very high in repeated set rows. Access: labels, focus, keyboard, error text. | Medium; shared and route-specific. | **Theme carefully.** Keep logging field dimensions and focus order. |
 | Empty states | A little more hierarchy and a clear next action. | Density: low. Access: text and action stay explicit. | Low; per screen. | **Later.** Do not invent empty-state dashboards. |
@@ -301,7 +301,7 @@ Treat this as one connected proof with fixed representative data and matched lig
 - **Type:** selected metric leads; Time/Volume support; labels and exact values remain stable.
 - **Actions:** chart/range/metric controls preserve existing hit regions and labels.
 - **Motion:** quick selection and point-tooltip feedback; no value counting or data-series interpolation across unrelated ranges.
-- **Selection:** metric, date range, exercise, and chart point states are distinguishable.
+- **Selection:** metric, date range, exercise, and currently available chart-point states remain distinguishable; add no new point-selection interaction in this slice.
 - **Owners:** MeasurementsTrendsPage, WorkoutMetricChartCard, ExerciseProgressSection, HealthTrendsSection.
 - **Responsive/reduced motion:** preserve all six range options; the current selector uses six columns through 1.15 text scale and three columns above that scale. Selection changes settle immediately when animations are disabled.
 
@@ -362,7 +362,7 @@ Review whether the Expressive direction itself is approved, then the conditional
 
 ### Phase 1 — Isolated family foundation and proving slice
 
-Only after product approval, build the Expressive family behind a development/build gate. Initialize all 14 non-identity extension slots in both brightnesses, but make new slice-specific decisions only for the seven role groups consumed by the current Train, workout, and Progress owners. Include both Train tabs alongside Active Workout and Progress. Add a Theme Lab-only preview entry that constructs the family directly without using AppThemeCapabilities.availableFamilies or persisting AppThemeSelection; host its screens, in-slice navigation, and overlays in a preview-owned nested Navigator under Expressive ThemeData. Intercept child routes outside scope instead of pushing them onto MyApp's root navigator. Do not enable release selection. The existing TONOS_ENABLE_NEO_RELEASE flag must remain Neo-only.
+Only after product approval, build the Expressive family behind a development/build gate. Initialize all 14 non-identity extension slots in both brightnesses, but make new slice-specific decisions only for the seven role groups consumed by the current Train, workout, and Progress owners. Include both Train tabs alongside Active Workout and Progress. Add a Theme Lab-only preview entry that constructs the family directly without using AppThemeCapabilities.availableFamilies or persisting AppThemeSelection; host its screens, in-slice navigation, and overlays in a preview-owned nested Navigator under Expressive ThemeData. Route modal overlays through that navigator or explicitly apply Expressive ThemeData to their route builders. Intercept child routes outside scope instead of pushing them onto MyApp's root navigator. Do not enable release selection. The existing TONOS_ENABLE_NEO_RELEASE flag must remain Neo-only.
 
 ### Phase 2 — Device and accessibility qualification
 
@@ -370,7 +370,7 @@ Use Pixel 7 review and responsive/semantics/reduced-motion checks. Tune or rejec
 
 ### Phase 3 — Expand by workflow
 
-Only after the slice is accepted, apply the same recipe to Catalog and Logbook workflows, then Profile/settings. Preserve component semantics and keep shared-boundary reuse evidence-based.
+Only after the slice is accepted, qualify the out-of-slice Train plan detail/edit/preset-generation routes, then apply the same recipe to Catalog and Logbook workflows and Profile/settings. Preserve component semantics and keep shared-boundary reuse evidence-based.
 
 ### Phase 4 — Secondary flows and release readiness
 
