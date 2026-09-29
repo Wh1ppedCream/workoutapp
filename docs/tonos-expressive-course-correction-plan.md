@@ -4,6 +4,8 @@
 **Prepared:** 2026-09-29
 **Scope:** an isolated experimental theme direction, not a change to Classic or Neo
 
+> **Independent review update — 2026-09-29:** the later [Sol review](tonos-expressive-sol-review.md) is now the recommended implementation brief. It retains this plan's source fidelity, package rejection, Classic/Neo boundaries, and eventual Train/Workout/Progress qualification program. It changes the initial architecture to a **preview-only explicit rendered identity**, with stored-family promotion after acceptance; replaces the nested workflow preview with a **separate root sandbox app using production providers/routes**; and narrows the first proof to **Train Overview/Plans plus the shell**. It also specifies real selective springs, sparse 14-slot registration with shared semantic/data ownership, and chart-accessibility prerequisites before Progress qualification. The sections below remain prior planning evidence rather than instructions to implement the earlier architecture or all three destinations at once. No implementation is approved by either document alone.
+
 ## 1. Executive summary
 
 The three approved Classic interaction improvements are good groundwork: controlled WeightCard expansion, a 48 dp set-completion target without taller rows, and a standard anchored exercise menu. They show that Tonos can gain tactile clarity through small, testable changes. They do not answer how the whole app should look and feel as a coherent Material 3 Expressive experience.
