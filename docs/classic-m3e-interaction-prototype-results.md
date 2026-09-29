@@ -168,3 +168,7 @@ The package conclusion is final: **do not retain `material_3_expressive`**. `mat
 Two separate, non-blocking observations remain documented: at approximately 2× text the visible fixed-width `Set N` label can ellipsize while its semantic label remains complete; and collapsing at an extreme scroll limit can shift the preceding content by about 15 dp as the viewport clamps. Neither was introduced by the approved target change or judged a reason to reopen the adopted interactions. The set-label issue remains a separate accessibility/responsive follow-up.
 
 **Recommendation: PAUSE INTERACTION MODERNIZATION.** The three highest-value interaction candidates are complete and approved; the other four original candidates remain `KEEP CURRENT`, with no unresolved evidence justifying more interaction polish. Revisit the area only if a concrete usability problem appears.
+
+### Broader Expressive design direction
+
+This pause closes the original interaction-candidate list only. The broader question of a coherent Tonos Expressive visual system has been reopened as a separate research and planning effort. See [Tonos Expressive: Course-Correction Plan](tonos-expressive-course-correction-plan.md) for the current source-backed architecture recommendation and three-screen roadmap; this does not change the accepted Classic behavior recorded above.
