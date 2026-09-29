@@ -97,7 +97,9 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(
-      tester.widget<MenuItemButton>(find.byType(MenuItemButton).first).autofocus,
+      tester
+          .widget<MenuItemButton>(find.byType(MenuItemButton).first)
+          .autofocus,
       isTrue,
     );
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -166,7 +168,10 @@ void main() {
   testWidgets('Android back dismisses the open menu before leaving the page', (
     tester,
   ) async {
-    await _pumpWeightCard(tester, onSwapExercise: () {});
+    await _pumpWeightCard(tester, onSwapExercise: () {}, routeStack: true);
+    await tester.tap(find.text('Open workout'));
+    await tester.pumpAndSettle();
+    expect(find.byType(WeightCard), findsOneWidget);
     final strings = AppLocalizations.of(
       tester.element(find.byType(WeightCard)),
     );
@@ -177,6 +182,11 @@ void main() {
 
     expect(find.byType(WeightCard), findsOneWidget);
     expect(find.text(strings.weightSwapExercise), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(WeightCard), findsNothing);
+    expect(find.text('Open workout'), findsOneWidget);
   });
 
   testWidgets('anchor exposes one labelled action and menu items stay named', (
@@ -257,6 +267,7 @@ Future<void> _pumpWeightCard(
   WidgetTester tester, {
   bool readOnly = false,
   double textScale = 1,
+  bool routeStack = false,
   VoidCallback? onSwapExercise,
   VoidCallback? onDeleteExercise,
   VoidCallback? onOutsideTap,
@@ -272,6 +283,40 @@ Future<void> _pumpWeightCard(
     sets: [ExerciseSet(weight: 100, reps: 5)],
   );
 
+  Widget workoutPage(BuildContext context) {
+    final media = MediaQuery.of(context)
+        .copyWith(textScaler: TextScaler.linear(textScale));
+    return MediaQuery(
+      data: media,
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: SingleChildScrollView(
+                child: WeightCard(
+                  exercise: exercise,
+                  readOnlyMode: readOnly,
+                  previewWeightUnit: WeightUnit.pounds,
+                  onSwapExercise: onSwapExercise,
+                  onDeleteExercise: onDeleteExercise,
+                ),
+              ),
+            ),
+            if (onOutsideTap != null)
+              Positioned(
+                left: 8,
+                bottom: 8,
+                child: TextButton(
+                  onPressed: onOutsideTap,
+                  child: const Text('Outside action'),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   await tester.pumpWidget(
     ChangeNotifierProvider<UnitPreferenceProvider>.value(
       value: units,
@@ -282,34 +327,14 @@ Future<void> _pumpWeightCard(
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder: (context) {
-            final media = MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(textScale));
-            return MediaQuery(
-              data: media,
-              child: Scaffold(
-                body: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: SingleChildScrollView(
-                        child: WeightCard(
-                          exercise: exercise,
-                          readOnlyMode: readOnly,
-                          previewWeightUnit: WeightUnit.pounds,
-                          onSwapExercise: onSwapExercise,
-                          onDeleteExercise: onDeleteExercise,
-                        ),
-                      ),
-                    ),
-                    if (onOutsideTap != null)
-                      Positioned(
-                        left: 8,
-                        bottom: 8,
-                        child: TextButton(
-                          onPressed: onOutsideTap,
-                          child: const Text('Outside action'),
-                        ),
-                      ),
-                  ],
+            if (!routeStack) return workoutPage(context);
+            return Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: workoutPage)),
+                  child: const Text('Open workout'),
                 ),
               ),
             );
