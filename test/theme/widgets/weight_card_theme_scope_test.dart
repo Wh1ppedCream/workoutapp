@@ -389,7 +389,7 @@ void main() {
   }
 
   testWidgets(
-    'WeightCard popup labels contrast with their menu surface in all modes',
+    'WeightCard anchored menu labels contrast with their menu surface in all modes',
     (tester) async {
       for (final family in AppThemeFamily.values) {
         for (final theme in [
@@ -424,10 +424,10 @@ void main() {
           );
           await tester.pump();
 
-          final popupButton = find.byType(PopupMenuButton<String>);
+          final menuAnchor = find.byType(MenuAnchor);
           await tester.tap(
             find.descendant(
-              of: popupButton,
+              of: menuAnchor,
               matching: find.byIcon(Icons.more_vert),
             ),
           );
@@ -443,21 +443,22 @@ void main() {
             reason: '${family.name} ${theme.brightness}',
           );
 
-          final popupContext = tester.element(popupButton);
-          final popupTheme = Theme.of(popupContext);
-          final popupSurface =
-              popupTheme.popupMenuTheme.color ??
-              popupTheme.colorScheme.surfaceContainer;
+          final menuContext = tester.element(menuAnchor);
+          final menuTheme = Theme.of(menuContext);
+          final menuStyle = tester.widget<MenuAnchor>(menuAnchor).style!;
+          final menuSurface = menuStyle.backgroundColor!.resolve(
+            <WidgetState>{},
+          )!;
           final expectedInk = tonosForegroundForSurface(
-            popupContext,
-            popupSurface,
+            menuContext,
+            menuSurface,
           );
           final labelContext = tester.element(menuLabel);
           final label = tester.widget<Text>(menuLabel);
           final effectiveInk =
               label.style?.color ??
               DefaultTextStyle.of(labelContext).style.color ??
-              popupTheme.colorScheme.onSurface;
+              menuTheme.colorScheme.onSurface;
 
           expect(
             effectiveInk,

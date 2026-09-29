@@ -122,3 +122,25 @@ The device font scale was temporarily raised from its original **1.15** to **2.0
 - `flutter analyze --no-pub`: **0 errors, 0 warnings, 83 informational notices**; exit code 1 because the repository reports informational deprecation notices as a nonzero analyzer result. No new analyzer error or warning was present in the changed Dart files.
 - Android debug APK built and launched with `flutter run` against the isolated package/database; the normal Tonos installs and data were left untouched.
 - `git diff --check`: passed. Theme inventory and style ratchet were not applicable; no theme ownership or token changed.
+
+## Production follow-up: anchored exercise menu
+
+- **Evaluation date:** 2026-09-29
+- **Branch:** `feature/classic-m3e`
+- **Starting commit:** `42ff353f25db7b543fbf6cbe26fc7537f8352d94`
+- **Decision:** **ADOPT.**
+
+The production contextual menu is the trailing exercise-card action in `WeightCard` (`lib/widgets/weight_card.dart`), used by the active logger through `SessionScreen` and `ExerciseCard` and by plan-editing callers. It is now a standard Flutter `MenuAnchor`. The action order and owners remain the same: Swap Exercise appears only when its callback exists, Remove Exercise still requires the existing Tonos confirmation dialog, and Make ChangeSet still toggles the existing local editing mode. Read-only cards disable the anchor.
+
+The anchor keeps the prior Tonos popup surface, shape, elevation, shadow, tint, and family-specific foreground treatment. It is aligned to the card's trailing edge, constrained to the viewport, and consumes outside taps. The same owned focus node connects the icon button and menu; the first available action uses standard `MenuItemButton.autofocus`, so Enter opens the menu and a second Enter activates that action. Selecting an action returns focus to the trigger, Escape dismisses the menu, and Android Back closes it before leaving the route. When Swap is unavailable, Remove receives initial focus but still opens the existing confirmation dialog. No workout state or action callback moved into the menu.
+
+On Pixel 7 (`28021FDH200228`, `Pixel_7` / `panther`, 1080×2400 at 420 dpi), `flutter run` launched the real active workout screen with isolated package `com.tonos.internal.menuvalidation` and database `tonos_menu_anchor_validation_20260929.db`. The app used the normal 1.15 device text scale and dark Classic appearance. The menu stayed within the right screen edge. Android Back and outside taps dismissed it without leaving the session or activating the underlying row. Make ChangeSet showed the existing Add CSet control; Remove Exercise displayed the existing confirmation dialog, which was cancelled. Opening the menu from a focused weight field hid the numeric keyboard while preserving the entered row values. Rapid open/dismiss interactions left the card and session intact. The normal Tonos installs and databases were not used.
+
+### Anchored-menu validation
+
+- Flutter **3.47.5** / bundled Dart **3.13.4**.
+- Focused menu and WeightCard theme-scope batch: **17 passed**. Coverage includes action order, keyboard activation and Escape focus return, callback behavior, remove confirmation, read-only state, outside-tap handling, Android Back, semantics labels/actions, compact-width 2× text, and Classic/Neo light/dark menu contrast.
+- Full Flutter suite: **1,198 passed, 0 failed, 0 skipped**, exit code 0, uninterrupted (**9m36.2s**).
+- `dart analyze`: exit code **0**, **0 errors, 0 warnings, 0 hints, 84 informational diagnostics**; no diagnostics were reported in the changed Dart files.
+- Android debug APK built successfully with `flutter build apk --debug --no-pub` in **81.0 seconds** (Gradle task: **69.9 seconds**). Flutter reported upcoming support cutoffs for the existing Gradle **8.14.5**, Android Gradle Plugin **8.11.1**, and Kotlin **2.2.21** versions; this task made no build-tool changes.
+- `git diff --check`: passed. Theme inventory and style ratchet were not applicable because no theme recipes or static styles changed.

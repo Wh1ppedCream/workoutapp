@@ -79,6 +79,9 @@ class _WeightCardState extends State<WeightCard> {
   /// Parent set controllers stay in index order with [widget.exercise.sets].
   List<TextEditingController> _weightControllers = [];
   List<TextEditingController> _repsControllers = [];
+  late final FocusNode _exerciseMenuFocusNode = FocusNode(
+    debugLabel: 'WeightCard exercise actions',
+  );
 
   bool _isChangeSetMode = false;
   bool _isCollapsed = false;
@@ -176,6 +179,7 @@ class _WeightCardState extends State<WeightCard> {
 
   @override
   void dispose() {
+    _exerciseMenuFocusNode.dispose();
     _disposeSetControllers();
     super.dispose();
   }
@@ -248,6 +252,37 @@ class _WeightCardState extends State<WeightCard> {
       });
   }
 
+  Future<void> _handleExerciseMenuAction(String choice) async {
+    if (choice == 'remove') {
+      final strings = AppLocalizations.of(context);
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.weightRemoveExerciseTitle),
+            content: Text(strings.weightRemoveExerciseBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(strings.commonCancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(strings.commonRemove),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted) return;
+      if (confirm == true) widget.onDeleteExercise?.call();
+    } else if (choice == 'changeSet') {
+      setState(() => _isChangeSetMode = !_isChangeSetMode);
+    } else if (choice == 'swap') {
+      widget.onSwapExercise?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
@@ -307,6 +342,34 @@ class _WeightCardState extends State<WeightCard> {
         surfaces.useSemanticWorkoutCardFill
             ? completedSetColor
             : semantic.workoutCompleted;
+
+    final popupMenuTheme = theme.popupMenuTheme;
+    final menuSurface =
+        popupMenuTheme.color ?? theme.colorScheme.surfaceContainer;
+    final menuTextStyle = usesInkRecipe && theme.brightness == Brightness.dark
+        ? (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
+            color: tonosForegroundForSurface(context, menuSurface),
+          )
+        : popupMenuTheme.textStyle;
+    final menuShape = popupMenuTheme.shape;
+    final exerciseMenuStyle = MenuStyle(
+      // This matches PopupMenuButton's default M3 placement: aligned to the
+      // trailing edge of its trigger and over the trigger's vertical origin.
+      alignment: AlignmentDirectional.topEnd,
+      backgroundColor: WidgetStatePropertyAll(menuSurface),
+      elevation: popupMenuTheme.elevation == null
+          ? null
+          : WidgetStatePropertyAll(popupMenuTheme.elevation!),
+      shadowColor: popupMenuTheme.shadowColor == null
+          ? null
+          : WidgetStatePropertyAll(popupMenuTheme.shadowColor!),
+      surfaceTintColor: popupMenuTheme.surfaceTintColor == null
+          ? null
+          : WidgetStatePropertyAll(popupMenuTheme.surfaceTintColor!),
+      shape: menuShape is OutlinedBorder
+          ? WidgetStatePropertyAll(menuShape)
+          : null,
+    );
 
     final cardTheme =
         surfaces.useSemanticWorkoutCardFill
@@ -445,89 +508,67 @@ class _WeightCardState extends State<WeightCard> {
                         onTap: widget.onDetails!,
                       ),
                     ),
-                  PopupMenuButton<String>(
-                    enabled: !readOnly,
-                    icon: Icon(
-                      Icons.more_vert,
-                      color:
-                          usesInkRecipe && theme.brightness == Brightness.dark
-                              ? semantic.onWorkoutContainer
-                              : null,
-                    ),
-                    onSelected: (choice) async {
-                      if (choice == 'remove') {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder:
-                              (ctx) => TonosDialogFrame(
-                                child: AlertDialog(
-                                  title: Text(
-                                    strings.weightRemoveExerciseTitle,
-                                  ),
-                                  content: Text(
-                                    strings.weightRemoveExerciseBody,
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.pop(ctx, false),
-                                      child: Text(strings.commonCancel),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: Text(strings.commonRemove),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                        );
-                        if (!mounted) return;
-                        if (confirm == true) widget.onDeleteExercise?.call();
-                      } else if (choice == 'changeSet') {
-                        setState(() => _isChangeSetMode = !_isChangeSetMode);
-                      } else if (choice == 'swap') {
-                        widget.onSwapExercise?.call();
-                      }
-                    },
-                    itemBuilder: (menuContext) {
-                      final menuSurface =
-                          Theme.of(menuContext).popupMenuTheme.color ??
-                          Theme.of(menuContext).colorScheme.surfaceContainer;
-                      final menuTextStyle =
-                          usesInkRecipe && theme.brightness == Brightness.dark
-                              ? (theme.textTheme.bodyLarge ?? const TextStyle())
-                                  .copyWith(
-                                    color: tonosForegroundForSurface(
-                                      menuContext,
-                                      menuSurface,
-                                    ),
-                                  )
-                              : null;
-                      return [
-                        if (widget.onSwapExercise != null)
-                          PopupMenuItem(
-                            value: 'swap',
-                            child: Text(
-                              strings.weightSwapExercise,
-                              style: menuTextStyle,
+                  MenuAnchor(
+                    childFocusNode: _exerciseMenuFocusNode,
+                    consumeOutsideTap: true,
+                    crossAxisUnconstrained: false,
+                    style: exerciseMenuStyle,
+                    menuChildren: [
+                      if (widget.onSwapExercise != null)
+                        MenuItemButton(
+                          autofocus: true,
+                          onPressed: () => _handleExerciseMenuAction('swap'),
+                          child: Text(
+                            strings.weightSwapExercise,
+                            style: menuTextStyle,
+                          ),
+                        ),
+                      MenuItemButton(
+                        autofocus: widget.onSwapExercise == null,
+                        onPressed: () => _handleExerciseMenuAction('remove'),
+                        child: Text(
+                          strings.weightRemoveExerciseTitle,
+                          style: menuTextStyle,
+                        ),
+                      ),
+                      MenuItemButton(
+                        onPressed: () => _handleExerciseMenuAction('changeSet'),
+                        child: Text(
+                          strings.weightMakeChangeSet,
+                          style: menuTextStyle,
+                        ),
+                      ),
+                    ],
+                    builder: (menuContext, controller, child) =>
+                        PopScope<Object?>(
+                          canPop: !controller.isOpen,
+                          onPopInvokedWithResult: (didPop, result) {
+                            if (!didPop && controller.isOpen)
+                              controller.close();
+                          },
+                          child: IconButton(
+                            focusNode: _exerciseMenuFocusNode,
+                            tooltip: MaterialLocalizations.of(menuContext)
+                                .showMenuTooltip,
+                            icon: Icon(
+                              Icons.more_vert,
+                              color:
+                                  usesInkRecipe &&
+                                      theme.brightness == Brightness.dark
+                                  ? semantic.onWorkoutContainer
+                                  : null,
                             ),
-                          ),
-                        PopupMenuItem(
-                          value: 'remove',
-                          child: Text(
-                            strings.weightRemoveExerciseTitle,
-                            style: menuTextStyle,
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'changeSet',
-                          child: Text(
-                            strings.weightMakeChangeSet,
-                            style: menuTextStyle,
+                            onPressed: readOnly
+                                ? null
+                                : () {
+                                    if (controller.isOpen) {
+                                      controller.close();
+                                    } else {
+                                      controller.open();
+                                    }
+                                  },
                           ),
                         ),
-                      ];
-                    },
                   ),
                 ],
               ),
