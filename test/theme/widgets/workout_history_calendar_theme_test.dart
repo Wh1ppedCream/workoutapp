@@ -35,15 +35,9 @@ void main() {
         await tester.binding.setSurfaceSize(const Size(390, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        final today = DateUtils.dateOnly(DateTime.now());
-        final weekStartDay = 1 + ((today.day - 1) ~/ 7) * 7;
-        final companionDay =
-            today.day > weekStartDay
-                ? today.day - 1
-                : today.day < DateTime(today.year, today.month + 1, 0).day
-                ? today.day + 1
-                : weekStartDay;
-        final earlierDay = DateTime(today.year, today.month, companionDay);
+        // Fix the reference date so the theme matrix is independent of the clock.
+        final today = DateTime(2026, 10, 28);
+        final earlierDay = today.subtract(const Duration(days: 1));
         final sessions = <WorkoutReportSession>[
           _session(1, DateTime(today.year, today.month, today.day, 12)),
           _session(2, DateTime(today.year, today.month, today.day, 13)),
@@ -76,6 +70,7 @@ void main() {
                   child: WorkoutHistoryCalendar(
                     onSessionTap: (session) => tappedSession = session,
                     onOpenFullHistory: () => openedFullHistory = true,
+                    referenceDate: today,
                   ),
                 ),
               ),
@@ -397,7 +392,7 @@ void main() {
 
             final selectedWeekLabel = strings.logbookMonthWeek(
               LocalizedFormatters.month(today, locale),
-              ((weekStartDay - 1) ~/ 7) + 1,
+              4,
             );
             final selectedWeek = _semanticButton(selectedWeekLabel);
             expect(selectedWeek, findsOneWidget);
@@ -512,7 +507,10 @@ void main() {
               localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
-                body: WorkoutHistoryCalendar(key: const ValueKey('failed')),
+                body: WorkoutHistoryCalendar(
+                  key: const ValueKey('failed'),
+                  referenceDate: today,
+                ),
               ),
             ),
           ),
@@ -536,6 +534,73 @@ void main() {
       });
     }
   }
+
+  testWidgets('days 22 through month-end select the fourth period', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final units = UnitPreferenceProvider();
+    await units.ready;
+    addTearDown(units.dispose);
+    await tester.binding.setSurfaceSize(const Size(390, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final theme = AppThemeFactory.light(AppThemeFamily.classic);
+    final repository = _CalendarRepository(const <WorkoutReportSession>[]);
+    const locale = Locale('en');
+    final dates = <({int month, int day, int expectedWeek})>[
+      (month: 10, day: 21, expectedWeek: 3),
+      (month: 10, day: 22, expectedWeek: 4),
+      (month: 10, day: 28, expectedWeek: 4),
+      (month: 9, day: 29, expectedWeek: 4),
+      (month: 9, day: 30, expectedWeek: 4),
+      (month: 10, day: 31, expectedWeek: 4),
+    ];
+
+    for (final dateCase in dates) {
+      final today = DateTime(2026, dateCase.month, dateCase.day);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: repository),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: theme,
+            locale: locale,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: WorkoutHistoryCalendar(
+                key: ValueKey<DateTime>(today),
+                referenceDate: today,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('3M'));
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(WorkoutHistoryCalendar)),
+      );
+      final selectedPeriod = _semanticButton(
+        strings.logbookMonthWeek(
+          LocalizedFormatters.month(today, locale),
+          dateCase.expectedWeek,
+        ),
+      );
+      expect(selectedPeriod, findsOneWidget);
+      expect(find.text(strings.logbookWeekShort(5)), findsNothing);
+      expect(
+        _dayFill(tester, selectedPeriod).color,
+        theme.colorScheme.primary,
+        reason: 'The selected month period should match the fixed date.',
+      );
+    }
+  });
 }
 
 Finder _dayButton(DateTime day, Locale locale) {

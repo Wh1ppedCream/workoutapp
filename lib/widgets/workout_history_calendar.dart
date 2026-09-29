@@ -23,12 +23,17 @@ class WorkoutHistoryCalendar extends StatefulWidget {
   final VoidCallback? onOpenFullHistory;
   final EdgeInsetsGeometry margin;
 
+  /// Optional reference date for deterministic calendar tests.
+  @visibleForTesting
+  final DateTime? referenceDate;
+
   const WorkoutHistoryCalendar({
     super.key,
     this.refreshToken = 0,
     this.onSessionTap,
     this.onOpenFullHistory,
     this.margin = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.referenceDate,
   });
 
   @override
@@ -37,6 +42,8 @@ class WorkoutHistoryCalendar extends StatefulWidget {
 
 class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   AppRepository get _repo => context.read<AppRepository>();
+  DateTime get _today =>
+      DateUtils.dateOnly(widget.referenceDate ?? DateTime.now());
 
   late Future<List<WorkoutReportSession>> _sessionsFuture;
   List<WorkoutReportSession>? _lastSessions;
@@ -57,7 +64,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   @override
   void initState() {
     super.initState();
-    final now = DateUtils.dateOnly(DateTime.now());
+    final now = _today;
     _visibleMonth = DateTime(now.year, now.month);
     _selectedDay = now;
     _visibleThreeMonthEnd = DateTime(now.year, now.month);
@@ -162,6 +169,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
                   context,
                   _CalendarModeBody(
                     mode: _mode,
+                    today: _today,
                     visibleMonth: _visibleMonth,
                     visibleThreeMonthEnd: _visibleThreeMonthEnd,
                     selectedDay: _selectedDay,
@@ -291,7 +299,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
   void _selectMode(_CalendarRangeMode mode) {
     if (_mode == mode) return;
 
-    final today = DateUtils.dateOnly(DateTime.now());
+    final today = _today;
     setState(() {
       _mode = mode;
       switch (mode) {
@@ -359,7 +367,7 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       _visibleMonth = normalizedMonth;
       if (_selectedDay.year != normalizedMonth.year ||
           _selectedDay.month != normalizedMonth.month) {
-        final today = DateUtils.dateOnly(DateTime.now());
+        final today = _today;
         _selectedDay =
             today.year == normalizedMonth.year &&
                     today.month == normalizedMonth.month
@@ -634,6 +642,7 @@ class _CalendarModeTabs extends StatelessWidget {
 
 class _CalendarModeBody extends StatelessWidget {
   final _CalendarRangeMode mode;
+  final DateTime today;
   final DateTime visibleMonth;
   final DateTime visibleThreeMonthEnd;
   final DateTime selectedDay;
@@ -656,6 +665,7 @@ class _CalendarModeBody extends StatelessWidget {
 
   const _CalendarModeBody({
     required this.mode,
+    required this.today,
     required this.visibleMonth,
     required this.visibleThreeMonthEnd,
     required this.selectedDay,
@@ -697,10 +707,11 @@ class _CalendarModeBody extends StatelessWidget {
               nextTooltip: strings.logbookNextMonth,
             ),
             const SizedBox(height: 14),
-            const _WeekdayRow(),
+            _WeekdayRow(today: today),
             const SizedBox(height: 8),
             _CalendarGrid(
               visibleMonth: visibleMonth,
+              today: today,
               selectedDay: selectedDay,
               sessionsByDay: sessionsByDay,
               maxSessionsPerDay: maxSessionsPerDay,
@@ -728,6 +739,7 @@ class _CalendarModeBody extends StatelessWidget {
         );
       case _CalendarRangeMode.fourYear:
         return _FourYearSelector(
+          currentYear: today.year,
           selectedYear: selectedYear,
           sessionsByDay: sessionsByDay,
           onSelectYear: onSelectYear,
@@ -971,11 +983,13 @@ class _YearMonthSelector extends StatelessWidget {
 }
 
 class _FourYearSelector extends StatelessWidget {
+  final int currentYear;
   final int selectedYear;
   final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
   final ValueChanged<int> onSelectYear;
 
   const _FourYearSelector({
+    required this.currentYear,
     required this.selectedYear,
     required this.sessionsByDay,
     required this.onSelectYear,
@@ -983,7 +997,6 @@ class _FourYearSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentYear = DateTime.now().year;
     final years = List.generate(4, (index) => currentYear - 3 + index);
     final maxYearSessions = years.fold<int>(0, (max, year) {
       final count = _sessionCountInRange(
@@ -1181,12 +1194,13 @@ class _CalendarHeader extends StatelessWidget {
 }
 
 class _WeekdayRow extends StatelessWidget {
-  const _WeekdayRow();
+  final DateTime today;
+
+  const _WeekdayRow({required this.today});
 
   @override
   Widget build(BuildContext context) {
     final locale = Localizations.localeOf(context);
-    final today = DateTime.now();
     final sunday = today.subtract(Duration(days: today.weekday % 7));
     final labels = List.generate(
       DateTime.daysPerWeek,
@@ -1218,6 +1232,7 @@ class _WeekdayRow extends StatelessWidget {
 
 class _CalendarGrid extends StatelessWidget {
   final DateTime visibleMonth;
+  final DateTime today;
   final DateTime selectedDay;
   final Map<DateTime, List<WorkoutReportSession>> sessionsByDay;
   final int maxSessionsPerDay;
@@ -1225,6 +1240,7 @@ class _CalendarGrid extends StatelessWidget {
 
   const _CalendarGrid({
     required this.visibleMonth,
+    required this.today,
     required this.selectedDay,
     required this.sessionsByDay,
     required this.maxSessionsPerDay,
@@ -1249,6 +1265,7 @@ class _CalendarGrid extends StatelessWidget {
         final sessions = sessionsByDay[day] ?? const <WorkoutReportSession>[];
         return _CalendarDayButton(
           day: day,
+          today: today,
           isCurrentMonth: day.month == visibleMonth.month,
           isSelected: DateUtils.isSameDay(day, selectedDay),
           sessionCount: sessions.length,
@@ -1277,6 +1294,7 @@ class _CalendarGrid extends StatelessWidget {
 
 class _CalendarDayButton extends StatelessWidget {
   final DateTime day;
+  final DateTime today;
   final bool isCurrentMonth;
   final bool isSelected;
   final int sessionCount;
@@ -1285,6 +1303,7 @@ class _CalendarDayButton extends StatelessWidget {
 
   const _CalendarDayButton({
     required this.day,
+    required this.today,
     required this.isCurrentMonth,
     required this.isSelected,
     required this.sessionCount,
@@ -1347,8 +1366,7 @@ class _CalendarDayButton extends StatelessWidget {
                           color: tonosOutlineForSurface(context, selectedFill),
                           width: shapes.outlineWidth,
                         )
-                        : DateUtils.isSameDay(day, DateTime.now()) &&
-                            !isSelected
+                        : DateUtils.isSameDay(day, today) && !isSelected
                         ? Border.all(color: cs.primary, width: 1.4)
                         : null,
               ),
