@@ -5,6 +5,7 @@ import '../l10n/generated/app_localizations.dart';
 import 'app_theme_capabilities.dart';
 import 'app_theme_factory.dart';
 import 'app_theme_family.dart';
+import 'classic_interaction_lab/classic_interaction_lab_page.dart';
 import 'neo_brutalism_pilot_gallery.dart';
 import 'theme_extensions.dart';
 import 'tokens/app_effect_tokens.dart';
@@ -16,6 +17,10 @@ import 'widgets/tonos_field.dart';
 import 'widgets/tonos_section.dart';
 import 'widgets/tonos_sheet.dart';
 import 'widgets/tonos_surface.dart';
+
+const _compileTimeInteractionPrototypes = bool.fromEnvironment(
+  'TONOS_INTERACTION_PROTOTYPES',
+);
 
 /// Development-only gallery for reviewing theme contracts and primitives.
 ///
@@ -54,110 +59,159 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
     return Localizations.override(
       context: context,
       locale: _locale,
-      child: Builder(
-        builder:
-            (_) => Theme(
-              data: _previewTheme(),
-              child: Builder(
-                builder:
-                    (themeContext) => MediaQuery(
-                      data: MediaQuery.of(
-                        themeContext,
-                      ).copyWith(textScaler: TextScaler.linear(_textScale)),
-                      child: Scaffold(
-                        appBar: AppBar(
-                          title: const Text('Theme Lab'),
-                          actions: [
-                            IconButton(
-                              tooltip: 'Close Theme Lab',
-                              onPressed: () {
-                                final navigator = Navigator.of(themeContext);
-                                if (navigator.canPop()) {
-                                  navigator.maybePop();
-                                } else {
-                                  navigator.pushReplacementNamed('/main');
-                                }
-                              },
-                              icon: const Icon(Icons.close),
-                            ),
-                          ],
-                        ),
-                        body: ListView(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                          children: [
-                            _buildControls(themeContext),
-                            const SizedBox(height: 20),
-                            if (_family == AppThemeFamily.neoBrutalism) ...[
-                              NeoBrutalismPilotGallery(
-                                resetToken: _previewResetToken,
-                              ),
-                              const SizedBox(height: 20),
-                            ],
-                            _buildSection(
-                              themeContext,
-                              'Tonos surfaces',
-                              _buildSurfaceGallery(),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Tonos sections',
-                              _buildSectionGallery(themeContext),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Tonos actions',
-                              _buildActionGallery(),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Tonos fields',
-                              _buildFieldGallery(),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Tonos sheets',
-                              _buildSheetGallery(themeContext),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Material states',
-                              _buildMaterialGallery(themeContext),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Typography',
-                              _buildTypographyGallery(themeContext),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Data visualization',
-                              _buildDataVisualizationGallery(themeContext),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Fitness states',
-                              _buildFitnessGallery(),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildSection(
-                              themeContext,
-                              'Stress states',
-                              _buildStressGallery(),
-                            ),
-                          ],
-                        ),
-                      ),
+      child: Theme(
+        data: _previewTheme(),
+        child: Builder(
+          builder: (themeContext) => MediaQuery(
+            data: MediaQuery.of(themeContext).copyWith(
+              textScaler: TextScaler.linear(_textScale),
+              disableAnimations:
+                  _reducedMotion ||
+                  MediaQuery.disableAnimationsOf(themeContext),
+            ),
+            child: Builder(
+              builder: (labContext) => Scaffold(
+                appBar: AppBar(
+                  title: const Text('Theme Lab'),
+                  actions: [
+                    IconButton(
+                      tooltip: 'Close Theme Lab',
+                      onPressed: () {
+                        final navigator = Navigator.of(labContext);
+                        if (navigator.canPop()) {
+                          navigator.maybePop();
+                        } else {
+                          navigator.pushReplacementNamed('/main');
+                        }
+                      },
+                      icon: const Icon(Icons.close),
                     ),
+                  ],
+                ),
+                body: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  children: [
+                    _buildControls(labContext),
+                    if (_showInteractionPrototypeEntry) ...[
+                      const SizedBox(height: 16),
+                      _buildInteractionPrototypeEntry(labContext),
+                    ],
+                    const SizedBox(height: 20),
+                    if (_family == AppThemeFamily.neoBrutalism) ...[
+                      NeoBrutalismPilotGallery(resetToken: _previewResetToken),
+                      const SizedBox(height: 20),
+                    ],
+                    _buildSection(
+                      labContext,
+                      'Tonos surfaces',
+                      _buildSurfaceGallery(),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Tonos sections',
+                      _buildSectionGallery(labContext),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Tonos actions',
+                      _buildActionGallery(),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Tonos fields',
+                      _buildFieldGallery(),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Tonos sheets',
+                      _buildSheetGallery(labContext),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Material states',
+                      _buildMaterialGallery(labContext),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Typography',
+                      _buildTypographyGallery(labContext),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Data visualization',
+                      _buildDataVisualizationGallery(labContext),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Fitness states',
+                      _buildFitnessGallery(),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSection(
+                      labContext,
+                      'Stress states',
+                      _buildStressGallery(),
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  bool get _showInteractionPrototypeEntry =>
+      kDebugMode &&
+      _compileTimeInteractionPrototypes &&
+      _family == AppThemeFamily.classic;
+
+  Widget _buildInteractionPrototypeEntry(BuildContext context) {
+    return TonosSurface(
+      variant: TonosSurfaceVariant.panelRaised,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Classic interaction prototypes',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Compare current Tonos Material behavior with selective '
+            'Standard Material interaction options.',
+          ),
+          const SizedBox(height: 12),
+          TonosAction(
+            label: 'Open interaction lab',
+            icon: const Icon(Icons.touch_app_outlined),
+            onPressed: () {
+              final previewTheme = _previewTheme();
+              final previewMediaQuery = MediaQuery.of(context);
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => Theme(
+                    data: previewTheme,
+                    child: MediaQuery(
+                      data: previewMediaQuery,
+                      child: const ClassicInteractionLabPage(),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -264,10 +318,9 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
 
   void _resetPreview() {
     setState(() {
-      _family =
-          _families.contains(AppThemeFamily.classic)
-              ? AppThemeFamily.classic
-              : _families.first;
+      _family = _families.contains(AppThemeFamily.classic)
+          ? AppThemeFamily.classic
+          : _families.first;
       _brightness = Brightness.dark;
       _locale = const Locale('en');
       _textScale = 1;
@@ -743,10 +796,9 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
   }
 
   ThemeData _previewTheme() {
-    final base =
-        _brightness == Brightness.light
-            ? AppThemeFactory.light(_family)
-            : AppThemeFactory.dark(_family);
+    final base = _brightness == Brightness.light
+        ? AppThemeFactory.light(_family)
+        : AppThemeFactory.dark(_family);
     final extensions = [
       for (final extension in base.extensions.values)
         if (extension is AppMotionTokens && _reducedMotion)
@@ -765,22 +817,24 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
           )
         else if (extension is AppTutorialTokens)
           extension.copyWith(
-            pageDuration:
-                _reducedMotion ? Duration.zero : extension.pageDuration,
-            selectionDuration:
-                _reducedMotion ? Duration.zero : extension.selectionDuration,
-            guidedScrollDuration:
-                _reducedMotion ? Duration.zero : extension.guidedScrollDuration,
-            coachDuration:
-                _reducedMotion ? Duration.zero : extension.coachDuration,
-            cardShadow:
-                _effectsEnabled
-                    ? extension.cardShadow
-                    : const BoxShadow(color: Colors.transparent),
-            coachShadow:
-                _effectsEnabled
-                    ? extension.coachShadow
-                    : const BoxShadow(color: Colors.transparent),
+            pageDuration: _reducedMotion
+                ? Duration.zero
+                : extension.pageDuration,
+            selectionDuration: _reducedMotion
+                ? Duration.zero
+                : extension.selectionDuration,
+            guidedScrollDuration: _reducedMotion
+                ? Duration.zero
+                : extension.guidedScrollDuration,
+            coachDuration: _reducedMotion
+                ? Duration.zero
+                : extension.coachDuration,
+            cardShadow: _effectsEnabled
+                ? extension.cardShadow
+                : const BoxShadow(color: Colors.transparent),
+            coachShadow: _effectsEnabled
+                ? extension.coachShadow
+                : const BoxShadow(color: Colors.transparent),
             effectsEnabled: _effectsEnabled,
           )
         else if (extension is AppEffectTokens && !_effectsEnabled)
@@ -827,10 +881,9 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
           elevation: effects.dialogElevation,
         ),
         tooltipTheme: preview.tooltipTheme.copyWith(
-          decoration:
-              tooltipDecoration is BoxDecoration
-                  ? tooltipDecoration.copyWith(boxShadow: const [])
-                  : tooltipDecoration,
+          decoration: tooltipDecoration is BoxDecoration
+              ? tooltipDecoration.copyWith(boxShadow: const [])
+              : tooltipDecoration,
         ),
       );
     }
