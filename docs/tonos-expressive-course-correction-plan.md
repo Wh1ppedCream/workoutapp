@@ -10,9 +10,9 @@ The three approved Classic interaction improvements are good groundwork: control
 
 The earlier visual work and interaction work answered different questions. The separate-family boards did not remain convincing as the current app wearing a theme: reconstructed screens drifted from production composition, and color/container treatment read as an imposed concept. The later interaction phase correctly prioritized safety but tested isolated controls inside an otherwise Classic visual system. Its “pause” conclusion applies to the original interaction-candidate list, not to the broader design direction.
 
-**Recommendation:** pursue Expressive as a true, paired light/dark third theme family, provisionally labeled **Expressive**, implemented with material_ui, standard Flutter primitives, and Tonos-owned recipes. Keep it build-gated and unavailable in release builds until the three-screen slice passes visual, accessibility, regression, and Pixel 7 gates. Do not retain or reintroduce the material_3_expressive package.
+**Conditional recommendation:** if product review approves Expressive as a Tonos design direction, represent it as a true, paired light/dark third theme family, provisionally labeled **Expressive**, implemented with material_ui, standard Flutter primitives, and Tonos-owned recipes. Keep the experiment build-gated and unavailable in release builds until the proving slice passes visual, accessibility, regression, and Pixel 7 gates. This document does not select the design direction or approve implementation. Do not retain or reintroduce the material_3_expressive package.
 
-The first proof should style the current production Train Overview, Active Workout, and Progress experiences as one system. It should change hierarchy, tonal containment, selected states, role-specific geometry, and a few deliberate interactions while retaining Tonos layout, data meanings, and fast workout workflow.
+The first proof should style the current production Train destination (both Overview and Plans tabs), Active Workout, and Progress as one system. These are three production destinations and four representative screen states. It should change hierarchy, tonal containment, selected states, role-specific geometry, and a few deliberate interactions while retaining Tonos layout, data meanings, and fast workout workflow.
 
 ## 2. Why the earlier work stopped short
 
@@ -72,16 +72,16 @@ The family backbone is real and explicit:
 - AppThemeFamily stores the persisted family code, while AppThemeFamilyIdentity and the AppThemeIdentity ThemeExtension record the rendered family. These drive explicit usesClassicPresentation and usesNeoPresentation helpers; the enum and extension must both gain the new identity.
 - Theme extensions already own semantic colors, surfaces, surface decoration/effects, shape, motion, progress and chart data colors, nutrition, and other product recipes.
 
-This makes a third family technically feasible, but not a drop-in recipe. In the current dirty working tree, a search across lib Dart files found 174 usesNeoPresentation occurrences in 54 files and 29 usesClassicPresentation occurrences in 11 files. This includes debug/preview code; the figures are identifier occurrences, not widget counts or a rewrite estimate. Many “not Neo” branches currently select Classic-specific or generic Material rendering. An Expressive theme can therefore have a complete ThemeData and still fall through to an incoherent mix of Classic and defaults.
+This makes a third family technically feasible, but not a drop-in recipe. In the current dirty working tree, a search across lib Dart files found 175 usesNeoPresentation occurrences in 54 files and 36 usesClassicPresentation occurrences in 11 files. This includes debug/preview code; the figures are identifier occurrences, not widget counts or a rewrite estimate. Many “not Neo” branches currently select Classic-specific or generic Material rendering. An Expressive theme can therefore have a complete ThemeData and still fall through to an incoherent mix of Classic and defaults.
 
 Before expanding production screens, classify affected identity branches by visual or behavioral intent. Generalize only owners that truly have three-family behavior; keep unrelated route-specific decisions local. In particular:
 
 - Check custom surface foreground resolution. TonosSurfaceTheme currently applies a Neo-specific treatment, while foreground helpers fall back to the active ColorScheme outside Neo.
-- Complete all 14 non-identity theme extensions intentionally: semantic colors, shapes, surfaces, surface decoration, effects, motion, data visualization, progress, nutrition, flows, generation, settings presentation, media, and tutorials. Do not depend on Classic fallbacks for the new family.
+- Populate all 14 non-identity extensions for both brightnesses so the internal family recipe is complete; this does not mean restyling all 14 domains in the first slice. Source tracing shows the slice's current Train, workout, and Progress owners consume family values for semantic colors, shapes, surfaces, surface decoration, effects, motion, and data visualization. Give those seven role groups deliberate Expressive values and test them in the target widgets. Register explicit compatibility values for the other extensions rather than leaving nulls or relying on accidental Classic fallbacks; review and refine those domain recipes as their routes enter later slices.
 - Review app-theme selection, both identity registries, capability/release gates, UI Appearance labels and localized descriptions, Theme Lab previews, debug controls, and exhaustive family tests. The current release opt-in is Neo-specific; do not reuse TONOS_ENABLE_NEO_RELEASE to expose Expressive.
 - Preserve current Classic and Neo builder outputs and their availability rules.
 - Keep family identity explicit. Do not infer Expressive identity from border, elevation, or shape style.
-- Account for app-wide scope: MyApp applies the selected family to MaterialApp.theme and darkTheme, and both UI Appearance and Theme Lab consume the available-family list. A development toggle therefore changes every route, not only the proving slice. Keep the first preview scoped to a Theme Lab/isolated preview composition or cover all out-of-slice routes before exposing a global family choice.
+- Account for app-wide scope: MyApp applies the selected family to MaterialApp.theme and darkTheme, and both UI Appearance and Theme Lab currently consume AppThemeCapabilities.availableFamilies. Do not add Expressive to that shared list for the experiment. Give Theme Lab a separate development-only “Open Expressive preview” path that constructs the paired theme without writing AppThemeSelection preferences. Host the slice in a preview-owned nested Navigator under the Expressive Theme; route all in-slice navigation and overlays through that navigator, and intercept out-of-slice destinations rather than silently pushing them onto the root Navigator under Classic. This keeps UI Appearance, persisted selection, and the rest of MyApp unchanged while the preview remains coherent.
 
 The older [Step 16 design brief](theme-step-16-design-brief.md) remains useful historical exploration, but its usesClassicPresentation description and earlier source counts are stale. The current implementation uses explicit AppThemeIdentity; verify current code rather than copying those passages.
 
@@ -89,11 +89,11 @@ The older [Step 16 design brief](theme-step-16-design-brief.md) remains useful h
 
 | Option | Isolation and iteration | Cost and risk | Assessment |
 |---|---|---|---|
-| **A. True third theme family** | Independent identity, light/dark recipes, Theme Lab preview, and eventual user choice. Classic and Neo remain selectable baselines. | Requires exhaustive family wiring and targeted review of two-family branches; family tests grow. | **Recommend.** This matches a coherent app-wide visual system and gives the experiment a clear safety boundary. Gate it from release until accepted. |
+| **A. True third theme family** | Independent identity, light/dark recipes, an isolated Theme Lab preview, and possible eventual user choice. Classic and Neo remain selectable baselines. | Requires exhaustive family wiring and targeted review of two-family branches; family tests grow. | **Recommend if the design direction is approved.** This matches a coherent app-wide visual system and gives the experiment a clear safety boundary. Keep it out of release and global selection until accepted. |
 | **B. Expressive style variant layered over Material/Classic** | Quick to prototype a few component treatments. | Creates a second style axis alongside family identity; screens can accidentally combine Classic + Expressive or Neo + Expressive. A later promotion migrates variant state and branches. | Reject for production architecture. A disposable visual fixture is fine, but not a persisted mode. |
 | **C. Screen-specific Expressive wrappers without a family identity** | Local experiments can be isolated temporarily. | Scatters conditions and makes a coordinated visual contract, paired light/dark behavior, and family selection difficult to test. High leakage risk. | Reject beyond short-lived experiments. |
 
-**Recommended identity:** a true third AppThemeFamily with a stable code such as expressive; final stored code and localized product label must be fixed before implementation. Use the existing capability boundary or a narrowly generalized equivalent to keep it internal/build-gated. Do not make it generally selectable in a release until the gates in §21 pass.
+**Conditional identity recommendation:** if Expressive is approved, use a true third AppThemeFamily with a stable code such as expressive; finalize the stored code and localized product label before implementation. The preview-only path must construct its paired ThemeData without exposing the family through AppThemeCapabilities.availableFamilies or persisting it through AppThemeSelection. Decide separately whether a later accepted family needs a user preference and release capability. Do not make it generally selectable until the product and implementation gates pass.
 
 ## 6. Tonos Expressive design philosophy
 
@@ -181,7 +181,7 @@ Emphasize the current exercise and selected Progress metric selectively. Do not 
 - **Destructive:** keep red/error ownership, explicit labels, and current confirmation paths.
 - **Completion:** green remains the success/completion signal, not an alternate general primary.
 
-Make selected state unmistakable through at least two cues where practical (for example tonal fill plus shape/weight or icon plus label). Preserve current selection semantics and only style selected cards when a real state exists. Apply the same selection logic to Train tabs, configurable navigation, plan states, Progress metric/range controls, chart points, and exercise selectors.
+Make selected state unmistakable through at least two cues where practical (for example tonal fill plus shape/weight or icon plus label). Preserve current selection semantics and only style selected cards when a real state exists. Apply the same selection logic to Train tabs, configurable navigation, plan states, Progress metric/range controls, currently interactive chart-point/tooltip states, and exercise selectors. Do not add new chart-point interactions as part of the slice.
 
 ## 8. Train: current composition and proposal
 
@@ -220,7 +220,7 @@ Make selected state unmistakable through at least two cues where practical (for 
 
 **Current layout, in order:** a pull-to-refresh vertical list begins with Workout Report: Workouts, Time, and Volume totals, a swipeable/selectable chart, six range options, and Additional Details. Exercise progress follows with actual and estimated one-rep-max trends, summary values, and a horizontal exercise selector. Health measurement trends follow in a horizontal card collection with add-entry/custom-metric actions. Do not substitute the separate, hidden Dashboard route.
 
-**High-value Expressive treatment:** make the selected metric the focal item through stronger selected containment, text weight, and clear state geometry; keep the other two as supporting summaries. Give range selection a coordinated selected fill and local response. Give a selected chart point/tooltip enough contrast to read as interactive. Apply surface and type hierarchy consistently across the exercise and health sections.
+**High-value Expressive treatment:** make the selected metric the focal item through stronger selected containment, text weight, and clear state geometry; keep the other two as supporting summaries. Give range selection a coordinated selected fill and local response. Give an already-selected chart point/tooltip enough contrast to read as interactive, without adding point gestures or selection states. Apply surface and type hierarchy consistently across the exercise and health sections.
 
 **Keep:** all metric totals, order, range choices, actual/estimated distinction, drilldowns, chart ownership, and health-measurement identity. Preserve chart-series and heatmap colors. Do not count up metrics or tween a data line between different ranges; keep values immediately correct and use motion only to show which metric/range/point is selected. The existing WorkoutMetricChartCard range animation uses a fixed 160 ms AnimatedContainer; if touched, bring it under the existing reduced-motion helper.
 
@@ -261,9 +261,9 @@ Keep the Train app bar’s tabs/profile control, Profile/settings back bars, and
 | Empty states | A little more hierarchy and a clear next action. | Density: low. Access: text and action stay explicit. | Low; per screen. | **Later.** Do not invent empty-state dashboards. |
 | Route transitions and container morphs | Could clarify orientation where navigation truly changes task context. | Density: n/a. Access: reduced motion and no lost state; frame-time risk. | High; router/app shell. | **Defer.** Keep platform routes for this slice. |
 
-## 13. Three-screen vertical slice
+## 13. Three-destination vertical slice
 
-Treat this as one connected proof, with fixed representative data and matched light/dark states. Geometry, section order, navigation, controls, and task flow remain the production versions.
+Treat this as one connected proof with fixed representative data and matched light/dark states: Train Overview, Train Plans, Active Workout, and Progress. Train Overview and Plans are the two tabs of one production destination. Geometry, section order, navigation, controls, and task flow remain the production versions.
 
 ### Train / Overview
 
@@ -275,6 +275,13 @@ Treat this as one connected proof, with fixed representative data and matched li
 - **Selection:** current Overview tab and actual active plan state are explicit.
 - **Owners:** existing Train layout, TonosTrainTabs, TonosSurface, split action bar, and app navigation.
 - **Responsive/reduced motion:** preserve compact app-bar/action-bar reflow and reduce animated selection to immediate state.
+
+### Train / Plans
+
+- Include the current Active Plans, Archived Plans, Premade Plans, Generate Custom Plans, and Manually Add Plan sections in their production order, with current progressive reveal, empty states, plan identity colors, and edit/action placement.
+- Style the real tab-selected state, plan/group surfaces, and title/metadata hierarchy with the same roles used in Overview. Do not replace the lists with a dashboard or new plan workflow.
+- The initial preview styles this Plans tab and preserves its visible actions. Child preset generation, plan editing, and plan detail destinations are outside the three-destination proving slice; preview navigation must intercept those out-of-slice routes and show a clearly preview-only “outside this slice” placeholder with Back returning to Plans. It must not silently push an unthemed root route. The placeholder is not part of the visual evaluation, and the production actions/workflows remain unchanged for later route qualification.
+- Keep compact-width and 2× text behavior readable without adding nested cards or unnecessary vertical growth. In the reduced-motion setting, tab selection changes immediately.
 
 ### Active Workout
 
@@ -300,7 +307,7 @@ Treat this as one connected proof, with fixed representative data and matched li
 
 ### Slice acceptance
 
-The three screens should read as the same Tonos Expressive family in both modes while still being recognizable as today’s Tonos. The slice fails if it only looks like new purple paint, if one screen reads as Neo, if it changes workout density, or if its selected states/motion are inconsistent between shared components.
+The three destinations (four representative states including both Train tabs) should read as the same Tonos Expressive direction in both modes while remaining recognizable as today’s Tonos. The slice fails if it only looks like new purple paint, if one screen reads as Neo, if it changes workout density, if Train Plans is left as an unthemed tab in the preview, or if selected states/motion are inconsistent between shared components.
 
 ## 14. Areas deliberately kept current
 
@@ -334,15 +341,15 @@ Use semantic shared boundaries where they already exist: TonosAction, TonosSurfa
 - Use MediaQuery.disableAnimationsOf(context) through appMotionDuration for custom movement and selection. Reduced motion must keep all selected/expanded/completion states clear and immediate.
 - Preserve scroll anchoring when cards expand/collapse; never auto-scroll merely to stage an expressive transition.
 - Include contrast and non-color selection cues in both light and dark families. Check Android font scaling and localization expansion.
-- The custom-painted exercise trend chart needs a separate screen-reader/keyboard description review; its totals and controls should not be mistaken for a description of plotted points.
+- Preserve the existing chart summaries, range/filter semantics, data-series ownership, and labels in this slice; add no new point-level interaction without a specific accessibility design. The custom-painted exercise trend chart's screen-reader/keyboard point descriptions and fixed-size label scaling are known separate follow-up work, not a visual-slice deliverable. Verify that Expressive framing does not regress current chart semantics; complete that follow-up before adding expressive point selection or claiming chart accessibility improvements.
 
 ## 17. Testing strategy for implementation
 
-1. **Theme contract:** for Classic, Neo, and Expressive in light/dark, assert both persisted family and rendered-family identity, complete registration of all 14 non-identity extensions, capabilities, stable stored code, and expected foreground/surface contrast. The existing Classic completeness helper omits Progress, Tutorial, and Media extensions; assert these explicitly so Classic defaults cannot mask an incomplete Expressive recipe. Test unavailable Expressive selection resolves safely without changing Classic or Neo.
+1. **Theme contract:** for Classic, Neo, and any approved Expressive family in light/dark, assert rendered-family identity and registration of all 14 non-identity extensions. Test Expressive's seven slice-consumed role groups (semantic colors, shapes, surfaces, surface decoration, effects, motion, and data visualization) for their intended values and contrast. Test the other extension slots are deliberately initialized, while deferring route-specific visual qualification until those routes enter scope. Keep Expressive outside AppThemeCapabilities.availableFamilies and AppThemeSelection persistence during preview; verify opening/closing the preview leaves Classic/Neo preference and rendered contracts unchanged. The existing completeness helper omits Progress, Tutorial, and Media extensions, so assert every slot explicitly.
 2. **Parity:** compare Classic and Neo theme recipes/representative widgets against current golden or value contracts. No Expressive registration should silently alter their current builders.
 3. **Fallback audit:** categorize every affected usesNeoPresentation / usesClassicPresentation branch in the three routes and shared components. Add targeted tests so an Expressive theme cannot accidentally receive a Classic-only custom surface or fallback.
-4. **Screen behavior:** widget tests use production Train Overview, Session/WeightCard, and Progress owners with deterministic state/data. Verify screen hierarchy, action order, current selected state, set behavior, and chart meaning.
-5. **Accessibility/responsive:** semantics for controls and charts, focus and keyboard where supported, reduced-motion state, 320 dp and regular width, 1×/2× text, and adequate hit boxes/non-overlap.
+4. **Screen behavior:** widget tests use production Train Overview and Plans tabs, Session/WeightCard, and Progress owners with deterministic state/data. Verify hierarchy, action order, existing selected states, set behavior, preview-local navigation, and no chart meaning/data-color regression.
+5. **Accessibility/responsive:** semantics for in-scope controls and existing chart summaries, focus and keyboard where supported, reduced-motion state, 320 dp and regular width, 1×/2× text, and adequate hit boxes/non-overlap. Track custom chart point descriptions and fixed label scaling as separate follow-up; they block new point-level expressive interactions, not static surface framing.
 6. **Goldens:** capture the real production widgets with fixed fake/session data in paired light/dark modes at one standard and one compact/text-scaled viewport. Keep snapshots limited to the proving slice and update them only with deliberate visual review. Goldens catch drift; they do not replace Pixel 7 review.
 7. **Device review:** reuse the checkpoints in [device visual accessibility QA](device-visual-accessibility-qa.md); install an isolated development package/database on Pixel 7 (previously verified device ID 28021FDH200228), compare Classic with Expressive in the same workflow, and ask whether hierarchy/tactility improve without slowing logging or harming data reading. Do not use the user's normal app database.
 8. **Repository gates:** run dart analyze with the accepted toolchain, focused route/theme tests, the uninterrupted full suite, git diff --check, Android debug build, and current theme inventory/ratchet checks if theme ownership/inventory scopes change.
@@ -351,11 +358,11 @@ Use semantic shared boundaries where they already exist: TonosAction, TonosSurfa
 
 ### Phase 0 — Approve the product contract
 
-Review this plan’s family recommendation, palette strategy, role-based shape/motion language, and keep-current boundaries. No production change is implied until this review is accepted.
+Review whether the Expressive direction itself is approved, then the conditional family architecture, palette strategy, role-based shape/motion language, and keep-current boundaries. No production change is implied until product acceptance is explicit.
 
 ### Phase 1 — Isolated family foundation and proving slice
 
-Build the Expressive family behind a development/build gate. Add complete light/dark recipes and only the minimum shared-owner adjustments needed for the Train Overview, Active Workout, and Progress production widgets. Preview these production widgets under a scoped Theme Lab/isolated preview theme; do not put Expressive into the global available-family list yet. MyApp applies a selected family to every route, so either establish coherent out-of-slice fallbacks for all routes or keep the experiment locally scoped. Do not enable release selection. The existing TONOS_ENABLE_NEO_RELEASE flag must remain Neo-only.
+Only after product approval, build the Expressive family behind a development/build gate. Initialize all 14 non-identity extension slots in both brightnesses, but make new slice-specific decisions only for the seven role groups consumed by the current Train, workout, and Progress owners. Include both Train tabs alongside Active Workout and Progress. Add a Theme Lab-only preview entry that constructs the family directly without using AppThemeCapabilities.availableFamilies or persisting AppThemeSelection; host its screens, in-slice navigation, and overlays in a preview-owned nested Navigator under Expressive ThemeData. Intercept child routes outside scope instead of pushing them onto MyApp's root navigator. Do not enable release selection. The existing TONOS_ENABLE_NEO_RELEASE flag must remain Neo-only.
 
 ### Phase 2 — Device and accessibility qualification
 
@@ -371,8 +378,8 @@ Qualify dialogs, sheets, onboarding, and secondary settings routes; finish local
 
 ## 19. Decision gates
 
-- **Gate A — identity isolation:** Expressive has explicit persisted and rendered identity plus complete paired recipes. A preview is scoped to the lab/slice; do not expose it in the app-wide selector until the rest of the app has intentional behavior. Classic/Neo selection, persisted values, and rendered contracts remain unchanged.
-- **Gate B — three-screen coherence:** Train, active logging, and Progress read as one family without new information architecture, misplaced controls, inconsistent selection, or density loss.
+- **Gate A — identity isolation:** if approved, Expressive has explicit rendered family identity and complete paired extension slots. The preview uses a Theme Lab-only entry and nested navigator; it is excluded from AppThemeCapabilities.availableFamilies and does not persist AppThemeSelection. Classic/Neo selection, preference, and rendered contracts remain unchanged.
+- **Gate B — three-destination coherence:** Train Overview and Plans, active logging, and Progress read as one family without new information architecture, misplaced controls, inconsistent selection, or density loss.
 - **Gate C — real-device approval:** on Pixel 7, primary actions feel tactile and responsive; logging is no slower; no unexpected focus, scroll, keyboard, or chart behavior occurs.
 - **Gate D — access parity:** 2× text, compact width, semantics, touch targets, keyboard/focus, reduced motion, light/dark contrast, and chart meaning remain usable.
 - **Gate E — regression qualification:** analyzer, focused tests, full suite, build, inventory/ratchet where applicable, and Classic/Neo parity all pass.
@@ -389,12 +396,12 @@ Failure at B, C, or D means revise or narrow the slice; failure at A or E means 
 - **Accessibility:** icon-only selected states, semantics separated from hit actions, tiny scaled labels, and custom charts can undermine the visual gain. Test state names and geometry with real widgets.
 - **System capability drift:** material_ui is evolving. Verify the actual pinned package API before relying on newer Expressive controls or official motion support.
 - **Maintenance:** a third family adds one recipe across family builders, extensions, previews, localization, capability, and tests. Avoid unnecessary new tokens and avoid globally rewriting every identity branch.
-- **Brand expression:** carrying the purple seed gives continuity but may make the result too Classic-like; aggressive accent rotation may make it feel unrelated. Resolve this in the matched three-screen palette comparison, not by deciding from a token table.
-- **Scope:** Nutrition and unrelated dashboard/Theme Lab modifications remain outside this proving slice.
+- **Brand expression:** carrying the purple seed gives continuity but may make the result too Classic-like; aggressive accent rotation may make it feel unrelated. Resolve this in a matched light/dark palette comparison across the slice, not by deciding from a token table.
+- **Scope:** Nutrition, dashboard, and unrelated Theme Lab work remain outside this proving slice. Only the dedicated preview entry/host needed to open the slice is in scope.
 
 ## 21. Recommended immediate next implementation task
 
-**Implement one scoped Tonos Expressive vertical slice using the production Train Overview, Active Workout, and Progress widgets.** Include the minimum true-family identity and complete light/dark theme plumbing required to render that slice in a Theme Lab/isolated preview, without adding it to the app-wide family selector; preserve current layouts and all Classic/Neo behavior; and finish with the responsive, reduced-motion, regression, and Pixel 7 gates in this plan. Before exposing Expressive app-wide, either give every route intentional behavior or keep the preview isolated. Do not expand to Catalog, Logbook, or Profile until this single slice is reviewed and accepted.
+**If product review approves the Expressive direction, implement one scoped preview slice using the production Train Overview and Plans tabs, Active Workout, and Progress widgets.** Initialize all 14 non-identity extension slots, but make new Expressive role decisions only for semantic colors, shapes, surfaces, surface decoration, effects, motion, and data visualization consumed by the slice. Add a Theme Lab-only entry and a preview-owned nested Navigator that keeps in-slice routes/overlays themed without adding Expressive to AppThemeCapabilities.availableFamilies or persisting AppThemeSelection. Preserve layouts and Classic/Neo behavior; intercept child routes outside the slice. Complete responsive, reduced-motion, regression, and Pixel 7 gates before expanding to Catalog, Logbook, Profile, or plan child workflows. Keep custom chart point accessibility and fixed label scaling as separately tracked work; do not add expressive point interactions before that work is done.
 
 This is a recommendation only. No part of that implementation is included in this documentation task.
 
@@ -409,9 +416,9 @@ This is a recommendation only. No part of that implementation is included in thi
 
 ## 23. Decision record
 
-- **Design direction:** Material 3 Expressive as a coherent Tonos visual/interaction system remains worth evaluating.
-- **Architecture recommendation:** a true third, development-gated family.
+- **Design direction:** Material 3 Expressive as a coherent Tonos visual/interaction system remains worth evaluating; product approval is still open.
+- **Conditional architecture recommendation:** if approved, represent it as a true third, development-gated family, with an isolated preview path rather than app-wide selection during the proving slice.
 - **Package decision:** do not retain or add material_3_expressive; use current official material_ui, standard Flutter, and Tonos-owned behavior.
 - **Classic/Neo:** preserve as accepted families and require parity.
-- **Next work:** one source-faithful, build-gated Train/Active Workout/Progress vertical slice; not implemented here.
+- **Next work:** if approved, one source-faithful, build-gated Train Overview/Plans, Active Workout, and Progress slice; not implemented here.
 - **Screenshot need:** source code establishes the current hierarchy and widget composition for this planning pass. No screenshot is required to define the slice. Pixel 7 visual/human review remains required at the implementation gate.
