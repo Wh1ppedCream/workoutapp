@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -7,7 +8,7 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,7 +59,7 @@ void main() {
                   theme: theme,
                   locale: const Locale('en'),
                   localizationsDelegates:
-                      AppLocalizations.localizationsDelegates,
+                      tonosLocalizationDelegates,
                   supportedLocales: const [Locale('en')],
                   home: const Scaffold(
                     body: SingleChildScrollView(
@@ -187,7 +188,7 @@ void main() {
                       ? AppThemeFactory.light(AppThemeFamily.classic)
                       : AppThemeFactory.dark(AppThemeFamily.classic),
               locale: const Locale('en'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: const [Locale('en')],
               builder:
                   (context, child) => MediaQuery(
@@ -290,7 +291,7 @@ void main() {
         child: MaterialApp(
           theme: AppThemeFactory.light(AppThemeFamily.neoBrutalism),
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: const [Locale('en')],
           home: const Scaffold(
             body: SingleChildScrollView(child: WorkoutMetricChartCard()),
@@ -364,7 +365,7 @@ void main() {
         child: MaterialApp(
           theme: genericTheme,
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: const [Locale('en')],
           builder:
               (context, child) => MediaQuery(
@@ -458,7 +459,7 @@ void main() {
               ),
               theme: theme,
               locale: const Locale('fr'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: const [Locale('fr')],
               builder:
                   (context, child) => MediaQuery(

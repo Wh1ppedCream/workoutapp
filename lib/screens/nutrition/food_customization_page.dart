@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/food_customization_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_expansion_tile_scope.dart';
 import '../../theme/widgets/tonos_field.dart';

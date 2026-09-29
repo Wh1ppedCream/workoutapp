@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/services/catalog_entity_localizer.dart';
 import 'package:env_test/widgets/localized_catalog_entity_name.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _muscle = CatalogEntityDisplayName(
@@ -48,7 +49,7 @@ CatalogEntityLocalizer _testLocalizer() {
 Widget _host(Locale locale, CatalogEntityLocalizer localizer) {
   return MaterialApp(
     locale: locale,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: tonosLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: Column(

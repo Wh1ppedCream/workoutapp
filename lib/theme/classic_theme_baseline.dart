@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Machine-readable inventory of stable surfaces used to protect Classic.
 ///

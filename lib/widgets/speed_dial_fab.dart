@@ -1,7 +1,7 @@
 // File: lib/widgets/speed_dial_fab.dart
 // for logging food intake and measurements
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/measured_items_page.dart';

@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/nutrition/food_customization_page.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
@@ -18,7 +19,7 @@ void main() {
           MaterialApp(
             locale: const Locale('en'),
             theme: ClassicThemeDefinition.light(),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(
               builder:
@@ -221,7 +222,7 @@ void main() {
             base.nutritionTokens.copyWith(photoPlaceholder: placeholder),
           ],
         ),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const FoodCustomizationPage(initialName: 'Original'),
       );
@@ -253,7 +254,7 @@ void main() {
       MaterialApp(
         locale: const Locale('en'),
         theme: NeoBrutalismThemeDefinition.light(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const FoodCustomizationPage(initialName: 'Test oats'),
       ),
@@ -282,7 +283,7 @@ void main() {
       MaterialApp(
         locale: const Locale('en'),
         theme: NeoBrutalismThemeDefinition.light(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const FoodCustomizationPage(initialName: ''),
       ),
@@ -315,7 +316,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder:
                 (context, child) => MediaQuery(

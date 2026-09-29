@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:env_test/theme/tokens/app_effect_tokens.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_decoration_tokens.dart';
@@ -185,9 +186,9 @@ void main() {
     );
     expect(find.text('Details'), findsOneWidget);
     expect(find.text('Sheet content'), findsOneWidget);
-    expect(find.byTooltip('Close details'), findsOneWidget);
+    expect(findTonosTooltip('Close details'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Close details'));
+    await tester.tap(findTonosTooltip('Close details'));
     expect(closed, isTrue);
   });
 

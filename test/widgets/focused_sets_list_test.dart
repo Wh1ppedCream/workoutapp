@@ -1,15 +1,16 @@
 import 'package:env_test/models/models.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/utils/localized_body_part_name.dart';
 import 'package:env_test/widgets/focused_sets_list.dart';
 import 'package:env_test/widgets/set_stat_chip.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Widget host(Widget child, {Locale? locale}) => MaterialApp(
     locale: locale,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: tonosLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
   );

@@ -1,6 +1,6 @@
 // lib/theme/theme_extensions.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'tokens/app_data_visualization_tokens.dart';
 import 'tokens/app_effect_tokens.dart';

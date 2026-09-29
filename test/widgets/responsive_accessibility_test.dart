@@ -1,11 +1,13 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/widgets/add_exercise_fab.dart';
 import 'package:env_test/widgets/guided_tutorial_overlay.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 
 void main() {
   testWidgets('settings hero reflows long French titles at large text sizes', (
@@ -18,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr', 'CA'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -67,7 +69,7 @@ void main() {
               MaterialApp(
                 theme: theme,
                 locale: locale,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                localizationsDelegates: tonosLocalizationDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: MediaQuery(
                   data: const MediaQueryData(
@@ -113,7 +115,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SettingsHeroCard(
@@ -138,7 +140,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SettingsHeroCard(
@@ -163,13 +165,13 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const Scaffold(floatingActionButton: AddExerciseFab()),
       ),
     );
 
-    expect(find.byTooltip('Add'), findsOneWidget);
+    expect(findTonosTooltip('Add'), findsOneWidget);
   });
 
   testWidgets('French tutorial actions stack at large text sizes', (
@@ -182,7 +184,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('fr', 'CA'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder:
             (context, child) => MediaQuery(
@@ -239,7 +241,7 @@ void main() {
     for (final scale in [1.0, 1.3, 1.6, 2.0]) {
       await tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder:
               (context, child) => MediaQuery(

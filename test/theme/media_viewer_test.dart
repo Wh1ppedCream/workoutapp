@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
@@ -127,7 +128,7 @@ void main() {
       await tester.pumpAndSettle();
       final afterPan = viewerTransform();
       expect(afterPan.getTranslation(), isNot(beforePan.getTranslation()));
-      await tester.tap(find.byTooltip('Close viewer'));
+      await tester.tap(findTonosTooltip('Close viewer'));
       await tester.pumpAndSettle();
       expect(find.byType(InteractiveViewer), findsNothing);
       expect(find.text('Open viewer'), findsOneWidget);

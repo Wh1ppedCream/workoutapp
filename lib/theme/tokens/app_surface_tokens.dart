@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Tonos-specific surface recipes. Standard Material surfaces stay in
 /// ColorScheme; these roles describe how the app composes them.

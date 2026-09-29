@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/locale_preference_provider.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
@@ -7,8 +8,9 @@ import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -138,7 +140,7 @@ void main() {
         _expectEmptyEquipmentSummary(tester, theme, strings);
         _expectNoFlutterException(tester, 'workout-space equipment');
 
-        await tester.tap(find.byTooltip(strings.onboardingPreviousStepTooltip));
+        await tester.tap(findTonosTooltip(strings.onboardingPreviousStepTooltip));
         await tester.pumpAndSettle();
         final skipGym = find.text(strings.onboardingGymSkipTitle);
         _expectGymSpaceTile(tester, family, theme, skipGym, selected: false);
@@ -257,7 +259,7 @@ Future<void> _pumpOnboarding(
       ],
       child: MaterialApp(
         theme: theme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) {
           final mediaQuery = MediaQuery.of(context).copyWith(

@@ -7,7 +7,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_segmented_action_bar.dart';
 import 'package:env_test/widgets/meal_plan_add_bar.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

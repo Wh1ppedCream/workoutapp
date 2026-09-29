@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Depth and optional rendering effects, with explicit no-effects fallbacks.
 @immutable

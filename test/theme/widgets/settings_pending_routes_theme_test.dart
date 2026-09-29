@@ -1,6 +1,7 @@
 import 'package:env_test/db/database_helper.dart';
 import 'package:env_test/db/database_maintenance.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/selected_profile.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -14,9 +15,10 @@ import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,7 +57,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const ExerciseEditorScreen(),
             ),
@@ -166,7 +168,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip(strings.exerciseEditorChoose));
+        await tester.tap(findTonosTooltip(strings.exerciseEditorChoose));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump();
@@ -175,8 +177,8 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump();
-        expect(find.byTooltip(strings.commonAdd), findsOneWidget);
-        await tester.tap(find.byTooltip(strings.commonAdd));
+        expect(findTonosTooltip(strings.commonAdd), findsOneWidget);
+        await tester.tap(findTonosTooltip(strings.commonAdd));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump();
@@ -427,7 +429,7 @@ void main() {
           reason: 'guide fields remain read-only until editing is enabled',
         );
 
-        await tester.tap(find.byTooltip(strings.exerciseEditorEdit));
+        await tester.tap(findTonosTooltip(strings.exerciseEditorEdit));
         await tester.pumpAndSettle();
         expect(
           tester
@@ -441,7 +443,7 @@ void main() {
               .widget<IconButton>(
                 find
                     .ancestor(
-                      of: find.byTooltip(strings.exerciseEditorChoose),
+                      of: findTonosTooltip(strings.exerciseEditorChoose),
                       matching: find.byType(IconButton),
                     )
                     .first,
@@ -454,7 +456,7 @@ void main() {
               .widget<IconButton>(
                 find
                     .ancestor(
-                      of: find.byTooltip(strings.exerciseEditorCreate),
+                      of: findTonosTooltip(strings.exerciseEditorCreate),
                       matching: find.byType(IconButton),
                     )
                     .first,
@@ -467,7 +469,7 @@ void main() {
         final moveUp = tester.widget<IconButton>(
           find
               .ancestor(
-                of: find.byTooltip(strings.exerciseEditorMoveUp).first,
+                of: findTonosTooltip(strings.exerciseEditorMoveUp).first,
                 matching: find.byType(IconButton),
               )
               .first,
@@ -570,7 +572,7 @@ void main() {
 
         await tester.tap(find.text(strings.exerciseEditorMuscles));
         await tester.pumpAndSettle();
-        await tester.tap(find.byTooltip(strings.exerciseEditorRemoveMuscle));
+        await tester.tap(findTonosTooltip(strings.exerciseEditorRemoveMuscle));
         await tester.pumpAndSettle();
         expect(
           find.text(
@@ -602,7 +604,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const DatabaseSettingsPage(),
             ),

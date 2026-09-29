@@ -1,7 +1,7 @@
 // File: lib/widgets/rounded_progress_indicator.dart
 
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A donut-style progress indicator with rounded stroke caps.
 /// You can pass [scale] to shrink/grow the overall size and stroke thickness.

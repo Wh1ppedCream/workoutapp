@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/measured_items_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/health_trends_section.dart';

@@ -1,6 +1,6 @@
 // File: lib/widgets/meal_plan_add_bar.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../screens/nutrition/pantry_log_page.dart';
 import '../screens/nutrition/food_logging_page.dart';

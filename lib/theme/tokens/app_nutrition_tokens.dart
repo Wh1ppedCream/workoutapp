@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Theme roles for nutrition-specific surfaces that are not generic actions.
 @immutable

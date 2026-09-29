@@ -1,9 +1,11 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/widgets/add_exercise_fab.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 
 void main() {
   testWidgets('settings scaffold remains usable across release layout matrix', (
@@ -23,7 +25,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           locale: scenario.locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: MediaQueryData(
@@ -47,7 +49,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byTooltip(strings.commonBack), findsOneWidget);
+      expect(findTonosTooltip(strings.commonBack), findsOneWidget);
       expect(find.text(strings.profileDiagnosticsTitle), findsWidgets);
       expect(tester.takeException(), isNull);
     }
@@ -60,7 +62,7 @@ void main() {
       try {
         await tester.pumpWidget(
           MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(floatingActionButton: AddExerciseFab()),
           ),

@@ -1,12 +1,28 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+SemanticsData? _findSemanticsDataWithFlag(
+  SemanticsNode node,
+  SemanticsFlag flag,
+) {
+  final data = node.getSemanticsData();
+  if (data.hasFlag(flag)) return data;
+
+  SemanticsData? match;
+  node.visitChildren((child) {
+    match ??= _findSemanticsDataWithFlag(child, flag);
+    return true;
+  });
+  return match;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -385,9 +401,13 @@ void main() {
         expect(rateSliderFinder, findsOneWidget);
         expect(tester.widget<Slider>(rateSliderFinder).onChanged, isNotNull);
         await tester.ensureVisible(rateSliderFinder);
-        final rateSemantics =
-            tester.getSemantics(rateSliderFinder).getSemanticsData();
-        expect(rateSemantics.hasAction(SemanticsAction.increase), isTrue);
+        await tester.pumpAndSettle();
+        final rateSemantics = _findSemanticsDataWithFlag(
+          tester.getSemantics(rateSliderFinder),
+          SemanticsFlag.isSlider,
+        );
+        expect(rateSemantics, isNotNull);
+        expect(rateSemantics!.hasAction(SemanticsAction.increase), isTrue);
         expect(rateSemantics.hasAction(SemanticsAction.decrease), isTrue);
         final initialRate = tester.widget<Slider>(rateSliderFinder).value;
         await tester.drag(rateSliderFinder, const Offset(36, 0));
@@ -558,7 +578,7 @@ Future<void> _pumpHost(
     MaterialApp(
       theme: theme,
       locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context).copyWith(

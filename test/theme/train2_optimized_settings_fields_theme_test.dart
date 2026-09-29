@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/providers/selected_profile.dart';
@@ -62,7 +64,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const TickerMode(enabled: false, child: Train2Page()),
             ),
@@ -105,7 +107,7 @@ void main() {
         );
         expect(profileMonogram.style?.fontWeight, FontWeight.bold);
 
-        final settingsButton = find.byTooltip(
+        final settingsButton = findTonosTooltip(
           strings.trainOptimizedSettingsTitle,
         );
         expect(settingsButton, findsOneWidget);

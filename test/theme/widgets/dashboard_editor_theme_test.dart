@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/providers/dashboard_config.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -9,9 +10,10 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/dashboard_section_palette.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -186,7 +188,7 @@ void main() {
           theme.colorScheme.onSurfaceVariant,
         );
 
-        final hideButton = find.byTooltip(strings.dashboardHideSection);
+        final hideButton = findTonosTooltip(strings.dashboardHideSection);
         await tester.ensureVisible(hideButton);
         final hideIconFinder = find.descendant(
           of: tileFinder,
@@ -210,7 +212,7 @@ void main() {
         final editorList = tester.widget<ReorderableListView>(
           find.byType(ReorderableListView),
         );
-        editorList.onReorder(0, 2);
+        editorList.onReorder!(0, 2);
         await tester.pumpAndSettle();
         expect(config.widgetOrder.where(config.isVisible).take(2), [
           'training',
@@ -253,7 +255,7 @@ Future<DashboardConfig> _pumpEmptyDashboard(
       child: MaterialApp(
         theme: theme,
         themeAnimationDuration: Duration.zero,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const DashboardPage(),
       ),

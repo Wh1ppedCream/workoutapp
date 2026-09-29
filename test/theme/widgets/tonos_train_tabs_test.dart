@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
@@ -172,7 +172,7 @@ void main() {
       expect(
         tester
             .getSemantics(find.bySemanticsLabel(RegExp(r'^Overview')))
-            .hasFlag(SemanticsFlag.isChecked),
+            .hasFlag(SemanticsFlag.isSelected),
         isTrue,
       );
 
@@ -182,7 +182,7 @@ void main() {
       expect(
         tester
             .getSemantics(find.bySemanticsLabel(RegExp(r'^Plans')))
-            .hasFlag(SemanticsFlag.isChecked),
+            .hasFlag(SemanticsFlag.isSelected),
         isTrue,
       );
       expect(tester.takeException(), isNull);

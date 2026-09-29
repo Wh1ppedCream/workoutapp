@@ -1,11 +1,12 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/session_record_badge_models.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/tokens/app_data_visualization_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/workout_record_badges.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -88,7 +89,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: MediaQuery(
@@ -171,7 +172,7 @@ void main() {
             theme: theme,
             themeAnimationDuration: Duration.zero,
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: Column(
@@ -285,7 +286,7 @@ void main() {
           theme: theme,
           themeAnimationDuration: Duration.zero,
           locale: const Locale('en'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
@@ -333,7 +334,7 @@ Widget _host(
         dataTokens == null
             ? null
             : ThemeData(extensions: <ThemeExtension<dynamic>>[dataTokens]),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: tonosLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: WorkoutRecordBadgeChip(badge: badge)),
   );

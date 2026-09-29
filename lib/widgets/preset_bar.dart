@@ -1,6 +1,6 @@
 // File: lib/widgets/preset_bar.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';

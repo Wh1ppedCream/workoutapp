@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Onboarding and tutorial presentation only. Readiness retries and completion
 /// persistence are behavior-owned and intentionally excluded.

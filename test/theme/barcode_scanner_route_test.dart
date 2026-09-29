@@ -2,11 +2,12 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/nutrition/barcode_scanner_page.dart';
 import 'package:env_test/services/barcode_scanner_session.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Scanner extends BarcodeScannerSession {
@@ -54,7 +55,7 @@ Future<void> _open(
   await tester.pumpWidget(
     MaterialApp(
       theme: theme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder:

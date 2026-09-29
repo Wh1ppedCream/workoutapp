@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
@@ -931,7 +931,10 @@ class SettingsSection extends StatelessWidget {
                 width: shapes.outlineWidth,
               ),
             ),
-            child: sectionChild,
+            child: Material(
+              type: MaterialType.transparency,
+              child: sectionChild,
+            ),
           ),
         ],
       ),
@@ -1039,74 +1042,77 @@ class SettingsExpansionSection extends StatelessWidget {
             width: shapes.outlineWidth,
           ),
         ),
-        child: Theme(
-          data: theme.copyWith(
-            colorScheme: scheme.copyWith(
-              primary:
-                  presentation.sectionUsesAccentForControls
-                      ? accentColor
-                      : scheme.primary,
-              onSurface: usesInkRecipe ? controlForeground : scheme.onSurface,
-              onSurfaceVariant:
+        child: Material(
+          type: MaterialType.transparency,
+          child: Theme(
+            data: theme.copyWith(
+              colorScheme: scheme.copyWith(
+                primary:
+                    presentation.sectionUsesAccentForControls
+                        ? accentColor
+                        : scheme.primary,
+                onSurface: usesInkRecipe ? controlForeground : scheme.onSurface,
+                onSurfaceVariant:
+                    usesInkRecipe
+                        ? tonosSecondaryForegroundForSurface(
+                          context,
+                          surfaces.settingsSection,
+                        )
+                        : scheme.onSurfaceVariant,
+              ),
+              textTheme:
                   usesInkRecipe
-                      ? tonosSecondaryForegroundForSurface(
-                        context,
-                        surfaces.settingsSection,
+                      ? theme.textTheme.apply(
+                        bodyColor: controlForeground,
+                        displayColor: controlForeground,
                       )
-                      : scheme.onSurfaceVariant,
+                      : theme.textTheme,
             ),
-            textTheme:
-                usesInkRecipe
-                    ? theme.textTheme.apply(
-                      bodyColor: controlForeground,
-                      displayColor: controlForeground,
-                    )
-                    : theme.textTheme,
-          ),
-          child: TonosExpansionTileScope(
-            child: ExpansionTile(
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 4,
-              ),
-              childrenPadding: EdgeInsets.zero,
-              leading: Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color:
-                      usesInkRecipe
-                          ? accentColor.withValues(alpha: 0.28)
-                          : accentColor.withValues(
-                            alpha: presentation.iconFillOpacity,
-                          ),
-                  borderRadius: shapes.settingsAction,
+            child: TonosExpansionTileScope(
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
                 ),
-                child: Icon(
-                  icon,
-                  color: usesInkRecipe ? controlForeground : accentColor,
-                  size: 22,
+                childrenPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color:
+                        usesInkRecipe
+                            ? accentColor.withValues(alpha: 0.28)
+                            : accentColor.withValues(
+                              alpha: presentation.iconFillOpacity,
+                            ),
+                    borderRadius: shapes.settingsAction,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: usesInkRecipe ? controlForeground : accentColor,
+                    size: 22,
+                  ),
                 ),
-              ),
-              title: Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: usesInkRecipe ? controlForeground : null,
+                title: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: usesInkRecipe ? controlForeground : null,
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color:
-                      usesInkRecipe
-                          ? controlForeground.withValues(alpha: 0.72)
-                          : scheme.onSurfaceVariant,
+                subtitle: Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color:
+                        usesInkRecipe
+                            ? controlForeground.withValues(alpha: 0.72)
+                            : scheme.onSurfaceVariant,
+                  ),
                 ),
+                children: children,
               ),
-              children: children,
             ),
           ),
         ),

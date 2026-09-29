@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/log_entry_page.dart
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../theme/theme_extensions.dart';
 import 'package:provider/provider.dart';
 

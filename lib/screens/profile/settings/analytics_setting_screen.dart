@@ -1,7 +1,7 @@
 // File: lib/screens/profile/settings/analytics_setting_screen.dart
 // Hub for exercise analytics and training recommendation settings.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../widgets/settings_tiles.dart';

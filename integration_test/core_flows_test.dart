@@ -6,7 +6,7 @@ import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/workout_record_badges.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';

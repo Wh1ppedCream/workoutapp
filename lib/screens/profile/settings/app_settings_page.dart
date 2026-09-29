@@ -1,6 +1,6 @@
 // File: lib/screens/profile/settings/app_settings_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../repositories/app_repository.dart';

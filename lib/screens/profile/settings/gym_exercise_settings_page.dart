@@ -1,6 +1,6 @@
 // lib/screens/profile/settings/gym_exercise_settings_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/workout_exit_preferences.dart';

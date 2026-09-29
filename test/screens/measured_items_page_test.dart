@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -10,7 +11,7 @@ import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/utils/app_test_keys.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +37,7 @@ void main() {
           value: _MeasurementRepository(),
           child: MaterialApp(
             theme: theme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(body: HealthTrendsSection()),
           ),
@@ -85,7 +86,7 @@ void main() {
               child: MaterialApp(
                 theme: theme,
                 locale: const Locale('en'),
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                localizationsDelegates: tonosLocalizationDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: RepaintBoundary(
@@ -147,7 +148,7 @@ void main() {
       Provider<AppRepository>.value(
         value: _MeasurementRepository(),
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const MeasuredItemsPage(),
         ),
@@ -174,7 +175,7 @@ void main() {
       Provider<AppRepository>.value(
         value: _MeasurementRepository(),
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(body: HealthTrendsSection()),
         ),

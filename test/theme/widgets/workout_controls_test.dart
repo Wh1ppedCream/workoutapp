@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
@@ -380,7 +381,7 @@ void main() {
 Widget _host(ThemeData theme, Widget child) => MaterialApp(
   theme: theme,
   themeAnimationDuration: Duration.zero,
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: tonosLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(body: Center(child: child)),
 );

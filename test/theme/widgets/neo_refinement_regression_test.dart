@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
@@ -455,7 +456,7 @@ Widget _host(
   theme: theme,
   themeAnimationDuration: Duration.zero,
   locale: locale,
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  localizationsDelegates: tonosLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder:
       (context, child) => MediaQuery(

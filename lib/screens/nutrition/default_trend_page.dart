@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/default_trend_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';

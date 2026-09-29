@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -1732,38 +1732,41 @@ class _SessionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    return ListTile(
-      key: AppTestKeys.historySession(session.id),
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      onTap: onTap,
-      title: Text(
-        LocalizedFormatters.time(
-          session.displayDateTime,
-          Localizations.localeOf(context),
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w800),
-      ),
-      subtitle: Text(
-        AppLocalizations.of(context).logbookSessionSummary(
-          formatCompletedWorkoutDuration(
-            AppLocalizations.of(context),
-            session.durationSeconds,
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        key: AppTestKeys.historySession(session.id),
+        dense: true,
+        contentPadding: EdgeInsets.zero,
+        onTap: onTap,
+        title: Text(
+          LocalizedFormatters.time(
+            session.displayDateTime,
+            Localizations.localeOf(context),
           ),
-          session.exerciseCount,
-          session.setCount,
-          WeightUnitFormatter.formatVolume(
-            session.totalVolume,
-            weightUnit,
-            locale: Localizations.localeOf(context),
-          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        subtitle: Text(
+          AppLocalizations.of(context).logbookSessionSummary(
+            formatCompletedWorkoutDuration(
+              AppLocalizations.of(context),
+              session.durationSeconds,
+            ),
+            session.exerciseCount,
+            session.setCount,
+            WeightUnitFormatter.formatVolume(
+              session.totalVolume,
+              weightUnit,
+              locale: Localizations.localeOf(context),
+            ),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       ),
-      trailing: onTap == null ? null : const Icon(Icons.chevron_right),
     );
   }
 }

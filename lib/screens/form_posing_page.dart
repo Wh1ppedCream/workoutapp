@@ -1,5 +1,5 @@
 // lib/screens/form_posing_page.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class FormPosingPage extends StatelessWidget {
   const FormPosingPage({super.key});

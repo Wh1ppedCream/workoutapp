@@ -1,7 +1,7 @@
 // File: lib/screens/nutrition/food_logging_page.dart
 
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';

@@ -1,9 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/preset_models.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/auto_preset_flow_screen.dart';
@@ -80,7 +82,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const AutoPresetFlowScreen.appDefaults(),
             ),
@@ -320,7 +322,7 @@ void main() {
               : scheme.error.withValues(alpha: surfaces.flowErrorBorderOpacity),
         );
 
-        await tester.tap(find.byTooltip(strings.flowManageActionsTooltip));
+        await tester.tap(findTonosTooltip(strings.flowManageActionsTooltip));
         await tester.pumpAndSettle();
         expect(find.byType(TonosDialogFrame), findsOneWidget);
         await tester.tap(find.text(strings.flowAddNewMethod));

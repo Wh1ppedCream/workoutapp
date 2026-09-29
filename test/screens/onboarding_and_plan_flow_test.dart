@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/locale_preference_provider.dart';
 import 'package:env_test/providers/onboarding_provider.dart';
@@ -7,7 +8,7 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/preset_detail_screen.dart';
 import 'package:env_test/screens/onboarding_flow.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,7 +40,7 @@ void main() {
           builder: (context, localePreferences, _) {
             return MaterialApp(
               locale: localePreferences.locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const OnboardingFlow(),
             );
@@ -84,7 +85,7 @@ void main() {
           ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
         ],
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder:
               (context, child) => MediaQuery(
@@ -140,7 +141,7 @@ void main() {
           ],
           child: MaterialApp(
             locale: locale,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder:
                 (context, child) => MediaQuery(
@@ -199,7 +200,7 @@ void main() {
           builder: (context, localePreferences, _) {
             return MaterialApp(
               locale: localePreferences.locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const OnboardingFlow(),
             );
@@ -247,7 +248,7 @@ void main() {
           builder: (context, localePreferences, _) {
             return MaterialApp(
               locale: localePreferences.locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const OnboardingFlow(),
               routes: {'/main': (_) => const Scaffold(body: Text('Home'))},
@@ -330,7 +331,7 @@ class _PlanTestApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),
       ],
       child: MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder:

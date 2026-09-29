@@ -1,7 +1,7 @@
 // file: lib/screens/profile/settings/exercise_editor_screen.dart
 // Advanced editor for shared exercise definition data.
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';

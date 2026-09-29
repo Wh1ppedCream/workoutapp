@@ -1,6 +1,6 @@
 // File: lib/widgets/stretch_card.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';

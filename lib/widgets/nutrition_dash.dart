@@ -1,6 +1,6 @@
 // File: lib/widgets/nutrition_dash.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'nutrition_text_details.dart';
 import 'meal_plan_add_bar.dart';
 import 'nutrition_circle_details.dart';

@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -8,7 +9,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/dashboard_section_palette.dart';
 import 'package:env_test/widgets/dashboard_sections.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
@@ -41,7 +42,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: SingleChildScrollView(

@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/providers/locale_preference_provider.dart';
 import 'package:env_test/providers/onboarding_provider.dart';
 import 'package:env_test/providers/theme_provider.dart';
@@ -421,7 +422,7 @@ class _AppearanceHarness {
                 darkTheme: AppThemeFactory.dark(provider.family),
                 themeMode: provider.mode,
                 themeAnimationDuration: Duration.zero,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                localizationsDelegates: tonosLocalizationDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Builder(
                   builder:

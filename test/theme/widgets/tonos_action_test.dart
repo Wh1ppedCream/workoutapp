@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
@@ -157,7 +158,7 @@ void main() {
     await tester.tap(find.text('Save'));
     expect(taps, 1);
     expect(tester.getSize(find.byType(FilledButton)).width, 320);
-    expect(find.byTooltip('Save changes'), findsOneWidget);
+    expect(findTonosTooltip('Save changes'), findsOneWidget);
     expect(
       find.byWidgetPredicate(
         (widget) =>

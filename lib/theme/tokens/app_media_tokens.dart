@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Detail-media geometry and overlay effects, separate from anatomy data colors.
 @immutable

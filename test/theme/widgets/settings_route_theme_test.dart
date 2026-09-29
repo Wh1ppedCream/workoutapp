@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/providers/nav_bar_config.dart';
 import 'package:env_test/screens/profile/settings/gym_exercise_settings_page.dart';
 import 'package:env_test/screens/profile/settings/nav_bar_settings_page.dart';
@@ -9,7 +10,7 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -95,7 +96,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               themeAnimationDuration: Duration.zero,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: const NavBarSettingsPage(),
             ),
@@ -149,7 +150,7 @@ void main() {
           MaterialApp(
             theme: theme,
             themeAnimationDuration: Duration.zero,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const GymExerciseSettingsPage(),
           ),

@@ -1,6 +1,6 @@
 // lib/screens/profile/settings/measurements_trends_settings_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../utils/app_test_keys.dart';

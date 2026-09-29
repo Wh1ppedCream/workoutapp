@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Dedicated data-visualization roles. They are separate from UI state roles.
 @immutable

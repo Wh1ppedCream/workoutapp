@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Semantic surface roles understood by shared Tonos surface renderers.
 enum AppSurfaceDecorationRole {

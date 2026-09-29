@@ -1,7 +1,7 @@
 // File: lib/widgets/cardio_card.dart
 
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_field.dart';

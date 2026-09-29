@@ -1,6 +1,6 @@
 // File: lib/widgets/nutrition_text_details.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../theme/theme_extensions.dart';
 
 /// Shows calorie stats (Remaining, Consumed, Target)

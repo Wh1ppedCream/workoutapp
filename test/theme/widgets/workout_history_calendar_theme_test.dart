@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
@@ -9,8 +10,9 @@ import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/utils/localized_formatters.dart';
 import 'package:env_test/widgets/workout_history_calendar.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../test_support.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,7 +69,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: SingleChildScrollView(
@@ -311,7 +313,7 @@ void main() {
         await tester.tap(sessionTile);
         expect(tappedSession?.id, 1);
 
-        final fullHistoryButton = find.byTooltip(
+        final fullHistoryButton = findTonosTooltip(
           strings.logbookViewAllSessions,
         );
         await tester.ensureVisible(fullHistoryButton);
@@ -507,7 +509,7 @@ void main() {
             child: MaterialApp(
               theme: theme,
               locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: WorkoutHistoryCalendar(key: const ValueKey('failed')),

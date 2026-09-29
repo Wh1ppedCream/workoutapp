@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/pantry_log_page.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class PantryLogPage extends StatelessWidget {
   const PantryLogPage({super.key});

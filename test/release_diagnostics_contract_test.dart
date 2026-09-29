@@ -81,8 +81,9 @@ void main() {
   test('production release and policy publishing use guarded workflows', () {
     final release =
         File('.github/workflows/production-release.yml').readAsStringSync();
-    final pages =
-        File('.github/workflows/privacy-pages.yml').readAsStringSync();
+    final pages = File(
+      '.github/workflows/privacy-pages.yml',
+    ).readAsStringSync().replaceAll('\r\n', '\n');
 
     expect(release, contains('environment: production'));
     expect(release, isNot(contains('TONOS_SENTRY_DSN')));

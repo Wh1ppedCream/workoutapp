@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Tonos-specific state, feedback, and domain-action roles outside ColorScheme.
 @immutable

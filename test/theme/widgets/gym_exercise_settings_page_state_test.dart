@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/profile/settings/gym_exercise_settings_page.dart';
 import 'package:env_test/services/workout_exit_preferences.dart';
 import 'package:env_test/theme/classic_theme.dart';
@@ -43,7 +44,7 @@ void main() {
         MaterialApp(
           locale: const Locale('en'),
           theme: entry.value,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const GymExerciseSettingsPage(),
         ),

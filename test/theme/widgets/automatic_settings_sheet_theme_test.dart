@@ -1,6 +1,7 @@
 import 'dart:ui' show SemanticsFlag;
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/preset_session.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
@@ -9,7 +10,7 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/widgets/automatic_settings_sheet.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +54,7 @@ void main() {
               ],
               child: MaterialApp(
                 theme: theme,
-                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                localizationsDelegates: tonosLocalizationDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 home: Scaffold(
                   body: Builder(

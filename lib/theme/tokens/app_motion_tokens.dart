@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Motion recipes, including a complete reduced-motion contract.
 @immutable

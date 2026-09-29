@@ -1,6 +1,6 @@
 // File: lib/widgets/nutrition_circle_details.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'rounded_progress_indicator.dart';
 import '../theme/theme_extensions.dart';
 

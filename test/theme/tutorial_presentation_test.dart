@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
@@ -23,7 +24,7 @@ Widget _host(
         tokens,
       ],
     ),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: tonosLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     builder:
         (context, child) => MediaQuery(
@@ -306,7 +307,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: theme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: Stack(
@@ -365,7 +366,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: NeoBrutalismThemeDefinition.light(),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Stack(
@@ -413,7 +414,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: theme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: Stack(

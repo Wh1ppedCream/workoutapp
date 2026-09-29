@@ -1,5 +1,5 @@
 // lib/screens/combined_history_page.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CombinedHistoryPage extends StatelessWidget {
   const CombinedHistoryPage({super.key});

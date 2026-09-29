@@ -1,6 +1,6 @@
 // File: lib/screens/nutrition/barcode_scanner_page.dart
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../../services/barcode_scanner_session.dart';
 
 import '../../l10n/generated/app_localizations.dart';

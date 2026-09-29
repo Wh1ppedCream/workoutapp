@@ -3,7 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -18,6 +18,7 @@ import 'providers/unit_preference_provider.dart';
 import 'providers/locale_preference_provider.dart';
 import 'l10n/app_localization_extensions.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'l10n/tonos_localization_delegates.dart';
 
 import 'screens/dashboard_page.dart';
 import 'screens/catalog_page.dart';
@@ -210,7 +211,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           locale: localePreferences.locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           theme: lightTheme,
           darkTheme: darkTheme,

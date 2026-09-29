@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/premade_training_plans.dart';
@@ -424,7 +424,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         exercise.name,
         exercise.equipment,
       );
-      return _repo.fetchDefinitionById(id);
+      return await _repo.fetchDefinitionById(id);
     } catch (_) {
       // Fall through to name search. Some definitions store extra equipment in
       // the join table, while the strict ID lookup checks only the primary

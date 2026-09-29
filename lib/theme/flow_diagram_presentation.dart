@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
 /// Updates owned diagram paint without rebuilding user-edited graph objects.

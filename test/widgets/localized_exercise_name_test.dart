@@ -1,10 +1,11 @@
 import 'dart:convert';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/definition_models.dart';
 import 'package:env_test/services/exercise_content_localizer.dart';
 import 'package:env_test/widgets/localized_exercise_name.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -33,7 +34,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: LocalizedExerciseName(
@@ -57,7 +58,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: LocalizedExerciseName(
@@ -89,7 +90,7 @@ void main() {
 
     Widget host(Locale locale) => MaterialApp(
       locale: locale,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: LocalizedExerciseName(

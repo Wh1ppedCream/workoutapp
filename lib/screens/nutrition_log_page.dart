@@ -1,5 +1,5 @@
 // lib/screens/nutrition_log_page.dart
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class NutritionLogPage extends StatelessWidget {
   const NutritionLogPage({super.key});

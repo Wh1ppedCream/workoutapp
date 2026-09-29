@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../theme_extensions.dart';
 
@@ -184,7 +184,7 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
   }
 }
 
-InputDecorationTheme _neoDialogFormInputTheme(
+InputDecorationThemeData _neoDialogFormInputTheme(
   BuildContext context,
   ThemeData theme,
 ) {

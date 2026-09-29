@@ -1,10 +1,11 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/catalog_page.dart';
 import 'package:env_test/screens/profile/settings/profile_page.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,7 +71,7 @@ void main() {
 Widget _localizedApp({required Widget home}) {
   return MaterialApp(
     locale: const Locale('fr', 'CA'),
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: tonosLocalizationDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: home,
   );

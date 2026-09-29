@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -159,7 +160,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(
               body: Center(child: SingleBodyPartHeatmap(bodyPartName: 'Quads')),

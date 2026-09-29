@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Fixed identity colors used by the current profile and saved gym spaces.
 ///

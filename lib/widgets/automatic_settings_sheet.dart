@@ -1,6 +1,6 @@
 // File: lib/widgets/automatic_settings_sheet.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -242,397 +242,414 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
-            child: DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  TabBar(
-                    tabs: [
-                      Tab(text: strings.automaticValuesTab),
-                      Tab(text: strings.automaticMethodsTab),
-                    ],
-                    labelColor: cs.primary,
-                    unselectedLabelColor: labelColor.withValues(alpha: 0.6),
-                    indicatorColor: cs.primary,
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        // Values tab.
-                        ListView(
-                          controller: scrollCtrl,
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            const SizedBox(height: 12),
-                            TonosField(
-                              controller: _globalController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              labelText: strings.automaticGlobalIncrement,
-                              suffixText: _weightUnit.shortLabel,
-                              border: const OutlineInputBorder(),
-                            ),
-                            const SizedBox(height: 12),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: ChoiceChip(
-                                    label: Text(strings.automaticAutoSelect),
-                                    selected: !_manualSelect,
-                                    onSelected:
-                                        (_) => setState(
-                                          () => _manualSelect = false,
-                                        ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: ChoiceChip(
-                                    label: Text(strings.automaticManualSelect),
-                                    selected: _manualSelect,
-                                    onSelected:
-                                        (_) => setState(
-                                          () => _manualSelect = true,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            if (!_manualSelect) ...[
-                              CheckboxListTile(
-                                title: Text(strings.automaticSkipFirstSet),
-                                value: _skipFirst,
-                                onChanged: (checked) {
-                                  if (checked == null) return;
-                                  setState(() => _skipFirst = checked);
-                                },
+            child: Material(
+              type: MaterialType.transparency,
+              child: DefaultTabController(
+                length: 2,
+                child: Column(
+                  children: [
+                    TabBar(
+                      tabs: [
+                        Tab(text: strings.automaticValuesTab),
+                        Tab(text: strings.automaticMethodsTab),
+                      ],
+                      labelColor: cs.primary,
+                      unselectedLabelColor: labelColor.withValues(alpha: 0.6),
+                      indicatorColor: cs.primary,
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          // Values tab.
+                          ListView(
+                            controller: scrollCtrl,
+                            padding: const EdgeInsets.all(16),
+                            children: [
+                              const SizedBox(height: 12),
+                              TonosField(
+                                controller: _globalController,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                labelText: strings.automaticGlobalIncrement,
+                                suffixText: _weightUnit.shortLabel,
+                                border: const OutlineInputBorder(),
                               ),
-                              Divider(color: dividerColor),
+                              const SizedBox(height: 12),
 
-                              // Per-Exercise Overrides
-                              ...widget.preset.exercises.asMap().entries.map((
-                                entry,
-                              ) {
-                                final i = entry.key;
-                                final ex = entry.value;
-                                final exId = widget.preset.presetExerciseIds[i];
-                                final controller = _exControllers[exId]!;
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            ex.name,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: ChoiceChip(
+                                      label: Text(strings.automaticAutoSelect),
+                                      selected: !_manualSelect,
+                                      onSelected:
+                                          (_) => setState(
+                                            () => _manualSelect = false,
                                           ),
-                                        ),
-                                        _buildIncrementField(
-                                          controller,
-                                          width: 80,
-                                          hintText: 'ex',
-                                        ),
-                                      ],
                                     ),
-                                    const SizedBox(height: 8),
-
-                                    ...List.generate(
-                                      widget
-                                          .preset
-                                          .presetParentSetIds[i]
-                                          .length,
-                                      (pi) {
-                                        final setId =
-                                            widget
-                                                .preset
-                                                .presetParentSetIds[i][pi];
-                                        final set =
-                                            (ex as WeightExercise).sets[pi];
-                                        final setCtrl = _setControllers[setId]!;
-                                        return _buildSetIncrementRow(
-                                          label: AppLocalizations.of(
-                                            context,
-                                          ).automaticSetLabel(
-                                            pi + 1,
-                                            _formatSetWeight(set.weight),
-                                            set.reps,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ChoiceChip(
+                                      label: Text(
+                                        strings.automaticManualSelect,
+                                      ),
+                                      selected: _manualSelect,
+                                      onSelected:
+                                          (_) => setState(
+                                            () => _manualSelect = true,
                                           ),
-                                          controller: setCtrl,
-                                        );
-                                      },
                                     ),
-
-                                    ...widget
-                                        .preset
-                                        .presetChildSetIds[i]
-                                        .entries
-                                        .expand((e) {
-                                          final parentIdx = e.key;
-                                          return e.value.asMap().entries.map((
-                                            childEntry,
-                                          ) {
-                                            final childIndex = childEntry.key;
-                                            final cid = childEntry.value;
-                                            final childSet =
-                                                (ex as WeightExercise)
-                                                    .changeSets[parentIdx]![childIndex];
-                                            final childCtrl =
-                                                _setControllers[cid]!;
-                                            return _buildSetIncrementRow(
-                                              label: AppLocalizations.of(
-                                                context,
-                                              ).automaticChildSetLabel(
-                                                parentIdx + 1,
-                                                childIndex + 1,
-                                                _formatSetWeight(
-                                                  childSet.weight,
-                                                ),
-                                                childSet.reps,
-                                              ),
-                                              controller: childCtrl,
-                                            );
-                                          });
-                                        }),
-
-                                    const Divider(),
-                                  ],
-                                );
-                              }),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 16),
 
-                              _buildSaveButton(),
-                              const SizedBox(height: 24),
-                            ] else ...[
-                              const Divider(),
-                              // Exercise-level IA stays the same
-                              ...widget.preset.exercises.asMap().entries.map((
-                                entry,
-                              ) {
-                                final i = entry.key;
-                                final ex = entry.value as WeightExercise;
-                                final exId = widget.preset.presetExerciseIds[i];
-                                final exCtrl = _exControllers[exId]!;
+                              if (!_manualSelect) ...[
+                                CheckboxListTile(
+                                  title: Text(strings.automaticSkipFirstSet),
+                                  value: _skipFirst,
+                                  onChanged: (checked) {
+                                    if (checked == null) return;
+                                    setState(() => _skipFirst = checked);
+                                  },
+                                ),
+                                Divider(color: dividerColor),
 
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            ex.name,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                // Per-Exercise Overrides
+                                ...widget.preset.exercises.asMap().entries.map((
+                                  entry,
+                                ) {
+                                  final i = entry.key;
+                                  final ex = entry.value;
+                                  final exId =
+                                      widget.preset.presetExerciseIds[i];
+                                  final controller = _exControllers[exId]!;
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              ex.name,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        _buildIncrementField(
-                                          exCtrl,
-                                          width: 80,
-                                          hintText: 'ex',
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
+                                          _buildIncrementField(
+                                            controller,
+                                            width: 80,
+                                            hintText: 'ex',
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
 
-                                    ...List.generate(
-                                      widget
+                                      ...List.generate(
+                                        widget
+                                            .preset
+                                            .presetParentSetIds[i]
+                                            .length,
+                                        (pi) {
+                                          final setId =
+                                              widget
+                                                  .preset
+                                                  .presetParentSetIds[i][pi];
+                                          final set =
+                                              (ex as WeightExercise).sets[pi];
+                                          final setCtrl =
+                                              _setControllers[setId]!;
+                                          return _buildSetIncrementRow(
+                                            label: AppLocalizations.of(
+                                              context,
+                                            ).automaticSetLabel(
+                                              pi + 1,
+                                              _formatSetWeight(set.weight),
+                                              set.reps,
+                                            ),
+                                            controller: setCtrl,
+                                          );
+                                        },
+                                      ),
+
+                                      ...widget
                                           .preset
-                                          .presetParentSetIds[i]
-                                          .length,
-                                      (pi) {
-                                        final setId =
-                                            widget
-                                                .preset
-                                                .presetParentSetIds[i][pi];
-                                        final set = ex.sets[pi];
-                                        final setCtrl = _setControllers[setId]!;
-
-                                        return _buildSetIncrementRow(
-                                          leading: Checkbox(
-                                            value:
-                                                _setSelections[setId] ?? false,
-                                            onChanged:
-                                                (v) => setState(
-                                                  () =>
-                                                      _setSelections[setId] =
-                                                          v!,
+                                          .presetChildSetIds[i]
+                                          .entries
+                                          .expand((e) {
+                                            final parentIdx = e.key;
+                                            return e.value.asMap().entries.map((
+                                              childEntry,
+                                            ) {
+                                              final childIndex = childEntry.key;
+                                              final cid = childEntry.value;
+                                              final childSet =
+                                                  (ex as WeightExercise)
+                                                      .changeSets[parentIdx]![childIndex];
+                                              final childCtrl =
+                                                  _setControllers[cid]!;
+                                              return _buildSetIncrementRow(
+                                                label: AppLocalizations.of(
+                                                  context,
+                                                ).automaticChildSetLabel(
+                                                  parentIdx + 1,
+                                                  childIndex + 1,
+                                                  _formatSetWeight(
+                                                    childSet.weight,
+                                                  ),
+                                                  childSet.reps,
                                                 ),
+                                                controller: childCtrl,
+                                              );
+                                            });
+                                          }),
+
+                                      const Divider(),
+                                    ],
+                                  );
+                                }),
+                                const SizedBox(height: 16),
+
+                                _buildSaveButton(),
+                                const SizedBox(height: 24),
+                              ] else ...[
+                                const Divider(),
+                                // Exercise-level IA stays the same
+                                ...widget.preset.exercises.asMap().entries.map((
+                                  entry,
+                                ) {
+                                  final i = entry.key;
+                                  final ex = entry.value as WeightExercise;
+                                  final exId =
+                                      widget.preset.presetExerciseIds[i];
+                                  final exCtrl = _exControllers[exId]!;
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              ex.name,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                          label: AppLocalizations.of(
-                                            context,
-                                          ).automaticSetLabel(
-                                            pi + 1,
-                                            _formatSetWeight(set.weight),
-                                            set.reps,
+                                          _buildIncrementField(
+                                            exCtrl,
+                                            width: 80,
+                                            hintText: 'ex',
                                           ),
-                                          controller: setCtrl,
-                                        );
-                                      },
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+
+                                      ...List.generate(
+                                        widget
+                                            .preset
+                                            .presetParentSetIds[i]
+                                            .length,
+                                        (pi) {
+                                          final setId =
+                                              widget
+                                                  .preset
+                                                  .presetParentSetIds[i][pi];
+                                          final set = ex.sets[pi];
+                                          final setCtrl =
+                                              _setControllers[setId]!;
+
+                                          return _buildSetIncrementRow(
+                                            leading: Checkbox(
+                                              value:
+                                                  _setSelections[setId] ??
+                                                  false,
+                                              onChanged:
+                                                  (v) => setState(
+                                                    () =>
+                                                        _setSelections[setId] =
+                                                            v!,
+                                                  ),
+                                            ),
+                                            label: AppLocalizations.of(
+                                              context,
+                                            ).automaticSetLabel(
+                                              pi + 1,
+                                              _formatSetWeight(set.weight),
+                                              set.reps,
+                                            ),
+                                            controller: setCtrl,
+                                          );
+                                        },
+                                      ),
+
+                                      ...widget
+                                          .preset
+                                          .presetChildSetIds[i]
+                                          .entries
+                                          .expand((e) {
+                                            final parentIdx = e.key;
+                                            return e.value.asMap().entries.map((
+                                              childEntry,
+                                            ) {
+                                              final ci = childEntry.key;
+                                              final cid = childEntry.value;
+                                              final child =
+                                                  ex.changeSets[parentIdx]![ci];
+                                              final childCtrl =
+                                                  _setControllers[cid]!;
+
+                                              return _buildSetIncrementRow(
+                                                leading: Checkbox(
+                                                  value:
+                                                      _setSelections[cid] ??
+                                                      false,
+                                                  onChanged:
+                                                      (v) => setState(
+                                                        () =>
+                                                            _setSelections[cid] =
+                                                                v!,
+                                                      ),
+                                                ),
+                                                label: AppLocalizations.of(
+                                                  context,
+                                                ).automaticChildSetLabel(
+                                                  parentIdx + 1,
+                                                  ci + 1,
+                                                  _formatSetWeight(
+                                                    child.weight,
+                                                  ),
+                                                  child.reps,
+                                                ),
+                                                controller: childCtrl,
+                                              );
+                                            });
+                                          }),
+
+                                      const Divider(),
+                                    ],
+                                  );
+                                }),
+                                const SizedBox(height: 16),
+
+                                _buildSaveButton(),
+                                const SizedBox(height: 24),
+                              ],
+                            ],
+                          ),
+
+                          // Methods tab.
+                          ListView(
+                            controller: scrollCtrl,
+                            padding: const EdgeInsets.all(16),
+                            children: [
+                              Text(strings.automaticIncrementWhen),
+                              CheckboxListTile(
+                                title: Text(strings.automaticWeightTarget),
+                                value: widget.preset.weightCheck,
+                                onChanged:
+                                    (b) => setState(
+                                      () => widget.preset.weightCheck = b!,
                                     ),
+                              ),
+                              CheckboxListTile(
+                                title: Text(strings.automaticRepsTarget),
+                                value: widget.preset.repCheck,
+                                onChanged:
+                                    (b) => setState(
+                                      () => widget.preset.repCheck = b!,
+                                    ),
+                              ),
+                              CheckboxListTile(
+                                title: Text(strings.automaticVolumeTarget),
+                                value: widget.preset.volumeCheck,
+                                onChanged:
+                                    (b) => setState(
+                                      () => widget.preset.volumeCheck = b!,
+                                    ),
+                              ),
+                              const SizedBox(height: 16),
 
-                                    ...widget
-                                        .preset
-                                        .presetChildSetIds[i]
-                                        .entries
-                                        .expand((e) {
-                                          final parentIdx = e.key;
-                                          return e.value.asMap().entries.map((
-                                            childEntry,
-                                          ) {
-                                            final ci = childEntry.key;
-                                            final cid = childEntry.value;
-                                            final child =
-                                                ex.changeSets[parentIdx]![ci];
-                                            final childCtrl =
-                                                _setControllers[cid]!;
+                              Text(
+                                strings.automaticScopeLabel,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              RadioListTile<ProgressionSuccessScope>(
+                                title: Text(strings.automaticWorkoutSession),
+                                value: ProgressionSuccessScope.session,
+                                groupValue: _successCountMode,
+                                activeColor: cs.primary,
+                                onChanged:
+                                    (m) =>
+                                        setState(() => _successCountMode = m!),
+                              ),
+                              RadioListTile<ProgressionSuccessScope>(
+                                title: Text(strings.automaticPerExercise),
+                                value: ProgressionSuccessScope.exercise,
+                                groupValue: _successCountMode,
+                                activeColor: cs.primary,
+                                onChanged:
+                                    (m) =>
+                                        setState(() => _successCountMode = m!),
+                              ),
+                              RadioListTile<ProgressionSuccessScope>(
+                                title: Text(strings.automaticPerSet),
+                                value: ProgressionSuccessScope.set,
+                                groupValue: _successCountMode,
+                                activeColor: cs.primary,
+                                onChanged:
+                                    (m) =>
+                                        setState(() => _successCountMode = m!),
+                              ),
 
-                                            return _buildSetIncrementRow(
-                                              leading: Checkbox(
-                                                value:
-                                                    _setSelections[cid] ??
-                                                    false,
-                                                onChanged:
-                                                    (v) => setState(
-                                                      () =>
-                                                          _setSelections[cid] =
-                                                              v!,
-                                                    ),
-                                              ),
-                                              label: AppLocalizations.of(
-                                                context,
-                                              ).automaticChildSetLabel(
-                                                parentIdx + 1,
-                                                ci + 1,
-                                                _formatSetWeight(child.weight),
-                                                child.reps,
-                                              ),
-                                              controller: childCtrl,
-                                            );
-                                          });
-                                        }),
-
-                                    const Divider(),
-                                  ],
-                                );
-                              }),
+                              const SizedBox(height: 16),
+                              Text(
+                                strings.automaticAdjustScope,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              RadioListTile<bool>(
+                                title: Text(strings.automaticAdjustOneSet),
+                                value: false,
+                                groupValue: widget.preset.adjustAllSets,
+                                activeColor: cs.primary,
+                                onChanged:
+                                    (b) => setState(
+                                      () => widget.preset.adjustAllSets = b!,
+                                    ),
+                              ),
+                              RadioListTile<bool>(
+                                title: Text(strings.automaticAdjustAllSets),
+                                value: true,
+                                groupValue: widget.preset.adjustAllSets,
+                                activeColor: cs.primary,
+                                onChanged:
+                                    (b) => setState(
+                                      () => widget.preset.adjustAllSets = b!,
+                                    ),
+                              ),
                               const SizedBox(height: 16),
 
                               _buildSaveButton(),
                               const SizedBox(height: 24),
                             ],
-                          ],
-                        ),
-
-                        // Methods tab.
-                        ListView(
-                          controller: scrollCtrl,
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            Text(strings.automaticIncrementWhen),
-                            CheckboxListTile(
-                              title: Text(strings.automaticWeightTarget),
-                              value: widget.preset.weightCheck,
-                              onChanged:
-                                  (b) => setState(
-                                    () => widget.preset.weightCheck = b!,
-                                  ),
-                            ),
-                            CheckboxListTile(
-                              title: Text(strings.automaticRepsTarget),
-                              value: widget.preset.repCheck,
-                              onChanged:
-                                  (b) => setState(
-                                    () => widget.preset.repCheck = b!,
-                                  ),
-                            ),
-                            CheckboxListTile(
-                              title: Text(strings.automaticVolumeTarget),
-                              value: widget.preset.volumeCheck,
-                              onChanged:
-                                  (b) => setState(
-                                    () => widget.preset.volumeCheck = b!,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            Text(
-                              strings.automaticScopeLabel,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            RadioListTile<ProgressionSuccessScope>(
-                              title: Text(strings.automaticWorkoutSession),
-                              value: ProgressionSuccessScope.session,
-                              groupValue: _successCountMode,
-                              activeColor: cs.primary,
-                              onChanged:
-                                  (m) => setState(() => _successCountMode = m!),
-                            ),
-                            RadioListTile<ProgressionSuccessScope>(
-                              title: Text(strings.automaticPerExercise),
-                              value: ProgressionSuccessScope.exercise,
-                              groupValue: _successCountMode,
-                              activeColor: cs.primary,
-                              onChanged:
-                                  (m) => setState(() => _successCountMode = m!),
-                            ),
-                            RadioListTile<ProgressionSuccessScope>(
-                              title: Text(strings.automaticPerSet),
-                              value: ProgressionSuccessScope.set,
-                              groupValue: _successCountMode,
-                              activeColor: cs.primary,
-                              onChanged:
-                                  (m) => setState(() => _successCountMode = m!),
-                            ),
-
-                            const SizedBox(height: 16),
-                            Text(
-                              strings.automaticAdjustScope,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            RadioListTile<bool>(
-                              title: Text(strings.automaticAdjustOneSet),
-                              value: false,
-                              groupValue: widget.preset.adjustAllSets,
-                              activeColor: cs.primary,
-                              onChanged:
-                                  (b) => setState(
-                                    () => widget.preset.adjustAllSets = b!,
-                                  ),
-                            ),
-                            RadioListTile<bool>(
-                              title: Text(strings.automaticAdjustAllSets),
-                              value: true,
-                              groupValue: widget.preset.adjustAllSets,
-                              activeColor: cs.primary,
-                              onChanged:
-                                  (b) => setState(
-                                    () => widget.preset.adjustAllSets = b!,
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            _buildSaveButton(),
-                            const SizedBox(height: 24),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

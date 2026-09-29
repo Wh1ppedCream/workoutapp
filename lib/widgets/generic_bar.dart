@@ -1,6 +1,6 @@
 // File: lib/widgets/generic_bar.dart
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/tokens/app_surface_decoration_tokens.dart';
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Semantic values specific to the permanent Classic theme family.
 abstract final class ClassicThemeTokens {

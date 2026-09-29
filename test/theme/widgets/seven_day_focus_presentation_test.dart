@@ -1,11 +1,12 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/focused_sets_list.dart';
 import 'package:env_test/widgets/seven_day_focus_card.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -38,7 +39,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder:
                 (context, child) => MediaQuery(

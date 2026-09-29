@@ -1,4 +1,5 @@
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/gym_models.dart';
 import 'package:env_test/models/nutrition_models.dart';
 import 'package:env_test/providers/nutrition_profile.dart';
@@ -9,8 +10,9 @@ import 'package:env_test/screens/nutrition/log_entry_page.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 import 'package:provider/provider.dart';
 
 class _CatalogSource implements FoodCatalogSource {
@@ -202,7 +204,7 @@ Future<void> _pumpPage(
   await tester.pumpWidget(
     MaterialApp(
       theme: theme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: ChangeNotifierProvider<NutritionProfile>(
         create: (_) => profile,
@@ -276,7 +278,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: themeEntry.value,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: ChangeNotifierProvider<NutritionProfile>(
             create: (_) => profile,
@@ -466,12 +468,12 @@ void main() {
       await tester.pump();
       expect(find.widgetWithText(ListTile, food.name), findsOneWidget);
 
-      await tester.tap(find.byTooltip(strings.foodFavorite));
+      await tester.tap(findTonosTooltip(strings.foodFavorite));
       await tester.pump();
       expect(repository.favorites, contains(food.id));
-      expect(find.byTooltip(strings.foodUnfavorite), findsOneWidget);
+      expect(findTonosTooltip(strings.foodUnfavorite), findsOneWidget);
 
-      await tester.tap(find.byTooltip(strings.foodEditAndAdd));
+      await tester.tap(findTonosTooltip(strings.foodEditAndAdd));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ChoiceChip, 'Breakfast'));
       await tester.tap(find.byType(DropdownButton<FoodPortion>));
@@ -486,7 +488,7 @@ void main() {
       for (final meal in [MealType.lunch, MealType.dinner, MealType.snack]) {
         final mealLabel =
             '${meal.name[0].toUpperCase()}${meal.name.substring(1)}';
-        await tester.tap(find.byTooltip(strings.foodEditAndAdd));
+        await tester.tap(findTonosTooltip(strings.foodEditAndAdd));
         await tester.pumpAndSettle();
         await tester.tap(find.widgetWithText(ChoiceChip, mealLabel));
         await tester.tap(find.text(strings.foodAddToPlate));
@@ -633,7 +635,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: ChangeNotifierProvider<NutritionProfile>(
             create: (_) => profile,

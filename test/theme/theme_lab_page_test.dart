@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../test_support.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
+import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/neo_brutalism_pilot_gallery.dart';
@@ -22,7 +24,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -78,7 +80,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           navigatorKey: navigatorKey,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home:
               startsAtRoot
@@ -93,7 +95,7 @@ void main() {
         );
       }
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Close Theme Lab'));
+      await tester.tap(findTonosTooltip('Close Theme Lab'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ThemeLabPage), findsNothing);
@@ -111,7 +113,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -186,7 +188,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -206,7 +208,7 @@ void main() {
   testWidgets('effects switch removes optional preview depth', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -276,7 +278,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -324,7 +326,7 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: ThemeLabPage(),
         ),
@@ -388,7 +390,7 @@ void main() {
 
       final collapse = find.descendant(
         of: find.byKey(const ValueKey('neo-pilot-weight-card')),
-        matching: find.byTooltip('Collapse sets'),
+        matching: findTonosTooltip('Collapse sets'),
       );
       await _ensureVisibleAndSettle(tester, collapse);
       await tester.tap(collapse);
@@ -396,7 +398,7 @@ void main() {
       expect(weightField, findsNothing);
       final expand = find.descendant(
         of: find.byKey(const ValueKey('neo-pilot-weight-card')),
-        matching: find.byTooltip('Expand sets'),
+        matching: findTonosTooltip('Expand sets'),
       );
       expect(expand, findsOneWidget);
       await tester.tap(expand);
@@ -405,7 +407,7 @@ void main() {
 
       final removeSet = find.descendant(
         of: find.byKey(const ValueKey('neo-pilot-weight-card')),
-        matching: find.byTooltip('Remove Set'),
+        matching: findTonosTooltip('Remove Set'),
       );
       expect(removeSet, findsNWidgets(4));
       await tester.tap(removeSet.last);
@@ -415,7 +417,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(const ValueKey('neo-pilot-weight-card')),
-          matching: find.byTooltip('Remove Set'),
+          matching: findTonosTooltip('Remove Set'),
         ),
         findsNWidgets(3),
       );
@@ -449,7 +451,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -506,7 +508,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -534,7 +536,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -564,7 +566,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: ThemeLabPage(),
       ),
@@ -630,7 +632,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(

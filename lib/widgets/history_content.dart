@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../models/models.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';

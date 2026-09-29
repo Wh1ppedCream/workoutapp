@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Progress-specific recipes preserve the distinct legacy chart meanings.
 /// Generic chart palettes are not interchangeable with these Material colors.
