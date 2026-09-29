@@ -68,3 +68,24 @@ The plan groups Add Set with set completion. This pass isolated completion feedb
 ## Decision boundary
 
 This artifact recommends only the small standard Material/Tonos candidates above. It does **not** approve production adoption or change the Classic/Neo theme architecture. The next work, if approved separately, is to productionize one candidate at a time behind its existing Tonos component boundary, beginning with controlled exercise expansion and its auto-collapse/reduced-motion behavior.
+
+## Production follow-up: controlled WeightCard expansion
+
+- **Evaluation date:** 2026-09-29
+- **Branch:** `feature/classic-m3e`
+- **Starting commit:** `47e9ba0846c0a0b91171243abc21c1e317a85322`
+- **Decision:** **ADOPT.**
+
+The production `WeightCard` now uses a controlled, standard Flutter height reveal when the active workout runs under Classic. Its existing `_isCollapsed` state and final-set auto-collapse remain authoritative. `TweenAnimationBuilder<double>` with `ClipRect` and `Align.heightFactor` reveals the existing set content over the Classic quick duration (180 ms), using the theme's standard curve. It uses no spring, fade, new controller, or animation dependency. The `appMotionDuration` reduced-motion policy selects the theme's immediate reduced duration. Other `WeightCard` call sites remain immediate by default, and the session enables the behavior only for Classic.
+
+On Pixel 7 (`28021FDH200228`, `Pixel_7` / `panther`), the production session was launched with `flutter run` using the isolated package `com.tonos.internal.weightcardvalidation` and database `tonos_weightcard_validation.db`. Existing Tonos package installs and their data were left untouched. The hands-on session covered manual open/close and rapid retargeting, weight editing with the keyboard, a nonfinal set, final-set completion, reopening completed sets, and expansion of a lower card in a scrolled two-exercise session. The interaction felt slightly smoother and remained quick; there was no bounce or visual flourish. Editing retained the entered value, collapse removed focus and hid the keyboard, the nonfinal set kept the card open, the final required set auto-collapsed it, and reopening retained both completion checks. The lower card's header stayed anchored while it expanded and collapsed. At the scroll limit, the preceding card shifted by 42 screen pixels (about 15 dp) as the scroll extent clamped after collapse; this was small and did not obscure the active card.
+
+Reduced motion was verified by the focused widget test with `MediaQuery.disableAnimations` enabled: collapse and reopen were immediate. The Pixel 7 remained at its normal motion setting during device interaction. Focused regression coverage passed for manual/rapid toggles, semantics, focus, reduced motion, compact width/large text, nonfinal and final completion, and reopened completed sets. The focused interaction and workout/session regression batch passed **37 tests**. Final repository validation and build results are recorded with the implementation commit.
+
+### Final validation
+
+- Flutter **3.47.5** / Dart **3.13.4**; the full suite used `--no-pub` and the machine's normal temp directory.
+- Full Flutter suite: **1,188 passed, 0 failed, 0 skipped**, exit code 0, uninterrupted (**6m35s**).
+- `flutter analyze --no-pub`: **0 errors, 0 warnings, 115 informational deprecation notices** in existing files; analyzer exit code 1 reflects the repository's informational-only findings. None are in the changed Dart files.
+- Android debug APK: built successfully in **42.4 seconds**. Flutter reported upcoming support cutoffs for the existing Gradle 8.14.5, Android Gradle Plugin 8.11.1, and Kotlin 2.2.21 versions; this build succeeded without changing those versions.
+- `git diff --check`: passed. Theme inventory and style ratchet were not applicable because no theme recipes or static styles changed.

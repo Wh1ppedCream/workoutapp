@@ -156,6 +156,7 @@ class _SessionScreenState extends State<SessionScreen> {
                     child: ExerciseCard(
                       exercise: ex,
                       cardType: type,
+                      animateExpansion: ctx.usesClassicPresentation,
                       onDetails:
                           type == CardType.weight
                               ? () async {

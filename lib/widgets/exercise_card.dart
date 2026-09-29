@@ -20,6 +20,7 @@ class ExerciseCard extends StatelessWidget {
   final int? definitionId;
   final VoidCallback? onSwapExercise;
   final bool forceCollapsed;
+  final bool animateExpansion;
   final Key? firstSetWeightKey;
   final Key? firstSetRepsKey;
   final Key? addSetKey;
@@ -43,6 +44,7 @@ class ExerciseCard extends StatelessWidget {
     this.definitionId,
     this.onSwapExercise,
     this.forceCollapsed = false,
+    this.animateExpansion = false,
     this.firstSetWeightKey,
     this.firstSetRepsKey,
     this.addSetKey,
@@ -69,6 +71,7 @@ class ExerciseCard extends StatelessWidget {
           definitionId: definitionId,
           onSwapExercise: onSwapExercise,
           forceCollapsed: forceCollapsed,
+          animateExpansion: animateExpansion,
           firstSetWeightKey: firstSetWeightKey,
           firstSetRepsKey: firstSetRepsKey,
           addSetKey: addSetKey,
