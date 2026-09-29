@@ -104,7 +104,7 @@ The app is organized by responsibility:
 
 ### Prerequisites
 
-- Flutter SDK installed
+- Flutter SDK **3.47.0 or newer** (Dart **3.13.0 or newer**)
 - A configured Android, iOS, Windows, Linux, macOS, or web Flutter environment
 
 ### Install dependencies
