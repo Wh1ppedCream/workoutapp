@@ -1,0 +1,12 @@
+Focused analyzer record — 2026-09-30
+
+SDK: Dart 3.13.4 bundled with Flutter 3.47.5
+Command: E:\tools\flutter_sdks\3.47.5\flutter\bin\cache\dart-sdk\bin\dart.exe analyze integration_test\expressive_preview_device_test.dart
+Scope: test-only device harness after the refreshed outer IconButton target correction
+
+Output:
+Analyzing expressive_preview_device_test.dart...
+No issues found!
+
+Exit code: 0
+Elapsed wall time: 6.096 seconds

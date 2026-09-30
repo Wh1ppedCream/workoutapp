@@ -1,0 +1,39 @@
+**********************
+PowerShell transcript start
+Start time: 20260930143545
+Username: DESKTOP-V50RJE7\talh7
+RunAs User: DESKTOP-V50RJE7\talh7
+Configuration Name:
+Machine: DESKTOP-V50RJE7 (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\talh7\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+$adb='E:\Android\Sdk\platform-tools\adb.exe'; $serial='28021FDH200228'; $out='docs/proposals/tonos-expressive-train-proving-ground/review-final'; $log=Join-Path $out 'native-large-text-qualification-2026-09-30.txt'; Start-Transcript -Path $log -Force | Out-Null; function Capture-State([string]$name) { & $adb -s $serial shell screencap -p "/sdcard/$name.png"; & $adb -s $serial pull "/sdcard/$name.png" (Join-Path $out "$name.png") | Out-Null; & $adb -s $serial shell uiautomator dump "/sdcard/$name.xml" | Out-Null; & $adb -s $serial pull "/sdcard/$name.xml" (Join-Path $out "$name.xml") | Out-Null }; function Tap-Node([string]$xmlPath,[string]$desc) { [xml]$doc=Get-Content -LiteralPath $xmlPath -Raw; $node=$doc.SelectSingleNode("//node[@content-desc='$desc' and @clickable='true']"); if($null -eq $node) { throw "Clickable node not found: $desc" }; $b=$node.GetAttribute('bounds'); if($b -match '\[(\d+),(\d+)\]\[(\d+),(\d+)\]') { $x=[int](([int]$Matches[1]+[int]$Matches[3])/2); $y=[int](([int]$Matches[2]+[int]$Matches[4])/2); "TAP_NODE=$desc center=$x,$y bounds=$b"; & $adb -s $serial shell input tap $x $y } else { throw "Invalid bounds for ${desc}: $b" } }; try { & $adb -s $serial shell input tap 828 2148; Start-Sleep -Milliseconds 350; & $adb -s $serial shell settings put system font_scale 2.0; Start-Sleep -Seconds 2; $fs=& $adb -s $serial shell settings get system font_scale; "FONT_SCALE_DURING=$fs"; if($fs.Trim() -ne '2.0') { throw 'Font scale did not apply' }; Capture-State 'native-os2-overview-before-scroll-final-2026-09-30'; & $adb -s $serial shell input swipe 540 1700 540 900 500; Start-Sleep -Milliseconds 500; Capture-State 'native-os2-overview-after-scroll-final-2026-09-30'; Tap-Node (Join-Path $out 'native-os2-overview-after-scroll-final-2026-09-30.xml') 'Plans'; Start-Sleep -Seconds 2; Capture-State 'native-os2-plans-before-scroll-final-2026-09-30'; & $adb -s $serial shell input swipe 540 1700 540 900 500; Start-Sleep -Milliseconds 500; Capture-State 'native-os2-plans-after-scroll-final-2026-09-30'; Tap-Node (Join-Path $out 'native-os2-plans-after-scroll-final-2026-09-30.xml') 'Profile'; Start-Sleep -Seconds 2; Capture-State 'native-os2-profile-destination-final-2026-09-30'; [xml]$profile=Get-Content -LiteralPath (Join-Path $out 'native-os2-profile-destination-final-2026-09-30.xml') -Raw; $profileNodes=$profile.SelectNodes('//node[@text!="" or @content-desc!=""]'); $profileText=($profileNodes | ForEach-Object { $_.GetAttribute('text')+' '+$_.GetAttribute('content-desc') }) -join ' | '; "PROFILE_DESTINATION_TEXT=$profileText"; if($profileText -notmatch 'Profile|Personal|Appearance|Account') { throw 'Profile page content was not confirmed' } } catch { "QUALIFICATION_ERROR=$($_.Exception.Message)"; throw } finally { & $adb -s $serial shell settings put system font_scale 1.15; Start-Sleep -Seconds 2; $restored=& $adb -s $serial shell settings get system font_scale; "FONT_SCALE_RESTORED=$restored"; Stop-Transcript | Out-Null }
+Process ID: 13964
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+FONT_SCALE_DURING=2.0
+
+
+
+TAP_NODE=Plans center=666,357 bounds=[461,294][870,420]
+
+
+
+
+PS>TerminatingError(): "Clickable node not found: Profile"
+QUALIFICATION_ERROR=Clickable node not found: Profile
+
+FONT_SCALE_RESTORED=1.15
+**********************
+PowerShell transcript end
+End time: 20260930143606
+**********************

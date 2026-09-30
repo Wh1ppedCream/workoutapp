@@ -1,0 +1,33 @@
+**********************
+PowerShell transcript start
+Start time: 20260930120633
+Username: DESKTOP-V50RJE7\talh7
+RunAs User: DESKTOP-V50RJE7\talh7
+Configuration Name:
+Machine: DESKTOP-V50RJE7 (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\talh7\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+$reviewRoot = 'docs\proposals\tonos-expressive-train-proving-ground\review-final'; New-Item -ItemType Directory -Force -Path $reviewRoot | Out-Null; $logPath = Join-Path $reviewRoot 'canonical-profile-build-2026-09-30.txt'; $buildStarted = Get-Date; Start-Transcript -Path $logPath -Force | Out-Null; "BUILD_STARTED_LOCAL=$($buildStarted.ToString('o'))"; $buildExit = 0; try { & .\tools\run_expressive_preview.ps1 -BuildMode profile; if (-not $?) { throw 'Preview build script returned an unsuccessful status.' }; 'BUILD_OUTCOME=PASS' } catch { $buildExit = 1; "BUILD_ERROR=$($_.Exception.Message)"; throw } finally { "BUILD_EXIT=$buildExit"; "BUILD_FINISHED_LOCAL=$((Get-Date).ToString('o'))"; Stop-Transcript | Out-Null }
+Process ID: 18736
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+BUILD_STARTED_LOCAL=2026-09-30T12:06:33.0288581-04:00
+
+APK manifest package: package: name='com.tonos.expressivepreview' versionCode='6' versionName='1.0.1' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+Validated Dart defines: TONOS_EXPRESSIVE_PREVIEW=true; TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true; TONOS_ANDROID_INTERNAL_BUILD=false; TONOS_DATABASE_NAME=tonos_expressive_preview.db
+APK: E:\projects\env_test\build\app\outputs\flutter-apk\app-profile.apk
+Build-only runner; it does not install or launch the APK.
+BUILD_OUTCOME=PASS
+BUILD_EXIT=0
+BUILD_FINISHED_LOCAL=2026-09-30T12:10:27.0219243-04:00
+**********************
+PowerShell transcript end
+End time: 20260930121027
+**********************

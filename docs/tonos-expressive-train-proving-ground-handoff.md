@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Handoff
 
-**Status: safe resumable qualification checkpoint; final device/user review remains pending (2026-09-30).** The user stopped the broader campaign to preserve usage. Section 21 is the latest continuation record. Sections 1–20 retain the implementation checkpoint and its historical evidence/procedure; their pending-device/full-suite statements describe that checkpoint. The recovered bounded combined run passed 163/163 tests, zero failures/skips, exit 0, before this qualification session. Resume the existing implementation rather than repeating the architecture audit.
+**Status: READY WITH KNOWN LIMITATIONS for user review (2026-09-30).** Section 22 is the current qualification record and supersedes earlier pending-device statements. Sections 1–20 retain implementation history and the original procedures; Section 21 records the prior bounded qualification checkpoint. The final Train + shell comparison set, motion clips, native checks, and canonical preview are prepared. TalkBack remains untested. Do not repeat the full suite or expand to another destination before user feedback.
 
 ## 1. Checkpoint summary
 
@@ -369,3 +369,41 @@ Current details: [results](tonos-expressive-train-proving-ground-results.md), [h
 The user changed the stop condition to a resumable checkpoint. The bounded source correction and its scoped analyzer/build verification are complete; the stalled device proof is saved as pending. Preserve already-collected timings, commit/push qualification-owned changes, then stop. No further full suite, complete timing matrix, canonical interactive build, capture campaign, or lengthy native-accessibility campaign is started in this checkpoint pass.
 
 Resume from this qualification checkpoint. Complete only any remaining Pixel evidence/native accessibility checks, then present the existing Train + shell Expressive proving ground to the user for keep/tune/reject feedback. Do not expand Expressive to another screen before user review.
+
+## 22. Final qualification and user-review handoff — 2026-09-30
+
+This section is the current authority. No production UI, theme, palette, spring, dependency, SDK, or stored-family code changed during final qualification. The only source change since the previous checkpoint is the device test harness correction in `integration_test/expressive_preview_device_test.dart`.
+
+### Host evidence retained
+
+- Flutter 3.47.5 / bundled Dart 3.13.4.
+- Full suite, not rerun: **1,255 passed, 0 failed, 0 skipped, exit 0**, 1,274.075 seconds (21m 14.075s), one uninterrupted normal-temp run.
+- Repository analyzer from the accepted final run: **0 errors, 0 warnings, 84 infos**. The updated device harness receives a separate focused Dart analysis recorded under `qualification/validation/logs/`.
+- Theme inventory: **0 pending/unassigned**. Ratchet enforcement passed. Classic/Neo/default-root parity and host Workout compatibility passed in the saved host evidence.
+- Accessibility widget evidence: **28 existing tests + 1 new 320 dp / long French / RTL / nonlinear stress test**, passing in their recorded focused runs. This is not physical TalkBack validation.
+
+### Pixel 7 findings
+
+- Device `28021FDH200228`, Pixel 7 / Android 16. The canonical preview package is installed and running; package is `com.tonos.expressivepreview`, version 6 / 1.0.1, DB `tonos_expressive_preview.db`. The canonical profile APK hash is recorded in `review-final/README.md`. Normal/internal Tonos package data was not touched.
+- The real workout collapse target measured 48 × 48 dp. Center, left-edge, and right-edge activation worked; the neighboring exercise menu activated only itself from its edge. Direct physical checks verified non-final completion stays expanded, final-set completion auto-collapses, and reopening retains both completion states.
+- A focused Dart analyzer run passed for the corrected test harness, which reacquires the same outer Collapse IconButton after dismissing the menu and then retests its refreshed edge. No full profile/timing campaign was restarted; direct device evidence, not an integration rerun, resolves the production target question.
+- Native font scale was temporarily 2.0 and restored to its original 1.15. Overview and Plans remain scrollable; their lower content/actions were exposed by scrolling. At 2×, four nav destinations are visible at once; a leftward horizontal swipe exposes Profile, whose measured target opened the real Profile page. Long plan names can ellipsize.
+- Weight input focus opened the numeric keyboard; one Android Back dismissed the IME and left the Workout session/set row visible. Back also dismissed preview controls, a plan menu, and the Workout Timer modal. Start → Session, returning to Train, and explicit Exit → Cancel Workout were exercised; final state has no active workout.
+- TalkBack was not tested. No screen-reader announcement or focus-order claim is made.
+
+### Final visual and motion evidence
+
+The final matched screenshots are the four light/dark pairs for Overview and Plans under `docs/proposals/tonos-expressive-train-proving-ground/review-final/`, indexed exactly in its [README](proposals/tonos-expressive-train-proving-ground/review-final/README.md). Five human-review clips are indexed there: tab spring, bottom navigation, Start press/release, rapid tab retargeting, and reduced motion. These clips are qualitative only and do not establish physical input latency or profile performance.
+
+The existing profile measurements remain unchanged: Classic and Expressive settled frame costs were broadly comparable, with substantial frame-budget exceedances in both. Synthetic 80 ms rapid retargeting produced more Expressive build-budget exceedances (50/212 versus 34/212). Do not claim zero jank, faster Expressive, perfect performance, or physical latency.
+
+### Canonical final device state
+
+The Pixel was left running at Train → Overview with Expressive / Curated / Light / 1×, reduced motion off, effects off, system font scale 1.15, no dialog/menu/keyboard, and no active workout. The final screenshot and UI hierarchy are `canonical-train-overview-ready-2026-09-30.png/.xml`. Launch/reset steps are in `qualification/manual-review.md`; reset controls and fixture reset are preview-only.
+
+### Remaining limitations and stop rule
+
+- **TUNING:** purple hierarchy, surfaces, spring character, native 2× horizontal navigation, and long-label ellipsis remain for user judgment.
+- **DEFERRED:** TalkBack, landscape, child-route visual qualification, and full Workout/Progress visual design review.
+- **BLOCKER:** none for reviewing Train + shell.
+- Human keep/tune/reject feedback is now the only product-direction gate. Do not implement design tuning or expand Expressive to Active Workout, Progress, or another destination until the user reviews this proving ground.

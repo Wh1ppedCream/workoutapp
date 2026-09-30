@@ -56,6 +56,15 @@ void main() {
         ? 'smoke-only Workout compatibility on the isolated preview database'
         : 'profile matched Train shell interactions on the isolated preview database',
     (tester) async {
+      final startupStopwatch = Stopwatch()..start();
+
+      void startupCheckpoint(String stage) {
+        debugPrint(
+          '[expressive-preview-startup] '
+          '+${startupStopwatch.elapsedMilliseconds}ms $stage',
+        );
+      }
+
       expect(
         kProfileMode,
         isTrue,
@@ -64,14 +73,19 @@ void main() {
 
       // This identity check must complete before preferences, the repository,
       // or the preview fixture manifest are read.
+      startupCheckpoint('identity guard started');
       await ExpressivePreviewSafety.verifyBeforeDataAccess();
+      startupCheckpoint('identity guard completed');
       final themeProvider = await ThemeProvider.load();
+      startupCheckpoint('theme provider loaded');
       final repository = AppRepository();
       final fixtures = await ExpressivePreviewFixtures.prepare(repository);
+      startupCheckpoint('fixtures prepared');
       final presentation = TonosPreviewPresentation();
       presentation.setLocaleOverride(const Locale('en'));
       final semanticsHandle = tester.ensureSemantics();
       try {
+        startupCheckpoint('app mount started');
         await tester.pumpWidget(
           buildTonosApp(
             repo: repository,
@@ -80,7 +94,17 @@ void main() {
             previewPresentation: presentation,
           ),
         );
-        await tester.pumpAndSettle();
+        startupCheckpoint('app mount completed; waiting for TrainPage');
+        // MainScreen initially shows an indeterminate spinner while
+        // NavBarConfig loads preferences. pumpAndSettle cannot finish while
+        // that spinner is active, so wait for the concrete route readiness
+        // condition with a fixed pump bound instead.
+        await _waitForElement(
+          tester,
+          find.byType(TrainPage),
+          maxPumps: 120,
+        );
+        startupCheckpoint('TrainPage ready');
 
         expect(find.byType(MainScreen), findsOneWidget);
         expect(find.byType(TrainPage), findsOneWidget);
@@ -110,13 +134,15 @@ void main() {
         );
 
         if (_smokeOnlyDeviceRun) {
+          startupCheckpoint('smoke presentation setup started');
           presentation.setLook(TonosPreviewLook.expressive);
           presentation.setPaletteTreatment(ExpressivePaletteTreatment.curated);
           presentation.setBrightness(Brightness.light);
           presentation.setTextScaleOverride(1);
           presentation.setReducedMotion(false);
           presentation.setEffectsOff(false);
-          await tester.pumpAndSettle();
+          await tester.pump(const Duration(milliseconds: 250));
+          startupCheckpoint('smoke presentation setup rendered');
 
           final productionSession =
               await _exerciseProductionSessionCompatibility(
@@ -674,8 +700,43 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     await tester.pumpAndSettle();
     expect(find.text(strings.weightMakeChangeSet), findsNothing);
 
+    final collapseTooltipAfterMenu = find.descendant(
+      of: card,
+      matching: find.byTooltip(strings.weightCollapseSets),
+    );
+    expect(collapseTooltipAfterMenu, findsOneWidget);
+    final collapseControlAfterMenu = find.ancestor(
+      of: collapseTooltipAfterMenu,
+      matching: find.byType(IconButton),
+    );
+    expect(collapseControlAfterMenu, findsOneWidget);
+    await tester.ensureVisible(collapseControlAfterMenu);
+    final collapseRectAfterMenu = tester.getRect(collapseControlAfterMenu);
+    final collapseRectDelta =
+        collapseRectAfterMenu.topLeft - collapseRect.topLeft;
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'collapse target beforeMenu='
+      '${collapseRect.left.toStringAsFixed(1)},'
+      '${collapseRect.top.toStringAsFixed(1)},'
+      '${collapseRect.width.toStringAsFixed(1)}x'
+      '${collapseRect.height.toStringAsFixed(1)} '
+      'afterMenu='
+      '${collapseRectAfterMenu.left.toStringAsFixed(1)},'
+      '${collapseRectAfterMenu.top.toStringAsFixed(1)},'
+      '${collapseRectAfterMenu.width.toStringAsFixed(1)}x'
+      '${collapseRectAfterMenu.height.toStringAsFixed(1)} '
+      'deltaDp=${collapseRectDelta.dx.toStringAsFixed(1)},'
+      '${collapseRectDelta.dy.toStringAsFixed(1)}',
+    );
+    expect(collapseRectAfterMenu.width, greaterThanOrEqualTo(48));
+    expect(collapseRectAfterMenu.height, greaterThanOrEqualTo(48));
+    expect(collapseControlAfterMenu.hitTestable(), findsOneWidget);
+
     expandedHeight = tester.getSize(card).height;
-    await tester.tapAt(Offset(collapseRect.left + 1, collapseRect.center.dy));
+    await tester.tapAt(
+      Offset(collapseRectAfterMenu.left + 1, collapseRectAfterMenu.center.dy),
+    );
     await tester.pump();
     if (motionDisabled) {
       midpointHeight = tester.getSize(card).height;
@@ -685,17 +746,23 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
       await tester.pump(const Duration(milliseconds: 120));
     }
     collapsedHeight = tester.getSize(card).height;
-    expect(find.byTooltip(strings.weightExpandSets), findsOneWidget);
+    final expandTooltip = find.descendant(
+      of: card,
+      matching: find.byTooltip(strings.weightExpandSets),
+    );
+    debugPrint(
+      '[expressive-preview-workout-smoke] collapse edge result '
+      'expandTooltipCount=${expandTooltip.evaluate().length} '
+      'expandedHeightDp=${expandedHeight.toStringAsFixed(1)} '
+      'collapsedHeightDp=${collapsedHeight.toStringAsFixed(1)}',
+    );
+    expect(expandTooltip, findsOneWidget);
     expect(collapsedHeight, lessThan(expandedHeight));
     if (!motionDisabled) {
       expect(midpointHeight, lessThan(expandedHeight));
       expect(midpointHeight, greaterThan(collapsedHeight));
     }
 
-    final expandTooltip = find.descendant(
-      of: card,
-      matching: find.byTooltip(strings.weightExpandSets),
-    );
     final expandControl = find.ancestor(
       of: expandTooltip,
       matching: find.byType(IconButton),
@@ -726,7 +793,13 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     await tester.ensureVisible(checkboxes.first);
     await tester.tap(checkboxes.first);
     await tester.pump();
-    expect(find.byTooltip(strings.weightCollapseSets), findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.byTooltip(strings.weightCollapseSets),
+      ),
+      findsOneWidget,
+    );
     expect(
       find.descendant(of: card, matching: find.byType(TextFormField)),
       findsNWidgets(6),
@@ -735,19 +808,25 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     await tester.ensureVisible(checkboxes.at(1));
     await tester.tap(checkboxes.at(1));
     await tester.pump();
-    expect(find.byTooltip(strings.weightCollapseSets), findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.byTooltip(strings.weightCollapseSets),
+      ),
+      findsOneWidget,
+    );
 
     await tester.ensureVisible(checkboxes.at(2));
     await tester.tap(checkboxes.at(2));
     await tester.pump();
-    expect(find.byTooltip(strings.weightExpandSets), findsOneWidget);
+    expect(expandTooltip, findsOneWidget);
     if (!motionDisabled) {
       await tester.pump(const Duration(milliseconds: 200));
     }
     autoCollapsedHeight = tester.getSize(card).height;
     expect(autoCollapsedHeight, lessThan(expandedHeight));
 
-    await tester.tap(find.byTooltip(strings.weightExpandSets));
+    await tester.tap(expandTooltip);
     await tester.pump();
     if (!motionDisabled) {
       await tester.pump(const Duration(milliseconds: 200));

@@ -2,12 +2,25 @@
 
 This reviews the existing preview. It does not approve a stored theme or any other screen.
 
-**Setup pending at the qualification checkpoint:** the Pixel currently has an integration-test profile build. Install the canonical interactive preview before using this checklist; it is not yet a manual-review-ready setup. The user stopped the capture/native-accessibility campaign, so this checklist is saved for the next session.
+**Review build:** the canonical profile preview was built, manifest-verified, installed, and launched on Pixel 7 during qualification. It uses the isolated package/database below; the normal Tonos installs and their data were not targeted. The device was temporarily absent from ADB during the final checkpoint, so confirm it reconnects and the preview launches before starting review.
+
+- Package: `com.tonos.expressivepreview`
+- Database: `tonos_expressive_preview.db`
+- Build: profile, versionCode 6 / versionName 1.0.1; no DEBUG ribbon
+- Device: Pixel 7, serial `28021FDH200228`
+
+Launch it from the app drawer as **Tonos Expressive Preview**, or after USB debugging reconnects run:
+
+```powershell
+& 'E:\Android\Sdk\platform-tools\adb.exe' -s 28021FDH200228 shell monkey -p com.tonos.expressivepreview -c android.intent.category.LAUNCHER 1
+```
+
+Open the sliders button in the preview strip. Select **Expressive**, **Curated**, **Light**, **1×**; leave **Reduced motion** and **Effects off** disabled. Use **Done** or Android Back to close controls. **Reset review controls** restores the comparison settings; **Reset sandbox fixtures** restores disposable sample content. The controls and fixture reset affect only the preview sandbox.
 
 ## Open and compare
 
 1. Open **Tonos Expressive Preview** on the Pixel 7. Use this sandbox, not the normal Tonos app.
-2. Tap the sliders icon in the separate top review strip. Choose **Expressive**, **Curated**, **Light**, and **1×** text; leave **Reduced motion** and **Effects off** off. Close the review dialog with Android Back.
+2. Tap the sliders icon in the separate top review strip. Choose **Expressive**, **Curated**, **Light**, and **1×** text; leave **Reduced motion** and **Effects off** off. Close with **Done** or Android Back.
 3. Review **Train → Overview** and **Train → Plans**. Switch the review look to **Classic** to compare the same content, tab, and scroll position. Switch back to Expressive, then repeat in **Dark**.
 4. **Reset review controls** resets appearance controls only. **Reset sandbox fixtures** restores disposable preview content; use it between workflow trials, not while finishing a workout.
 

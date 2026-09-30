@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Results
 
-**Status: safe resumable qualification checkpoint; final device/user review remains pending (2026-09-30).** The user stopped the broader campaign to preserve usage. This proving ground renders the production Train page and app shell with an in-memory Expressive preview identity. Classic and Neo remain the stored theme families. The preferred visual treatment is Curated purple; Generated, light/dark, locale, text scale, and motion controls remain available in the isolated preview.
+**Status: READY WITH KNOWN LIMITATIONS for user review (2026-09-30).** The final matched Train Overview/Plans captures, five motion clips, bounded native checks, and canonical Pixel review setup are ready. TalkBack is untested; native 2× navigation needs a horizontal swipe to reveal Profile and some long plan names ellipsize. This proving ground renders the production Train page and app shell with an in-memory Expressive preview identity. Classic and Neo remain the stored theme families. The preferred visual treatment is Curated purple; Generated, light/dark, locale, text scale, and motion controls remain available in the isolated preview.
 
 ## Qualification record — 2026-09-30
 
@@ -18,11 +18,9 @@ Raw host results and command metadata: [validation summary](proposals/tonos-expr
 
 ### Device gates
 
-The isolated profile integration APK rebuilt successfully, with manifest `com.tonos.expressivepreview`. The initial driver collected all four quiet-idle windows and 16 matched light/dark interaction phases, then exited 1 after a missed tap in the separate returned-home ongoing-session menu smoke. The second driver passed that route after a narrow settle/hit-test correction, collected all timing phases again, then exited 1 because its collapse-control assertion measured the 40 dp inner Tooltip/Material rather than the padded outer `IconButton`. The pinned Material button sources (`material_ui` 1.5.0 `lib/src/button_style_button.dart` and the matching Flutter SDK implementation) confirm the separate `_InputPadding` hit-region owner; the harness now measures the outer control and contains edge-tap assertions without lowering its 48 dp requirement. No production edit was made for either finding. Both failed attempts remain preliminary phase observations, not end-to-end passes. Only the bounded Workout target/compatibility proof was attempted afterward, through a test-only smoke selector that skips all timing/warm-up loops and extra routes. Final matched visual captures, recordings, native accessibility checks, and the canonical installed user-review build remain pending under the user-directed checkpoint.
+The initial profile driver collected its idle/interaction phases and later failed a separate route/menu assertion. The second driver passed that route and collected the matched timing phases, then failed because the harness measured the 40 dp inner Tooltip/Material instead of the padded outer `IconButton`. Pinned Material button sources confirm the separate `_InputPadding` hit-region owner. A bounded smoke retry then exposed a stale-coordinate weakness after menu dismissal. The harness now reacquires and measures the same card's outer control after the menu closes; no production code changed. Direct Pixel checks subsequently confirmed the actual outer target and its edge behavior, the real Workout final-set flow, and menu isolation. The corrected harness receives scoped analysis; the full timing matrix was not restarted.
 
-**Bounded follow-up outcome:** the smoke-only selector builds in profile mode, passes scoped analysis, and retains the safety guard and 48 dp requirements. Its Pixel attempt stalled after fixture setup for over five minutes, before runtime/Workout geometry output, with no Flutter exception observed in the inspected logcat. It was interrupted under the checkpoint instruction (observed exit 1); no new device campaign was started. The outer-control size and edge-tap proof are therefore **PENDING**, not a device pass. The actual stall cause remains unclassified; this is not evidence of a production 40 dp target. Host Workout regressions remain green, but the corrected device integration assertions have not yet completed.
-
-The installed artifact is an **integration-test profile APK**, not the canonical interactive user-review app. Its identity/hash, stopped-run log, and installation state are recorded in the device qualification note. It must not be presented as a finished review setup.
+**Direct Pixel outcome:** collapse target 48 × 48 dp; center, left, and right edge taps changed the intended state; adjacent menu edge opened only the menu; non-final completion stayed expanded; final-set completion auto-collapsed and retained both completed states on reopen. Native 2× scrolling exposed Overview/Plans content and their controls. A horizontal nav swipe exposed Profile and its target opened the Profile destination. The canonical profile preview is installed and was left running at Train → Overview with the normal review settings and no active workout.
 
 ### Preserved matched Pixel profile measurements
 
@@ -43,13 +41,13 @@ Settled costs are comparable and materially exceed budget in both looks. Express
 
 Raw logs: [initial profile attempt](proposals/tonos-expressive-train-proving-ground/qualification/logs/profile-driver-2026-09-30.txt), [matched second attempt](proposals/tonos-expressive-train-proving-ground/qualification/logs/profile-driver-rerun-2026-09-30.txt). Device build/runtime detail and bounded proof: [device qualification](proposals/tonos-expressive-train-proving-ground/qualification/device-qualification.md).
 
-### Evidence and unfinished review work
+### Evidence and remaining user review
 
-- Existing [static capture set](proposals/tonos-expressive-train-proving-ground/static/) retains 19 PNGs from the implementation checkpoint, including Overview/Plans light/dark raw captures and five boards. They are historical visual/structure evidence. The Profile focus/highlight mismatch and DEBUG ribbon are retained and disclosed; the boards are **not final matched-focus comparisons**.
-- Fresh matched-focus Overview/Plans/shell comparisons: **PENDING**. No cosmetic recapture campaign was started after the course change.
-- Motion clips for tabs, navigation, Start, rapid retargeting, and reduced motion: **PENDING; none captured**. No video was recorded during timing.
-- Actual Android OS large/nonlinear text, soft-keyboard/focus/IME, native Back, TalkBack/screen-reader smoke, and the canonical installed interactive user-review build: **PENDING**. Widget-test accessibility and automated integration callbacks are not represented as those native checks.
-- Human motion/design keep/tune/reject feedback: **PENDING**. This checkpoint does not approve Expressive or make it ready for manual review.
+- Final matched-focus Overview/Plans light/dark comparisons and five motion clips are indexed in [review-final/README.md](proposals/tonos-expressive-train-proving-ground/review-final/README.md). Historical static boards remain unqualified because of the old focus/DEBUG-ribbon mismatch; use the final matched set for preference decisions.
+- Native 2× text and navigation, preview Back, plan-menu Back, Workout Timer modal Back, focused numeric-field keyboard dismissal, and the disposable Workout exit were checked on the Pixel. Profile requires a horizontal navigation swipe at 2×; some long Plans labels ellipsize.
+- Native TalkBack/screen-reader announcements remain **NOT TESTED**. The host widget semantics tests are recorded separately and do not stand in for TalkBack.
+- The canonical profile app `com.tonos.expressivepreview` / `tonos_expressive_preview.db` was confirmed running. The device is left on Train → Overview, Expressive / Curated / Light / 1×, reduced motion and effects off, system scale 1.15, and no active session.
+- Human keep/tune/reject feedback remains **PENDING**. Technical qualification does not approve Expressive or authorize expansion to another destination.
 
 [Manual user-review checklist](proposals/tonos-expressive-train-proving-ground/qualification/manual-review.md). The user decides keep/tune/reject; technical qualification does not approve the design.
 
@@ -59,18 +57,18 @@ Raw logs: [initial profile attempt](proposals/tonos-expressive-train-proving-gro
 |---|---|
 | PRE-EXISTING | Orange plan-name light-mode contrast and Classic Train-tab touch allocation. Domain colors and Classic geometry remain unchanged. |
 | PRE-EXISTING / DEFERRED | Chart accessibility debt, plus the documented Classic inactive/reduced-motion `RenderAnimatedSize` SDK case. These do not become claims of chart qualification. |
-| TUNING | Human judgment of surfaces, purple action hierarchy, spring character, the 8 dp ordinary Train-header increase, and extreme configured-navigation density. The five-item 2× navigation remains the corrected approximately 72 dp; no implementation change required a new measurement. |
-| DEFERRED | Child-route visual qualification, landscape, native screen-reader announcements/focus order, and unsupported RTL-language shaping. Widget semantics and RTL layout stress do not establish those device capabilities. |
-| BLOCKER (device proof only) | The smoke-only integration attempt stalled after fixture setup and was interrupted. Its cause is not diagnosed. It blocks a passing corrected native target/Workout smoke, not saving the checkpoint; no production-design fix is implied. |
-| PENDING / DEFERRED QUALIFICATION | Bounded outer-target device proof, final matched-focus captures/recordings, physical OS-scale/keyboard/TalkBack checks, canonical interactive user-review build, and human motion/design feedback. The broader campaign was stopped by user instruction. |
+| TUNING | Human judgment of surfaces, purple action hierarchy, spring character, the 8 dp ordinary Train-header increase, 2× horizontal navigation, long-label ellipsis, and higher Expressive rapid synthetic build cost. These are user review observations, not technical blockers. |
+| DEFERRED | TalkBack announcements/focus order, landscape, child-route visual qualification, full Workout/Progress visual review, and unsupported RTL-language shaping. Widget semantics and RTL layout stress do not establish those device capabilities. |
+| BLOCKER | None for the Train + shell review. The earlier stalled smoke and stale-coordinate failures were harness limitations; direct physical target/workout behavior is documented. |
+| PENDING | Human keep/tune/reject feedback; native TalkBack checks if the user wants them. No other destination should be added before user review. |
 
 Expressive remains explicitly rendered and nonpersisted. Normal root/default-null behavior, Classic/Neo stored selection, generic Material fallback, and domain data ownership remain subject to the retained regression gates. Workout is only a compatibility smoke target: its adopted controlled 180 ms reveal, 48×48 completion target, anchored menu, and final-set collapse are preserved rather than redesigned.
 
 ### Resume and publishing
 
-Commit only the qualification harness, accessibility test, exact theme-role contract correction, and these evidence/docs. Resolve the latest checkpoint SHA with `git log -1 --format='%H %s' -- docs/tonos-expressive-train-proving-ground-handoff.md`; verify the normal branch push with `git ls-remote origin refs/heads/feature/classic-m3e`. No protected user work belongs in that commit. The final chat report records the verified commit/remote values.
+Commit only the qualification-owned harness correction, current device/review notes, final screenshots/clips, and handoff/results docs. The 15 protected user Dart files and five unrelated untracked groups remain excluded. Verify the normal branch push with `git ls-remote origin refs/heads/feature/classic-m3e`; no force push, master merge, or malformed-ref repair.
 
-Resume from this qualification checkpoint. Complete only any remaining Pixel evidence/native accessibility checks, then present the existing Train + shell Expressive proving ground to the user for keep/tune/reject feedback. Do not expand Expressive to another screen before user review.
+The existing Train + shell Expressive proving ground is ready for user keep/tune/reject feedback. Do not expand Expressive to another screen before that review.
 
 ## What the current preview demonstrates
 

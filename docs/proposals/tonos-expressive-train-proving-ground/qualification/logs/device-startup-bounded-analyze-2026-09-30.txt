@@ -1,0 +1,3 @@
+START_LOCAL=2026-09-30T11:52:40.2577160-04:00 FLUTTER_VERSION=Flutter 3.47.5 • channel stable • https://github.com/flutter/flutter.git | Framework • revision 6a19cca564 (13 days ago) • 2026-09-17 14:13:22 -0400 | Engine • hash ab598368592da0064197e2bc15c7f5b0a2c6bb1f (revision af7e796e16) (13 days ago) • 2026-09-16 18:35:09.000Z | Tools • Dart 3.13.4 • DevTools 2.60.0 DART_VERSION=Dart SDK version: 3.13.4 (stable) (Tue Sep 15 01:01:15 2026 -0700) on "windows_x64" COMMAND=dart analyze integration_test\expressive_preview_device_test.dart ELAPSED_SECONDS=27.478 EXIT_CODE=0 --- ANALYSIS OUTPUT ---
+Analyzing expressive_preview_device_test.dart...
+No issues found!

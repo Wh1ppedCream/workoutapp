@@ -1,0 +1,50 @@
+**********************
+PowerShell transcript start
+Start time: 20260930143723
+Username: DESKTOP-V50RJE7\talh7
+RunAs User: DESKTOP-V50RJE7\talh7
+Configuration Name:
+Machine: DESKTOP-V50RJE7 (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\talh7\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+$adb='E:\Android\Sdk\platform-tools\adb.exe'; $serial='28021FDH200228'; $out='docs/proposals/tonos-expressive-train-proving-ground/review-final'; Start-Transcript -Path (Join-Path $out 'native-profile-scroll-qualification-2026-09-30.txt') -Force | Out-Null; function Capture([string]$name) { & $adb -s $serial shell screencap -p "/sdcard/$name.png"; & $adb -s $serial pull "/sdcard/$name.png" (Join-Path $out "$name.png") | Out-Null; & $adb -s $serial shell uiautomator dump "/sdcard/$name.xml" | Out-Null; & $adb -s $serial pull "/sdcard/$name.xml" (Join-Path $out "$name.xml") | Out-Null }; function Show-Navigation([string]$path) { [xml]$doc=Get-Content -LiteralPath $path -Raw; $doc.SelectNodes('//node[@clickable="true"]') | Where-Object { $_.GetAttribute('bounds') -match '^\[\d+,2\d{3}\]' } | ForEach-Object { '{0} {1} {2}' -f $_.GetAttribute('text'),$_.GetAttribute('content-desc'),$_.GetAttribute('bounds') } }; try { & $adb -s $serial shell settings put system font_scale 2.0; Start-Sleep -Seconds 2; "FONT_SCALE_DURING=$(& $adb -s $serial shell settings get system font_scale)"; Capture 'native-os2-nav-before-swipe-final-2026-09-30'; Show-Navigation (Join-Path $out 'native-os2-nav-before-swipe-final-2026-09-30.xml'); & $adb -s $serial shell input swipe 930 2235 180 2235 500; Start-Sleep -Milliseconds 700; Capture 'native-os2-nav-after-left-swipe-final-2026-09-30'; Show-Navigation (Join-Path $out 'native-os2-nav-after-left-swipe-final-2026-09-30.xml'); [xml]$doc=Get-Content -LiteralPath (Join-Path $out 'native-os2-nav-after-left-swipe-final-2026-09-30.xml') -Raw; $node=$doc.SelectSingleNode('//node[@content-desc="Profile" and @clickable="true"]'); if($null -ne $node) { $b=$node.GetAttribute('bounds'); if($b -match '\[(\d+),(\d+)\]\[(\d+),(\d+)\]') { $x=[int](([int]$Matches[1]+[int]$Matches[3])/2); $y=[int](([int]$Matches[2]+[int]$Matches[4])/2); "PROFILE_TARGET_AFTER_SWIPE=$b center=$x,$y"; & $adb -s $serial shell input tap $x $y; Start-Sleep -Seconds 2; Capture 'native-os2-profile-reached-final-2026-09-30'; [xml]$profile=Get-Content -LiteralPath (Join-Path $out 'native-os2-profile-reached-final-2026-09-30.xml') -Raw; $items=$profile.SelectNodes('//node[@text!="" or @content-desc!=""]'); ($items | ForEach-Object { $_.GetAttribute('text')+' '+$_.GetAttribute('content-desc') }) -join ' | ' } } else { 'PROFILE_TARGET_AFTER_SWIPE=NOT_PRESENT' } } finally { & $adb -s $serial shell settings put system font_scale 1.15; Start-Sleep -Seconds 2; "FONT_SCALE_RESTORED=$(& $adb -s $serial shell settings get system font_scale)"; Stop-Transcript | Out-Null }
+Process ID: 5256
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+FONT_SCALE_DURING=2.0
+
+ Generate Custom Plans [42,2025][1038,2148]
+ Train [0,2148][286,2337]
+ Catalog [286,2148][572,2337]
+ Logbook [572,2148][857,2337]
+ Progress [857,2148][1080,2337]
+
+
+ Generate Custom Plans [42,2025][1038,2148]
+ Catalog [0,2148][223,2337]
+ Logbook [223,2148][508,2337]
+ Progress [508,2148][794,2337]
+ Profile [794,2148][1080,2337]
+PROFILE_TARGET_AFTER_SWIPE=[794,2148][1080,2337] center=937,2242
+
+
+ Open preview controls |  Profile
+Personalize Tonos, manage training defaults, and keep your data healthy. |  Account
+Your identity and app-level appearance. |  User Information
+Name, body details, and activity profile. |  UI & Appearance
+Theme, onboarding, and bottom tab setup. |  Guided Tutorials
+Replay walkthroughs and reset guided help. |  Catalog |  Logbook |  Progress |  Profile
+
+FONT_SCALE_RESTORED=1.15
+**********************
+PowerShell transcript end
+End time: 20260930143740
+**********************

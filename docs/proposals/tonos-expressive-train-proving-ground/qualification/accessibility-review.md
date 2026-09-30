@@ -74,3 +74,11 @@ The profile harness uses synthetic `WidgetTester` pointer events and build/raste
 - No RTL locale is currently supported. RTL layout direction was stress-tested with French strings; native RTL localization and bidirectional script shaping remain outside this test.
 - No TalkBack/VoiceOver session, hardware keyboard session, landscape case, or system-inset/keyboard-inset device case was performed by this lane.
 - Widget semantics checks do not establish screen-reader focus order or announcements on a device.
+
+## Physical Pixel 7 follow-up — 2026-09-30
+
+The bounded native review was completed on Pixel 7 (`28021FDH200228`, Android 16 / API 36) at the operating-system text scale set to 2.0, then the setting was restored and verified at 1.15. At 2×, Train Overview and Plans remained scrollable and their lower content/actions were reachable. The bottom bar showed four destinations at once; a horizontal swipe exposed Profile, and opening Profile confirmed that destination was reachable. Some long plan labels ellipsize at this scale. These observations qualify the tested portrait screens only.
+
+With the numeric keyboard visible in a real Workout Session, one Android Back press dismissed the keyboard while keeping the session and set row visible; no value changed. Separate bounded Back checks dismissed preview controls, a Plans context menu, and the workout timer modal while preserving the underlying route. Physical WeightCard edge taps, menu-boundary taps, set completion, final-set auto-collapse, and workout exit/cancel were also checked in the isolated preview flow. This adds device-level interaction evidence but does not establish general screen-reader focus order.
+
+TalkBack was not enabled for this pass. Screen-reader announcements/focus order, landscape, hardware-keyboard navigation, and broader keyboard-inset coverage remain unverified. The earlier notes above describe the scope at the time they were written; this dated follow-up supersedes their pending status only for the specific physical checks listed here.
