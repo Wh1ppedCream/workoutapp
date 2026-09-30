@@ -1424,6 +1424,14 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    // In Flutter 3.47.5, a muted Progress tab can build AnimatedSize through
+    // AnimatedCrossFade with zero duration and mark layout dirty while sizing.
+    // Keep this compatibility path preview-only and preserve the parent's
+    // expanded state so the same disclosure returns when the tab is active.
+    final usesStaticExpressiveDisclosure =
+        context.usesExpressivePresentation &&
+        !TickerMode.valuesOf(context).enabled &&
+        MediaQuery.disableAnimationsOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1479,19 +1487,28 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
             ),
           ),
         ),
-        AnimatedCrossFade(
-          firstChild: const SizedBox.shrink(),
-          secondChild: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: _ReportInsightGrid(insights: insights),
+        if (usesStaticExpressiveDisclosure)
+          if (expanded)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _ReportInsightGrid(insights: insights),
+            )
+          else
+            const SizedBox.shrink()
+        else
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: _ReportInsightGrid(insights: insights),
+            ),
+            crossFadeState:
+                expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: appMotionDuration(context, context.motionTokens.quick),
+            firstCurve: Curves.easeOutCubic,
+            secondCurve: Curves.easeOutCubic,
+            sizeCurve: Curves.easeOutCubic,
           ),
-          crossFadeState:
-              expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-          duration: appMotionDuration(context, context.motionTokens.quick),
-          firstCurve: Curves.easeOutCubic,
-          secondCurve: Curves.easeOutCubic,
-          sizeCurve: Curves.easeOutCubic,
-        ),
       ],
     );
   }

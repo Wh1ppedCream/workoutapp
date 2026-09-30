@@ -301,7 +301,8 @@ class _WeightCardState extends State<WeightCard> {
     final expansionDuration =
         widget.animateExpansion &&
                 !widget.forceCollapsed &&
-                context.usesClassicPresentation
+                (context.usesClassicPresentation ||
+                    context.usesExpressivePresentation)
             ? appMotionDuration(context, context.motionTokens.quick)
             : Duration.zero;
     final workoutFieldBorder = OutlineInputBorder(

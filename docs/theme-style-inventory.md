@@ -1,41 +1,41 @@
 Theme style inventory (report-only)
 Scanned root: lib
-Dart files: 279
-Style candidates: 2239
+Dart files: 294
+Style candidates: 2294
 
 Candidates by kind:
-- color: 159
+- color: 165
 - color_literal: 256
 - color_literal_candidate: 244
-- color_transform: 387
-- component_style: 28
-- decoration: 272
-- geometry: 721
+- color_transform: 392
+- component_style: 30
+- decoration: 285
+- geometry: 743
 - gradient: 6
-- local_theme: 12
-- shadow: 25
-- text_style: 129
+- local_theme: 15
+- shadow: 26
+- text_style: 132
 Candidates by classification:
-- application_shell: 1
+- application_shell: 2
 - data_visualization: 28
 - illustration_media: 25
 - intentional_one_off: 41
 - material_component: 9
 - release_surface: 5
 - stable_category_data: 40
-- structural_theme: 823
-- theme_system: 1262
+- structural_theme: 834
+- theme_system: 1305
 - tonos_semantic: 5
 Candidates by status:
 - allowlisted: 130
-- migrated: 2109
+- migrated: 2164
 
 Pending candidates without a review queue: 0
 Review queue coverage:
-- 941 candidates in exactly one queue
-- 1298 candidates outside configured queues
+- 957 candidates in exactly one queue
+- 1337 candidates outside configured queues
 - 0 candidates in multiple queues
-- application-shell: 43 candidates (allowlisted=7, migrated=36)
+- application-shell: 55 candidates (allowlisted=7, migrated=48)
 - shared-settings: 222 candidates (allowlisted=16, migrated=206)
 - active-workout: 50 candidates (migrated=50)
 - catalog-detail: 90 candidates (allowlisted=13, migrated=77)
@@ -46,7 +46,7 @@ Review queue coverage:
 - history-measurement-support: 32 candidates (allowlisted=6, migrated=26)
 - shared-flow-controls: 14 candidates (migrated=14)
 - catalog-conditioning-browse: 8 candidates (migrated=8)
-- navigation-anatomy-support: 19 candidates (allowlisted=5, migrated=14)
+- navigation-anatomy-support: 23 candidates (allowlisted=5, migrated=18)
 
 Unassigned candidates: 0
 
@@ -65,7 +65,8 @@ Pending review queue (12):
 - Navigation and anatomy support widgets [navigation-anatomy-support] -> Shared navigation tokens and anatomy/data-visualization ownership
 
 Sample findings (first 20):
-- lib/main.dart:145 color [application_shell/migrated] statusBarColor: Colors.transparent,
+- lib/main.dart:339 color [application_shell/migrated] statusBarColor: Colors.transparent,
+- lib/main.dart:451 local_theme [application_shell/migrated] return Theme(
 - lib/screens/catalog_page.dart:540 decoration [structural_theme/migrated] decoration: BoxDecoration(
 - lib/screens/catalog_page.dart:543 geometry [structural_theme/migrated] border: Border.all(
 - lib/screens/catalog_page.dart:553 shadow [structural_theme/migrated] BoxShadow(
@@ -84,5 +85,4 @@ Sample findings (first 20):
 - lib/screens/exercise/analytics_dashboard_screen.dart:514 decoration [structural_theme/migrated] decoration: BoxDecoration(
 - lib/screens/exercise/analytics_dashboard_screen.dart:517 geometry [structural_theme/migrated] border: Border.all(
 - lib/screens/exercise/analytics_dashboard_screen.dart:582 decoration [structural_theme/migrated] decoration: BoxDecoration(
-- lib/screens/exercise/analytics_dashboard_screen.dart:583 color_transform [structural_theme/migrated] color: scheme.primaryContainer.withValues(alpha: 0.55),
-- ... 2219 more; use --format json for all.
+- ... 2274 more; use --format json for all.

@@ -41,6 +41,7 @@ import 'widgets/tonos_bottom_navigation_bar.dart';
 import 'theme/app_theme_factory.dart';
 import 'theme/debug_theme_family_control.dart';
 import 'theme/theme_lab_page.dart';
+import 'theme/tonos_preview_presentation.dart';
 
 import 'repositories/app_repository.dart';
 import 'services/active_plan_store.dart';
@@ -48,58 +49,252 @@ import 'services/diagnostics_service.dart';
 import 'utils/app_test_keys.dart';
 
 const _compileTimeThemeLab = bool.fromEnvironment('TONOS_THEME_LAB');
+const _previewStartupStageTimeout = Duration(seconds: 45);
 
-Future<void> main() async {
+Future<void> main() => runTonosApp();
+
+/// Runs the production app with the same provider tree and repository.
+///
+/// The optional callbacks are used only by the isolated preview entry point.
+/// Its identity guard runs after binding initialization and before preferences
+/// or SQLite; the normal [main] path supplies neither callback.
+Future<void> runTonosApp({
+  TonosPreviewPresentation? previewPresentation,
+  Future<void> Function()? beforeDataAccess,
+  Future<void> Function(AppRepository repository)? beforeRunApp,
+}) async {
   final diagnostics = DiagnosticsService.instance;
+  var previewIdentityGuardVerified = previewPresentation == null;
+  var previewStartupFailureShown = false;
+  Zone? previewStartupZone;
+
+  void showPreviewStartupFailure(Object error) {
+    if (previewStartupFailureShown) return;
+    previewStartupFailureShown = true;
+    final initializedZone = previewStartupZone;
+    if (initializedZone == null) {
+      debugPrint(
+        '[expressive-preview] startup failure before binding initialization: $error',
+      );
+      return;
+    }
+    initializedZone.run<void>(() => showExpressivePreviewStartupFailure(error));
+  }
+
   final launch = runZonedGuarded<Future<void>>(
     () async {
       final launchStopwatch = Stopwatch()..start();
-      WidgetsFlutterBinding.ensureInitialized();
-      await diagnostics.initialize();
 
-      FlutterError.onError = (details) {
-        FlutterError.presentError(details);
-        unawaited(
-          diagnostics.captureException(
-            details.exception,
-            details.stack ?? StackTrace.current,
-            category: 'flutter_framework',
+      void previewCheckpoint(String stage) {
+        if (previewPresentation == null) return;
+        debugPrint(
+          '[expressive-preview] +${launchStopwatch.elapsedMilliseconds}ms $stage',
+        );
+      }
+
+      Future<T> runPreviewStage<T>(
+        String stage,
+        Future<T> Function() action,
+      ) async {
+        if (previewPresentation == null) return action();
+        try {
+          final result = await action().timeout(_previewStartupStageTimeout);
+          return result;
+        } catch (error, stackTrace) {
+          previewCheckpoint('$stage failed: $error');
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+      }
+
+      try {
+        WidgetsFlutterBinding.ensureInitialized();
+        previewStartupZone = Zone.current;
+        if (!hasRequiredPreviewIdentityGuard(
+          isExpressivePreview: previewPresentation != null,
+          hasIdentityGuard: beforeDataAccess != null,
+        )) {
+          final error = StateError(
+            'Expressive preview startup requires an identity guard before app data access.',
+          );
+          previewCheckpoint('identity guard missing: $error');
+          showPreviewStartupFailure(error);
+          return;
+        }
+        if (beforeDataAccess != null) {
+          final identityAccepted = await runPreviewDataAccessGuard(
+            guard: () => runPreviewStage(
+              'beforeDataAccess preview identity guard',
+              beforeDataAccess,
+            ),
+            onFailure: (error, stackTrace) {
+              previewCheckpoint('identity guard failed: $error\n$stackTrace');
+              showPreviewStartupFailure(error);
+            },
+          );
+          if (!previewIdentityVerificationAllowsStartup(
+            accepted: identityAccepted,
+            startupFailureShown: previewStartupFailureShown,
+          )) {
+            return;
+          }
+          previewIdentityGuardVerified = true;
+        }
+        if (previewPresentation == null) {
+          await diagnostics.initialize();
+        } else {
+          await runPreviewStage(
+            'diagnostics.initialize',
+            diagnostics.initialize,
+          );
+        }
+
+        FlutterError.onError = (details) {
+          FlutterError.presentError(details);
+          unawaited(
+            diagnostics.captureException(
+              details.exception,
+              details.stack ?? StackTrace.current,
+              category: 'flutter_framework',
+            ),
+          );
+        };
+        PlatformDispatcher.instance.onError = (error, stackTrace) {
+          unawaited(
+            diagnostics.captureException(
+              error,
+              stackTrace,
+              category: 'platform_dispatcher',
+            ),
+          );
+          return true;
+        };
+
+        unawaited(BodyHeatmap.preload());
+        final themeProvider = previewPresentation == null
+            ? await ThemeProvider.load()
+            : await runPreviewStage('ThemeProvider.load', ThemeProvider.load);
+        final repo = AppRepository();
+        if (beforeRunApp != null) {
+          await runPreviewStage(
+            'beforeRunApp preview fixtures',
+            () => beforeRunApp(repo),
+          );
+        }
+        runApp(
+          buildTonosApp(
+            repo: repo,
+            themeProvider: themeProvider,
+            previewPresentation: previewPresentation,
           ),
         );
-      };
-      PlatformDispatcher.instance.onError = (error, stackTrace) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          debugPrint(
+            '[startup] first frame rendered in '
+            '${launchStopwatch.elapsedMilliseconds}ms',
+          );
+        });
+      } catch (error, stackTrace) {
+        if (previewPresentation == null) {
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+        previewCheckpoint('startup failed: $error\n$stackTrace');
+        showPreviewStartupFailure(error);
+      }
+    },
+    (error, stackTrace) {
+      if (shouldCaptureTonosStartupDiagnostic(
+        isExpressivePreview: previewPresentation != null,
+        identityGuardVerified: previewIdentityGuardVerified,
+      )) {
         unawaited(
           diagnostics.captureException(
             error,
             stackTrace,
-            category: 'platform_dispatcher',
+            category: 'uncaught_async',
           ),
         );
-        return true;
-      };
-
-      unawaited(BodyHeatmap.preload());
-      final themeProvider = await ThemeProvider.load();
-      final repo = AppRepository();
-      runApp(buildTonosApp(repo: repo, themeProvider: themeProvider));
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      } else {
         debugPrint(
-          '[startup] first frame rendered in '
-          '${launchStopwatch.elapsedMilliseconds}ms',
+          '[expressive-preview] uncaught startup error before identity guard acceptance; '
+          'diagnostic capture skipped: $error\n$stackTrace',
         );
-      });
-    },
-    (error, stackTrace) {
-      unawaited(
-        diagnostics.captureException(
-          error,
-          stackTrace,
-          category: 'uncaught_async',
-        ),
-      );
+        showPreviewStartupFailure(error);
+      }
     },
   );
   if (launch != null) await launch;
+}
+
+@visibleForTesting
+bool hasRequiredPreviewIdentityGuard({
+  required bool isExpressivePreview,
+  required bool hasIdentityGuard,
+}) => !isExpressivePreview || hasIdentityGuard;
+
+@visibleForTesting
+bool shouldCaptureTonosStartupDiagnostic({
+  required bool isExpressivePreview,
+  required bool identityGuardVerified,
+}) => !isExpressivePreview || identityGuardVerified;
+
+@visibleForTesting
+bool previewIdentityVerificationAllowsStartup({
+  required bool accepted,
+  required bool startupFailureShown,
+}) => accepted && !startupFailureShown;
+
+@visibleForTesting
+Future<bool> runPreviewDataAccessGuard({
+  required Future<void> Function() guard,
+  required void Function(Object error, StackTrace stackTrace) onFailure,
+}) async {
+  try {
+    await guard();
+    return true;
+  } catch (error, stackTrace) {
+    onFailure(error, stackTrace);
+    return false;
+  }
+}
+
+/// Shows a preview-only startup failure without opening preferences or SQLite.
+/// Missing/rejected identity checks and staged-startup timeouts intentionally
+/// fail closed instead of falling through to the production storage path.
+void showExpressivePreviewStartupFailure(Object error) {
+  runApp(_ExpressivePreviewStartupFailure(error: error));
+}
+
+class _ExpressivePreviewStartupFailure extends StatelessWidget {
+  const _ExpressivePreviewStartupFailure({required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    home: Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 40),
+                const SizedBox(height: 16),
+                Text(
+                  'Expressive preview could not start',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                SelectableText(error.toString(), textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Builds the production provider tree around an injected repository.
@@ -110,13 +305,11 @@ Widget buildTonosApp({
   required AppRepository repo,
   bool closeRepositoryOnDispose = true,
   ThemeProvider? themeProvider,
+  TonosPreviewPresentation? previewPresentation,
 }) {
-  final themeProviderNode =
-      themeProvider == null
-          ? ChangeNotifierProvider<ThemeProvider>(
-            create: (_) => ThemeProvider(),
-          )
-          : ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider);
+  final themeProviderNode = themeProvider == null
+      ? ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider())
+      : ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider);
   final app = MultiProvider(
     providers: [
       Provider<AppRepository>.value(value: repo), // repo FIRST
@@ -133,7 +326,7 @@ Widget buildTonosApp({
       ChangeNotifierProvider(create: (_) => LocalePreferenceProvider()),
       ChangeNotifierProvider(create: (_) => NavBarConfig()),
     ],
-    child: const MyApp(),
+    child: MyApp(previewPresentation: previewPresentation),
   );
 
   if (!closeRepositoryOnDispose) return app;
@@ -144,8 +337,9 @@ Widget buildTonosApp({
 SystemUiOverlayStyle appSystemUiOverlayStyleFor(Brightness brightness) =>
     SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      statusBarIconBrightness: brightness == Brightness.dark
+          ? Brightness.light
+          : Brightness.dark,
       statusBarBrightness: brightness,
     );
 
@@ -199,54 +393,123 @@ class _RepositoryLifecycleState extends State<RepositoryLifecycle> {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.previewPresentation});
+
+  final TonosPreviewPresentation? previewPresentation;
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<ThemeProvider, OnboardingConfig, LocalePreferenceProvider>(
-      builder: (context, themeProv, onboardingConf, localePreferences, _) {
-        final lightTheme = AppThemeFactory.light(themeProv.family);
-        final darkTheme = AppThemeFactory.dark(themeProv.family);
+    Widget buildMaterialApp() {
+      return Consumer3<
+        ThemeProvider,
+        OnboardingConfig,
+        LocalePreferenceProvider
+      >(
+        builder: (context, themeProv, onboardingConf, localePreferences, _) {
+          final preview = previewPresentation;
+          final lightTheme =
+              preview?.lightTheme ?? AppThemeFactory.light(themeProv.family);
+          final darkTheme =
+              preview?.darkTheme ?? AppThemeFactory.dark(themeProv.family);
 
-        return MaterialApp(
-          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          locale: localePreferences.locale,
-          localizationsDelegates: tonosLocalizationDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeProv.mode,
-          builder: (context, child) {
-            final showDebugToolbar =
-                kDebugMode && const bool.fromEnvironment('TONOS_THEME_SWITCH');
-            final appChild = child ?? const SizedBox.shrink();
+          return MaterialApp(
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            navigatorKey: preview?.navigatorKey,
+            navigatorObservers: preview == null
+                ? const <NavigatorObserver>[]
+                : <NavigatorObserver>[preview.navigatorObserver],
+            locale: preview?.localeOverride ?? localePreferences.locale,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: preview?.themeMode ?? themeProv.mode,
+            builder: (context, child) {
+              final showDebugToolbar =
+                  preview == null &&
+                  kDebugMode &&
+                  const bool.fromEnvironment('TONOS_THEME_SWITCH');
+              final appChild = child ?? const SizedBox.shrink();
 
-            return AnnotatedRegion<SystemUiOverlayStyle>(
-              value: appSystemUiOverlayStyleFor(Theme.of(context).brightness),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ActiveSessionDurabilityBanner(child: appChild),
-                  if (showDebugToolbar) const _DebugThemeToolbar(),
-                ],
-              ),
-            );
-          },
+              if (preview == null) {
+                return AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: appSystemUiOverlayStyleFor(
+                    Theme.of(context).brightness,
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ActiveSessionDurabilityBanner(child: appChild),
+                      if (showDebugToolbar) const _DebugThemeToolbar(),
+                    ],
+                  ),
+                );
+              }
 
-          home:
-              !onboardingConf.initialized
-                  ? const _StartupGate()
-                  : kDebugMode && _compileTimeThemeLab
-                  ? const ThemeLabPage()
-                  : onboardingConf.showOnboarding
-                  ? const OnboardingFlow()
-                  : const MainScreen(),
-          routes: {
-            '/main': (_) => const MainScreen(),
-            if (kDebugMode) '/__theme_lab': (_) => const ThemeLabPage(),
-          },
-        );
-      },
+              final inheritedMedia = MediaQuery.of(context);
+              final scale = preview.textScaleOverride;
+              return Theme(
+                data: preview.activeTheme,
+                child: MediaQuery(
+                  data: inheritedMedia.copyWith(
+                    disableAnimations:
+                        inheritedMedia.disableAnimations ||
+                        preview.reducedMotion ||
+                        preview.effectsOff,
+                    textScaler: scale == null
+                        ? inheritedMedia.textScaler
+                        : TextScaler.linear(scale),
+                  ),
+                  child: AnnotatedRegion<SystemUiOverlayStyle>(
+                    value: appSystemUiOverlayStyleFor(preview.brightness),
+                    child: Builder(
+                      builder: (previewContext) {
+                        final appShell = ActiveSessionDurabilityBanner(
+                          child: appChild,
+                        );
+                        final content = preview.controlsChromeEnabled
+                            ? MediaQuery.removePadding(
+                                context: previewContext,
+                                removeTop: true,
+                                child: appShell,
+                              )
+                            : appShell;
+                        return Column(
+                          verticalDirection: VerticalDirection.up,
+                          children: [
+                            Expanded(child: content),
+                            TonosPreviewControls(presentation: preview),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
+            home: preview != null
+                ? const MainScreen()
+                : !onboardingConf.initialized
+                ? const _StartupGate()
+                : kDebugMode && _compileTimeThemeLab
+                ? const ThemeLabPage()
+                : onboardingConf.showOnboarding
+                ? const OnboardingFlow()
+                : const MainScreen(),
+            routes: {
+              '/main': (_) => const MainScreen(),
+              if (kDebugMode) '/__theme_lab': (_) => const ThemeLabPage(),
+            },
+          );
+        },
+      );
+    }
+
+    final preview = previewPresentation;
+    if (preview == null) return buildMaterialApp();
+    return AnimatedBuilder(
+      animation: preview,
+      builder: (context, _) => buildMaterialApp(),
     );
   }
 }
@@ -403,11 +666,9 @@ class _MainScreenState extends State<MainScreen> {
       body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: Consumer<ActiveSession>(
-        builder:
-            (_, session, __) =>
-                session.isActive
-                    ? const OngoingSessionFab()
-                    : const SizedBox.shrink(),
+        builder: (_, session, __) => session.isActive
+            ? const OngoingSessionFab()
+            : const SizedBox.shrink(),
       ),
     );
   }

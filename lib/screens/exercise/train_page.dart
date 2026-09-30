@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,7 @@ import '../../utils/app_test_keys.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_action.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_expressive_motion.dart';
 import '../../theme/widgets/tonos_surface.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/exercise_card.dart';
@@ -173,22 +175,20 @@ class _TrainPageState extends State<TrainPage> {
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder:
-            (outerCtx) => MultiProvider(
-              providers: [
-                ChangeNotifierProvider<ActiveSession>.value(
-                  value: outerCtx.read<ActiveSession>(),
-                ),
-                ChangeNotifierProvider(
-                  create:
-                      (context) => PresetSession(
-                        presetId,
-                        repository: context.read<AppRepository>(),
-                      ),
-                ),
-              ],
-              child: const PresetDetailScreen(),
+        builder: (outerCtx) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ActiveSession>.value(
+              value: outerCtx.read<ActiveSession>(),
             ),
+            ChangeNotifierProvider(
+              create: (context) => PresetSession(
+                presetId,
+                repository: context.read<AppRepository>(),
+              ),
+            ),
+          ],
+          child: const PresetDetailScreen(),
+        ),
       ),
     );
     if (!mounted) return;
@@ -222,9 +222,8 @@ class _TrainPageState extends State<TrainPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          AppLocalizations.of(
-            context,
-          ).trainGeneratedPlans(generatedPresetIds.length),
+          AppLocalizations.of(context)
+              .trainGeneratedPlans(generatedPresetIds.length),
         ),
       ),
     );
@@ -265,9 +264,8 @@ class _TrainPageState extends State<TrainPage> {
   Future<void> _startWorkout() async {
     await context.read<ActiveSession>().start();
     if (!mounted) return;
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
     if (!mounted) return;
     setState(() => _overviewRefreshToken++);
   }
@@ -380,12 +378,10 @@ class _TrainPageState extends State<TrainPage> {
     }
     if (!mounted) return;
 
-    final settings = await Navigator.of(
-      context,
-    ).push<OptimizedWorkoutSettingsResult>(
-      MaterialPageRoute(
-        builder:
-            (_) => OptimizedWorkoutSettingsPage(
+    final settings = await Navigator.of(context)
+        .push<OptimizedWorkoutSettingsResult>(
+          MaterialPageRoute(
+            builder: (_) => OptimizedWorkoutSettingsPage(
               initialMinutes: _optimizedSessionMinutes,
               initialMinSets: _optimizedMinSetsPerExercise,
               initialMaxSets: _optimizedMaxSetsPerExercise,
@@ -396,8 +392,8 @@ class _TrainPageState extends State<TrainPage> {
               initialBlacklistedBodypartIds: _optimizedBlacklistedBodypartIds,
               bodyParts: bodyParts,
             ),
-      ),
-    );
+          ),
+        );
     if (!mounted || settings == null) return;
     if (settings.action == OptimizedWorkoutSettingsAction.startNow) {
       await _startOptimizedWorkout(
@@ -437,19 +433,18 @@ class _TrainPageState extends State<TrainPage> {
     final strings = AppLocalizations.of(context);
     return showDialog<void>(
       context: context,
-      builder:
-          (dialogContext) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.trainRestTitle),
-              content: Text(strings.trainRestBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: Text(strings.commonOkay),
-                ),
-              ],
+      builder: (dialogContext) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.trainRestTitle),
+          content: Text(strings.trainRestBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(strings.commonOkay),
             ),
-          ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -473,9 +468,8 @@ class _TrainPageState extends State<TrainPage> {
     await active.ready;
     if (!mounted) return;
     if (active.isActive) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+      await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
       return;
     }
 
@@ -548,9 +542,8 @@ class _TrainPageState extends State<TrainPage> {
             ),
           ),
         );
-        await Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+        await Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
         return;
       }
 
@@ -562,9 +555,8 @@ class _TrainPageState extends State<TrainPage> {
         _optimizedBlacklistedBodypartIds.clear();
       });
       _showOptimizedWeightEstimateNotice(generationResult);
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+      await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
       if (!mounted) return;
       setState(() => _overviewRefreshToken++);
     } catch (e) {
@@ -602,17 +594,13 @@ class _TrainPageState extends State<TrainPage> {
         result.exercisesWithUnavailableStarterWeights.length;
     if (estimatedCount == 0 && unavailableCount == 0) return;
 
-    final message =
-        unavailableCount > 0
-            ? AppLocalizations.of(
-              context,
-            ).trainOptimizedManualWeights(unavailableCount)
-            : AppLocalizations.of(
-              context,
-            ).trainOptimizedStarterWeights(estimatedCount);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    final message = unavailableCount > 0
+        ? AppLocalizations.of(context)
+              .trainOptimizedManualWeights(unavailableCount)
+        : AppLocalizations.of(context)
+              .trainOptimizedStarterWeights(estimatedCount);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -673,7 +661,11 @@ class _TrainPageState extends State<TrainPage> {
           ),
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            toolbarHeight: TonosTrainTabs.toolbarHeight(context),
+            toolbarHeight: TonosTrainTabs.toolbarHeight(
+              context,
+              overviewLabel: strings.trainOverviewTab,
+              plansLabel: strings.trainPlansTab,
+            ),
             title: TonosTrainTabs(
               key: _trainTabsTutorialKey,
               overviewKey: AppTestKeys.trainOverviewTab,
@@ -738,18 +730,17 @@ class _TrainPageState extends State<TrainPage> {
               ],
             ),
           ),
-          bottomNavigationBar:
-              _selectedTab == 0
-                  ? KeyedSubtree(
-                    key: _workoutBarTutorialKey,
-                    child: _SplitWorkoutBar(
-                      onStartWorkout: _startWorkout,
-                      onOptimizeWorkout: () => _startOptimizedWorkout(sel),
-                      onOptimizeSettings: _openOptimizedWorkoutSettings,
-                      isStartingOptimized: _isStartingOptimized,
-                    ),
-                  )
-                  : null,
+          bottomNavigationBar: _selectedTab == 0
+              ? KeyedSubtree(
+                  key: _workoutBarTutorialKey,
+                  child: _SplitWorkoutBar(
+                    onStartWorkout: _startWorkout,
+                    onOptimizeWorkout: () => _startOptimizedWorkout(sel),
+                    onOptimizeSettings: _openOptimizedWorkoutSettings,
+                    isStartingOptimized: _isStartingOptimized,
+                  ),
+                )
+              : null,
         );
       },
     );
@@ -788,12 +779,11 @@ class _OverviewTab extends StatelessWidget {
           key: weeklyOverviewKey,
           child: SevenDayFocusCard(
             refreshToken: refreshToken,
-            onFocusedSetsTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AnalyticsDashboardScreen(),
-                  ),
-                ),
+            onFocusedSetsTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AnalyticsDashboardScreen(),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -876,6 +866,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -897,7 +888,9 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                     child: Text(
                       strings.trainActivePlans,
                       style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: usesExpressiveRecipe
+                            ? FontWeight.w600
+                            : FontWeight.w800,
                         color: usesInkRecipe ? surfaceInk : null,
                       ),
                     ),
@@ -919,20 +912,18 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                 Text(
                   strings.trainSelectProfileForPlans,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color:
-                        usesInkRecipe
-                            ? surfaceInk
-                            : theme.colorScheme.onSurfaceVariant,
+                    color: usesInkRecipe
+                        ? surfaceInk
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 )
               else if (selectedIds.isEmpty)
                 Text(
                   strings.trainChooseActivePlans,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color:
-                        usesInkRecipe
-                            ? surfaceInk
-                            : theme.colorScheme.onSurfaceVariant,
+                    color: usesInkRecipe
+                        ? surfaceInk
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 )
               else
@@ -951,9 +942,11 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
         },
       ),
     );
-    if (usesInkRecipe) {
+    if (usesInkRecipe || usesExpressiveRecipe) {
       return TonosSurface(
-        variant: TonosSurfaceVariant.panelRaised,
+        variant: usesExpressiveRecipe
+            ? TonosSurfaceVariant.card
+            : TonosSurfaceVariant.panelRaised,
         color: surfaces.planGroup,
         padding: const EdgeInsets.all(16),
         child: content,
@@ -1014,11 +1007,10 @@ class _PlansTabState extends State<_PlansTab> {
     unawaited(
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder:
-              (_) => PremadePlansPage(
-                profileId: widget.profileId,
-                onPlanAdded: widget.onRefresh,
-              ),
+          builder: (_) => PremadePlansPage(
+            profileId: widget.profileId,
+            onPlanAdded: widget.onRefresh,
+          ),
         ),
       ),
     );
@@ -1140,6 +1132,7 @@ class _PresetSectionCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -1154,7 +1147,9 @@ class _PresetSectionCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: usesExpressiveRecipe
+                        ? FontWeight.w600
+                        : FontWeight.w800,
                     color: usesInkRecipe ? surfaceInk : null,
                   ),
                 ),
@@ -1172,9 +1167,11 @@ class _PresetSectionCard extends StatelessWidget {
         ],
       ),
     );
-    if (usesInkRecipe) {
+    if (usesInkRecipe || usesExpressiveRecipe) {
       return TonosSurface(
-        variant: TonosSurfaceVariant.panelRaised,
+        variant: usesExpressiveRecipe
+            ? TonosSurfaceVariant.card
+            : TonosSurfaceVariant.panelRaised,
         color: surfaces.planGroup,
         padding: const EdgeInsets.all(16),
         child: content,
@@ -1197,6 +1194,7 @@ class _PremadePlansCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -1217,7 +1215,9 @@ class _PremadePlansCard extends StatelessWidget {
                 child: Text(
                   strings.trainPremadePlans,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: usesExpressiveRecipe
+                        ? FontWeight.w600
+                        : FontWeight.w800,
                     color: usesInkRecipe ? surfaceInk : null,
                   ),
                 ),
@@ -1228,37 +1228,39 @@ class _PremadePlansCard extends StatelessWidget {
           Text(
             strings.trainPremadeDescription(premadeTrainingPlans.length),
             style: theme.textTheme.bodyMedium?.copyWith(
-              color:
-                  usesInkRecipe
-                      ? surfaceInk
-                      : theme.colorScheme.onSurfaceVariant,
+              color: usesInkRecipe
+                  ? surfaceInk
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child:
-                usesInkRecipe
-                    ? TonosAction(
-                      variant: TonosActionVariant.primary,
-                      label: strings.trainBrowsePremadePlans,
-                      icon: const Icon(Icons.arrow_forward),
-                      onPressed: onOpen,
-                      expand: true,
-                    )
-                    : FilledButton.tonalIcon(
-                      onPressed: onOpen,
-                      icon: const Icon(Icons.arrow_forward),
-                      label: Text(strings.trainBrowsePremadePlans),
-                    ),
+            child: usesInkRecipe
+                ? TonosAction(
+                    variant: TonosActionVariant.primary,
+                    label: strings.trainBrowsePremadePlans,
+                    icon: const Icon(Icons.arrow_forward),
+                    onPressed: onOpen,
+                    expand: true,
+                  )
+                : FilledButton.tonalIcon(
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.arrow_forward),
+                    label: Text(strings.trainBrowsePremadePlans),
+                  ),
           ),
         ],
       ),
     );
-    if (usesInkRecipe) {
+    if (usesInkRecipe || usesExpressiveRecipe) {
       return TonosSurface(
-        variant: TonosSurfaceVariant.panelRaised,
-        color: surfaces.optimizedAction,
+        variant: usesExpressiveRecipe
+            ? TonosSurfaceVariant.card
+            : TonosSurfaceVariant.panelRaised,
+        color: usesExpressiveRecipe
+            ? surfaces.planGroup
+            : surfaces.optimizedAction,
         padding: const EdgeInsets.all(16),
         child: content,
       );
@@ -1314,244 +1316,320 @@ class _SplitWorkoutBar extends StatelessWidget {
     final shapes = context.shapeTokens;
     final effects = context.effectTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final textTheme = Theme.of(context).textTheme;
     final strings = AppLocalizations.of(context);
     final startWorkoutAction = semantic.startWorkoutAction;
     final onStartWorkoutAction = semantic.onStartWorkoutAction;
-    final optimizeAction =
-        usesInkRecipe ? surfaces.optimizedAction : colorScheme.primaryContainer;
-    final onOptimizeAction =
-        usesInkRecipe
-            ? colorScheme.onSecondaryContainer
-            : colorScheme.onPrimaryContainer;
+    final optimizeAction = usesInkRecipe
+        ? surfaces.optimizedAction
+        : usesExpressiveRecipe
+        ? colorScheme.secondaryContainer
+        : colorScheme.primaryContainer;
+    final onOptimizeAction = usesInkRecipe || usesExpressiveRecipe
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onPrimaryContainer;
+    final optimizeIconColor = usesExpressiveRecipe
+        ? colorScheme.onSurfaceVariant
+        : colorScheme.onPrimaryContainer;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final textDirection = Directionality.of(context);
+    final locale = Localizations.maybeLocaleOf(context);
     final languageCode = Localizations.localeOf(context).languageCode;
     final usesClassicPresentation = context.usesClassicPresentation;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     // This action bar serves all languages. Its layout follows available phone
     // width and text scaling in Neo. Classic retains its compact baseline at
     // ordinary text sizes, then reflows only when accessibility text needs it.
-    final useVerticalLayout =
-        usesClassicPresentation
-            ? textScale > 1.15 &&
-                (languageCode != 'en' || MediaQuery.sizeOf(context).width < 380)
-            : textScale > 1.15 || MediaQuery.sizeOf(context).width < 380;
-    final actionBarHeight = textScale > 1.5 ? 152.0 : 120.0;
+    final useVerticalLayout = usesClassicPresentation
+        ? textScale > 1.15 && (languageCode != 'en' || screenWidth < 380)
+        : textScale > 1.15 || screenWidth < 380;
+    final startStyle =
+        textTheme.titleMedium?.copyWith(
+          color: onStartWorkoutAction,
+          fontWeight: usesExpressiveRecipe ? FontWeight.w600 : FontWeight.w800,
+        ) ??
+        TextStyle(color: onStartWorkoutAction);
+    final optimizeStyle =
+        textTheme.bodyMedium?.copyWith(
+          color: onOptimizeAction,
+          fontWeight: usesExpressiveRecipe ? FontWeight.w600 : FontWeight.w800,
+        ) ??
+        TextStyle(color: onOptimizeAction);
+
+    double measuredHeight(String label, TextStyle style, double maxWidth) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textAlign: TextAlign.center,
+        textDirection: textDirection,
+        locale: locale,
+        textScaler: textScaler,
+      )..layout(maxWidth: maxWidth.clamp(1.0, double.infinity).toDouble());
+      return painter.height;
+    }
+
+    final expressiveStartHeight = usesExpressiveRecipe
+        ? measuredHeight(
+            strings.trainStartWorkout,
+            startStyle,
+            screenWidth - 64,
+          )
+        : 0.0;
+    final expressiveOptimizeHeight = usesExpressiveRecipe
+        ? measuredHeight(strings.trainOptimize, optimizeStyle, screenWidth - 96)
+        : 0.0;
+    final expressiveStartSegmentHeight = math
+        .max(59.5, expressiveStartHeight + 8)
+        .toDouble();
+    final expressiveOptimizeSegmentHeight = math
+        .max(59.5, expressiveOptimizeHeight + 8)
+        .toDouble();
+    final actionBarHeight = usesExpressiveRecipe && useVerticalLayout
+        ? expressiveStartSegmentHeight + expressiveOptimizeSegmentHeight + 1.0
+        : textScale > 1.5
+        ? 152.0
+        : 120.0;
+
+    BorderRadius startRadius({required bool vertical, required bool pressed}) {
+      final radius = Radius.circular(pressed ? 14 : 22);
+      return vertical
+          ? BorderRadius.only(topLeft: radius, topRight: radius)
+          : textDirection == TextDirection.rtl
+          ? BorderRadius.only(topRight: radius, bottomRight: radius)
+          : BorderRadius.only(topLeft: radius, bottomLeft: radius);
+    }
+
+    BorderRadius optimizeRadius({required bool vertical}) {
+      final radius = const Radius.circular(22);
+      return vertical
+          ? BorderRadius.only(bottomLeft: radius, bottomRight: radius)
+          : textDirection == TextDirection.rtl
+          ? BorderRadius.only(topLeft: radius, bottomLeft: radius)
+          : BorderRadius.only(topRight: radius, bottomRight: radius);
+    }
+
+    Widget startAction({required bool vertical}) {
+      final visual = Material(
+        color: startWorkoutAction,
+        child: InkWell(
+          key: AppTestKeys.trainStartWorkout,
+          onTap: onStartWorkout,
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: vertical ? 16 : 0),
+              child: Text(
+                strings.trainStartWorkout,
+                maxLines: vertical && !usesExpressiveRecipe ? 2 : null,
+                textAlign: TextAlign.center,
+                style: startStyle,
+              ),
+            ),
+          ),
+        ),
+      );
+      if (!usesExpressiveRecipe) return visual;
+      return TonosExpressivePressResponse(
+        enabled: true,
+        borderRadius: startRadius(vertical: vertical, pressed: false),
+        pressedBorderRadius: startRadius(vertical: vertical, pressed: true),
+        child: visual,
+      );
+    }
+
+    Widget optimizeSegment({required bool vertical}) {
+      final material = Material(
+        color: optimizeAction,
+        child: vertical
+            ? Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: isStartingOptimized ? null : onOptimizeWorkout,
+                      child: Center(
+                        child: isStartingOptimized
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: onOptimizeAction,
+                                ),
+                              )
+                            : Text(
+                                strings.trainOptimize,
+                                maxLines: usesExpressiveRecipe ? null : 2,
+                                textAlign: TextAlign.center,
+                                style: usesExpressiveRecipe
+                                    ? optimizeStyle
+                                    : textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onPrimaryContainer,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: strings.trainOptimizedSettings,
+                    onPressed: isStartingOptimized ? null : onOptimizeSettings,
+                    icon: const Icon(Icons.settings_outlined),
+                    color: optimizeIconColor,
+                  ),
+                ],
+              )
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: InkWell(
+                      onTap: isStartingOptimized ? null : onOptimizeWorkout,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: usesExpressiveRecipe ? 48 : 36,
+                        ),
+                        child: Center(
+                          child: isStartingOptimized
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: usesExpressiveRecipe
+                                        ? onOptimizeAction
+                                        : colorScheme.onPrimaryContainer,
+                                  ),
+                                )
+                              : Text(
+                                  strings.trainOptimize,
+                                  textAlign: TextAlign.center,
+                                  style: usesExpressiveRecipe
+                                      ? optimizeStyle
+                                      : textTheme.bodyMedium?.copyWith(
+                                          color: onOptimizeAction,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: IconButton(
+                      tooltip: strings.trainOptimizedSettings,
+                      onPressed: isStartingOptimized
+                          ? null
+                          : onOptimizeSettings,
+                      icon: const Icon(Icons.settings_outlined),
+                      iconSize: 19,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(
+                        minWidth: usesExpressiveRecipe ? 48 : 36,
+                        minHeight: 64,
+                      ),
+                      color: optimizeIconColor,
+                    ),
+                  ),
+                ],
+              ),
+      );
+      if (!usesExpressiveRecipe) return material;
+      return ClipRRect(
+        borderRadius: optimizeRadius(vertical: vertical),
+        clipBehavior: Clip.antiAlias,
+        child: material,
+      );
+    }
+
+    final Widget actionContent;
+    if (useVerticalLayout && usesExpressiveRecipe) {
+      actionContent = Column(
+        children: [
+          SizedBox(
+            height: expressiveStartSegmentHeight,
+            child: startAction(vertical: true),
+          ),
+          Container(
+            height: 1,
+            color: colorScheme.outline.withValues(
+              alpha: surfaces.splitWorkoutDividerOpacity,
+            ),
+          ),
+          SizedBox(
+            height: expressiveOptimizeSegmentHeight,
+            child: optimizeSegment(vertical: true),
+          ),
+        ],
+      );
+    } else if (useVerticalLayout) {
+      actionContent = Column(
+        children: [
+          Expanded(child: startAction(vertical: true)),
+          Container(
+            height: 1,
+            color: colorScheme.outline.withValues(
+              alpha: surfaces.splitWorkoutDividerOpacity,
+            ),
+          ),
+          Expanded(child: optimizeSegment(vertical: true)),
+        ],
+      );
+    } else {
+      actionContent = Row(
+        children: [
+          Expanded(flex: 3, child: startAction(vertical: false)),
+          Container(
+            width: 1,
+            height: double.infinity,
+            color: colorScheme.outline.withValues(
+              alpha: surfaces.splitWorkoutDividerOpacity,
+            ),
+          ),
+          Expanded(flex: 2, child: optimizeSegment(vertical: false)),
+        ],
+      );
+    }
+
     return SafeArea(
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: shapes.sheet,
-          border:
-              usesInkRecipe
-                  ? Border.all(
-                    color: surfaces.subtleOutline,
-                    width: shapes.outlineWidth,
-                  )
-                  : null,
-          boxShadow:
-              usesInkRecipe
-                  ? [
-                    BoxShadow(
-                      color: effects.cardShadow,
-                      blurRadius: effects.cardShadowBlur,
-                      offset: effects.primaryActionShadowOffset,
-                    ),
-                  ]
-                  : null,
+          border: usesInkRecipe
+              ? Border.all(
+                  color: surfaces.subtleOutline,
+                  width: shapes.outlineWidth,
+                )
+              : null,
+          boxShadow: usesInkRecipe
+              ? [
+                  BoxShadow(
+                    color: effects.cardShadow,
+                    blurRadius: effects.cardShadowBlur,
+                    offset: effects.primaryActionShadowOffset,
+                  ),
+                ]
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
           borderRadius: shapes.sheet,
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: usesExpressiveRecipe ? Clip.none : Clip.antiAlias,
           elevation: effects.sheetElevation,
-          child: SizedBox(
-            height: useVerticalLayout ? actionBarHeight : 64,
-            child:
-                useVerticalLayout
-                    ? Column(
-                      children: [
-                        Expanded(
-                          child: Material(
-                            color: startWorkoutAction,
-                            child: InkWell(
-                              key: AppTestKeys.trainStartWorkout,
-                              onTap: onStartWorkout,
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  child: Text(
-                                    strings.trainStartWorkout,
-                                    maxLines: 2,
-                                    textAlign: TextAlign.center,
-                                    style: textTheme.titleMedium?.copyWith(
-                                      color: onStartWorkoutAction,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 1,
-                          color: colorScheme.outline.withValues(
-                            alpha: surfaces.splitWorkoutDividerOpacity,
-                          ),
-                        ),
-                        Expanded(
-                          child: Material(
-                            color: optimizeAction,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: InkWell(
-                                    onTap:
-                                        isStartingOptimized
-                                            ? null
-                                            : onOptimizeWorkout,
-                                    child: Center(
-                                      child:
-                                          isStartingOptimized
-                                              ? SizedBox(
-                                                width: 18,
-                                                height: 18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      color: onOptimizeAction,
-                                                    ),
-                                              )
-                                              : Text(
-                                                strings.trainOptimize,
-                                                maxLines: 2,
-                                                textAlign: TextAlign.center,
-                                                style: textTheme.bodyMedium
-                                                    ?.copyWith(
-                                                      color:
-                                                          colorScheme
-                                                              .onPrimaryContainer,
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                    ),
-                                              ),
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: strings.trainOptimizedSettings,
-                                  onPressed:
-                                      isStartingOptimized
-                                          ? null
-                                          : onOptimizeSettings,
-                                  icon: const Icon(Icons.settings_outlined),
-                                  color: colorScheme.onPrimaryContainer,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                    : Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Material(
-                            color: startWorkoutAction,
-                            child: InkWell(
-                              key: AppTestKeys.trainStartWorkout,
-                              onTap: onStartWorkout,
-                              child: Center(
-                                child: Text(
-                                  strings.trainStartWorkout,
-                                  style: textTheme.titleMedium?.copyWith(
-                                    color: onStartWorkoutAction,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 1,
-                          height: double.infinity,
-                          color: colorScheme.outline.withValues(
-                            alpha: surfaces.splitWorkoutDividerOpacity,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Material(
-                            color: optimizeAction,
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: InkWell(
-                                    onTap:
-                                        isStartingOptimized
-                                            ? null
-                                            : onOptimizeWorkout,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(right: 36),
-                                      child: Center(
-                                        child:
-                                            isStartingOptimized
-                                                ? SizedBox(
-                                                  width: 18,
-                                                  height: 18,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    color:
-                                                        colorScheme
-                                                            .onPrimaryContainer,
-                                                  ),
-                                                )
-                                                : Text(
-                                                  strings.trainOptimize,
-                                                  textAlign: TextAlign.center,
-                                                  style: textTheme.bodyMedium
-                                                      ?.copyWith(
-                                                        color: onOptimizeAction,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                      ),
-                                                ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: IconButton(
-                                    tooltip: strings.trainOptimizedSettings,
-                                    onPressed:
-                                        isStartingOptimized
-                                            ? null
-                                            : onOptimizeSettings,
-                                    icon: const Icon(Icons.settings_outlined),
-                                    iconSize: 19,
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(
-                                      minWidth: 36,
-                                      minHeight: 64,
-                                    ),
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-          ),
+          child: usesExpressiveRecipe
+              ? ClipRect(
+                  child: SizedBox(
+                    height: useVerticalLayout ? actionBarHeight : 64,
+                    child: actionContent,
+                  ),
+                )
+              : SizedBox(
+                  height: useVerticalLayout ? actionBarHeight : 64,
+                  child: actionContent,
+                ),
         ),
       ),
     );

@@ -2,17 +2,20 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../tools/theme_style_ratchet.dart';
 
 void main() {
   test('production manifest retains exact qualified scopes', () {
-    final manifest =
-        jsonDecode(File('docs/theme-style-ratchet.json').readAsStringSync())
-            as Map<String, dynamic>;
+    final manifest = jsonDecode(
+      File('docs/theme-style-ratchet.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
     final files = manifest['files'] as List<dynamic>;
     expect(files, hasLength(18));
-    final paths =
-        files.cast<Map<String, dynamic>>().map((file) => file['path']).toSet();
+    final paths = files
+        .cast<Map<String, dynamic>>()
+        .map((file) => file['path'])
+        .toSet();
     expect(
       paths,
       containsAll([
@@ -69,9 +72,8 @@ void main() {
     final valueCardScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/nutrition_text_details.dart',
     );
-    final valueCardApprovals =
-        (valueCardScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final valueCardApprovals = (valueCardScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(valueCardApprovals, hasLength(5));
     expect(
       {
@@ -97,10 +99,9 @@ void main() {
     final trainTabsScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/tonos_train_tabs.dart',
     );
-    final trainTabsApprovals =
-        (trainTabsScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
-    expect(trainTabsApprovals, hasLength(10));
+    final trainTabsApprovals = (trainTabsScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
+    expect(trainTabsApprovals, hasLength(13));
     expect(
       {
         for (final approval in trainTabsApprovals)
@@ -109,14 +110,17 @@ void main() {
       {
         '0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a': 1,
         '200cb37f2955432a9ce1d7e5ffac2aaaf07904aa7b56288a3997bc5e7f8856d9': 1,
+        '206572f83763ae9534e1f972c1f3dd135d10f4ebe05c264ca279ce21c9bae7ed': 1,
         '2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239': 1,
         '2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea': 1,
+        '416a222464b72f674936761b42a34af5c256d8c8876d6ba1933e69a92504b951': 2,
+        '45d21e426dc9356e0063e987bcc1f2143b87a4997abb068a13c4e1da70c5baaf': 1,
         '73d044eee9eb451d4267a9aceb5afb59da566cb43ec44d8aecf32259c05fa0f8': 1,
+        '77eaf73ee6fa579a9398863ae0fb61d61157f443de0b558dfd244cf14b0f2772': 1,
         '92d4cc98d360ce548fc0efe13bc47bc1fe41bda8521363877bd779f2a08d433a': 1,
+        '96ee44c35eeeed933d184b41f687d36cf8f95ef617c486331d3900eec265b3cc': 1,
         'a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96': 2,
-        'b97cf83a07f0c34fb40826c6e3f830624906eeecb13bcb315a6187e8499d3e26': 1,
         'd52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3': 1,
-        'ff4cb09888cd128e8d0ee6061d5be12da8189fa081955c553ca2d6402b8eb618': 1,
       },
     );
     expect(
@@ -128,31 +132,39 @@ void main() {
     final navigationScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/tonos_bottom_navigation_bar.dart',
     );
-    final navigationApprovals =
-        (navigationScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
-    expect(navigationApprovals, hasLength(8));
+    final navigationApprovals = (navigationScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
+    expect(navigationApprovals, hasLength(19));
     expect(
       {
         for (final approval in navigationApprovals)
           approval['fingerprint']: approval['count'],
       },
       {
+        '03258464a568390e832ec2cffafcab101bafa3e9ca5ae605b0d6dfc7c21bcb72': 1,
         '0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a': 1,
         '0d3601f1da4df264c2aef6eea19f0d4ec9b58ab3e317636c4899a9fa1e6368ed': 1,
         '14547d142c719736f56b7d3720acbc57a76d2cab26fcfbc84647e018dfef3f13': 1,
         '1a02edd38f5a7cbdca6c845fea770194fe16d96816ed81a824420eca77283791': 1,
+        '1e38447340beb12fd339f9cdbd547a47a3ded3c580a4c1c8d22c7197717ad434': 1,
+        '620ea1b0fec3574fd2ada72c9ec04ca80a495f11aa560eb81b5a1d1dc04314d8': 1,
+        '64ab63cb8a1c8856ec7f396c1829562f5823e198ca272bfa25f3e7b6e32897ef': 1,
         '657d2f1738bc0e8c38f4f6a8ef73b0677c2b46aeabdf4aa4f1364b02e9b59e18': 1,
         '6e935861fcb507bebb821426e90e2ad6f971d6eda62dd2c5b1cb5df21856e7b4': 1,
+        '9a4a9476c4b12075d4c557127a78c485bf07207d7736a122a877199595521c69': 1,
+        '9a4c72b2818e67aa56940cf6b2f0ad73037787556f6453c2f5e53ba66226898c': 3,
         '9b587dc1a09a54ff64331ff81ad911c56b10d82f645ff4c8565372024455eab3': 1,
+        '9d05d1c99125b8d1630d7ccd97bb5de8a049a63c3fd4416bb0504d5a358329e6': 1,
+        'b80259cfcf6344f1ae14a7ce2307f0065bd488df4752091d2f1e17119b34d676': 3,
         'c52be0033ea57248051d9176a33f1e9852c22272b83dcfe6cc34a15a9134a59f': 1,
+        'd838425677fe39c04540f6bc06cb4ae2b2f75d856ae6a3c06032d2f094eb8741': 1,
+        'de6514ef2cda78f80265b8149ea6391b6776dcec693e2747067f2220d59385ba': 1,
+        'e1d7e645cb0d557ce03446482b7d0988ad24900233e1aa164e3e974f9bab6e45': 1,
       },
     );
     expect(
       navigationApprovals.every(
-        (approval) =>
-            approval['count'] == 1 &&
-            (approval['reason'] as String).trim().isNotEmpty,
+        (approval) => (approval['reason'] as String).trim().isNotEmpty,
       ),
       isTrue,
     );
@@ -160,9 +172,8 @@ void main() {
       (file) =>
           file['path'] == 'lib/theme/widgets/tonos_expansion_tile_scope.dart',
     );
-    final expansionApprovals =
-        (expansionScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final expansionApprovals = (expansionScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(expansionApprovals, hasLength(3));
     expect(
       expansionApprovals.map((approval) => approval['fingerprint']).toSet(),
@@ -183,8 +194,8 @@ void main() {
     final flowScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/flow_screen_widgets.dart',
     );
-    final flowApprovals =
-        (flowScope['approvals'] as List<dynamic>).cast<Map<String, dynamic>>();
+    final flowApprovals = (flowScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(flowApprovals, hasLength(6));
     expect(flowApprovals.map((approval) => approval['fingerprint']).toSet(), {
       '1a9ae9252a12c1064b8145627e4182aded14d79292508875a29873d2040b3fe4',
@@ -216,9 +227,8 @@ void main() {
     final completionScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/session_complete_sheet.dart',
     );
-    final completionApprovals =
-        (completionScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final completionApprovals = (completionScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(completionApprovals, hasLength(26));
     expect(
       {
@@ -272,9 +282,8 @@ void main() {
     final setStatScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/set_stat_chip.dart',
     );
-    final setStatApprovals =
-        (setStatScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final setStatApprovals = (setStatScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(setStatApprovals, hasLength(2));
     expect(
       {
@@ -378,9 +387,9 @@ void main() {
         '158fb0382b2320120dbc3a07808ceee3f0e913a404fee58254d7989e5f373f51': 1,
         '1a589e19d333469209d6dd7598dcf846010ad50c00ee91a1e5c15910704f368b': 1,
         '36789b54998ceccc9032fa5e455fedeeda3fb8aabf270a1ae1f4a7f1f49d219f': 1,
-        '5af65561290bc70f6ceac06eea598028afff67729a38c3b6de66d81d3daa529e': 1,
+        '66f9b9e961e6672c9f2a31cc71d3ac63d18c271cbabcaf7666f434088eb57326': 1,
+        '6cc3275950aa57ad95991ab5c94d139e8d5c02c0bd17d9a5d4be4362150679fe': 1,
         'c1ab889e2b5322df241752d144847bf07716ef779d4981ca96fbc47b75514a67': 1,
-        'c1e69096be224a5b8c62b9ce57e15da4e9029aa1cf2009760c1a26be6135ef47': 1,
       },
     );
     expect(
@@ -415,9 +424,8 @@ void main() {
     final presetInfoScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/preset_info_card.dart',
     );
-    final presetInfoApprovals =
-        (presetInfoScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final presetInfoApprovals = (presetInfoScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(presetInfoApprovals, hasLength(4));
     expect(
       {
@@ -434,9 +442,8 @@ void main() {
     final cardioScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/cardio_card.dart',
     );
-    final cardioApprovals =
-        (cardioScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final cardioApprovals = (cardioScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(cardioApprovals, hasLength(4));
     expect(
       {
@@ -453,9 +460,8 @@ void main() {
     final stretchScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/stretch_card.dart',
     );
-    final stretchApprovals =
-        (stretchScope['approvals'] as List<dynamic>)
-            .cast<Map<String, dynamic>>();
+    final stretchApprovals = (stretchScope['approvals'] as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     expect(stretchApprovals, hasLength(3));
     expect(
       {
@@ -492,74 +498,66 @@ void main() {
     expect(result, containsPair('lib/widgets/stretch_card.dart', isNotEmpty));
   });
 
-  test(
-    'CLI enforces approvals in a nonempty scope',
-    () async {
-      final root = Directory.systemTemp.createTempSync('ratchet_enforcement_');
-      final script = File('tools/theme_style_ratchet.dart').absolute.path;
-      final packages = File('.dart_tool/package_config.json').absolute.path;
-      try {
-        Directory('${root.path}/lib').createSync();
-        final source = File('${root.path}/lib/example.dart');
-        source.writeAsStringSync('var color = Colors.red;');
-        final manifest = File('${root.path}/manifest.json');
-        manifest.writeAsStringSync(
-          jsonEncode({
-            'schemaVersion': 1,
-            'files': [
-              {
-                'path': 'lib/example.dart',
-                'owner': 'test',
-                'evidence': 'CLI fixture only',
-                'approvals': [
-                  for (final e
-                      in styleFingerprints(source.readAsStringSync()).entries)
-                    {
-                      'fingerprint': e.key,
-                      'count': e.value,
-                      'reason': 'fixture',
-                    },
-                ],
-              },
-            ],
-          }),
-        );
-        Future<ProcessResult> run({bool report = false}) => Process.run(
-          'dart',
-          [
-            '--packages=$packages',
-            script,
-            manifest.path,
-            if (report) ...['--report', '--details'],
+  test('CLI enforces approvals in a nonempty scope', () async {
+    final root = Directory.systemTemp.createTempSync('ratchet_enforcement_');
+    final script = File('tools/theme_style_ratchet.dart').absolute.path;
+    final packages = File('.dart_tool/package_config.json').absolute.path;
+    try {
+      Directory('${root.path}/lib').createSync();
+      final source = File('${root.path}/lib/example.dart');
+      source.writeAsStringSync('var color = Colors.red;');
+      final manifest = File('${root.path}/manifest.json');
+      manifest.writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'files': [
+            {
+              'path': 'lib/example.dart',
+              'owner': 'test',
+              'evidence': 'CLI fixture only',
+              'approvals': [
+                for (final e in styleFingerprints(
+                  source.readAsStringSync(),
+                ).entries)
+                  {'fingerprint': e.key, 'count': e.value, 'reason': 'fixture'},
+              ],
+            },
           ],
-          workingDirectory: root.path,
-          runInShell: Platform.isWindows,
-        );
-        final approved = await run();
-        expect(approved.exitCode, 0, reason: '${approved.stderr}');
-        expect(jsonDecode(approved.stdout as String)['protectedFileCount'], 1);
-        final report = await run(report: true);
-        expect(report.exitCode, 0, reason: '${report.stderr}');
-        final reportJson = jsonDecode(report.stdout as String) as Map;
-        final details =
-            (reportJson['fingerprintDetails'] as Map)['lib/example.dart']
-                as Map;
-        expect(details.values.single['candidate'], 'Colors');
-        expect(
-          (details.values.single['statementTokens'] as List).join(' '),
-          contains('red'),
-        );
-        source.writeAsStringSync('var color = Colors.blue;');
-        final rejected = await run();
-        expect(rejected.exitCode, 64);
-        expect(rejected.stderr, contains('lib/example.dart'));
-        expect(rejected.stderr, contains('expected'));
-      } finally {
-        root.deleteSync(recursive: true);
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+        }),
+      );
+      Future<ProcessResult> run({bool report = false}) => Process.run(
+        'dart',
+        [
+          '--packages=$packages',
+          script,
+          manifest.path,
+          if (report) ...['--report', '--details'],
+        ],
+        workingDirectory: root.path,
+        runInShell: Platform.isWindows,
+      );
+      final approved = await run();
+      expect(approved.exitCode, 0, reason: '${approved.stderr}');
+      expect(jsonDecode(approved.stdout as String)['protectedFileCount'], 1);
+      final report = await run(report: true);
+      expect(report.exitCode, 0, reason: '${report.stderr}');
+      final reportJson = jsonDecode(report.stdout as String) as Map;
+      final details =
+          (reportJson['fingerprintDetails'] as Map)['lib/example.dart'] as Map;
+      expect(details.values.single['candidate'], 'Colors');
+      expect(
+        (details.values.single['statementTokens'] as List).join(' '),
+        contains('red'),
+      );
+      source.writeAsStringSync('var color = Colors.blue;');
+      final rejected = await run();
+      expect(rejected.exitCode, 64);
+      expect(rejected.stderr, contains('lib/example.dart'));
+      expect(rejected.stderr, contains('expected'));
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
   test(
     'CLI reports empty protection honestly and rejects invalid input',
     () async {

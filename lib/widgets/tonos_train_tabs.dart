@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 
 /// Shared Overview/Plans selector used by the Train route and its preview.
 ///
@@ -27,10 +30,42 @@ class TonosTrainTabs extends StatelessWidget {
   /// Keeps the ordinary selector compact while allowing large text to reflow.
   /// The extra AppBar room is supplied separately so the Neo hard shadow is
   /// not clipped by the toolbar's title bounds.
-  static double preferredHeight(BuildContext context) {
+  static double preferredHeight(
+    BuildContext context, {
+    String? overviewLabel,
+    String? plansLabel,
+  }) {
     if (context.usesClassicPresentation) return 44;
 
     final theme = Theme.of(context);
+    if (context.usesExpressivePresentation) {
+      final textStyle = theme.textTheme.labelLarge;
+      final textScaler = MediaQuery.textScalerOf(context);
+      final labels = <String>[
+        overviewLabel ?? 'Overview',
+        plansLabel ?? 'Plans',
+      ];
+      final availableWidth = (MediaQuery.sizeOf(context).width - 32)
+          .clamp(0.0, 320.0)
+          .toDouble();
+      final labelWidth = ((availableWidth - 8) / 2)
+          .clamp(1.0, 156.0)
+          .toDouble();
+      final textHeight = labels.fold<double>(
+        0,
+        (tallest, label) => math.max(
+          tallest,
+          _measureLabelHeight(
+            context,
+            label,
+            textStyle ?? DefaultTextStyle.of(context).style,
+            textScaler,
+            labelWidth,
+          ),
+        ),
+      );
+      return math.max(56.0, textHeight + 8).toDouble();
+    }
     if (!theme.usesNeoPresentation) {
       final textScale = MediaQuery.textScalerOf(context).scale(1);
       final fontSize = theme.textTheme.labelLarge?.fontSize ?? 14;
@@ -48,14 +83,26 @@ class TonosTrainTabs extends StatelessWidget {
     return contentHeight.clamp(48.0, 88.0).toDouble();
   }
 
-  static double toolbarHeight(BuildContext context) {
-    return context.usesNeoPresentation
-        ? preferredHeight(context) + 8
+  static double toolbarHeight(
+    BuildContext context, {
+    String? overviewLabel,
+    String? plansLabel,
+  }) {
+    return context.usesNeoPresentation || context.usesExpressivePresentation
+        ? preferredHeight(
+                context,
+                overviewLabel: overviewLabel,
+                plansLabel: plansLabel,
+              ) +
+              8
         : kToolbarHeight;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (context.usesExpressivePresentation) {
+      return _buildExpressive(context);
+    }
     if (!context.usesNeoPresentation && !context.usesClassicPresentation) {
       return _buildMaterialFallback(context);
     }
@@ -79,22 +126,20 @@ class TonosTrainTabs extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 320),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color:
-            usesInkRecipe
-                ? context.cs.secondaryContainer
-                : surfaces.panelRaised.withValues(
-                  alpha: surfaces.trainTabSurfaceOpacity,
-                ),
+        color: usesInkRecipe
+            ? context.cs.secondaryContainer
+            : surfaces.panelRaised.withValues(
+                alpha: surfaces.trainTabSurfaceOpacity,
+              ),
         borderRadius: tabRadius,
-        border:
-            usesInkRecipe
-                ? Border.all(
-                  color: surfaces.subtleOutline,
-                  // The selector is a structural frame, not a focus ring.
-                  // Match the 2px outlines used by the panels below it.
-                  width: shapes.outlineWidth,
-                )
-                : null,
+        border: usesInkRecipe
+            ? Border.all(
+                color: surfaces.subtleOutline,
+                // The selector is a structural frame, not a focus ring.
+                // Match the 2px outlines used by the panels below it.
+                width: shapes.outlineWidth,
+              )
+            : null,
         boxShadow: usesInkRecipe && _hasVisibleShadow(shadow) ? [shadow] : null,
       ),
       child: Row(
@@ -114,6 +159,50 @@ class TonosTrainTabs extends StatelessWidget {
             onTap: () => onChanged(1),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildExpressive(BuildContext context) {
+    final scheme = context.cs;
+    final shapes = context.shapeTokens;
+    final surfaces = context.surfaceTokens;
+    final selected = selectedIndex.clamp(0, 1).toInt();
+    return Container(
+      key: const ValueKey('tonos-train-tabs-frame'),
+      height: preferredHeight(
+        context,
+        overviewLabel: overviewLabel,
+        plansLabel: plansLabel,
+      ),
+      constraints: const BoxConstraints(maxWidth: 320),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: surfaces.panel,
+        borderRadius: shapes.trainTab,
+      ),
+      child: TonosExpressiveSelectionIndicator(
+        selectedIndex: selected,
+        itemCount: 2,
+        color: scheme.secondaryContainer,
+        borderRadius: shapes.trainTabButton,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _TonosTrainTabButton(
+              key: overviewKey,
+              label: overviewLabel,
+              selected: selected == 0,
+              onTap: () => onChanged(0),
+            ),
+            _TonosTrainTabButton(
+              key: plansKey,
+              label: plansLabel,
+              selected: selected == 1,
+              onTap: () => onChanged(1),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -160,6 +249,35 @@ class TonosTrainTabs extends StatelessWidget {
   }
 }
 
+double _measureLabelHeight(
+  BuildContext context,
+  String label,
+  TextStyle style,
+  TextScaler textScaler,
+  double maxWidth,
+) {
+  double measure(TextStyle measuredStyle) {
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: measuredStyle),
+      textAlign: TextAlign.center,
+      textDirection: Directionality.of(context),
+      locale: Localizations.maybeLocaleOf(context),
+      textScaler: textScaler,
+    );
+    try {
+      painter.layout(maxWidth: maxWidth);
+      return painter.height;
+    } finally {
+      painter.dispose();
+    }
+  }
+
+  return math.max(
+    measure(style.copyWith(fontWeight: FontWeight.w500)),
+    measure(style.copyWith(fontWeight: FontWeight.w600)),
+  );
+}
+
 class _TonosTrainTabButton extends StatelessWidget {
   const _TonosTrainTabButton({
     super.key,
@@ -177,27 +295,32 @@ class _TonosTrainTabButton extends StatelessWidget {
     final colorScheme = context.cs;
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final textTheme = Theme.of(context).textTheme;
-    final buttonRadius = usesInkRecipe ? shapes.trainTabButton : shapes.pill;
+    final buttonRadius = usesInkRecipe || usesExpressiveRecipe
+        ? shapes.trainTabButton
+        : shapes.pill;
     final buttonShape = RoundedRectangleBorder(
       borderRadius: buttonRadius,
-      side:
-          usesInkRecipe
-              ? BorderSide(
-                color: context.surfaceTokens.subtleOutline,
-                width: shapes.outlineWidth,
-              )
-              : BorderSide.none,
+      side: usesInkRecipe
+          ? BorderSide(
+              color: context.surfaceTokens.subtleOutline,
+              width: shapes.outlineWidth,
+            )
+          : BorderSide.none,
     );
     final button = Material(
-      color:
-          selected
-              ? colorScheme.primaryContainer
-              : usesInkRecipe
-              ? colorScheme.secondaryContainer
-              : Colors.transparent,
+      color: usesExpressiveRecipe
+          ? Colors.transparent
+          : selected
+          ? colorScheme.primaryContainer
+          : usesInkRecipe
+          ? colorScheme.secondaryContainer
+          : Colors.transparent,
       shape: buttonShape,
-      clipBehavior: usesInkRecipe ? Clip.antiAlias : Clip.none,
+      clipBehavior: usesInkRecipe || usesExpressiveRecipe
+          ? Clip.antiAlias
+          : Clip.none,
       child: InkWell(
         customBorder: buttonShape,
         excludeFromSemantics: true,
@@ -211,15 +334,24 @@ class _TonosTrainTabButton extends StatelessWidget {
                 maxLines: usesInkRecipe ? 2 : null,
                 textAlign: TextAlign.center,
                 overflow: usesInkRecipe ? TextOverflow.ellipsis : null,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color:
-                      selected
-                          ? colorScheme.onPrimaryContainer
-                          : usesInkRecipe
-                          ? colorScheme.onSecondaryContainer
-                          : colorScheme.onSurfaceVariant,
-                ),
+                style:
+                    (usesExpressiveRecipe
+                            ? textTheme.labelLarge
+                            : textTheme.bodyMedium)
+                        ?.copyWith(
+                          fontWeight: usesExpressiveRecipe
+                              ? selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500
+                              : FontWeight.w700,
+                          color: selected
+                              ? usesExpressiveRecipe
+                                    ? colorScheme.onSecondaryContainer
+                                    : colorScheme.onPrimaryContainer
+                              : usesInkRecipe
+                              ? colorScheme.onSecondaryContainer
+                              : colorScheme.onSurfaceVariant,
+                        ),
               ),
             ),
             if (usesInkRecipe && selected)

@@ -180,8 +180,13 @@
     {
       "path": "lib/widgets/tonos_bottom_navigation_bar.dart",
       "owner": "theme-maintainers",
-      "evidence": "The exact shared shell owner is covered by test/theme/widgets/tonos_bottom_navigation_bar_test.dart across Classic/Neo light/dark. Classic retains the unwrapped Material fallback; Neo frame colors, shape, effects, selected and unselected ink, selection segment, 4px underline, and activation are asserted. The user accepted the current 21-item Neo route review, which includes the shared application shell. The report-only fingerprints were mapped statement-by-statement to source before approval.",
+      "evidence": "The exact shared shell owner remains covered by test/theme/widgets/tonos_bottom_navigation_bar_test.dart across Classic/Neo light/dark. Classic retains the unwrapped Material fallback; Neo frame colors, shape, effects, selected and unselected ink, selection segment, 4px underline, and activation remain asserted, preserving the prior user acceptance of the 21-item Neo route review. The review-only Expressive implementation passed the focused Train/navigation suite (13/13); its responsive labels, five real destinations, theme roles, and activation are covered by test/expressive_train_presentation_test.dart and test/expressive_navigation_presentation_test.dart. Matched device captures are recorded under docs/proposals/tonos-expressive-train-proving-ground/static/. The 11 Expressive fingerprints below are mapped to the custom bar and text-measurement helpers. This protects the preview implementation and does not claim a persisted family or public visual adoption.",
       "approvals": [
+        {
+          "fingerprint": "03258464a568390e832ec2cffafcab101bafa3e9ca5ae605b0d6dfc7c21bcb72",
+          "count": 1,
+          "reason": "Reviewed the TextStyle labelStyle input to _buildDestination; the caller supplies the inherited labelSmall role with a DefaultTextStyle fallback, and the focused responsive Expressive navigation tests cover typography at narrow widths and 2x scale."
+        },
         {
           "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
           "count": 1,
@@ -203,6 +208,21 @@
           "reason": "Reviewed the structural Border.all outline in the Neo frame; its color and width resolve from surface and shape roles and are asserted in the four-mode contract."
         },
         {
+          "fingerprint": "1e38447340beb12fd339f9cdbd547a47a3ded3c580a4c1c8d22c7197717ad434",
+          "count": 1,
+          "reason": "Reviewed the Expressive destination cornerRadius input; each destination receives AppShapeTokens.trainTabButton, and the navigation contract checks its reachable hit bounds and tap behavior."
+        },
+        {
+          "fingerprint": "620ea1b0fec3574fd2ada72c9ec04ca80a495f11aa560eb81b5a1d1dc04314d8",
+          "count": 1,
+          "reason": "Reviewed the destination RoundedRectangleBorder used by the visible InkWell; its radius is supplied from AppShapeTokens and the focused interaction tests cover the real destination action."
+        },
+        {
+          "fingerprint": "64ab63cb8a1c8856ec7f396c1829562f5823e198ca272bfa25f3e7b6e32897ef",
+          "count": 1,
+          "reason": "Reviewed the Theme lookup in the Expressive-only bar builder; its text and color roles come from the active preview ThemeData and are exercised in light/dark matched navigation captures."
+        },
+        {
           "fingerprint": "657d2f1738bc0e8c38f4f6a8ef73b0677c2b46aeabdf4aa4f1364b02e9b59e18",
           "count": 1,
           "reason": "Reviewed the transparent Material bar fill that lets the shared selected-segment layer show through without painting a second surface; the contract checks transparency and the selected segment."
@@ -218,16 +238,51 @@
           "reason": "Reviewed the selected-segment Color role passed to the decorative selection layer; the four-mode contract asserts its ColorScheme-derived fill."
         },
         {
+          "fingerprint": "9a4a9476c4b12075d4c557127a78c485bf07207d7736a122a877199595521c69",
+          "count": 1,
+          "reason": "Reviewed the TextStyle input used by _labelHeight; measurement varies only the inherited label style's selected weight, and the French/2x responsive tests assert stable destination layout."
+        },
+        {
+          "fingerprint": "9a4c72b2818e67aa56940cf6b2f0ad73037787556f6453c2f5e53ba66226898c",
+          "count": 3,
+          "reason": "Reviewed the three Color role inputs to _buildDestinations; selected icon, selected label, and unselected ink are supplied by the active ColorScheme and covered by Expressive navigation tests."
+        },
+        {
+          "fingerprint": "9d05d1c99125b8d1630d7ccd97bb5de8a049a63c3fd4416bb0504d5a358329e6",
+          "count": 1,
+          "reason": "Reviewed the TextStyle parameter on the _labelHeight helper; the caller passes the themed label role and the helper measures both displayed weights with TextPainter."
+        },
+        {
+          "fingerprint": "b80259cfcf6344f1ae14a7ce2307f0065bd488df4752091d2f1e17119b34d676",
+          "count": 3,
+          "reason": "Reviewed the three Color inputs to _buildDestination; they are resolved by the parent from selected/unselected ColorScheme roles, then used for the destination icon and label states."
+        },
+        {
           "fingerprint": "c52be0033ea57248051d9176a33f1e9852c22272b83dcfe6cc34a15a9134a59f",
           "count": 1,
           "reason": "Reviewed the shared Neo frame BoxDecoration; its background, outline, radius, and optional token-derived shadow are all asserted by the four-mode test."
+        },
+        {
+          "fingerprint": "d838425677fe39c04540f6bc06cb4ae2b2f75d856ae6a3c06032d2f094eb8741",
+          "count": 1,
+          "reason": "Reviewed the TextStyle input to _labelIntrinsicWidth; label width is measured with the caller's inherited typography and current TextScaler, locale, and text direction."
+        },
+        {
+          "fingerprint": "de6514ef2cda78f80265b8149ea6391b6776dcec693e2747067f2220d59385ba",
+          "count": 1,
+          "reason": "Reviewed the Theme lookup in _buildDestinations; the selected indicator reads its surface color from the active ColorScheme and its radius from AppShapeTokens."
+        },
+        {
+          "fingerprint": "e1d7e645cb0d557ce03446482b7d0988ad24900233e1aa164e3e974f9bab6e45",
+          "count": 1,
+          "reason": "Reviewed the TextStyle labelStyle input to _buildDestinations; the parent forwards the active theme's navigation typography into each destination rather than defining a separate font recipe."
         }
       ]
     },
     {
       "path": "lib/widgets/tonos_train_tabs.dart",
       "owner": "theme-maintainers",
-      "evidence": "The migrated tonos-train-tabs inventory rules assign four geometry findings and four surface/effect/color findings to this shared selector. test/theme/widgets/tonos_train_tabs_test.dart asserts rendered frame, button shape, fill, outline, shadow, semantics, tap behavior, and no layout exceptions across Classic/Neo light/dark; a focused Neo 2x text-scale reflow regression also protects the bounded frame. The user accepted Train visually in all four theme/brightness modes. Report-only output was mapped statement-by-statement to the widget source before enrollment; the canonical manifest contract pins all ten fingerprints and their counts.",
+      "evidence": "The migrated tonos-train-tabs inventory rules assign the shared selector's style findings to this owner. Existing test/theme/widgets/tonos_train_tabs_test.dart still asserts the Classic/Neo light/dark frame, shape, fill, outline, shadow, semantics, and tap behavior, preserving prior Classic/Neo visual acceptance and the focused Neo 2x text-scale reflow contract. The review-only Expressive branch passed the 13/13 focused Train/navigation cases; test/expressive_train_presentation_test.dart and test/expressive_navigation_presentation_test.dart cover the real selector, callbacks, large text, and French labels. Matched device captures are recorded under docs/proposals/tonos-expressive-train-proving-ground/static/. The exact current fingerprints are mapped below. This is automated preview qualification and does not claim a persisted family or public visual adoption.",
       "approvals": [
         {
           "fingerprint": "0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a",
@@ -240,6 +295,11 @@
           "reason": "Reviewed the shared button shape: radius and outlined side resolve from shape/surface tokens, and the four-mode rendered contract checks both branches."
         },
         {
+          "fingerprint": "206572f83763ae9534e1f972c1f3dd135d10f4ebe05c264ca279ce21c9bae7ed",
+          "count": 1,
+          "reason": "Reviewed the Expressive selector frame BoxDecoration; its fill and radius come from AppSurfaceTokens.panel and AppShapeTokens.trainTab, covered by the focused rendered Train contract."
+        },
+        {
           "fingerprint": "2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239",
           "count": 1,
           "reason": "Reviewed the selector frame decoration; fill, radius, outline, and shadow are selected from theme-family tokens and asserted in rendered tests."
@@ -248,6 +308,16 @@
           "fingerprint": "2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea",
           "count": 1,
           "reason": "Reviewed the structural frame border; its color and width come from surface and shape tokens and are checked in both Neo brightness modes."
+        },
+        {
+          "fingerprint": "416a222464b72f674936761b42a34af5c256d8c8876d6ba1933e69a92504b951",
+          "count": 2,
+          "reason": "Reviewed both Colors.transparent appearances in the Expressive tab button; the transparent Material layer preserves the selected indicator as the sole selected fill, verified by the Train selector contract."
+        },
+        {
+          "fingerprint": "45d21e426dc9356e0063e987bcc1f2143b87a4997abb068a13c4e1da70c5baaf",
+          "count": 1,
+          "reason": "Reviewed the TextStyle input to _measureLabelHeight; the Expressive preferred-height calculation uses the active labelLarge role and locale-aware TextPainter measurements."
         },
         {
           "fingerprint": "73d044eee9eb451d4267a9aceb5afb59da566cb43ec44d8aecf32259c05fa0f8",
@@ -260,14 +330,14 @@
           "reason": "Reviewed the Classic frame alpha application; the opacity is supplied by the train-tab surface token and the resulting fill is checked in both Classic modes."
         },
         {
+          "fingerprint": "96ee44c35eeeed933d184b41f687d36cf8f95ef617c486331d3900eec265b3cc",
+          "count": 1,
+          "reason": "Reviewed the TextStyle passed into the label-measurement closure; it is derived from the current theme typography before measuring both displayed weights under the supplied scaler and width."
+        },
+        {
           "fingerprint": "a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96",
           "count": 2,
           "reason": "Reviewed both branches of the shared button BorderSide: Neo uses the token-backed outline, while Classic intentionally uses no side; both modes are rendered and asserted."
-        },
-        {
-          "fingerprint": "b97cf83a07f0c34fb40826c6e3f830624906eeecb13bcb315a6187e8499d3e26",
-          "count": 1,
-          "reason": "Reviewed the transparent unselected Classic button fill; selected and Neo fills resolve from the active color scheme and are pinned by the four-mode test."
         },
         {
           "fingerprint": "d52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3",
@@ -275,9 +345,9 @@
           "reason": "Reviewed the button's active text-theme lookup; label styling inherits the current theme typography before applying the deliberate weight and semantic foreground."
         },
         {
-          "fingerprint": "ff4cb09888cd128e8d0ee6061d5be12da8189fa081955c553ca2d6402b8eb618",
+          "fingerprint": "77eaf73ee6fa579a9398863ae0fb61d61157f443de0b558dfd244cf14b0f2772",
           "count": 1,
-          "reason": "Reviewed the responsive-height theme lookup; Neo frame sizing uses the active body text metrics and text scaler, while Classic retains its established compact height."
+          "reason": "Reviewed the Theme lookup in TonosTrainTabs preferred-height calculation; Classic, Neo, and Expressive branches derive text measurements from their active inherited recipe."
         }
       ]
     },
@@ -553,7 +623,7 @@
     {
       "path": "lib/widgets/seven_day_focus_card.dart",
       "owner": "theme-maintainers",
-      "evidence": "test/theme/widgets/seven_day_focus_presentation_test.dart renders Classic/Neo light/dark and verifies the scoped surface/text/progress roles, focused-sets hint ink, transparent details tap surface, and 16px InkWell radius while retaining responsive reflow and action reachability. The six report-only fingerprints were mapped to exact statements and widget scopes. This is lexical protection for this file, not route-wide visual qualification.",
+      "evidence": "Existing test/theme/widgets/seven_day_focus_presentation_test.dart still renders Classic/Neo light/dark and verifies scoped surface/text/progress roles, focused-sets hint ink, the transparent details tap surface, and 16px InkWell radius while retaining responsive reflow and action reachability. The review-only Expressive overview passed the focused Train/navigation suite (13/13); test/expressive_train_presentation_test.dart exercises the real focus-card child and callbacks, and matched device captures are recorded under docs/proposals/tonos-expressive-train-proving-ground/static/. The current fingerprints are mapped to their exact statements. This is automated preview qualification and lexical protection, not route-wide visual adoption or a persisted-family claim.",
       "approvals": [
         {
           "fingerprint": "158fb0382b2320120dbc3a07808ceee3f0e913a404fee58254d7989e5f373f51",
@@ -571,19 +641,19 @@
           "reason": "Reviewed the 16px details InkWell radius in SevenDayFocusPresentation; the rendered contract asserts this exact hit-target shape in all four modes."
         },
         {
-          "fingerprint": "5af65561290bc70f6ceac06eea598028afff67729a38c3b6de66d81d3daa529e",
+          "fingerprint": "66f9b9e961e6672c9f2a31cc71d3ac63d18c271cbabcaf7666f434088eb57326",
           "count": 1,
-          "reason": "Reviewed the scoped Theme recipe in SevenDayFocusPresentation, including onSurface/onSurfaceVariant, body/display text ink, and progress foreground/track alpha; the four-mode contract asserts each resolved role and preserves Classic's existing values."
+          "reason": "Reviewed the 0.22 linear-track alpha in the scoped Expressive focus-card Theme; the opacity is applied to the surface-qualified ink and the root overview contract checks its rendered state."
+        },
+        {
+          "fingerprint": "6cc3275950aa57ad95991ab5c94d139e8d5c02c0bd17d9a5d4be4362150679fe",
+          "count": 1,
+          "reason": "Reviewed the SevenDayFocusPresentation Theme scope; it selects the Expressive focus recipe by explicit presentation identity and leaves the inherited Classic/Neo path intact."
         },
         {
           "fingerprint": "c1ab889e2b5322df241752d144847bf07716ef779d4981ca96fbc47b75514a67",
           "count": 1,
           "reason": "Reviewed the Theme.of(context) lookup in _MoreFocusedSetsHint; the four-mode contract checks the resolved icon/text foreground and bold label weight."
-        },
-        {
-          "fingerprint": "c1e69096be224a5b8c62b9ce57e15da4e9029aa1cf2009760c1a26be6135ef47",
-          "count": 1,
-          "reason": "Reviewed the scoped Theme construction in SevenDayFocusPresentation; its four-mode contract checks the conditional text and progress colors, including the 0.22 track alpha."
         }
       ]
     },

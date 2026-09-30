@@ -125,32 +125,49 @@ class SevenDayFocusPresentation extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
+    final expressiveFocusTheme = usesExpressiveRecipe
+        ? theme.copyWith(
+            textTheme: theme.textTheme.copyWith(
+              bodySmall: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 15,
+                height: 1.25,
+              ),
+              titleSmall: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          )
+        : theme;
     final content = Theme(
-      data:
-          usesInkRecipe
-              ? theme.copyWith(
-                colorScheme: theme.colorScheme.copyWith(
-                  onSurface: surfaceInk,
-                  onSurfaceVariant: surfaceInk,
-                ),
-                textTheme: theme.textTheme.apply(
-                  bodyColor: surfaceInk,
-                  displayColor: surfaceInk,
-                ),
-                progressIndicatorTheme: theme.progressIndicatorTheme.copyWith(
-                  color: surfaceInk,
-                  linearTrackColor: surfaceInk.withValues(alpha: 0.22),
-                ),
-              )
-              : theme,
+      data: usesInkRecipe
+          ? theme.copyWith(
+              colorScheme: theme.colorScheme.copyWith(
+                onSurface: surfaceInk,
+                onSurfaceVariant: surfaceInk,
+              ),
+              textTheme: theme.textTheme.apply(
+                bodyColor: surfaceInk,
+                displayColor: surfaceInk,
+              ),
+              progressIndicatorTheme: theme.progressIndicatorTheme.copyWith(
+                color: surfaceInk,
+                linearTrackColor: surfaceInk.withValues(alpha: 0.22),
+              ),
+            )
+          : usesExpressiveRecipe
+          ? expressiveFocusTheme
+          : theme,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             strings.sevenDayFocusTitle,
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: usesExpressiveRecipe
+                  ? FontWeight.w600
+                  : FontWeight.w800,
               color: usesInkRecipe ? surfaceInk : null,
             ),
           ),
@@ -176,16 +193,18 @@ class SevenDayFocusPresentation extends StatelessWidget {
         ],
       ),
     );
-    return usesInkRecipe
+    return usesInkRecipe || usesExpressiveRecipe
         ? TonosSurface(
-          variant: TonosSurfaceVariant.panelRaised,
-          color: surfaces.dashboardHero,
-          padding: const EdgeInsets.all(16),
-          child: content,
-        )
+            variant: usesExpressiveRecipe
+                ? TonosSurfaceVariant.card
+                : TonosSurfaceVariant.panelRaised,
+            color: surfaces.dashboardHero,
+            padding: const EdgeInsets.all(16),
+            child: content,
+          )
         : Card(
-          child: Padding(padding: const EdgeInsets.all(16), child: content),
-        );
+            child: Padding(padding: const EdgeInsets.all(16), child: content),
+          );
   }
 }
 
@@ -210,15 +229,15 @@ class _SevenDayFocusLayout extends StatelessWidget {
         final minimumDetailsWidth =
             176.0 * (supportsStackedLayout ? textScale.clamp(1.0, 1.6) : 1.0);
         final gap = constraints.maxWidth < 330 ? 10.0 : 14.0;
-        final rowAnatomyWidth =
-            (constraints.maxWidth * 0.43).clamp(118.0, 170.0).toDouble();
+        final rowAnatomyWidth = (constraints.maxWidth * 0.43)
+            .clamp(118.0, 170.0)
+            .toDouble();
         final isStacked =
             supportsStackedLayout &&
             constraints.maxWidth < rowAnatomyWidth + gap + minimumDetailsWidth;
-        final heatmapBox =
-            (constraints.maxWidth * (isStacked ? 0.62 : 0.43))
-                .clamp(118.0, 170.0)
-                .toDouble();
+        final heatmapBox = (constraints.maxWidth * (isStacked ? 0.62 : 0.43))
+            .clamp(118.0, 170.0)
+            .toDouble();
         final heatmapSize = (heatmapBox - 6).clamp(112.0, 164.0).toDouble();
         final heatmap = BodyHeatmap(
           frequencyMap: data.heatmapFrequencyMap,
@@ -240,7 +259,9 @@ class _SevenDayFocusLayout extends StatelessWidget {
                 hits: data.topBodyParts,
                 maxVisible: 3,
                 emptyMessage: AppLocalizations.of(context).sevenDayFocusEmpty,
-                titleWeight: FontWeight.w800,
+                titleWeight: context.usesExpressivePresentation
+                    ? FontWeight.w600
+                    : FontWeight.w800,
               ),
               if (data.topBodyParts.length > 3) const _MoreFocusedSetsHint(),
             ],
@@ -253,16 +274,12 @@ class _SevenDayFocusLayout extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: onFocusedSetsTap,
-                child:
-                    scrollable
-                        ? SingleChildScrollView(
-                          padding: const EdgeInsets.all(6),
-                          child: content,
-                        )
-                        : Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: content,
-                        ),
+                child: scrollable
+                    ? SingleChildScrollView(
+                        padding: const EdgeInsets.all(6),
+                        child: content,
+                      )
+                    : Padding(padding: const EdgeInsets.all(6), child: content),
               ),
             ),
           );
@@ -313,10 +330,9 @@ class _MoreFocusedSetsHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground =
-        context.usesNeoPresentation
-            ? theme.colorScheme.onPrimaryContainer
-            : theme.colorScheme.primary;
+    final foreground = context.usesNeoPresentation
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Row(

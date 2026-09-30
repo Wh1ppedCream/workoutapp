@@ -266,6 +266,17 @@
       "rationale": "The app shell owns the transparent status-bar surface and brightness-aware icon contrast through appSystemUiOverlayStyleFor. Its exact color finding is pinned by a unit contract for both brightness modes; this is system-overlay policy, not a user-selectable theme accent or a claim of device visual acceptance."
     },
     {
+      "id": "expressive-preview-root-theme",
+      "pattern": "lib/main.dart",
+      "kinds": [
+        "local_theme"
+      ],
+      "classification": "application_shell",
+      "status": "migrated",
+      "target": "Non-persisted Expressive preview theme across the production route subtree",
+      "rationale": "This exact local Theme applies the preview controller's cached active light/dark recipe around the existing MaterialApp route tree; it adds no provider or navigation branch and the default-null shell remains rendered identically. The root overlay/default-null suite passed 13/13 tests for provider reads, locale/media, dialogs, controls, and navigation. This is preview-qualified automated shell ownership only and makes no human visual-adoption or persisted-family claim."
+    },
+    {
       "id": "application-shell",
       "pattern": "lib/main.dart",
       "classification": "application_shell",

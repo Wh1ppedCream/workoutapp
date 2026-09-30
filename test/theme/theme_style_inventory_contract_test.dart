@@ -157,13 +157,12 @@ void main() {
     final ownerPattern = RegExp(r'^class\s+(\w+)\b');
     final qualifiedOwners = <String, int>{};
     for (final finding in qualified) {
-      final owner =
-          lines
-              .take(finding.line)
-              .map(ownerPattern.firstMatch)
-              .whereType<RegExpMatch>()
-              .last
-              .group(1)!;
+      final owner = lines
+          .take(finding.line)
+          .map(ownerPattern.firstMatch)
+          .whereType<RegExpMatch>()
+          .last
+          .group(1)!;
       qualifiedOwners.update(owner, (count) => count + 1, ifAbsent: () => 1);
     }
     expect(qualifiedOwners, <String, int>{
@@ -208,10 +207,42 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(1));
     expect(findings.single.snippet, contains('statusBarColor'));
+    expect(findings.single.status, 'migrated');
+  });
+
+  test('Expressive preview root theme has exact migrated ownership', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final rule = inventory.ruleFor('lib/main.dart', 'local_theme');
+
+    expect(rule?.id, 'expressive-preview-root-theme');
+    expect(rule?.classification, 'application_shell');
+    expect(rule?.status, 'migrated');
+    expect(rule?.kinds, unorderedEquals(<String>['local_theme']));
+    expect(
+      rule?.rationale,
+      contains('default-null shell remains rendered identically'),
+    );
+    expect(
+      rule?.rationale,
+      contains('no human visual-adoption or persisted-family claim'),
+    );
+
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
+    expect(findings, hasLength(1));
+    expect(findings.single.file, 'lib/main.dart');
     expect(findings.single.status, 'migrated');
   });
 
@@ -352,14 +383,12 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final surfaceFindings =
-        report.findings
-            .where((finding) => finding.ruleId == surfaceRule.id)
-            .toList();
-    final categoryFindings =
-        report.findings
-            .where((finding) => finding.ruleId == categoryRule.id)
-            .toList();
+    final surfaceFindings = report.findings
+        .where((finding) => finding.ruleId == surfaceRule.id)
+        .toList();
+    final categoryFindings = report.findings
+        .where((finding) => finding.ruleId == categoryRule.id)
+        .toList();
 
     expect(surfaceFindings, hasLength(8));
     expect(
@@ -432,8 +461,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(3));
     expect(
       findings.map((finding) => finding.kind),
@@ -468,8 +498,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(2));
     expect(
       findings.map((finding) => finding.kind),
@@ -504,10 +535,9 @@ void main() {
         root: Directory('lib'),
         inventory: inventory,
       );
-      final findings =
-          report.findings
-              .where((finding) => finding.ruleId == rule!.id)
-              .toList();
+      final findings = report.findings
+          .where((finding) => finding.ruleId == rule!.id)
+          .toList();
       expect(findings, hasLength(3));
       expect(
         findings.map((finding) => finding.kind),
@@ -569,17 +599,15 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'weight-card-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'weight-card-recipes')
+        .toList();
     expect(findings, hasLength(23));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
 
-    final popupTextFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'weight-card-popup-text')
-            .toList();
+    final popupTextFindings = report.findings
+        .where((finding) => finding.ruleId == 'weight-card-popup-text')
+        .toList();
     expect(popupTextFindings, hasLength(3));
     expect(
       popupTextFindings.map((finding) => finding.status),
@@ -629,11 +657,10 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'train-action-bar-recipes')
-            .toList();
-    expect(findings, hasLength(7));
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'train-action-bar-recipes')
+        .toList();
+    expect(findings, hasLength(18));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
 
@@ -656,8 +683,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
     expect(findings, hasLength(3));
     expect(
       findings.map((finding) => finding.kind),
@@ -692,8 +720,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(5));
     expect(findings.map((finding) => finding.kind), everyElement('text_style'));
     expect(
@@ -763,10 +792,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'history-summary-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'history-summary-recipes')
+        .toList();
     expect(findings, hasLength(10));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -803,12 +831,11 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'workout-history-calendar-recipes',
-            )
-            .toList();
+    final findings = report.findings
+        .where(
+          (finding) => finding.ruleId == 'workout-history-calendar-recipes',
+        )
+        .toList();
     expect(findings, hasLength(19));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -843,10 +870,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'workout-dashboard-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'workout-dashboard-recipes')
+        .toList();
     expect(findings, hasLength(8));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -881,10 +907,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'data-records-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'data-records-recipes')
+        .toList();
     expect(findings, hasLength(4));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -914,10 +939,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'presets-loaded-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'presets-loaded-recipes')
+        .toList();
     expect(findings, hasLength(6));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -953,12 +977,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'exercise-definition-info-title',
-            )
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'exercise-definition-info-title')
+        .toList();
     expect(findings, hasLength(1));
     expect(findings.single.kind, 'text_style');
     expect(findings.single.status, 'migrated');
@@ -991,10 +1012,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'plan-builder-coach-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'plan-builder-coach-recipes')
+        .toList();
     expect(findings, hasLength(6));
     expect(
       findings.map((finding) => finding.kind),
@@ -1029,12 +1049,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'stretch-search-dialog-controls',
-            )
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'stretch-search-dialog-controls')
+        .toList();
     expect(findings, hasLength(2));
     expect(findings.map((finding) => finding.kind), everyElement('decoration'));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
@@ -1063,10 +1080,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'set-stat-chip-surface')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'set-stat-chip-surface')
+        .toList();
     expect(findings, hasLength(1));
     expect(findings.single.kind, 'decoration');
     expect(findings.single.status, 'migrated');
@@ -1097,8 +1113,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(1));
     expect(findings.single.kind, 'text_style');
     expect(findings.single.status, 'migrated');
@@ -1121,10 +1138,9 @@ void main() {
     expect(cardioRule?.classification, 'tonos_semantic');
     expect(cardioRule?.status, 'migrated');
     expect(cardioRule?.kinds, ['color']);
-    final cardioFindings =
-        report.findings
-            .where((finding) => finding.ruleId == cardioRule?.id)
-            .toList();
+    final cardioFindings = report.findings
+        .where((finding) => finding.ruleId == cardioRule?.id)
+        .toList();
     expect(cardioFindings, hasLength(2));
     expect(
       cardioFindings.map((finding) => finding.status),
@@ -1139,10 +1155,9 @@ void main() {
     expect(stretchRule?.classification, 'tonos_semantic');
     expect(stretchRule?.status, 'migrated');
     expect(stretchRule?.kinds, ['color']);
-    final stretchFindings =
-        report.findings
-            .where((finding) => finding.ruleId == stretchRule?.id)
-            .toList();
+    final stretchFindings = report.findings
+        .where((finding) => finding.ruleId == stretchRule?.id)
+        .toList();
     expect(stretchFindings, hasLength(1));
     expect(stretchFindings.single.status, 'migrated');
 
@@ -1175,10 +1190,9 @@ void main() {
       expect(semanticRule?.classification, 'tonos_semantic');
       expect(semanticRule?.status, 'migrated');
       expect(semanticRule?.kinds, ['color']);
-      final semanticFindings =
-          report.findings
-              .where((finding) => finding.ruleId == semanticRule?.id)
-              .toList();
+      final semanticFindings = report.findings
+          .where((finding) => finding.ruleId == semanticRule?.id)
+          .toList();
       expect(semanticFindings, hasLength(2));
       expect(
         semanticFindings.map((finding) => finding.status),
@@ -1196,10 +1210,9 @@ void main() {
         recipeRule?.kinds,
         unorderedEquals(<String>['geometry', 'text_style']),
       );
-      final recipeFindings =
-          report.findings
-              .where((finding) => finding.ruleId == recipeRule?.id)
-              .toList();
+      final recipeFindings = report.findings
+          .where((finding) => finding.ruleId == recipeRule?.id)
+          .toList();
       expect(recipeFindings, hasLength(4));
       expect(
         recipeFindings.map((finding) => finding.kind),
@@ -1242,8 +1255,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule?.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule?.id)
+        .toList();
     expect(findings, hasLength(2));
     expect(
       findings.map((finding) => finding.kind),
@@ -1288,10 +1302,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'session-completion-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'session-completion-recipes')
+        .toList();
     expect(findings, hasLength(16));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -1320,8 +1333,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
     expect(findings, hasLength(6));
     expect(findings.map((finding) => finding.kind), everyElement('text_style'));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
@@ -1354,8 +1368,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
     expect(findings, hasLength(3));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
@@ -1387,28 +1402,24 @@ void main() {
         root: Directory('lib'),
         inventory: inventory,
       );
-      final findings =
-          report.findings
-              .where(
-                (finding) =>
-                    finding.ruleId == 'current-metrics-category-colors',
-              )
-              .toList();
+      final findings = report.findings
+          .where(
+            (finding) => finding.ruleId == 'current-metrics-category-colors',
+          )
+          .toList();
       expect(findings, hasLength(5));
       expect(
         findings.map((finding) => finding.status),
         everyElement('allowlisted'),
       );
 
-      final markerFindings =
-          report.findings
-              .where(
-                (finding) =>
-                    finding.file ==
-                        'lib/widgets/current_metrics_section.dart' &&
-                    finding.ruleId == 'current-metrics-category-marker',
-              )
-              .toList();
+      final markerFindings = report.findings
+          .where(
+            (finding) =>
+                finding.file == 'lib/widgets/current_metrics_section.dart' &&
+                finding.ruleId == 'current-metrics-category-marker',
+          )
+          .toList();
       expect(markerFindings, hasLength(1));
       expect(markerFindings.single.kind, 'decoration');
       expect(markerFindings.single.status, 'allowlisted');
@@ -1435,10 +1446,9 @@ void main() {
         root: Directory('lib'),
         inventory: inventory,
       );
-      final findings =
-          report.findings
-              .where((finding) => finding.ruleId == 'tonos-bottom-navigation')
-              .toList();
+      final findings = report.findings
+          .where((finding) => finding.ruleId == 'tonos-bottom-navigation')
+          .toList();
 
       expect(rule.pattern, 'lib/widgets/tonos_bottom_navigation_bar.dart');
       expect(rule.classification, 'theme_system');
@@ -1447,7 +1457,7 @@ void main() {
         rule.kinds,
         unorderedEquals(<String>['color', 'decoration', 'geometry', 'shadow']),
       );
-      expect(findings, hasLength(4));
+      expect(findings, hasLength(6));
       expect(
         findings.map((finding) => finding.kind).toSet(),
         unorderedEquals(<String>{'color', 'decoration', 'geometry', 'shadow'}),
@@ -1469,16 +1479,12 @@ void main() {
         root: Directory('lib'),
         inventory: inventory,
       );
-      final findings =
-          report.findings
-              .where((finding) => finding.ruleId == 'tonos-train-tabs-geometry')
-              .toList();
-      final matchingQueues =
-          inventory.reviewQueue
-              .where(
-                (queue) => queue.matches('lib/widgets/tonos_train_tabs.dart'),
-              )
-              .toList();
+      final findings = report.findings
+          .where((finding) => finding.ruleId == 'tonos-train-tabs-geometry')
+          .toList();
+      final matchingQueues = inventory.reviewQueue
+          .where((queue) => queue.matches('lib/widgets/tonos_train_tabs.dart'))
+          .toList();
 
       expect(rule.pattern, 'lib/widgets/tonos_train_tabs.dart');
       expect(rule.classification, 'theme_system');
@@ -1502,10 +1508,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'tonos-train-tabs-recipes')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'tonos-train-tabs-recipes')
+        .toList();
 
     expect(rule.pattern, 'lib/widgets/tonos_train_tabs.dart');
     expect(rule.classification, 'theme_system');
@@ -1519,7 +1524,7 @@ void main() {
         'shadow',
       ]),
     );
-    expect(findings, hasLength(4));
+    expect(findings, hasLength(6));
     expect(
       findings.map((finding) => finding.kind).toSet(),
       unorderedEquals(<String>{
@@ -1593,10 +1598,9 @@ void main() {
       ]),
     );
 
-    final flowMethodsFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'flow-methods-recipes')
-            .toList();
+    final flowMethodsFindings = report.findings
+        .where((finding) => finding.ruleId == 'flow-methods-recipes')
+        .toList();
     expect(flowMethodsFindings, hasLength(20));
     expect(
       flowMethodsFindings.every((finding) => finding.status == 'migrated'),
@@ -1615,12 +1619,9 @@ void main() {
       workoutFlowsRule.kinds,
       unorderedEquals(<String>['color_transform', 'decoration', 'geometry']),
     );
-    final workoutFlowsFindings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'workout-progress-flows-recipes',
-            )
-            .toList();
+    final workoutFlowsFindings = report.findings
+        .where((finding) => finding.ruleId == 'workout-progress-flows-recipes')
+        .toList();
     expect(workoutFlowsFindings, hasLength(18));
     expect(
       workoutFlowsFindings.every((finding) => finding.status == 'migrated'),
@@ -1645,12 +1646,9 @@ void main() {
         'text_style',
       ]),
     );
-    final workoutMetricChartFindings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'workout-metric-chart-recipes',
-            )
-            .toList();
+    final workoutMetricChartFindings = report.findings
+        .where((finding) => finding.ruleId == 'workout-metric-chart-recipes')
+        .toList();
     expect(workoutMetricChartFindings, hasLength(35));
     expect(
       workoutMetricChartFindings.every(
@@ -1679,26 +1677,21 @@ void main() {
         'text_style',
       ]),
     );
-    final exerciseProgressFindings =
-        report.findings
-            .where(
-              (finding) => finding.ruleId == 'exercise-progress-chart-recipes',
-            )
-            .toList();
+    final exerciseProgressFindings = report.findings
+        .where((finding) => finding.ruleId == 'exercise-progress-chart-recipes')
+        .toList();
     expect(exerciseProgressFindings, hasLength(40));
     expect(
       exerciseProgressFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
     );
-    final localThemeFindings =
-        report.findings
-            .where(
-              (finding) =>
-                  finding.file ==
-                      'lib/widgets/exercise_progress_section.dart' &&
-                  finding.kind == 'local_theme',
-            )
-            .toList();
+    final localThemeFindings = report.findings
+        .where(
+          (finding) =>
+              finding.file == 'lib/widgets/exercise_progress_section.dart' &&
+              finding.kind == 'local_theme',
+        )
+        .toList();
     expect(localThemeFindings, hasLength(2));
     expect(
       localThemeFindings.every((finding) => finding.status == 'migrated'),
@@ -1731,10 +1724,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final dividerFindings =
-        report.findings
-            .where((finding) => finding.ruleId == dividerRule?.id)
-            .toList();
+    final dividerFindings = report.findings
+        .where((finding) => finding.ruleId == dividerRule?.id)
+        .toList();
     expect(dividerFindings, hasLength(1));
     expect(dividerFindings.single.kind, 'color');
     expect(dividerFindings.single.snippet, contains('dividerColor:'));
@@ -1764,10 +1756,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings
-            .where((finding) => finding.ruleId == 'flow-event-dialog-fields')
-            .toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'flow-event-dialog-fields')
+        .toList();
     expect(findings, hasLength(2));
     expect(findings.map((finding) => finding.kind), everyElement('decoration'));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
@@ -1778,8 +1769,7 @@ void main() {
             finding.status == 'pending',
       ),
       isEmpty,
-      reason:
-          'Automatic Settings styling has a separate four-mode ownership contract.',
+      reason: 'Automatic Settings styling has a separate four-mode ownership contract.',
     );
   });
 
@@ -1811,8 +1801,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(9));
     expect(
       findings.map((finding) => finding.kind),
@@ -1841,10 +1832,9 @@ void main() {
       dropdownRule?.rationale,
       contains('four-mode production-page contract'),
     );
-    final dropdownFindings =
-        report.findings
-            .where((finding) => finding.ruleId == dropdownRule!.id)
-            .toList();
+    final dropdownFindings = report.findings
+        .where((finding) => finding.ruleId == dropdownRule!.id)
+        .toList();
     expect(dropdownFindings, hasLength(1));
     expect(dropdownFindings.single.kind, 'decoration');
     expect(dropdownFindings.single.status, 'migrated');
@@ -1881,8 +1871,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(7));
     expect(
       findings.map((finding) => finding.kind),
@@ -1927,8 +1918,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(39));
     expect(
       findings.map((finding) => finding.kind),
@@ -1978,8 +1970,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(17));
     expect(
       findings.map((finding) => finding.kind),
@@ -2032,8 +2025,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(8));
     expect(
       findings.map((finding) => finding.kind),
@@ -2086,8 +2080,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(12));
     expect(
       findings.map((finding) => finding.kind),
@@ -2136,8 +2131,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(2));
     expect(
       findings.map((finding) => finding.kind),
@@ -2183,8 +2179,9 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
     expect(findings, hasLength(12));
     expect(findings.every((finding) => finding.status == 'migrated'), isTrue);
   });
@@ -2201,10 +2198,9 @@ void main() {
     expect(report.scannedFiles, isNotEmpty);
     expect(report.findings, isNotEmpty);
     expect(report.hasUnassignedFindings, isFalse);
-    final localThemeFindings =
-        report.findings
-            .where((finding) => finding.kind == 'local_theme')
-            .toList();
+    final localThemeFindings = report.findings
+        .where((finding) => finding.kind == 'local_theme')
+        .toList();
     expect(localThemeFindings, isNotEmpty);
     expect(
       localThemeFindings.every((finding) => finding.status == 'migrated'),
@@ -2219,14 +2215,13 @@ void main() {
       reason:
           'MealPlanAddBar delegates style ownership to TonosSegmentedActionBar',
     );
-    final exerciseEditorFindings =
-        report.findings
-            .where(
-              (finding) =>
-                  finding.file ==
-                  'lib/screens/profile/settings/exercise_editor_screen.dart',
-            )
-            .toList();
+    final exerciseEditorFindings = report.findings
+        .where(
+          (finding) =>
+              finding.file ==
+              'lib/screens/profile/settings/exercise_editor_screen.dart',
+        )
+        .toList();
     expect(exerciseEditorFindings, isNotEmpty);
     expect(
       exerciseEditorFindings.every(
@@ -2269,8 +2264,8 @@ void main() {
       uniqueQueueCount + outsideQueueCount + overlapCount,
       report.findings.length,
     );
-    final queueRows =
-        (queueCoverage['queues'] as List).cast<Map<String, dynamic>>();
+    final queueRows = (queueCoverage['queues'] as List)
+        .cast<Map<String, dynamic>>();
     expect(queueRows, hasLength(inventory.reviewQueue.length));
     for (final queue in queueRows) {
       final statusCounts = queue['countsByStatus'] as Map<String, int>;
@@ -2279,19 +2274,17 @@ void main() {
         queue['candidateCount'],
       );
     }
-    final badgeFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'workout-record-badges')
-            .toList();
+    final badgeFindings = report.findings
+        .where((finding) => finding.ruleId == 'workout-record-badges')
+        .toList();
     expect(badgeFindings, hasLength(6));
     expect(
       badgeFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
     );
-    final settingsAccentFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'settings-category-accents')
-            .toList();
+    final settingsAccentFindings = report.findings
+        .where((finding) => finding.ruleId == 'settings-category-accents')
+        .toList();
     expect(settingsAccentFindings, hasLength(16));
     expect(
       settingsAccentFindings.every(
@@ -2299,19 +2292,17 @@ void main() {
       ),
       isTrue,
     );
-    final settingsRecipeFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'settings-tiles-recipes')
-            .toList();
+    final settingsRecipeFindings = report.findings
+        .where((finding) => finding.ruleId == 'settings-tiles-recipes')
+        .toList();
     expect(settingsRecipeFindings, hasLength(99));
     expect(
       settingsRecipeFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
     );
-    final settingsLocalThemeFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'settings-tiles-local-theme')
-            .toList();
+    final settingsLocalThemeFindings = report.findings
+        .where((finding) => finding.ruleId == 'settings-tiles-local-theme')
+        .toList();
     expect(settingsLocalThemeFindings, hasLength(2));
     expect(
       settingsLocalThemeFindings.every(
@@ -2319,10 +2310,9 @@ void main() {
       ),
       isTrue,
     );
-    final healthTrendFindings =
-        report.findings
-            .where((finding) => finding.ruleId == 'health-trends-recipes')
-            .toList();
+    final healthTrendFindings = report.findings
+        .where((finding) => finding.ruleId == 'health-trends-recipes')
+        .toList();
     expect(healthTrendFindings, hasLength(29));
     expect(
       healthTrendFindings.every((finding) => finding.status == 'migrated'),

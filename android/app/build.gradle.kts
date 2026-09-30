@@ -1,4 +1,5 @@
 import java.io.FileInputStream
+import java.util.Base64
 import java.util.Properties
 import org.gradle.api.GradleException
 
@@ -32,10 +33,69 @@ val isInternalBuild = when {
         "TONOS_ANDROID_INTERNAL_BUILD must be true or false.",
     )
 }
+val expressivePreviewBuildSetting =
+    System.getenv("TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD")
+val isExpressivePreviewBuild = when {
+    expressivePreviewBuildSetting.isNullOrBlank() -> false
+    expressivePreviewBuildSetting.equals("true", ignoreCase = true) -> true
+    expressivePreviewBuildSetting.equals("false", ignoreCase = true) -> false
+    else -> throw GradleException(
+        "TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD must be true or false.",
+    )
+}
+if (isInternalBuild && isExpressivePreviewBuild) {
+    throw GradleException(
+        "Internal and Expressive preview Android build flags cannot overlap.",
+    )
+}
+val encodedDartDefines = project.findProperty("dart-defines")?.toString()
+val decodedDartDefines = encodedDartDefines
+    ?.split(',')
+    ?.filter(String::isNotBlank)
+    ?.map { encoded ->
+        try {
+            String(Base64.getDecoder().decode(encoded), Charsets.UTF_8)
+        } catch (error: IllegalArgumentException) {
+            throw GradleException("Flutter supplied an invalid dart-define.", error)
+        }
+    }
+    .orEmpty()
+val dartDefineValues = decodedDartDefines
+    .mapNotNull { entry ->
+        val separator = entry.indexOf('=')
+        if (separator < 0) null else entry.substring(0, separator) to
+            entry.substring(separator + 1)
+    }
+    .groupBy({ it.first }, { it.second })
+fun dartDefine(name: String): String? =
+    dartDefineValues[name]?.distinct()?.singleOrNull()
+val expressivePreviewDartFlag = dartDefine("TONOS_EXPRESSIVE_PREVIEW")
+if (isExpressivePreviewBuild) {
+    if (expressivePreviewDartFlag != "true" ||
+        dartDefine("TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD") != "true" ||
+        dartDefine("TONOS_ANDROID_INTERNAL_BUILD") != "false" ||
+        dartDefine("TONOS_DATABASE_NAME") != "tonos_expressive_preview.db") {
+        throw GradleException(
+            "Preview APKs require matching preview, isolated database, and non-internal dart-defines.",
+        )
+    }
+} else if (expressivePreviewDartFlag == "true") {
+    throw GradleException(
+        "TONOS_EXPRESSIVE_PREVIEW=true requires TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true.",
+    )
+}
 val candidateApplicationId =
-    if (isInternalBuild) "com.tonos.internal" else "com.tonos"
+    when {
+        isExpressivePreviewBuild -> "com.tonos.expressivepreview"
+        isInternalBuild -> "com.tonos.internal"
+        else -> "com.tonos"
+    }
 val applicationLabel =
-    if (isInternalBuild) "Tonos (Internal)" else "Tonos - Health and Fitness"
+    when {
+        isExpressivePreviewBuild -> "Tonos Expressive Preview"
+        isInternalBuild -> "Tonos (Internal)"
+        else -> "Tonos - Health and Fitness"
+    }
 
 android {
     namespace = "com.tonos"

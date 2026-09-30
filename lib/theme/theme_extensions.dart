@@ -17,7 +17,7 @@ import 'tokens/app_media_tokens.dart';
 import 'tokens/app_progress_colors.dart';
 import 'tokens/app_tutorial_tokens.dart';
 
-enum AppThemeFamilyIdentity { classic, neoBrutalism }
+enum AppThemeFamilyIdentity { classic, neoBrutalism, expressivePreview }
 
 @immutable
 class AppThemeIdentity extends ThemeExtension<AppThemeIdentity> {
@@ -76,6 +76,8 @@ extension AppThemeDataX on ThemeData {
       appThemeFamilyIdentity == AppThemeFamilyIdentity.classic;
   bool get usesNeoPresentation =>
       appThemeFamilyIdentity == AppThemeFamilyIdentity.neoBrutalism;
+  bool get usesExpressivePresentation =>
+      appThemeFamilyIdentity == AppThemeFamilyIdentity.expressivePreview;
 
   AppSettingsPresentationTokens get settingsPresentationTokens =>
       extension<AppSettingsPresentationTokens>() ??
@@ -118,6 +120,8 @@ extension AppThemeX on BuildContext {
       Theme.of(this).appThemeFamilyIdentity;
   bool get usesClassicPresentation => Theme.of(this).usesClassicPresentation;
   bool get usesNeoPresentation => Theme.of(this).usesNeoPresentation;
+  bool get usesExpressivePresentation =>
+      Theme.of(this).usesExpressivePresentation;
   AppSettingsPresentationTokens get settingsPresentationTokens =>
       Theme.of(this).settingsPresentationTokens;
   AppMotionTokens get motionTokens => Theme.of(this).motionTokens;
