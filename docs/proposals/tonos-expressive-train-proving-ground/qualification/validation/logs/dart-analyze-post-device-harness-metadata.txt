@@ -1,0 +1,8 @@
+started_local=2026-09-30T10:49:44.3715646-04:00
+finished_local=2026-09-30T10:50:33.5186962-04:00
+elapsed_seconds=49.135
+exit_code=0
+errors=0
+warnings=0
+infos=84
+log_path=E:\projects\env_test\docs\proposals\tonos-expressive-train-proving-ground\qualification\validation\logs\dart-analyze-post-device-harness-machine.txt

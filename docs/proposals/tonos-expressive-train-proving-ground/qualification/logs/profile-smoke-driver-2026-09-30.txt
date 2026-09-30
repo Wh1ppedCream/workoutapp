@@ -1,0 +1,64 @@
+DRIVE_STARTED_LOCAL=2026-09-30T11:03:04.7126206-04:00
+APK_SHA256=A493D82CFCAAD26783BB5190B5958FBCA8A30627C549146954A335683AB46D3B
+SMOKE_ONLY_DEFINE=true
+Installing build\app\outputs\flutter-apk\app-profile.apk...         7.9s
+I/HWUI    (16659): Using FreeType backend (prop=Auto)
+I/pressivepreview(16659): Compiler allocated 5116KB to compile void android.view.ViewRootImpl.performTraversals()
+VMServiceFlutterDriver: Connecting to Flutter application at http://127.0.0.1:10465/B2eanNdG9_g=/
+VMServiceFlutterDriver: Isolate found with number: 6282957303957407
+VMServiceFlutterDriver: Isolate 6282957303957407 is runnable.
+VMServiceFlutterDriver: Isolate is paused at start.
+VMServiceFlutterDriver: Attempting to resume isolate
+I/flutter (16659): 00:00 +0: smoke-only Workout compatibility on the isolated preview database
+VMServiceFlutterDriver: Connected to Flutter application.
+I/flutter (16659): [expressive-preview] +0ms fixtures.repository.warmUp started
+I/flutter (16659): [db] opening existing database (size=1544192B)
+I/flutter (16659): [db] onOpen (begin)
+I/flutter (16659): [db] onOpen step trigger-reset: 0ms - skipped (done:18)
+I/flutter (16659): [db] onOpen step legacy-catalog-compact: 13ms - skipped (not_needed:4:0)
+I/flutter (16659): [db] onOpen step starter-plan-cleanup: 9ms - skipped (done:0:7)
+I/flutter (16659): [db] onOpen step seed-foods: 5ms - skipped (count=4)
+I/flutter (16659): [db] onOpen step ensure-indexes: 0ms - skipped (done:54)
+I/flutter (16659): [db] onOpen step fts-ready: 158ms - ok (foods=4, fts=4)
+I/flutter (16659): [db] onOpen (done in 1202ms) - seeded: false
+I/flutter (16659): [db] openDatabase ready in 1334ms (existingDb: true)
+I/flutter (16659): [expressive-preview] +1614ms fixtures.repository.warmUp completed
+I/flutter (16659): [expressive-preview] +1614ms fixtures.removeRecordedRows started
+I/flutter (16659): [expressive-preview] +1950ms fixtures.removeRecordedRows completed
+I/flutter (16659): [expressive-preview] +1950ms fixtures.detailedExerciseDefinitions query started
+D/ProfileInstaller(16659): Installing profile for com.tonos.expressivepreview
+I/flutter (16659): [expressive-preview] +2507ms fixtures.detailedExerciseDefinitions query completed count=300
+I/flutter (16659): [expressive-preview] +2508ms fixtures.exerciseDefinitions eligible=300
+I/flutter (16659): [expressive-preview] +2508ms fixtures.equipment query started
+I/flutter (16659): [expressive-preview] +2517ms fixtures.equipment query completed count=40
+I/flutter (16659): [expressive-preview] +2518ms fixtures.profile creation started
+I/flutter (16659): [expressive-preview] +2624ms fixtures.profile creation completed
+I/flutter (16659): [expressive-preview] +2651ms fixtures.preset 1/8 creation started
+I/flutter (16659): [expressive-preview] +2723ms fixtures.preset 1/8 completed
+I/flutter (16659): [expressive-preview] +2724ms fixtures.preset 2/8 creation started
+I/flutter (16659): [expressive-preview] +2786ms fixtures.preset 2/8 completed
+I/flutter (16659): [expressive-preview] +2786ms fixtures.preset 3/8 creation started
+I/flutter (16659): [expressive-preview] +2843ms fixtures.preset 3/8 completed
+I/flutter (16659): [expressive-preview] +2844ms fixtures.preset 4/8 creation started
+I/flutter (16659): [expressive-preview] +2892ms fixtures.preset 4/8 completed
+I/flutter (16659): [expressive-preview] +2893ms fixtures.preset 5/8 creation started
+I/flutter (16659): [expressive-preview] +2940ms fixtures.preset 5/8 completed
+I/flutter (16659): [expressive-preview] +2941ms fixtures.preset 6/8 creation started
+I/flutter (16659): [expressive-preview] +3008ms fixtures.preset 6/8 completed
+I/flutter (16659): [expressive-preview] +3009ms fixtures.preset 7/8 creation started
+I/flutter (16659): [expressive-preview] +3087ms fixtures.preset 7/8 completed
+I/flutter (16659): [expressive-preview] +3087ms fixtures.preset 8/8 creation started
+I/flutter (16659): [expressive-preview] +3141ms fixtures.preset 8/8 completed
+I/flutter (16659): [expressive-preview] +3142ms fixtures.activePlan replacement started
+I/flutter (16659): [expressive-preview] +3168ms fixtures.activePlan replacement completed
+I/flutter (16659): [expressive-preview] +3169ms fixtures.session 1/3 creation started
+I/flutter (16659): [expressive-preview] +3267ms fixtures.session 1/3 completed
+I/flutter (16659): [expressive-preview] +3267ms fixtures.session 2/3 creation started
+I/flutter (16659): [expressive-preview] +3362ms fixtures.session 2/3 completed
+I/flutter (16659): [expressive-preview] +3362ms fixtures.session 3/3 creation started
+I/flutter (16659): [expressive-preview] +3458ms fixtures.session 3/3 completed
+I/flutter (16659): [expressive-preview] +3459ms fixtures.selectedProfile write started
+I/flutter (16659): [expressive-preview] +3468ms fixtures.seed completed
+I/flutter (16659): [expressive-preview] +3469ms fixtures.reviewPreferences started
+I/flutter (16659): [expressive-preview] +3511ms fixtures.reviewPreferences completed
+I/pressivepreview(16659): Background concurrent mark compact GC freed 5175KB AllocSpace bytes, 29(2020KB) LOS objects, 98% free, 3310KB/256MB, paused 348us,8.172ms total 123.096ms

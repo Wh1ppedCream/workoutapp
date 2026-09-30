@@ -1,0 +1,10 @@
+Build stage: profile integration APK, all-timing harness with outer-target correction
+Command: flutter build apk --profile --no-pub --target integration_test\expressive_preview_device_test.dart
+Defines: TONOS_EXPRESSIVE_PREVIEW=true; TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true; TONOS_ANDROID_INTERNAL_BUILD=false; TONOS_DATABASE_NAME=tonos_expressive_preview.db; TONOS_PREVIEW_SHOW_CONTROLS=true
+Gradle result: exit 0; assembleProfile elapsed 197.1 seconds; Flutter reported 165.1 MB
+APK: build\app\outputs\flutter-apk\app-profile.apk
+APK size: 173,126,062 bytes
+Manifest package: com.tonos.expressivepreview
+Manifest version: versionCode 6, versionName 1.0.1
+SHA-256: 40D4133EEFD93E3D1ADC092ED73C119477A3E698CC13F2768FCBE71ACB32E68D
+Install/drive: not installed or driven after the narrowed user checkpoint; this full-matrix artifact is retained as historical build evidence.

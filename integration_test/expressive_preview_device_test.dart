@@ -24,14 +24,23 @@ import 'package:env_test/screens/exercise/session_screen.dart';
 import 'package:env_test/screens/catalog_page.dart';
 import 'package:env_test/screens/exercise/train_page.dart';
 import 'package:env_test/providers/theme_provider.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tonos_preview_presentation.dart';
 import 'package:env_test/utils/app_test_keys.dart';
+import 'package:env_test/widgets/tonos_bottom_navigation_bar.dart';
+import 'package:env_test/widgets/tonos_train_tabs.dart';
 import 'package:env_test/widgets/seven_day_focus_card.dart';
 import 'package:env_test/widgets/weight_card.dart';
 
 const _timingFlushDelay = Duration(seconds: 2);
+const _idleObservationDuration = Duration(seconds: 3);
+const _rapidSelectionCadence = Duration(milliseconds: 80);
 const _measuredCyclesPerBatch = 6;
+const _smokeOnlyDeviceRun = bool.fromEnvironment(
+  'TONOS_PREVIEW_DEVICE_SMOKE_ONLY',
+  defaultValue: false,
+);
 const _measurementOrder = <TonosPreviewLook>[
   TonosPreviewLook.classic,
   TonosPreviewLook.expressive,
@@ -43,12 +52,14 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
-    'profile matched Train shell interactions on the isolated preview database',
+    _smokeOnlyDeviceRun
+        ? 'smoke-only Workout compatibility on the isolated preview database'
+        : 'profile matched Train shell interactions on the isolated preview database',
     (tester) async {
       expect(
         kProfileMode,
         isTrue,
-        reason: 'Frame-budget evidence is valid only from a profile build.',
+        reason: 'Device qualification must use a profile build.',
       );
 
       // This identity check must complete before preferences, the repository,
@@ -87,56 +98,172 @@ void main() {
         expect(refreshRateHz, greaterThan(0));
         final frameBudgetMicros = (1000000 / refreshRateHz).round();
         final logicalSize = view.physicalSize / view.devicePixelRatio;
+        debugPrint(
+          '[expressive-preview-profile] '
+          'platform=${defaultTargetPlatform.name} '
+          'refreshRateHz=$refreshRateHz '
+          'frameBudgetMicros=$frameBudgetMicros '
+          'physicalSize=${view.physicalSize} '
+          'logicalWidthDp=${logicalSize.width} '
+          'logicalHeightDp=${logicalSize.height} '
+          'devicePixelRatio=${view.devicePixelRatio}',
+        );
 
-        // Warm both render paths before collecting samples. No timing callback
-        // is attached during these interactions.
-        for (final look in [
-          TonosPreviewLook.classic,
-          TonosPreviewLook.expressive,
-        ]) {
-          presentation.setLook(look);
+        if (_smokeOnlyDeviceRun) {
+          presentation.setLook(TonosPreviewLook.expressive);
+          presentation.setPaletteTreatment(ExpressivePaletteTreatment.curated);
+          presentation.setBrightness(Brightness.light);
+          presentation.setTextScaleOverride(1);
+          presentation.setReducedMotion(false);
+          presentation.setEffectsOff(false);
           await tester.pumpAndSettle();
-          await _resetTrainPosition(tester);
-          await _exerciseMatchedInteractions(tester, cycles: 1);
+
+          final productionSession =
+              await _exerciseProductionSessionCompatibility(
+                tester,
+                repository: repository,
+                presentation: presentation,
+              );
+          expect(await repository.loadActiveWorkoutDraft(), isNull);
+          expect(tester.takeException(), isNull);
+          final previewContext = tester.element(find.byType(TrainPage));
+          binding.reportData = <String, dynamic>{
+            'expressivePreviewDeviceSmoke': <String, Object>{
+              'mode': 'profile',
+              'smokeOnly': true,
+              'timingsMeasured': false,
+              'phases': const <Object>[],
+              'platform': defaultTargetPlatform.name,
+              'deviceRefreshRateHz': refreshRateHz,
+              'frameBudgetMicros': frameBudgetMicros,
+              'logicalWidthDp': logicalSize.width,
+              'logicalHeightDp': logicalSize.height,
+              'devicePixelRatio': view.devicePixelRatio,
+              'look': presentation.look.name,
+              'paletteTreatment': presentation.paletteTreatment.name,
+              'brightness': presentation.brightness.name,
+              'textScaleOverride': presentation.textScaleOverride!,
+              'reducedMotionControl': presentation.reducedMotion,
+              'effectsOffControl': presentation.effectsOff,
+              'effectiveAnimationsDisabled': MediaQuery.disableAnimationsOf(
+                previewContext,
+              ),
+              'productionSessionCompatibility': productionSession,
+            },
+          };
+          return;
+        }
+
+        // Warm both looks in both brightness modes before collecting samples.
+        // No timing callback is attached during these interactions.
+        for (final brightness in [Brightness.light, Brightness.dark]) {
+          presentation.setBrightness(brightness);
+          await tester.pumpAndSettle();
+          for (final look in [
+            TonosPreviewLook.classic,
+            TonosPreviewLook.expressive,
+          ]) {
+            presentation.setLook(look);
+            await tester.pumpAndSettle();
+            await _resetTrainPosition(tester);
+            await _exerciseMatchedInteractions(tester, cycles: 1);
+          }
         }
 
         final phases = <Map<String, Object>>[];
-        for (var index = 0; index < _measurementOrder.length; index++) {
-          final look = _measurementOrder[index];
-          presentation.setLook(look);
+        for (final brightness in [Brightness.light, Brightness.dark]) {
+          presentation.setBrightness(brightness);
           await tester.pumpAndSettle();
-          await _resetTrainPosition(tester);
-          await Future<void>.delayed(_timingFlushDelay);
+          for (final look in [
+            TonosPreviewLook.classic,
+            TonosPreviewLook.expressive,
+          ]) {
+            presentation.setLook(look);
+            await tester.pumpAndSettle();
+            await _resetTrainPosition(tester);
+            await Future<void>.delayed(_timingFlushDelay);
 
-          final timings = await _captureTimings(
-            binding,
-            () => _exerciseMatchedInteractions(
-              tester,
-              cycles: _measuredCyclesPerBatch,
-            ),
-          );
-          expect(timings, isNotEmpty);
-          final phase = <String, Object>{
-            'batch': index + 1,
-            'look': look.name,
-            'interactionCycles': _measuredCyclesPerBatch,
-            'frameCount': timings.length,
-            'build': _durationSummary(
-              timings.map((frame) => frame.buildDuration.inMicroseconds),
-              frameBudgetMicros,
-            ),
-            'raster': _durationSummary(
-              timings.map((frame) => frame.rasterDuration.inMicroseconds),
-              frameBudgetMicros,
-            ),
-            'slowFrameClusters': _slowFrameClusterCount(
-              timings,
-              frameBudgetMicros,
-            ),
-          };
-          phases.add(phase);
-          debugPrint('[expressive-preview-profile] $phase');
+            late DateTime idleStartedAtUtc;
+            late int idleDurationMicros;
+            final timings = await _captureTimings(binding, () async {
+              idleStartedAtUtc = DateTime.now().toUtc();
+              final idleStopwatch = Stopwatch()..start();
+              await Future<void>.delayed(_idleObservationDuration);
+              idleStopwatch.stop();
+              idleDurationMicros = idleStopwatch.elapsedMicroseconds;
+            });
+            final idlePhase =
+                _profilePhase(
+                    batch: 1,
+                    brightness: brightness,
+                    look: look,
+                    pattern: 'quiet-idle-observation',
+                    timings: timings,
+                    frameBudgetMicros: frameBudgetMicros,
+                    interactionCycles: null,
+                  )
+                  ..['idleStartedAtUtc'] = idleStartedAtUtc.toIso8601String()
+                  ..['idleDurationMicros'] = idleDurationMicros
+                  ..['idleFrameCount'] = timings.length;
+            phases.add(idlePhase);
+            debugPrint('[expressive-preview-profile] $idlePhase');
+          }
         }
+
+        for (final brightness in [Brightness.light, Brightness.dark]) {
+          presentation.setBrightness(brightness);
+          await tester.pumpAndSettle();
+          for (var index = 0; index < _measurementOrder.length; index++) {
+            final look = _measurementOrder[index];
+            presentation.setLook(look);
+            await tester.pumpAndSettle();
+            await _resetTrainPosition(tester);
+            await Future<void>.delayed(_timingFlushDelay);
+
+            var timings = await _captureTimings(
+              binding,
+              () => _exerciseMatchedInteractions(
+                tester,
+                cycles: _measuredCyclesPerBatch,
+              ),
+            );
+            expect(timings, isNotEmpty);
+            var phase = _profilePhase(
+              batch: index + 1,
+              brightness: brightness,
+              look: look,
+              pattern: 'settled-mixed-interactions',
+              timings: timings,
+              frameBudgetMicros: frameBudgetMicros,
+            );
+            phases.add(phase);
+            debugPrint('[expressive-preview-profile] $phase');
+
+            await _resetTrainPosition(tester);
+            await Future<void>.delayed(_timingFlushDelay);
+            timings = await _captureTimings(
+              binding,
+              () => _exerciseRapidSelectionRetargeting(
+                tester,
+                cycles: _measuredCyclesPerBatch,
+              ),
+            );
+            expect(timings, isNotEmpty);
+            phase = _profilePhase(
+              batch: index + 1,
+              brightness: brightness,
+              look: look,
+              pattern: 'rapid-tab-and-nav-retargeting',
+              timings: timings,
+              frameBudgetMicros: frameBudgetMicros,
+              inputCadenceMicros: _rapidSelectionCadence.inMicroseconds,
+            );
+            phases.add(phase);
+            debugPrint('[expressive-preview-profile] $phase');
+          }
+        }
+        presentation.setBrightness(Brightness.light);
+        await tester.pumpAndSettle();
 
         final finalTrainContext = tester.element(find.byType(TrainPage));
         expect(
@@ -174,6 +301,7 @@ void main() {
             'logicalWidthDp': logicalSize.width,
             'logicalHeightDp': logicalSize.height,
             'devicePixelRatio': view.devicePixelRatio,
+            'measuredBrightnesses': <String>['light', 'dark'],
             'brightness': presentation.brightness.name,
             'fixtureProfileId': fixtures.profileId,
             'matchedInteractionOrder': _measurementOrder
@@ -194,6 +322,41 @@ void main() {
       }
     },
   );
+}
+
+Map<String, Object> _profilePhase({
+  required int batch,
+  required Brightness brightness,
+  required TonosPreviewLook look,
+  required String pattern,
+  required List<ui.FrameTiming> timings,
+  required int frameBudgetMicros,
+  int? interactionCycles = _measuredCyclesPerBatch,
+  int? inputCadenceMicros,
+}) {
+  final phase = <String, Object>{
+    'batch': batch,
+    'brightness': brightness.name,
+    'look': look.name,
+    'pattern': pattern,
+    'frameCount': timings.length,
+    'build': _durationSummary(
+      timings.map((frame) => frame.buildDuration.inMicroseconds),
+      frameBudgetMicros,
+    ),
+    'raster': _durationSummary(
+      timings.map((frame) => frame.rasterDuration.inMicroseconds),
+      frameBudgetMicros,
+    ),
+    'slowFrameClusters': _slowFrameClusterCount(timings, frameBudgetMicros),
+  };
+  if (interactionCycles != null) {
+    phase['interactionCycles'] = interactionCycles;
+  }
+  if (inputCadenceMicros != null) {
+    phase['inputCadenceMicros'] = inputCadenceMicros;
+  }
+  return phase;
 }
 
 Future<List<String>> _exerciseFunctionalPreviewFlows(
@@ -317,11 +480,35 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
     expect(find.byType(SessionScreen), findsOneWidget);
     expect(await repository.loadActiveWorkoutDraft(), isNotNull);
     await tester.binding.handlePopRoute();
-    await tester.pump(const Duration(milliseconds: 400));
-    await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
-    expect(find.byKey(AppTestKeys.ongoingSessionMenu), findsOneWidget);
-    await tester.tap(find.byKey(AppTestKeys.ongoingSessionMenu));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    final ongoingSessionMenu = find.byKey(AppTestKeys.ongoingSessionMenu);
+    await _waitForElement(tester, ongoingSessionMenu);
+    expect(ongoingSessionMenu, findsOneWidget);
+    final menuRect = tester.getRect(ongoingSessionMenu);
+    final logicalViewport =
+        tester.view.physicalSize / tester.view.devicePixelRatio;
+    final hitTestableMenu = ongoingSessionMenu.hitTestable();
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'ongoing-session-menu rectDp='
+      'left:${menuRect.left.toStringAsFixed(1)},'
+      'top:${menuRect.top.toStringAsFixed(1)},'
+      'width:${menuRect.width.toStringAsFixed(1)},'
+      'height:${menuRect.height.toStringAsFixed(1)} '
+      'logicalViewportDp='
+      '${logicalViewport.width.toStringAsFixed(1)}x'
+      '${logicalViewport.height.toStringAsFixed(1)} '
+      'hitTestable=${hitTestableMenu.evaluate().isNotEmpty}',
+    );
+    expect(menuRect.width, greaterThanOrEqualTo(48));
+    expect(menuRect.height, greaterThanOrEqualTo(48));
+    expect(
+      hitTestableMenu,
+      findsOneWidget,
+      reason: 'The returned-home session menu must be hit-testable.',
+    );
+    await tester.tap(hitTestableMenu);
+    await tester.pumpAndSettle();
     await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.tap(find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.pump();
@@ -371,7 +558,10 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
   var midpointHeight = 0.0;
   var collapsedHeight = 0.0;
   var autoCollapsedHeight = 0.0;
+  var collapseInnerRect = Rect.zero;
+  var collapseGlyphRect = Rect.zero;
   var collapseRect = Rect.zero;
+  var menuGlyphRect = Rect.zero;
   var menuRect = Rect.zero;
   var checkboxRect = Rect.zero;
   var textScale = 1.0;
@@ -413,30 +603,79 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
       );
     }
 
-    final collapseControl = find.byTooltip(strings.weightCollapseSets).first;
+    final collapseTooltip = find.descendant(
+      of: card,
+      matching: find.byTooltip(strings.weightCollapseSets),
+    );
+    expect(collapseTooltip, findsOneWidget);
+    final collapseControl = find.ancestor(
+      of: collapseTooltip,
+      matching: find.byType(IconButton),
+    );
+    expect(collapseControl, findsOneWidget);
     await tester.ensureVisible(collapseControl);
+    collapseInnerRect = tester.getRect(collapseTooltip);
+    final collapseGlyph = find.descendant(
+      of: card,
+      matching: find.byIcon(Icons.keyboard_arrow_up),
+    );
+    expect(collapseGlyph, findsOneWidget);
+    collapseGlyphRect = tester.getRect(collapseGlyph);
     collapseRect = tester.getRect(collapseControl);
+    final hitTestableCollapse = collapseControl.hitTestable();
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'collapse innerDp='
+      '${collapseInnerRect.width.toStringAsFixed(1)}x'
+      '${collapseInnerRect.height.toStringAsFixed(1)} '
+      'glyphDp='
+      '${collapseGlyphRect.width.toStringAsFixed(1)}x'
+      '${collapseGlyphRect.height.toStringAsFixed(1)} '
+      'outerTargetDp='
+      '${collapseRect.width.toStringAsFixed(1)}x'
+      '${collapseRect.height.toStringAsFixed(1)} '
+      'hitTestable=${hitTestableCollapse.evaluate().isNotEmpty}',
+    );
     expect(collapseRect.width, greaterThanOrEqualTo(48));
     expect(collapseRect.height, greaterThanOrEqualTo(48));
+    expect(hitTestableCollapse, findsOneWidget);
 
-    final cardMenu = find.descendant(
+    final cardMenuGlyph = find.descendant(
       of: card,
       matching: find.byIcon(Icons.more_vert),
     );
+    expect(cardMenuGlyph, findsOneWidget);
+    menuGlyphRect = tester.getRect(cardMenuGlyph);
+    final cardMenu = find.ancestor(
+      of: cardMenuGlyph,
+      matching: find.byType(IconButton),
+    );
     expect(cardMenu, findsOneWidget);
     menuRect = tester.getRect(cardMenu);
+    final hitTestableCardMenu = cardMenu.hitTestable();
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'menu glyphDp='
+      '${menuGlyphRect.width.toStringAsFixed(1)}x'
+      '${menuGlyphRect.height.toStringAsFixed(1)} '
+      'outerTargetDp='
+      '${menuRect.width.toStringAsFixed(1)}x'
+      '${menuRect.height.toStringAsFixed(1)} '
+      'hitTestable=${hitTestableCardMenu.evaluate().isNotEmpty}',
+    );
     expect(menuRect.width, greaterThanOrEqualTo(48));
     expect(menuRect.height, greaterThanOrEqualTo(48));
-    await tester.tap(cardMenu);
-    await tester.pump();
+    expect(hitTestableCardMenu, findsOneWidget);
+    await tester.tapAt(Offset(menuRect.left + 1, menuRect.center.dy));
+    await tester.pumpAndSettle();
     await _waitForElement(tester, find.text(strings.weightMakeChangeSet));
     expect(find.text(strings.weightMakeChangeSet), findsOneWidget);
     await tester.binding.handlePopRoute();
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text(strings.weightMakeChangeSet), findsNothing);
 
     expandedHeight = tester.getSize(card).height;
-    await tester.tap(find.byTooltip(strings.weightCollapseSets));
+    await tester.tapAt(Offset(collapseRect.left + 1, collapseRect.center.dy));
     await tester.pump();
     if (motionDisabled) {
       midpointHeight = tester.getSize(card).height;
@@ -453,7 +692,26 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
       expect(midpointHeight, greaterThan(collapsedHeight));
     }
 
-    await tester.tap(find.byTooltip(strings.weightExpandSets));
+    final expandTooltip = find.descendant(
+      of: card,
+      matching: find.byTooltip(strings.weightExpandSets),
+    );
+    final expandControl = find.ancestor(
+      of: expandTooltip,
+      matching: find.byType(IconButton),
+    );
+    expect(expandTooltip, findsOneWidget);
+    expect(expandControl, findsOneWidget);
+    final expandRect = tester.getRect(expandControl);
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'expand outerTargetDp='
+      '${expandRect.width.toStringAsFixed(1)}x'
+      '${expandRect.height.toStringAsFixed(1)}',
+    );
+    expect(expandRect.width, greaterThanOrEqualTo(48));
+    expect(expandRect.height, greaterThanOrEqualTo(48));
+    await tester.tapAt(Offset(expandRect.right - 1, expandRect.center.dy));
     await tester.pump();
     if (!motionDisabled) {
       await tester.pump(const Duration(milliseconds: 200));
@@ -502,12 +760,27 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     // This session contains completed sets. Discard it through the production
     // confirmation so no fixture history or progression data is written.
     await tester.binding.handlePopRoute();
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.binding.handlePopRoute();
-    await tester.pump(const Duration(milliseconds: 400));
-    await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionMenu));
-    await tester.tap(find.byKey(AppTestKeys.ongoingSessionMenu));
-    await tester.pump();
+    await tester.pumpAndSettle();
+    final ongoingSessionMenu = find.byKey(AppTestKeys.ongoingSessionMenu);
+    await _waitForElement(tester, ongoingSessionMenu);
+    final ongoingMenuRect = tester.getRect(ongoingSessionMenu);
+    final hitTestableOngoingMenu = ongoingSessionMenu.hitTestable();
+    debugPrint(
+      '[expressive-preview-workout-smoke] '
+      'completed-session-menu rectDp='
+      'left:${ongoingMenuRect.left.toStringAsFixed(1)},'
+      'top:${ongoingMenuRect.top.toStringAsFixed(1)},'
+      'width:${ongoingMenuRect.width.toStringAsFixed(1)},'
+      'height:${ongoingMenuRect.height.toStringAsFixed(1)} '
+      'hitTestable=${hitTestableOngoingMenu.evaluate().isNotEmpty}',
+    );
+    expect(ongoingMenuRect.width, greaterThanOrEqualTo(48));
+    expect(ongoingMenuRect.height, greaterThanOrEqualTo(48));
+    expect(hitTestableOngoingMenu, findsOneWidget);
+    await tester.tap(hitTestableOngoingMenu);
+    await tester.pumpAndSettle();
     await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.tap(find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.pump();
@@ -532,12 +805,17 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     'autoCollapsedAfterFinalSetHeightDp': autoCollapsedHeight,
     'collapseHitBoundsDp': '${collapseRect.width}x${collapseRect.height}',
     'menuHitBoundsDp': '${menuRect.width}x${menuRect.height}',
+    'menuGlyphBoundsDp': '${menuGlyphRect.width}x${menuGlyphRect.height}',
     'checkboxHitBoundsDp': '${checkboxRect.width}x${checkboxRect.height}',
     'textScaleAt1x': textScale,
     'menuAnchorOpened': true,
     'nonFinalSetKeptCardOpen': true,
     'finalSetAutoCollapsedCard': true,
     'reopenPreservedCompletedChecks': true,
+    'collapseInnerBoundsDp':
+        '${collapseInnerRect.width}x${collapseInnerRect.height}',
+    'collapseGlyphBoundsDp':
+        '${collapseGlyphRect.width}x${collapseGlyphRect.height}',
     'completedHistoryCountUnchanged': true,
   };
 }
@@ -687,3 +965,43 @@ Future<void> _exerciseMatchedInteractions(
   }
   await _showTrainOverview(tester);
 }
+
+Future<void> _exerciseRapidSelectionRetargeting(
+  WidgetTester tester, {
+  required int cycles,
+}) async {
+  final plansTab = find.byKey(AppTestKeys.trainPlansTab);
+  final overviewTab = find.byKey(AppTestKeys.trainOverviewTab);
+  final catalogTab = find.byKey(AppTestKeys.mainTab('catalog'));
+  final trainTab = find.byKey(AppTestKeys.mainTab('train'));
+
+  expect(_selectedTrainTabIndex(tester), 0);
+  expect(_selectedNavigationIndex(tester), 0);
+  for (var cycle = 0; cycle < cycles; cycle++) {
+    await tester.tap(plansTab);
+    await tester.pump(_rapidSelectionCadence);
+    expect(_selectedTrainTabIndex(tester), 1);
+
+    await tester.tap(overviewTab);
+    await tester.pump(_rapidSelectionCadence);
+    expect(_selectedTrainTabIndex(tester), 0);
+
+    await tester.tap(catalogTab);
+    await tester.pump(_rapidSelectionCadence);
+    expect(_selectedNavigationIndex(tester), 1);
+
+    await tester.tap(trainTab);
+    await tester.pump(_rapidSelectionCadence);
+    expect(_selectedNavigationIndex(tester), 0);
+  }
+  await tester.pumpAndSettle();
+  expect(_selectedTrainTabIndex(tester), 0);
+  expect(_selectedNavigationIndex(tester), 0);
+}
+
+int _selectedTrainTabIndex(WidgetTester tester) =>
+    tester.widget<TonosTrainTabs>(find.byType(TonosTrainTabs)).selectedIndex;
+
+int _selectedNavigationIndex(WidgetTester tester) => tester
+    .widget<TonosBottomNavigationBar>(find.byType(TonosBottomNavigationBar))
+    .currentIndex;

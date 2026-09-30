@@ -1,0 +1,10 @@
+command=dart analyze --format machine
+sdk=E:\tools\flutter_sdks\3.47.5\flutter\bin\cache\dart-sdk\bin\dart.exe
+start_local=2026-09-30T10:05:29.9571442-04:00
+finish_local=2026-09-30T10:06:11.5802066-04:00
+elapsed_seconds=41.597
+exit_code=0
+errors=0
+warnings=0
+infos=84
+log=docs/proposals/tonos-expressive-train-proving-ground/qualification/validation/logs/dart-analyze-final-postfix-machine.txt

@@ -1,0 +1,146 @@
+Installing build\app\outputs\flutter-apk\app-profile.apk...         8.7s
+D/ProfileInstaller(11601): Installing profile for com.tonos.expressivepreview
+VMServiceFlutterDriver: Connecting to Flutter application at http://127.0.0.1:3363/flXOnxmk-_c=/
+VMServiceFlutterDriver: Isolate found with number: 6201618843977715
+VMServiceFlutterDriver: Isolate 6201618843977715 is runnable.
+VMServiceFlutterDriver: Isolate is paused at start.
+VMServiceFlutterDriver: Attempting to resume isolate
+I/flutter (11601): 00:00 +0: profile matched Train shell interactions on the isolated preview database
+I/flutter (11601): [expressive-preview] +0ms fixtures.repository.warmUp started
+I/flutter (11601): [db] opening existing database (size=1540096B)
+D/InsetsController(11601): hide(ime())
+I/ImeTracker(11601): com.tonos.expressivepreview:4a2df8ef: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+VMServiceFlutterDriver: Connected to Flutter application.
+I/flutter (11601): [db] onOpen (begin)
+I/flutter (11601): [db] onOpen step trigger-reset: 0ms - skipped (done:18)
+I/flutter (11601): [db] onOpen step legacy-catalog-compact: 1ms - skipped (not_needed:4:0)
+I/flutter (11601): [db] onOpen step starter-plan-cleanup: 2ms - skipped (done:0:7)
+I/flutter (11601): [db] onOpen step seed-foods: 2ms - skipped (count=4)
+I/flutter (11601): [db] onOpen step ensure-indexes: 0ms - skipped (done:54)
+I/flutter (11601): [db] onOpen step fts-ready: 32ms - ok (foods=4, fts=4)
+I/flutter (11601): [db] onOpen (done in 154ms) - seeded: false
+I/flutter (11601): [db] openDatabase ready in 247ms (existingDb: true)
+I/flutter (11601): [expressive-preview] +1781ms fixtures.repository.warmUp completed
+I/flutter (11601): [expressive-preview] +1781ms fixtures.removeRecordedRows started
+I/flutter (11601): [expressive-preview] +1917ms fixtures.removeRecordedRows completed
+I/flutter (11601): [expressive-preview] +1917ms fixtures.detailedExerciseDefinitions query started
+I/flutter (11601): [expressive-preview] +2051ms fixtures.detailedExerciseDefinitions query completed count=300
+I/flutter (11601): [expressive-preview] +2052ms fixtures.exerciseDefinitions eligible=300
+I/flutter (11601): [expressive-preview] +2052ms fixtures.equipment query started
+I/flutter (11601): [expressive-preview] +2055ms fixtures.equipment query completed count=40
+I/flutter (11601): [expressive-preview] +2055ms fixtures.profile creation started
+I/flutter (11601): [expressive-preview] +2103ms fixtures.profile creation completed
+I/flutter (11601): [expressive-preview] +2108ms fixtures.preset 1/8 creation started
+I/flutter (11601): [expressive-preview] +2128ms fixtures.preset 1/8 completed
+I/flutter (11601): [expressive-preview] +2128ms fixtures.preset 2/8 creation started
+I/flutter (11601): [expressive-preview] +2156ms fixtures.preset 2/8 completed
+I/flutter (11601): [expressive-preview] +2156ms fixtures.preset 3/8 creation started
+I/flutter (11601): [expressive-preview] +2191ms fixtures.preset 3/8 completed
+I/flutter (11601): [expressive-preview] +2191ms fixtures.preset 4/8 creation started
+I/flutter (11601): [expressive-preview] +2224ms fixtures.preset 4/8 completed
+I/flutter (11601): [expressive-preview] +2224ms fixtures.preset 5/8 creation started
+I/flutter (11601): [expressive-preview] +2258ms fixtures.preset 5/8 completed
+I/flutter (11601): [expressive-preview] +2258ms fixtures.preset 6/8 creation started
+I/flutter (11601): [expressive-preview] +2293ms fixtures.preset 6/8 completed
+I/flutter (11601): [expressive-preview] +2293ms fixtures.preset 7/8 creation started
+I/flutter (11601): [expressive-preview] +2329ms fixtures.preset 7/8 completed
+I/flutter (11601): [expressive-preview] +2329ms fixtures.preset 8/8 creation started
+I/flutter (11601): [expressive-preview] +2357ms fixtures.preset 8/8 completed
+I/flutter (11601): [expressive-preview] +2357ms fixtures.activePlan replacement started
+I/flutter (11601): [expressive-preview] +2369ms fixtures.activePlan replacement completed
+I/flutter (11601): [expressive-preview] +2369ms fixtures.session 1/3 creation started
+I/flutter (11601): [expressive-preview] +2404ms fixtures.session 1/3 completed
+I/flutter (11601): [expressive-preview] +2404ms fixtures.session 2/3 creation started
+I/flutter (11601): [expressive-preview] +2447ms fixtures.session 2/3 completed
+I/flutter (11601): [expressive-preview] +2447ms fixtures.session 3/3 creation started
+I/flutter (11601): [expressive-preview] +2490ms fixtures.session 3/3 completed
+I/flutter (11601): [expressive-preview] +2490ms fixtures.selectedProfile write started
+I/flutter (11601): [expressive-preview] +2494ms fixtures.seed completed
+I/flutter (11601): [expressive-preview] +2494ms fixtures.reviewPreferences started
+I/flutter (11601): [expressive-preview] +2515ms fixtures.reviewPreferences completed
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: light, look: classic, pattern: quiet-idle-observation, frameCount: 0, build: {sampleCount: 0}, raster: {sampleCount: 0}, slowFrameClusters: 0, idleStartedAtUtc: 2026-09-30T13:53:04.598393Z, idleDurationMicros: 3004692, idleFrameCount: 0}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: light, look: expressive, pattern: quiet-idle-observation, frameCount: 0, build: {sampleCount: 0}, raster: {sampleCount: 0}, slowFrameClusters: 0, idleStartedAtUtc: 2026-09-30T13:53:15.239073Z, idleDurationMicros: 3003347, idleFrameCount: 0}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: dark, look: classic, pattern: quiet-idle-observation, frameCount: 0, build: {sampleCount: 0}, raster: {sampleCount: 0}, slowFrameClusters: 0, idleStartedAtUtc: 2026-09-30T13:53:26.237303Z, idleDurationMicros: 3003758, idleFrameCount: 0}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: dark, look: expressive, pattern: quiet-idle-observation, frameCount: 0, build: {sampleCount: 0}, raster: {sampleCount: 0}, slowFrameClusters: 0, idleStartedAtUtc: 2026-09-30T13:53:36.797736Z, idleDurationMicros: 3004141, idleFrameCount: 0}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: light, look: classic, pattern: settled-mixed-interactions, frameCount: 229, build: {sampleCount: 229, p50Micros: 6568, p90Micros: 21144, p95Micros: 43092, p99Micros: 52805, maxMicros: 56805, overBudgetFrames: 25, overBudgetPercent: 10.91703056768559, utilizationBuckets: {under50Percent: 143, 50To75Percent: 52, 75To100Percent: 9, 100To150Percent: 3, over150Percent: 22}}, raster: {sampleCount: 229, p50Micros: 14261, p90Micros: 19093, p95Micros: 20747, p99Micros: 22464, maxMicros: 24565, overBudgetFrames: 81, overBudgetPercent: 35.37117903930131, utilizationBuckets: {under50Percent: 53, 50To75Percent: 42, 75To100Percent: 53, 100To150Percent: 81, over150Percent: 0}}, slowFrameClusters: 41, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: light, look: classic, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 7303, p90Micros: 18469, p95Micros: 22448, p99Micros: 28016, maxMicros: 52492, overBudgetFrames: 9, overBudgetPercent: 16.9811320754717, utilizationBuckets: {under50Percent: 27, 50To75Percent: 3, 75To100Percent: 14, 100To150Percent: 7, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 6899, p90Micros: 15188, p95Micros: 15889, p99Micros: 17199, maxMicros: 17346, overBudgetFrames: 2, overBudgetPercent: 3.7735849056603774, utilizationBuckets: {under50Percent: 30, 50To75Percent: 14, 75To100Percent: 7, 100To150Percent: 2, over150Percent: 0}}, slowFrameClusters: 11, interactionCycles: 6, inputCadenceMicros: 80000}
+I/pressivepreview(11601): Background concurrent mark compact GC freed 3475KB AllocSpace bytes, 2(392KB) LOS objects, 98% free, 3163KB/256MB, paused 255us,8.510ms total 61.229ms
+I/flutter (11601): [expressive-preview-profile] {batch: 2, brightness: light, look: expressive, pattern: settled-mixed-interactions, frameCount: 229, build: {sampleCount: 229, p50Micros: 6975, p90Micros: 24207, p95Micros: 47694, p99Micros: 65040, maxMicros: 65745, overBudgetFrames: 25, overBudgetPercent: 10.91703056768559, utilizationBuckets: {under50Percent: 141, 50To75Percent: 56, 75To100Percent: 7, 100To150Percent: 2, over150Percent: 23}}, raster: {sampleCount: 229, p50Micros: 15071, p90Micros: 19207, p95Micros: 20131, p99Micros: 21570, maxMicros: 26089, overBudgetFrames: 84, overBudgetPercent: 36.68122270742358, utilizationBuckets: {under50Percent: 41, 50To75Percent: 42, 75To100Percent: 62, 100To150Percent: 83, over150Percent: 1}}, slowFrameClusters: 41, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 2, brightness: light, look: expressive, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 9135, p90Micros: 20334, p95Micros: 21098, p99Micros: 24367, maxMicros: 49025, overBudgetFrames: 9, overBudgetPercent: 16.9811320754717, utilizationBuckets: {under50Percent: 26, 50To75Percent: 9, 75To100Percent: 9, 100To150Percent: 8, over150Percent: 1}}, raster: {sampleCount: 53, p50Micros: 7796, p90Micros: 13049, p95Micros: 13687, p99Micros: 14952, maxMicros: 15174, overBudgetFrames: 0, overBudgetPercent: 0.0, utilizationBuckets: {under50Percent: 28, 50To75Percent: 17, 75To100Percent: 8, 100To150Percent: 0, over150Percent: 0}}, slowFrameClusters: 9, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 3, brightness: light, look: expressive, pattern: settled-mixed-interactions, frameCount: 228, build: {sampleCount: 228, p50Micros: 6984, p90Micros: 25679, p95Micros: 49771, p99Micros: 65690, maxMicros: 69790, overBudgetFrames: 25, overBudgetPercent: 10.964912280701755, utilizationBuckets: {under50Percent: 140, 50To75Percent: 51, 75To100Percent: 12, 100To150Percent: 1, over150Percent: 24}}, raster: {sampleCount: 228, p50Micros: 14472, p90Micros: 19448, p95Micros: 20393, p99Micros: 23052, maxMicros: 25482, overBudgetFrames: 82, overBudgetPercent: 35.96491228070175, utilizationBuckets: {under50Percent: 46, 50To75Percent: 42, 75To100Percent: 58, 100To150Percent: 81, over150Percent: 1}}, slowFrameClusters: 43, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 3, brightness: light, look: expressive, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 4994, p90Micros: 20060, p95Micros: 21233, p99Micros: 27260, maxMicros: 49921, overBudgetFrames: 10, overBudgetPercent: 18.867924528301888, utilizationBuckets: {under50Percent: 30, 50To75Percent: 5, 75To100Percent: 8, 100To150Percent: 8, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 5787, p90Micros: 10960, p95Micros: 12695, p99Micros: 15369, maxMicros: 16170, overBudgetFrames: 0, overBudgetPercent: 0.0, utilizationBuckets: {under50Percent: 38, 50To75Percent: 11, 75To100Percent: 4, 100To150Percent: 0, over150Percent: 0}}, slowFrameClusters: 10, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 4, brightness: light, look: classic, pattern: settled-mixed-interactions, frameCount: 228, build: {sampleCount: 228, p50Micros: 7363, p90Micros: 28119, p95Micros: 48102, p99Micros: 57962, maxMicros: 62341, overBudgetFrames: 26, overBudgetPercent: 11.403508771929825, utilizationBuckets: {under50Percent: 139, 50To75Percent: 55, 75To100Percent: 8, 100To150Percent: 1, over150Percent: 25}}, raster: {sampleCount: 228, p50Micros: 15068, p90Micros: 19527, p95Micros: 20353, p99Micros: 21425, maxMicros: 21648, overBudgetFrames: 90, overBudgetPercent: 39.473684210526315, utilizationBuckets: {under50Percent: 48, 50To75Percent: 39, 75To100Percent: 51, 100To150Percent: 90, over150Percent: 0}}, slowFrameClusters: 42, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 4, brightness: light, look: classic, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 7961, p90Micros: 19482, p95Micros: 22991, p99Micros: 25488, maxMicros: 47425, overBudgetFrames: 15, overBudgetPercent: 28.30188679245283, utilizationBuckets: {under50Percent: 27, 50To75Percent: 1, 75To100Percent: 10, 100To150Percent: 13, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 6956, p90Micros: 15475, p95Micros: 16453, p99Micros: 16970, maxMicros: 17999, overBudgetFrames: 3, overBudgetPercent: 5.660377358490566, utilizationBuckets: {under50Percent: 32, 50To75Percent: 11, 75To100Percent: 7, 100To150Percent: 3, over150Percent: 0}}, slowFrameClusters: 18, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: dark, look: classic, pattern: settled-mixed-interactions, frameCount: 227, build: {sampleCount: 227, p50Micros: 6842, p90Micros: 27528, p95Micros: 43528, p99Micros: 54206, maxMicros: 56358, overBudgetFrames: 26, overBudgetPercent: 11.45374449339207, utilizationBuckets: {under50Percent: 140, 50To75Percent: 46, 75To100Percent: 15, 100To150Percent: 2, over150Percent: 24}}, raster: {sampleCount: 227, p50Micros: 14279, p90Micros: 19295, p95Micros: 20110, p99Micros: 22590, maxMicros: 26387, overBudgetFrames: 88, overBudgetPercent: 38.76651982378855, utilizationBuckets: {under50Percent: 43, 50To75Percent: 50, 75To100Percent: 46, 100To150Percent: 87, over150Percent: 1}}, slowFrameClusters: 45, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 1, brightness: dark, look: classic, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 7901, p90Micros: 17241, p95Micros: 17538, p99Micros: 28059, maxMicros: 29189, overBudgetFrames: 8, overBudgetPercent: 15.09433962264151, utilizationBuckets: {under50Percent: 28, 50To75Percent: 7, 75To100Percent: 10, 100To150Percent: 6, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 6422, p90Micros: 13252, p95Micros: 15325, p99Micros: 15685, maxMicros: 17212, overBudgetFrames: 1, overBudgetPercent: 1.8867924528301887, utilizationBuckets: {under50Percent: 35, 50To75Percent: 12, 75To100Percent: 5, 100To150Percent: 1, over150Percent: 0}}, slowFrameClusters: 9, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 2, brightness: dark, look: expressive, pattern: settled-mixed-interactions, frameCount: 228, build: {sampleCount: 228, p50Micros: 6807, p90Micros: 24904, p95Micros: 42721, p99Micros: 57576, maxMicros: 62131, overBudgetFrames: 25, overBudgetPercent: 10.964912280701755, utilizationBuckets: {under50Percent: 148, 50To75Percent: 45, 75To100Percent: 10, 100To150Percent: 2, over150Percent: 23}}, raster: {sampleCount: 228, p50Micros: 14531, p90Micros: 19123, p95Micros: 20105, p99Micros: 24814, maxMicros: 29492, overBudgetFrames: 83, overBudgetPercent: 36.40350877192982, utilizationBuckets: {under50Percent: 52, 50To75Percent: 44, 75To100Percent: 49, 100To150Percent: 81, over150Percent: 2}}, slowFrameClusters: 39, interactionCycles: 6}
+I/pressivepreview(11601): Background young concurrent mark compact GC freed 2159KB AllocSpace bytes, 0(0B) LOS objects, 98% free, 3159KB/256MB, paused 619us,12.695ms total 72.386ms
+I/flutter (11601): [expressive-preview-profile] {batch: 2, brightness: dark, look: expressive, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 7100, p90Micros: 21385, p95Micros: 23272, p99Micros: 25132, maxMicros: 54400, overBudgetFrames: 14, overBudgetPercent: 26.41509433962264, utilizationBuckets: {under50Percent: 28, 50To75Percent: 2, 75To100Percent: 9, 100To150Percent: 12, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 6933, p90Micros: 14631, p95Micros: 15216, p99Micros: 15755, maxMicros: 17364, overBudgetFrames: 1, overBudgetPercent: 1.8867924528301887, utilizationBuckets: {under50Percent: 31, 50To75Percent: 11, 75To100Percent: 10, 100To150Percent: 1, over150Percent: 0}}, slowFrameClusters: 15, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 3, brightness: dark, look: expressive, pattern: settled-mixed-interactions, frameCount: 227, build: {sampleCount: 227, p50Micros: 6672, p90Micros: 21416, p95Micros: 48905, p99Micros: 57309, maxMicros: 64499, overBudgetFrames: 26, overBudgetPercent: 11.45374449339207, utilizationBuckets: {under50Percent: 141, 50To75Percent: 45, 75To100Percent: 15, 100To150Percent: 3, over150Percent: 23}}, raster: {sampleCount: 227, p50Micros: 14604, p90Micros: 19512, p95Micros: 20305, p99Micros: 22213, maxMicros: 23179, overBudgetFrames: 77, overBudgetPercent: 33.92070484581498, utilizationBuckets: {under50Percent: 49, 50To75Percent: 50, 75To100Percent: 51, 100To150Percent: 77, over150Percent: 0}}, slowFrameClusters: 44, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 3, brightness: dark, look: expressive, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 8137, p90Micros: 20122, p95Micros: 20896, p99Micros: 26092, maxMicros: 54917, overBudgetFrames: 16, overBudgetPercent: 30.18867924528302, utilizationBuckets: {under50Percent: 27, 50To75Percent: 3, 75To100Percent: 7, 100To150Percent: 14, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 6142, p90Micros: 14485, p95Micros: 14859, p99Micros: 16123, maxMicros: 16787, overBudgetFrames: 1, overBudgetPercent: 1.8867924528301887, utilizationBuckets: {under50Percent: 34, 50To75Percent: 13, 75To100Percent: 5, 100To150Percent: 1, over150Percent: 0}}, slowFrameClusters: 16, interactionCycles: 6, inputCadenceMicros: 80000}
+I/flutter (11601): [expressive-preview-profile] {batch: 4, brightness: dark, look: classic, pattern: settled-mixed-interactions, frameCount: 229, build: {sampleCount: 229, p50Micros: 6670, p90Micros: 25911, p95Micros: 43783, p99Micros: 55927, maxMicros: 98321, overBudgetFrames: 24, overBudgetPercent: 10.480349344978166, utilizationBuckets: {under50Percent: 148, 50To75Percent: 46, 75To100Percent: 11, 100To150Percent: 0, over150Percent: 24}}, raster: {sampleCount: 229, p50Micros: 14943, p90Micros: 18860, p95Micros: 19992, p99Micros: 21611, maxMicros: 22520, overBudgetFrames: 84, overBudgetPercent: 36.68122270742358, utilizationBuckets: {under50Percent: 50, 50To75Percent: 43, 75To100Percent: 52, 100To150Percent: 84, over150Percent: 0}}, slowFrameClusters: 47, interactionCycles: 6}
+I/flutter (11601): [expressive-preview-profile] {batch: 4, brightness: dark, look: classic, pattern: rapid-tab-and-nav-retargeting, frameCount: 53, build: {sampleCount: 53, p50Micros: 9364, p90Micros: 19270, p95Micros: 20644, p99Micros: 25082, maxMicros: 31289, overBudgetFrames: 10, overBudgetPercent: 18.867924528301888, utilizationBuckets: {under50Percent: 25, 50To75Percent: 5, 75To100Percent: 13, 100To150Percent: 8, over150Percent: 2}}, raster: {sampleCount: 53, p50Micros: 8041, p90Micros: 15027, p95Micros: 15739, p99Micros: 16156, maxMicros: 19495, overBudgetFrames: 1, overBudgetPercent: 1.8867924528301887, utilizationBuckets: {under50Percent: 27, 50To75Percent: 15, 75To100Percent: 10, 100To150Percent: 1, over150Percent: 0}}, slowFrameClusters: 11, interactionCycles: 6, inputCadenceMicros: 80000}
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): io.flutter.embedding.android.FlutterActivity$1@4abae69
+I/flutter (11601):
+I/flutter (11601): Warning: A call to tap() with finder "Found 1 widget with key [<'ongoing-session-menu'>]: [
+I/flutter (11601):   Instance of 'StatelessElement',
+I/flutter (11601): ]" derived an Offset (Instance of 'Offset') that would not hit test on the specified widget.
+I/flutter (11601): Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+I/flutter (11601): The finder corresponds to this RenderBox: Instance of 'RenderMergeSemantics'
+I/flutter (11601): The hit test result at that offset is: Instance of 'HitTestResult'
+I/flutter (11601): #0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165)
+I/flutter (11601): #1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947)
+I/flutter (11601): #2      WidgetController.tap (package:flutter_test/src/controller.dart:1080)
+I/flutter (11601): #3      _exerciseFunctionalPreviewFlows (file:///E:/projects/env_test/integration_test/expressive_preview_device_test.dart:424)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #4      main.<anonymous closure> (file:///E:/projects/env_test/integration_test/expressive_preview_device_test.dart:217)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #7      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:1707)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): To silence this warning, pass "warnIfMissed: false" to "tap()".
+I/flutter (11601): To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+I/flutter (11601):
+D/WindowOnBackDispatcher(11601): setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@8144f63
+I/flutter (11601): Timed out waiting for the expected production route or control.
+I/flutter (11601): #0      _waitForElement (file:///E:/projects/env_test/integration_test/expressive_preview_device_test.dart:452)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #1      _exerciseFunctionalPreviewFlows (file:///E:/projects/env_test/integration_test/expressive_preview_device_test.dart:426)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #2      main.<anonymous closure> (file:///E:/projects/env_test/integration_test/expressive_preview_device_test.dart:217)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): #5      TestWidgetsFlutterBinding._createTestCompletionHandler.<anonymous closure> (package:flutter_test/src/binding.dart:1707)
+I/flutter (11601): <asynchronous suspension>
+I/flutter (11601): 07:39 +0: profile matched Train shell interactions on the isolated preview database [E]
+I/flutter (11601):   Test failed. See exception logs above.
+I/flutter (11601):   The test description was: profile matched Train shell interactions on the isolated preview database
+I/flutter (11601):
+I/flutter (11601): 07:39 +0 -1: (tearDownAll)
+I/flutter (11601): 07:39 +1 -1: Some tests failed.
+Failure Details:
+Failure in method: profile matched Train shell interactions on the isolated preview database
+Instance of 'FlutterErrorDetails'
+end of failure 1
+
+
+
+Leaving the application running.

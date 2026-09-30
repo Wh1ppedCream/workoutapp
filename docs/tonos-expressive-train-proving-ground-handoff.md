@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Handoff
 
-**Status: recovered implementation checkpoint, not final qualification (2026-09-30).** The current bounded combined run passed 163/163 tests, zero failures/skips, exit 0. The four stale inventory/ratchet fixture expectations are resolved. This handoff accompanies the implementation and evidence checkpoint commits; section 2 identifies the implementation commit and commands that resolve this document's commit, current HEAD, and remote tip. No profile driver run, APK install, recording, new build, or full-suite run is part of this recovery. Resume from this evidence rather than repeating the initial architecture audit.
+**Status: safe resumable qualification checkpoint; final device/user review remains pending (2026-09-30).** The user stopped the broader campaign to preserve usage. Section 21 is the latest continuation record. Sections 1–20 retain the implementation checkpoint and its historical evidence/procedure; their pending-device/full-suite statements describe that checkpoint. The recovered bounded combined run passed 163/163 tests, zero failures/skips, exit 0, before this qualification session. Resume the existing implementation rather than repeating the architecture audit.
 
 ## 1. Checkpoint summary
 
@@ -15,11 +15,11 @@ This is an implementation checkpoint, not final qualification. Profile performan
 - Branch: `feature/classic-m3e`.
 - Starting checkpoint: `0b7c4fd510a3ffa4f7dff270685445c066feec4b` (Review and expand Tonos Expressive plan).
 - Implementation checkpoint: `9cd78807922e57602f4d9bbf32d417afc40386f9` — `Add isolated Tonos Expressive proving ground` (31 task-owned files).
-- Documentation/evidence checkpoint: the commit introducing this handoff, named `Record Expressive proving-ground checkpoint`. Its exact SHA is resolved by the path-specific command below; it cannot be embedded in its own contents.
-- Final checkpoint HEAD is that documentation/evidence commit. The publishing procedure requires a normal push followed by an exact `git ls-remote` comparison with HEAD; the final chat report records the resulting full SHA. Recheck both values on continuation, because later work may advance the branch.
+- Documentation/evidence checkpoint: `a4f877a59b0872315b6e53db1049bb7bd5d1d5c9` — `Record Expressive proving-ground checkpoint`.
+- Qualification started with that documentation/evidence checkpoint synchronized with the live remote. Later qualification evidence may advance the branch; resolve current HEAD and remote with the commands below.
 - Before publishing these commits the live remote was `0b7c4fd510a3ffa4f7dff270685445c066feec4b`; do not confuse that historical tip with the final pushed checkpoint.
 - Upstream: `origin/feature/classic-m3e`.
-- This handoff file cannot include its own final commit SHA. After the lead creates and pushes the checkpoint, resolve the final values with:
+- The latest qualification commit cannot embed its own SHA. Resolve the current values with:
 
 ~~~powershell
 git status --short --branch
@@ -123,7 +123,7 @@ In the preview review sheet, `Reset review controls` restores only in-memory set
 
 ## 10. Test results
 
-### Currently passed — recovered checkpoint, 2026-09-30
+### Passed at the recovered implementation checkpoint (historical), 2026-09-30
 
 | Test group | Result |
 |---|---|
@@ -174,7 +174,7 @@ The interrupted session's earlier bounded run reported 159 passed, 4 failed, 0 s
 
 Earlier milestones (historical, superseded by the current aggregate): architecture 8/8 before later startup-policy tests, compatibility/architecture/chart 14/14, and Classic/Neo presentation 34/34. Do not add these overlapping milestones to the current total.
 
-### Pending or not run
+### Pending at the implementation checkpoint (historical)
 
 - Full Flutter regression suite: not run.
 - Profile integration driver/device test: not run.
@@ -307,7 +307,7 @@ Preserve these five original untracked groups and do not add or clean them:
 
 `android/.kotlin/` was previously observed as a generated build cache and is absent from the recovered status. If it reappears, exclude it from commits and do not clean it. Expressive preview sources/tests and `docs/proposals/tonos-expressive-train-proving-ground/` are task-owned. Stage explicit paths; never `git add .` or `git add -A`.
 
-## 19. Next exact task
+## 19. Qualification procedure from the implementation checkpoint
 
 The checkpoint recovery completes the exact fixture corrections, clean bounded rerun, and task-owned commit/push. The next GPT-6.1 Sol High session should resume qualification of the existing Train + shell proving ground; do not redesign it first or repeat the architecture audit.
 
@@ -347,3 +347,25 @@ The integration build and canonical interactive app build both write `app-profil
 - Do not touch or repair the malformed Codex checkpoint ref.
 - Do not treat the uninstalled profile APK or debug timing as profile qualification.
 - Do not report a pending gate as passed.
+
+## 21. Qualification continuation record — current authority
+
+This session began with `a4f877a59b0872315b6e53db1049bb7bd5d1d5c9` equal to the live remote. The production proving ground, palettes, springs, persistence, dependencies, and SDK remain unchanged. Only qualification tests/harnesses, evidence, and documentation are being updated.
+
+- Latest pinned repository analysis: **0 errors, 0 warnings, 84 infos, exit 0**, **49.135 seconds**, after the outer-target harness correction. The subsequent test-only bounded smoke selector receives scoped analysis/build verification. No normal-suite or production inputs changed after the clean full run.
+- Initial uninterrupted full suite: **1,254 passed, 1 failed, 0 skipped, exit 1**, 834.154 seconds. The sole failure was a stale source-text contract in `test/theme/app_theme_tokens_test.dart`. Its corrected matcher proves the three Expressive `card` / retained `panelRaised` choices; other ownership checks remain. Focused rerun: **18/18**, exit 0.
+- Final uninterrupted full suite: **1,255 passed, 0 failed, 0 skipped, exit 0**, **1,274.075 seconds**. Default concurrency, `--no-pub`, normal C: TEMP/TMP, source frozen; 239 hidden suite-load events excluded. Logs/metadata use the distinct `full-flutter-test-postfix-*` filenames. This is the current full-suite result.
+- Direct inventory/ratchet: **0 pending/unassigned**, exit 0; exact counts remain 294 files / 2,294 candidates and 18 files / 139 approvals / 137 hashes / 156 occurrences.
+- Accessibility: **28 existing focused tests + 1 new stress test**, passing in separate runs, exit 0. The new test uses 320 dp, 11 long French labels, RTL layout direction, semantics/hit checks, and a deterministic nonlinear scaler. Actual Android OS scaling is a separate pending device gate.
+- Initial profile driver collected all idle/timing batches, then exited 1 at a non-hit-testable ongoing-session menu tap in a separate functional smoke. The second driver passed that route after a narrow settle/hit-test correction, collected all timing phases again, then exited 1 at a geometry assertion measuring the inner 40 dp Tooltip/Material. That finder does not measure the padded outer `IconButton` target. The harness-only correction now selects the outer `IconButton`, retains ≥48 dp checks, and probes outer edges; it also settles both returned-home cleanup paths. Neither complete timing driver is an end-to-end pass.
+- To respect the course change, `TONOS_PREVIEW_DEVICE_SMOKE_ONLY=true` skips all warm-up/timing loops and unrelated functional routes, running only the existing production Workout compatibility helper. It is a test-only compile selector, default false, with separate `expressivePreviewDeviceSmoke` reporting and `timingsMeasured:false`. Scoped analyzer/build verification passed. The bounded Pixel attempt stalled after fixture setup for over five minutes without reaching geometry output or reporting a Flutter exception in inspected logcat; it was interrupted. The exact cause and outer-target/edge-hit proof remain **PENDING**. Do not invent a device pass or treat this as a production 40 dp target defect.
+- Preserved second-run profile context: Pixel `28021FDH200228`, 60 Hz / 16,667 µs; no video or host-suite overlap. Four quiet idle observations had zero frame timings; each observation includes a three-second action and two-second flush. Settled raster exceedances: Classic 326/915 (35.63%), Expressive 330/911 (36.22%). Rapid build exceedances at the synthetic 80 ms cadence: Classic 34/212 (16.04%), Expressive 50/212 (23.58%). The complete matched p95/count/cluster table and raw logs are in Results. These are frame-cost observations from a failed later functional attempt, not zero-jank, physical-latency, or faster-Expressive evidence.
+- Final matched-focus comparisons, all five requested motion clips, native Android OS large text/keyboard/Back/TalkBack checks, and the canonical interactive review build remain **PENDING**. Historical static captures contain a Profile-focus mismatch and DEBUG ribbon. The currently installed sandbox artifact is an integration-test profile APK, not a manual-review-ready canonical app. See the device note for exact APK identity/hash and interrupted-run state.
+- C: storage fell to 0.35 GiB during overlapping validation/build work. No files were cleaned and TEMP/TMP were not redirected. The user freed space; the full suite finished uninterrupted with exit 0. C: measured 2.52 GiB after completion. All second-run timing windows began after the host suite finished; recheck headroom before additional profile/canonical builds.
+- The 15 protected user-file hashes still match the saved baseline. Unrelated untracked groups remain excluded from task staging/cleanup.
+
+Current details: [results](tonos-expressive-train-proving-ground-results.md), [host validation](proposals/tonos-expressive-train-proving-ground/qualification/validation/validation-summary.md), [device qualification](proposals/tonos-expressive-train-proving-ground/qualification/device-qualification.md), [accessibility scope](proposals/tonos-expressive-train-proving-ground/qualification/accessibility-review.md), and [short user-review checklist](proposals/tonos-expressive-train-proving-ground/qualification/manual-review.md).
+
+The user changed the stop condition to a resumable checkpoint. The bounded source correction and its scoped analyzer/build verification are complete; the stalled device proof is saved as pending. Preserve already-collected timings, commit/push qualification-owned changes, then stop. No further full suite, complete timing matrix, canonical interactive build, capture campaign, or lengthy native-accessibility campaign is started in this checkpoint pass.
+
+Resume from this qualification checkpoint. Complete only any remaining Pixel evidence/native accessibility checks, then present the existing Train + shell Expressive proving ground to the user for keep/tune/reject feedback. Do not expand Expressive to another screen before user review.

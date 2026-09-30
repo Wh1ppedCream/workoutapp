@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "runDate": "2026-09-30",
+  "sourceLog": "profile-driver-rerun-2026-09-30.txt",
+  "sourceKind": "summary transcribed from emitted Flutter profile phase records; app reportData was not emitted",
+  "device": {
+    "model": "Pixel 7",
+    "serial": "28021FDH200228",
+    "android": "16 / API 36",
+    "physicalPixels": [1080, 2400],
+    "logicalDp": [411.42857142857144, 914.2857142857143],
+    "devicePixelRatio": 2.625,
+    "activeRefreshRateHz": 60.0,
+    "supportedRefreshRatesHz": [60, 90],
+    "frameBudgetMicros": 16667,
+    "fontScale": 1.15,
+    "batteryPercent": 80,
+    "usbPowered": true,
+    "thermalStatusBeforeRerun": 0
+  },
+  "hostSuiteOverlap": false,
+  "screenRecordingDuringTiming": false,
+  "idlePhases": {
+    "phaseCount": 4,
+    "brightnesses": ["light", "dark"],
+    "looks": ["classic", "expressive"],
+    "windowDurationMicrosRange": [3003699, 3004412],
+    "idleFrameCountPerPhase": [0, 0, 0, 0]
+  },
+  "interactionPhases": {
+    "phaseCount": 16,
+    "cyclesPerBatch": 6,
+    "rapidInputCadenceMicros": 80000,
+    "settledMixedInteractions": {
+      "classic": {
+        "frameCount": 915,
+        "buildOverBudgetFrames": 98,
+        "rasterOverBudgetFrames": 326,
+        "slowFrameClusters": 171,
+        "perBatchBuildP95MicrosRange": [41892, 50378],
+        "perBatchRasterP95MicrosRange": [19382, 20247]
+      },
+      "expressive": {
+        "frameCount": 911,
+        "buildOverBudgetFrames": 103,
+        "rasterOverBudgetFrames": 330,
+        "slowFrameClusters": 174,
+        "perBatchBuildP95MicrosRange": [46156, 49722],
+        "perBatchRasterP95MicrosRange": [19423, 20482]
+      }
+    },
+    "rapidTabNavigationRetargeting": {
+      "classic": {
+        "frameCount": 212,
+        "buildOverBudgetFrames": 34,
+        "rasterOverBudgetFrames": 2,
+        "slowFrameClusters": 34,
+        "perBatchBuildP95MicrosRange": [16671, 23248],
+        "perBatchRasterP95MicrosRange": [14529, 15561]
+      },
+      "expressive": {
+        "frameCount": 212,
+        "buildOverBudgetFrames": 50,
+        "rasterOverBudgetFrames": 1,
+        "slowFrameClusters": 51,
+        "perBatchBuildP95MicrosRange": [21470, 25754],
+        "perBatchRasterP95MicrosRange": [13254, 15252]
+      }
+    },
+    "percentileNote": "p95 ranges are min/max across four batch p95 values per look and phase, not pooled percentiles",
+    "latencyNote": "frame build/raster timings are not physical input-to-pixel or callback-latency measurements"
+  },
+  "driverOutcome": {
+    "exitCode": 1,
+    "status": "all idle and interaction batches emitted; later functional compatibility check failed",
+    "bindingReportDataEmitted": false,
+    "functionalFlowNote": "The existing run reached the Start-to-Session/discard flow before the later compatibility assertion.",
+    "failureNote": "Harness measured the inner Tooltip/Material visual bounds as 40 dp rather than the padded IconButton target; corrected harness now measures outer targets, but edge activation remains physically unverified."
+  },
+  "smokeOnlyBuild": {
+    "define": "TONOS_PREVIEW_DEVICE_SMOKE_ONLY=true",
+    "buildExitCode": 0,
+    "buildElapsedSeconds": 163.7,
+    "apkPath": "build/app/outputs/flutter-apk/app-profile.apk",
+    "apkBytes": 172994990,
+    "apkSha256": "A493D82CFCAAD26783BB5190B5958FBCA8A30627C549146954A335683AB46D3B",
+    "package": "com.tonos.expressivepreview",
+    "versionCode": 6,
+    "versionName": "1.0.1"
+  },
+  "smokeOnlyDeviceAttempt": {
+    "driverLog": "profile-smoke-driver-2026-09-30.txt",
+    "startedAtLocal": "2026-09-30T11:03:04.7126206-04:00",
+    "status": "interrupted after stall",
+    "driverExitCode": 1,
+    "interruption": "PowerShell Ctrl-C at about 11:08 local (approximate; exact stop time was not recorded), after more than five minutes without progress",
+    "lastFixtureProgress": "fixtures.reviewPreferences completed at +3511 ms",
+    "laterFlutterLogOutput": "GC line only",
+    "runtimeViewportMetadataEmitted": false,
+    "workoutGeometryEmitted": false,
+    "outerTargetOrEdgeProofEmitted": false,
+    "filteredFlutterExceptionObserved": false,
+    "interpretation": "incomplete stalled attempt; not a pass and not evidence of a production defect"
+  },
+  "installedPackageAfterAttempt": {
+    "package": "com.tonos.expressivepreview",
+    "installed": true,
+    "versionCode": 6,
+    "versionName": "1.0.1",
+    "lastUpdateTimeLocal": "2026-09-30 11:03:17",
+    "processAfterForceStop": false,
+    "normalOrInternalPackageTargeted": false,
+    "note": "Host APK SHA-256 was verified before drive; the driver log confirms install. Installed APK bytes were not separately pulled and hashed from device."
+  },
+  "harnessSource": {
+    "path": "integration_test/expressive_preview_device_test.dart",
+    "sha256": "85E57EC942ED03637FC3AB957CD7B862C2C9499663DE1CD7C094ED423F777CCB",
+    "focusedDartAnalyzeExitCode": 0,
+    "focusedDartAnalyzeResult": "No issues found!",
+    "gitDiffCheckExitCode": 0,
+    "productionSourcesChanged": false
+  },
+  "remainingDeviceProof": [
+    "physical 48 dp outer-target measurements and edge activation",
+    "fresh focus-matched visual pairs and user review",
+    "motion/reduced-motion clips",
+    "keyboard, focus, Back, and native accessibility review",
+    "OS font scale 2 review using Android nonlinear scaling",
+    "canonical interactive preview build and full successful functional pass"
+  ]
+}

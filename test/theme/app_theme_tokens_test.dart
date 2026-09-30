@@ -184,7 +184,15 @@ void main() {
     );
     expect(trainTabsSource, contains('width: shapes.outlineWidth'));
 
-    expect(trainSource, contains('variant: TonosSurfaceVariant.panelRaised'));
+    // Expressive changes the rendered surface role; the established branch
+    // must continue to use panelRaised rather than inheriting that preview role.
+    expect(
+      RegExp(
+        r'variant:\s*usesExpressiveRecipe\s*\?\s*TonosSurfaceVariant\.card'
+        r'\s*:\s*TonosSurfaceVariant\.panelRaised',
+      ).allMatches(trainSource),
+      hasLength(3),
+    );
     expect(trainSource, contains('TonosActionVariant.primary'));
 
     final weightCardSource =

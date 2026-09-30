@@ -1,0 +1,18 @@
+Focused source-check record, 2026-09-30
+
+Source: integration_test/expressive_preview_device_test.dart
+Source SHA-256: 85E57EC942ED03637FC3AB957CD7B862C2C9499663DE1CD7C094ED423F777CCB
+
+Command:
+  E:\tools\flutter_sdks\3.47.5\flutter\bin\cache\dart-sdk\bin\dart.exe analyze integration_test\expressive_preview_device_test.dart
+Exit: 0
+Output:
+  Analyzing expressive_preview_device_test.dart...
+  No issues found!
+
+Command:
+  git diff --check -- integration_test/expressive_preview_device_test.dart
+Exit: 0
+Output: no diff errors; Git reported only that LF will be replaced by CRLF the next time it touches the working copy.
+
+The repository-wide post-harness analyzer record is in ../validation/logs/dart-analyze-post-device-harness-machine.txt and ../validation/logs/dart-analyze-post-device-harness-metadata.txt.
