@@ -12,7 +12,7 @@ import 'package:env_test/widgets/preset_bar.dart';
 
 void main() {
   testWidgets(
-    'Expressive plan card corners contain the identity frame and preserve heatmap contrast',
+    'Expressive plan card and identity frame share a shape and preserve heatmap contrast',
     (tester) async {
       tester.view.physicalSize = const Size(420, 900);
       tester.view.devicePixelRatio = 1;
@@ -81,19 +81,10 @@ void main() {
               (identity.decoration! as BoxDecoration).borderRadius!
                   as BorderRadius;
           final identitySize = tester.getSize(identityFinder);
-          final inset = rowScale * 5;
           expect(identitySize.width, closeTo(rowScale * 72, 0.01));
           expect(identitySize.height, closeTo(rowScale * 70, 0.01));
 
-          void expectContained(Radius inner, Radius outer) {
-            expect(inner.x + inset, greaterThanOrEqualTo(outer.x - 0.01));
-            expect(inner.y + inset, greaterThanOrEqualTo(outer.y - 0.01));
-          }
-
-          expectContained(innerRadius.topLeft, outerRadius.topLeft);
-          expectContained(innerRadius.topRight, outerRadius.topRight);
-          expectContained(innerRadius.bottomLeft, outerRadius.bottomLeft);
-          expectContained(innerRadius.bottomRight, outerRadius.bottomRight);
+          expect(innerRadius, outerRadius);
           expect(identity.decoration is BoxDecoration, isTrue);
           expect((identity.decoration! as BoxDecoration).color, identityColor);
 

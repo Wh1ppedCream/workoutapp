@@ -321,7 +321,7 @@ void main() {
   ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.625;
-    tester.platformDispatcher.textScaleFactorTestValue = 1.15;
+    tester.platformDispatcher.textScaleFactorTestValue = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
@@ -348,12 +348,21 @@ void main() {
     await _pumpExpressiveTrain(tester, repository, profile, session);
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 700));
-    final scale = MediaQuery.textScalerOf(
-      tester.element(find.byType(TrainPage)),
-    ).scale(1);
     final focusLayout = find.byKey(
       const ValueKey('seven-day-focus-side-by-side'),
     );
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'the Weekly Overview should fit at the default text scale',
+    );
+
+    tester.platformDispatcher.textScaleFactorTestValue = 1.15;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    final scale = MediaQuery.textScalerOf(
+      tester.element(find.byType(TrainPage)),
+    ).scale(1);
     expect(scale, 1.15);
     expect(tester.getSize(focusLayout).height, greaterThan(198));
 

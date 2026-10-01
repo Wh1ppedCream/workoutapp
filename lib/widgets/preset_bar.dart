@@ -128,15 +128,7 @@ class PresetBar extends StatelessWidget {
     final radius = index.isEven
         ? ExpressiveTrainShapes.planRow
         : ExpressiveTrainShapes.planRowAlternate;
-    final identityRadius = index.isEven
-        ? ExpressiveTrainShapes.planIdentityBlock
-        : ExpressiveTrainShapes.planIdentityBlockAlternate;
     final inset = 5 * scaleFactor;
-    final containedIdentityRadius = _containedRadius(
-      preferred: identityRadius,
-      outer: radius,
-      inset: inset,
-    );
     final rowShape = RoundedRectangleBorder(borderRadius: radius);
     final effects = context.effectTokens;
     final shadows = effects.cardShadowBlur > 0 && effects.cardShadow.a > 0
@@ -179,7 +171,7 @@ class PresetBar extends StatelessWidget {
                     padding: EdgeInsets.all(inset),
                     decoration: BoxDecoration(
                       color: accent,
-                      borderRadius: containedIdentityRadius,
+                      borderRadius: radius,
                     ),
                     child: Center(
                       child: _PresetFocusBadge(
@@ -442,30 +434,6 @@ class _PresetFocusBadge extends StatelessWidget {
       ),
     );
   }
-}
-
-BorderRadius _containedRadius({
-  required BorderRadius preferred,
-  required BorderRadius outer,
-  required double inset,
-}) {
-  double contained(double inner, double parent) {
-    final requiredRadius = parent - inset;
-    final nonNegativeRequired = requiredRadius > 0 ? requiredRadius : 0.0;
-    return inner > nonNegativeRequired ? inner : nonNegativeRequired;
-  }
-
-  Radius fit(Radius inner, Radius parent) => Radius.elliptical(
-    contained(inner.x, parent.x),
-    contained(inner.y, parent.y),
-  );
-
-  return BorderRadius.only(
-    topLeft: fit(preferred.topLeft, outer.topLeft),
-    topRight: fit(preferred.topRight, outer.topRight),
-    bottomLeft: fit(preferred.bottomLeft, outer.bottomLeft),
-    bottomRight: fit(preferred.bottomRight, outer.bottomRight),
-  );
 }
 
 class _AutomaticBadge extends StatelessWidget {

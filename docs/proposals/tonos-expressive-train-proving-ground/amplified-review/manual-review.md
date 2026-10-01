@@ -47,7 +47,7 @@ The final captures below use the restarted preview build, the same 1.15 OS font 
 - [Active plan cards — dark](current-refinement-20261001/plan-cards-active-review-dark.png)
 - [Open active-plan menu](current-refinement-20261001/plan-menu-open.png)
 
-The updated inner identity radius nests inside the outer row with its existing inset. The heatmap stays on the media-placeholder field while saturated identity color stays concentrated at the leading edge.
+The active plan row and its identity block now share the same asymmetric expressive corner silhouette. The heatmap stays on the media-placeholder field while saturated identity color stays concentrated at the leading edge.
 
 ## Motion evidence
 

@@ -448,14 +448,19 @@ class MyApp extends StatelessWidget {
 
               final inheritedMedia = MediaQuery.of(context);
               final scale = preview.textScaleOverride;
-              return Theme(
+              final reducedMotion =
+                  inheritedMedia.disableAnimations ||
+                  preview.reducedMotion ||
+                  preview.effectsOff;
+              return AnimatedTheme(
                 data: preview.activeTheme,
+                duration: reducedMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 300),
+                curve: Curves.easeInOutCubic,
                 child: MediaQuery(
                   data: inheritedMedia.copyWith(
-                    disableAnimations:
-                        inheritedMedia.disableAnimations ||
-                        preview.reducedMotion ||
-                        preview.effectsOff,
+                    disableAnimations: reducedMotion,
                     textScaler: scale == null
                         ? inheritedMedia.textScaler
                         : TextScaler.linear(scale),

@@ -491,9 +491,11 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
           );
         }
 
-        return SizedBox(
+        return ConstrainedBox(
           key: const ValueKey('seven-day-focus-side-by-side'),
-          height: 198 + (textScale - 1).clamp(0.0, 0.35) * 150,
+          constraints: BoxConstraints(
+            minHeight: 198 + (textScale - 1).clamp(0.0, 0.35) * 150,
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -265,30 +265,20 @@ abstract final class ExpressiveTrainShapes {
     bottomRight: Radius.circular(16),
   );
   static const planRow = BorderRadius.only(
-    topLeft: Radius.circular(18),
-    topRight: Radius.circular(30),
-    bottomLeft: Radius.circular(18),
-    bottomRight: Radius.circular(30),
-  );
-  static const planRowAlternate = BorderRadius.only(
-    topLeft: Radius.circular(30),
-    topRight: Radius.circular(18),
-    bottomLeft: Radius.circular(30),
-    bottomRight: Radius.circular(14),
-  );
-  static const planRowPressed = BorderRadius.all(Radius.circular(15));
-  static const planIdentityBlock = BorderRadius.only(
     topLeft: Radius.circular(14),
     topRight: Radius.circular(22),
     bottomLeft: Radius.circular(22),
     bottomRight: Radius.circular(10),
   );
-  static const planIdentityBlockAlternate = BorderRadius.only(
+  static const planRowAlternate = BorderRadius.only(
     topLeft: Radius.circular(22),
     topRight: Radius.circular(14),
     bottomLeft: Radius.circular(10),
     bottomRight: Radius.circular(22),
   );
+  static const planRowPressed = BorderRadius.all(Radius.circular(15));
+  static const planIdentityBlock = planRow;
+  static const planIdentityBlockAlternate = planRowAlternate;
   static const compactControl = BorderRadius.only(
     topLeft: Radius.circular(17),
     topRight: Radius.circular(9),
