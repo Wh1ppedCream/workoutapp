@@ -66,7 +66,7 @@ For a normal-motion run, switch back to Expressive / Curated / Light and leave R
 ## Motion and implementation contract
 
 - Weekly Overview is the only continuous ambient surface. It runs with a 3 second half-cycle (6 seconds per surface round trip), and interpolates up to 42% toward its inset tone. Accent bars and Focused Sets wave share that phase.
-- Focused Sets keeps the existing progress values and native progress semantics. The active segment is a 2.2 dp sinusoidal stroke with 1.5 dp amplitude and 20 dp wavelength over a 1.5 dp straight inactive track; the active horizontal extent stays exactly `width × value`, with a quiet 3 dp terminal dot at the track end.
+- Focused Sets keeps the existing progress values and native progress semantics. The active segment is a 2.5 dp sinusoidal stroke, lifted 8% toward white from the existing warm role, with 1.5 dp amplitude and 20 dp wavelength. Its straight 1.5 dp remainder track begins at the active extent and is clipped away from the wave; the active horizontal extent stays exactly `width × value`, with a quiet 3 dp terminal dot at the track end.
 - The Weekly Overview anatomy field blends 15% toward its plum inset tone in light mode and 20% in dark mode. The anatomy colors are resolved against that surface; the drawing itself and its blue data highlights are unchanged.
 - The Overview heatmap and Focused Sets row use their natural side-by-side height, with the anatomy centered vertically against the details. They stack at text scale 1.35 or above, or below 340 dp available width; large-text reflow does not add a fixed blank band.
 - Start Workout, Optimize, and the settings gear retain the same bounds and callbacks. Their release spring is capped at the resting paint bounds inside the action bar's fixed rounded clip, preventing the prior overshoot crop while preserving the inward press response.
@@ -121,3 +121,15 @@ Fresh Pixel 7 captures from the isolated preview are in `tint-adjustment-2026100
 - [Train Plans — light](tint-adjustment-20261001/plans-light.png) · [dark](tint-adjustment-20261001/plans-dark.png)
 
 The Plans captures show the blue, orange, and green active-plan thumbnails together. Use these newest stills to judge tint visibility; the earlier `expressive-polish-20261001/` images show the preceding, more subtle tint values.
+
+### Focused Sets wave polish — 2026-10-01
+
+This pass changes only the Focused Sets progress treatment. The active wave is slightly brighter and thicker (2.5 dp, previously 2.2 dp), while its 1.5 dp amplitude and 20 dp wavelength remain. The straight track is now painted only after the exact active extent, with a clip boundary that prevents it from showing under the wave. Short positive values keep the wavy treatment instead of falling back to a straight active line. Progress values, the 6 dp slot, the terminal marker, shared phase, and native progress semantics are unchanged.
+
+Pixel 7 `28021FDH200228` captures from the isolated `com.tonos.expressivepreview` app:
+
+- Train Overview: [light](wave-refinement-20261001/overview-light-final.png) · [dark](wave-refinement-20261001/overview-dark.png)
+- Normal motion: [12-second idle clip](wave-refinement-20261001/wave-normal-motion.mp4) · [frame A](wave-refinement-20261001/wave-normal-a.png) · [frame B](wave-refinement-20261001/wave-normal-b.png)
+- Reduced Motion: [10-second clip](wave-refinement-20261001/wave-reduced-motion.mp4) · [still A](wave-refinement-20261001/reduced-motion-a.png) · [still B](wave-refinement-20261001/reduced-motion-b.png)
+
+The two normal-motion frames show the wave at different phases. The reduced-motion stills are byte-identical across the 10-second interval, and the reduced-motion clip remains static. The device was returned to Train → Overview, light mode, with Reduced Motion off after capture.

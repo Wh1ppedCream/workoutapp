@@ -103,9 +103,17 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
 
   static const double _waveAmplitude = 1.5;
   static const double _waveLength = 20;
-  static const double _waveStrokeWidth = 2.2;
+  static const double _waveStrokeWidth = 2.5;
+  static const double _waveColorLift = 0.08;
   static const double _trackStrokeWidth = 1.5;
   static const double _terminalRadius = 1.5;
+
+  @visibleForTesting
+  Color get activeWaveColor =>
+      Color.lerp(fillColor, Colors.white, _waveColorLift)!;
+
+  @visibleForTesting
+  double get activeWaveStrokeWidth => _waveStrokeWidth;
 
   @visibleForTesting
   double activeExtentFor(Size size) =>
@@ -120,6 +128,29 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
   }
 
   @visibleForTesting
+  Rect inactiveTrackRectFor(Size size) {
+    final activeExtent = activeExtentFor(size);
+    return textDirection == TextDirection.rtl
+        ? Rect.fromLTRB(0, 0, size.width - activeExtent, size.height)
+        : Rect.fromLTRB(activeExtent, 0, size.width, size.height);
+  }
+
+  @visibleForTesting
+  Path? inactiveTrackPathFor(Size size) {
+    if (size.width <= 0) return null;
+
+    final activeExtent = activeExtentFor(size);
+    if (activeExtent >= size.width) return null;
+
+    final isRtl = textDirection == TextDirection.rtl;
+    final startX = isRtl ? 0.0 : activeExtent;
+    final endX = isRtl ? size.width - activeExtent : size.width;
+    return Path()
+      ..moveTo(startX, size.height / 2)
+      ..lineTo(endX, size.height / 2);
+  }
+
+  @visibleForTesting
   Offset terminalMarkerCenterFor(Size size) => Offset(
     textDirection == TextDirection.rtl
         ? _terminalRadius
@@ -130,7 +161,7 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
   @visibleForTesting
   Path? activeStrokePathFor(Size size) {
     final activeExtent = activeExtentFor(size);
-    if (activeExtent < _waveStrokeWidth * 2) return null;
+    if (activeExtent <= 0 || size.width <= 0) return null;
 
     final isRtl = textDirection == TextDirection.rtl;
     final direction = isRtl ? -1.0 : 1.0;
@@ -166,51 +197,39 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
       bottomLeft: borderRadius.bottomLeft,
       bottomRight: borderRadius.bottomRight,
     );
-    final centerY = size.height / 2;
-    final isRtl = textDirection == TextDirection.rtl;
-    canvas.drawLine(
-      Offset(0, centerY),
-      Offset(size.width, centerY),
-      Paint()
-        ..color = trackColor
-        ..strokeWidth = _trackStrokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
+    final path = activeStrokePathFor(size);
+    if (path != null) {
+      canvas.save();
+      canvas.clipRRect(track);
+      canvas.clipRect(activeRectFor(size));
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = activeWaveColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _waveStrokeWidth
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
+      );
+      canvas.restore();
+    }
 
-    final progress = value.clamp(0.0, 1.0).toDouble();
-    if (progress > 0) {
-      final path = activeStrokePathFor(size);
-      if (path != null) {
-        canvas.save();
-        canvas.clipRRect(track);
-        canvas.clipRect(activeRectFor(size));
-        canvas.drawPath(
-          path,
-          Paint()
-            ..color = fillColor
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = _waveStrokeWidth
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round,
-        );
-        canvas.restore();
-      } else if (progress > 0) {
-        // Preserve visible progress for very short values that cannot yet
-        // carry a complete wave cycle.
-        final activeExtent = activeExtentFor(size);
-        canvas.save();
-        canvas.clipRRect(track);
-        canvas.clipRect(activeRectFor(size));
-        canvas.drawLine(
-          Offset(isRtl ? size.width : 0, centerY),
-          Offset(isRtl ? size.width - activeExtent : activeExtent, centerY),
-          Paint()
-            ..color = fillColor
-            ..strokeWidth = _waveStrokeWidth
-            ..strokeCap = StrokeCap.round,
-        );
-        canvas.restore();
-      }
+    final remainder = inactiveTrackPathFor(size);
+    if (remainder != null) {
+      canvas.save();
+      canvas.clipRRect(track);
+      // The track begins at the exact value boundary and is clipped to the
+      // inactive side, so no straight line is visible under the active wave.
+      canvas.clipRect(inactiveTrackRectFor(size));
+      canvas.drawPath(
+        remainder,
+        Paint()
+          ..color = trackColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _trackStrokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.restore();
     }
 
     // This fixed, quiet marker closes the track. It does not encode progress;

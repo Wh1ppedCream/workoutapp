@@ -150,6 +150,11 @@ void main() {
       isNot(closeTo(phaseQuarterPoint.dy, 0.05)),
       reason: 'phase changes the stroke contour within the active extent',
     );
+    expect(phaseZero.activeWaveStrokeWidth, 2.5);
+    expect(
+      phaseZero.activeWaveColor.computeLuminance(),
+      greaterThan(phaseZero.fillColor.computeLuminance()),
+    );
   });
 
   test('short, empty, full, and RTL values keep exact active extents', () {
@@ -169,7 +174,9 @@ void main() {
     expect(short.activeRectFor(size), const Rect.fromLTWH(0, 0, 12, 6));
     expect(short.activeStrokePathFor(size), isNotNull);
     expect(tiny.activeRectFor(size), const Rect.fromLTWH(0, 0, 2.4, 6));
-    expect(tiny.activeStrokePathFor(size), isNull);
+    final tinyStroke = tiny.activeStrokePathFor(size);
+    expect(tinyStroke, isNotNull);
+    expect(tinyStroke!.getBounds().height, greaterThan(0.4));
     expect(full.activeRectFor(size), const Rect.fromLTWH(0, 0, 120, 6));
     expect(full.activeStrokePathFor(size), isNotNull);
     expect(rtl.activeRectFor(size), const Rect.fromLTRB(36, 0, 120, 6));
@@ -182,6 +189,48 @@ void main() {
       lessThanOrEqualTo(120),
     );
   });
+
+  test(
+    'straight remainder track starts outside the active wave in LTR and RTL',
+    () {
+      const size = Size(120, 6);
+      final empty = _painter(value: 0, phase: 0.2);
+      final short = _painter(value: 0.1, phase: 0.2);
+      final full = _painter(value: 1, phase: 0.2);
+      final rtl = _painter(
+        value: 0.7,
+        phase: 0.2,
+        textDirection: TextDirection.rtl,
+      );
+
+      expect(
+        empty.inactiveTrackPathFor(size)!.getBounds(),
+        const Rect.fromLTRB(0, 3, 120, 3),
+      );
+      expect(
+        short.inactiveTrackRectFor(size),
+        const Rect.fromLTRB(12, 0, 120, 6),
+      );
+      expect(
+        short.activeStrokePathFor(size)!.getBounds().right,
+        short.inactiveTrackPathFor(size)!.getBounds().left,
+      );
+      expect(
+        short.inactiveTrackPathFor(size)!.getBounds(),
+        const Rect.fromLTRB(12, 3, 120, 3),
+      );
+      expect(full.inactiveTrackPathFor(size), isNull);
+      expect(rtl.inactiveTrackRectFor(size), const Rect.fromLTRB(0, 0, 36, 6));
+      expect(
+        rtl.inactiveTrackPathFor(size)!.getBounds(),
+        const Rect.fromLTRB(0, 3, 36, 3),
+      );
+      expect(
+        rtl.inactiveTrackPathFor(size)!.getBounds().right,
+        rtl.activeStrokePathFor(size)!.getBounds().left,
+      );
+    },
+  );
 
   testWidgets('reduced motion keeps the sinusoid in its static pose', (
     tester,
