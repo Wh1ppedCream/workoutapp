@@ -1,8 +1,8 @@
 # Tonos Expressive Train Proving Ground — Results
 
-**Status: READY WITH KNOWN LIMITATIONS for user review (2026-09-30).** The final matched Train Overview/Plans captures, five motion clips, bounded native checks, and canonical Pixel review setup are ready. TalkBack is untested; native 2× navigation needs a horizontal swipe to reveal Profile and some long plan names ellipsize. This proving ground renders the production Train page and app shell with an in-memory Expressive preview identity. Classic and Neo remain the stored theme families. The preferred visual treatment is Curated purple; Generated, light/dark, locale, text scale, and motion controls remain available in the isolated preview.
+**Current status (2026-10-01): TRAIN + SHELL EXPRESSIVE REFERENCE BASELINE QUALIFIED.** The user-approved visual and motion language for Train → Overview, Train → Plans, and the existing navigation shell is technically qualified for continuation. Expressive remains isolated and preview-only; no stored family, production rollout, app-wide theme completion, or other-destination visual approval is implied. TalkBack was not tested. At native 2×, horizontal navigation scrolling is required to reveal Profile and long plan names can ellipsize. Classic and Neo remain the stored theme families. The isolated preview retains Curated/Generated, light/dark, locale, text-scale, and motion controls.
 
-## Qualification record — 2026-09-30
+## Qualification record — 2026-09-30 (historical checkpoint; superseded by section 25)
 
 Qualification started at `a4f877a59b0872315b6e53db1049bb7bd5d1d5c9`, synchronized with `origin/feature/classic-m3e`. The SDK remains Flutter 3.47.5 / bundled Dart 3.13.4, with locked `material_ui` 1.5.0. No production source, palette, spring recipe, stored family, dependency, or SDK changed in this qualification pass.
 
@@ -41,13 +41,13 @@ Settled costs are comparable and materially exceed budget in both looks. Express
 
 Raw logs: [initial profile attempt](proposals/tonos-expressive-train-proving-ground/qualification/logs/profile-driver-2026-09-30.txt), [matched second attempt](proposals/tonos-expressive-train-proving-ground/qualification/logs/profile-driver-rerun-2026-09-30.txt). Device build/runtime detail and bounded proof: [device qualification](proposals/tonos-expressive-train-proving-ground/qualification/device-qualification.md).
 
-### Evidence and remaining user review
+### Evidence and status as of 2026-09-30
 
 - Final matched-focus Overview/Plans light/dark comparisons and five motion clips are indexed in [review-final/README.md](proposals/tonos-expressive-train-proving-ground/review-final/README.md). Historical static boards remain unqualified because of the old focus/DEBUG-ribbon mismatch; use the final matched set for preference decisions.
 - Native 2× text and navigation, preview Back, plan-menu Back, Workout Timer modal Back, focused numeric-field keyboard dismissal, and the disposable Workout exit were checked on the Pixel. Profile requires a horizontal navigation swipe at 2×; some long Plans labels ellipsize.
 - Native TalkBack/screen-reader announcements remain **NOT TESTED**. The host widget semantics tests are recorded separately and do not stand in for TalkBack.
 - The canonical profile app `com.tonos.expressivepreview` / `tonos_expressive_preview.db` was confirmed running. The device is left on Train → Overview, Expressive / Curated / Light / 1×, reduced motion and effects off, system scale 1.15, and no active session.
-- Human keep/tune/reject feedback remains **PENDING**. Technical qualification does not approve Expressive or authorize expansion to another destination.
+- At this checkpoint, human keep/tune/reject feedback was **PENDING**. The user's later approval and the final technical qualification are recorded in section 25.
 
 [Manual user-review checklist](proposals/tonos-expressive-train-proving-ground/qualification/manual-review.md). The user decides keep/tune/reject; technical qualification does not approve the design.
 
@@ -60,7 +60,7 @@ Raw logs: [initial profile attempt](proposals/tonos-expressive-train-proving-gro
 | TUNING | Human judgment of surfaces, purple action hierarchy, spring character, the 8 dp ordinary Train-header increase, 2× horizontal navigation, long-label ellipsis, and higher Expressive rapid synthetic build cost. These are user review observations, not technical blockers. |
 | DEFERRED | TalkBack announcements/focus order, landscape, child-route visual qualification, full Workout/Progress visual review, and unsupported RTL-language shaping. Widget semantics and RTL layout stress do not establish those device capabilities. |
 | BLOCKER | None for the Train + shell review. The earlier stalled smoke and stale-coordinate failures were harness limitations; direct physical target/workout behavior is documented. |
-| PENDING | Human keep/tune/reject feedback; native TalkBack checks if the user wants them. No other destination should be added before user review. |
+| PENDING AT CHECKPOINT | Human keep/tune/reject feedback; native TalkBack checks if the user wants them. Section 25 records the later approval and technical status; TalkBack remains untested. |
 
 Expressive remains explicitly rendered and nonpersisted. Normal root/default-null behavior, Classic/Neo stored selection, generic Material fallback, and domain data ownership remain subject to the retained regression gates. Workout is only a compatibility smoke target: its adopted controlled 180 ms reveal, 48×48 completion target, anchored menu, and final-set collapse are preserved rather than redesigned.
 
@@ -102,7 +102,7 @@ See [the handoff](tonos-expressive-train-proving-ground-handoff.md) for the exac
 
 Implementation checkpoint: `9cd78807922e57602f4d9bbf32d417afc40386f9` — `Add isolated Tonos Expressive proving ground`. This results document and the retained 19 PNGs accompany `Record Expressive proving-ground checkpoint`; resolve that commit and the current remote using the handoff's section 2 commands.
 
-### 23. User-directed Train polish follow-up — 2026-10-01
+### 23. User-directed Train polish follow-up — 2026-10-01 (historical iteration; superseded by section 25)
 
 This is the current review evidence for the explicitly requested polish to plan heatmap backgrounds, Weekly Overview composition, Focused Sets progress, and the Train action bar. It supersedes the previous stop rule only for this named Train + shell refinement; no other destination or theme work is authorized by this follow-up.
 
@@ -126,16 +126,16 @@ The preview uses package `com.tonos.expressivepreview` and database `tonos_expre
 - Weekly Overview heatmap, Focused Sets wave, and resting action-bar close-ups in light/dark;
 - untouched Focused Sets/ambient and Weekly Overview idle clips, action tactile clip, and Reduced Motion clip with paired stills.
 
-The action clip includes the current Optimize recovery warning (dismissed), settings route, and Start into the isolated preview session and return. It does not alter the normal Tonos package or database. Visual judgment is for the reviewer's approval; this document does not mark the candidate as product-approved.
+The action clip includes the Optimize recovery warning (dismissed), settings route, and Start into the isolated preview session and return. It does not alter the normal Tonos package or database. At this iteration the proposal was still awaiting user review; section 25 records the later reference-baseline approval. Production rollout remains unapproved.
 
 #### Focused validation and stop condition
 
 - Flutter 3.47.5 / bundled Dart 3.13.4 focused Train, plan, motion, and layout batch: **51 passed, 0 failed, 0 skipped, exit 0**.
 - Scoped Dart analysis: **No issues found**.
-- Full Flutter suite: **not run**, intentionally deferred until the user reviews this Train + shell candidate.
-- This is not a production promotion or SDK/theme migration. Keep the scope limited to the named Train + shell refinements until the seven review questions are answered.
+- Full Flutter suite: **not run at this iteration**, intentionally deferred until review. Section 25 records the later final full-suite run.
+- This was not a production promotion or SDK/theme migration. The current continuation boundary is recorded in section 25.
 
-### 24. User tint-strength adjustment — 2026-10-01
+### 24. User tint-strength adjustment — 2026-10-01 (historical iteration; superseded by section 25)
 
 After reviewing the previous captures, the user requested a small increase because the plan and Weekly Overview heatmap differences were hard to see. The current implementation changes only these blends:
 
@@ -149,4 +149,39 @@ The updated Preview was freshly built with Flutter 3.47.5 and installed on Pixel
 - [Overview light](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/overview-light.png) and [dark](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/overview-dark.png).
 - [Plans light](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/plans-light.png) and [dark](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/plans-dark.png), each showing the blue, orange, and green active-plan rows.
 
-The directly affected plan/Weekly Overview tests passed **10/10**, with scoped Dart analysis reporting no issues. The full suite remains deferred until the user approves the Train + shell review candidate. This adjustment is awaiting user judgment; the earlier values are preserved in section 23 as the preceding iteration's record.
+The directly affected plan/Weekly Overview tests passed **10/10**, with scoped Dart analysis reporting no issues. At that point the full suite was still deferred and the adjustment awaited review. Section 25 records the user's later approval and final full-suite qualification; section 23 preserves the preceding tint values.
+
+### 25. Final Train + shell qualification — 2026-10-01
+
+The user approved the Train + shell visual/motion language as the current reference baseline. This final gate freezes that language for continuation. It does not approve production rollout, persistence, app-wide Expressive, or a visual redesign of Active Workout, Progress, Catalog, Logbook, or Profile.
+
+#### Host gates
+
+- Pinned Flutter **3.47.5** / bundled Dart **3.13.4**.
+- Final uninterrupted `flutter test --no-pub --reporter compact`: **1,295 passed, 0 failed, 0 skipped, exit 0**, elapsed **00:11:53.386**. Log: `C:\Users\talh7\AppData\Local\Temp\tonos-full-test-final-20261001.log`.
+- Repository-wide pinned `dart analyze`: **0 errors, 0 warnings, 81 informational notices, exit 0**. Existing informational deprecation notices were not expanded into unrelated cleanup. Log: `C:\Users\talh7\AppData\Local\Temp\tonos-final-dart-analyze-20261001.log`.
+- Inventory: **296 Dart files, 2,440 candidates, 130 allowlisted, 2,310 classified/migrated, 0 pending, 0 unassigned, 0 overlaps**; 992 candidates are in exactly one review queue and 1,448 outside configured queues. Ratchet enforcement passed for **18 protected files, 158 fingerprint entries, and 180 current occurrences**, with exact maps. Theme contracts, extension completeness, Classic/Neo/default-root parity, preview persistence boundaries, reduced-motion and Workout compatibility tests passed in the suite.
+- Focused gates also passed: **75** Train/shell/motion/presentation tests, **53** inventory-contract tests, **3** ratchet CLI tests, and **1** ambient visibility qualification test. The integration-test source passed scoped analysis after its last harness correction.
+- `git diff --check` passed before final staging; the qualification commit repeats the staged diff check.
+
+An early full-suite run exposed stale source-rule expectations and `pumpAndSettle` assumptions around intentionally continuous ambient motion. Those were corrected in tests/harness only, narrowly preserving Classic, Neo, and explicit Expressive contracts. The final complete run above is the authoritative suite result.
+
+#### Motion, accessibility, parity, and persistence
+
+- Automated lifecycle coverage exercises visibility threshold, selected Overview versus Plans, inactive TickerMode, app inactive/resumed lifecycle, route visibility, and disposal. Plans retains its existing scroll position. The Focused Sets phase is shared; repainting remains local to the ambient/progress layers.
+- Reduced Motion coverage confirms ambient/accent movement stops, the wave phase freezes while its static wavy geometry remains, nonessential motion resolves immediately, callbacks remain responsive, and static Expressive identity remains present.
+- Responsive/accessibility widget coverage spans 1×, 1.15×, 1.5×, 2× and 320 dp, including long French labels, RTL layout direction, semantics/value stability and reachable navigation targets. Native Android 2× text/navigation and key Back/keyboard checks are recorded below. **TalkBack was not tested**; landscape and unsupported RTL-language shaping remain deferred.
+- Classic, Neo, and generic-root behavior remain separate. Expressive uses explicit in-memory preview identity. Saved Classic/Neo values and preference sentinels remain unchanged; no Expressive preference, migration, Appearance choice, or promotion was added.
+- Workout remains a compatibility smoke only. The adopted 180 ms reveal, 48 × 48 dp completion target, anchored menu, non-final-set-open/final-set-collapse rule, completion retention on reopen, and isolated data path remain intact; no Workout visual adaptation occurred.
+
+#### Pixel 7 and performance
+
+- Pixel 7 `28021FDH200228`, Android 16, 60 Hz, 411.43 × 914.29 dp at DPR 2.625. The successful smoke-only profile drive returned exit 0: the outer Collapse target and exercise menu each measured **48 × 48 dp** and were hit-testable; the same collapse target was reacquired after menu dismissal; expansion/collapse changed card height from **96 dp to 400 dp** and back; the completed-session menu was reachable. The drive reported no active draft after its cleanup. Its smoke selector explicitly sets `timingsMeasured:false`; it is functional compatibility evidence, not a profile timing run.
+- The prior matched profile data remains the only timing matrix. Settled frame-cost results were comparable but above budget in both looks; the synthetic 80 ms rapid retargeting produced more Expressive build-budget exceedances (50/212 vs 34/212). Four approximately five-second quiet-idle observation windows recorded zero Flutter frame timings. These are bounded Flutter `FrameTiming` observations; they do not establish zero jank, compositor deadlines, or physical input latency. No runaway idle frame stream was observed.
+- The canonical profile preview was rebuilt from `lib/expressive_preview_main.dart`, manifest-verified, installed only to `com.tonos.expressivepreview`, and visually checked running at Train → Overview in Light / Expressive / Curated / 1×, Reduced Motion and Effects Off disabled, no overlay or workout. APK SHA-256: `63C1202CF793FF5CB38568A43255D0C119B858B09059AA888C71C2F47646CD42`. Database remains `tonos_expressive_preview.db`; normal/internal Tonos data was not targeted.
+
+#### Review assets and handoff
+
+The final Focused Sets wave captures and normal/reduced-motion clips remain indexed in [the wave refinement review](proposals/tonos-expressive-train-proving-ground/amplified-review/manual-review.md#focused-sets-wave-polish--2026-10-01). Earlier matched Overview/Plans stills, plan identity/heatmap evidence and tactile clips remain in that guide and [review-final index](proposals/tonos-expressive-train-proving-ground/review-final/README.md). The current specification is summarized in [the Expressive reference baseline](tonos-expressive-reference-baseline.md).
+
+The approved Train + shell slice is technically qualified for continuation. It is not production released or a completed app-wide theme. The next phase is documentation/planning for adapting this approved language to Active Workout; this qualification did not begin that implementation.

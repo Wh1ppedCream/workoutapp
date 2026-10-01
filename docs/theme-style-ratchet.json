@@ -213,11 +213,6 @@
           "reason": "Reviewed the Expressive destination cornerRadius input; each destination receives AppShapeTokens.trainTabButton, and the navigation contract checks its reachable hit bounds and tap behavior."
         },
         {
-          "fingerprint": "620ea1b0fec3574fd2ada72c9ec04ca80a495f11aa560eb81b5a1d1dc04314d8",
-          "count": 1,
-          "reason": "Reviewed the destination RoundedRectangleBorder used by the visible InkWell; its radius is supplied from AppShapeTokens and the focused interaction tests cover the real destination action."
-        },
-        {
           "fingerprint": "64ab63cb8a1c8856ec7f396c1829562f5823e198ca272bfa25f3e7b6e32897ef",
           "count": 1,
           "reason": "Reviewed the Theme lookup in the Expressive-only bar builder; its text and color roles come from the active preview ThemeData and are exercised in light/dark matched navigation captures."
@@ -231,6 +226,26 @@
           "fingerprint": "6e935861fcb507bebb821426e90e2ad6f971d6eda62dd2c5b1cb5df21856e7b4",
           "count": 1,
           "reason": "Reviewed the underline Color role passed to the decorative selection layer; its token-derived value and 4px rendered geometry are covered by the four-mode widget test."
+        },
+        {
+          "fingerprint": "4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f",
+          "count": 2,
+          "reason": "Reviewed both BorderRadius inputs to the RTL mirroring helper; the Expressive navigation frame and destination shapes retain their logical corners in either text direction."
+        },
+        {
+          "fingerprint": "5311ac0142412882084a2ea9bbd49f86ab2386f2a9d7005c9181a67f90d271b3",
+          "count": 1,
+          "reason": "Reviewed the mirrored RoundedRectangleBorder used as the Expressive destination InkWell hit shape; navigation interaction tests cover activation and destination bounds."
+        },
+        {
+          "fingerprint": "83b6681bc565f7c7d87035728f59e5020ada10e3619376a578b2b6ae534178f4",
+          "count": 1,
+          "reason": "Reviewed the Expressive navigation frame BoxDecoration; its surface and mirrored radius come from preview tokens and the navigation contract exercises the frame and destinations."
+        },
+        {
+          "fingerprint": "a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b",
+          "count": 1,
+          "reason": "Reviewed the BorderRadius.only RTL mirror mapping; each logical corner is transferred to its matching physical corner for Expressive navigation."
         },
         {
           "fingerprint": "9b587dc1a09a54ff64331ff81ad911c56b10d82f645ff4c8565372024455eab3",
@@ -295,11 +310,6 @@
           "reason": "Reviewed the shared button shape: radius and outlined side resolve from shape/surface tokens, and the four-mode rendered contract checks both branches."
         },
         {
-          "fingerprint": "206572f83763ae9534e1f972c1f3dd135d10f4ebe05c264ca279ce21c9bae7ed",
-          "count": 1,
-          "reason": "Reviewed the Expressive selector frame BoxDecoration; its fill and radius come from AppSurfaceTokens.panel and AppShapeTokens.trainTab, covered by the focused rendered Train contract."
-        },
-        {
           "fingerprint": "2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239",
           "count": 1,
           "reason": "Reviewed the selector frame decoration; fill, radius, outline, and shadow are selected from theme-family tokens and asserted in rendered tests."
@@ -308,11 +318,6 @@
           "fingerprint": "2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea",
           "count": 1,
           "reason": "Reviewed the structural frame border; its color and width come from surface and shape tokens and are checked in both Neo brightness modes."
-        },
-        {
-          "fingerprint": "416a222464b72f674936761b42a34af5c256d8c8876d6ba1933e69a92504b951",
-          "count": 2,
-          "reason": "Reviewed both Colors.transparent appearances in the Expressive tab button; the transparent Material layer preserves the selected indicator as the sole selected fill, verified by the Train selector contract."
         },
         {
           "fingerprint": "45d21e426dc9356e0063e987bcc1f2143b87a4997abb068a13c4e1da70c5baaf",
@@ -333,6 +338,36 @@
           "fingerprint": "96ee44c35eeeed933d184b41f687d36cf8f95ef617c486331d3900eec265b3cc",
           "count": 1,
           "reason": "Reviewed the TextStyle passed into the label-measurement closure; it is derived from the current theme typography before measuring both displayed weights under the supplied scaler and width."
+        },
+        {
+          "fingerprint": "4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f",
+          "count": 2,
+          "reason": "Reviewed both BorderRadius inputs to the RTL mirroring helper; Expressive selector track and selected shapes retain logical corners in either text direction."
+        },
+        {
+          "fingerprint": "804a603bd906bbd1d08900ec8e4f67b8a6a9d8d0c2584924214cd813bd7615cc",
+          "count": 1,
+          "reason": "Reviewed the Expressive selector track BoxDecoration; its active-family fill and mirrored shape are checked by the focused Train selector contract."
+        },
+        {
+          "fingerprint": "8b81cbe8367b5ab7cd509ac3020bb3ee2009e47ada5cc1e6d243695aec063d3d",
+          "count": 2,
+          "reason": "Reviewed both transparent Material fill branches in the Expressive tab button; transparency keeps the selection indicator as the visible selected surface."
+        },
+        {
+          "fingerprint": "a3ab52916ab3234372277904efa5812b770f6ac85d6fc86323b9398e18cd49b8",
+          "count": 1,
+          "reason": "Reviewed the Expressive train-token lookup that supplies the selector's track, selected fill, and foreground roles."
+        },
+        {
+          "fingerprint": "a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b",
+          "count": 1,
+          "reason": "Reviewed the BorderRadius.only RTL mirror mapping; logical selector corners are transferred to their matching physical corners."
+        },
+        {
+          "fingerprint": "d1ec04069cf6108cf9aaaf9502e4380ee4cdb38c4406508ec6a52317b2264013",
+          "count": 1,
+          "reason": "Reviewed the conditional Expressive token lookup; it applies only to the explicit Expressive selector while Classic and Neo retain their existing owners."
         },
         {
           "fingerprint": "a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96",
@@ -654,6 +689,66 @@
           "fingerprint": "c1ab889e2b5322df241752d144847bf07716ef779d4981ca96fbc47b75514a67",
           "count": 1,
           "reason": "Reviewed the Theme.of(context) lookup in _MoreFocusedSetsHint; the four-mode contract checks the resolved icon/text foreground and bold label weight."
+        },
+        {
+          "fingerprint": "1d0030deeea5ab41e973b93e8089c50d03e20f32c8d4bdd8328a10e6f90160ec",
+          "count": 1,
+          "reason": "Reviewed the nullable Color input used by the Expressive focus-progress painter; the focused progress tests cover the resolved state colors."
+        },
+        {
+          "fingerprint": "37f1f9e2cb78b2c4e51d7b443fe013dc09f0c4ca06c551bc9a9e648c7e467923",
+          "count": 1,
+          "reason": "Reviewed the brightness-specific heatmap tint; the focus presentation contract checks the resolved heatmap surface in light and dark modes."
+        },
+        {
+          "fingerprint": "3b5bb49bc22a9ae233759493f3d29edd903314209e4d7b61dc3fd5ffd3569ed3",
+          "count": 1,
+          "reason": "Reviewed the scoped focus Theme roles, including the token-derived progress color and 0.2-alpha track."
+        },
+        {
+          "fingerprint": "61b58668262c6a3759a230ec9efcfe33eab463e3a34848a4a783e8f419846705",
+          "count": 2,
+          "reason": "Reviewed both warm/cool accent BoxDecorations in the Expressive focus-progress painter; their token colors and animated geometry are covered by focus tests."
+        },
+        {
+          "fingerprint": "74bcad162ac009b79ecd966ae2cc032839f42b6d72db43fdb97a8f42b6805ab5",
+          "count": 2,
+          "reason": "Reviewed both rounded accent-segment corners in the Expressive focus-progress painter; the pill shapes and wave motion are covered by progress tests."
+        },
+        {
+          "fingerprint": "7df9936fdfc8b9c884319278f7122b4341cc9b4e50603abd81675d2436f51ab0",
+          "count": 2,
+          "reason": "Reviewed both RoundedRectangleBorder hit surfaces for Expressive focused-set details; the response effect preserves the inset radius and tap behavior."
+        },
+        {
+          "fingerprint": "95e4d7532fa47b2c9f36ed95e3a43b39fd2fbacfe5ff8aa79cc250b02d77ac97",
+          "count": 1,
+          "reason": "Reviewed the active Theme lookup used to resolve Expressive focus state and surface roles."
+        },
+        {
+          "fingerprint": "9f4965e52431ab1ace1bcc85bfba44f29cd5dea8badb1c46d724c1ec7c8adac8",
+          "count": 1,
+          "reason": "Reviewed the Expressive heatmap BoxDecoration; its resolved surface and inset radius are asserted by the focus presentation contract."
+        },
+        {
+          "fingerprint": "c5e5ec93685c6a607268dbad9fc3e2deed84ec0f282098c876a038c2e23f1e5e",
+          "count": 1,
+          "reason": "Reviewed the ambient card's interpolated Color; the animation blends only the existing focus surface and inset tokens."
+        },
+        {
+          "fingerprint": "cd02c9dabe79354773790b39efd4265ddf8cacd9ff9e6bcce1fb32c5517f0ee4",
+          "count": 1,
+          "reason": "Reviewed the Expressive focus Theme boundary that scopes focus typography and foreground roles to card content."
+        },
+        {
+          "fingerprint": "f232946db4af06a2f1429df4f02d5b036efcd2e2ec749e9f426f2d8464a6309a",
+          "count": 1,
+          "reason": "Reviewed the heatmap surface interpolation between the caller surface and the existing focus inset token."
+        },
+        {
+          "fingerprint": "f72906d16230ea5aac9751d143cd174acc490844fa0883fb19d29b71fb62ef14",
+          "count": 1,
+          "reason": "Reviewed the heatmap surface Color input passed into the Expressive focus layout and its surface-aware heatmap colors."
         }
       ]
     },

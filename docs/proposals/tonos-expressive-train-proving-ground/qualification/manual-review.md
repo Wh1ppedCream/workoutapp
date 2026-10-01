@@ -1,8 +1,8 @@
 # Train + shell Expressive — user review
 
-This reviews the existing preview. It does not approve a stored theme or any other screen.
+The user has approved the current Train + shell Expressive visual/motion language as a reference baseline, and this slice has passed technical qualification. This guide remains the procedure for opening and rechecking the isolated preview. It does not approve a stored theme, production rollout, or any other screen.
 
-**Review build:** the canonical profile preview was built, manifest-verified, installed, and launched on Pixel 7 during qualification. It uses the isolated package/database below; the normal Tonos installs and their data were not targeted. The device was temporarily absent from ADB during the final checkpoint, so confirm it reconnects and the preview launches before starting review.
+**Current review build:** the canonical profile preview was rebuilt, manifest-verified, installed, and visually checked on Pixel 7 after qualification. It uses the isolated package/database below; the normal Tonos installs and their data were not targeted.
 
 - Package: `com.tonos.expressivepreview`
 - Database: `tonos_expressive_preview.db`
@@ -38,4 +38,4 @@ Open the sliders button in the preview strip. Select **Expressive**, **Curated**
 
 ## Feedback
 
-Give **keep / tune / reject** separately for surfaces, tabs, navigation, Start, density, and dark mode. Mention the exact state and whether the issue appeared after repeated use. The user chooses the visual direction; technical qualification does not make that decision.
+For any later targeted review, describe the exact surface/control, light/dark mode, text scale, and whether a concern appears at rest or after repeated use. The approved Train + shell baseline is the reference for future adaptation; technical qualification does not authorize production rollout or determine the visual design of other destinations.

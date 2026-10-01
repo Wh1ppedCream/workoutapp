@@ -25,33 +25,31 @@ void main() {
         'exercise_analytics_screen',
         'exercise_editor_screen',
       ]) {
-        final source =
-            File('lib/screens/profile/settings/$name.dart').readAsStringSync();
+        final source = File('lib/screens/profile/settings/$name.dart')
+            .readAsStringSync();
         expect(source, contains('borderRadius: shapes.settingsTabIndicator'));
         expect(source, isNot(contains('shapes.settingsInput')));
       }
       for (final name in ['flow_methods_page', 'workout_progress_flows_page']) {
-        final source =
-            File('lib/screens/profile/settings/$name.dart').readAsStringSync();
+        final source = File('lib/screens/profile/settings/$name.dart')
+            .readAsStringSync();
         expect(source, contains('shapes.settingsScopeIcon'));
         expect(source, isNot(contains('shapes.settingsInput')));
       }
     },
   );
   test('settings consumers resolve the new semantic ownership roles', () {
-    final databaseSource =
-        File(
-          'lib/screens/profile/settings/database_settings_page.dart',
-        ).readAsStringSync();
+    final databaseSource = File(
+      'lib/screens/profile/settings/database_settings_page.dart',
+    ).readAsStringSync();
     expect(databaseSource, contains('semantic.databaseHealthy'));
     expect(databaseSource, contains('semantic.databaseWarning'));
     expect(databaseSource, isNot(contains('Colors.green')));
     expect(databaseSource, isNot(contains('Colors.orange')));
 
-    final editorSource =
-        File(
-          'lib/screens/profile/settings/exercise_editor_screen.dart',
-        ).readAsStringSync();
+    final editorSource = File(
+      'lib/screens/profile/settings/exercise_editor_screen.dart',
+    ).readAsStringSync();
     expect(editorSource, contains('shapes.settingsTitleCard'));
     expect(editorSource, contains('surfaces.settingsHero'));
     expect(editorSource, contains('SettingsInlineActionButton('));
@@ -66,8 +64,8 @@ void main() {
         'exercise_editor_screen',
         'goal_manual_entry_page',
       ]) {
-        final source =
-            File('lib/screens/profile/settings/$name.dart').readAsStringSync();
+        final source = File('lib/screens/profile/settings/$name.dart')
+            .readAsStringSync();
         expect(source, contains('SettingsSaveBar('), reason: name);
       }
 
@@ -77,8 +75,8 @@ void main() {
         'volume_boundaries_screen',
         'exercise_analytics_screen',
       ]) {
-        final source =
-            File('lib/screens/profile/settings/$name.dart').readAsStringSync();
+        final source = File('lib/screens/profile/settings/$name.dart')
+            .readAsStringSync();
         expect(source, contains('settingsFieldDecoration('), reason: name);
       }
     },
@@ -127,22 +125,18 @@ void main() {
     expect(editorSource, contains('AlertDialog('));
   });
   test('settings label consumers use shared pill and badge primitives', () {
-    final flowMethodsSource =
-        File(
-          'lib/screens/profile/settings/flow_methods_page.dart',
-        ).readAsStringSync();
-    final progressFlowsSource =
-        File(
-          'lib/screens/profile/settings/workout_progress_flows_page.dart',
-        ).readAsStringSync();
-    final tutorialsSource =
-        File(
-          'lib/screens/profile/settings/tutorials_settings_page.dart',
-        ).readAsStringSync();
-    final analyticsSource =
-        File(
-          'lib/screens/profile/settings/exercise_analytics_screen.dart',
-        ).readAsStringSync();
+    final flowMethodsSource = File(
+      'lib/screens/profile/settings/flow_methods_page.dart',
+    ).readAsStringSync();
+    final progressFlowsSource = File(
+      'lib/screens/profile/settings/workout_progress_flows_page.dart',
+    ).readAsStringSync();
+    final tutorialsSource = File(
+      'lib/screens/profile/settings/tutorials_settings_page.dart',
+    ).readAsStringSync();
+    final analyticsSource = File(
+      'lib/screens/profile/settings/exercise_analytics_screen.dart',
+    ).readAsStringSync();
 
     expect(flowMethodsSource, contains('SettingsLegendChip('));
     expect(flowMethodsSource, contains('SettingsCountBadge('));
@@ -160,8 +154,8 @@ void main() {
     expect(analyticsSource, contains('SettingsAccentPill('));
   });
   test('Train and workout completion consumers use focused theme roles', () {
-    final trainSource =
-        File('lib/screens/exercise/train_page.dart').readAsStringSync();
+    final trainSource = File('lib/screens/exercise/train_page.dart')
+        .readAsStringSync();
     expect(trainSource, contains('semantic.startWorkoutAction'));
     expect(trainSource, contains('semantic.onStartWorkoutAction'));
     expect(trainSource, contains('dataVisualization.tertiarySeries'));
@@ -174,8 +168,8 @@ void main() {
     expect(trainSource, isNot(contains('Colors.green.shade700')));
     expect(trainSource, isNot(contains('color: Colors.purple')));
 
-    final trainTabsSource =
-        File('lib/widgets/tonos_train_tabs.dart').readAsStringSync();
+    final trainTabsSource = File('lib/widgets/tonos_train_tabs.dart')
+        .readAsStringSync();
     expect(trainTabsSource, contains('surfaces.trainTabSurfaceOpacity'));
     expect(trainTabsSource, contains('shapes.trainTabButton'));
     expect(
@@ -184,19 +178,27 @@ void main() {
     );
     expect(trainTabsSource, contains('width: shapes.outlineWidth'));
 
-    // Expressive changes the rendered surface role; the established branch
-    // must continue to use panelRaised rather than inheriting that preview role.
+    // Expressive returns its own surface composition before the retained
+    // Classic/Neo TonosSurface branch; the established branch keeps its
+    // panelRaised role rather than inheriting the preview surface.
     expect(
       RegExp(
-        r'variant:\s*usesExpressiveRecipe\s*\?\s*TonosSurfaceVariant\.card'
-        r'\s*:\s*TonosSurfaceVariant\.panelRaised',
+        r'if\s*\(usesExpressiveRecipe\)\s*\{[\s\S]{0,350}?'
+        r'return\s+_ExpressiveTrainSurface\(',
+      ).allMatches(trainSource),
+      hasLength(3),
+    );
+    expect(
+      RegExp(
+        r'if\s*\(usesInkRecipe\)\s*\{\s*return\s+TonosSurface\('
+        r'\s*variant:\s*TonosSurfaceVariant\.panelRaised',
       ).allMatches(trainSource),
       hasLength(3),
     );
     expect(trainSource, contains('TonosActionVariant.primary'));
 
-    final weightCardSource =
-        File('lib/widgets/weight_card.dart').readAsStringSync();
+    final weightCardSource = File('lib/widgets/weight_card.dart')
+        .readAsStringSync();
     expect(weightCardSource, contains('semantic.workoutCompleted'));
     expect(weightCardSource, contains('semantic.workoutExerciseCompleted'));
     expect(weightCardSource, contains('semantic.workoutSetCompleted'));
@@ -208,8 +210,8 @@ void main() {
     expect(weightCardSource, contains('context.shapeTokens.mediaThumbnail'));
     expect(weightCardSource, isNot(contains('Colors.green.withAlpha')));
 
-    final completionSource =
-        File('lib/widgets/session_complete_sheet.dart').readAsStringSync();
+    final completionSource = File('lib/widgets/session_complete_sheet.dart')
+        .readAsStringSync();
     expect(completionSource, contains('class WorkoutCompletionPresentation'));
     expect(completionSource, contains('WorkoutCompletionExerciseCard('));
     expect(completionSource, contains('semantic.completionAccent'));
@@ -224,57 +226,53 @@ void main() {
     expect(completionSource, contains('surfaces.completionExerciseFill'));
     expect(completionSource, contains('surfaces.completionExerciseBorder'));
 
-    final pilotSource =
-        File('lib/theme/neo_brutalism_pilot_gallery.dart').readAsStringSync();
+    final pilotSource = File('lib/theme/neo_brutalism_pilot_gallery.dart')
+        .readAsStringSync();
     expect(pilotSource, contains('WorkoutCompletionPresentation('));
 
-    final optimizedSource =
-        File(
-          'lib/screens/exercise/optimized_workout_settings_page.dart',
-        ).readAsStringSync();
+    final optimizedSource = File(
+      'lib/screens/exercise/optimized_workout_settings_page.dart',
+    ).readAsStringSync();
     expect(optimizedSource, contains('semantic.startWorkoutAction'));
     expect(optimizedSource, contains('semantic.onStartWorkoutAction'));
     expect(optimizedSource, contains('surfaces.optimizedAction'));
     expect(optimizedSource, contains('shapes.pill'));
 
-    final presetDetailSource =
-        File(
-          'lib/screens/exercise/preset_detail_screen.dart',
-        ).readAsStringSync();
+    final presetDetailSource = File(
+      'lib/screens/exercise/preset_detail_screen.dart',
+    ).readAsStringSync();
     expect(presetDetailSource, contains('semantic.editingActive'));
     expect(presetDetailSource, contains('semantic.editingInactive'));
 
-    final planManagementSource =
-        File(
-          'lib/screens/exercise/plan_management_page.dart',
-        ).readAsStringSync();
+    final planManagementSource = File(
+      'lib/screens/exercise/plan_management_page.dart',
+    ).readAsStringSync();
     expect(planManagementSource, contains('surfaces.planCard'));
     expect(planManagementSource, contains('shapes.planCard'));
 
-    final presetsLoadedSource =
-        File('lib/widgets/presets_loaded.dart').readAsStringSync();
+    final presetsLoadedSource = File('lib/widgets/presets_loaded.dart')
+        .readAsStringSync();
     expect(presetsLoadedSource, contains('shapes.card'));
     expect(presetsLoadedSource, contains('PlanIdentityPalette.colors'));
     expect(presetsLoadedSource, contains('surfaces.planRevealBorderOpacity'));
     expect(presetsLoadedSource, isNot(contains('static const _palette')));
 
-    final detailSource =
-        File(
-          'lib/screens/exercise/session_detail_screen.dart',
-        ).readAsStringSync();
+    final detailSource = File('lib/screens/exercise/session_detail_screen.dart')
+        .readAsStringSync();
     expect(detailSource, contains('semantic.editingActive'));
     expect(detailSource, contains('surfaces.sessionSummary'));
 
-    final badgesSource =
-        File('lib/widgets/workout_record_badges.dart').readAsStringSync();
+    final badgesSource = File('lib/widgets/workout_record_badges.dart')
+        .readAsStringSync();
     expect(badgesSource, contains('dataVisualization.recordMonthly'));
     expect(badgesSource, contains('dataVisualization.recordAllTime'));
     expect(badgesSource, contains('dataVisualization.firstRecord'));
     expect(badgesSource, contains('shapes.recordBadge'));
     expect(badgesSource, contains('shapes.recordBadgeCompact'));
 
-    final premadePlansSource =
-        File('lib/screens/exercise/premade_plans_page.dart').readAsStringSync();
+    final premadePlansSource = File(
+      'lib/screens/exercise/premade_plans_page.dart',
+    ).readAsStringSync();
     expect(premadePlansSource, contains('surfaces.planFilter'));
     expect(premadePlansSource, contains('surfaces.planDuration'));
     expect(premadePlansSource, contains('surfaces.planGroup'));
@@ -286,10 +284,9 @@ void main() {
     expect(premadePlansSource, isNot(contains('Duration(milliseconds: 180)')));
     expect(premadePlansSource, isNot(contains('withValues(alpha: 0.55)')));
 
-    final automaticFlowSource =
-        File(
-          'lib/screens/exercise/auto_preset_flow_screen.dart',
-        ).readAsStringSync();
+    final automaticFlowSource = File(
+      'lib/screens/exercise/auto_preset_flow_screen.dart',
+    ).readAsStringSync();
     expect(automaticFlowSource, contains('surfaces.flowControl'));
     expect(
       automaticFlowSource,
@@ -323,45 +320,45 @@ void main() {
     expect(automaticFlowSource, isNot(contains('withValues(alpha: .04)')));
     expect(automaticFlowSource, isNot(contains('withValues(alpha: .16)')));
 
-    final flowWidgetsSource =
-        File('lib/widgets/flow_widgets.dart').readAsStringSync();
+    final flowWidgetsSource = File('lib/widgets/flow_widgets.dart')
+        .readAsStringSync();
     expect(flowWidgetsSource, contains('context.flowTokens'));
     expect(flowWidgetsSource, contains('context.surfaceTokens.dialog'));
     expect(flowWidgetsSource, isNot(contains('context.colors')));
 
-    final flowScreenWidgetsSource =
-        File('lib/widgets/flow_screen_widgets.dart').readAsStringSync();
+    final flowScreenWidgetsSource = File('lib/widgets/flow_screen_widgets.dart')
+        .readAsStringSync();
     expect(flowScreenWidgetsSource, contains('context.flowTokens'));
     expect(flowScreenWidgetsSource, contains('context.surfaceTokens.dialog'));
     expect(flowScreenWidgetsSource, isNot(contains('context.colors')));
 
-    final genericBarSource =
-        File('lib/widgets/generic_bar.dart').readAsStringSync();
+    final genericBarSource = File('lib/widgets/generic_bar.dart')
+        .readAsStringSync();
     expect(genericBarSource, contains('shapes.compact'));
 
-    final focusedSetsSource =
-        File('lib/widgets/focused_sets_list.dart').readAsStringSync();
+    final focusedSetsSource = File('lib/widgets/focused_sets_list.dart')
+        .readAsStringSync();
     expect(focusedSetsSource, contains('shapes.pill'));
 
-    final metricChipSource =
-        File('lib/widgets/set_stat_chip.dart').readAsStringSync();
+    final metricChipSource = File('lib/widgets/set_stat_chip.dart')
+        .readAsStringSync();
     expect(metricChipSource, contains('surfaces.metricChip'));
     expect(metricChipSource, contains('shapes.metric'));
 
-    final presetInfoSource =
-        File('lib/widgets/preset_info_card.dart').readAsStringSync();
+    final presetInfoSource = File('lib/widgets/preset_info_card.dart')
+        .readAsStringSync();
     expect(presetInfoSource, contains('shapes.metric'));
     expect(presetInfoSource, contains('tonosHeatmapLowForSurface'));
     expect(presetInfoSource, contains('surfaces.card'));
     expect(presetInfoSource, contains('semantic.strongContent'));
 
-    final presetBarSource =
-        File('lib/widgets/preset_bar.dart').readAsStringSync();
+    final presetBarSource = File('lib/widgets/preset_bar.dart')
+        .readAsStringSync();
     expect(presetBarSource, contains('WorkoutThumbnailFrame'));
     expect(presetBarSource, contains('tonosHeatmapLowForSurface'));
 
-    final swapSource =
-        File('lib/widgets/swap_exercise_sheet.dart').readAsStringSync();
+    final swapSource = File('lib/widgets/swap_exercise_sheet.dart')
+        .readAsStringSync();
     expect(swapSource, contains('swapSecondaryTextOpacity'));
 
     expect(detailSource, contains('shapes.metric'));

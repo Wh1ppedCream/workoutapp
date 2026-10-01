@@ -65,21 +65,22 @@ void main() {
         _expectSingleTapNode(tester, strings.trainPlansTab, selected: false);
 
         await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
-        await tester.pumpAndSettle();
+        await _pumpTransientAnimations(tester);
         _expectSingleTapNode(tester, strings.trainOverviewTab, selected: false);
         _expectSingleTapNode(tester, strings.trainPlansTab, selected: true);
 
         await tester.tap(find.bySemanticsLabel(navLabels[1]));
-        await tester.pumpAndSettle();
+        await _pumpTransientAnimations(tester);
         _expectSingleTapNode(tester, navLabels[1], selected: true);
         expect(find.byType(CatalogPage), findsOneWidget);
 
         await tester.tap(find.bySemanticsLabel(navLabels.first));
-        await tester.pumpAndSettle();
+        await _pumpTransientAnimations(tester);
         _expectSingleTapNode(tester, navLabels.first, selected: true);
         _expectSingleTapNode(tester, strings.trainPlansTab, selected: true);
         expect(tester.takeException(), isNull);
         expect(find.byType(MainScreen), findsOneWidget);
+        await _pumpTransientAnimations(tester);
         await tester.pumpWidget(const SizedBox.shrink());
       } finally {
         semanticsHandle.dispose();
@@ -260,7 +261,7 @@ void main() {
         _expectSingleTapNode(tester, 'Open preview controls', selected: false);
         _expectPreviewEntryDoesNotOverlapTrainTabs(tester);
         await tester.tap(find.byIcon(Icons.tune));
-        await tester.pumpAndSettle();
+        await _pumpTransientAnimations(tester);
         expect(harness.presentation.controlsDialogOpen, isTrue);
         expect(find.text('Preview controls'), findsOneWidget);
         expect(find.bySemanticsLabel('Open preview controls'), findsNothing);
@@ -274,7 +275,7 @@ void main() {
         );
         expect(reducedMotionSwitch, findsOneWidget);
         await tester.tap(reducedMotionSwitch);
-        await tester.pumpAndSettle();
+        await _pumpTransientAnimations(tester);
         expect(harness.presentation.reducedMotion, isTrue);
         expect(
           tester.takeException(),
@@ -458,12 +459,12 @@ void main() {
       expect(focusBeforeOpen.hasFocus, isTrue);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await _pumpTransientAnimations(tester);
       expect(harness.presentation.controlsDialogOpen, isTrue);
       expect(find.text('Preview controls'), findsOneWidget);
 
       await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
+      await _pumpTransientAnimations(tester);
       expect(harness.presentation.controlsDialogOpen, isFalse);
       _expectSingleTapNode(tester, 'Open preview controls', selected: false);
       final focusAfterBack = Focus.of(tester.element(controlIcon));
@@ -474,10 +475,10 @@ void main() {
       );
 
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
+      await _pumpTransientAnimations(tester);
       expect(harness.presentation.controlsDialogOpen, isTrue);
       await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
+      await _pumpTransientAnimations(tester);
       expect(harness.presentation.controlsDialogOpen, isFalse);
       expect(tester.takeException(), isNull);
     } finally {
@@ -522,7 +523,7 @@ void main() {
       );
       addTearDown(harness.dispose);
       await tester.pump(const Duration(milliseconds: 700));
-      await tester.pumpAndSettle();
+      await _pumpTransientAnimations(tester);
       final semanticsHandle = tester.ensureSemantics();
       try {
         _expectPreviewEntryDoesNotOverlapTrainTabs(tester);
@@ -585,9 +586,9 @@ Future<void> _expectLookResizeHasNoLayoutError(
   );
   addTearDown(harness.dispose);
   await tester.pump(const Duration(milliseconds: 700));
-  await tester.pumpAndSettle();
+  await _settlePreviewMotion(tester, look: look);
   await tester.binding.setSurfaceSize(const Size(320, 844));
-  await tester.pumpAndSettle();
+  await _settlePreviewMotion(tester, look: look);
   if (look == TonosPreviewLook.expressive) {
     _expectTrainTabsAtLeast48(tester);
   }
@@ -604,7 +605,7 @@ Future<void> _expectLiveScaleChangeHasNoLayoutError(
   final harness = await _PreviewHarness.create(tester, look: look);
   addTearDown(harness.dispose);
   await tester.pump(const Duration(milliseconds: 700));
-  await tester.pumpAndSettle();
+  await _settlePreviewMotion(tester, look: look);
 
   harness.presentation.setReducedMotion(true);
   await tester.pumpAndSettle();
@@ -649,7 +650,11 @@ Future<void> _expectRestDialogSemantics(
   _capturePendingFlutterErrors(tester, capturedLayoutErrors);
   final semanticsHandle = tester.ensureSemantics();
   try {
-    await tester.pumpAndSettle();
+    await _settlePreviewMotion(
+      tester,
+      look: look,
+      reducedMotion: reducedMotion,
+    );
     _capturePendingFlutterErrors(tester, capturedLayoutErrors);
     final trainContext = tester.element(find.byType(TrainPage));
     final strings = AppLocalizations.of(trainContext);
@@ -691,7 +696,15 @@ Future<void> _expectRestDialogSemantics(
     expect(okayData.hasAction(SemanticsAction.tap), isTrue);
 
     await tester.tap(find.text(strings.commonOkay));
-    await tester.pumpAndSettle();
+    if (look == TonosPreviewLook.expressive && !reducedMotion) {
+      await _pumpUntilDialogDismisses(tester);
+    } else {
+      await _settlePreviewMotion(
+        tester,
+        look: look,
+        reducedMotion: reducedMotion,
+      );
+    }
     _capturePendingFlutterErrors(tester, capturedLayoutErrors);
     expect(find.byType(AlertDialog), findsNothing);
     if (look == TonosPreviewLook.classic &&
@@ -893,13 +906,44 @@ class _PreviewHarness {
         previewPresentation: presentation,
       ),
     );
-    await tester.pumpAndSettle();
+    await _settlePreviewMotion(
+      tester,
+      look: look,
+      reducedMotion: reducedMotion,
+    );
     return _PreviewHarness(repository, presentation, themeProvider);
   }
 
   void dispose() {
     presentation.dispose();
     themeProvider.dispose();
+  }
+}
+
+Future<void> _pumpTransientAnimations(WidgetTester tester) =>
+    tester.pump(const Duration(milliseconds: 750));
+
+Future<void> _pumpUntilDialogDismisses(WidgetTester tester) async {
+  final dialog = find.byType(AlertDialog);
+  for (var frame = 0; frame < 30 && dialog.evaluate().isNotEmpty; frame++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  expect(
+    dialog,
+    findsNothing,
+    reason: 'The dialog route should dismiss within 1.5 seconds.',
+  );
+}
+
+Future<void> _settlePreviewMotion(
+  WidgetTester tester, {
+  TonosPreviewLook look = TonosPreviewLook.expressive,
+  bool reducedMotion = false,
+}) async {
+  if (look == TonosPreviewLook.expressive && !reducedMotion) {
+    await _pumpTransientAnimations(tester);
+  } else {
+    await tester.pumpAndSettle();
   }
 }
 

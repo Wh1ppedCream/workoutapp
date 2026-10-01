@@ -1,6 +1,6 @@
 # Train + shell Expressive motion inventory
 
-This is the current review contract for the disposable Expressive preview. It covers only Train Overview, Train Plans, and the existing bottom-navigation shell. Tonos continues to own navigation, selection, plans, callbacks, and workout data; the wrappers add presentation only.
+This is the approved and technically qualified reference contract for the disposable Expressive preview. It covers only Train Overview, Train Plans, and the existing bottom-navigation shell. Tonos continues to own navigation, selection, plans, callbacks, and workout data; the wrappers add presentation only. It does not authorize production rollout or visual adaptation of another destination.
 
 ## Tactile roles
 
@@ -49,3 +49,7 @@ The shared compact tier is 0.88 scale, 0.5 dp offset, and 0.05 rad rotation. Sup
 - The focus surface interpolates its own color while the unchanged child is passed through the shared phase scope. Accent bars and progress painting listen locally, so the entire Train page does not rebuild on each animation tick.
 - The ambient owner stops and resets when its visibility threshold is crossed, Overview is inactive, TickerMode is disabled, reduced motion/Effects Off is active, or the app leaves the resumed state. Controllers are disposed with their widgets.
 - The normal preview uses standard Flutter Material widgets and Tonos-owned paint/gesture wrappers. It does not imply spring-based layout morphing, a third-party animation package, an idle avatar spinner, or animation on other Tonos destinations.
+
+## Qualification boundary
+
+The Train + shell reference passed the final host suite, repository analysis, inventory/ratchet, parity, persistence, responsive/accessibility, motion lifecycle, and Reduced Motion gates. Pixel 7 review evidence verifies the approved surfaces, motion clips and Workout compatibility smoke. The Workout checks preserve existing behavior only; Active Workout styling remains future work. Native TalkBack was not tested. See [the qualification results](../../../tonos-expressive-train-proving-ground-results.md#25-final-train--shell-qualification--2026-10-01) and [reference baseline](../../../tonos-expressive-reference-baseline.md).

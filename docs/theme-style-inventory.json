@@ -266,17 +266,6 @@
       "rationale": "The app shell owns the transparent status-bar surface and brightness-aware icon contrast through appSystemUiOverlayStyleFor. Its exact color finding is pinned by a unit contract for both brightness modes; this is system-overlay policy, not a user-selectable theme accent or a claim of device visual acceptance."
     },
     {
-      "id": "expressive-preview-root-theme",
-      "pattern": "lib/main.dart",
-      "kinds": [
-        "local_theme"
-      ],
-      "classification": "application_shell",
-      "status": "migrated",
-      "target": "Non-persisted Expressive preview theme across the production route subtree",
-      "rationale": "This exact local Theme applies the preview controller's cached active light/dark recipe around the existing MaterialApp route tree; it adds no provider or navigation branch and the default-null shell remains rendered identically. The root overlay/default-null suite passed 13/13 tests for provider reads, locale/media, dialogs, controls, and navigation. This is preview-qualified automated shell ownership only and makes no human visual-adoption or persisted-family claim."
-    },
-    {
       "id": "application-shell",
       "pattern": "lib/main.dart",
       "classification": "application_shell",
@@ -929,7 +918,7 @@
         "text_style"
       ],
       "target": "Train profile contrast and split workout action-bar recipes",
-      "rationale": "This exact file/kind rule covers the seven existing Train candidates: the avatar uses onTrainProfileAvatar, and the split action-bar frame, divider, transparent Material, and action labels resolve through the existing shape, effect, surface, semantic, and ColorScheme roles. The four-mode Train regression checks the existing compact horizontal geometry (including its accepted Classic/Neo frame heights), frame border/shadow/clipping/elevation, divider, action colors/text, and enabled action/settings callbacks. The user accepted the Train appearance in all four modes. A contract pins the rule to these seven findings so new styling in the screen is not silently enrolled."
+      "rationale": "The exact Train screen rule owns the avatar and split action-bar styling across the existing Classic/Neo recipes and the opt-in Expressive preview. Four-mode Train tests pin compact horizontal geometry, frame border/shadow/clipping/elevation, divider, action colors/text, and enabled action/settings callbacks; Expressive shell qualification additionally exercises the real Overview/Plans flow, controls, reduced motion, locale, and responsive layout. The user accepted the Train appearance in all four modes. The exact kind list and finding count keep new styling from being silently enrolled."
     },
     {
       "id": "food-customization-expansion-recipes",
@@ -1031,7 +1020,7 @@
       "classification": "theme_system",
       "status": "migrated",
       "target": "The exact shared Train-tab geometry, including the Neo button corner radius",
-      "rationale": "The four remaining geometry findings resolve through named AppShapeTokens roles: the frame uses trainTab, its outline uses outlineWidth, and each tab button uses trainTabButton (retaining the established 3px Neo radius) or the Classic pill. The literal radius candidate is removed by the token reference. The four-mode widget contract checks the frame and button shapes/borders; the inventory contract pins this kind-limited scope. Other colors, decoration, and effects remain separately reportable."
+      "rationale": "The shared Train selector keeps its named AppShapeTokens geometry for Classic/Neo and its opt-in Expressive selected-state shapes. Four-mode widget contracts check frame and button shapes/borders and the selected state; the inventory contract pins this geometry-only scope and the current seven findings. Other colors, decoration, and effects remain separately reportable."
     },
     {
       "id": "tonos-train-tabs-recipes",
@@ -1059,7 +1048,7 @@
       "classification": "theme_system",
       "status": "migrated",
       "target": "TonosBottomNavigationBar's theme-owned Neo rail, selected fill, outline, and elevation",
-      "rationale": "This exact shared owner has four current candidates: transparent Material fill preserves the selected-segment layer, the frame uses ColorScheme/surface tokens and AppShapeTokens, and its optional shadow is derived from AppEffectTokens. A four-mode widget contract checks both the Classic Material owner and Neo rail colors, outline, shape, effects, activation, and the specified 4px selection underline; an inventory contract pins the exact candidate count and kinds. Keep the rule kind-limited and do not generalize it to other navigation widgets."
+      "rationale": "This exact shared owner covers the Classic/Neo navigation recipes plus opt-in Expressive surface, selected container, and outline styles. Four-mode navigation tests check colors, outline, shape, effects, activation, and selection; the Expressive shell tests additionally verify all five destination semantics and responsive bounds. An inventory contract pins the exact candidate count and kinds. Keep the rule kind-limited and do not generalize it to other navigation widgets."
     },
     {
       "id": "workout-record-badges",
@@ -1241,10 +1230,11 @@
       "kinds": [
         "color_transform",
         "geometry",
-        "text_style"
+        "text_style",
+        "decoration"
       ],
       "target": "Archived-plan empty-state contrast and progressive Show More action",
-      "rationale": "A four-mode rendered contract checks archived empty-state text against its resolved card surface and checks the progressive Show More action's theme-primary ink, token-owned border opacity, scaled shape, and reveal interaction. This exact kind-limited rule covers the six current PresetsLoaded findings only; it does not qualify every plan detail, device condition, or release route."
+      "rationale": "Four-mode rendered contracts check archived empty-state text against its resolved card surface, the progressive Show More action's theme-primary ink, token-owned border opacity, scaled shape, and reveal interaction, and the opt-in Expressive loading/empty/failure surfaces. This exact kind-limited rule covers the eight current PresetsLoaded findings only; it does not qualify every plan detail, device condition, or release route."
     },
     {
       "id": "session-completion-recipes",
@@ -1344,6 +1334,7 @@
     {
       "id": "seven-day-focus-tap-recipe",
       "pattern": "lib/widgets/seven_day_focus_card.dart",
+      "sourcePattern": "\\bclass\\s+(?:SevenDayFocusPresentation|_SevenDayFocusLayout)\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)",
       "classification": "structural_theme",
       "status": "migrated",
       "kinds": [
@@ -1352,7 +1343,21 @@
         "geometry"
       ],
       "target": "Weekly Overview progress track and focused-sets tap surface",
-      "rationale": "The focused-sets panel uses the existing onPrimaryContainer role for progress ink and a 0.22-alpha track; its transparent Material leaves the caller-owned panel visible while a 16px InkWell radius clips the details interaction. The four-mode rendered contract asserts the resolved progress/track colors and exact tap-surface recipe, plus the details action. This exact rule owns only the current three color_transform, color, and geometry findings; no token or production appearance change is introduced."
+      "rationale": "Classic/Neo Weekly Overview keeps the existing onPrimaryContainer role for progress ink and a 0.22-alpha track; its transparent Material leaves the caller-owned panel visible while a 16px InkWell radius clips the details interaction. The four-mode rendered contract asserts the resolved progress/track colors and exact tap-surface recipe, plus the details action. A sourcePattern limits this rule to those existing presentations; Expressive-owned focused surfaces and accent geometry have their own exact rule."
+    },
+    {
+      "id": "expressive-seven-day-focus-recipes",
+      "pattern": "lib/widgets/seven_day_focus_card.dart",
+      "sourcePattern": "\\bclass\\s+_ExpressiveSevenDayFocusPresentation\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)|\\bclass\\s+_ExpressiveFocusAccents\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)|\\bclass\\s+_ExpressiveSevenDayFocusLayout\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)|\\bclass\\s+_ExpressiveFocusDetails\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry"
+      ],
+      "target": "Expressive Weekly Overview foreground, ambient accents, heatmap container, and focused-set surface",
+      "rationale": "The real Weekly Overview Expressive path owns its progress contrast, animated accent strokes, responsive heatmap inset, and focused-set container geometry. Focus and ambient-motion widget tests verify presentation, data ownership, reduced-motion/lifecycle behavior, and compact/text-scaled layout; the matched-device qualification checks normal versus frozen motion. This source-limited rule owns the exact eight current candidates and leaves Classic/Neo tap-surface ownership separate."
     },
     {
       "id": "single-bodypart-heatmap-container",
@@ -1392,6 +1397,7 @@
     {
       "id": "preset-bar-rename-and-badge",
       "pattern": "lib/widgets/preset_bar.dart",
+      "sourcePattern": "\\bclass\\s+_PresetRenameDialogState\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)|\\bclass\\s+_AutomaticBadge\\b[\\s\\S]*?\\r?\\n\\}(?=\\r?\\n)",
       "classification": "structural_theme",
       "status": "migrated",
       "kinds": [
@@ -1399,7 +1405,22 @@
         "text_style"
       ],
       "target": "Preset rename field and automatic-plan badge",
-      "rationale": "The rename TextField provides only a label and inherits the opted-in TonosDialogFrame form recipe; the automatic badge reads existing semantic automaticPlanBadge/onAutomaticPlanBadge roles with its intentional 12px-times-scale bold label. A four-mode widget contract checks both owners, scaled typography, dialog cancel/save callbacks through a fake repository, and the Classic Material input fallback. This exact kind-limited rule owns only the current two findings and does not qualify durable preset persistence or route behavior."
+      "rationale": "The rename TextField provides only a label and inherits the opted-in TonosDialogFrame form recipe; the automatic badge reads existing semantic automaticPlanBadge/onAutomaticPlanBadge roles with its intentional 12px-times-scale bold label. A four-mode widget contract checks both owners, scaled typography, dialog cancel/save callbacks through a fake repository, and the Classic Material input fallback. This source-limited rule owns only those two findings; the Expressive card recipe is tracked separately and durable preset persistence remains outside this scope."
+    },
+    {
+      "id": "preset-bar-expressive-card-recipes",
+      "pattern": "lib/widgets/preset_bar.dart",
+      "sourcePattern": "\\bWidget\\s+_buildExpressiveCard\\s*\\([\\s\\S]*?\\r?\\n  \\}(?=\\r?\\n)",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "shadow"
+      ],
+      "target": "Opt-in Expressive plan-card, plan-identity, and contextual-menu surfaces",
+      "rationale": "The opt-in PresetBar recipe owns the plan-tinted card wash, shared identity/heatmap frame shape, role-based shadows, and compact menu surface. The real Train Plans widget contract checks blue/orange/green plan identity, active/inactive wash, card and heatmap geometry, unchanged data-series colors, and menu bubble treatment; the default shared PresetBar recipe remains Classic. This source-limited rule owns the exact eight current candidates and does not qualify plan persistence."
     },
     {
       "id": "cardio-timer-semantic-colors",
@@ -1411,6 +1432,19 @@
       ],
       "target": "Neo positive/negative timer-state roles with unchanged Classic colors",
       "rationale": "The running and idle timer buttons resolve through AppSemanticColors.positive/negative in Neo while preserving the established Colors.green/Colors.red Classic appearance. A four-mode rendered widget test asserts both states and the TonosFormField boundary. This exact kind-limited rule owns only the two current color candidates; timer behavior and the deferred active-workout flow remain out of scope."
+    },
+    {
+      "id": "expressive-train-focus-progress",
+      "pattern": "lib/widgets/expressive_train_focus_progress.dart",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "kinds": [
+        "color_transform",
+        "color",
+        "geometry"
+      ],
+      "target": "Expressive Focused Sets active wave and straight remainder track",
+      "rationale": "Focused Sets progress has an exact Expressive-only painter with matching semantics and compact geometry. Its widget tests pin reported progress, motion phase, reduced-motion and disabled-ticker freezing, active/remainder boundary in LTR and RTL, stroke/color ownership, and 2x text/compact-width behavior. This exact rule owns five current candidates and leaves chart/data-series colors unchanged."
     },
     {
       "id": "stretch-add-semantic-color",

@@ -1,6 +1,16 @@
 # Expressive proving-ground validation
 
-**Status: repository analysis, inventory/ratchet enforcement, focused checks, and the post-fix full regression suite passed.** The separate Pixel profile/device and human-review gates are tracked in their own qualification records.
+**Current status (2026-10-01): final Train + shell reference qualification passed.** Final uninterrupted host suite, repository analyzer, inventory/ratchet, focused contracts, Pixel sanity and the isolated Workout-compatibility smoke all passed. The user-approved design is a continuation reference only; it is not a production rollout or app-wide theme release. TalkBack remains untested. Earlier records below preserve intermediate qualification history.
+
+## Final host qualification — 2026-10-01
+
+- Flutter **3.47.5** / bundled Dart **3.13.4**, normal C: TEMP/TMP, default concurrency.
+- Final uninterrupted `flutter test --no-pub --reporter compact`: **1,295 passed, 0 failed, 0 skipped, exit 0**, elapsed **00:11:53.386**. Transcript: `C:\Users\talh7\AppData\Local\Temp\tonos-full-test-final-20261001.log`.
+- Repository-wide pinned `dart analyze`: **0 errors, 0 warnings, 81 infos, exit 0**. Transcript: `C:\Users\talh7\AppData\Local\Temp\tonos-final-dart-analyze-20261001.log`.
+- Inventory: **296 files, 2,440 candidates, 130 allowlisted, 2,310 classified/migrated, 0 pending, 0 unassigned, 0 overlaps**. Ratchet enforcement passed for **18 protected scopes** with exact approval maps. Theme contracts and extension completeness passed.
+- Focused UI/motion/presentation set: **75 passed**; inventory contract: **53 passed**; ratchet CLI: **3 passed**; ambient visibility qualification: **1 passed**. Final scoped analysis of the device harness found no issues.
+- Full suite passed after narrow source-rule and infinite-ambient test-harness corrections. Production theme/UI source did not change during these corrections.
+- The successful Pixel smoke-only profile drive is detailed in [device qualification](../device-qualification.md). Its report sets `timingsMeasured:false`; the prior matched profile measurements remain the only timing evidence.
 
 ## Checkpoint and environment
 
@@ -8,12 +18,12 @@
 - Flutter 3.47.5 and bundled Dart 3.13.4 were used. The full suite ran as `flutter test --no-pub --reporter json`, with default concurrency and normal `C:\Users\talh7\AppData\Local\Temp` TEMP/TMP.
 - The 15 protected tracked files matched their handoff SHA-256 values before and after the full suite (15/15). All five unrelated untracked groups remain present. The approved profile build may have written generated content under `android/build/`; byte-for-byte equality for that group was not established from a pre-build digest. Nothing was cleaned or staged by this validation lane.
 
-## Repository analysis and theme gates
+## Earlier repository analysis and theme gates — 2026-09-30
 
 - Final repository-wide analysis against the frozen device-harness correction completed in 49.135 seconds: **exit 0, 0 errors, 0 warnings, 84 informational notices**. The machine output and observed timing/count metadata are in `logs/dart-analyze-post-device-harness-machine.txt` and `logs/dart-analyze-post-device-harness-metadata.txt`. The prior 41.597-second repository analysis remains as the earlier source snapshot in `logs/dart-analyze-final-postfix-machine.txt` and `logs/dart-analyze-final-postfix-metadata.txt`; an earlier clean analysis of the frozen preview/accessibility sources took 77.757 seconds and its separate log is retained.
 - One earlier analysis run caught an undefined `TextScaler` shown name in the new accessibility test. The test import was corrected to keep only `Tristate` from `dart:ui`; the new test then passed and the post-freeze repository analysis was clean for errors and warnings. The earlier diagnostic remains in `logs/dart-analyze-final-machine.txt` and `logs/dart-analyze-final-metadata.txt` as historical evidence.
-- `tools/theme_style_inventory.dart --check` exited 0: 294 Dart files, 2,294 candidates, 130 allowlisted, 2,164 migrated, 0 pending, and 0 unassigned. Review queues cover 957 candidates exactly once, 1,337 outside configured queues, and 0 overlaps. See `logs/theme-style-inventory-check.txt`.
-- Ratchet report and enforcement both exited 0: 18 protected files, 139 approval entries, 137 unique fingerprints, and 156 current occurrences. See `logs/theme-style-ratchet-report.txt` and `logs/theme-style-ratchet-enforce.txt`.
+- `tools/theme_style_inventory.dart --check` exited 0: 296 Dart files, 2,440 candidates, 130 allowlisted, 2,310 migrated, 0 pending, and 0 unassigned. Review queues cover 992 candidates exactly once, 1,448 outside configured queues, and 0 overlaps.
+- Ratchet report and enforcement both exited 0: 18 protected files, 158 per-file fingerprint entries, and 180 current occurrences, matching the exact approval maps.
 
 ## Full regression results
 

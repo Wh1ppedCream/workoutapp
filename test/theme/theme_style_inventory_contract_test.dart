@@ -215,35 +215,30 @@ void main() {
     expect(findings.single.status, 'migrated');
   });
 
-  test('Expressive preview root theme has exact migrated ownership', () {
+  test('preview root uses AnimatedTheme without a stale local-theme rule', () {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
     );
-    final rule = inventory.ruleFor('lib/main.dart', 'local_theme');
-
-    expect(rule?.id, 'expressive-preview-root-theme');
-    expect(rule?.classification, 'application_shell');
-    expect(rule?.status, 'migrated');
-    expect(rule?.kinds, unorderedEquals(<String>['local_theme']));
+    final source = File('lib/main.dart').readAsStringSync();
+    expect(source, contains('AnimatedTheme('));
     expect(
-      rule?.rationale,
-      contains('default-null shell remains rendered identically'),
-    );
-    expect(
-      rule?.rationale,
-      contains('no human visual-adoption or persisted-family claim'),
+      inventory.pathRules.any(
+        (rule) => rule.id == 'expressive-preview-root-theme',
+      ),
+      isFalse,
     );
 
     final report = scanThemeStyleInventory(
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings = report.findings
-        .where((finding) => finding.ruleId == rule!.id)
-        .toList();
-    expect(findings, hasLength(1));
-    expect(findings.single.file, 'lib/main.dart');
-    expect(findings.single.status, 'migrated');
+    expect(
+      report.findings.where(
+        (finding) =>
+            finding.file == 'lib/main.dart' && finding.kind == 'local_theme',
+      ),
+      isEmpty,
+    );
   });
 
   test('tutorial recipe exception stays kind-limited', () {
@@ -442,27 +437,27 @@ void main() {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
     );
-    final rule = inventory.ruleFor(
-      'lib/widgets/seven_day_focus_card.dart',
-      'color_transform',
+    final rule = inventory.pathRules.singleWhere(
+      (rule) => rule.id == 'seven-day-focus-tap-recipe',
     );
 
-    expect(rule?.id, 'seven-day-focus-tap-recipe');
-    expect(rule?.classification, 'structural_theme');
-    expect(rule?.status, 'migrated');
+    expect(rule.id, 'seven-day-focus-tap-recipe');
+    expect(rule.classification, 'structural_theme');
+    expect(rule.status, 'migrated');
     expect(
-      rule?.kinds,
+      rule.kinds,
       unorderedEquals(<String>['color_transform', 'color', 'geometry']),
     );
-    expect(rule?.rationale, contains('0.22'));
-    expect(rule?.rationale, contains('16px'));
+    expect(rule.rationale, contains('0.22'));
+    expect(rule.rationale, contains('16px'));
+    expect(rule.sourcePattern, contains('_SevenDayFocusLayout'));
 
     final report = scanThemeStyleInventory(
       root: Directory('lib'),
       inventory: inventory,
     );
     final findings = report.findings
-        .where((finding) => finding.ruleId == rule!.id)
+        .where((finding) => finding.ruleId == rule.id)
         .toList();
     expect(findings, hasLength(3));
     expect(
@@ -660,8 +655,44 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == 'train-action-bar-recipes')
         .toList();
-    expect(findings, hasLength(18));
+    expect(findings, hasLength(26));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
+  });
+
+  test('Expressive Weekly Overview recipes have source-limited ownership', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final rule = inventory.pathRules.singleWhere(
+      (rule) => rule.id == 'expressive-seven-day-focus-recipes',
+    );
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
+
+    expect(rule.pattern, 'lib/widgets/seven_day_focus_card.dart');
+    expect(rule.classification, 'structural_theme');
+    expect(rule.status, 'migrated');
+    expect(
+      rule.kinds,
+      unorderedEquals(<String>['color_transform', 'decoration', 'geometry']),
+    );
+    expect(
+      rule.sourcePattern,
+      contains('_ExpressiveSevenDayFocusPresentation'),
+    );
+    expect(rule.rationale, contains('reduced-motion/lifecycle behavior'));
+    expect(findings, hasLength(8));
+    expect(findings.map((finding) => finding.status), everyElement('migrated'));
+    expect(
+      inventory.ruleFor('lib/widgets/seven_day_focus_card.dart', 'color')?.id,
+      'release-widgets',
+      reason: 'The source-specific rules must not absorb the separate token recipe.',
+    );
   });
 
   test('Train2 tab selector owns only its exact theme recipe', () {
@@ -927,12 +958,17 @@ void main() {
     expect(rule.status, 'migrated');
     expect(
       rule.kinds,
-      unorderedEquals(<String>['color_transform', 'geometry', 'text_style']),
+      unorderedEquals(<String>[
+        'color_transform',
+        'geometry',
+        'text_style',
+        'decoration',
+      ]),
     );
-    expect(rule.rationale, contains('four-mode rendered contract'));
+    expect(rule.rationale, contains('Four-mode rendered contracts'));
     expect(
       inventory.ruleFor('lib/widgets/presets_loaded.dart', 'decoration')?.id,
-      'release-widgets',
+      'presets-loaded-recipes',
     );
 
     final report = scanThemeStyleInventory(
@@ -942,7 +978,7 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == 'presets-loaded-recipes')
         .toList();
-    expect(findings, hasLength(6));
+    expect(findings, hasLength(10));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });
 
@@ -1433,38 +1469,35 @@ void main() {
     },
   );
 
-  test(
-    'TonosBottomNavigationBar owns exactly four migrated theme candidates',
-    () {
-      final inventory = loadThemeStyleInventory(
-        'docs/theme-style-inventory.json',
-      );
-      final rule = inventory.pathRules.singleWhere(
-        (rule) => rule.id == 'tonos-bottom-navigation',
-      );
-      final report = scanThemeStyleInventory(
-        root: Directory('lib'),
-        inventory: inventory,
-      );
-      final findings = report.findings
-          .where((finding) => finding.ruleId == 'tonos-bottom-navigation')
-          .toList();
+  test('TonosBottomNavigationBar owns its exact migrated theme candidates', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final rule = inventory.pathRules.singleWhere(
+      (rule) => rule.id == 'tonos-bottom-navigation',
+    );
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final findings = report.findings
+        .where((finding) => finding.ruleId == 'tonos-bottom-navigation')
+        .toList();
 
-      expect(rule.pattern, 'lib/widgets/tonos_bottom_navigation_bar.dart');
-      expect(rule.classification, 'theme_system');
-      expect(rule.status, 'migrated');
-      expect(
-        rule.kinds,
-        unorderedEquals(<String>['color', 'decoration', 'geometry', 'shadow']),
-      );
-      expect(findings, hasLength(6));
-      expect(
-        findings.map((finding) => finding.kind).toSet(),
-        unorderedEquals(<String>{'color', 'decoration', 'geometry', 'shadow'}),
-      );
-      expect(findings.every((finding) => finding.status == 'migrated'), isTrue);
-    },
-  );
+    expect(rule.pattern, 'lib/widgets/tonos_bottom_navigation_bar.dart');
+    expect(rule.classification, 'theme_system');
+    expect(rule.status, 'migrated');
+    expect(
+      rule.kinds,
+      unorderedEquals(<String>['color', 'decoration', 'geometry', 'shadow']),
+    );
+    expect(findings, hasLength(10));
+    expect(
+      findings.map((finding) => finding.kind).toSet(),
+      unorderedEquals(<String>{'color', 'decoration', 'geometry', 'shadow'}),
+    );
+    expect(findings.every((finding) => finding.status == 'migrated'), isTrue);
+  });
 
   test(
     'Train tab geometry is narrowly token-owned and queued as navigation',
@@ -1490,7 +1523,7 @@ void main() {
       expect(rule.classification, 'theme_system');
       expect(rule.status, 'migrated');
       expect(rule.kinds, unorderedEquals(<String>['geometry']));
-      expect(findings, hasLength(4));
+      expect(findings, hasLength(7));
       expect(findings.every((finding) => finding.status == 'migrated'), isTrue);
       expect(matchingQueues, hasLength(1));
       expect(matchingQueues.single.id, 'navigation-anatomy-support');
@@ -2114,30 +2147,116 @@ void main() {
     final inventory = loadThemeStyleInventory(
       'docs/theme-style-inventory.json',
     );
-    final rule = inventory.ruleFor('lib/widgets/preset_bar.dart', 'decoration');
-
-    expect(rule?.id, 'preset-bar-rename-and-badge');
-    expect(rule?.classification, 'structural_theme');
-    expect(rule?.status, 'migrated');
-    expect(rule?.kinds, unorderedEquals(<String>['decoration', 'text_style']));
-    expect(rule?.rationale, contains('TonosDialogFrame'));
-    expect(rule?.rationale, contains('automaticPlanBadge'));
-    expect(
-      inventory.ruleFor('lib/widgets/preset_bar.dart', 'text_style')?.id,
-      rule?.id,
+    final rule = inventory.pathRules.singleWhere(
+      (rule) => rule.id == 'preset-bar-rename-and-badge',
     );
 
+    expect(rule.id, 'preset-bar-rename-and-badge');
+    expect(rule.classification, 'structural_theme');
+    expect(rule.status, 'migrated');
+    expect(rule.kinds, unorderedEquals(<String>['decoration', 'text_style']));
+    expect(rule.rationale, contains('TonosDialogFrame'));
+    expect(rule.rationale, contains('automaticPlanBadge'));
     final report = scanThemeStyleInventory(
       root: Directory('lib'),
       inventory: inventory,
     );
     final findings = report.findings
-        .where((finding) => finding.ruleId == rule!.id)
+        .where((finding) => finding.ruleId == rule.id)
         .toList();
     expect(findings, hasLength(2));
     expect(
       findings.map((finding) => finding.kind),
       unorderedEquals(<String>['decoration', 'text_style']),
+    );
+    expect(findings.map((finding) => finding.status), everyElement('migrated'));
+  });
+
+  test(
+    'Expressive PresetBar card styling has an exact source-limited owner',
+    () {
+      final inventory = loadThemeStyleInventory(
+        'docs/theme-style-inventory.json',
+      );
+      final rule = inventory.pathRules.singleWhere(
+        (rule) => rule.id == 'preset-bar-expressive-card-recipes',
+      );
+      final report = scanThemeStyleInventory(
+        root: Directory('lib'),
+        inventory: inventory,
+      );
+      final findings = report.findings
+          .where((finding) => finding.ruleId == rule.id)
+          .toList();
+
+      expect(rule.pattern, 'lib/widgets/preset_bar.dart');
+      expect(rule.classification, 'structural_theme');
+      expect(rule.status, 'migrated');
+      expect(rule.sourcePattern, contains('_buildExpressiveCard'));
+      expect(
+        rule.kinds,
+        unorderedEquals(<String>[
+          'color_transform',
+          'decoration',
+          'geometry',
+          'shadow',
+        ]),
+      );
+      expect(findings, hasLength(8));
+      expect(
+        findings.where((finding) => finding.kind == 'decoration'),
+        hasLength(3),
+      );
+      expect(
+        findings.where((finding) => finding.kind == 'geometry'),
+        hasLength(2),
+      );
+      expect(
+        findings.where((finding) => finding.kind == 'color_transform'),
+        hasLength(2),
+      );
+      expect(
+        findings.where((finding) => finding.kind == 'shadow'),
+        hasLength(1),
+      );
+      expect(
+        findings.map((finding) => finding.status),
+        everyElement('migrated'),
+      );
+    },
+  );
+
+  test('Expressive Focused Sets wave has exact inventory ownership', () {
+    final inventory = loadThemeStyleInventory(
+      'docs/theme-style-inventory.json',
+    );
+    final rule = inventory.pathRules.singleWhere(
+      (rule) => rule.id == 'expressive-train-focus-progress',
+    );
+    final report = scanThemeStyleInventory(
+      root: Directory('lib'),
+      inventory: inventory,
+    );
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
+
+    expect(rule.pattern, 'lib/widgets/expressive_train_focus_progress.dart');
+    expect(rule.classification, 'structural_theme');
+    expect(rule.status, 'migrated');
+    expect(
+      rule.kinds,
+      unorderedEquals(<String>['color_transform', 'color', 'geometry']),
+    );
+    expect(findings, hasLength(5));
+    expect(findings.where((finding) => finding.kind == 'color'), hasLength(3));
+    expect(
+      findings.where((finding) => finding.kind == 'color_transform'),
+      hasLength(1),
+    );
+    expect(
+      findings.where((finding) => finding.kind == 'geometry'),
+      hasLength(1),
     );
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
   });

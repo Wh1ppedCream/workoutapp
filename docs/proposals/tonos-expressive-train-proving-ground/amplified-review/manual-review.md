@@ -1,6 +1,6 @@
 # Tonos Expressive Train review
 
-This review is limited to the current **Train → Overview**, **Train → Plans**, and shared bottom-navigation shell. It is an isolated visual/motion candidate in **Tonos Expressive Preview**, package **com.tonos.expressivepreview**, using the sandbox database **tonos_expressive_preview.db**. It is not persisted to the normal Tonos install.
+This review guide covers the current **Train → Overview**, **Train → Plans**, and shared bottom-navigation shell in **Tonos Expressive Preview**, package **com.tonos.expressivepreview**, using the sandbox database **tonos_expressive_preview.db**. The user has approved this visual/motion language as the current reference baseline, and this slice is technically qualified. That status does not approve production rollout or any other destination. The preview is not persisted to the normal Tonos install.
 
 The proposal keeps the existing Tonos screen hierarchy, plan and workout content, bottom-navigation destinations, and actions. It adds the current Expressive treatment to those existing elements.
 
@@ -109,7 +109,7 @@ The tint strength was raised after review because the first light/dark differenc
 
 The action-bar clip records the optimized-workout recovery result, the settings route, and Start → isolated session → return to Train. Pixel stills captured during the press show the controls moving inward without cropped corners or changed resting placement. Start, Optimize, and gear bounds remain at their original positions.
 
-Focused validation for this pass: **51 tests passed, 0 failures**, Flutter 3.47.5 / Dart 3.13.4. See the newest follow-up in `docs/tonos-expressive-train-proving-ground-results.md` for the analyzer, diff check, and the explicit full-suite deferral until user review.
+Focused validation for that refinement: **51 tests passed, 0 failures**, Flutter 3.47.5 / Dart 3.13.4. The final full qualification is recorded in [the results document](../../../tonos-expressive-train-proving-ground-results.md#25-final-train--shell-qualification--2026-10-01).
 
 ### Latest user tint adjustment — 2026-10-01
 
@@ -132,4 +132,4 @@ Pixel 7 `28021FDH200228` captures from the isolated `com.tonos.expressivepreview
 - Normal motion: [12-second idle clip](wave-refinement-20261001/wave-normal-motion.mp4) · [frame A](wave-refinement-20261001/wave-normal-a.png) · [frame B](wave-refinement-20261001/wave-normal-b.png)
 - Reduced Motion: [10-second clip](wave-refinement-20261001/wave-reduced-motion.mp4) · [still A](wave-refinement-20261001/reduced-motion-a.png) · [still B](wave-refinement-20261001/reduced-motion-b.png)
 
-The two normal-motion frames show the wave at different phases. The reduced-motion stills are byte-identical across the 10-second interval, and the reduced-motion clip remains static. The device was returned to Train → Overview, light mode, with Reduced Motion off after capture.
+The two normal-motion frames show the wave at different phases. The reduced-motion stills are byte-identical across the 10-second interval, and the reduced-motion clip remains static. The canonical profile preview was rebuilt and visually rechecked on Pixel 7 after qualification; it is at Train → Overview, Expressive / Curated / Light / 1×, with Reduced Motion off.

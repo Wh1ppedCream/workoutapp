@@ -101,7 +101,7 @@ void main() {
     );
     final trainTabsApprovals = (trainTabsScope['approvals'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    expect(trainTabsApprovals, hasLength(13));
+    expect(trainTabsApprovals, hasLength(17));
     expect(
       {
         for (final approval in trainTabsApprovals)
@@ -110,17 +110,21 @@ void main() {
       {
         '0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a': 1,
         '200cb37f2955432a9ce1d7e5ffac2aaaf07904aa7b56288a3997bc5e7f8856d9': 1,
-        '206572f83763ae9534e1f972c1f3dd135d10f4ebe05c264ca279ce21c9bae7ed': 1,
         '2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239': 1,
         '2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea': 1,
-        '416a222464b72f674936761b42a34af5c256d8c8876d6ba1933e69a92504b951': 2,
         '45d21e426dc9356e0063e987bcc1f2143b87a4997abb068a13c4e1da70c5baaf': 1,
         '73d044eee9eb451d4267a9aceb5afb59da566cb43ec44d8aecf32259c05fa0f8': 1,
         '77eaf73ee6fa579a9398863ae0fb61d61157f443de0b558dfd244cf14b0f2772': 1,
         '92d4cc98d360ce548fc0efe13bc47bc1fe41bda8521363877bd779f2a08d433a': 1,
         '96ee44c35eeeed933d184b41f687d36cf8f95ef617c486331d3900eec265b3cc': 1,
+        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
+        '804a603bd906bbd1d08900ec8e4f67b8a6a9d8d0c2584924214cd813bd7615cc': 1,
+        '8b81cbe8367b5ab7cd509ac3020bb3ee2009e47ada5cc1e6d243695aec063d3d': 2,
+        'a3ab52916ab3234372277904efa5812b770f6ac85d6fc86323b9398e18cd49b8': 1,
+        'a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b': 1,
         'a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96': 2,
         'd52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3': 1,
+        'd1ec04069cf6108cf9aaaf9502e4380ee4cdb38c4406508ec6a52317b2264013': 1,
       },
     );
     expect(
@@ -134,7 +138,7 @@ void main() {
     );
     final navigationApprovals = (navigationScope['approvals'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    expect(navigationApprovals, hasLength(19));
+    expect(navigationApprovals, hasLength(22));
     expect(
       {
         for (final approval in navigationApprovals)
@@ -147,10 +151,13 @@ void main() {
         '14547d142c719736f56b7d3720acbc57a76d2cab26fcfbc84647e018dfef3f13': 1,
         '1a02edd38f5a7cbdca6c845fea770194fe16d96816ed81a824420eca77283791': 1,
         '1e38447340beb12fd339f9cdbd547a47a3ded3c580a4c1c8d22c7197717ad434': 1,
-        '620ea1b0fec3574fd2ada72c9ec04ca80a495f11aa560eb81b5a1d1dc04314d8': 1,
         '64ab63cb8a1c8856ec7f396c1829562f5823e198ca272bfa25f3e7b6e32897ef': 1,
         '657d2f1738bc0e8c38f4f6a8ef73b0677c2b46aeabdf4aa4f1364b02e9b59e18': 1,
         '6e935861fcb507bebb821426e90e2ad6f971d6eda62dd2c5b1cb5df21856e7b4': 1,
+        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
+        '5311ac0142412882084a2ea9bbd49f86ab2386f2a9d7005c9181a67f90d271b3': 1,
+        '83b6681bc565f7c7d87035728f59e5020ada10e3619376a578b2b6ae534178f4': 1,
+        'a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b': 1,
         '9a4a9476c4b12075d4c557127a78c485bf07207d7736a122a877199595521c69': 1,
         '9a4c72b2818e67aa56940cf6b2f0ad73037787556f6453c2f5e53ba66226898c': 3,
         '9b587dc1a09a54ff64331ff81ad911c56b10d82f645ff4c8565372024455eab3': 1,
@@ -377,7 +384,7 @@ void main() {
     final weeklyFocusApprovals =
         (weeklyFocusScope['approvals'] as List<dynamic>)
             .cast<Map<String, dynamic>>();
-    expect(weeklyFocusApprovals, hasLength(6));
+    expect(weeklyFocusApprovals, hasLength(18));
     expect(
       {
         for (final approval in weeklyFocusApprovals)
@@ -390,12 +397,24 @@ void main() {
         '66f9b9e961e6672c9f2a31cc71d3ac63d18c271cbabcaf7666f434088eb57326': 1,
         '6cc3275950aa57ad95991ab5c94d139e8d5c02c0bd17d9a5d4be4362150679fe': 1,
         'c1ab889e2b5322df241752d144847bf07716ef779d4981ca96fbc47b75514a67': 1,
+        '1d0030deeea5ab41e973b93e8089c50d03e20f32c8d4bdd8328a10e6f90160ec': 1,
+        '37f1f9e2cb78b2c4e51d7b443fe013dc09f0c4ca06c551bc9a9e648c7e467923': 1,
+        '3b5bb49bc22a9ae233759493f3d29edd903314209e4d7b61dc3fd5ffd3569ed3': 1,
+        '61b58668262c6a3759a230ec9efcfe33eab463e3a34848a4a783e8f419846705': 2,
+        '74bcad162ac009b79ecd966ae2cc032839f42b6d72db43fdb97a8f42b6805ab5': 2,
+        '7df9936fdfc8b9c884319278f7122b4341cc9b4e50603abd81675d2436f51ab0': 2,
+        '95e4d7532fa47b2c9f36ed95e3a43b39fd2fbacfe5ff8aa79cc250b02d77ac97': 1,
+        '9f4965e52431ab1ace1bcc85bfba44f29cd5dea8badb1c46d724c1ec7c8adac8': 1,
+        'c5e5ec93685c6a607268dbad9fc3e2deed84ec0f282098c876a038c2e23f1e5e': 1,
+        'cd02c9dabe79354773790b39efd4265ddf8cacd9ff9e6bcce1fb32c5517f0ee4': 1,
+        'f232946db4af06a2f1429df4f02d5b036efcd2e2ec749e9f426f2d8464a6309a': 1,
+        'f72906d16230ea5aac9751d143cd174acc490844fa0883fb19d29b71fb62ef14': 1,
       },
     );
     expect(
       weeklyFocusApprovals.every(
         (approval) =>
-            approval['count'] == 1 &&
+            (approval['count'] as int) > 0 &&
             (approval['reason'] as String).trim().isNotEmpty,
       ),
       isTrue,

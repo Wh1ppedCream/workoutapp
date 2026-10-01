@@ -99,11 +99,7 @@ void main() {
         // NavBarConfig loads preferences. pumpAndSettle cannot finish while
         // that spinner is active, so wait for the concrete route readiness
         // condition with a fixed pump bound instead.
-        await _waitForElement(
-          tester,
-          find.byType(TrainPage),
-          maxPumps: 120,
-        );
+        await _waitForElement(tester, find.byType(TrainPage), maxPumps: 120);
         startupCheckpoint('TrainPage ready');
 
         expect(find.byType(MainScreen), findsOneWidget);
@@ -184,13 +180,13 @@ void main() {
         // No timing callback is attached during these interactions.
         for (final brightness in [Brightness.light, Brightness.dark]) {
           presentation.setBrightness(brightness);
-          await tester.pumpAndSettle();
+          await _settleTransientAnimations(tester);
           for (final look in [
             TonosPreviewLook.classic,
             TonosPreviewLook.expressive,
           ]) {
             presentation.setLook(look);
-            await tester.pumpAndSettle();
+            await _settleTransientAnimations(tester);
             await _resetTrainPosition(tester);
             await _exerciseMatchedInteractions(tester, cycles: 1);
           }
@@ -199,13 +195,13 @@ void main() {
         final phases = <Map<String, Object>>[];
         for (final brightness in [Brightness.light, Brightness.dark]) {
           presentation.setBrightness(brightness);
-          await tester.pumpAndSettle();
+          await _settleTransientAnimations(tester);
           for (final look in [
             TonosPreviewLook.classic,
             TonosPreviewLook.expressive,
           ]) {
             presentation.setLook(look);
-            await tester.pumpAndSettle();
+            await _settleTransientAnimations(tester);
             await _resetTrainPosition(tester);
             await Future<void>.delayed(_timingFlushDelay);
 
@@ -238,11 +234,11 @@ void main() {
 
         for (final brightness in [Brightness.light, Brightness.dark]) {
           presentation.setBrightness(brightness);
-          await tester.pumpAndSettle();
+          await _settleTransientAnimations(tester);
           for (var index = 0; index < _measurementOrder.length; index++) {
             final look = _measurementOrder[index];
             presentation.setLook(look);
-            await tester.pumpAndSettle();
+            await _settleTransientAnimations(tester);
             await _resetTrainPosition(tester);
             await Future<void>.delayed(_timingFlushDelay);
 
@@ -289,7 +285,7 @@ void main() {
           }
         }
         presentation.setBrightness(Brightness.light);
-        await tester.pumpAndSettle();
+        await _settleTransientAnimations(tester);
 
         final finalTrainContext = tester.element(find.byType(TrainPage));
         expect(
@@ -393,7 +389,7 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
 }) async {
   final completedFlows = <String>[];
   presentation.setLook(TonosPreviewLook.expressive);
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   await _showTrainOverview(tester);
 
   final focusCardAction = find.descendant(
@@ -402,32 +398,32 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
   );
   expect(focusCardAction, findsOneWidget);
   await tester.tap(focusCardAction);
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   expect(find.byType(AnalyticsDashboardScreen), findsOneWidget);
   await tester.binding.handlePopRoute();
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   completedFlows.add('analytics dashboard route and Back');
 
   final trainPage = find.byType(TrainPage);
   final strings = AppLocalizations.of(tester.element(trainPage));
   await tester.tap(find.byTooltip(strings.trainOptimizedSettings));
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   expect(find.byType(OptimizedWorkoutSettingsPage), findsOneWidget);
   await tester.binding.handlePopRoute();
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   completedFlows.add('Optimize settings gear route and Back');
 
   final entry = find.byIcon(Icons.tune);
   expect(entry, findsOneWidget);
   await tester.tap(entry);
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   expect(find.text('Preview controls'), findsOneWidget);
   await tester.tap(find.text('Done'));
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   completedFlows.add('root preview controls dialog open and close');
 
   await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   final plansList = find.byKey(AppTestKeys.trainPlansList).hitTestable();
   final plansScrollable = find.descendant(
     of: plansList,
@@ -445,11 +441,11 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
     300,
     scrollable: plansScrollable,
   );
-  await tester.tap(premadeAction);
-  await tester.pumpAndSettle();
+  await _tapReachable(tester, premadeAction);
+  await _settleTransientAnimations(tester);
   expect(find.byType(PremadePlansPage), findsOneWidget);
   await tester.binding.handlePopRoute();
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   completedFlows.add('premade plans route and Back');
 
   final generateAction = find.text(strings.trainGenerateCustomPlans);
@@ -458,11 +454,11 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
     300,
     scrollable: plansScrollable,
   );
-  await tester.tap(generateAction);
-  await tester.pumpAndSettle();
+  await _tapReachable(tester, generateAction);
+  await _settleTransientAnimations(tester);
   expect(find.byType(PresetGenerationQaScreen), findsOneWidget);
   await tester.binding.handlePopRoute();
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   completedFlows.add('custom plan generation route and Back');
 
   final initialPresetIds = (await repository.fetchAllPresetsRaw(
@@ -476,12 +472,12 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
       300,
       scrollable: plansScrollable,
     );
-    await tester.tap(manualAction);
+    await _tapReachable(tester, manualAction);
     await tester.pump();
     await _waitForElement(tester, find.byType(PresetDetailScreen));
     expect(find.byType(PresetDetailScreen), findsOneWidget);
     await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     completedFlows.add('manual plan creation and detail route');
   } finally {
     await repository.replaceActivePlans(profileId, initialActiveIds);
@@ -506,7 +502,7 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
     expect(find.byType(SessionScreen), findsOneWidget);
     expect(await repository.loadActiveWorkoutDraft(), isNotNull);
     await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     final ongoingSessionMenu = find.byKey(AppTestKeys.ongoingSessionMenu);
     await _waitForElement(tester, ongoingSessionMenu);
     expect(ongoingSessionMenu, findsOneWidget);
@@ -534,7 +530,7 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
       reason: 'The returned-home session menu must be hit-testable.',
     );
     await tester.tap(hitTestableMenu);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.tap(find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.pump();
@@ -542,7 +538,7 @@ Future<List<String>> _exerciseFunctionalPreviewFlows(
     await _waitForElement(tester, cancelWorkout);
     expect(cancelWorkout, findsOneWidget);
     await tester.tap(cancelWorkout);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
   } finally {
     if (activeSession.isActive) await activeSession.discard();
   }
@@ -564,6 +560,27 @@ Future<void> _waitForElement(
   throw TestFailure(
     'Timed out waiting for the expected production route or control.',
   );
+}
+
+// Overview intentionally owns an infinite ambient animation, so
+// pumpAndSettle cannot complete after navigation or interaction. Advancing
+// the bounded transient window lets routes, selectors, springs, and scroll
+// physics finish without waiting for that ambient ticker to stop.
+Future<void> _settleTransientAnimations(WidgetTester tester) async {
+  // Advance a bounded 608 ms at approximately 60 Hz. A single long-duration
+  // pump skips the transient motion, while pumpAndSettle cannot finish during
+  // the ambient ticker.
+  for (var frame = 0; frame < 38; frame++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+}
+
+Future<void> _tapReachable(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  final hitTestable = finder.hitTestable();
+  expect(hitTestable, findsOneWidget);
+  await tester.tap(hitTestable);
 }
 
 Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
@@ -606,8 +623,17 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     await _waitForElement(tester, find.byType(SessionScreen));
     await tester.pump(const Duration(milliseconds: 400));
 
-    final card = find.byType(WeightCard).first;
-    await tester.ensureVisible(card);
+    final initialCard = find.byType(WeightCard).first;
+    await tester.ensureVisible(initialCard);
+    final targetExerciseName = tester
+        .widget<WeightCard>(initialCard)
+        .exercise
+        .name;
+    final card = find.byWidgetPredicate(
+      (widget) =>
+          widget is WeightCard && widget.exercise.name == targetExerciseName,
+    );
+    expect(card, findsOneWidget);
     expect(tester.widget<WeightCard>(card).animateExpansion, isTrue);
     expect(Theme.of(tester.element(card)).usesExpressivePresentation, isTrue);
     motionDisabled = MediaQuery.disableAnimationsOf(tester.element(card));
@@ -693,11 +719,11 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     expect(menuRect.height, greaterThanOrEqualTo(48));
     expect(hitTestableCardMenu, findsOneWidget);
     await tester.tapAt(Offset(menuRect.left + 1, menuRect.center.dy));
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     await _waitForElement(tester, find.text(strings.weightMakeChangeSet));
     expect(find.text(strings.weightMakeChangeSet), findsOneWidget);
     await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     expect(find.text(strings.weightMakeChangeSet), findsNothing);
 
     final collapseTooltipAfterMenu = find.descendant(
@@ -819,10 +845,25 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     await tester.ensureVisible(checkboxes.at(2));
     await tester.tap(checkboxes.at(2));
     await tester.pump();
+    expect(tester.widget<Checkbox>(checkboxes.at(2)).value, isTrue);
     expect(expandTooltip, findsOneWidget);
     if (!motionDisabled) {
-      await tester.pump(const Duration(milliseconds: 200));
+      await _settleTransientAnimations(tester);
     }
+    if (card.evaluate().isEmpty) {
+      // Completing the last visible set can leave the collapsed card above
+      // the current viewport after its content shrinks. Return to the list
+      // origin before measuring that same lazy-list item.
+      final sessionList = find
+          .descendant(
+            of: find.byType(SessionScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      tester.state<ScrollableState>(sessionList).position.jumpTo(0);
+      await tester.pump();
+    }
+    expect(card, findsOneWidget);
     autoCollapsedHeight = tester.getSize(card).height;
     expect(autoCollapsedHeight, lessThan(expandedHeight));
 
@@ -838,10 +879,10 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
 
     // This session contains completed sets. Discard it through the production
     // confirmation so no fixture history or progression data is written.
+    // Starting from PresetDetail replaces that route with SessionScreen, so a
+    // single Back returns to Train. A second Back would exit the app.
     await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     final ongoingSessionMenu = find.byKey(AppTestKeys.ongoingSessionMenu);
     await _waitForElement(tester, ongoingSessionMenu);
     final ongoingMenuRect = tester.getRect(ongoingSessionMenu);
@@ -859,14 +900,14 @@ Future<Map<String, Object>> _exerciseProductionSessionCompatibility(
     expect(ongoingMenuRect.height, greaterThanOrEqualTo(48));
     expect(hitTestableOngoingMenu, findsOneWidget);
     await tester.tap(hitTestableOngoingMenu);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     await _waitForElement(tester, find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.tap(find.byKey(AppTestKeys.ongoingSessionExit));
     await tester.pump();
     final discardCompletedWorkout = find.text(strings.sessionCancelDelete);
     await _waitForElement(tester, discardCompletedWorkout);
     await tester.tap(discardCompletedWorkout);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
   } finally {
     if (activeSession.isActive) await activeSession.discard();
   }
@@ -981,18 +1022,18 @@ Future<void> _resetTrainPosition(WidgetTester tester) async {
       .descendant(of: find.byType(TrainPage), matching: find.byType(Scrollable))
       .first;
   tester.state<ScrollableState>(scrollable).position.jumpTo(0);
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
 }
 
 Future<void> _showTrainOverview(WidgetTester tester) async {
   if (find.byType(TrainPage).evaluate().isEmpty) {
     await tester.tap(find.byKey(AppTestKeys.mainTab('train')));
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
   }
   final overviewTab = find.byKey(AppTestKeys.trainOverviewTab);
   if (overviewTab.evaluate().isNotEmpty) {
     await tester.tap(overviewTab);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
   }
 }
 
@@ -1017,14 +1058,14 @@ Future<void> _exerciseMatchedInteractions(
 
   for (var cycle = 0; cycle < cycles; cycle++) {
     await tester.tap(plansTab);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     await tester.tap(overviewTab);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
 
     await tester.drag(overviewScrollable, const Offset(0, -120));
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     await tester.drag(overviewScrollable, const Offset(0, 120));
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
 
     if (cycle.isEven) {
       final startAction = find.byKey(AppTestKeys.trainStartWorkout);
@@ -1032,14 +1073,14 @@ Future<void> _exerciseMatchedInteractions(
       final gesture = await tester.startGesture(tester.getCenter(startAction));
       await tester.pump();
       await gesture.cancel();
-      await tester.pumpAndSettle();
+      await _settleTransientAnimations(tester);
     }
 
     await tester.tap(catalogTab);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     expect(find.byType(CatalogPage), findsOneWidget);
     await tester.tap(trainTab);
-    await tester.pumpAndSettle();
+    await _settleTransientAnimations(tester);
     expect(find.byType(TrainPage), findsOneWidget);
   }
   await _showTrainOverview(tester);
@@ -1073,7 +1114,7 @@ Future<void> _exerciseRapidSelectionRetargeting(
     await tester.pump(_rapidSelectionCadence);
     expect(_selectedNavigationIndex(tester), 0);
   }
-  await tester.pumpAndSettle();
+  await _settleTransientAnimations(tester);
   expect(_selectedTrainTabIndex(tester), 0);
   expect(_selectedNavigationIndex(tester), 0);
 }

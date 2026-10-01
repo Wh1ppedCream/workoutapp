@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Handoff
 
-**Status: READY WITH KNOWN LIMITATIONS for user review (2026-09-30).** Section 22 is the current qualification record and supersedes earlier pending-device statements. Sections 1–20 retain implementation history and the original procedures; Section 21 records the prior bounded qualification checkpoint. The final Train + shell comparison set, motion clips, native checks, and canonical preview are prepared. TalkBack remains untested. Do not repeat the full suite or expand to another destination before user feedback.
+**Current status (2026-10-01): TRAIN + SHELL EXPRESSIVE REFERENCE BASELINE QUALIFIED.** The user-approved Train Overview, Train Plans, and shared shell visual/motion language passed final technical qualification and is the reference for continuation. This does not approve production rollout, a stored Expressive choice, app-wide theme completion, or other-destination adaptation. TalkBack remains untested. Sections 1–25 preserve implementation and dated checkpoint history; section 26 is the final current authority.
 
 ## 1. Checkpoint summary
 
@@ -8,7 +8,7 @@ The repository contains a non-persisted Expressive preview of the production Tra
 
 Train Overview contains exactly the existing seven-day focus card followed by the active presets card. Train Plans contains the active and archived plan sections and the existing premade, generated, and manual plan actions. No recommendations or placeholder workflow pages were added.
 
-This is an implementation checkpoint, not final qualification. Profile performance, human motion review, final matched-focus recapture, the full Flutter suite, and child-route visual qualification remain pending.
+The preview is isolated, non-persisted, and technically qualified for the Train + shell reference slice. Earlier checkpoint and user-review status statements below are historical; current gates and the continuation boundary are recorded in section 26 and [the concise reference baseline](tonos-expressive-reference-baseline.md).
 
 ## 2. Exact Git state
 
@@ -348,7 +348,7 @@ The integration build and canonical interactive app build both write `app-profil
 - Do not treat the uninstalled profile APK or debug timing as profile qualification.
 - Do not report a pending gate as passed.
 
-## 21. Qualification continuation record — current authority
+## 21. Qualification continuation record — historical checkpoint
 
 This session began with `a4f877a59b0872315b6e53db1049bb7bd5d1d5c9` equal to the live remote. The production proving ground, palettes, springs, persistence, dependencies, and SDK remain unchanged. Only qualification tests/harnesses, evidence, and documentation are being updated.
 
@@ -370,9 +370,9 @@ The user changed the stop condition to a resumable checkpoint. The bounded sourc
 
 Resume from this qualification checkpoint. Complete only any remaining Pixel evidence/native accessibility checks, then present the existing Train + shell Expressive proving ground to the user for keep/tune/reject feedback. Do not expand Expressive to another screen before user review.
 
-## 22. Final qualification and user-review handoff — 2026-09-30
+## 22. Final qualification and user-review handoff — 2026-09-30 (superseded)
 
-This section is the current authority. No production UI, theme, palette, spring, dependency, SDK, or stored-family code changed during final qualification. The only source change since the previous checkpoint is the device test harness correction in `integration_test/expressive_preview_device_test.dart`.
+At the 2026-09-30 checkpoint, this section was the current authority. Section 26 supersedes its review-pending status. No production UI, theme, palette, spring, dependency, SDK, or stored-family code changed during final qualification. The only source change since the previous checkpoint is the device test harness correction in `integration_test/expressive_preview_device_test.dart`.
 
 ### Host evidence retained
 
@@ -408,7 +408,7 @@ The Pixel was left running at Train → Overview with Expressive / Curated / Lig
 - **BLOCKER:** none for reviewing Train + shell.
 - Human keep/tune/reject feedback is now the only product-direction gate. Do not implement design tuning or expand Expressive to Active Workout, Progress, or another destination until the user reviews this proving ground.
 
-### 24. User-directed Train polish handoff — 2026-10-01
+### User-directed Train polish handoff — 2026-10-01 (historical checkpoint; superseded by section 26)
 
 The user's next review requested a narrow refinement of the approved Train + shell candidate. This section supersedes the prior no-tuning stop rule only for the named items: subtle plan/Weekly Overview heatmap tints, natural-height centered Weekly Overview layout, a true traveling sinusoidal Focused Sets stroke, and a complete-looking Start / Optimize / gear tactile response. Do not extend the work to Active Workout, Progress, Catalog, Logbook, Profile, or theme promotion before user review.
 
@@ -420,10 +420,36 @@ Focused widget/presentation tests passed **51/51**, scoped analysis reported no 
 
 The next gate is the user's seven-point visual/motion review. Until approval, do not start broader Expressive work or run the full-suite qualification campaign.
 
-### 25. User tint-strength adjustment handoff — 2026-10-01
+### User tint-strength adjustment handoff — 2026-10-01 (historical checkpoint; superseded by section 26)
 
-The user requested only slightly stronger heatmap background tints after the latest Train review. Current values are 12% for plan heatmaps and 15% light / 20% dark for the Weekly Overview anatomy field. Source and expected-surface tests are updated; the direct tint/layout test pair passed **10/10**, scoped analysis is clean, and the full suite remains deferred.
+At this checkpoint the user had requested slightly stronger heatmap background tints after the latest Train review. The resulting values were 12% for plan heatmaps and 15% light / 20% dark for the Weekly Overview anatomy field. The direct tint/layout test pair passed **10/10**, scoped analysis was clean, and the full suite was still deferred at that time; section 26 records the later full qualification.
 
 Fresh Pixel 7 captures are in `proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/`. The Plans pair includes all three plan identities, and the Overview pair shows the Weekly tint. Treat these as the current tint review assets; previous `expressive-polish-20261001` images document the prior values.
 
-No other Train visuals or motion changed. Await the user's tint feedback before changing these values again or starting another Expressive slice.
+No other Train visuals or motion changed in that iteration. The later user approval and current next-phase boundary are recorded in section 26.
+
+## 26. Final qualification and continuation handoff — 2026-10-01
+
+**Current authority:** the user-approved Train + shell Expressive visual/motion language is technically qualified for continuation. This is a reference-baseline qualification, not a production release, stored theme-family approval, app-wide completion, or approval of another destination's visual design.
+
+### Frozen reference
+
+The approved baseline is documented in [tonos-expressive-reference-baseline.md](tonos-expressive-reference-baseline.md). Its main traits are the warm canvas and plum Weekly Overview focal surface; purple primary and teal supporting actions; plan-owned identity with low-opacity heatmap tints; expressive but role-specific corner geometry; existing content hierarchy and five-destination shell; shared tactile/ambient phases; wavy Focused Sets progress; and a Reduced Motion policy that removes travel while preserving static Expressive identity and progress semantics.
+
+### Final qualification record
+
+- Flutter 3.47.5 / bundled Dart 3.13.4; `material_ui` remains locked at 1.5.0.
+- Full suite: **1,295 passed, 0 failed, 0 skipped, exit 0**, 00:11:53.386.
+- Repository analyzer: **0 errors, 0 warnings, 81 infos, exit 0**.
+- Inventory: **296 files / 2,440 candidates / 130 allowlisted / 2,310 classified or migrated / 0 pending / 0 unassigned / 0 overlaps**; 992 candidates are in one configured review queue and 1,448 outside configured queues. Ratchet enforcement passed for **18 protected files, 158 fingerprint entries, and 180 current occurrences** with exact maps.
+- Theme contracts, Classic/Neo/root parity, persistence boundary, responsive/accessibility, motion lifecycle, Reduced Motion, and Workout compatibility passed their host checks. Workout was only smoke-tested for compatibility; no Workout visual adaptation occurred.
+- Pixel 7 `28021FDH200228`: the final profile smoke returned exit 0 on `com.tonos.expressivepreview` and `tonos_expressive_preview.db`. Collapse and exercise-menu targets measured 48 × 48 dp, were hit-testable, and survived refreshed-coordinate edge activation; expansion, collapse, completion menu and cleanup completed. The smoke reports `timingsMeasured:false`, so it is functional compatibility evidence, not performance data.
+- Existing matched profile measurements show broadly comparable settled costs, above-budget costs in both looks, and more Expressive build-budget exceedances under the synthetic rapid cadence (50/212 vs 34/212). Quiet-idle windows recorded zero Flutter frame timings. These bounded observations do not claim zero jank or physical latency.
+- Canonical preview profile APK SHA-256: `63C1202CF793FF5CB38568A43255D0C119B858B09059AA888C71C2F47646CD42`. It is installed and visible at Train → Overview, Expressive / Curated / Light / 1×, with motion enabled and no active preview workout. Normal `com.tonos` data was not targeted.
+- **TalkBack was not tested.** Landscape, unsupported RTL-language shaping, and visual qualification of other destinations remain deferred.
+
+The final host suite, device run, analyzer, inventory/ratchet, parity and accessibility scope are detailed in [results](tonos-expressive-train-proving-ground-results.md), [validation summary](proposals/tonos-expressive-train-proving-ground/qualification/validation/validation-summary.md), [device qualification](proposals/tonos-expressive-train-proving-ground/qualification/device-qualification.md), and [motion inventory](proposals/tonos-expressive-train-proving-ground/amplified-review/motion-inventory.md).
+
+### Next phase
+
+**Documentation/planning only:** adapt the approved Expressive reference language to Active Workout in a future phase. Preserve its dense logging utility while reusing the accepted color, shape, containment, tactile and Reduced Motion rules. Do not reinterpret the Train/shell system from scratch. This qualification does not implement that adaptation.

@@ -1,8 +1,8 @@
 # Expressive Pixel Device Qualification
 
-**Status: Pixel review preparation complete with TalkBack deferred.** The direct device checks subsequently confirmed the real collapse target and workout completion behavior, and the final matched Train comparisons, motion clips, native 2× reachability checks, and canonical review setup are saved under `review-final/`. The integration harness was corrected to reacquire and remeasure the same card's outer collapse IconButton after the menu closes; only scoped Dart analysis is required for this test-only correction. Earlier failed integration attempts are retained as historical harness evidence, not production failures.
+**Current status (2026-10-01): Pixel sanity and isolated Workout-compatibility smoke passed; TalkBack remains untested.** The final matched Train comparisons, motion clips, native 2× reachability checks, and canonical preview are indexed under `review-final/`. The final smoke-only profile integration driver completed after narrowly correcting stale-coordinate, offscreen-action, card-reacquisition, and duplicate-Back assumptions in the test harness. Earlier failed attempts remain historical harness evidence, not production failures.
 
-The canonical preview package is installed and left on Train → Overview in the intended review state. Native TalkBack announcements were not tested. The complete scope and exact assets are indexed in [the final review evidence](../review-final/README.md).
+The canonical profile preview package was rebuilt, manifest-verified, installed and visually confirmed on Train → Overview in the intended review state. Native TalkBack announcements were not tested. The complete scope and exact assets are indexed in [the final review evidence](../review-final/README.md).
 
 ## Source and build checkpoint
 
@@ -104,3 +104,15 @@ Canonical APK: package `com.tonos.expressivepreview`, versionCode 6/versionName 
 ### Profile interpretation
 
 The existing matched Pixel timing table above remains the only performance dataset. Classic and Expressive settled costs were broadly comparable; both had substantial build/raster frame-budget exceedances. Synthetic 80 ms rapid retargeting had more Expressive build-budget exceedances (50/212 vs 34/212). These Flutter frame-cost samples do not establish compositor missed-frame counts, physical input latency, zero jank, or faster Expressive performance. No profiling was restarted while capturing motion clips.
+
+## Final Pixel sanity and Workout smoke — 2026-10-01
+
+The smoke-only profile APK was manifest-verified as `com.tonos.expressivepreview` / versionCode 6 / versionName 1.0.1, with `TONOS_DATABASE_NAME=tonos_expressive_preview.db`; SHA-256 `93C636099CC0BC7CC23358C7F139C506D74F7C447B22409BBE08D756F653F581`. It was installed only to that preview package on Pixel 7 `28021FDH200228` (Android 16, 60 Hz, 411.43 × 914.29 dp, DPR 2.625). The smoke driver returned exit 0 and reported two passing runner events, including the single smoke-only Workout compatibility test and teardown. Its result explicitly sets `timingsMeasured:false`; no performance timings are inferred from this run.
+
+- Collapse target: outer target **48 × 48 dp**, inner visible box **40 × 40 dp**, glyph **24 × 24 dp**, hit-testable. Exercise menu target: **48 × 48 dp**, glyph **24 × 24 dp**, hit-testable. The target was reacquired after the menu dismissed before edge interaction.
+- The workout card moved from **96 dp collapsed to 400 dp expanded** and back. The non-final set left the card open; final-set completion auto-collapsed it; reopening retained all completed states. The completed-session menu was reachable, and test cleanup left no draft/history row.
+- Driver log: `C:\Users\talh7\AppData\Local\Temp\tonos-expressive-profile-workout-smoke-backfix-20261001.log`. Scoped analyzer passed after the last harness correction.
+
+The canonical interactive profile preview was then rebuilt without the smoke-only define. APK SHA-256 `63C1202CF793FF5CB38568A43255D0C119B858B09059AA888C71C2F47646CD42`; manifest remains versionCode 6 / versionName 1.0.1 and package `com.tonos.expressivepreview`. It was installed and visually inspected at Train → Overview, Expressive / Curated / Light / 1×, motion enabled, no overlay, and no active preview workout. The device uses the isolated preview database; normal/internal Tonos packages were not targeted. Native font scale remained 1.15.
+
+The preceding matched profile timing run remains the only performance dataset and is interpreted as bounded Flutter frame-cost evidence in Results. TalkBack, landscape, and visual qualification of other destinations remain outside this slice.
