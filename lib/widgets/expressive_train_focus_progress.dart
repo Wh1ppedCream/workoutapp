@@ -1,14 +1,16 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, visibleForTesting;
 import 'package:material_ui/material_ui.dart';
 
 /// A Train-only decorative wave for an existing determinate focus metric.
 ///
 /// The supplied phase is shared with the containing focus card. The terminal
-/// edge's mean horizontal position remains [value] for every phase; only its
-/// contour moves. A native, visually hidden [LinearProgressIndicator] remains
-/// the semantics owner and receives the exact current value.
+/// active extent remains [value] for every phase; only a thin sinusoidal stroke
+/// travels inside that extent. A native, visually hidden
+/// [LinearProgressIndicator] remains the semantics owner and receives the exact
+/// current value.
 class ExpressiveTrainFocusProgress extends StatelessWidget {
   const ExpressiveTrainFocusProgress({
     super.key,
@@ -99,8 +101,58 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
   final BorderRadius borderRadius;
   final TextDirection textDirection;
 
-  static const int _waveSamples = 24;
-  static const double _maximumWaveAmplitude = 1.25;
+  static const double _waveAmplitude = 1.5;
+  static const double _waveLength = 20;
+  static const double _waveStrokeWidth = 2.2;
+  static const double _trackStrokeWidth = 1.5;
+  static const double _terminalRadius = 1.5;
+
+  @visibleForTesting
+  double activeExtentFor(Size size) =>
+      size.width * value.clamp(0.0, 1.0).toDouble();
+
+  @visibleForTesting
+  Rect activeRectFor(Size size) {
+    final activeExtent = activeExtentFor(size);
+    return textDirection == TextDirection.rtl
+        ? Rect.fromLTRB(size.width - activeExtent, 0, size.width, size.height)
+        : Rect.fromLTRB(0, 0, activeExtent, size.height);
+  }
+
+  @visibleForTesting
+  Offset terminalMarkerCenterFor(Size size) => Offset(
+    textDirection == TextDirection.rtl
+        ? _terminalRadius
+        : size.width - _terminalRadius,
+    size.height / 2,
+  );
+
+  @visibleForTesting
+  Path? activeStrokePathFor(Size size) {
+    final activeExtent = activeExtentFor(size);
+    if (activeExtent < _waveStrokeWidth * 2) return null;
+
+    final isRtl = textDirection == TextDirection.rtl;
+    final direction = isRtl ? -1.0 : 1.0;
+    final startX = isRtl ? size.width : 0.0;
+    final phaseOffset = phase.clamp(0.0, 1.0).toDouble() * math.pi * 2;
+    final sampleCount = math.max(8, (activeExtent / 1.5).ceil());
+    final path = Path();
+    for (var sample = 0; sample <= sampleCount; sample++) {
+      final distance = activeExtent * sample / sampleCount;
+      final x = startX + direction * distance;
+      final y =
+          size.height / 2 +
+          _waveAmplitude *
+              math.sin((math.pi * 2 * distance / _waveLength) - phaseOffset);
+      if (sample == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    return path;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -114,69 +166,60 @@ class ExpressiveTrainFocusProgressPainter extends CustomPainter {
       bottomLeft: borderRadius.bottomLeft,
       bottomRight: borderRadius.bottomRight,
     );
-    canvas.drawRRect(track, Paint()..color = trackColor);
+    final centerY = size.height / 2;
+    final isRtl = textDirection == TextDirection.rtl;
+    canvas.drawLine(
+      Offset(0, centerY),
+      Offset(size.width, centerY),
+      Paint()
+        ..color = trackColor
+        ..strokeWidth = _trackStrokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
 
     final progress = value.clamp(0.0, 1.0).toDouble();
-    if (progress <= 0) return;
-
-    final isRtl = textDirection == TextDirection.rtl;
-    final frontX = isRtl ? size.width * (1 - progress) : size.width * progress;
-    final unfilledWidth = size.width * (1 - progress);
-    final amplitude = math.min(
-      _maximumWaveAmplitude,
-      math.min(frontX, unfilledWidth) * 0.24,
-    );
-    final waveStrength = math.sin(phase * math.pi * 2);
-    final path = Path();
-
-    if (amplitude <= 0 || waveStrength.abs() < 0.0001) {
-      if (isRtl) {
-        path
-          ..moveTo(frontX, 0)
-          ..lineTo(size.width, 0)
-          ..lineTo(size.width, size.height)
-          ..lineTo(frontX, size.height)
-          ..close();
-      } else {
-        path
-          ..moveTo(0, 0)
-          ..lineTo(frontX, 0)
-          ..lineTo(frontX, size.height)
-          ..lineTo(0, size.height)
-          ..close();
+    if (progress > 0) {
+      final path = activeStrokePathFor(size);
+      if (path != null) {
+        canvas.save();
+        canvas.clipRRect(track);
+        canvas.clipRect(activeRectFor(size));
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = fillColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = _waveStrokeWidth
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round,
+        );
+        canvas.restore();
+      } else if (progress > 0) {
+        // Preserve visible progress for very short values that cannot yet
+        // carry a complete wave cycle.
+        final activeExtent = activeExtentFor(size);
+        canvas.save();
+        canvas.clipRRect(track);
+        canvas.clipRect(activeRectFor(size));
+        canvas.drawLine(
+          Offset(isRtl ? size.width : 0, centerY),
+          Offset(isRtl ? size.width - activeExtent : activeExtent, centerY),
+          Paint()
+            ..color = fillColor
+            ..strokeWidth = _waveStrokeWidth
+            ..strokeCap = StrokeCap.round,
+        );
+        canvas.restore();
       }
-    } else if (isRtl) {
-      path
-        ..moveTo(frontX, 0)
-        ..lineTo(size.width, 0)
-        ..lineTo(size.width, size.height)
-        ..lineTo(frontX, size.height);
-      for (var sample = _waveSamples - 1; sample >= 0; sample--) {
-        final y = size.height * sample / _waveSamples;
-        final offset =
-            amplitude * math.sin(math.pi * 2 * y / size.height) * waveStrength;
-        path.lineTo(frontX + offset, y);
-      }
-      path.close();
-    } else {
-      path
-        ..moveTo(0, 0)
-        ..lineTo(frontX, 0);
-      for (var sample = 1; sample <= _waveSamples; sample++) {
-        final y = size.height * sample / _waveSamples;
-        final offset =
-            amplitude * math.sin(math.pi * 2 * y / size.height) * waveStrength;
-        path.lineTo(frontX + offset, y);
-      }
-      path
-        ..lineTo(0, size.height)
-        ..close();
     }
 
-    canvas.save();
-    canvas.clipRRect(track);
-    canvas.drawPath(path, Paint()..color = fillColor);
-    canvas.restore();
+    // This fixed, quiet marker closes the track. It does not encode progress;
+    // the sinusoid's horizontal extent remains the sole value representation.
+    canvas.drawCircle(
+      terminalMarkerCenterFor(size),
+      _terminalRadius,
+      Paint()..color = trackColor,
+    );
   }
 
   @override

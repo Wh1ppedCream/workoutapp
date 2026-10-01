@@ -101,3 +101,36 @@ Human-speed spring visibility, refresh/thermal-aware profile frame metrics, and 
 See [the handoff](tonos-expressive-train-proving-ground-handoff.md) for the exact runner/build commands, architecture and file map, protected working-tree hashes, pending gate procedure, and continuation steps.
 
 Implementation checkpoint: `9cd78807922e57602f4d9bbf32d417afc40386f9` — `Add isolated Tonos Expressive proving ground`. This results document and the retained 19 PNGs accompany `Record Expressive proving-ground checkpoint`; resolve that commit and the current remote using the handoff's section 2 commands.
+
+### 23. User-directed Train polish follow-up — 2026-10-01
+
+This is the current review evidence for the explicitly requested polish to plan heatmap backgrounds, Weekly Overview composition, Focused Sets progress, and the Train action bar. It supersedes the previous stop rule only for this named Train + shell refinement; no other destination or theme work is authorized by this follow-up.
+
+The user's local refinements were preserved in the narrow checkpoint `f192b0bd33e0105e0ed4ac908719d0b377b88b67` (`Checkpoint user Expressive layout refinements`) before implementation. Existing unrelated tracked changes and untracked artifacts remain outside this task's staging scope.
+
+#### Current visual and interaction decisions
+
+- Plan anatomy backgrounds blend each plan identity accent into the neutral media-placeholder surface at 8%. The blue, orange, and green identity frame remains stronger; anatomy colors and semantic meaning are unchanged.
+- Weekly Overview's anatomy field blends 10% toward its plum inset tone in light mode and 16% in dark mode. The heatmap palette is resolved against that field.
+- The Focused Sets active segment is a 2.2 dp rounded sinusoidal stroke with 1.5 dp amplitude and 20 dp wavelength, over a straight 1.5 dp inactive track. Its horizontal extent remains exactly `width × value`; a quiet 3 dp terminal marker closes the track. Phase is shared with the existing Overview ambient controller. Reduced Motion fixes the phase at zero while retaining the static wave.
+- At normal text size, the anatomy and Focused Sets stay side by side, vertically centered, and wrap to the natural height of the taller child. They stack below 340 dp available width or from 1.35× text scale. The existing 2× stack remains covered.
+- Start, Optimize, and gear retain their existing callbacks, hit bounds, and resting placement. Only their release overshoot is capped at the fixed rounded action-bar paint bounds; the inward press response is preserved.
+- The approved Weekly Overview breathing and accent motion remain unchanged. The Overview, plan ordering, identity geometry, and five-destination shell are retained.
+
+#### Pixel 7 review evidence
+
+The preview uses package `com.tonos.expressivepreview` and database `tonos_expressive_preview.db`; normal `com.tonos` data is separate. Pixel 7 `28021FDH200228` is connected, with the preview activity currently resumed. Evidence is under `docs/proposals/tonos-expressive-train-proving-ground/amplified-review/expressive-polish-20261001/`:
+
+- matched Overview and Plans light/dark captures;
+- blue, orange, and green plan heatmap close-ups in light/dark;
+- Weekly Overview heatmap, Focused Sets wave, and resting action-bar close-ups in light/dark;
+- untouched Focused Sets/ambient and Weekly Overview idle clips, action tactile clip, and Reduced Motion clip with paired stills.
+
+The action clip includes the current Optimize recovery warning (dismissed), settings route, and Start into the isolated preview session and return. It does not alter the normal Tonos package or database. Visual judgment is for the reviewer's approval; this document does not mark the candidate as product-approved.
+
+#### Focused validation and stop condition
+
+- Flutter 3.47.5 / bundled Dart 3.13.4 focused Train, plan, motion, and layout batch: **51 passed, 0 failed, 0 skipped, exit 0**.
+- Scoped Dart analysis: **No issues found**.
+- Full Flutter suite: **not run**, intentionally deferred until the user reviews this Train + shell candidate.
+- This is not a production promotion or SDK/theme migration. Keep the scope limited to the named Train + shell refinements until the seven review questions are answered.

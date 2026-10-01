@@ -453,21 +453,36 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
       builder: (context, constraints) {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
         final isStacked = textScale >= 1.35 || constraints.maxWidth < 340;
+        final heatmapTint = Theme.of(context).brightness == Brightness.dark
+            ? 0.16
+            : 0.10;
+        final resolvedHeatmapSurface = Color.lerp(
+          heatmapSurface,
+          tokens.focusInset,
+          heatmapTint,
+        )!;
         final heatmapSize = isStacked
             ? constraints.maxWidth.clamp(132.0, 164.0).toDouble()
             : (constraints.maxWidth * 0.38).clamp(118.0, 148.0).toDouble();
         final heatmap = Container(
+          key: const ValueKey('expressive-weekly-heatmap'),
           width: heatmapSize,
           height: heatmapSize,
           padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: heatmapSurface,
+            color: resolvedHeatmapSurface,
             borderRadius: ExpressiveTrainShapes.focusInset,
           ),
           child: BodyHeatmap(
             frequencyMap: heatmapFrequencyMap,
-            lowColor: tonosHeatmapLowForSurface(context, heatmapSurface),
-            highColor: tonosHeatmapHighForSurface(context, heatmapSurface),
+            lowColor: tonosHeatmapLowForSurface(
+              context,
+              resolvedHeatmapSurface,
+            ),
+            highColor: tonosHeatmapHighForSurface(
+              context,
+              resolvedHeatmapSurface,
+            ),
             width: heatmapSize - 10,
             height: heatmapSize - 10,
           ),
@@ -491,19 +506,14 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
           );
         }
 
-        return ConstrainedBox(
+        return Row(
           key: const ValueKey('seven-day-focus-side-by-side'),
-          constraints: BoxConstraints(
-            minHeight: 198 + (textScale - 1).clamp(0.0, 0.35) * 150,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 4, child: Center(child: heatmap)),
-              const SizedBox(width: 12),
-              Expanded(flex: 6, child: details),
-            ],
-          ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(flex: 4, child: Center(child: heatmap)),
+            const SizedBox(width: 12),
+            Expanded(flex: 6, child: details),
+          ],
         );
       },
     );
@@ -553,6 +563,7 @@ class _ExpressiveFocusDetails extends StatelessWidget {
           pressedScale: TonosExpressiveMotionTiers.supportingScale,
           pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
           child: Material(
+            key: const ValueKey('expressive-weekly-focused-sets'),
             color: tokens.focusInset,
             shape: RoundedRectangleBorder(borderRadius: radius),
             clipBehavior: Clip.antiAlias,

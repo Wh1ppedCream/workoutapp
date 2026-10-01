@@ -109,6 +109,121 @@ void main() {
     ]);
   });
 
+  test('active sinusoid travels without changing determinate extent', () {
+    const size = Size(120, 6);
+    final phaseZero = _painter(value: 0.7, phase: 0);
+    final phaseQuarter = _painter(value: 0.7, phase: 0.25);
+    final phaseZeroBounds = phaseZero.activeStrokePathFor(size)!.getBounds();
+    final phaseQuarterBounds = phaseQuarter
+        .activeStrokePathFor(size)!
+        .getBounds();
+
+    expect(phaseZero.activeRectFor(size), const Rect.fromLTWH(0, 0, 84, 6));
+    expect(phaseQuarter.activeRectFor(size), phaseZero.activeRectFor(size));
+    expect(phaseQuarterBounds.left, phaseZeroBounds.left);
+    expect(phaseQuarterBounds.right, phaseZeroBounds.right);
+    expect(phaseZeroBounds.left, greaterThanOrEqualTo(0));
+    expect(phaseZeroBounds.right, lessThanOrEqualTo(84));
+    expect(phaseZeroBounds.top, lessThan(1.6));
+    expect(phaseZeroBounds.bottom, greaterThan(4.4));
+    expect(
+      phaseQuarter.terminalMarkerCenterFor(size),
+      phaseZero.terminalMarkerCenterFor(size),
+    );
+
+    final phaseZeroMetric = phaseZero
+        .activeStrokePathFor(size)!
+        .computeMetrics()
+        .single;
+    final phaseQuarterMetric = phaseQuarter
+        .activeStrokePathFor(size)!
+        .computeMetrics()
+        .single;
+    final phaseZeroPoint = phaseZeroMetric
+        .getTangentForOffset(phaseZeroMetric.length * 0.1)!
+        .position;
+    final phaseQuarterPoint = phaseQuarterMetric
+        .getTangentForOffset(phaseQuarterMetric.length * 0.1)!
+        .position;
+    expect(
+      phaseZeroPoint.dy,
+      isNot(closeTo(phaseQuarterPoint.dy, 0.05)),
+      reason: 'phase changes the stroke contour within the active extent',
+    );
+  });
+
+  test('short, empty, full, and RTL values keep exact active extents', () {
+    const size = Size(120, 6);
+    final empty = _painter(value: 0, phase: 0.6);
+    final short = _painter(value: 0.1, phase: 0.6);
+    final tiny = _painter(value: 0.02, phase: 0.6);
+    final full = _painter(value: 1, phase: 0.6);
+    final rtl = _painter(
+      value: 0.7,
+      phase: 0.6,
+      textDirection: TextDirection.rtl,
+    );
+
+    expect(empty.activeRectFor(size), const Rect.fromLTWH(0, 0, 0, 6));
+    expect(empty.activeStrokePathFor(size), isNull);
+    expect(short.activeRectFor(size), const Rect.fromLTWH(0, 0, 12, 6));
+    expect(short.activeStrokePathFor(size), isNotNull);
+    expect(tiny.activeRectFor(size), const Rect.fromLTWH(0, 0, 2.4, 6));
+    expect(tiny.activeStrokePathFor(size), isNull);
+    expect(full.activeRectFor(size), const Rect.fromLTWH(0, 0, 120, 6));
+    expect(full.activeStrokePathFor(size), isNotNull);
+    expect(rtl.activeRectFor(size), const Rect.fromLTRB(36, 0, 120, 6));
+    expect(
+      rtl.activeStrokePathFor(size)!.getBounds().left,
+      greaterThanOrEqualTo(36),
+    );
+    expect(
+      rtl.activeStrokePathFor(size)!.getBounds().right,
+      lessThanOrEqualTo(120),
+    );
+  });
+
+  testWidgets('reduced motion keeps the sinusoid in its static pose', (
+    tester,
+  ) async {
+    final phase = ValueNotifier<double>(0.75);
+    addTearDown(phase.dispose);
+
+    await tester.pumpWidget(
+      host(
+        FocusedSetsList(hits: hits, expressiveProgressPhase: phase),
+        disableAnimations: true,
+      ),
+    );
+    final reducedMotionPainters = _painters(tester);
+    expect(
+      reducedMotionPainters.map((painter) => painter.phase),
+      everyElement(0),
+    );
+    final reducedStroke = reducedMotionPainters.last.activeStrokePathFor(
+      const Size(100, 6),
+    );
+    expect(reducedStroke, isNotNull);
+    expect(
+      reducedStroke!
+          .computeMetrics()
+          .single
+          .getTangentForOffset(3)!
+          .position
+          .dy,
+      closeTo(
+        _painter(value: 2 / 12, phase: 0)
+            .activeStrokePathFor(const Size(100, 6))!
+            .computeMetrics()
+            .single
+            .getTangentForOffset(3)!
+            .position
+            .dy,
+        0.000001,
+      ),
+    );
+  });
+
   testWidgets('wave bars fit compact width with 2x text and RTL', (
     tester,
   ) async {
@@ -180,3 +295,16 @@ List<ExpressiveTrainFocusProgressPainter> _painters(WidgetTester tester) {
       .whereType<ExpressiveTrainFocusProgressPainter>()
       .toList();
 }
+
+ExpressiveTrainFocusProgressPainter _painter({
+  required double value,
+  required double phase,
+  TextDirection textDirection = TextDirection.ltr,
+}) => ExpressiveTrainFocusProgressPainter(
+  value: value,
+  phase: phase,
+  fillColor: Colors.amber,
+  trackColor: Colors.grey,
+  borderRadius: BorderRadius.circular(99),
+  textDirection: textDirection,
+);

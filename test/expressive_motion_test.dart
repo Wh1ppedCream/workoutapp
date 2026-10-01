@@ -93,6 +93,8 @@ Widget _pressHost({
   bool autofocus = false,
   bool responseEnabled = true,
   bool childActionEnabled = true,
+  bool allowReleaseOvershoot = true,
+  double pressedScale = 1,
 }) {
   return _host(
     SizedBox(
@@ -101,6 +103,8 @@ Widget _pressHost({
       height: 64,
       child: TonosExpressivePressResponse(
         enabled: responseEnabled,
+        allowReleaseOvershoot: allowReleaseOvershoot,
+        pressedScale: pressedScale,
         borderRadius: BorderRadius.circular(22),
         pressedBorderRadius: BorderRadius.circular(14),
         child: Material(
@@ -169,6 +173,16 @@ BorderRadius _pressRadius(WidgetTester tester) {
           )
           .borderRadius
       as BorderRadius;
+}
+
+double _pressScale(WidgetTester tester) {
+  final transforms = tester.widgetList<Transform>(
+    find.descendant(
+      of: find.byType(TonosExpressivePressResponse),
+      matching: find.byType(Transform),
+    ),
+  );
+  return transforms.last.transform.storage[0];
 }
 
 void main() {
@@ -603,6 +617,58 @@ void main() {
     expect(tapCount, 1);
     await tester.pumpAndSettle();
   });
+
+  testWidgets(
+    'release overshoot can be capped inside a fixed rounded action boundary',
+    (tester) async {
+      final semanticsHandle = tester.ensureSemantics();
+      try {
+        var tapCount = 0;
+        await tester.pumpWidget(
+          _pressHost(
+            onTap: () => tapCount++,
+            allowReleaseOvershoot: false,
+            pressedScale: 0.91,
+          ),
+        );
+        final layoutRect = tester.getRect(
+          find.byKey(const ValueKey('press-layout')),
+        );
+        final semanticNode = find.bySemanticsLabel('Start workout');
+        final semanticsRect = tester.getSemantics(semanticNode).rect;
+        expect(
+          tester
+              .getSemantics(semanticNode)
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isTrue,
+        );
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byKey(const ValueKey('start-action'))),
+        );
+        await tester.pump();
+        expect(_pressScale(tester), closeTo(0.91, 0.001));
+        await gesture.up();
+        await tester.pump();
+        expect(tapCount, 1);
+
+        for (var frame = 0; frame < 50; frame++) {
+          await tester.pump(const Duration(milliseconds: 16));
+          expect(_pressScale(tester), lessThanOrEqualTo(1.0001));
+        }
+        expect(_pressScale(tester), closeTo(1, 0.001));
+        expect(
+          tester.getRect(find.byKey(const ValueKey('press-layout'))),
+          layoutRect,
+        );
+        expect(tester.getSemantics(semanticNode).rect, semanticsRect);
+        expect(tapCount, 1);
+      } finally {
+        semanticsHandle.dispose();
+      }
+    },
+  );
 
   testWidgets('ambient motion breathes in the resumed active region', (
     tester,

@@ -1929,6 +1929,7 @@ class _SplitWorkoutBar extends StatelessWidget {
       if (!usesExpressiveRecipe) return visual;
       return TonosExpressivePressResponse(
         enabled: true,
+        allowReleaseOvershoot: false,
         borderRadius: startRadius(vertical: vertical, pressed: false),
         pressedBorderRadius: startRadius(vertical: vertical, pressed: true),
         pressedScale: TonosExpressiveMotionTiers.focalScale,
@@ -2152,6 +2153,7 @@ class _SplitWorkoutBar extends StatelessWidget {
     if (!expressive) return child;
     return TonosExpressivePressResponse(
       enabled: enabled,
+      allowReleaseOvershoot: false,
       borderRadius: ExpressiveTrainShapes.primaryAction,
       pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
       pressedScale: TonosExpressiveMotionTiers.supportingScale,
@@ -2193,6 +2195,7 @@ class _SplitWorkoutBar extends StatelessWidget {
     if (!expressive) return button;
     return TonosExpressivePressResponse(
       enabled: enabled,
+      allowReleaseOvershoot: false,
       borderRadius: ExpressiveTrainShapes.compactControl,
       pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
       pressedScale: TonosExpressiveMotionTiers.compactScale,

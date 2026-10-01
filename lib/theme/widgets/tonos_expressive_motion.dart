@@ -292,6 +292,7 @@ class TonosExpressivePressResponse extends StatefulWidget {
     this.pressedScale = 1,
     this.pressedOffset = Offset.zero,
     this.pressedRotation = 0,
+    this.allowReleaseOvershoot = true,
   }) : assert((borderRadius == null) == (pressedBorderRadius == null));
 
   final bool enabled;
@@ -301,6 +302,13 @@ class TonosExpressivePressResponse extends StatefulWidget {
   final double pressedScale;
   final Offset pressedOffset;
   final double pressedRotation;
+
+  /// Whether the release spring may paint past the resting bounds.
+  ///
+  /// Keep this disabled for controls inside a hard rounded clip. The inward
+  /// press response and spring return remain; only the clipped outward recoil
+  /// is capped at its stable rest pose.
+  final bool allowReleaseOvershoot;
 
   @override
   State<TonosExpressivePressResponse> createState() =>
@@ -417,10 +425,15 @@ class _TonosExpressivePressResponseState
         child: RepaintBoundary(child: widget.child),
         builder: (context, child) {
           final progress = _controller.value;
-          final borderRadius = _currentBorderRadius(progress);
-          final boundedProgress = progress.clamp(-0.08, 1.06).toDouble();
+          final visualProgress = widget.allowReleaseOvershoot
+              ? progress
+              : progress.clamp(0.0, 1.0).toDouble();
+          final borderRadius = _currentBorderRadius(visualProgress);
+          final boundedProgress = widget.allowReleaseOvershoot
+              ? visualProgress.clamp(-0.08, 1.06).toDouble()
+              : visualProgress;
           final scale = (1 + (widget.pressedScale - 1) * boundedProgress)
-              .clamp(0.78, 1.03)
+              .clamp(0.78, widget.allowReleaseOvershoot ? 1.03 : 1.0)
               .toDouble();
 
           Widget visual = child!;

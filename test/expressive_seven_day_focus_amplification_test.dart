@@ -77,18 +77,30 @@ void main() {
         expect(hero.borderRadius, ExpressiveTrainShapes.focusHero);
 
         final heatmap = tester.widget<BodyHeatmap>(find.byType(BodyHeatmap));
+        final expectedHeatmapSurface = Color.lerp(
+          theme.surfaceTokens.dashboardHero,
+          tokens.focusInset,
+          brightness == Brightness.dark ? 0.16 : 0.10,
+        )!;
+        final heatmapContainer = tester.widget<Container>(
+          find.byKey(const ValueKey('expressive-weekly-heatmap')),
+        );
+        expect(
+          (heatmapContainer.decoration! as BoxDecoration).color,
+          expectedHeatmapSurface,
+        );
         expect(
           heatmap.lowColor,
           tonosHeatmapLowForSurface(
             tester.element(find.byType(BodyHeatmap)),
-            theme.surfaceTokens.dashboardHero,
+            expectedHeatmapSurface,
           ),
         );
         expect(
           heatmap.highColor,
           tonosHeatmapHighForSurface(
             tester.element(find.byType(BodyHeatmap)),
-            theme.surfaceTokens.dashboardHero,
+            expectedHeatmapSurface,
           ),
         );
 
@@ -114,6 +126,78 @@ void main() {
           await tester.tap(moreText);
           expect(taps, 1);
         }
+      }
+    },
+  );
+
+  testWidgets(
+    'normal Weekly Overview hugs its content and vertically centers anatomy',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(411, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final textScale in <double>[1, 1.15]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(textScale),
+                disableAnimations: true,
+              ),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: SevenDayFocusPresentation(
+                  heatmapFrequencyMap: const {'Shoulders': 1, 'Core': 0.5},
+                  hits: [
+                    FocusedSetHit(
+                      bodyPart: BodyPart(1, 'Shoulders'),
+                      units: 12,
+                    ),
+                    FocusedSetHit(
+                      bodyPart: BodyPart(2, 'Lower Back'),
+                      units: 3,
+                    ),
+                    FocusedSetHit(bodyPart: BodyPart(3, 'Core'), units: 2),
+                    FocusedSetHit(bodyPart: BodyPart(4, 'Quads'), units: 1),
+                  ],
+                  onFocusedSetsTap: () {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await _pumpFocusFrames(tester);
+
+        expect(tester.takeException(), isNull);
+        final row = tester.getSize(
+          find.byKey(const ValueKey('seven-day-focus-side-by-side')),
+        );
+        final anatomyRect = tester.getRect(
+          find.byKey(const ValueKey('expressive-weekly-heatmap')),
+        );
+        final detailsRect = tester.getRect(
+          find.byKey(const ValueKey('expressive-weekly-focused-sets')),
+        );
+        final tallerChild = anatomyRect.height > detailsRect.height
+            ? anatomyRect.height
+            : detailsRect.height;
+
+        expect(
+          anatomyRect.center.dy,
+          closeTo(detailsRect.center.dy, 0.5),
+          reason: 'anatomy should center against Focused Sets at $textScale×',
+        );
+        expect(
+          row.height,
+          closeTo(tallerChild, 0.5),
+          reason:
+              'the side-by-side row should hug its taller child at $textScale×',
+        );
       }
     },
   );
@@ -157,6 +241,49 @@ void main() {
     );
     expect(find.text('Weekly Overview'), findsOneWidget);
     expect(find.text('Shoulders'), findsOneWidget);
+  });
+
+  testWidgets('Expressive overview adapts at 1.5x text and 320dp width', (
+    tester,
+  ) async {
+    Future<void> pump({required Size size, required double textScale}) async {
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ExpressiveThemeDefinition.light(),
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: SevenDayFocusPresentation(
+                heatmapFrequencyMap: const {'Shoulders': 1},
+                hits: [
+                  FocusedSetHit(bodyPart: BodyPart(1, 'Shoulders'), units: 12),
+                  FocusedSetHit(bodyPart: BodyPart(2, 'Lower Back'), units: 3),
+                  FocusedSetHit(bodyPart: BodyPart(3, 'Core'), units: 2),
+                ],
+                onFocusedSetsTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await _pumpFocusFrames(tester);
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byKey(const ValueKey('seven-day-focus-stacked')),
+        findsOneWidget,
+      );
+    }
+
+    await pump(size: const Size(411, 1000), textScale: 1.5);
+    await pump(size: const Size(320, 1000), textScale: 1);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
   });
 
   testWidgets('Expressive focus data appears immediately with a size reveal', (

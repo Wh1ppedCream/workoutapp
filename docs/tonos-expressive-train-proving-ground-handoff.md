@@ -407,3 +407,15 @@ The Pixel was left running at Train → Overview with Expressive / Curated / Lig
 - **DEFERRED:** TalkBack, landscape, child-route visual qualification, and full Workout/Progress visual design review.
 - **BLOCKER:** none for reviewing Train + shell.
 - Human keep/tune/reject feedback is now the only product-direction gate. Do not implement design tuning or expand Expressive to Active Workout, Progress, or another destination until the user reviews this proving ground.
+
+### 24. User-directed Train polish handoff — 2026-10-01
+
+The user's next review requested a narrow refinement of the approved Train + shell candidate. This section supersedes the prior no-tuning stop rule only for the named items: subtle plan/Weekly Overview heatmap tints, natural-height centered Weekly Overview layout, a true traveling sinusoidal Focused Sets stroke, and a complete-looking Start / Optimize / gear tactile response. Do not extend the work to Active Workout, Progress, Catalog, Logbook, Profile, or theme promotion before user review.
+
+The user's manual layout changes were saved first in local checkpoint `f192b0bd33e0105e0ed4ac908719d0b377b88b67`. The refinement keeps the approved plan geometry, Weekly Overview ambient breathing/accent, Reduced Motion contract, shell destinations, and callbacks. Exact implementation values and Pixel evidence are in [the latest results section](tonos-expressive-train-proving-ground-results.md#23-user-directed-train-polish-follow-up--2026-10-01) and the [manual review guide](proposals/tonos-expressive-train-proving-ground/amplified-review/manual-review.md).
+
+The connected Pixel 7 is `28021FDH200228`; the resumed app is the isolated package `com.tonos.expressivepreview` using `tonos_expressive_preview.db`. New stills and clips are in `proposals/tonos-expressive-train-proving-ground/amplified-review/expressive-polish-20261001/`. Keep normal `com.tonos` data untouched. The action clip includes the expected Optimize recovery dialog and a disposable preview session.
+
+Focused widget/presentation tests passed **51/51**, scoped analysis reported no issues, and the full suite remains deliberately deferred until the user reviews this candidate. Before publishing, stage only the named Train source/tests, this review evidence, and the three updated review/result/handoff documents. Protect every unrelated tracked change and untracked asset; do not use broad staging or cleanup. Push normally to `origin/feature/classic-m3e` and independently compare the remote tip with `HEAD`.
+
+The next gate is the user's seven-point visual/motion review. Until approval, do not start broader Expressive work or run the full-suite qualification campaign.
