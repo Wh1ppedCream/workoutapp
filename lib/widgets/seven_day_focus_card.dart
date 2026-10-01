@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_surface.dart';
 import 'body_heatmap.dart';
@@ -121,6 +122,16 @@ class SevenDayFocusPresentation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.usesExpressivePresentation) {
+      return _ExpressiveSevenDayFocusPresentation(
+        heatmapFrequencyMap: heatmapFrequencyMap,
+        hits: hits,
+        onFocusedSetsTap: onFocusedSetsTap,
+        loading: loading,
+        failed: failed,
+      );
+    }
+
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
@@ -205,6 +216,282 @@ class SevenDayFocusPresentation extends StatelessWidget {
         : Card(
             child: Padding(padding: const EdgeInsets.all(16), child: content),
           );
+  }
+}
+
+class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
+  const _ExpressiveSevenDayFocusPresentation({
+    required this.heatmapFrequencyMap,
+    required this.hits,
+    required this.onFocusedSetsTap,
+    required this.loading,
+    required this.failed,
+  });
+
+  final Map<String, double> heatmapFrequencyMap;
+  final List<FocusedSetHit> hits;
+  final VoidCallback onFocusedSetsTap;
+  final bool loading;
+  final bool failed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+    final surfaces = context.surfaceTokens;
+    final focusTheme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: tokens.focusForeground,
+        onSurfaceVariant: tokens.focusForeground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: tokens.focusForeground,
+        displayColor: tokens.focusForeground,
+      ),
+      progressIndicatorTheme: theme.progressIndicatorTheme.copyWith(
+        color: tokens.focusWarm,
+        linearTrackColor: tokens.focusForeground.withValues(alpha: 0.2),
+      ),
+    );
+    final motionEnabled =
+        !(MediaQuery.maybeOf(context)?.disableAnimations ?? false) &&
+        TickerMode.valuesOf(context).enabled;
+    final focusState = loading
+        ? SizedBox(
+            key: const ValueKey('expressive-focus-loading'),
+            height: 176,
+            child: Center(
+              child: CircularProgressIndicator(color: tokens.focusWarm),
+            ),
+          )
+        : failed
+        ? SizedBox(
+            key: const ValueKey('expressive-focus-failed'),
+            height: 176,
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context).sevenDayFocusLoadFailed,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
+        : _ExpressiveSevenDayFocusLayout(
+            key: const ValueKey('expressive-focus-data'),
+            heatmapFrequencyMap: heatmapFrequencyMap,
+            hits: hits,
+            onFocusedSetsTap: onFocusedSetsTap,
+            heatmapSurface: surfaces.dashboardHero,
+            tokens: tokens,
+          );
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.card,
+      color: tokens.focusSurface,
+      borderRadius: ExpressiveTrainShapes.focusHero,
+      padding: const EdgeInsets.all(18),
+      child: Theme(
+        data: focusTheme,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    AppLocalizations.of(context).sevenDayFocusTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: tokens.focusForeground,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.55,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Container(
+                  width: 34,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: tokens.focusWarm,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                Container(
+                  width: 13,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: tokens.focusCool,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            AnimatedSwitcher(
+              duration: motionEnabled
+                  ? const Duration(milliseconds: 180)
+                  : Duration.zero,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.985, end: 1).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: focusState,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
+  const _ExpressiveSevenDayFocusLayout({
+    super.key,
+    required this.heatmapFrequencyMap,
+    required this.hits,
+    required this.onFocusedSetsTap,
+    required this.heatmapSurface,
+    required this.tokens,
+  });
+
+  final Map<String, double> heatmapFrequencyMap;
+  final List<FocusedSetHit> hits;
+  final VoidCallback onFocusedSetsTap;
+  final Color heatmapSurface;
+  final AppExpressiveTrainTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final isStacked = textScale >= 1.6 || constraints.maxWidth < 340;
+        final heatmapSize = isStacked
+            ? constraints.maxWidth.clamp(132.0, 164.0).toDouble()
+            : (constraints.maxWidth * 0.38).clamp(118.0, 148.0).toDouble();
+        final heatmap = Container(
+          width: heatmapSize,
+          height: heatmapSize,
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: heatmapSurface,
+            borderRadius: ExpressiveTrainShapes.focusInset,
+          ),
+          child: BodyHeatmap(
+            frequencyMap: heatmapFrequencyMap,
+            lowColor: tonosHeatmapLowForSurface(context, heatmapSurface),
+            highColor: tonosHeatmapHighForSurface(context, heatmapSurface),
+            width: heatmapSize - 10,
+            height: heatmapSize - 10,
+          ),
+        );
+        final details = _ExpressiveFocusDetails(
+          hits: hits,
+          onTap: onFocusedSetsTap,
+          tokens: tokens,
+        );
+
+        if (isStacked) {
+          return Column(
+            key: const ValueKey('seven-day-focus-stacked'),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: heatmap),
+              const SizedBox(height: 12),
+              details,
+            ],
+          );
+        }
+
+        return SizedBox(
+          key: const ValueKey('seven-day-focus-side-by-side'),
+          height: 198,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 4, child: Center(child: heatmap)),
+              const SizedBox(width: 12),
+              Expanded(flex: 6, child: details),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ExpressiveFocusDetails extends StatefulWidget {
+  const _ExpressiveFocusDetails({
+    required this.hits,
+    required this.onTap,
+    required this.tokens,
+  });
+
+  final List<FocusedSetHit> hits;
+  final VoidCallback onTap;
+  final AppExpressiveTrainTokens tokens;
+
+  @override
+  State<_ExpressiveFocusDetails> createState() =>
+      _ExpressiveFocusDetailsState();
+}
+
+class _ExpressiveFocusDetailsState extends State<_ExpressiveFocusDetails> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final animationEnabled =
+        !disableAnimations && TickerMode.valuesOf(context).enabled;
+    final radius = ExpressiveTrainShapes.focusInset;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FocusedSetsList(
+          hits: widget.hits,
+          maxVisible: 3,
+          emptyMessage: AppLocalizations.of(context).sevenDayFocusEmpty,
+          titleWeight: FontWeight.w700,
+        ),
+        if (widget.hits.length > 3)
+          _MoreFocusedSetsHint(color: widget.tokens.focusWarm),
+      ],
+    );
+
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _pressed && animationEnabled ? 0.985 : 1,
+          duration: animationEnabled
+              ? const Duration(milliseconds: 90)
+              : Duration.zero,
+          curve: Curves.easeOut,
+          child: Material(
+            color: widget.tokens.focusInset,
+            shape: RoundedRectangleBorder(borderRadius: radius),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              customBorder: RoundedRectangleBorder(borderRadius: radius),
+              onTap: widget.onTap,
+              onHighlightChanged: (pressed) {
+                if (_pressed != pressed) setState(() => _pressed = pressed);
+              },
+              child: Padding(padding: const EdgeInsets.all(12), child: content),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -325,14 +612,18 @@ class _SevenDayFocusLayout extends StatelessWidget {
 }
 
 class _MoreFocusedSetsHint extends StatelessWidget {
-  const _MoreFocusedSetsHint();
+  const _MoreFocusedSetsHint({this.color});
+
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground = context.usesNeoPresentation
-        ? theme.colorScheme.onPrimaryContainer
-        : theme.colorScheme.primary;
+    final foreground =
+        color ??
+        (context.usesNeoPresentation
+            ? theme.colorScheme.onPrimaryContainer
+            : theme.colorScheme.primary);
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Row(

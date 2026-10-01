@@ -5,6 +5,7 @@ import 'classic_theme.dart';
 import 'theme_extensions.dart';
 import 'tokens/app_data_visualization_tokens.dart';
 import 'tokens/app_effect_tokens.dart';
+import 'tokens/app_expressive_train_tokens.dart';
 import 'tokens/app_flow_tokens.dart';
 import 'tokens/app_generation_tokens.dart';
 import 'tokens/app_media_tokens.dart';
@@ -71,14 +72,13 @@ abstract final class ExpressiveThemeDefinition {
       seedColor: Colors.deepPurple,
       brightness: brightness,
     );
-    final semanticColors = AppSemanticColors.fromColorScheme(
-      colorScheme,
-    ).copyWith(
-      primaryAction: colorScheme.primary,
-      onPrimaryAction: colorScheme.onPrimary,
-      startWorkoutAction: colorScheme.primary,
-      onStartWorkoutAction: colorScheme.onPrimary,
-    );
+    final semanticColors = AppSemanticColors.fromColorScheme(colorScheme)
+        .copyWith(
+          primaryAction: colorScheme.primary,
+          onPrimaryAction: colorScheme.onPrimary,
+          startWorkoutAction: colorScheme.primary,
+          onStartWorkoutAction: colorScheme.onPrimary,
+        );
     final shapeTokens = AppShapeTokens.classic.copyWith(
       card: BorderRadius.circular(18),
       planCard: BorderRadius.circular(18),
@@ -100,10 +100,9 @@ abstract final class ExpressiveThemeDefinition {
       ),
     };
     final base = AppMaterialTheme.fromColorScheme(colorScheme: colorScheme);
-    final classicProgressColors =
-        brightness == Brightness.light
-            ? _classicLightProgress
-            : _classicDarkProgress;
+    final classicProgressColors = brightness == Brightness.light
+        ? _classicLightProgress
+        : _classicDarkProgress;
 
     return base.copyWith(
       extensions: <ThemeExtension<dynamic>>[
@@ -111,6 +110,9 @@ abstract final class ExpressiveThemeDefinition {
           family: AppThemeFamilyIdentity.expressivePreview,
         ),
         semanticColors,
+        brightness == Brightness.light
+            ? AppExpressiveTrainTokens.light
+            : AppExpressiveTrainTokens.dark,
         shapeTokens,
         surfaceTokens,
         AppSurfaceDecorationTokens.classic,

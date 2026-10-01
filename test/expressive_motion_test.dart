@@ -42,7 +42,8 @@ Widget _selectionGroup({
       selectedIndex: selectedIndex,
       itemCount: itemCount,
       color: _indicatorColor,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
+      travelBorderRadius: BorderRadius.circular(8),
       topologyKey: topologyKey,
       child: Row(
         children: List.generate(
@@ -71,6 +72,13 @@ Finder _selectionDecoration() {
     }
     return (widget.decoration as BoxDecoration).color == _indicatorColor;
   });
+}
+
+BorderRadius _selectionRadius(WidgetTester tester) {
+  return (tester.widget<DecoratedBox>(_selectionDecoration()).decoration
+          as BoxDecoration)
+      .borderRadius!
+      .resolve(TextDirection.ltr);
 }
 
 double _relativeIndicatorCenterX(WidgetTester tester) {
@@ -167,6 +175,48 @@ void main() {
     } finally {
       semanticsHandle.dispose();
     }
+  });
+
+  testWidgets('selection fill morphs its bounded width and silhouette', (
+    tester,
+  ) async {
+    var selectedIndex = 0;
+    Widget group() => _selectionGroup(
+      selectedIndex: selectedIndex,
+      itemCount: 3,
+      onTap: (_) {},
+    );
+
+    await tester.pumpWidget(_host(group()));
+    final groupRect = tester.getRect(
+      find.byType(TonosExpressiveSelectionIndicator),
+    );
+    final selectedWidth = groupRect.width / 3 * 0.94;
+    final travelRadius = BorderRadius.circular(8);
+    expect(
+      tester.getSize(_selectionDecoration()).width,
+      closeTo(selectedWidth, 0.1),
+    );
+    expect(_selectionRadius(tester), BorderRadius.circular(20));
+
+    selectedIndex = 2;
+    await tester.pumpWidget(_host(group()));
+    await tester.pump(const Duration(milliseconds: 25));
+    final travelingWidth = tester.getSize(_selectionDecoration()).width;
+    expect(travelingWidth, lessThan(selectedWidth));
+    expect(travelingWidth, greaterThan(groupRect.width / 3 * 0.78));
+    expect(
+      _selectionRadius(tester).topLeft.x,
+      greaterThan(travelRadius.topLeft.x),
+    );
+    expect(_selectionRadius(tester).topLeft.x, lessThan(20));
+
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(_selectionDecoration()).width,
+      closeTo(selectedWidth, 0.1),
+    );
+    expect(_selectionRadius(tester), BorderRadius.circular(20));
   });
 
   testWidgets('selection snaps when count or ordered topology changes', (

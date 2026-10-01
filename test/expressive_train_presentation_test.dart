@@ -18,6 +18,7 @@ import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_data_visualization_tokens.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/theme/tokens/app_semantic_colors.dart';
 import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
@@ -46,7 +47,7 @@ void main() {
           curated.appThemeFamilyIdentity,
           AppThemeFamilyIdentity.expressivePreview,
         );
-        expect(curated.extensions.length, 15);
+        expect(curated.extensions.length, 16);
         expect(
           identical(
             curated,
@@ -63,6 +64,13 @@ void main() {
           curated.semanticColors.startWorkoutAction,
           curated.colorScheme.primary,
         );
+        final trainTokens = curated.extension<AppExpressiveTrainTokens>()!;
+        expect(
+          trainTokens.actionPrimary,
+          isNot(curated.semanticColors.startWorkoutAction),
+        );
+        expect(generated.extension<AppExpressiveTrainTokens>(), trainTokens);
+        expect(classic.extension<AppExpressiveTrainTokens>(), isNull);
         expect(curated.shapeTokens.card, BorderRadius.circular(18));
         expect(curated.shapeTokens.planCard, BorderRadius.circular(18));
         expect(
@@ -237,6 +245,146 @@ void main() {
     }
   });
 
+  testWidgets(
+    'Expressive tab arrival is brief and preserves tab scroll state',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await const TutorialStateStore().skipAll();
+      final repository = _ExpressiveTrainRepository();
+      final profile = _ExpressiveSelectedProfile(repository: repository);
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
+      );
+      addTearDown(profile.dispose);
+      addTearDown(session.dispose);
+      await session.ready;
+
+      await _pumpExpressiveTrain(tester, repository, profile, session);
+      await tester.pumpAndSettle();
+
+      final plansEntry = find.byKey(const ValueKey('expressive-plans-entry'));
+      await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+      await tester.pump();
+      final initialOffset = tester
+          .widget<SlideTransition>(plansEntry)
+          .position
+          .value
+          .dy;
+      expect(initialOffset, greaterThan(0));
+      expect(
+        tester
+            .getSemantics(
+              find.bySemanticsLabel(
+                AppLocalizations.of(tester.element(find.byType(TrainPage)))
+                    .trainPlansTab,
+              ),
+            )
+            .getSemanticsData()
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      final middleOffset = tester
+          .widget<SlideTransition>(plansEntry)
+          .position
+          .value
+          .dy;
+      expect(middleOffset, greaterThan(0));
+      expect(middleOffset, lessThan(initialOffset));
+      await tester.pumpAndSettle();
+
+      final plansList = find.byKey(AppTestKeys.trainPlansList);
+      final manualAdd = find.text(
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainManuallyAddPlan,
+      );
+      for (
+        var attempt = 0;
+        attempt < 8 && manualAdd.evaluate().isEmpty;
+        attempt++
+      ) {
+        await tester.drag(plansList, const Offset(0, -360));
+        await tester.pumpAndSettle();
+      }
+      expect(manualAdd, findsOneWidget);
+      await tester.ensureVisible(manualAdd);
+      await tester.pumpAndSettle();
+      final scrollable = find.descendant(
+        of: plansList,
+        matching: find.byType(Scrollable),
+    ).first;
+      final savedScrollPosition = tester
+          .state<ScrollableState>(scrollable)
+          .position
+          .pixels;
+
+      await tester.tap(find.byKey(AppTestKeys.trainOverviewTab));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+      await tester.pumpAndSettle();
+      expect(
+        tester.state<ScrollableState>(scrollable).position.pixels,
+        savedScrollPosition,
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('Expressive tab arrival snaps when reduced motion is enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await const TutorialStateStore().skipAll();
+    final repository = _ExpressiveTrainRepository();
+    final profile = _ExpressiveSelectedProfile(repository: repository);
+    final session = ActiveSession(
+      repository: repository,
+      retryDelay: (_) async {},
+    );
+    addTearDown(profile.dispose);
+    addTearDown(session.dispose);
+    await session.ready;
+
+    await _pumpExpressiveTrain(
+      tester,
+      repository,
+      profile,
+      session,
+      disableAnimations: true,
+    );
+    await tester.pumpAndSettle();
+
+    final plansEntry = find.byKey(const ValueKey('expressive-plans-entry'));
+    await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+    await tester.pump();
+    expect(
+      tester.widget<SlideTransition>(plansEntry).position.value,
+      Offset.zero,
+    );
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(
+      tester.widget<SlideTransition>(plansEntry).position.value,
+      Offset.zero,
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('Expressive horizontal action bar mirrors outer corners in RTL', (
     tester,
   ) async {
@@ -303,7 +451,16 @@ void main() {
     final optimizeLabel = find.text(strings.trainOptimize);
     final optimizeClip = find.ancestor(
       of: optimizeLabel,
-      matching: find.byType(ClipRRect),
+      matching: find.byWidgetPredicate((widget) {
+        if (widget is! ClipRRect || widget.borderRadius is! BorderRadius) {
+          return false;
+        }
+        final radius = widget.borderRadius as BorderRadius;
+        return radius.topLeft.x == 22 &&
+            radius.bottomLeft.x == 22 &&
+            radius.topRight.x == 0 &&
+            radius.bottomRight.x == 0;
+      }),
     );
     expect(optimizeClip, findsOneWidget);
     final optimizeRadius =
@@ -406,11 +563,47 @@ void main() {
               widget is Container &&
               widget.decoration is BoxDecoration &&
               (widget.decoration! as BoxDecoration).borderRadius ==
-                  Theme.of(tester.element(start)).shapeTokens.sheet,
+                  ExpressiveTrainShapes.primaryAction,
         ),
       );
       expect(tester.getSize(actionBar).width, lessThanOrEqualTo(288));
       expect(tester.getSize(actionBar).height, greaterThanOrEqualTo(120));
+
+      await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+      await tester.pumpAndSettle();
+      final plansList = find.byKey(AppTestKeys.trainPlansList);
+      for (final label in [
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainActivePlans,
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainArchivedPlans,
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainPremadePlans,
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainGenerateCustomPlans,
+        AppLocalizations.of(tester.element(find.byType(TrainPage)))
+            .trainManuallyAddPlan,
+      ]) {
+        final section = find.descendant(
+          of: plansList,
+          matching: find.text(label),
+        );
+        for (
+          var attempt = 0;
+          attempt < 8 && section.evaluate().isEmpty;
+          attempt++
+        ) {
+          await tester.drag(plansList, const Offset(0, -360));
+          await tester.pumpAndSettle();
+        }
+        expect(
+          section,
+          findsOneWidget,
+          reason: '$label is reachable by scrolling',
+        );
+        await tester.ensureVisible(section);
+        await tester.pumpAndSettle();
+      }
       expect(tester.takeException(), isNull);
     },
   );
@@ -746,8 +939,9 @@ Future<void> _pumpExpressiveTrain(
   WidgetTester tester,
   AppRepository repository,
   SelectedProfile profile,
-  ActiveSession session,
-) async {
+  ActiveSession session, {
+  bool disableAnimations = false,
+}) async {
   await tester.pumpWidget(
     MultiProvider(
       providers: [
@@ -762,7 +956,13 @@ Future<void> _pumpExpressiveTrain(
         theme: ExpressiveThemeDefinition.light(),
         localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const TrainPage(),
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(disableAnimations: disableAnimations),
+            child: const TrainPage(),
+          ),
+        ),
       ),
     ),
   );

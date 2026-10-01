@@ -20,6 +20,7 @@ import '../../utils/localized_formatters.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../theme/widgets/tonos_action.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_expressive_motion.dart';
@@ -108,7 +109,7 @@ class _TrainPageState extends State<TrainPage> {
       _lastProfileId = profileId;
       _presetsRefreshToken++;
     }
-    if (TickerMode.of(context)) {
+    if (TickerMode.valuesOf(context).enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueTrainTutorial();
       });
@@ -116,7 +117,11 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   void _queueTrainTutorial() {
-    if (!mounted || _trainTutorialQueued || !TickerMode.of(context)) return;
+    if (!mounted ||
+        _trainTutorialQueued ||
+        !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
     _trainTutorialQueued = true;
     unawaited(_showTrainTutorialIfNeeded());
   }
@@ -124,7 +129,7 @@ class _TrainPageState extends State<TrainPage> {
   Future<void> _showTrainTutorialIfNeeded() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 650));
-      if (!mounted || !TickerMode.of(context)) return;
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
 
       final completed = await _tutorialStore.isCompleted(TutorialIds.trainHome);
       if (completed || !mounted || _selectedTab != 0) return;
@@ -606,6 +611,9 @@ class _TrainPageState extends State<TrainPage> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -621,6 +629,7 @@ class _TrainPageState extends State<TrainPage> {
         final avatarForeground = context.semanticColors.onTrainProfileAvatar;
         return Scaffold(
           key: _scaffoldKey,
+          backgroundColor: expressiveTokens?.pageCanvas,
           endDrawer: ProfileDrawer(
             profiles: sel.profiles,
             selected: sel.currentProfile,
@@ -710,22 +719,30 @@ class _TrainPageState extends State<TrainPage> {
             child: IndexedStack(
               index: _selectedTab,
               children: [
-                _OverviewTab(
-                  refreshToken: _overviewRefreshToken,
-                  profileId: sel.currentProfile?.id,
-                  presetsRefreshToken: _presetsRefreshToken,
-                  weeklyOverviewKey: _weeklyOverviewTutorialKey,
-                  activePlansKey: _activePlansTutorialKey,
-                  onPresetsRefresh: () {
-                    setState(() => _presetsRefreshToken++);
-                  },
+                _TrainTabEntryMotion(
+                  active: _selectedTab == 0,
+                  motionKey: const ValueKey('expressive-overview-entry'),
+                  child: _OverviewTab(
+                    refreshToken: _overviewRefreshToken,
+                    profileId: sel.currentProfile?.id,
+                    presetsRefreshToken: _presetsRefreshToken,
+                    weeklyOverviewKey: _weeklyOverviewTutorialKey,
+                    activePlansKey: _activePlansTutorialKey,
+                    onPresetsRefresh: () {
+                      setState(() => _presetsRefreshToken++);
+                    },
+                  ),
                 ),
-                _PlansTab(
-                  profileId: sel.currentProfile?.id,
-                  refreshToken: _presetsRefreshToken,
-                  onRefresh: () => setState(() => _presetsRefreshToken++),
-                  onGeneratePreset: () => _openCustomPresetGenerator(sel),
-                  onCreatePreset: () => _createManualPreset(sel),
+                _TrainTabEntryMotion(
+                  active: _selectedTab == 1,
+                  motionKey: const ValueKey('expressive-plans-entry'),
+                  child: _PlansTab(
+                    profileId: sel.currentProfile?.id,
+                    refreshToken: _presetsRefreshToken,
+                    onRefresh: () => setState(() => _presetsRefreshToken++),
+                    onGeneratePreset: () => _openCustomPresetGenerator(sel),
+                    onCreatePreset: () => _createManualPreset(sel),
+                  ),
                 ),
               ],
             ),
@@ -750,6 +767,96 @@ class _TrainPageState extends State<TrainPage> {
     final trimmed = name?.trim();
     if (trimmed == null || trimmed.isEmpty) return 'P';
     return trimmed.substring(0, 1).toUpperCase();
+  }
+}
+
+/// Adds a brief Expressive arrival to the already-mounted Train tab content.
+///
+/// The selected tab changes immediately and both tab subtrees remain mounted,
+/// so scroll position and in-progress UI state survive tab switches. Only the
+/// active subtree gets a small paint-time settle; reduced motion snaps it to
+/// its resting pose.
+class _TrainTabEntryMotion extends StatefulWidget {
+  const _TrainTabEntryMotion({
+    required this.active,
+    required this.motionKey,
+    required this.child,
+  });
+
+  final bool active;
+  final Key motionKey;
+  final Widget child;
+
+  @override
+  State<_TrainTabEntryMotion> createState() => _TrainTabEntryMotionState();
+}
+
+class _TrainTabEntryMotionState extends State<_TrainTabEntryMotion>
+    with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 200);
+  static const _entryOffset = Offset(0, 0.018);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _duration,
+    value: widget.active ? 0 : 1,
+  );
+  late final Animation<Offset> _position = Tween<Offset>(
+    begin: _entryOffset,
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  late final Animation<double> _opacity = Tween<double>(
+    begin: 0.9,
+    end: 1,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  bool _dependenciesInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final canAnimate = _canAnimate(context);
+    if (!_dependenciesInitialized) {
+      _dependenciesInitialized = true;
+      if (widget.active && canAnimate) {
+        _controller.forward();
+      } else {
+        _controller.value = 1;
+      }
+    } else if (!canAnimate) {
+      _controller.value = 1;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _TrainTabEntryMotion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.active && widget.active) {
+      if (_canAnimate(context)) {
+        _controller.forward(from: 0);
+      } else {
+        _controller.value = 1;
+      }
+    }
+  }
+
+  static bool _canAnimate(BuildContext context) =>
+      TickerMode.valuesOf(context).enabled &&
+      !MediaQuery.disableAnimationsOf(context);
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _opacity,
+    child: SlideTransition(
+      key: widget.motionKey,
+      position: _position,
+      child: widget.child,
+    ),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
 
@@ -887,12 +994,16 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   Expanded(
                     child: Text(
                       strings.trainActivePlans,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: usesExpressiveRecipe
-                            ? FontWeight.w600
-                            : FontWeight.w800,
-                        color: usesInkRecipe ? surfaceInk : null,
-                      ),
+                      style:
+                          (usesExpressiveRecipe
+                                  ? theme.textTheme.headlineSmall
+                                  : theme.textTheme.titleLarge)
+                              ?.copyWith(
+                                fontWeight: usesExpressiveRecipe
+                                    ? FontWeight.w800
+                                    : FontWeight.w800,
+                                color: usesInkRecipe ? surfaceInk : null,
+                              ),
                     ),
                   ),
                   IconButton(
@@ -942,11 +1053,19 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
         },
       ),
     );
-    if (usesInkRecipe || usesExpressiveRecipe) {
+    if (usesExpressiveRecipe) {
+      final expressiveTokens = Theme.of(context)
+          .extension<AppExpressiveTrainTokens>()!;
+      return _ExpressiveTrainSurface(
+        color: expressiveTokens.activePlansSurface,
+        borderRadius: ExpressiveTrainShapes.activePlans,
+        padding: const EdgeInsets.all(18),
+        child: content,
+      );
+    }
+    if (usesInkRecipe) {
       return TonosSurface(
-        variant: usesExpressiveRecipe
-            ? TonosSurfaceVariant.card
-            : TonosSurfaceVariant.panelRaised,
+        variant: TonosSurfaceVariant.panelRaised,
         color: surfaces.planGroup,
         padding: const EdgeInsets.all(16),
         child: content,
@@ -1061,6 +1180,7 @@ class _PlansTabState extends State<_PlansTab> {
             _PresetSectionCard(
               title: strings.trainActivePlans,
               onEdit: _openPlanManagement,
+              isArchived: false,
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
@@ -1079,6 +1199,7 @@ class _PlansTabState extends State<_PlansTab> {
             _PresetSectionCard(
               title: strings.trainArchivedPlans,
               onEdit: _openPlanManagement,
+              isArchived: true,
               child: PresetsLoaded(
                 scale: 0.96,
                 refreshToken: widget.refreshToken,
@@ -1096,18 +1217,25 @@ class _PlansTabState extends State<_PlansTab> {
             const SizedBox(height: 16),
             _PremadePlansCard(onOpen: _openPremadePlans),
             const SizedBox(height: 16),
-            GenericBar(
-              label: strings.trainGenerateCustomPlans,
-              color: dataVisualization.tertiarySeries,
-              onTap: widget.onGeneratePreset,
-            ),
-            const SizedBox(height: 8),
-            GenericBar(
-              key: AppTestKeys.trainCreateManualPlan,
-              label: strings.trainManuallyAddPlan,
-              color: dataVisualization.tertiarySeries,
-              onTap: widget.onCreatePreset,
-            ),
+            if (context.usesExpressivePresentation)
+              _ExpressivePlanActions(
+                onGenerate: widget.onGeneratePreset,
+                onCreateManual: widget.onCreatePreset,
+              )
+            else ...[
+              GenericBar(
+                label: strings.trainGenerateCustomPlans,
+                color: dataVisualization.tertiarySeries,
+                onTap: widget.onGeneratePreset,
+              ),
+              const SizedBox(height: 8),
+              GenericBar(
+                key: AppTestKeys.trainCreateManualPlan,
+                label: strings.trainManuallyAddPlan,
+                color: dataVisualization.tertiarySeries,
+                onTap: widget.onCreatePreset,
+              ),
+            ],
           ],
         );
       },
@@ -1118,11 +1246,13 @@ class _PlansTabState extends State<_PlansTab> {
 class _PresetSectionCard extends StatelessWidget {
   final String title;
   final VoidCallback? onEdit;
+  final bool isArchived;
   final Widget child;
 
   const _PresetSectionCard({
     required this.title,
     this.onEdit,
+    this.isArchived = false,
     required this.child,
   });
 
@@ -1133,7 +1263,20 @@ class _PresetSectionCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveMotionEnabled =
+        usesExpressiveRecipe && _expressiveMotionEnabled(context);
     final surfaceInk = context.cs.onPrimaryContainer;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
+    final sectionContent = expressiveMotionEnabled
+        ? AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: child,
+          )
+        : child;
     final content = _withPanelInkTheme(
       context: context,
       usesInkRecipe: usesInkRecipe,
@@ -1146,12 +1289,18 @@ class _PresetSectionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: usesExpressiveRecipe
-                        ? FontWeight.w600
-                        : FontWeight.w800,
-                    color: usesInkRecipe ? surfaceInk : null,
-                  ),
+                  style:
+                      (usesExpressiveRecipe && !isArchived
+                              ? theme.textTheme.headlineSmall
+                              : theme.textTheme.titleLarge)
+                          ?.copyWith(
+                            fontWeight: usesExpressiveRecipe
+                                ? (isArchived
+                                      ? FontWeight.w600
+                                      : FontWeight.w800)
+                                : FontWeight.w800,
+                            color: usesInkRecipe ? surfaceInk : null,
+                          ),
                 ),
               ),
               if (onEdit != null)
@@ -1163,15 +1312,25 @@ class _PresetSectionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          child,
+          sectionContent,
         ],
       ),
     );
-    if (usesInkRecipe || usesExpressiveRecipe) {
+    if (usesExpressiveRecipe) {
+      return _ExpressiveTrainSurface(
+        color: isArchived
+            ? expressiveTokens!.archivedPlansSurface
+            : expressiveTokens!.activePlansSurface,
+        borderRadius: isArchived
+            ? ExpressiveTrainShapes.section
+            : ExpressiveTrainShapes.activePlans,
+        padding: const EdgeInsets.all(18),
+        child: content,
+      );
+    }
+    if (usesInkRecipe) {
       return TonosSurface(
-        variant: usesExpressiveRecipe
-            ? TonosSurfaceVariant.card
-            : TonosSurfaceVariant.panelRaised,
+        variant: TonosSurfaceVariant.panelRaised,
         color: surfaces.planGroup,
         padding: const EdgeInsets.all(16),
         child: content,
@@ -1196,6 +1355,9 @@ class _PremadePlansCard extends StatelessWidget {
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
     final surfaceInk = context.cs.onPrimaryContainer;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
     final content = _withPanelInkTheme(
       context: context,
       usesInkRecipe: usesInkRecipe,
@@ -1207,19 +1369,25 @@ class _PremadePlansCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.auto_stories_outlined,
-                color: theme.colorScheme.primary,
-                size: 32,
+                color:
+                    expressiveTokens?.actionPrimary ??
+                    theme.colorScheme.primary,
+                size: usesExpressiveRecipe ? 40 : 32,
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   strings.trainPremadePlans,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: usesExpressiveRecipe
-                        ? FontWeight.w600
-                        : FontWeight.w800,
-                    color: usesInkRecipe ? surfaceInk : null,
-                  ),
+                  style:
+                      (usesExpressiveRecipe
+                              ? theme.textTheme.headlineSmall
+                              : theme.textTheme.titleLarge)
+                          ?.copyWith(
+                            fontWeight: usesExpressiveRecipe
+                                ? FontWeight.w700
+                                : FontWeight.w800,
+                            color: usesInkRecipe ? surfaceInk : null,
+                          ),
                 ),
               ),
             ],
@@ -1227,16 +1395,28 @@ class _PremadePlansCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             strings.trainPremadeDescription(premadeTrainingPlans.length),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: usesInkRecipe
-                  ? surfaceInk
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
+            style:
+                (usesExpressiveRecipe
+                        ? theme.textTheme.bodyLarge
+                        : theme.textTheme.bodyMedium)
+                    ?.copyWith(
+                      color: usesInkRecipe
+                          ? surfaceInk
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: usesInkRecipe
+            child: usesExpressiveRecipe
+                ? _ExpressivePlanAction(
+                    label: strings.trainBrowsePremadePlans,
+                    icon: Icons.arrow_forward,
+                    color: expressiveTokens!.actionPrimary,
+                    foreground: expressiveTokens.actionPrimaryForeground,
+                    onTap: onOpen,
+                  )
+                : usesInkRecipe
                 ? TonosAction(
                     variant: TonosActionVariant.primary,
                     label: strings.trainBrowsePremadePlans,
@@ -1253,14 +1433,18 @@ class _PremadePlansCard extends StatelessWidget {
         ],
       ),
     );
-    if (usesInkRecipe || usesExpressiveRecipe) {
+    if (usesExpressiveRecipe) {
+      return _ExpressiveTrainSurface(
+        color: expressiveTokens!.librarySurface,
+        borderRadius: ExpressiveTrainShapes.section,
+        padding: const EdgeInsets.all(20),
+        child: content,
+      );
+    }
+    if (usesInkRecipe) {
       return TonosSurface(
-        variant: usesExpressiveRecipe
-            ? TonosSurfaceVariant.card
-            : TonosSurfaceVariant.panelRaised,
-        color: usesExpressiveRecipe
-            ? surfaces.planGroup
-            : surfaces.optimizedAction,
+        variant: TonosSurfaceVariant.panelRaised,
+        color: surfaces.optimizedAction,
         padding: const EdgeInsets.all(16),
         child: content,
       );
@@ -1295,6 +1479,147 @@ Widget _withPanelInkTheme({
   );
 }
 
+bool _expressiveMotionEnabled(BuildContext context) =>
+    TickerMode.valuesOf(context).enabled &&
+    !MediaQuery.disableAnimationsOf(context);
+
+Duration _expressiveMotionDuration(BuildContext context) =>
+    _expressiveMotionEnabled(context)
+    ? const Duration(milliseconds: 220)
+    : Duration.zero;
+
+class _ExpressiveTrainSurface extends StatelessWidget {
+  const _ExpressiveTrainSurface({
+    required this.color,
+    required this.borderRadius,
+    required this.padding,
+    required this.child,
+  });
+
+  final Color color;
+  final BorderRadius borderRadius;
+  final EdgeInsetsGeometry padding;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: _expressiveMotionDuration(context),
+      curve: Curves.easeOutCubic,
+      padding: padding,
+      decoration: ShapeDecoration(
+        color: color,
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _ExpressivePlanActions extends StatelessWidget {
+  const _ExpressivePlanActions({
+    required this.onGenerate,
+    required this.onCreateManual,
+  });
+
+  final VoidCallback onGenerate;
+  final VoidCallback onCreateManual;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final tokens = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+    return _ExpressiveTrainSurface(
+      color: tokens.creationSurface,
+      borderRadius: ExpressiveTrainShapes.section,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          _ExpressivePlanAction(
+            label: strings.trainGenerateCustomPlans,
+            icon: Icons.auto_awesome_outlined,
+            color: tokens.actionPrimary,
+            foreground: tokens.actionPrimaryForeground,
+            onTap: onGenerate,
+          ),
+          const SizedBox(height: 10),
+          _ExpressivePlanAction(
+            key: AppTestKeys.trainCreateManualPlan,
+            label: strings.trainManuallyAddPlan,
+            icon: Icons.edit_note_outlined,
+            color: tokens.actionSecondary,
+            foreground: tokens.actionSecondaryForeground,
+            onTap: onCreateManual,
+            secondary: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpressivePlanAction extends StatelessWidget {
+  const _ExpressivePlanAction({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.foreground,
+    required this.onTap,
+    this.secondary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color foreground;
+  final VoidCallback onTap;
+  final bool secondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = secondary
+        ? ExpressiveTrainShapes.focusInset
+        : ExpressiveTrainShapes.primaryAction;
+    final shape = RoundedRectangleBorder(borderRadius: radius);
+    return TonosExpressivePressResponse(
+      enabled: true,
+      borderRadius: radius,
+      pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
+      child: Material(
+        color: color,
+        shape: shape,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: shape,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(icon, color: foreground),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward, color: foreground),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SplitWorkoutBar extends StatelessWidget {
   const _SplitWorkoutBar({
     required this.onStartWorkout,
@@ -1319,18 +1644,27 @@ class _SplitWorkoutBar extends StatelessWidget {
     final usesExpressiveRecipe = context.usesExpressivePresentation;
     final textTheme = Theme.of(context).textTheme;
     final strings = AppLocalizations.of(context);
-    final startWorkoutAction = semantic.startWorkoutAction;
-    final onStartWorkoutAction = semantic.onStartWorkoutAction;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
+    final startWorkoutAction = usesExpressiveRecipe
+        ? expressiveTokens!.actionPrimary
+        : semantic.startWorkoutAction;
+    final onStartWorkoutAction = usesExpressiveRecipe
+        ? expressiveTokens!.actionPrimaryForeground
+        : semantic.onStartWorkoutAction;
     final optimizeAction = usesInkRecipe
         ? surfaces.optimizedAction
         : usesExpressiveRecipe
-        ? colorScheme.secondaryContainer
+        ? expressiveTokens!.actionSecondary
         : colorScheme.primaryContainer;
-    final onOptimizeAction = usesInkRecipe || usesExpressiveRecipe
+    final onOptimizeAction = usesExpressiveRecipe
+        ? expressiveTokens!.actionSecondaryForeground
+        : usesInkRecipe
         ? colorScheme.onSecondaryContainer
         : colorScheme.onPrimaryContainer;
     final optimizeIconColor = usesExpressiveRecipe
-        ? colorScheme.onSurfaceVariant
+        ? expressiveTokens!.actionSecondaryForeground
         : colorScheme.onPrimaryContainer;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final textScaler = MediaQuery.textScalerOf(context);
@@ -1597,7 +1931,9 @@ class _SplitWorkoutBar extends StatelessWidget {
       minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: shapes.sheet,
+          borderRadius: usesExpressiveRecipe
+              ? ExpressiveTrainShapes.primaryAction
+              : shapes.sheet,
           border: usesInkRecipe
               ? Border.all(
                   color: surfaces.subtleOutline,
@@ -1616,11 +1952,14 @@ class _SplitWorkoutBar extends StatelessWidget {
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: shapes.sheet,
+          borderRadius: usesExpressiveRecipe
+              ? ExpressiveTrainShapes.primaryAction
+              : shapes.sheet,
           clipBehavior: usesExpressiveRecipe ? Clip.none : Clip.antiAlias,
           elevation: effects.sheetElevation,
           child: usesExpressiveRecipe
-              ? ClipRect(
+              ? ClipRRect(
+                  borderRadius: ExpressiveTrainShapes.primaryAction,
                   child: SizedBox(
                     height: useVerticalLayout ? actionBarHeight : 64,
                     child: actionContent,

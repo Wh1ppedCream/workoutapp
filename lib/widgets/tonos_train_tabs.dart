@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 
 /// Shared Overview/Plans selector used by the Train route and its preview.
@@ -164,9 +165,20 @@ class TonosTrainTabs extends StatelessWidget {
   }
 
   Widget _buildExpressive(BuildContext context) {
-    final scheme = context.cs;
-    final shapes = context.shapeTokens;
-    final surfaces = context.surfaceTokens;
+    final tokens = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+    final direction = Directionality.of(context);
+    final trackShape = _mirrorBorderRadius(
+      ExpressiveTrainShapes.selector,
+      direction,
+    );
+    final selectedShape = _mirrorBorderRadius(
+      ExpressiveTrainShapes.selectedSelector,
+      direction,
+    );
+    final travelShape = _mirrorBorderRadius(
+      ExpressiveTrainShapes.selector,
+      direction,
+    );
     final selected = selectedIndex.clamp(0, 1).toInt();
     return Container(
       key: const ValueKey('tonos-train-tabs-frame'),
@@ -178,14 +190,17 @@ class TonosTrainTabs extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 320),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: surfaces.panel,
-        borderRadius: shapes.trainTab,
+        color: tokens.selectorTrack,
+        borderRadius: trackShape,
       ),
       child: TonosExpressiveSelectionIndicator(
         selectedIndex: selected,
         itemCount: 2,
-        color: scheme.secondaryContainer,
-        borderRadius: shapes.trainTabButton,
+        color: tokens.selectorActive,
+        borderRadius: selectedShape,
+        travelBorderRadius: travelShape,
+        travelWidthFraction: 0.78,
+        selectedWidthFraction: 0.94,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -297,6 +312,9 @@ class _TonosTrainTabButton extends StatelessWidget {
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
     final textTheme = Theme.of(context).textTheme;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     final buttonRadius = usesInkRecipe || usesExpressiveRecipe
         ? shapes.trainTabButton
         : shapes.pill;
@@ -346,7 +364,7 @@ class _TonosTrainTabButton extends StatelessWidget {
                               : FontWeight.w700,
                           color: selected
                               ? usesExpressiveRecipe
-                                    ? colorScheme.onSecondaryContainer
+                                    ? expressiveTokens!.selectorActiveForeground
                                     : colorScheme.onPrimaryContainer
                               : usesInkRecipe
                               ? colorScheme.onSecondaryContainer
@@ -388,4 +406,14 @@ bool _hasVisibleShadow(BoxShadow shadow) {
       (shadow.blurRadius > 0 ||
           shadow.spreadRadius != 0 ||
           shadow.offset != Offset.zero);
+}
+
+BorderRadius _mirrorBorderRadius(BorderRadius radius, TextDirection direction) {
+  if (direction != TextDirection.rtl) return radius;
+  return BorderRadius.only(
+    topLeft: radius.topRight,
+    topRight: radius.topLeft,
+    bottomLeft: radius.bottomRight,
+    bottomRight: radius.bottomLeft,
+  );
 }

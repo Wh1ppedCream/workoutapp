@@ -8,9 +8,136 @@ import 'package:env_test/providers/nav_bar_config.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/widgets/tonos_bottom_navigation_bar.dart';
 
 void main() {
+  testWidgets(
+    'Expressive navigation uses its chromatic surface and static selected shape',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const items = <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.fitness_center),
+          label: 'Train',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalog'),
+        BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Logbook'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.show_chart),
+          label: 'Progress',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      ];
+      final callbacks = <int>[];
+      var currentIndex = 0;
+      late StateSetter setCurrentIndex;
+      final semanticsHandle = tester.ensureSemantics();
+      try {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            home: MediaQuery(
+              data: const MediaQueryData(
+                size: Size(360, 800),
+                disableAnimations: true,
+              ),
+              child: StatefulBuilder(
+                builder: (context, update) {
+                  setCurrentIndex = update;
+                  return Scaffold(
+                    bottomNavigationBar: TonosBottomNavigationBar(
+                      items: items,
+                      currentIndex: currentIndex,
+                      onTap: callbacks.add,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        setCurrentIndex(() => currentIndex = 4);
+        await tester.pump();
+
+        final navigation = find.byType(TonosBottomNavigationBar);
+        final frame = tester.widget<DecoratedBox>(
+          find.byKey(const ValueKey('tonos-expressive-navigation-frame')),
+        );
+        final frameDecoration = frame.decoration as BoxDecoration;
+        expect(
+          frameDecoration.color,
+          AppExpressiveTrainTokens.light.navigationSurface,
+        );
+        expect(frameDecoration.borderRadius, ExpressiveTrainShapes.navigation);
+
+        final selectedFill = find.byWidgetPredicate((widget) {
+          if (widget is! DecoratedBox || widget.decoration is! BoxDecoration) {
+            return false;
+          }
+          return (widget.decoration as BoxDecoration).color ==
+              AppExpressiveTrainTokens.light.navigationSelected;
+        });
+        expect(selectedFill, findsOneWidget);
+        final fillDecoration =
+            tester.widget<DecoratedBox>(selectedFill).decoration
+                as BoxDecoration;
+        expect(
+          fillDecoration.borderRadius,
+          ExpressiveTrainShapes.selectedSelector,
+        );
+        final profile = find.bySemanticsLabel('Profile');
+        expect(
+          tester
+              .getSemantics(profile)
+              .getSemanticsData()
+              .flagsCollection
+              .isSelected,
+          Tristate.isTrue,
+        );
+        expect(
+          tester
+              .getSemantics(profile)
+              .getSemanticsData()
+              .hasAction(SemanticsAction.tap),
+          isTrue,
+        );
+        expect(
+          tester
+              .getSize(
+                find
+                    .ancestor(
+                      of: find.text('Profile'),
+                      matching: find.byType(InkWell),
+                    )
+                    .first,
+              )
+              .width,
+          greaterThanOrEqualTo(48),
+        );
+        final destination = find
+            .ancestor(of: find.text('Profile'), matching: find.byType(InkWell))
+            .first;
+        expect(
+          tester.getSize(selectedFill).width,
+          closeTo(tester.getSize(destination).width * 0.94, 0.1),
+        );
+
+        await tester.tap(find.text('Profile'));
+        expect(callbacks, [4]);
+        expect(tester.getSize(navigation).width, closeTo(360, 0.1));
+        expect(tester.takeException(), isNull);
+      } finally {
+        semanticsHandle.dispose();
+      }
+    },
+  );
+
   testWidgets('Expressive keeps the ordinary bottom-bar height at 1x', (
     tester,
   ) async {
@@ -50,6 +177,47 @@ void main() {
     expect(expressiveHeight, closeTo(classicHeight, 0.1));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'Expressive selected navigation label contrasts with its surface',
+    (tester) async {
+      const items = <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+          icon: Icon(Icons.fitness_center),
+          label: 'Train',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Catalog'),
+      ];
+
+      for (final brightness in Brightness.values) {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final tokens = brightness == Brightness.light
+            ? AppExpressiveTrainTokens.light
+            : AppExpressiveTrainTokens.dark;
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              bottomNavigationBar: TonosBottomNavigationBar(
+                items: items,
+                currentIndex: 0,
+                onTap: (_) {},
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final selectedLabel = tester.widget<Text>(find.text('Train'));
+        expect(selectedLabel.style?.color, tokens.navigationLabel);
+        expect(selectedLabel.style?.fontWeight, FontWeight.w700);
+      }
+
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'Expressive default five destinations keep accessible bounds at 2x',
@@ -129,10 +297,11 @@ void main() {
               .ancestor(of: labelFinder, matching: find.byType(InkWell))
               .first;
           final destinationRect = tester.getRect(destination);
-          final visibleHitWidth = (math.min(destinationRect.right, width) -
-                  math.max(destinationRect.left, 0))
-              .clamp(0.0, width)
-              .toDouble();
+          final visibleHitWidth =
+              (math.min(destinationRect.right, width) -
+                      math.max(destinationRect.left, 0))
+                  .clamp(0.0, width)
+                  .toDouble();
           expect(destinationRect.width, greaterThanOrEqualTo(48));
           expect(destinationRect.height, greaterThanOrEqualTo(48));
           expect(visibleHitWidth, greaterThanOrEqualTo(48));

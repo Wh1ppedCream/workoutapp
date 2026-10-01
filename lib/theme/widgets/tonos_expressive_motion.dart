@@ -1,8 +1,11 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
 
-const double _indicatorSlotWidthFraction = 0.86;
 const double _indicatorSlotHeightFraction = 0.82;
+const double _indicatorTravelWidthFraction = 0.78;
+const double _indicatorSelectedWidthFraction = 0.94;
 const double _maximumIndicatorOvershootInSlots = 0.06;
 const double _maximumPressShapeOvershoot = 0.08;
 
@@ -32,7 +35,11 @@ class TonosExpressiveSelectionIndicator extends StatefulWidget {
     required this.borderRadius,
     required this.child,
     this.topologyKey,
-  });
+    this.travelBorderRadius,
+    this.travelWidthFraction = _indicatorTravelWidthFraction,
+    this.selectedWidthFraction = _indicatorSelectedWidthFraction,
+  }) : assert(travelWidthFraction >= 0 && travelWidthFraction < 1),
+       assert(selectedWidthFraction >= 0 && selectedWidthFraction < 1);
 
   final int selectedIndex;
   final int itemCount;
@@ -40,6 +47,9 @@ class TonosExpressiveSelectionIndicator extends StatefulWidget {
   final BorderRadius borderRadius;
   final Widget child;
   final Object? topologyKey;
+  final BorderRadius? travelBorderRadius;
+  final double travelWidthFraction;
+  final double selectedWidthFraction;
 
   @override
   State<TonosExpressiveSelectionIndicator> createState() =>
@@ -171,11 +181,26 @@ class _TonosExpressiveSelectionIndicatorState
   Alignment _indicatorAlignment(double logicalIndex, int itemCount) {
     final isRtl = _textDirection == TextDirection.rtl;
     final physicalIndex = isRtl ? itemCount - 1 - logicalIndex : logicalIndex;
-    final widthFactor = _indicatorSlotWidthFraction / itemCount;
+    final widthFactor = _currentWidthFraction() / itemCount;
     final centerFraction = (physicalIndex + 0.5) / itemCount;
     final alignmentX =
         2 * (centerFraction - widthFactor / 2) / (1 - widthFactor) - 1;
     return Alignment(alignmentX, 0);
+  }
+
+  double _selectionMorphProgress() {
+    final nearestSlot = _controller.value.roundToDouble();
+    return (1 - (_controller.value - nearestSlot).abs().clamp(0.0, 1.0))
+        .toDouble();
+  }
+
+  double _currentWidthFraction() {
+    final morph = _selectionMorphProgress();
+    return lerpDouble(
+      widget.travelWidthFraction,
+      widget.selectedWidthFraction,
+      morph,
+    )!.clamp(0.0, 1.0);
   }
 
   @override
@@ -193,18 +218,25 @@ class _TonosExpressiveSelectionIndicatorState
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, _) {
+                  final morph = _selectionMorphProgress();
+                  final widthFactor = _currentWidthFraction();
+                  final borderRadius = BorderRadius.lerp(
+                    widget.travelBorderRadius ?? widget.borderRadius,
+                    widget.borderRadius,
+                    morph,
+                  )!;
                   return Align(
                     alignment: _indicatorAlignment(
                       _boundedVisualIndex(itemCount),
                       itemCount,
                     ),
                     child: FractionallySizedBox(
-                      widthFactor: _indicatorSlotWidthFraction / itemCount,
+                      widthFactor: widthFactor / itemCount,
                       heightFactor: _indicatorSlotHeightFraction,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: widget.color,
-                          borderRadius: widget.borderRadius,
+                          borderRadius: borderRadius,
                         ),
                         child: const SizedBox.expand(),
                       ),

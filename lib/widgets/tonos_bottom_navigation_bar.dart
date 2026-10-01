@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 
 /// Shared production navigation presentation used by the app and Theme Lab.
@@ -135,7 +136,7 @@ class _ExpressiveBottomNavigationBarState
     if (widget.items.isEmpty) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
     final textScaler = MediaQuery.textScalerOf(context);
     final textDirection = Directionality.of(context);
     final locale = Localizations.maybeLocaleOf(context);
@@ -211,9 +212,12 @@ class _ExpressiveBottomNavigationBarState
             destinationWidth: destinationWidth,
             contentWidth: contentWidth,
             barHeight: barHeight,
-            selectedIconColor: scheme.onSecondaryContainer,
-            selectedLabelColor: scheme.onSurface,
-            unselectedColor: scheme.onSurfaceVariant,
+            selectedIconColor: tokens.navigationSelectedForeground,
+            // The selected fill sits behind the icon row only. Keep the label
+            // on the navigation surface, where the general foreground is the
+            // contrasting role in both light and dark palettes.
+            selectedLabelColor: tokens.navigationLabel,
+            unselectedColor: tokens.navigationLabel,
             labelStyle: labelStyle,
           );
 
@@ -232,8 +236,15 @@ class _ExpressiveBottomNavigationBarState
                 )
               : destinations;
 
-          return Material(
-            color: scheme.surfaceContainerLow,
+          return DecoratedBox(
+            key: const ValueKey('tonos-expressive-navigation-frame'),
+            decoration: BoxDecoration(
+              color: tokens.navigationSurface,
+              borderRadius: _mirrorBorderRadius(
+                ExpressiveTrainShapes.navigation,
+                textDirection,
+              ),
+            ),
             child: SizedBox(height: barHeight, child: navigationContent),
           );
         },
@@ -252,7 +263,8 @@ class _ExpressiveBottomNavigationBarState
     required TextStyle labelStyle,
   }) {
     final theme = Theme.of(context);
-    final shapes = context.shapeTokens;
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+    final direction = Directionality.of(context);
     final topologyKey = _navigationTopology(widget.items);
     final placeholders = Row(
       children: [
@@ -274,9 +286,18 @@ class _ExpressiveBottomNavigationBarState
             child: TonosExpressiveSelectionIndicator(
               selectedIndex: _selectedIndex,
               itemCount: widget.items.length,
-              color: theme.colorScheme.secondaryContainer,
-              borderRadius: shapes.trainTabButton,
+              color: tokens.navigationSelected,
+              borderRadius: _mirrorBorderRadius(
+                ExpressiveTrainShapes.selectedSelector,
+                direction,
+              ),
               topologyKey: topologyKey,
+              travelBorderRadius: _mirrorBorderRadius(
+                ExpressiveTrainShapes.selector,
+                direction,
+              ),
+              travelWidthFraction: 0.78,
+              selectedWidthFraction: 0.94,
               child: placeholders,
             ),
           ),
@@ -293,7 +314,10 @@ class _ExpressiveBottomNavigationBarState
                   selectedLabelColor: selectedLabelColor,
                   unselectedColor: unselectedColor,
                   labelStyle: labelStyle,
-                  cornerRadius: shapes.trainTabButton,
+                  cornerRadius: _mirrorBorderRadius(
+                    ExpressiveTrainShapes.selectedSelector,
+                    direction,
+                  ),
                 ),
             ],
           ),
@@ -348,7 +372,10 @@ class _ExpressiveBottomNavigationBarState
                       height: 32,
                       child: Center(
                         child: IconTheme.merge(
-                          data: IconThemeData(color: iconColor, size: 24),
+                          data: IconThemeData(
+                            color: iconColor,
+                            size: selected ? 26 : 24,
+                          ),
                           child: icon ?? item.icon,
                         ),
                       ),
@@ -361,7 +388,7 @@ class _ExpressiveBottomNavigationBarState
                         style: labelStyle.copyWith(
                           color: labelColor,
                           fontWeight: selected
-                              ? FontWeight.w600
+                              ? FontWeight.w700
                               : FontWeight.w500,
                         ),
                       ),
@@ -595,4 +622,14 @@ bool _hasVisibleShadow(BoxShadow shadow) {
       (shadow.blurRadius > 0 ||
           shadow.spreadRadius != 0 ||
           shadow.offset != Offset.zero);
+}
+
+BorderRadius _mirrorBorderRadius(BorderRadius radius, TextDirection direction) {
+  if (direction != TextDirection.rtl) return radius;
+  return BorderRadius.only(
+    topLeft: radius.topRight,
+    topRight: radius.topLeft,
+    bottomLeft: radius.bottomRight,
+    bottomRight: radius.bottomLeft,
+  );
 }
