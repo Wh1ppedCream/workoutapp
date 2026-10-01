@@ -391,8 +391,8 @@ class _TonosTrainTabButton extends StatelessWidget {
         enabled: true,
         borderRadius: buttonRadius,
         pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
-        pressedScale: 0.93,
-        pressedOffset: const Offset(0, 1),
+        pressedScale: TonosExpressiveMotionTiers.supportingScale,
+        pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
         child: button,
       );
     }

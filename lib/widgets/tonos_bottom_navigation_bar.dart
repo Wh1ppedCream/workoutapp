@@ -381,8 +381,8 @@ class _ExpressiveBottomNavigationBarState
         enabled: true,
         borderRadius: cornerRadius,
         pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
-        pressedScale: 0.92,
-        pressedOffset: const Offset(0, 1),
+        pressedScale: TonosExpressiveMotionTiers.supportingScale,
+        pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
         child: destinationContent,
       );
     }

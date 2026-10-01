@@ -116,17 +116,13 @@ class PresetBar extends StatelessWidget {
     required AppLocalizations strings,
   }) {
     final theme = Theme.of(context);
-    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
     final isActive = isActivePlan ?? true;
     final neutralContainer = theme.colorScheme.surfaceContainerLow;
     final cardFill = Color.alphaBlend(
       accent.withValues(alpha: isActive ? 0.16 : 0.13),
       neutralContainer,
     );
-    final menuFill = Color.alphaBlend(
-      accent.withValues(alpha: 0.20),
-      neutralContainer,
-    );
+    final menuFill = theme.colorScheme.surfaceContainerHigh;
     final textColor = theme.colorScheme.onSurface;
     final scaleFactor = scale;
     final radius = index.isEven
@@ -135,6 +131,12 @@ class PresetBar extends StatelessWidget {
     final identityRadius = index.isEven
         ? ExpressiveTrainShapes.planIdentityBlock
         : ExpressiveTrainShapes.planIdentityBlockAlternate;
+    final inset = 5 * scaleFactor;
+    final containedIdentityRadius = _containedRadius(
+      preferred: identityRadius,
+      outer: radius,
+      inset: inset,
+    );
     final rowShape = RoundedRectangleBorder(borderRadius: radius);
     final effects = context.effectTokens;
     final shadows = effects.cardShadowBlur > 0 && effects.cardShadow.a > 0
@@ -149,13 +151,15 @@ class PresetBar extends StatelessWidget {
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
 
+    final heatmapBackground = context.surfaceTokens.mediaPlaceholder;
     final card = TonosExpressivePressResponse(
       enabled: expressiveMotionEnabled,
       borderRadius: radius,
       pressedBorderRadius: ExpressiveTrainShapes.planRowPressed,
-      pressedScale: 0.965,
-      pressedOffset: const Offset(0, 1.5),
+      pressedScale: TonosExpressiveMotionTiers.supportingScale,
+      pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
       child: Material(
+        key: ValueKey<String>('expressive-plan-card-$presetId'),
         color: cardFill,
         shape: rowShape,
         clipBehavior: Clip.antiAlias,
@@ -169,17 +173,22 @@ class PresetBar extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
+                    key: ValueKey<String>('expressive-plan-identity-$presetId'),
                     width: 72 * scaleFactor,
                     height: 70 * scaleFactor,
-                    padding: EdgeInsets.all(5 * scaleFactor),
+                    padding: EdgeInsets.all(inset),
                     decoration: BoxDecoration(
                       color: accent,
-                      borderRadius: identityRadius,
+                      borderRadius: containedIdentityRadius,
                     ),
                     child: Center(
                       child: _PresetFocusBadge(
                         frequencyMap: focusFrequencyMap,
                         scale: scaleFactor * 0.9,
+                        backgroundColor: heatmapBackground,
+                        frameKey: ValueKey<String>(
+                          'expressive-plan-heatmap-frame-$presetId',
+                        ),
                       ),
                     ),
                   ),
@@ -204,16 +213,20 @@ class PresetBar extends StatelessWidget {
                     borderRadius: ExpressiveTrainShapes.compactControl,
                     pressedBorderRadius:
                         ExpressiveTrainShapes.compactControlPressed,
-                    pressedScale: 0.84,
-                    pressedRotation: 0.055,
+                    pressedScale: TonosExpressiveMotionTiers.compactScale,
+                    pressedOffset: TonosExpressiveMotionTiers.compactOffset,
+                    pressedRotation: TonosExpressiveMotionTiers.compactRotation,
                     child: PopupMenuButton<String>(
                       padding: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: ExpressiveTrainShapes.menu,
                       ),
-                      color: tokens.librarySurface,
+                      color: menuFill,
                       iconColor: theme.colorScheme.onSurface,
                       icon: Container(
+                        key: ValueKey<String>(
+                          'expressive-plan-menu-bubble-$presetId',
+                        ),
                         width: 38 * scaleFactor,
                         height: 38 * scaleFactor,
                         decoration: BoxDecoration(
@@ -400,28 +413,59 @@ String _planDisplayText(String value) {
 class _PresetFocusBadge extends StatelessWidget {
   final Map<String, double> frequencyMap;
   final double scale;
+  final Color? backgroundColor;
+  final Key? frameKey;
 
-  const _PresetFocusBadge({required this.frequencyMap, required this.scale});
+  const _PresetFocusBadge({
+    required this.frequencyMap,
+    required this.scale,
+    this.backgroundColor,
+    this.frameKey,
+  });
 
   @override
   Widget build(BuildContext context) {
     final surfaces = context.surfaceTokens;
+    final heatmapBackground = backgroundColor ?? surfaces.mediaPlaceholder;
     final size = 60 * scale;
 
     return WorkoutThumbnailFrame(
+      key: frameKey,
       scale: scale,
+      backgroundColor: backgroundColor,
       child: BodyHeatmap(
         frequencyMap: frequencyMap,
-        lowColor: tonosHeatmapLowForSurface(context, surfaces.mediaPlaceholder),
-        highColor: tonosHeatmapHighForSurface(
-          context,
-          surfaces.mediaPlaceholder,
-        ),
+        lowColor: tonosHeatmapLowForSurface(context, heatmapBackground),
+        highColor: tonosHeatmapHighForSurface(context, heatmapBackground),
         width: size - 6 * scale,
         height: size - 6 * scale,
       ),
     );
   }
+}
+
+BorderRadius _containedRadius({
+  required BorderRadius preferred,
+  required BorderRadius outer,
+  required double inset,
+}) {
+  double contained(double inner, double parent) {
+    final requiredRadius = parent - inset;
+    final nonNegativeRequired = requiredRadius > 0 ? requiredRadius : 0.0;
+    return inner > nonNegativeRequired ? inner : nonNegativeRequired;
+  }
+
+  Radius fit(Radius inner, Radius parent) => Radius.elliptical(
+    contained(inner.x, parent.x),
+    contained(inner.y, parent.y),
+  );
+
+  return BorderRadius.only(
+    topLeft: fit(preferred.topLeft, outer.topLeft),
+    topRight: fit(preferred.topRight, outer.topRight),
+    bottomLeft: fit(preferred.bottomLeft, outer.bottomLeft),
+    bottomRight: fit(preferred.bottomRight, outer.bottomRight),
+  );
 }
 
 class _AutomaticBadge extends StatelessWidget {

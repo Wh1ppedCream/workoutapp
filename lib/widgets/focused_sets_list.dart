@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
+import 'expressive_train_focus_progress.dart';
 import '../theme/theme_extensions.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/localized_formatters.dart';
@@ -19,6 +21,7 @@ class FocusedSetsList extends StatelessWidget {
   final String? title;
   final String? emptyMessage;
   final FontWeight titleWeight;
+  final ValueListenable<double>? expressiveProgressPhase;
 
   const FocusedSetsList({
     super.key,
@@ -27,6 +30,7 @@ class FocusedSetsList extends StatelessWidget {
     this.title,
     this.emptyMessage,
     this.titleWeight = FontWeight.w700,
+    this.expressiveProgressPhase,
   });
 
   @override
@@ -46,14 +50,20 @@ class FocusedSetsList extends StatelessWidget {
           title ?? strings.focusedSetsTitle,
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: titleWeight),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: expressiveProgressPhase == null ? 8 : 6),
         if (visibleHits.isEmpty && emptyMessage != null)
           Text(emptyMessage!, style: theme.textTheme.bodySmall)
         else
           for (final hit in visibleHits)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _FocusedSetRow(hit: hit, maxUnits: maxUnits),
+              padding: EdgeInsets.only(
+                bottom: expressiveProgressPhase == null ? 10 : 8,
+              ),
+              child: _FocusedSetRow(
+                hit: hit,
+                maxUnits: maxUnits,
+                expressiveProgressPhase: expressiveProgressPhase,
+              ),
             ),
       ],
     );
@@ -63,8 +73,13 @@ class FocusedSetsList extends StatelessWidget {
 class _FocusedSetRow extends StatelessWidget {
   final FocusedSetHit hit;
   final double maxUnits;
+  final ValueListenable<double>? expressiveProgressPhase;
 
-  const _FocusedSetRow({required this.hit, required this.maxUnits});
+  const _FocusedSetRow({
+    required this.hit,
+    required this.maxUnits,
+    required this.expressiveProgressPhase,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,13 +112,20 @@ class _FocusedSetRow extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: shapes.pill,
-          child: LinearProgressIndicator(
-            minHeight: 6,
-            value: value.clamp(0.0, 1.0).toDouble(),
+        if (expressiveProgressPhase case final phase?)
+          ExpressiveTrainFocusProgress(
+            value: value,
+            phase: phase,
+            borderRadius: shapes.pill,
+          )
+        else
+          ClipRRect(
+            borderRadius: shapes.pill,
+            child: LinearProgressIndicator(
+              minHeight: 6,
+              value: value.clamp(0.0, 1.0).toDouble(),
+            ),
           ),
-        ),
       ],
     );
   }

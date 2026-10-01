@@ -8,10 +8,12 @@ class WorkoutThumbnailFrame extends StatelessWidget {
     super.key,
     required this.scale,
     required this.child,
+    this.backgroundColor,
   });
 
   final double scale;
   final Widget child;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class WorkoutThumbnailFrame extends StatelessWidget {
       height: size,
       padding: EdgeInsets.all(3 * scale),
       decoration: BoxDecoration(
-        color: context.surfaceTokens.presetFocus,
+        color: backgroundColor ?? context.surfaceTokens.presetFocus,
         borderRadius: BorderRadius.circular(10 * scale),
       ),
       child: child,

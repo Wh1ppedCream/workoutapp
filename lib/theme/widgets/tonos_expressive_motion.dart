@@ -10,6 +10,21 @@ const double _maximumIndicatorOvershootInSlots = 0.06;
 const double _maximumPressShapeOvershoot = 0.08;
 const int _maximumRevealStaggerIndex = 6;
 
+/// Shared press amplitudes for the Expressive Train preview.
+///
+/// Focal actions compress more than their supporting actions; compact controls
+/// use a short, local response. Individual widgets may still vary shape and
+/// offset to communicate their role.
+abstract final class TonosExpressiveMotionTiers {
+  static const double focalScale = 0.91;
+  static const double supportingScale = 0.93;
+  static const double compactScale = 0.88;
+  static const Offset focalOffset = Offset(0, 2);
+  static const Offset supportingOffset = Offset(0, 1.5);
+  static const Offset compactOffset = Offset(0, 0.5);
+  static const double compactRotation = 0.05;
+}
+
 final SpringDescription _selectedSpring = SpringDescription.withDampingRatio(
   mass: 1,
   stiffness: 650,
@@ -591,10 +606,32 @@ class TonosExpressiveAmbientMotion extends StatefulWidget {
       _TonosExpressiveAmbientMotionState();
 }
 
+/// Exposes the ambient owner's existing phase without making the whole child
+/// subtree rebuild on every tick. Paint-only accents and progress decorations
+/// can listen to the same animation through their own [AnimatedBuilder].
+class TonosExpressiveAmbientPhaseScope extends InheritedWidget {
+  const TonosExpressiveAmbientPhaseScope({
+    super.key,
+    required this.phase,
+    required super.child,
+  });
+
+  final Animation<double> phase;
+
+  static Animation<double>? maybePhaseOf(BuildContext context) => context
+      .getInheritedWidgetOfExactType<TonosExpressiveAmbientPhaseScope>()
+      ?.phase;
+
+  @override
+  bool updateShouldNotify(TonosExpressiveAmbientPhaseScope oldWidget) =>
+      !identical(phase, oldWidget.phase);
+}
+
 class _TonosExpressiveAmbientMotionState
     extends State<TonosExpressiveAmbientMotion>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
+  late final CurvedAnimation _phase;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
   @override
@@ -604,6 +641,7 @@ class _TonosExpressiveAmbientMotionState
         WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
     _controller = AnimationController(vsync: this, duration: widget.halfCycle);
+    _phase = CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine);
   }
 
   @override
@@ -648,13 +686,16 @@ class _TonosExpressiveAmbientMotionState
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: AnimatedBuilder(
-        animation: _controller,
+        animation: _phase,
         child: RepaintBoundary(child: widget.child),
-        builder: (context, child) => widget.builder(
-          context,
-          Curves.easeInOutSine.transform(_controller.value),
-          child!,
-        ),
+        builder: (context, child) {
+          final phase = _phase.value;
+          return widget.builder(
+            context,
+            phase,
+            TonosExpressiveAmbientPhaseScope(phase: _phase, child: child!),
+          );
+        },
       ),
     );
   }
@@ -662,6 +703,7 @@ class _TonosExpressiveAmbientMotionState
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _phase.dispose();
     _controller.dispose();
     super.dispose();
   }

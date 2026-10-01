@@ -647,8 +647,9 @@ class _TrainPageState extends State<TrainPage> {
             enabled: true,
             borderRadius: ExpressiveTrainShapes.compactControl,
             pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
-            pressedScale: 0.88,
-            pressedRotation: 0.035,
+            pressedScale: TonosExpressiveMotionTiers.compactScale,
+            pressedOffset: TonosExpressiveMotionTiers.compactOffset,
+            pressedRotation: TonosExpressiveMotionTiers.compactRotation,
             child: profileButton,
           );
         }
@@ -872,7 +873,7 @@ class _TrainTabEntryMotionState extends State<_TrainTabEntryMotion>
   }
 }
 
-class _OverviewTab extends StatelessWidget {
+class _OverviewTab extends StatefulWidget {
   const _OverviewTab({
     required this.isActive,
     required this.refreshToken,
@@ -892,34 +893,101 @@ class _OverviewTab extends StatelessWidget {
   final VoidCallback onPresetsRefresh;
 
   @override
+  State<_OverviewTab> createState() => _OverviewTabState();
+}
+
+class _OverviewTabState extends State<_OverviewTab> {
+  static const double _minimumFocusCardVisibleHeight = 24;
+
+  final GlobalKey _viewportKey = GlobalKey();
+  final GlobalKey _weeklyFocusCardKey = GlobalKey();
+  bool _weeklyFocusCardVisible = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scheduleVisibilityCheck();
+  }
+
+  @override
+  void didUpdateWidget(covariant _OverviewTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isActive != widget.isActive) {
+      _scheduleVisibilityCheck();
+    }
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.depth == 0) _scheduleVisibilityCheck();
+    return false;
+  }
+
+  void _scheduleVisibilityCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final viewportObject = _viewportKey.currentContext?.findRenderObject();
+      final focusCardObject = _weeklyFocusCardKey.currentContext
+          ?.findRenderObject();
+      if (viewportObject is! RenderBox || focusCardObject is! RenderBox) {
+        return;
+      }
+      if (!viewportObject.attached || !focusCardObject.attached) return;
+
+      final viewportRect =
+          viewportObject.localToGlobal(Offset.zero) & viewportObject.size;
+      final focusCardRect =
+          focusCardObject.localToGlobal(Offset.zero) & focusCardObject.size;
+      final visibleHeight =
+          (math.min(viewportRect.bottom, focusCardRect.bottom) -
+                  math.max(viewportRect.top, focusCardRect.top))
+              .clamp(0.0, double.infinity);
+      final visible =
+          viewportRect.overlaps(focusCardRect) &&
+          visibleHeight >= _minimumFocusCardVisibleHeight;
+      if (visible != _weeklyFocusCardVisible) {
+        setState(() => _weeklyFocusCardVisible = visible);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
-      children: [
-        KeyedSubtree(
-          key: weeklyOverviewKey,
-          child: SevenDayFocusCard(
-            refreshToken: refreshToken,
-            ambientMotionEnabled: isActive,
-            motionEnabled: isActive,
-            onFocusedSetsTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const AnalyticsDashboardScreen(),
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: SizedBox.expand(
+        key: _viewportKey,
+        child: ListView(
+          key: const ValueKey<String>('expressive-overview-scroll'),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+          children: [
+            KeyedSubtree(
+              key: widget.weeklyOverviewKey,
+              child: SevenDayFocusCard(
+                key: _weeklyFocusCardKey,
+                refreshToken: widget.refreshToken,
+                ambientMotionEnabled:
+                    widget.isActive && _weeklyFocusCardVisible,
+                motionEnabled: widget.isActive,
+                onFocusedSetsTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const AnalyticsDashboardScreen(),
+                  ),
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 16),
+            KeyedSubtree(
+              key: widget.activePlansKey,
+              child: _ActivePresetsCard(
+                isActive: widget.isActive,
+                profileId: widget.profileId,
+                refreshToken: widget.presetsRefreshToken,
+                onRefresh: widget.onPresetsRefresh,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        KeyedSubtree(
-          key: activePlansKey,
-          child: _ActivePresetsCard(
-            isActive: isActive,
-            profileId: profileId,
-            refreshToken: presetsRefreshToken,
-            onRefresh: onPresetsRefresh,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -1028,8 +1096,8 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   borderRadius: ExpressiveTrainShapes.compactControl,
                   pressedBorderRadius:
                       ExpressiveTrainShapes.compactControlPressed,
-                  pressedScale: 0.84,
-                  pressedRotation: -0.055,
+                  pressedScale: TonosExpressiveMotionTiers.compactScale,
+                  pressedRotation: -TonosExpressiveMotionTiers.compactRotation,
                   child: editButton,
                 )
               : editButton;
@@ -1380,8 +1448,9 @@ class _PresetSectionCard extends StatelessWidget {
                         borderRadius: ExpressiveTrainShapes.compactControl,
                         pressedBorderRadius:
                             ExpressiveTrainShapes.compactControlPressed,
-                        pressedScale: 0.84,
-                        pressedRotation: -0.055,
+                        pressedScale: TonosExpressiveMotionTiers.compactScale,
+                        pressedRotation:
+                            -TonosExpressiveMotionTiers.compactRotation,
                         child: IconButton(
                           tooltip: strings.trainManagePlans,
                           style: IconButton.styleFrom(
@@ -1679,8 +1748,8 @@ class _ExpressivePlanAction extends StatelessWidget {
       enabled: true,
       borderRadius: radius,
       pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
-      pressedScale: 0.95,
-      pressedOffset: const Offset(0, 1.5),
+      pressedScale: TonosExpressiveMotionTiers.supportingScale,
+      pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
       child: Material(
         color: color,
         shape: shape,
@@ -1862,8 +1931,8 @@ class _SplitWorkoutBar extends StatelessWidget {
         enabled: true,
         borderRadius: startRadius(vertical: vertical, pressed: false),
         pressedBorderRadius: startRadius(vertical: vertical, pressed: true),
-        pressedScale: 0.945,
-        pressedOffset: const Offset(0, 1.5),
+        pressedScale: TonosExpressiveMotionTiers.focalScale,
+        pressedOffset: TonosExpressiveMotionTiers.focalOffset,
         child: visual,
       );
     }
@@ -2085,8 +2154,8 @@ class _SplitWorkoutBar extends StatelessWidget {
       enabled: enabled,
       borderRadius: ExpressiveTrainShapes.primaryAction,
       pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
-      pressedScale: 0.955,
-      pressedOffset: const Offset(0, 1),
+      pressedScale: TonosExpressiveMotionTiers.supportingScale,
+      pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
       child: child,
     );
   }
@@ -2126,8 +2195,9 @@ class _SplitWorkoutBar extends StatelessWidget {
       enabled: enabled,
       borderRadius: ExpressiveTrainShapes.compactControl,
       pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
-      pressedScale: 0.84,
-      pressedRotation: 0.08,
+      pressedScale: TonosExpressiveMotionTiers.compactScale,
+      pressedOffset: TonosExpressiveMotionTiers.compactOffset,
+      pressedRotation: TonosExpressiveMotionTiers.compactRotation,
       child: button,
     );
   }

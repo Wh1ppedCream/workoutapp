@@ -453,8 +453,8 @@ class _ShowMorePlansButton extends StatelessWidget {
           enabled: expressiveMotionEnabled,
           borderRadius: radius,
           pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
-          pressedScale: 0.94,
-          pressedOffset: const Offset(0, 1),
+          pressedScale: TonosExpressiveMotionTiers.supportingScale,
+          pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
           child: Material(
             color: tokens.creationSurface,
             shape: shape,

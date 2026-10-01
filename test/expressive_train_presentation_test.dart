@@ -25,6 +25,7 @@ import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/generic_bar.dart';
 import 'package:env_test/widgets/preset_bar.dart';
+import 'package:env_test/widgets/seven_day_focus_card.dart';
 import 'package:env_test/widgets/tonos_train_tabs.dart';
 
 void main() {
@@ -188,7 +189,6 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-
       final pageContext = tester.element(find.byType(TrainPage));
       final theme = Theme.of(pageContext);
       final strings = AppLocalizations.of(pageContext);
@@ -315,6 +315,142 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });
+
+  testWidgets('Weekly Overview fits Pixel 7 size and text scale', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.625;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.15;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await const TutorialStateStore().skipAll();
+    final repository = _ExpressiveTrainRepository(
+      bodyPartSets: <BodyPart, double>{
+        BodyPart(1, 'Shoulders'): 12,
+        BodyPart(2, 'Lower Back'): 3,
+        BodyPart(3, 'Core'): 2,
+        BodyPart(4, 'Chest'): 1,
+      },
+    );
+    final profile = _ExpressiveSelectedProfile(repository: repository);
+    final session = ActiveSession(
+      repository: repository,
+      retryDelay: (_) async {},
+    );
+    addTearDown(profile.dispose);
+    addTearDown(session.dispose);
+    await session.ready;
+
+    await _pumpExpressiveTrain(tester, repository, profile, session);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 700));
+    final scale = MediaQuery.textScalerOf(
+      tester.element(find.byType(TrainPage)),
+    ).scale(1);
+    final focusLayout = find.byKey(
+      const ValueKey('seven-day-focus-side-by-side'),
+    );
+    expect(scale, 1.15);
+    expect(tester.getSize(focusLayout).height, greaterThan(198));
+
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'the Weekly Overview should not overflow at Pixel 7 font scaling',
+    );
+
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(
+      find.byKey(const ValueKey('seven-day-focus-stacked')),
+      findsOneWidget,
+    );
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: 'the Weekly Overview should stack cleanly at 2x text scale',
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'Weekly Overview ambient motion follows its visible viewport state',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 480);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await const TutorialStateStore().skipAll();
+      final repository = _ExpressiveTrainRepository();
+      final profile = _ExpressiveSelectedProfile(repository: repository);
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
+      );
+      addTearDown(profile.dispose);
+      addTearDown(session.dispose);
+      await session.ready;
+
+      await _pumpExpressiveTrain(tester, repository, profile, session);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final overviewScroll = find.byKey(
+        const ValueKey<String>('expressive-overview-scroll'),
+      );
+      final focusCard = find.byType(SevenDayFocusCard);
+      final ambientMotion = find.byType(TonosExpressiveAmbientMotion);
+      expect(overviewScroll, findsOneWidget);
+      expect(focusCard, findsOneWidget);
+      expect(ambientMotion, findsOneWidget);
+      expect(
+        tester.widget<TonosExpressiveAmbientMotion>(ambientMotion).enabled,
+        isTrue,
+        reason: 'the Weekly Overview card starts inside the viewport',
+      );
+
+      final scrollable = find
+          .descendant(of: overviewScroll, matching: find.byType(Scrollable))
+          .first;
+      await tester.drag(scrollable, const Offset(0, -420));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+
+      final scrollRect = tester.getRect(overviewScroll);
+      final focusRect = tester.getRect(focusCard);
+      final verticalIntersection =
+          (focusRect.bottom.clamp(scrollRect.top, scrollRect.bottom) -
+                  focusRect.top.clamp(scrollRect.top, scrollRect.bottom))
+              .clamp(0.0, double.infinity);
+      expect(verticalIntersection, greaterThan(0));
+      expect(verticalIntersection, lessThan(24));
+      expect(
+        tester.widget<TonosExpressiveAmbientMotion>(ambientMotion).enabled,
+        isFalse,
+        reason:
+            'ambient motion pauses when less than 24 dp of the card is visible',
+      );
+
+      await tester.drag(scrollable, const Offset(0, 420));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(
+        tester.widget<TonosExpressiveAmbientMotion>(ambientMotion).enabled,
+        isTrue,
+        reason: 'ambient motion resumes when the card returns to view',
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets(
     'Expressive tab arrival is brief and preserves tab scroll state',

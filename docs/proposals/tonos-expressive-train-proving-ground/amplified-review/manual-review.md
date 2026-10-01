@@ -1,58 +1,79 @@
 # Tonos Expressive Train review
 
-This preview shows the current Tonos **Train → Overview** and **Train → Plans** screens in the amplified Expressive presentation. It is a disposable preview, not the normal Tonos install. The plan rows now use the same expressive language as their surrounding sections; the current layout and actions remain Tonos-owned.
+This review is limited to the current **Train → Overview**, **Train → Plans**, and shared bottom-navigation shell. It is an isolated visual/motion candidate in **Tonos Expressive Preview**, package **com.tonos.expressivepreview**, using the sandbox database **tonos_expressive_preview.db**. It is not persisted to the normal Tonos install.
 
-## Open the preview and set a fair comparison
+The proposal keeps the existing Tonos screen hierarchy, plan and workout content, bottom-navigation destinations, and actions. It adds the current Expressive treatment to those existing elements.
 
-1. On the Pixel 7, open **Tonos Expressive Preview** from the app drawer. It opens on **Train → Overview**.
-2. Tap the sliders button in the separate strip at the upper right, above the Overview / Plans selector.
-3. Set **Rendered recipe** to **Expressive**. With Expressive selected, set **Palette treatment** to **Curated**.
-4. Choose **Light** or **Dark**. Keep **Reduced motion** and **Effects off** switched off for the normal-motion review. Leave text scale at **OS/app default** to match the captures; the dialog can scroll to its text-scale control.
-5. Tap **Done**. To compare, reopen the sliders, change only **Rendered recipe** to **Classic**, tap Done, and inspect the same screen and scroll position. Switch back to Expressive and repeat in the other brightness.
+## Review on Pixel 7
 
-The preview controls affect only this in-memory review. **Reset review controls** restores Expressive / Curated / Light and the default motion settings. **Reset sandbox fixtures** restores the sample plans and data in the isolated preview database.
+1. Open **Tonos Expressive Preview** from the app drawer. It starts on **Train → Overview**.
+2. Tap the sliders control at the upper right, above the Overview / Plans selector.
+3. Select **Expressive** under Rendered recipe and **Curated** under Palette treatment.
+4. Choose **Light** or **Dark**. For the normal interaction review, leave **Reduced motion** and **Effects off** disabled. Leave text scale at **OS/app default** for comparison.
+5. Tap **Done**. To compare with Classic, reopen the controls and change only Rendered recipe; keep the palette, brightness, text scale, route, and scroll position the same.
+6. The current Pixel 7 is at 1.15 OS font scale. The final light screenshot shows the updated responsive Focused Sets panel with “more” visible and no overflow. At scale 1.15 it grows to 220.5 dp; at 2x the widget test verifies the stacked layout.
 
-## What to inspect
+The controls and sample data belong to the isolated preview. **Reset review controls** restores Expressive / Curated / Light and default motion. **Reset sandbox fixtures** restores the sample plans in the preview database.
 
-| Screen and route | Current Tonos widgets to look at | What changes from Classic | What to do |
+## What to inspect and do
+
+| Screen / route | Current Tonos content retained | Expressive treatment to compare | Try this |
 |---|---|---|---|
-| **Train → Overview** | The existing Overview / Plans selector, profile avatar, **Weekly Overview** focus card, **Active Plans** card, split **Start Workout / Optimize** bar, and bottom navigation | The warm canvas and plum Weekly Overview remain the focal treatment, with its inset focus list and apricot/mint accents. The Active Plans parent is a warm supporting group; its individual rows are now filled, plan-identity-bearing cards with a strong leading thumbnail block, asymmetric row/identity shapes, and a separate menu bubble. Start is purple and leads; Optimize is teal-toned. Anatomy heatmap colors and plan identity colors retain their meanings. | Compare the whole screen, then inspect the focus card, filled plan rows, and action hierarchy. The plan names, thumbnails, order, and menu actions are unchanged. |
-| **Train → Plans** | Existing **Active Plans**, **Archived Plans**, **Premade Plans**, **Generate Custom**, and **Manually Add** sections | The current section order, controls, and density remain. Active and archived plan rows share the filled identity-bearing card treatment, with different row silhouettes and plan-colored leading blocks. Their neutral tonal fills keep blue, orange, green, and teal identities legible against the warm/mint section containers. | Tap **Plans** in the selector beside the avatar. Tap **Show 1 more** to see the real progressive reveal, then scroll through Archived and Premade to Generate Custom and Manually Add. |
-| **Train shell** (visible on both tabs) | Five current destinations: **Train, Catalog, Logbook, Progress, Profile** | The existing navigation gets a tinted surface and a more visible selected shape. The selected icon sits in a springing/morphing indicator; its label remains high-contrast. Destination count, order, labels, placement, and callbacks are unchanged. | Tap **Catalog**, **Progress**, then **Train** to watch the selection indicator move. Those destinations' page styling is outside this review. |
+| **Train → Overview** | Overview / Plans tabs, profile avatar, Weekly Overview, Active Plans, split Start Workout / Optimize action, and the existing five-destination navigation | Plum focal card, warm canvas, tonal inset, animated accent marks and Focused Sets progress, bright plan-identity blocks on neutral-filled rows, purple Start, teal Optimize, and a springing selected navigation fill | Leave the screen untouched for 10–15 seconds and watch the Weekly Overview surface/accent marks/progress edge. Tap Focused Sets → More, an Active Plan row, its menu, the edit button, Start Workout, and Optimize. Use only the preview database. |
+| **Train → Plans** | Existing Active Plans, Archived Plans, Premade Plans, Generate Custom, and Manually Add sections in their established order | Filled identity-bearing rows on both sections; plan identity stays in the leading block while muted tonal bodies keep the anatomy thumbnail readable; menu and edit controls use smaller tactile responses | Tap Plans beside the profile avatar. Tap Show 1 more and watch rows enter. Open and dismiss a row menu. Scroll to Archived and Premade, then view Generate Custom and Manually Add. |
+| **Train shell** | Train, Catalog, Logbook, Progress, Profile; destination count, order, placement, and callbacks are unchanged | Tinted navigation surface with a springing selected fill and high-contrast selected icon/label; supporting touch compression on destinations | Tap Catalog, Progress, Profile, then Train to watch the selected fill move. Other destinations’ screen styling is outside this review. |
+| **Reduced motion** | Same content, layouts, colors, and callbacks | Static Expressive resting geometry; no continuous surface, progress, or accent movement | In preview controls, enable Reduced motion, return to Overview, and leave it for 10 seconds. The content remains expressive and stable. Tab/navigation callbacks remain immediate. Disable it again after comparison. |
+| **Effects Off** | Same content and workflows | Same stop/reset behavior as the preview’s animation-disable path | Toggle Effects Off separately if you want to confirm the second route to the same no-motion state. |
 
-## Motion review clips
+The Optimize callback shows its existing recovery warning for the seeded sample state; dismiss it with **OK**. Start Workout enters the disposable preview session; no normal Tonos data is involved. If you want to return to the visual review after opening that route, exit and relaunch Tonos Expressive Preview from the app drawer; it starts again on Train → Overview.
 
-All clips were recorded from the isolated Pixel 7 preview. The existing screen state and callbacks remain the owners of navigation, selection, and plan data; the motion wrappers only present those state changes.
+## Matched Pixel 7 stills
 
-- [Normal motion: plan rows, menu, reveal, tab entry, and bottom navigation](normal-motion.mp4). It opens on Overview, switches to Plans, reveals the remaining plan, opens/dismisses a row menu, opens and backs out of a plan detail, then changes tabs and shell destinations.
-- [Start Workout touch and route](start-touch.mp4). The existing primary action opens the disposable session route.
-- [Optimize touch and recovery warning](optimize-touch.mp4). The current Optimize callback reaches its existing “Take some time to rest” state for the seeded data; dismiss it with **OK**.
-- [Rapid tab and navigation retargeting](rapid-interaction.mp4). This repeats Overview/Plans and shell selection changes.
-- [Idle Overview breathing, 22 seconds](idle-10-second.mp4). Leave the screen untouched and watch the large plum Weekly Overview surface slowly breathe in tone. Its color interpolates through a small 24% portion of the focus-surface range with an 8-second half-cycle (16 seconds per full cycle); no text, metrics, heatmap meaning, or layout moves.
-- [Reduced motion interactions](reduced-motion.mp4). The same Expressive colors and shapes remain, while selection snaps and the ambient loop stops. Reduced motion was on; Effects Off remained off.
+The final captures below use the restarted preview build, the same 1.15 OS font scale, seeded content, selected Train destination, and matching scroll state within each light/dark pair.
 
-The broader interaction list is in [motion-inventory.md](motion-inventory.md). Press/release callbacks and business state update immediately. Plan rows remain Expressive on both tabs, but row-arrival and touch motion are disabled while their tab is inactive; selecting the tab enables the reveal without replacing its list or losing scroll state. Selection and press springs, size/reveal transitions, and the ambient loop honor `TickerMode` and the preview’s reduced-motion path. Weekly Overview state changes snap while its tab is inactive. The breathing loop additionally runs only while Train → Overview is active and the app is resumed. Effects Off maps into the same animation-disable path.
+### Train → Overview
 
-## Boundaries
+- [Expressive light — Pixel 7 final capture](current-refinement-20261001/overview-expressive-light-final.png)
+- [Expressive dark — Pixel 7 final capture](current-refinement-20261001/overview-expressive-dark-final.png)
 
-Only Train, its two tabs, and the shared bottom-navigation treatment are being reviewed. **Catalog, Logbook, Progress, Profile, Active Workout, and child routes are not visual targets for this pass.** Their product behavior and navigation remain intact. Use the preview package `com.tonos.expressivepreview` and database `tonos_expressive_preview.db`; changes made there do not target normal Tonos data.
+### Train → Plans
 
-## Matched Pixel 7 captures
+- [Expressive light — Pixel 7 final capture](current-refinement-20261001/plans-expressive-light-final.png)
+- [Expressive dark — Pixel 7 final capture](current-refinement-20261001/plans-expressive-dark-final.png)
 
-All eight captures use the same seeded preview content, screen/tab, scroll position, OS/app text scale, selected destination, and unobstructed screen state. The Classic and Expressive captures are separate screenshots from the same Pixel 7 profile preview.
+### Plan-card and menu close-ups
 
-### Overview
+- [Active plan cards — light](current-refinement-20261001/plan-cards-active-review-light.png)
+- [Active plan cards — dark](current-refinement-20261001/plan-cards-active-review-dark.png)
+- [Open active-plan menu](current-refinement-20261001/plan-menu-open.png)
 
-- [Classic light — current matched capture](overview-classic-light-current.png)
-- [Expressive light — current review build](overview-expressive-light-refined.png)
-- [Classic dark — current matched capture](overview-classic-dark-current.png)
-- [Expressive dark — current review build](overview-expressive-dark.png)
+The updated inner identity radius nests inside the outer row with its existing inset. The heatmap stays on the media-placeholder field while saturated identity color stays concentrated at the leading edge.
 
-### Plans
+## Motion evidence
 
-- [Classic light — current matched capture](plans-classic-light-current.png)
-- [Expressive light — current review build](plans-expressive-light-refined.png)
-- [Classic dark — current matched capture](plans-classic-dark-current.png)
-- [Expressive dark — current review build](plans-expressive-dark.png)
+- [Weekly Overview untouched for 15 seconds](current-refinement-20261001/weekly-overview-idle-final-15s.mp4) — recorded after a full preview restart, with no user interaction during the capture.
+- [Plan-card tactile response](current-refinement-20261001/plan-card-tactile.mp4)
+- [Plan controls, menu, edit, and Show 1 more](current-refinement-20261001/plan-controls-edit-menu-show-more.mp4)
+- [Start Workout touch and isolated session route](current-refinement-20261001/start-workout-touch-final-6s.mp4)
+- [Optimize touch and its current recovery result](current-refinement-20261001/optimize-touch-final-6s.mp4)
+- [Optimize recovery dialog still](current-refinement-20261001/optimize-final-settled.png)
+- [Profile/avatar touch and existing drawer](current-refinement-20261001/profile-avatar-touch-final-5s.mp4)
+- [Reduced-motion Overview idle for 10 seconds](current-refinement-20261001/weekly-overview-reduced-motion-final-10s.mp4)
+- [Reduced-motion Expressive Overview still](current-refinement-20261001/overview-expressive-reduced-motion-final.png)
 
-Each comparison pair uses the same seeded sample plans, Overview metrics, selected Train destination, text scale, and unobstructed screen state. Classic and Expressive screenshots were captured from the same Pixel 7 preview; system status-bar time can differ.
+For a normal-motion run, switch back to Expressive / Curated / Light and leave Reduced motion and Effects Off disabled. For a reduced-motion run, turn on Reduced motion; the surface resets, the accent and wave stay still, and interaction state changes remain immediate.
+
+## Motion and implementation contract
+
+- Weekly Overview is the only continuous ambient surface. It runs with a 3 second half-cycle (6 seconds per surface round trip), and interpolates up to 42% toward its inset tone. Accent bars and Focused Sets wave share that phase.
+- The wave preserves the exact progress proportion and native progress semantics. It is 6 dp tall and its edge moves by at most 1.25 dp.
+- Ambient work is gated by Overview selection, at least 24 dp visibility, TickerMode, app lifecycle, and MediaQuery’s animation-disable policy. A shared controller drives the card; RepaintBoundaries isolate accent/progress painting.
+- The train tabs and five-item navigation use the existing spring selection indicator. Press wrappers remain paint-only; their child controls continue owning hit tests, semantics, and callbacks.
+- Reduced motion stops/resets the ambient phase, fixes progress at its static shape, disables press/reveal/selection motion, and makes content-size changes near-immediate.
+- No idle profile/gym spinner is included. The profile/avatar only responds while pressed.
+
+See [motion-inventory.md](motion-inventory.md) for the per-control motion tiers, amplitudes, spring settings, clipping boundaries, and reduced-motion behavior.
+
+## Validation recorded for this refinement
+
+The focused eight-file Train/plan/motion/accessibility batch passed **57 tests, 0 failures** on Flutter 3.47.5 / Dart 3.13.4. Scoped Dart analysis reported **No issues found**. The 1.15 Pixel 7 capture after hot restart has no RenderFlex overflow; widget coverage checks 1.15 Pixel geometry and the 2x stacked layout. The full suite and final expensive qualification campaign were intentionally not run in this refinement stage.

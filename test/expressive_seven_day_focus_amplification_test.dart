@@ -286,7 +286,7 @@ void main() {
     expect(responseFinder, findsOneWidget);
     expect(
       tester.widget<TonosExpressivePressResponse>(responseFinder).pressedScale,
-      0.965,
+      TonosExpressiveMotionTiers.supportingScale,
     );
     await tester.tap(find.text('Shoulders'));
     expect(taps, 1);

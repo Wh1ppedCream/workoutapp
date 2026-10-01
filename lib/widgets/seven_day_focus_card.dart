@@ -300,17 +300,18 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
             onFocusedSetsTap: onFocusedSetsTap,
             heatmapSurface: surfaces.dashboardHero,
             tokens: tokens,
+            motionEnabled: motionEnabled,
           );
 
     return TonosExpressiveAmbientMotion(
       enabled: ambientMotionEnabled,
-      halfCycle: const Duration(seconds: 8),
+      halfCycle: const Duration(seconds: 3),
       builder: (context, phase, child) => TonosSurface(
         variant: TonosSurfaceVariant.card,
         color: Color.lerp(
           tokens.focusSurface,
           tokens.focusInset,
-          0.24 * phase,
+          0.42 * phase,
         )!,
         borderRadius: ExpressiveTrainShapes.focusHero,
         padding: const EdgeInsets.all(18),
@@ -334,23 +335,7 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 14),
-                Container(
-                  width: 34,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: tokens.focusWarm,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Container(
-                  width: 13,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: tokens.focusCool,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
+                _ExpressiveFocusAccents(tokens: tokens),
               ],
             ),
             const SizedBox(height: 14),
@@ -376,6 +361,74 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
   }
 }
 
+/// Small decorative marks share the hero surface's existing phase driver.
+/// Their text/data siblings remain still and these marks are excluded from
+/// touch and accessibility trees.
+class _ExpressiveFocusAccents extends StatelessWidget {
+  const _ExpressiveFocusAccents({required this.tokens});
+
+  final AppExpressiveTrainTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    final phase = TonosExpressiveAmbientPhaseScope.maybePhaseOf(context);
+    if (phase == null) return _paintAt(0);
+
+    return RepaintBoundary(
+      child: IgnorePointer(
+        child: ExcludeSemantics(
+          child: AnimatedBuilder(
+            animation: phase,
+            builder: (context, _) => _paintAt(phase.value),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _paintAt(double phase) {
+    final progress = phase.clamp(0.0, 1.0).toDouble();
+    final warmWidth = 34 + 14 * progress;
+    return SizedBox(
+      width: 72,
+      height: 6,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Transform.translate(
+              offset: Offset(0, -1.5 * progress),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: tokens.focusWarm,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: SizedBox(width: warmWidth, height: 6),
+              ),
+            ),
+          ),
+          Positioned(
+            left: warmWidth + 5,
+            top: 0,
+            child: Transform.translate(
+              offset: Offset(0, 1.5 * progress),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: tokens.focusCool,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: const SizedBox(width: 13, height: 6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
   const _ExpressiveSevenDayFocusLayout({
     super.key,
@@ -384,6 +437,7 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
     required this.onFocusedSetsTap,
     required this.heatmapSurface,
     required this.tokens,
+    required this.motionEnabled,
   });
 
   final Map<String, double> heatmapFrequencyMap;
@@ -391,13 +445,14 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
   final VoidCallback onFocusedSetsTap;
   final Color heatmapSurface;
   final AppExpressiveTrainTokens tokens;
+  final bool motionEnabled;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final isStacked = textScale >= 1.6 || constraints.maxWidth < 340;
+        final isStacked = textScale >= 1.35 || constraints.maxWidth < 340;
         final heatmapSize = isStacked
             ? constraints.maxWidth.clamp(132.0, 164.0).toDouble()
             : (constraints.maxWidth * 0.38).clamp(118.0, 148.0).toDouble();
@@ -421,6 +476,7 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
           hits: hits,
           onTap: onFocusedSetsTap,
           tokens: tokens,
+          motionEnabled: motionEnabled,
         );
 
         if (isStacked) {
@@ -437,7 +493,7 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
 
         return SizedBox(
           key: const ValueKey('seven-day-focus-side-by-side'),
-          height: 198,
+          height: 198 + (textScale - 1).clamp(0.0, 0.35) * 150,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -457,11 +513,13 @@ class _ExpressiveFocusDetails extends StatelessWidget {
     required this.hits,
     required this.onTap,
     required this.tokens,
+    required this.motionEnabled,
   });
 
   final List<FocusedSetHit> hits;
   final VoidCallback onTap;
   final AppExpressiveTrainTokens tokens;
+  final bool motionEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -475,6 +533,8 @@ class _ExpressiveFocusDetails extends StatelessWidget {
           maxVisible: 3,
           emptyMessage: AppLocalizations.of(context).sevenDayFocusEmpty,
           titleWeight: FontWeight.w700,
+          expressiveProgressPhase:
+              TonosExpressiveAmbientPhaseScope.maybePhaseOf(context),
         ),
         if (hits.length > 3) _MoreFocusedSetsHint(color: tokens.focusWarm),
       ],
@@ -485,11 +545,11 @@ class _ExpressiveFocusDetails extends StatelessWidget {
         button: true,
         onTap: onTap,
         child: TonosExpressivePressResponse(
-          enabled: true,
+          enabled: motionEnabled,
           borderRadius: radius,
           pressedBorderRadius: ExpressiveTrainShapes.focusInsetPressed,
-          pressedScale: 0.965,
-          pressedOffset: const Offset(0, 1.5),
+          pressedScale: TonosExpressiveMotionTiers.supportingScale,
+          pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
           child: Material(
             color: tokens.focusInset,
             shape: RoundedRectangleBorder(borderRadius: radius),
