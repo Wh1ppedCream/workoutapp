@@ -20,7 +20,7 @@ The controls and sample data belong to the isolated preview. **Reset review cont
 | Screen / route | Current Tonos content retained | Expressive treatment to compare | Try this |
 |---|---|---|---|
 | **Train → Overview** | Overview / Plans tabs, profile avatar, Weekly Overview, Active Plans, split Start Workout / Optimize action, and the existing five-destination navigation | Plum focal card, warm canvas, tinted anatomy inset, traveling Focused Sets progress wave, plan-identity blocks with subtly tinted heatmap fields, purple Start, teal Optimize, and a springing selected navigation fill | Leave the screen untouched for 10–15 seconds and watch the Weekly Overview surface/accent marks/progress wave. Compare the wave at Shoulders, Lower Back, and Core: lengths stay tied to their values while the contour travels. Tap Focused Sets → More, an Active Plan row, its menu, the edit button, Start Workout, and Optimize. Use only the preview database. |
-| **Train → Plans** | Existing Active Plans, Archived Plans, Premade Plans, Generate Custom, and Manually Add sections in their established order | Filled identity-bearing rows on both sections; 8% plan-color tint over the neutral heatmap field keeps anatomy markings readable; menu and edit controls use smaller tactile responses | Tap Plans beside the profile avatar. Compare blue, orange, and green thumbnail fields in light and dark. Tap Show 1 more and watch rows enter. Open and dismiss a row menu. Scroll to Archived and Premade, then view Generate Custom and Manually Add. |
+| **Train → Plans** | Existing Active Plans, Archived Plans, Premade Plans, Generate Custom, and Manually Add sections in their established order | Filled identity-bearing rows on both sections; 12% plan-color tint over the neutral heatmap field keeps anatomy markings readable; menu and edit controls use smaller tactile responses | Tap Plans beside the profile avatar. Compare blue, orange, and green thumbnail fields in light and dark. Tap Show 1 more and watch rows enter. Open and dismiss a row menu. Scroll to Archived and Premade, then view Generate Custom and Manually Add. |
 | **Train shell** | Train, Catalog, Logbook, Progress, Profile; destination count, order, placement, and callbacks are unchanged | Tinted navigation surface with a springing selected fill and high-contrast selected icon/label; supporting touch compression on destinations | Tap Catalog, Progress, Profile, then Train to watch the selected fill move. Other destinations’ screen styling is outside this review. |
 | **Reduced motion** | Same content, layouts, colors, and callbacks | Static Expressive resting geometry; no continuous surface, progress, or accent movement | In preview controls, enable Reduced motion, return to Overview, and leave it for 10 seconds. The content remains expressive and stable. Tab/navigation callbacks remain immediate. Disable it again after comparison. |
 | **Effects Off** | Same content and workflows | Same stop/reset behavior as the preview’s animation-disable path | Toggle Effects Off separately if you want to confirm the second route to the same no-motion state. |
@@ -47,7 +47,7 @@ The final captures below use the restarted preview build, the same 1.15 OS font 
 - [Active plan cards — dark](current-refinement-20261001/plan-cards-active-review-dark.png)
 - [Open active-plan menu](current-refinement-20261001/plan-menu-open.png)
 
-The active plan row and its identity block share the same asymmetric expressive corner silhouette. Saturated identity color stays concentrated at the leading edge; each heatmap background blends its plan accent into the media-placeholder surface at 8%.
+The active plan row and its identity block share the same asymmetric expressive corner silhouette. Saturated identity color stays concentrated at the leading edge; each heatmap background blends its plan accent into the media-placeholder surface at 12%.
 
 ## Motion evidence
 
@@ -67,7 +67,7 @@ For a normal-motion run, switch back to Expressive / Curated / Light and leave R
 
 - Weekly Overview is the only continuous ambient surface. It runs with a 3 second half-cycle (6 seconds per surface round trip), and interpolates up to 42% toward its inset tone. Accent bars and Focused Sets wave share that phase.
 - Focused Sets keeps the existing progress values and native progress semantics. The active segment is a 2.2 dp sinusoidal stroke with 1.5 dp amplitude and 20 dp wavelength over a 1.5 dp straight inactive track; the active horizontal extent stays exactly `width × value`, with a quiet 3 dp terminal dot at the track end.
-- The Weekly Overview anatomy field blends 10% toward its plum inset tone in light mode and 16% in dark mode. The anatomy colors are resolved against that surface; the drawing itself and its blue data highlights are unchanged.
+- The Weekly Overview anatomy field blends 15% toward its plum inset tone in light mode and 20% in dark mode. The anatomy colors are resolved against that surface; the drawing itself and its blue data highlights are unchanged.
 - The Overview heatmap and Focused Sets row use their natural side-by-side height, with the anatomy centered vertically against the details. They stack at text scale 1.35 or above, or below 340 dp available width; large-text reflow does not add a fixed blank band.
 - Start Workout, Optimize, and the settings gear retain the same bounds and callbacks. Their release spring is capped at the resting paint bounds inside the action bar's fixed rounded clip, preventing the prior overshoot crop while preserving the inward press response.
 - Ambient work is gated by Overview selection, at least 24 dp visibility, TickerMode, app lifecycle, and MediaQuery’s animation-disable policy. A shared controller drives the card; RepaintBoundaries isolate accent/progress painting.
@@ -105,8 +105,19 @@ This is the current review evidence for the requested Train/shell polish. The pr
 - [Weekly Overview untouched idle](expressive-polish-20261001/weekly-overview-idle.mp4)
 - [Reduced Motion idle](expressive-polish-20261001/reduced-motion-idle.mp4); paired stills [A](expressive-polish-20261001/overview-reduced-motion-a.png) and [B](expressive-polish-20261001/overview-reduced-motion-b.png) show the same static phase.
 
-The 8% plan tints distinguish blue, orange, and green while leaving the semantic blue muscle highlights legible. The Weekly Overview panel keeps its approved ambient surface breathing and accent motion. The wave is an active sinusoidal line rather than a filled bar with a moving edge: only its phase changes, and reduced motion fixes it at phase zero. The normal Preview and Reduced Motion captures retain the same content and composition.
+The tint strength was raised after review because the first light/dark difference was difficult to see: plan tints are now 12%, and the Weekly Overview anatomy field is 15% light / 20% dark. See the newest tint-adjustment captures below. The Weekly Overview panel keeps its approved ambient surface breathing and accent motion. The wave is an active sinusoidal line rather than a filled bar with a moving edge: only its phase changes, and reduced motion fixes it at phase zero. The normal Preview and Reduced Motion captures retain the same content and composition.
 
 The action-bar clip records the optimized-workout recovery result, the settings route, and Start → isolated session → return to Train. Pixel stills captured during the press show the controls moving inward without cropped corners or changed resting placement. Start, Optimize, and gear bounds remain at their original positions.
 
 Focused validation for this pass: **51 tests passed, 0 failures**, Flutter 3.47.5 / Dart 3.13.4. See the newest follow-up in `docs/tonos-expressive-train-proving-ground-results.md` for the analyzer, diff check, and the explicit full-suite deferral until user review.
+
+### Latest user tint adjustment — 2026-10-01
+
+The user found the previous plan and Weekly Overview heatmap tints difficult to see. Only those tint strengths changed: plan heatmaps are now 12%; the Weekly Overview anatomy field is 15% in light mode and 20% in dark mode. Plan-card geometry, heatmap data colors, layout, controls, and motion are unchanged.
+
+Fresh Pixel 7 captures from the isolated preview are in `tint-adjustment-20261001/`:
+
+- [Train Overview — light](tint-adjustment-20261001/overview-light.png) · [dark](tint-adjustment-20261001/overview-dark.png)
+- [Train Plans — light](tint-adjustment-20261001/plans-light.png) · [dark](tint-adjustment-20261001/plans-dark.png)
+
+The Plans captures show the blue, orange, and green active-plan thumbnails together. Use these newest stills to judge tint visibility; the earlier `expressive-polish-20261001/` images show the preceding, more subtle tint values.

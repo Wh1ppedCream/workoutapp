@@ -419,3 +419,11 @@ The connected Pixel 7 is `28021FDH200228`; the resumed app is the isolated packa
 Focused widget/presentation tests passed **51/51**, scoped analysis reported no issues, and the full suite remains deliberately deferred until the user reviews this candidate. Before publishing, stage only the named Train source/tests, this review evidence, and the three updated review/result/handoff documents. Protect every unrelated tracked change and untracked asset; do not use broad staging or cleanup. Push normally to `origin/feature/classic-m3e` and independently compare the remote tip with `HEAD`.
 
 The next gate is the user's seven-point visual/motion review. Until approval, do not start broader Expressive work or run the full-suite qualification campaign.
+
+### 25. User tint-strength adjustment handoff — 2026-10-01
+
+The user requested only slightly stronger heatmap background tints after the latest Train review. Current values are 12% for plan heatmaps and 15% light / 20% dark for the Weekly Overview anatomy field. Source and expected-surface tests are updated; the direct tint/layout test pair passed **10/10**, scoped analysis is clean, and the full suite remains deferred.
+
+Fresh Pixel 7 captures are in `proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/`. The Plans pair includes all three plan identities, and the Overview pair shows the Weekly tint. Treat these as the current tint review assets; previous `expressive-polish-20261001` images document the prior values.
+
+No other Train visuals or motion changed. Await the user's tint feedback before changing these values again or starting another Expressive slice.

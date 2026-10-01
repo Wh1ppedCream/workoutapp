@@ -143,11 +143,11 @@ class PresetBar extends StatelessWidget {
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
 
-    // Keep the diagram on a neutral media surface, with only a quiet hint of
-    // plan identity. This stays below either plan-row wash (13% or 16%), so
-    // the fixed heatmap colors remain the visual owner of the data.
+    // Keep the diagram on a neutral media surface with a low-chroma plan tint.
+    // It stays below either plan-row wash (13% or 16%), so the fixed heatmap
+    // colors remain the visual owner of the data.
     final heatmapBackground = Color.alphaBlend(
-      accent.withValues(alpha: 0.08),
+      accent.withValues(alpha: 0.12),
       context.surfaceTokens.mediaPlaceholder,
     );
     final card = TonosExpressivePressResponse(

@@ -454,8 +454,8 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
         final isStacked = textScale >= 1.35 || constraints.maxWidth < 340;
         final heatmapTint = Theme.of(context).brightness == Brightness.dark
-            ? 0.16
-            : 0.10;
+            ? 0.20
+            : 0.15;
         final resolvedHeatmapSurface = Color.lerp(
           heatmapSurface,
           tokens.focusInset,

@@ -80,7 +80,7 @@ void main() {
         final expectedHeatmapSurface = Color.lerp(
           theme.surfaceTokens.dashboardHero,
           tokens.focusInset,
-          brightness == Brightness.dark ? 0.16 : 0.10,
+          brightness == Brightness.dark ? 0.20 : 0.15,
         )!;
         final heatmapContainer = tester.widget<Container>(
           find.byKey(const ValueKey('expressive-weekly-heatmap')),

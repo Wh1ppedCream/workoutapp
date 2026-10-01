@@ -38,14 +38,14 @@ The shared compact tier is 0.88 scale, 0.5 dp offset, and 0.05 rad rotation. Sup
 
 - Active plan rows use the broad alternating Expressive row silhouettes. Each bright plan-identity block uses a complementary inner radius constrained to the outer row radius with the existing scaled 5 dp inset; the thumbnail frame therefore no longer clips on its lower corner, and row height is unchanged.
 - Identity color stays concentrated in the leading block. The row body uses a neutral container blended with the identity at 13% normally or 16% for the active state, preserving filled-card presence without putting saturated blue behind the anatomy data.
-- Both the heatmap frame and its color-resolver surface use the same media-placeholder tone with the plan accent blended over it at 8%. This low-strength blue/orange/green tint restores plan identity without recoloring anatomy data; fixed blue heatmap highlights remain legible in light and dark modes.
+- Both the heatmap frame and its color-resolver surface use the same media-placeholder tone with the plan accent blended over it at 12%. This low-chroma blue/orange/green tint restores plan identity without recoloring anatomy data; fixed blue heatmap highlights remain legible in light and dark modes.
 - Menu bubble and popup use neutral surfaceContainerHigh. The menu remains a supporting action and does not compete with the plan identity.
 - The card press wrapper lets the outer row silhouette compress as a unit; the Material shape clip still contains the thumbnail and row content. Pixel close-ups show no inner-corner clipping.
 
 ## Responsive and implementation notes
 
 - The side-by-side focus row now uses its natural height and centers the anatomy against Focused Sets, removing the previous imposed minimum-height band. At text scale 1.35 or higher, or width below 340 dp, the heatmap and details stack. Focused tests cover scales 1.0, 1.15, 1.5, and 2.0 plus 320 dp width without overflow.
-- The Weekly Overview heatmap container blends 10% toward its plum inset tone in light mode and 16% in dark mode. Its BodyHeatmap colors are resolved against this resulting surface; the anatomy illustration and semantic blue data highlights are not recolored.
+- The Weekly Overview heatmap container blends 15% toward its plum inset tone in light mode and 20% in dark mode. Its BodyHeatmap colors are resolved against this resulting surface; the anatomy illustration and semantic blue data highlights are not recolored.
 - The focus surface interpolates its own color while the unchanged child is passed through the shared phase scope. Accent bars and progress painting listen locally, so the entire Train page does not rebuild on each animation tick.
 - The ambient owner stops and resets when its visibility threshold is crossed, Overview is inactive, TickerMode is disabled, reduced motion/Effects Off is active, or the app leaves the resumed state. Controllers are disposed with their widgets.
 - The normal preview uses standard Flutter Material widgets and Tonos-owned paint/gesture wrappers. It does not imply spring-based layout morphing, a third-party animation package, an idle avatar spinner, or animation on other Tonos destinations.

@@ -118,7 +118,7 @@ void main() {
               ),
             );
             final expectedHeatmapSurface = Color.alphaBlend(
-              identityColor.withValues(alpha: 0.08),
+              identityColor.withValues(alpha: 0.12),
               surfaces.mediaPlaceholder,
             );
             expect(frame.backgroundColor, expectedHeatmapSurface);
@@ -129,7 +129,7 @@ void main() {
                   'plan identity adds a subtle tint to the neutral media tone',
             );
             expect(
-              0.08,
+              0.12,
               lessThan(isActive ? 0.16 : 0.13),
               reason: 'heatmap tint stays weaker than the plan-card wash',
             );

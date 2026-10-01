@@ -134,3 +134,19 @@ The action clip includes the current Optimize recovery warning (dismissed), sett
 - Scoped Dart analysis: **No issues found**.
 - Full Flutter suite: **not run**, intentionally deferred until the user reviews this Train + shell candidate.
 - This is not a production promotion or SDK/theme migration. Keep the scope limited to the named Train + shell refinements until the seven review questions are answered.
+
+### 24. User tint-strength adjustment — 2026-10-01
+
+After reviewing the previous captures, the user requested a small increase because the plan and Weekly Overview heatmap differences were hard to see. The current implementation changes only these blends:
+
+- Plan heatmaps: 12% identity accent over the existing media-placeholder surface for blue, orange, and green plans.
+- Weekly Overview anatomy field: 15% toward the plum inset tone in light mode and 20% in dark mode.
+
+The actual anatomy data colors, plan-card colors and geometry, screen layout, action bar, wave, ambient motion, and Reduced Motion behavior remain unchanged.
+
+The updated Preview was freshly built with Flutter 3.47.5 and installed on Pixel 7 `28021FDH200228` as `com.tonos.expressivepreview`, using the isolated `tonos_expressive_preview.db`. Normal `com.tonos` data was not targeted. Latest matched-state captures are under `docs/proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/`:
+
+- [Overview light](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/overview-light.png) and [dark](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/overview-dark.png).
+- [Plans light](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/plans-light.png) and [dark](proposals/tonos-expressive-train-proving-ground/amplified-review/tint-adjustment-20261001/plans-dark.png), each showing the blue, orange, and green active-plan rows.
+
+The directly affected plan/Weekly Overview tests passed **10/10**, with scoped Dart analysis reporting no issues. The full suite remains deferred until the user approves the Train + shell review candidate. This adjustment is awaiting user judgment; the earlier values are preserved in section 23 as the preceding iteration's record.
