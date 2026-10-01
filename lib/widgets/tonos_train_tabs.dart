@@ -327,7 +327,7 @@ class _TonosTrainTabButton extends StatelessWidget {
             )
           : BorderSide.none,
     );
-    final button = Material(
+    Widget button = Material(
       color: usesExpressiveRecipe
           ? Colors.transparent
           : selected
@@ -386,6 +386,16 @@ class _TonosTrainTabButton extends StatelessWidget {
         ),
       ),
     );
+    if (usesExpressiveRecipe) {
+      button = TonosExpressivePressResponse(
+        enabled: true,
+        borderRadius: buttonRadius,
+        pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
+        pressedScale: 0.93,
+        pressedOffset: const Offset(0, 1),
+        child: button,
+      );
+    }
 
     return Expanded(
       child: Semantics(

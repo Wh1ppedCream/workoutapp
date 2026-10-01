@@ -8,6 +8,7 @@ const double _indicatorTravelWidthFraction = 0.78;
 const double _indicatorSelectedWidthFraction = 0.94;
 const double _maximumIndicatorOvershootInSlots = 0.06;
 const double _maximumPressShapeOvershoot = 0.08;
+const int _maximumRevealStaggerIndex = 6;
 
 final SpringDescription _selectedSpring = SpringDescription.withDampingRatio(
   mass: 1,
@@ -263,9 +264,9 @@ class _TonosExpressiveSelectionIndicatorState
 ///
 /// The child continues to own the action callback, keyboard activation,
 /// focus, and semantics. This wrapper only listens to raw pointer down/up/cancel
-/// events and clips its visual child to a changing shape. The child keeps its
-/// layout, pointer hit testing, and semantic bounds. Pass both border radii to
-/// add bounded shape compression/recovery without animating the label itself.
+/// events and adds paint-only scale, offset, rotation, and shape compression.
+/// The child keeps its layout and hit target. Pass both border radii to morph
+/// the silhouette without animating the label itself.
 class TonosExpressivePressResponse extends StatefulWidget {
   const TonosExpressivePressResponse({
     super.key,
@@ -273,12 +274,18 @@ class TonosExpressivePressResponse extends StatefulWidget {
     required this.child,
     this.borderRadius,
     this.pressedBorderRadius,
+    this.pressedScale = 1,
+    this.pressedOffset = Offset.zero,
+    this.pressedRotation = 0,
   }) : assert((borderRadius == null) == (pressedBorderRadius == null));
 
   final bool enabled;
   final Widget child;
   final BorderRadius? borderRadius;
   final BorderRadius? pressedBorderRadius;
+  final double pressedScale;
+  final Offset pressedOffset;
+  final double pressedRotation;
 
   @override
   State<TonosExpressivePressResponse> createState() =>
@@ -392,10 +399,14 @@ class _TonosExpressivePressResponseState
       onPointerCancel: _handlePointerUp,
       child: AnimatedBuilder(
         animation: _controller,
-        child: widget.child,
+        child: RepaintBoundary(child: widget.child),
         builder: (context, child) {
           final progress = _controller.value;
           final borderRadius = _currentBorderRadius(progress);
+          final boundedProgress = progress.clamp(-0.08, 1.06).toDouble();
+          final scale = (1 + (widget.pressedScale - 1) * boundedProgress)
+              .clamp(0.78, 1.03)
+              .toDouble();
 
           Widget visual = child!;
           if (borderRadius != null) {
@@ -405,7 +416,19 @@ class _TonosExpressivePressResponseState
               child: visual,
             );
           }
-          return visual;
+          return Transform.translate(
+            offset: widget.pressedOffset * boundedProgress,
+            transformHitTests: false,
+            child: Transform.rotate(
+              angle: widget.pressedRotation * boundedProgress,
+              transformHitTests: false,
+              child: Transform.scale(
+                scale: scale,
+                transformHitTests: false,
+                child: visual,
+              ),
+            ),
+          );
         },
       ),
     );
@@ -413,6 +436,232 @@ class _TonosExpressivePressResponseState
 
   @override
   void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+/// A short, one-shot expressive arrival for a newly visible child.
+///
+/// The child remains mounted and interactive while it arrives; only paint is
+/// transformed. [staggerIndex] offsets the start within a small bounded batch
+/// without timers or delayed callbacks. Reduced motion and disabled ticker
+/// regions resolve directly to the resting presentation.
+class TonosExpressiveReveal extends StatefulWidget {
+  const TonosExpressiveReveal({
+    super.key,
+    required this.child,
+    this.enabled = true,
+    this.staggerIndex = 0,
+    this.duration = const Duration(milliseconds: 240),
+    this.staggerStep = const Duration(milliseconds: 55),
+  }) : assert(staggerIndex >= 0),
+       assert(duration > Duration.zero),
+       assert(staggerStep >= Duration.zero);
+
+  final Widget child;
+  final bool enabled;
+  final int staggerIndex;
+  final Duration duration;
+  final Duration staggerStep;
+
+  @override
+  State<TonosExpressiveReveal> createState() => _TonosExpressiveRevealState();
+}
+
+class _TonosExpressiveRevealState extends State<TonosExpressiveReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _arrival;
+  bool _started = false;
+
+  int get _boundedStagger =>
+      widget.staggerIndex.clamp(0, _maximumRevealStaggerIndex);
+
+  Duration get _delay => widget.staggerStep * _boundedStagger;
+
+  Duration get _totalDuration => widget.duration + _delay;
+
+  @override
+  void initState() {
+    super.initState();
+    final totalMicros = _totalDuration.inMicroseconds;
+    final delayFraction = totalMicros == 0
+        ? 0.0
+        : _delay.inMicroseconds / totalMicros;
+    _controller = AnimationController(vsync: this, duration: _totalDuration);
+    _arrival = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(delayFraction, 1, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant TonosExpressiveReveal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enabled != widget.enabled && !widget.enabled) {
+      _snapToRest();
+    } else if (!oldWidget.enabled && widget.enabled) {
+      _syncAnimation();
+    }
+  }
+
+  bool _canAnimate() =>
+      widget.enabled &&
+      TickerMode.valuesOf(context).enabled &&
+      !MediaQuery.disableAnimationsOf(context);
+
+  void _syncAnimation() {
+    if (!_canAnimate()) {
+      _snapToRest();
+      return;
+    }
+    if (!_started) {
+      _started = true;
+      _controller.forward(from: 0);
+    }
+  }
+
+  void _snapToRest() {
+    _controller.stop(canceled: true);
+    _controller.value = 1;
+    _started = true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _arrival,
+      child: RepaintBoundary(child: widget.child),
+      builder: (context, child) {
+        final progress = _arrival.value;
+        return Opacity(
+          opacity: progress,
+          alwaysIncludeSemantics: true,
+          child: Transform.translate(
+            offset: Offset(0, 8 * (1 - progress)),
+            transformHitTests: false,
+            child: Transform.scale(
+              scale: lerpDouble(0.965, 1, progress)!,
+              transformHitTests: false,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+/// A low-cost, paint-only ambient loop for a small expressive focal surface.
+///
+/// The caller keeps layout and semantics in [child] and uses [builder] only to
+/// interpolate decorative color/paint. The loop is stopped and snapped to its
+/// neutral pose whenever reduced motion, Effects Off, TickerMode, an inactive
+/// tab, or a non-resumed app lifecycle state disables it.
+class TonosExpressiveAmbientMotion extends StatefulWidget {
+  const TonosExpressiveAmbientMotion({
+    super.key,
+    required this.child,
+    required this.builder,
+    this.enabled = true,
+    this.halfCycle = const Duration(seconds: 8),
+  }) : assert(halfCycle > Duration.zero);
+
+  final Widget child;
+  final Widget Function(BuildContext context, double phase, Widget child)
+  builder;
+  final bool enabled;
+  final Duration halfCycle;
+
+  @override
+  State<TonosExpressiveAmbientMotion> createState() =>
+      _TonosExpressiveAmbientMotionState();
+}
+
+class _TonosExpressiveAmbientMotionState
+    extends State<TonosExpressiveAmbientMotion>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late final AnimationController _controller;
+  AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycleState =
+        WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+    WidgetsBinding.instance.addObserver(this);
+    _controller = AnimationController(vsync: this, duration: widget.halfCycle);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant TonosExpressiveAmbientMotion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.halfCycle != widget.halfCycle) {
+      _controller.duration = widget.halfCycle;
+    }
+    _syncAnimation();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _lifecycleState = state;
+    _syncAnimation();
+  }
+
+  bool _canAnimate() =>
+      widget.enabled &&
+      TickerMode.valuesOf(context).enabled &&
+      !MediaQuery.disableAnimationsOf(context) &&
+      _lifecycleState == AppLifecycleState.resumed;
+
+  void _syncAnimation() {
+    if (_canAnimate()) {
+      if (!_controller.isAnimating) {
+        _controller.repeat(reverse: true);
+      }
+    } else {
+      _controller.stop(canceled: true);
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        child: RepaintBoundary(child: widget.child),
+        builder: (context, child) => widget.builder(
+          context,
+          Curves.easeInOutSine.transform(_controller.value),
+          child!,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }

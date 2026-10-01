@@ -23,6 +23,8 @@ import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/theme/tokens/app_semantic_colors.dart';
 import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/utils/app_test_keys.dart';
+import 'package:env_test/widgets/generic_bar.dart';
+import 'package:env_test/widgets/preset_bar.dart';
 import 'package:env_test/widgets/tonos_train_tabs.dart';
 
 void main() {
@@ -109,6 +111,35 @@ void main() {
     },
   );
 
+  testWidgets('shared PresetBar stays scoped without the Train opt-in', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ExpressiveThemeDefinition.light(),
+        localizationsDelegates: tonosLocalizationDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: PresetBar(
+            presetId: 91,
+            label: 'Route Plan',
+            color: const Color(0xff4285f4),
+            index: 0,
+            onRefresh: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(GenericBar), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('expressive-plan-91')),
+      findsNothing,
+    );
+    expect(find.byType(TonosExpressiveReveal), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Train Overview and Plans keep their real states and actions', (
     tester,
   ) async {
@@ -170,7 +201,7 @@ void main() {
       final start = find.byKey(AppTestKeys.trainStartWorkout);
       final startText = find.text(strings.trainStartWorkout);
       expect(tester.widget<Text>(startText).style?.fontWeight, FontWeight.w600);
-      final startRect = tester.getRect(start);
+      final startSize = tester.getSize(start);
       final responseFinder = find.ancestor(
         of: start,
         matching: find.byType(TonosExpressivePressResponse),
@@ -186,9 +217,10 @@ void main() {
           tester.widget<ClipRRect>(responseClip).borderRadius as BorderRadius;
       expect(pressedRadius.topLeft.x, 14);
       expect(pressedRadius.topRight.x, 14);
-      expect(tester.getRect(start), startRect);
+      expect(tester.getSize(start), startSize);
       await press.cancel();
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await _pumpExpressiveFrames(tester);
       final restRadius =
           tester.widget<ClipRRect>(responseClip).borderRadius as BorderRadius;
       expect(restRadius.topLeft.x, 22);
@@ -198,6 +230,20 @@ void main() {
       await tester.tap(plansTab);
       await tester.pump();
       await tester.pump();
+      final plansEntry = find.byKey(
+        const ValueKey<String>('expressive-plans-entry'),
+      );
+      final planReveals = find.descendant(
+        of: plansEntry,
+        matching: find.byType(TonosExpressiveReveal),
+      );
+      expect(planReveals, findsWidgets);
+      expect(
+        tester
+            .widgetList<TonosExpressiveReveal>(planReveals)
+            .every((reveal) => reveal.enabled),
+        isTrue,
+      );
       final plansSemantics = tester
           .getSemantics(find.bySemanticsLabel(strings.trainPlansTab))
           .getSemanticsData();
@@ -223,23 +269,48 @@ void main() {
       expect(find.text('Plan 2'), findsOneWidget);
       expect(find.text('Plan 3'), findsOneWidget);
       expect(find.text('Plan 4'), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('expressive-plan-1')),
+        findsOneWidget,
+      );
 
-      final showMore = find.byType(OutlinedButton);
+      final showMore = find.byKey(
+        const ValueKey<String>('expressive-plan-show-more'),
+      );
       expect(showMore, findsOneWidget);
-      final showMoreButton = tester.widget<OutlinedButton>(showMore);
-      expect(showMoreButton.onPressed, isNotNull);
-      showMoreButton.onPressed!();
-      await tester.pumpAndSettle();
+      await tester.ensureVisible(showMore);
+      await _pumpExpressiveFrames(tester);
+      await tester.tap(showMore);
+      await _pumpExpressiveFrames(tester);
       for (var index = 4; index <= 8; index++) {
         expect(find.text('Plan $index'), findsOneWidget);
       }
       expect(find.text('Plan 9'), findsNothing);
-      final showMoreAgain = find.byType(OutlinedButton);
-      final showMoreAgainButton = tester.widget<OutlinedButton>(showMoreAgain);
-      expect(showMoreAgainButton.onPressed, isNotNull);
-      showMoreAgainButton.onPressed!();
-      await tester.pumpAndSettle();
+      final showMoreAgain = find.byKey(
+        const ValueKey<String>('expressive-plan-show-more'),
+      );
+      expect(showMoreAgain, findsOneWidget);
+      await tester.ensureVisible(showMoreAgain);
+      await _pumpExpressiveFrames(tester);
+      await tester.tap(showMoreAgain);
+      await _pumpExpressiveFrames(tester);
       expect(find.text('Plan 9'), findsOneWidget);
+      await tester.tap(find.byKey(AppTestKeys.trainOverviewTab));
+      await _pumpExpressiveFrames(tester);
+      expect(
+        tester
+            .widgetList<TonosExpressiveReveal>(planReveals)
+            .every((reveal) => !reveal.enabled),
+        isTrue,
+      );
+      await tester.tap(plansTab);
+      await _pumpExpressiveFrames(tester);
+      expect(
+        tester
+            .widgetList<TonosExpressiveReveal>(planReveals)
+            .every((reveal) => reveal.enabled),
+        isTrue,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     }
@@ -266,7 +337,7 @@ void main() {
       await session.ready;
 
       await _pumpExpressiveTrain(tester, repository, profile, session);
-      await tester.pumpAndSettle();
+      await _pumpExpressiveFrames(tester);
 
       final plansEntry = find.byKey(const ValueKey('expressive-plans-entry'));
       await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
@@ -298,6 +369,7 @@ void main() {
           .dy;
       expect(middleOffset, greaterThan(0));
       expect(middleOffset, lessThan(initialOffset));
+      await _pumpExpressiveFrames(tester);
       await tester.pumpAndSettle();
 
       final plansList = find.byKey(AppTestKeys.trainPlansList);
@@ -311,28 +383,29 @@ void main() {
         attempt++
       ) {
         await tester.drag(plansList, const Offset(0, -360));
-        await tester.pumpAndSettle();
+        await _pumpExpressiveFrames(tester);
       }
       expect(manualAdd, findsOneWidget);
       await tester.ensureVisible(manualAdd);
-      await tester.pumpAndSettle();
-      final scrollable = find.descendant(
-        of: plansList,
-        matching: find.byType(Scrollable),
-    ).first;
+      await _pumpExpressiveFrames(tester);
+      final scrollable = find
+          .descendant(of: plansList, matching: find.byType(Scrollable))
+          .first;
       final savedScrollPosition = tester
           .state<ScrollableState>(scrollable)
           .position
           .pixels;
 
       await tester.tap(find.byKey(AppTestKeys.trainOverviewTab));
-      await tester.pumpAndSettle();
+      await _pumpExpressiveFrames(tester);
       await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+      await tester.pump();
+      await _pumpExpressiveFrames(tester);
       await tester.pumpAndSettle();
-      expect(
-        tester.state<ScrollableState>(scrollable).position.pixels,
-        savedScrollPosition,
-      );
+      final returnedPosition = tester
+          .state<ScrollableState>(scrollable)
+          .position;
+      expect(returnedPosition.pixels, savedScrollPosition);
       await tester.pump(const Duration(milliseconds: 700));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -366,7 +439,7 @@ void main() {
       session,
       disableAnimations: true,
     );
-    await tester.pumpAndSettle();
+    await _pumpExpressiveFrames(tester);
 
     final plansEntry = find.byKey(const ValueKey('expressive-plans-entry'));
     await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
@@ -433,6 +506,7 @@ void main() {
     final strings = AppLocalizations.of(pageContext);
     final start = find.byKey(AppTestKeys.trainStartWorkout);
     final startRect = tester.getRect(start);
+    final startSize = tester.getSize(start);
     final startResponse = find.ancestor(
       of: start,
       matching: find.byType(TonosExpressivePressResponse),
@@ -485,10 +559,11 @@ void main() {
     expect(pressedRadius.bottomLeft.x, 0);
     expect(pressedRadius.topRight.x, 14);
     expect(pressedRadius.bottomRight.x, 14);
-    expect(tester.getRect(start), startRect);
+    expect(tester.getSize(start), startSize);
     await press.cancel();
-    await tester.pumpAndSettle();
-    expect(tester.getRect(start), startRect);
+    await tester.pump();
+    await _pumpExpressiveFrames(tester);
+    expect(tester.getSize(start), startSize);
     expect(tester.takeException(), isNull);
   });
 
@@ -570,7 +645,7 @@ void main() {
       expect(tester.getSize(actionBar).height, greaterThanOrEqualTo(120));
 
       await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
-      await tester.pumpAndSettle();
+      await _pumpExpressiveFrames(tester);
       final plansList = find.byKey(AppTestKeys.trainPlansList);
       for (final label in [
         AppLocalizations.of(tester.element(find.byType(TrainPage)))
@@ -594,7 +669,7 @@ void main() {
           attempt++
         ) {
           await tester.drag(plansList, const Offset(0, -360));
-          await tester.pumpAndSettle();
+          await _pumpExpressiveFrames(tester);
         }
         expect(
           section,
@@ -602,7 +677,7 @@ void main() {
           reason: '$label is reachable by scrolling',
         );
         await tester.ensureVisible(section);
-        await tester.pumpAndSettle();
+        await _pumpExpressiveFrames(tester);
       }
       expect(tester.takeException(), isNull);
     },
@@ -969,3 +1044,6 @@ Future<void> _pumpExpressiveTrain(
   await tester.pump();
   await tester.pump();
 }
+
+Future<void> _pumpExpressiveFrames(WidgetTester tester) =>
+    tester.pump(const Duration(milliseconds: 800));

@@ -627,6 +627,31 @@ class _TrainPageState extends State<TrainPage> {
     return Consumer<SelectedProfile>(
       builder: (context, sel, _) {
         final avatarForeground = context.semanticColors.onTrainProfileAvatar;
+        Widget profileButton = IconButton(
+          tooltip: strings.trainGymProfilesTooltip,
+          onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          icon: CircleAvatar(
+            radius: 18,
+            backgroundColor: ProfileIdentityPalette.currentProfileAvatar,
+            child: Text(
+              _profileInitial(sel.currentProfile?.name),
+              style: TextStyle(
+                color: avatarForeground,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        );
+        if (expressiveTokens != null) {
+          profileButton = TonosExpressivePressResponse(
+            enabled: true,
+            borderRadius: ExpressiveTrainShapes.compactControl,
+            pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+            pressedScale: 0.88,
+            pressedRotation: 0.035,
+            child: profileButton,
+          );
+        }
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: expressiveTokens?.pageCanvas,
@@ -696,22 +721,7 @@ class _TrainPageState extends State<TrainPage> {
               Padding(
                 key: _gymProfileTutorialKey,
                 padding: const EdgeInsets.only(right: 8),
-                child: IconButton(
-                  tooltip: strings.trainGymProfilesTooltip,
-                  onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                  icon: CircleAvatar(
-                    radius: 18,
-                    backgroundColor:
-                        ProfileIdentityPalette.currentProfileAvatar,
-                    child: Text(
-                      _profileInitial(sel.currentProfile?.name),
-                      style: TextStyle(
-                        color: avatarForeground,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
+                child: profileButton,
               ),
             ],
           ),
@@ -723,6 +733,7 @@ class _TrainPageState extends State<TrainPage> {
                   active: _selectedTab == 0,
                   motionKey: const ValueKey('expressive-overview-entry'),
                   child: _OverviewTab(
+                    isActive: _selectedTab == 0,
                     refreshToken: _overviewRefreshToken,
                     profileId: sel.currentProfile?.id,
                     presetsRefreshToken: _presetsRefreshToken,
@@ -737,6 +748,7 @@ class _TrainPageState extends State<TrainPage> {
                   active: _selectedTab == 1,
                   motionKey: const ValueKey('expressive-plans-entry'),
                   child: _PlansTab(
+                    isActive: _selectedTab == 1,
                     profileId: sel.currentProfile?.id,
                     refreshToken: _presetsRefreshToken,
                     onRefresh: () => setState(() => _presetsRefreshToken++),
@@ -862,6 +874,7 @@ class _TrainTabEntryMotionState extends State<_TrainTabEntryMotion>
 
 class _OverviewTab extends StatelessWidget {
   const _OverviewTab({
+    required this.isActive,
     required this.refreshToken,
     required this.profileId,
     required this.presetsRefreshToken,
@@ -870,6 +883,7 @@ class _OverviewTab extends StatelessWidget {
     required this.onPresetsRefresh,
   });
 
+  final bool isActive;
   final int refreshToken;
   final int? profileId;
   final int presetsRefreshToken;
@@ -886,6 +900,8 @@ class _OverviewTab extends StatelessWidget {
           key: weeklyOverviewKey,
           child: SevenDayFocusCard(
             refreshToken: refreshToken,
+            ambientMotionEnabled: isActive,
+            motionEnabled: isActive,
             onFocusedSetsTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const AnalyticsDashboardScreen(),
@@ -897,6 +913,7 @@ class _OverviewTab extends StatelessWidget {
         KeyedSubtree(
           key: activePlansKey,
           child: _ActivePresetsCard(
+            isActive: isActive,
             profileId: profileId,
             refreshToken: presetsRefreshToken,
             onRefresh: onPresetsRefresh,
@@ -908,11 +925,13 @@ class _OverviewTab extends StatelessWidget {
 }
 
 class _ActivePresetsCard extends StatefulWidget {
+  final bool isActive;
   final int? profileId;
   final int refreshToken;
   final VoidCallback onRefresh;
 
   const _ActivePresetsCard({
+    required this.isActive,
     required this.profileId,
     required this.refreshToken,
     required this.onRefresh,
@@ -974,6 +993,9 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressiveRecipe
+        ? theme.extension<AppExpressiveTrainTokens>()
+        : null;
     final surfaceInk = context.cs.onPrimaryContainer;
     final content = _withPanelInkTheme(
       context: context,
@@ -986,6 +1008,55 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
           final isLoading =
               snapshot.connectionState != ConnectionState.done &&
               !snapshot.hasData;
+          final editButton = IconButton(
+            tooltip: strings.trainEditActivePlans,
+            style: usesExpressiveRecipe
+                ? IconButton.styleFrom(
+                    backgroundColor: expressiveTokens!.actionSecondary,
+                    foregroundColor: expressiveTokens.actionSecondaryForeground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: ExpressiveTrainShapes.compactControl,
+                    ),
+                  )
+                : null,
+            onPressed: isLoading ? null : _openPlanManagement,
+            icon: const Icon(Icons.edit_outlined),
+          );
+          final Widget themedEditButton = usesExpressiveRecipe
+              ? TonosExpressivePressResponse(
+                  enabled: !isLoading && widget.isActive,
+                  borderRadius: ExpressiveTrainShapes.compactControl,
+                  pressedBorderRadius:
+                      ExpressiveTrainShapes.compactControlPressed,
+                  pressedScale: 0.84,
+                  pressedRotation: -0.055,
+                  child: editButton,
+                )
+              : editButton;
+          Widget activePlanList() {
+            final list = PresetsLoaded(
+              scale: 0.92,
+              refreshToken: widget.refreshToken,
+              presetIds: selectedIds,
+              planActiveState: true,
+              useExpressiveTrainPresentation: true,
+              expressiveMotionEnabled: widget.isActive,
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              emptyMessage: strings.trainSelectedPlansMissing,
+              onRefresh: widget.onRefresh,
+            );
+            if (!usesExpressiveRecipe) return list;
+            return AnimatedSize(
+              duration: widget.isActive && _expressiveMotionEnabled(context)
+                  ? const Duration(milliseconds: 220)
+                  : const Duration(milliseconds: 1),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: list,
+            );
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1006,11 +1077,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                               ),
                     ),
                   ),
-                  IconButton(
-                    tooltip: strings.trainEditActivePlans,
-                    onPressed: isLoading ? null : _openPlanManagement,
-                    icon: const Icon(Icons.edit_outlined),
-                  ),
+                  themedEditButton,
                 ],
               ),
               const SizedBox(height: 8),
@@ -1038,16 +1105,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
                   ),
                 )
               else
-                PresetsLoaded(
-                  scale: 0.92,
-                  refreshToken: widget.refreshToken,
-                  presetIds: selectedIds,
-                  planActiveState: true,
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  emptyMessage: strings.trainSelectedPlansMissing,
-                  onRefresh: widget.onRefresh,
-                ),
+                activePlanList(),
             ],
           );
         },
@@ -1079,6 +1137,7 @@ class _ActivePresetsCardState extends State<_ActivePresetsCard> {
 
 class _PlansTab extends StatefulWidget {
   const _PlansTab({
+    required this.isActive,
     required this.profileId,
     required this.refreshToken,
     required this.onRefresh,
@@ -1086,6 +1145,7 @@ class _PlansTab extends StatefulWidget {
     required this.onCreatePreset,
   });
 
+  final bool isActive;
   final int? profileId;
   final int refreshToken;
   final VoidCallback onRefresh;
@@ -1179,6 +1239,7 @@ class _PlansTabState extends State<_PlansTab> {
           children: [
             _PresetSectionCard(
               title: strings.trainActivePlans,
+              isActive: widget.isActive,
               onEdit: _openPlanManagement,
               isArchived: false,
               child: PresetsLoaded(
@@ -1186,6 +1247,8 @@ class _PlansTabState extends State<_PlansTab> {
                 refreshToken: widget.refreshToken,
                 presetIds: activeIds,
                 planActiveState: true,
+                useExpressiveTrainPresentation: true,
+                expressiveMotionEnabled: widget.isActive,
                 progressiveReveal: true,
                 initialVisibleCount: 3,
                 revealBatchSize: 5,
@@ -1198,6 +1261,7 @@ class _PlansTabState extends State<_PlansTab> {
             const SizedBox(height: 16),
             _PresetSectionCard(
               title: strings.trainArchivedPlans,
+              isActive: widget.isActive,
               onEdit: _openPlanManagement,
               isArchived: true,
               child: PresetsLoaded(
@@ -1205,6 +1269,8 @@ class _PlansTabState extends State<_PlansTab> {
                 refreshToken: widget.refreshToken,
                 excludedPresetIds: activeIds,
                 planActiveState: false,
+                useExpressiveTrainPresentation: true,
+                expressiveMotionEnabled: widget.isActive,
                 progressiveReveal: true,
                 initialVisibleCount: 3,
                 revealBatchSize: 5,
@@ -1245,12 +1311,14 @@ class _PlansTabState extends State<_PlansTab> {
 
 class _PresetSectionCard extends StatelessWidget {
   final String title;
+  final bool isActive;
   final VoidCallback? onEdit;
   final bool isArchived;
   final Widget child;
 
   const _PresetSectionCard({
     required this.title,
+    required this.isActive,
     this.onEdit,
     this.isArchived = false,
     required this.child,
@@ -1264,14 +1332,16 @@ class _PresetSectionCard extends StatelessWidget {
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
     final expressiveMotionEnabled =
-        usesExpressiveRecipe && _expressiveMotionEnabled(context);
+        usesExpressiveRecipe && isActive && _expressiveMotionEnabled(context);
     final surfaceInk = context.cs.onPrimaryContainer;
     final expressiveTokens = usesExpressiveRecipe
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
         : null;
-    final sectionContent = expressiveMotionEnabled
+    final sectionContent = usesExpressiveRecipe
         ? AnimatedSize(
-            duration: const Duration(milliseconds: 220),
+            duration: expressiveMotionEnabled
+                ? const Duration(milliseconds: 220)
+                : const Duration(milliseconds: 1),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: child,
@@ -1304,11 +1374,34 @@ class _PresetSectionCard extends StatelessWidget {
                 ),
               ),
               if (onEdit != null)
-                IconButton(
-                  tooltip: strings.trainManagePlans,
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                ),
+                usesExpressiveRecipe
+                    ? TonosExpressivePressResponse(
+                        enabled: isActive,
+                        borderRadius: ExpressiveTrainShapes.compactControl,
+                        pressedBorderRadius:
+                            ExpressiveTrainShapes.compactControlPressed,
+                        pressedScale: 0.84,
+                        pressedRotation: -0.055,
+                        child: IconButton(
+                          tooltip: strings.trainManagePlans,
+                          style: IconButton.styleFrom(
+                            backgroundColor: expressiveTokens!.actionSecondary,
+                            foregroundColor:
+                                expressiveTokens.actionSecondaryForeground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  ExpressiveTrainShapes.compactControl,
+                            ),
+                          ),
+                          onPressed: onEdit,
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: strings.trainManagePlans,
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                      ),
             ],
           ),
           const SizedBox(height: 8),
@@ -1586,6 +1679,8 @@ class _ExpressivePlanAction extends StatelessWidget {
       enabled: true,
       borderRadius: radius,
       pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
+      pressedScale: 0.95,
+      pressedOffset: const Offset(0, 1.5),
       child: Material(
         color: color,
         shape: shape,
@@ -1767,6 +1862,8 @@ class _SplitWorkoutBar extends StatelessWidget {
         enabled: true,
         borderRadius: startRadius(vertical: vertical, pressed: false),
         pressedBorderRadius: startRadius(vertical: vertical, pressed: true),
+        pressedScale: 0.945,
+        pressedOffset: const Offset(0, 1.5),
         child: visual,
       );
     }
@@ -1778,37 +1875,43 @@ class _SplitWorkoutBar extends StatelessWidget {
             ? Row(
                 children: [
                   Expanded(
-                    child: InkWell(
-                      onTap: isStartingOptimized ? null : onOptimizeWorkout,
-                      child: Center(
-                        child: isStartingOptimized
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: onOptimizeAction,
+                    child: _optimizeTouchResponse(
+                      expressive: usesExpressiveRecipe,
+                      enabled: !isStartingOptimized,
+                      child: InkWell(
+                        onTap: isStartingOptimized ? null : onOptimizeWorkout,
+                        child: Center(
+                          child: isStartingOptimized
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: onOptimizeAction,
+                                  ),
+                                )
+                              : Text(
+                                  strings.trainOptimize,
+                                  maxLines: usesExpressiveRecipe ? null : 2,
+                                  textAlign: TextAlign.center,
+                                  style: usesExpressiveRecipe
+                                      ? optimizeStyle
+                                      : textTheme.bodyMedium?.copyWith(
+                                          color: colorScheme.onPrimaryContainer,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                 ),
-                              )
-                            : Text(
-                                strings.trainOptimize,
-                                maxLines: usesExpressiveRecipe ? null : 2,
-                                textAlign: TextAlign.center,
-                                style: usesExpressiveRecipe
-                                    ? optimizeStyle
-                                    : textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                              ),
+                        ),
                       ),
                     ),
                   ),
-                  IconButton(
+                  _optimizeSettingsButton(
+                    expressive: usesExpressiveRecipe,
+                    enabled: !isStartingOptimized,
+                    onPressed: onOptimizeSettings,
                     tooltip: strings.trainOptimizedSettings,
-                    onPressed: isStartingOptimized ? null : onOptimizeSettings,
-                    icon: const Icon(Icons.settings_outlined),
                     color: optimizeIconColor,
+                    tokens: expressiveTokens,
                   ),
                 ],
               )
@@ -1817,32 +1920,36 @@ class _SplitWorkoutBar extends StatelessWidget {
                   Positioned.fill(
                     child: InkWell(
                       onTap: isStartingOptimized ? null : onOptimizeWorkout,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: usesExpressiveRecipe ? 48 : 36,
-                        ),
-                        child: Center(
-                          child: isStartingOptimized
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: usesExpressiveRecipe
-                                        ? onOptimizeAction
-                                        : colorScheme.onPrimaryContainer,
+                      child: _optimizeTouchResponse(
+                        expressive: usesExpressiveRecipe,
+                        enabled: !isStartingOptimized,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: usesExpressiveRecipe ? 48 : 36,
+                          ),
+                          child: Center(
+                            child: isStartingOptimized
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: usesExpressiveRecipe
+                                          ? onOptimizeAction
+                                          : colorScheme.onPrimaryContainer,
+                                    ),
+                                  )
+                                : Text(
+                                    strings.trainOptimize,
+                                    textAlign: TextAlign.center,
+                                    style: usesExpressiveRecipe
+                                        ? optimizeStyle
+                                        : textTheme.bodyMedium?.copyWith(
+                                            color: onOptimizeAction,
+                                            fontWeight: FontWeight.w800,
+                                          ),
                                   ),
-                                )
-                              : Text(
-                                  strings.trainOptimize,
-                                  textAlign: TextAlign.center,
-                                  style: usesExpressiveRecipe
-                                      ? optimizeStyle
-                                      : textTheme.bodyMedium?.copyWith(
-                                          color: onOptimizeAction,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                ),
+                          ),
                         ),
                       ),
                     ),
@@ -1851,20 +1958,14 @@ class _SplitWorkoutBar extends StatelessWidget {
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    child: IconButton(
+                    child: _optimizeSettingsButton(
+                      expressive: usesExpressiveRecipe,
+                      enabled: !isStartingOptimized,
+                      onPressed: onOptimizeSettings,
                       tooltip: strings.trainOptimizedSettings,
-                      onPressed: isStartingOptimized
-                          ? null
-                          : onOptimizeSettings,
-                      icon: const Icon(Icons.settings_outlined),
-                      iconSize: 19,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(
-                        minWidth: usesExpressiveRecipe ? 48 : 36,
-                        minHeight: 64,
-                      ),
                       color: optimizeIconColor,
+                      tokens: expressiveTokens,
+                      compact: true,
                     ),
                   ),
                 ],
@@ -1971,6 +2072,63 @@ class _SplitWorkoutBar extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _optimizeTouchResponse({
+    required bool expressive,
+    required bool enabled,
+    required Widget child,
+  }) {
+    if (!expressive) return child;
+    return TonosExpressivePressResponse(
+      enabled: enabled,
+      borderRadius: ExpressiveTrainShapes.primaryAction,
+      pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+      pressedScale: 0.955,
+      pressedOffset: const Offset(0, 1),
+      child: child,
+    );
+  }
+
+  Widget _optimizeSettingsButton({
+    required bool expressive,
+    required bool enabled,
+    required VoidCallback onPressed,
+    required String tooltip,
+    required Color color,
+    required AppExpressiveTrainTokens? tokens,
+    bool compact = false,
+  }) {
+    final button = IconButton(
+      tooltip: tooltip,
+      onPressed: enabled ? onPressed : null,
+      icon: const Icon(Icons.settings_outlined),
+      iconSize: compact ? 19 : null,
+      visualDensity: compact ? VisualDensity.compact : null,
+      padding: compact ? EdgeInsets.zero : null,
+      constraints: compact
+          ? const BoxConstraints(minWidth: 48, minHeight: 64)
+          : null,
+      color: color,
+      style: expressive
+          ? IconButton.styleFrom(
+              backgroundColor: tokens!.actionSecondary.withValues(alpha: 0.88),
+              foregroundColor: color,
+              shape: RoundedRectangleBorder(
+                borderRadius: ExpressiveTrainShapes.compactControl,
+              ),
+            )
+          : null,
+    );
+    if (!expressive) return button;
+    return TonosExpressivePressResponse(
+      enabled: enabled,
+      borderRadius: ExpressiveTrainShapes.compactControl,
+      pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+      pressedScale: 0.84,
+      pressedRotation: 0.08,
+      child: button,
     );
   }
 }

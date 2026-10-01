@@ -9,7 +9,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/selected_profile.dart';
 import '../repositories/app_repository.dart';
 import '../services/active_plan_store.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
@@ -37,6 +39,8 @@ class PresetsLoaded extends StatefulWidget {
   final bool progressiveReveal;
   final int initialVisibleCount;
   final int revealBatchSize;
+  final bool useExpressiveTrainPresentation;
+  final bool expressiveMotionEnabled;
 
   const PresetsLoaded({
     super.key,
@@ -52,6 +56,8 @@ class PresetsLoaded extends StatefulWidget {
     this.progressiveReveal = false,
     this.initialVisibleCount = 3,
     this.revealBatchSize = 5,
+    this.useExpressiveTrainPresentation = false,
+    this.expressiveMotionEnabled = true,
     required this.onRefresh,
   }) : assert(initialVisibleCount > 0),
        assert(revealBatchSize > 0);
@@ -154,10 +160,9 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   Future<Map<int, Map<String, double>>> _loadBodyPartUnitsByDefinition(
     Map<int, Map<int, int>> focusSetCountsByPreset,
   ) async {
-    final defIds =
-        <int>{
-          for (final counts in focusSetCountsByPreset.values) ...counts.keys,
-        }.toList();
+    final defIds = <int>{
+      for (final counts in focusSetCountsByPreset.values) ...counts.keys,
+    }.toList();
     if (defIds.isEmpty) return const <int, Map<String, double>>{};
 
     final entries =
@@ -229,6 +234,10 @@ class _PresetsLoadedState extends State<PresetsLoaded>
   @override
   bool get wantKeepAlive => true;
 
+  bool _usesExpressiveTrainPresentation(BuildContext context) =>
+      widget.useExpressiveTrainPresentation &&
+      context.usesExpressivePresentation;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -247,7 +256,15 @@ class _PresetsLoadedState extends State<PresetsLoaded>
     }
 
     if (profileId == null) {
-      return Center(child: Text(strings.presetsNoProfile));
+      return Center(
+        child: _usesExpressiveTrainPresentation(context)
+            ? _expressiveStatus(
+                context,
+                icon: Icons.person_outline,
+                message: strings.presetsNoProfile,
+              )
+            : Text(strings.presetsNoProfile),
+      );
     }
 
     return FutureBuilder<List<_PresetListItem>>(
@@ -255,9 +272,20 @@ class _PresetsLoadedState extends State<PresetsLoaded>
       initialData: _lastRows,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done && !snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: _usesExpressiveTrainPresentation(context)
+                ? _expressiveLoading(context)
+                : const CircularProgressIndicator(),
+          );
         }
         if (snap.hasError && !snap.hasData) {
+          if (_usesExpressiveTrainPresentation(context)) {
+            return _expressiveStatus(
+              context,
+              icon: Icons.error_outline,
+              message: strings.presetsLoadError,
+            );
+          }
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
             child: Text(strings.presetsLoadError),
@@ -268,20 +296,19 @@ class _PresetsLoadedState extends State<PresetsLoaded>
         if (snap.connectionState == ConnectionState.done && snap.hasData) {
           _lastRows = loadedRows;
         }
-        final rows =
-            loadedRows.where((row) {
-              final included =
-                  widget.presetIds == null ||
-                  widget.presetIds!.contains(row.presetId);
-              final excluded =
-                  widget.excludedPresetIds?.contains(row.presetId) ?? false;
-              return included && !excluded;
-            }).toList();
+        final rows = loadedRows.where((row) {
+          final included =
+              widget.presetIds == null ||
+              widget.presetIds!.contains(row.presetId);
+          final excluded =
+              widget.excludedPresetIds?.contains(row.presetId) ?? false;
+          return included && !excluded;
+        }).toList();
         if (rows.isEmpty) {
           final emptyMessage =
               widget.emptyMessage == PresetsLoaded.defaultEmptyMessage
-                  ? strings.presetsNoPlans
-                  : widget.emptyMessage;
+              ? strings.presetsNoPlans
+              : widget.emptyMessage;
           if (context.usesNeoPresentation && widget.excludedPresetIds != null) {
             final surfaces = context.surfaceTokens;
             final foreground = tonosForegroundForSurface(
@@ -313,6 +340,13 @@ class _PresetsLoadedState extends State<PresetsLoaded>
               ),
             );
           }
+          if (_usesExpressiveTrainPresentation(context)) {
+            return _expressiveStatus(
+              context,
+              icon: Icons.inbox_outlined,
+              message: emptyMessage,
+            );
+          }
           return Padding(
             padding: EdgeInsets.all(16 * widget.scale),
             child: Text(emptyMessage),
@@ -321,8 +355,8 @@ class _PresetsLoadedState extends State<PresetsLoaded>
 
         final visibleLimit =
             widget.progressiveReveal && _visibleCount < rows.length
-                ? _visibleCount
-                : rows.length;
+            ? _visibleCount
+            : rows.length;
         final visibleRows = rows.take(visibleLimit).toList(growable: false);
         final remainingCount = rows.length - visibleRows.length;
 
@@ -335,25 +369,25 @@ class _PresetsLoadedState extends State<PresetsLoaded>
           shrinkWrap: widget.shrinkWrap,
           itemBuilder: (ctx2, i) {
             if (i == visibleRows.length) {
-              final revealCount =
-                  remainingCount < widget.revealBatchSize
-                      ? remainingCount
-                      : widget.revealBatchSize;
+              final revealCount = remainingCount < widget.revealBatchSize
+                  ? remainingCount
+                  : widget.revealBatchSize;
               return _ShowMorePlansButton(
                 scale: widget.scale,
                 revealCount: revealCount,
                 remainingCount: remainingCount,
-                onPressed:
-                    () => setState(() {
-                      _visibleCount += widget.revealBatchSize;
-                    }),
+                useExpressiveTrainPresentation:
+                    widget.useExpressiveTrainPresentation,
+                expressiveMotionEnabled: widget.expressiveMotionEnabled,
+                onPressed: () => setState(() {
+                  _visibleCount += widget.revealBatchSize;
+                }),
               );
             }
 
             final row = visibleRows[i];
-            final color =
-                PlanIdentityPalette.colors[row.listIndex %
-                    PlanIdentityPalette.colors.length];
+            final color = PlanIdentityPalette
+                .colors[row.listIndex % PlanIdentityPalette.colors.length];
 
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 6 * widget.scale),
@@ -366,11 +400,13 @@ class _PresetsLoadedState extends State<PresetsLoaded>
                 focusFrequencyMap: row.focusFrequencyMap,
                 scale: widget.scale,
                 isActivePlan: widget.planActiveState,
-                onSetActivePlan:
-                    widget.planActiveState == null
-                        ? null
-                        : (active) =>
-                            _setPlanActive(profileId, row.presetId, active),
+                useExpressiveTrainPresentation:
+                    widget.useExpressiveTrainPresentation,
+                expressiveMotionEnabled: widget.expressiveMotionEnabled,
+                onSetActivePlan: widget.planActiveState == null
+                    ? null
+                    : (active) =>
+                          _setPlanActive(profileId, row.presetId, active),
                 onRefresh: _refreshPresets,
               ),
             );
@@ -385,12 +421,16 @@ class _ShowMorePlansButton extends StatelessWidget {
   final double scale;
   final int revealCount;
   final int remainingCount;
+  final bool useExpressiveTrainPresentation;
+  final bool expressiveMotionEnabled;
   final VoidCallback onPressed;
 
   const _ShowMorePlansButton({
     required this.scale,
     required this.revealCount,
     required this.remainingCount,
+    required this.useExpressiveTrainPresentation,
+    required this.expressiveMotionEnabled,
     required this.onPressed,
   });
 
@@ -400,10 +440,64 @@ class _ShowMorePlansButton extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
-    final countText =
-        revealCount == remainingCount
-            ? strings.presetsShowMore(revealCount)
-            : strings.presetsShowMoreRemaining(revealCount, remainingCount);
+    final countText = revealCount == remainingCount
+        ? strings.presetsShowMore(revealCount)
+        : strings.presetsShowMoreRemaining(revealCount, remainingCount);
+    if (useExpressiveTrainPresentation && context.usesExpressivePresentation) {
+      final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+      final radius = ExpressiveTrainShapes.showMore;
+      final shape = RoundedRectangleBorder(borderRadius: radius);
+      return Padding(
+        padding: EdgeInsets.only(top: 8 * scale),
+        child: TonosExpressivePressResponse(
+          enabled: expressiveMotionEnabled,
+          borderRadius: radius,
+          pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+          pressedScale: 0.94,
+          pressedOffset: const Offset(0, 1),
+          child: Material(
+            color: tokens.creationSurface,
+            shape: shape,
+            child: InkWell(
+              key: const ValueKey<String>('expressive-plan-show-more'),
+              onTap: onPressed,
+              customBorder: shape,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16 * scale,
+                    vertical: 11 * scale,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        color: tokens.actionPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          countText,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: tokens.actionPrimary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: EdgeInsets.only(top: 8 * scale),
       child: OutlinedButton.icon(
@@ -418,8 +512,11 @@ class _ShowMorePlansButton extends StatelessWidget {
             ),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.lerp(BorderRadius.zero, shapes.card, scale)!,
+            borderRadius: BorderRadius.lerp(
+              BorderRadius.zero,
+              shapes.card,
+              scale,
+            )!,
           ),
           padding: EdgeInsets.symmetric(
             horizontal: 14 * scale,
@@ -429,4 +526,51 @@ class _ShowMorePlansButton extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _expressiveLoading(BuildContext context) {
+  final tokens = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+  return Container(
+    width: double.infinity,
+    constraints: const BoxConstraints(minHeight: 88),
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: tokens.focusInset.withValues(alpha: 0.72),
+      borderRadius: ExpressiveTrainShapes.focusInset,
+    ),
+    alignment: Alignment.center,
+    child: CircularProgressIndicator(color: tokens.focusWarm),
+  );
+}
+
+Widget _expressiveStatus(
+  BuildContext context, {
+  required IconData icon,
+  required String message,
+}) {
+  final theme = Theme.of(context);
+  final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    decoration: BoxDecoration(
+      color: tokens.creationSurface,
+      borderRadius: ExpressiveTrainShapes.section,
+    ),
+    child: Row(
+      children: [
+        Icon(icon, color: tokens.actionPrimary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

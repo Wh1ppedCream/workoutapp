@@ -1,6 +1,6 @@
 # Tonos Expressive Train review
 
-This preview shows the current Tonos **Train → Overview** and **Train → Plans** screens in the amplified Expressive presentation. It is a disposable preview, not the normal Tonos install.
+This preview shows the current Tonos **Train → Overview** and **Train → Plans** screens in the amplified Expressive presentation. It is a disposable preview, not the normal Tonos install. The plan rows now use the same expressive language as their surrounding sections; the current layout and actions remain Tonos-owned.
 
 ## Open the preview and set a fair comparison
 
@@ -16,21 +16,22 @@ The preview controls affect only this in-memory review. **Reset review controls*
 
 | Screen and route | Current Tonos widgets to look at | What changes from Classic | What to do |
 |---|---|---|---|
-| **Train → Overview** | The existing Overview / Plans selector, profile avatar, **Weekly Overview** focus card, **Active Plans** card, split **Start Workout / Optimize** bar, and bottom navigation | The page canvas becomes warm-toned. The Weekly Overview becomes a dark plum focal module with an inset focus list, stronger title and apricot/mint accents. The anatomy map and the meaning of its heat colors stay the same. Active Plans becomes a softer supporting group. Start is purple and visually leads; Optimize is a teal-toned secondary action. | Compare the whole screen first, then inspect the focus card and action hierarchy. The blue/orange/green plan identities should remain recognizable and unchanged. |
-| **Train → Plans** | Existing **Active Plans**, **Archived Plans**, **Premade Plans**, **Generate Custom**, and **Manually Add** sections | The same sections and actions use distinct warm, mint, gold, and lavender surface groups. Their silhouettes and headings vary more; plan rows retain their identity colors, menu, edit actions, and order. | Tap **Plans** in the selector beside the avatar. Scroll down to inspect Archived and Premade, then the Generate Custom and Manually Add actions. In Active Plans, tap **Show 1 more** to see the existing progressive reveal. |
-| **Train shell** (visible on both tabs) | Five current destinations: **Train, Catalog, Logbook, Progress, Profile** | The navigation gets a tinted surface and a more visible selected shape. The selected icon sits in a moving/morphing indicator; its label remains high-contrast. Destination count, order, labels, placement, and callbacks remain the same. | Tap **Catalog**, then **Train**, to watch the indicator move. Catalog's screen styling is outside this review. |
+| **Train → Overview** | The existing Overview / Plans selector, profile avatar, **Weekly Overview** focus card, **Active Plans** card, split **Start Workout / Optimize** bar, and bottom navigation | The warm canvas and plum Weekly Overview remain the focal treatment, with its inset focus list and apricot/mint accents. The Active Plans parent is a warm supporting group; its individual rows are now filled, plan-identity-bearing cards with a strong leading thumbnail block, asymmetric row/identity shapes, and a separate menu bubble. Start is purple and leads; Optimize is teal-toned. Anatomy heatmap colors and plan identity colors retain their meanings. | Compare the whole screen, then inspect the focus card, filled plan rows, and action hierarchy. The plan names, thumbnails, order, and menu actions are unchanged. |
+| **Train → Plans** | Existing **Active Plans**, **Archived Plans**, **Premade Plans**, **Generate Custom**, and **Manually Add** sections | The current section order, controls, and density remain. Active and archived plan rows share the filled identity-bearing card treatment, with different row silhouettes and plan-colored leading blocks. Their neutral tonal fills keep blue, orange, green, and teal identities legible against the warm/mint section containers. | Tap **Plans** in the selector beside the avatar. Tap **Show 1 more** to see the real progressive reveal, then scroll through Archived and Premade to Generate Custom and Manually Add. |
+| **Train shell** (visible on both tabs) | Five current destinations: **Train, Catalog, Logbook, Progress, Profile** | The existing navigation gets a tinted surface and a more visible selected shape. The selected icon sits in a springing/morphing indicator; its label remains high-contrast. Destination count, order, labels, placement, and callbacks are unchanged. | Tap **Catalog**, **Progress**, then **Train** to watch the selection indicator move. Those destinations' page styling is outside this review. |
 
-## How to see the motion
+## Motion review clips
 
-- With motion on, switch **Overview ↔ Plans** slowly, then repeat about 10 times quickly. The selected shape springs and morphs; the selected tab and content state update immediately.
-- Watch the tab content as well as the selector: Overview and Plans each make a short 200 ms fade and roughly 12 dp settle on entry. This is only a paint transition around the existing mounted tab, so switching back keeps the same scroll position.
-- On first launch, watch **Weekly Overview** while its real focus data finishes loading; its loading/data state change has a brief 180 ms fade/scale. It is data-driven, not an idle animation.
-- Tap a bottom destination and return to Train. Watch the selected navigation shape move. The five labels and their tap areas stay in place.
-- Briefly press and release **Start Workout** if you want to feel its shape response. It performs the existing start action and opens the disposable workout flow; cancel that preview session if you do not want to continue.
-- On Plans, use **Show 1 more** to see the existing list reveal/section-size response. Plan data and action order do not change.
-- Open the sliders and turn **Reduced motion** on. Repeat the selector and navigation actions. Selection should snap without spring travel, while the Expressive colors, typography, grouping, and shape stay visibly distinct. **Effects off** also disables optional spring recovery.
+All clips were recorded from the isolated Pixel 7 preview. The existing screen state and callbacks remain the owners of navigation, selection, and plan data; the motion wrappers only present those state changes.
 
-There is no continuous idle loop. Motion is tied to selection, content entry, press/release, section reveal, and asynchronous focus-card content changes; the data callbacks and selected state remain immediate.
+- [Normal motion: plan rows, menu, reveal, tab entry, and bottom navigation](normal-motion.mp4). It opens on Overview, switches to Plans, reveals the remaining plan, opens/dismisses a row menu, opens and backs out of a plan detail, then changes tabs and shell destinations.
+- [Start Workout touch and route](start-touch.mp4). The existing primary action opens the disposable session route.
+- [Optimize touch and recovery warning](optimize-touch.mp4). The current Optimize callback reaches its existing “Take some time to rest” state for the seeded data; dismiss it with **OK**.
+- [Rapid tab and navigation retargeting](rapid-interaction.mp4). This repeats Overview/Plans and shell selection changes.
+- [Idle Overview breathing, 22 seconds](idle-10-second.mp4). Leave the screen untouched and watch the large plum Weekly Overview surface slowly breathe in tone. Its color interpolates through a small 24% portion of the focus-surface range with an 8-second half-cycle (16 seconds per full cycle); no text, metrics, heatmap meaning, or layout moves.
+- [Reduced motion interactions](reduced-motion.mp4). The same Expressive colors and shapes remain, while selection snaps and the ambient loop stops. Reduced motion was on; Effects Off remained off.
+
+The broader interaction list is in [motion-inventory.md](motion-inventory.md). Press/release callbacks and business state update immediately. Plan rows remain Expressive on both tabs, but row-arrival and touch motion are disabled while their tab is inactive; selecting the tab enables the reveal without replacing its list or losing scroll state. Selection and press springs, size/reveal transitions, and the ambient loop honor `TickerMode` and the preview’s reduced-motion path. Weekly Overview state changes snap while its tab is inactive. The breathing loop additionally runs only while Train → Overview is active and the app is resumed. Effects Off maps into the same animation-disable path.
 
 ## Boundaries
 
@@ -42,21 +43,16 @@ All eight captures use the same seeded preview content, screen/tab, scroll posit
 
 ### Overview
 
-- [Classic light](overview-classic-light.png)
-- [Expressive light](overview-expressive-light.png)
-- [Expressive light — latest review build](overview-expressive-light-final.png)
-- [Classic dark](overview-classic-dark.png)
-- [Expressive dark](overview-expressive-dark.png)
+- [Classic light — current matched capture](overview-classic-light-current.png)
+- [Expressive light — current review build](overview-expressive-light-refined.png)
+- [Classic dark — current matched capture](overview-classic-dark-current.png)
+- [Expressive dark — current review build](overview-expressive-dark.png)
 
 ### Plans
 
-- [Classic light](plans-classic-light.png)
-- [Expressive light](plans-expressive-light.png)
-- [Classic dark](plans-classic-dark.png)
-- [Expressive dark](plans-expressive-dark.png)
+- [Classic light — current matched capture](plans-classic-light-current.png)
+- [Expressive light — current review build](plans-expressive-light-refined.png)
+- [Classic dark — current matched capture](plans-classic-dark-current.png)
+- [Expressive dark — current review build](plans-expressive-dark.png)
 
-## Motion clips
-
-- [Normal motion: tab entry, plan reveal, and shell selection](normal-motion.mp4)
-- [Rapid Overview / Plans and navigation switching](rapid-interaction.mp4)
-- [Reduced motion: same states snapping without spring travel](reduced-motion.mp4)
+Each comparison pair uses the same seeded sample plans, Overview metrics, selected Train destination, text scale, and unobstructed screen state. Classic and Expressive screenshots were captured from the same Pixel 7 preview; system status-bar time can differ.

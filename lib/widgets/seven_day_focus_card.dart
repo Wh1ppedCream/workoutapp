@@ -7,6 +7,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_surface.dart';
 import 'body_heatmap.dart';
 import 'focused_sets_list.dart';
@@ -16,11 +17,15 @@ import 'focused_sets_list.dart';
 class SevenDayFocusCard extends StatefulWidget {
   final int refreshToken;
   final VoidCallback onFocusedSetsTap;
+  final bool ambientMotionEnabled;
+  final bool motionEnabled;
 
   const SevenDayFocusCard({
     super.key,
     required this.refreshToken,
     required this.onFocusedSetsTap,
+    this.ambientMotionEnabled = false,
+    this.motionEnabled = true,
   });
 
   @override
@@ -94,6 +99,8 @@ class _SevenDayFocusCardState extends State<SevenDayFocusCard> {
         heatmapFrequencyMap: data.heatmapFrequencyMap,
         hits: data.topBodyParts,
         onFocusedSetsTap: widget.onFocusedSetsTap,
+        ambientMotionEnabled: widget.ambientMotionEnabled,
+        motionEnabled: widget.motionEnabled,
         loading:
             snapshot.connectionState != ConnectionState.done &&
             snapshot.data == null,
@@ -110,6 +117,8 @@ class SevenDayFocusPresentation extends StatelessWidget {
     required this.heatmapFrequencyMap,
     required this.hits,
     required this.onFocusedSetsTap,
+    this.ambientMotionEnabled = false,
+    this.motionEnabled = true,
     this.loading = false,
     this.failed = false,
   });
@@ -117,6 +126,8 @@ class SevenDayFocusPresentation extends StatelessWidget {
   final Map<String, double> heatmapFrequencyMap;
   final List<FocusedSetHit> hits;
   final VoidCallback onFocusedSetsTap;
+  final bool ambientMotionEnabled;
+  final bool motionEnabled;
   final bool loading;
   final bool failed;
 
@@ -127,6 +138,8 @@ class SevenDayFocusPresentation extends StatelessWidget {
         heatmapFrequencyMap: heatmapFrequencyMap,
         hits: hits,
         onFocusedSetsTap: onFocusedSetsTap,
+        ambientMotionEnabled: ambientMotionEnabled,
+        motionEnabled: motionEnabled,
         loading: loading,
         failed: failed,
       );
@@ -224,6 +237,8 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
     required this.heatmapFrequencyMap,
     required this.hits,
     required this.onFocusedSetsTap,
+    required this.ambientMotionEnabled,
+    required this.motionEnabled,
     required this.loading,
     required this.failed,
   });
@@ -231,6 +246,8 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
   final Map<String, double> heatmapFrequencyMap;
   final List<FocusedSetHit> hits;
   final VoidCallback onFocusedSetsTap;
+  final bool ambientMotionEnabled;
+  final bool motionEnabled;
   final bool loading;
   final bool failed;
 
@@ -253,7 +270,8 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
         linearTrackColor: tokens.focusForeground.withValues(alpha: 0.2),
       ),
     );
-    final motionEnabled =
+    final canAnimateContent =
+        motionEnabled &&
         !(MediaQuery.maybeOf(context)?.disableAnimations ?? false) &&
         TickerMode.valuesOf(context).enabled;
     final focusState = loading
@@ -284,11 +302,20 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
             tokens: tokens,
           );
 
-    return TonosSurface(
-      variant: TonosSurfaceVariant.card,
-      color: tokens.focusSurface,
-      borderRadius: ExpressiveTrainShapes.focusHero,
-      padding: const EdgeInsets.all(18),
+    return TonosExpressiveAmbientMotion(
+      enabled: ambientMotionEnabled,
+      halfCycle: const Duration(seconds: 8),
+      builder: (context, phase, child) => TonosSurface(
+        variant: TonosSurfaceVariant.card,
+        color: Color.lerp(
+          tokens.focusSurface,
+          tokens.focusInset,
+          0.24 * phase,
+        )!,
+        borderRadius: ExpressiveTrainShapes.focusHero,
+        padding: const EdgeInsets.all(18),
+        child: child,
+      ),
       child: Theme(
         data: focusTheme,
         child: Column(
@@ -328,7 +355,7 @@ class _ExpressiveSevenDayFocusPresentation extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             AnimatedSwitcher(
-              duration: motionEnabled
+              duration: canAnimateContent
                   ? const Duration(milliseconds: 180)
                   : Duration.zero,
               switchInCurve: Curves.easeOutCubic,
@@ -425,7 +452,7 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
   }
 }
 
-class _ExpressiveFocusDetails extends StatefulWidget {
+class _ExpressiveFocusDetails extends StatelessWidget {
   const _ExpressiveFocusDetails({
     required this.hits,
     required this.onTap,
@@ -437,55 +464,39 @@ class _ExpressiveFocusDetails extends StatefulWidget {
   final AppExpressiveTrainTokens tokens;
 
   @override
-  State<_ExpressiveFocusDetails> createState() =>
-      _ExpressiveFocusDetailsState();
-}
-
-class _ExpressiveFocusDetailsState extends State<_ExpressiveFocusDetails> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final disableAnimations =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final animationEnabled =
-        !disableAnimations && TickerMode.valuesOf(context).enabled;
     final radius = ExpressiveTrainShapes.focusInset;
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         FocusedSetsList(
-          hits: widget.hits,
+          hits: hits,
           maxVisible: 3,
           emptyMessage: AppLocalizations.of(context).sevenDayFocusEmpty,
           titleWeight: FontWeight.w700,
         ),
-        if (widget.hits.length > 3)
-          _MoreFocusedSetsHint(color: widget.tokens.focusWarm),
+        if (hits.length > 3) _MoreFocusedSetsHint(color: tokens.focusWarm),
       ],
     );
 
     return MergeSemantics(
       child: Semantics(
         button: true,
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: _pressed && animationEnabled ? 0.985 : 1,
-          duration: animationEnabled
-              ? const Duration(milliseconds: 90)
-              : Duration.zero,
-          curve: Curves.easeOut,
+        onTap: onTap,
+        child: TonosExpressivePressResponse(
+          enabled: true,
+          borderRadius: radius,
+          pressedBorderRadius: ExpressiveTrainShapes.focusInsetPressed,
+          pressedScale: 0.965,
+          pressedOffset: const Offset(0, 1.5),
           child: Material(
-            color: widget.tokens.focusInset,
+            color: tokens.focusInset,
             shape: RoundedRectangleBorder(borderRadius: radius),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               customBorder: RoundedRectangleBorder(borderRadius: radius),
-              onTap: widget.onTap,
-              onHighlightChanged: (pressed) {
-                if (_pressed != pressed) setState(() => _pressed = pressed);
-              },
+              onTap: onTap,
               child: Padding(padding: const EdgeInsets.all(12), child: content),
             ),
           ),

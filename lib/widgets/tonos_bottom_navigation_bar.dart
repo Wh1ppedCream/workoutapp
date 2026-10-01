@@ -343,6 +343,49 @@ class _ExpressiveBottomNavigationBarState
     final labelColor = selected ? selectedLabelColor : unselectedColor;
     final label = item.label ?? item.tooltip ?? '';
     final icon = selected ? item.activeIcon : null;
+    Widget destinationContent = SizedBox.expand(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 32,
+              child: Center(
+                child: IconTheme.merge(
+                  data: IconThemeData(
+                    color: iconColor,
+                    size: selected ? 26 : 24,
+                  ),
+                  child: icon ?? item.icon,
+                ),
+              ),
+            ),
+            if (label.isNotEmpty)
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                softWrap: true,
+                style: labelStyle.copyWith(
+                  color: labelColor,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (context.usesExpressivePresentation) {
+      destinationContent = TonosExpressivePressResponse(
+        enabled: true,
+        borderRadius: cornerRadius,
+        pressedBorderRadius: ExpressiveTrainShapes.selectedSelector,
+        pressedScale: 0.92,
+        pressedOffset: const Offset(0, 1),
+        child: destinationContent,
+      );
+    }
 
     return SizedBox(
       width: destinationWidth,
@@ -361,41 +404,7 @@ class _ExpressiveBottomNavigationBarState
             excludeFromSemantics: true,
             customBorder: RoundedRectangleBorder(borderRadius: cornerRadius),
             onTap: () => widget.onTap(index),
-            child: SizedBox.expand(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: 32,
-                      child: Center(
-                        child: IconTheme.merge(
-                          data: IconThemeData(
-                            color: iconColor,
-                            size: selected ? 26 : 24,
-                          ),
-                          child: icon ?? item.icon,
-                        ),
-                      ),
-                    ),
-                    if (label.isNotEmpty)
-                      Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        softWrap: true,
-                        style: labelStyle.copyWith(
-                          color: labelColor,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            child: destinationContent,
           ),
         ),
       ),

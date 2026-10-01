@@ -5,6 +5,7 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
 import 'package:env_test/widgets/focused_sets_list.dart';
 import 'package:env_test/widgets/seven_day_focus_card.dart';
@@ -25,16 +26,19 @@ void main() {
       ];
 
       for (final brightness in Brightness.values) {
-        final theme =
-            brightness == Brightness.light
-                ? ExpressiveThemeDefinition.light()
-                : ExpressiveThemeDefinition.dark();
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
         final tokens = theme.extension<AppExpressiveTrainTokens>()!;
         await tester.pumpWidget(
           MaterialApp(
             theme: theme,
             localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
             home: Scaffold(
               body: SingleChildScrollView(
                 child: SevenDayFocusPresentation(
@@ -46,7 +50,7 @@ void main() {
             ),
           ),
         );
-        await tester.pumpAndSettle();
+        await _pumpFocusFrames(tester);
 
         expect(tester.takeException(), isNull);
         expect(find.text('Weekly Overview'), findsOneWidget);
@@ -124,13 +128,11 @@ void main() {
         theme: ExpressiveThemeDefinition.light(),
         localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        builder:
-            (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: const TextScaler.linear(2)),
-              child: child!,
-            ),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
         home: Scaffold(
           body: SingleChildScrollView(
             child: SevenDayFocusPresentation(
@@ -146,7 +148,7 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _pumpFocusFrames(tester);
 
     expect(tester.takeException(), isNull);
     expect(
@@ -190,6 +192,33 @@ void main() {
     );
   });
 
+  testWidgets('Expressive focus content snaps while its tab is inactive', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ExpressiveThemeDefinition.light(),
+        localizationsDelegates: tonosLocalizationDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SevenDayFocusPresentation(
+            heatmapFrequencyMap: const {'Shoulders': 1},
+            hits: [
+              FocusedSetHit(bodyPart: BodyPart(1, 'Shoulders'), units: 12),
+            ],
+            onFocusedSetsTap: () {},
+            motionEnabled: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher)).duration,
+      Duration.zero,
+    );
+  });
+
   testWidgets('Expressive hero press response disables with reduced motion', (
     tester,
   ) async {
@@ -198,11 +227,10 @@ void main() {
         theme: ExpressiveThemeDefinition.light(),
         localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        builder:
-            (context, child) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(disableAnimations: true),
-              child: child!,
-            ),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
         home: Scaffold(
           body: SevenDayFocusPresentation(
             heatmapFrequencyMap: const {},
@@ -212,10 +240,9 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await _pumpFocusFrames(tester);
 
-    final response = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-    expect(response.duration, Duration.zero);
+    expect(find.byType(TonosExpressivePressResponse), findsOneWidget);
     expect(
       tester.widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher)).duration,
       Duration.zero,
@@ -247,37 +274,32 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await _pumpFocusFrames(tester);
     }
 
     await pump(tickersEnabled: true);
     expect(
-      tester.widget<AnimatedScale>(find.byType(AnimatedScale)).duration,
-      const Duration(milliseconds: 90),
-    );
-    expect(
       tester.widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher)).duration,
       const Duration(milliseconds: 180),
     );
-    final gesture = await tester.startGesture(
-      tester.getCenter(find.text('Shoulders')),
-    );
-    await tester.pump(const Duration(milliseconds: 20));
+    final responseFinder = find.byType(TonosExpressivePressResponse);
+    expect(responseFinder, findsOneWidget);
     expect(
-      tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale,
-      0.985,
+      tester.widget<TonosExpressivePressResponse>(responseFinder).pressedScale,
+      0.965,
     );
-    await gesture.up();
+    await tester.tap(find.text('Shoulders'));
     expect(taps, 1);
 
     await pump(tickersEnabled: false);
     expect(
-      tester.widget<AnimatedScale>(find.byType(AnimatedScale)).duration,
-      Duration.zero,
-    );
-    expect(
       tester.widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher)).duration,
       Duration.zero,
     );
+    await tester.tap(find.text('Shoulders'));
+    expect(taps, 2);
   });
 }
+
+Future<void> _pumpFocusFrames(WidgetTester tester) =>
+    tester.pump(const Duration(milliseconds: 400));

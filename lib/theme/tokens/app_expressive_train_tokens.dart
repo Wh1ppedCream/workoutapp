@@ -257,6 +257,7 @@ abstract final class ExpressiveTrainShapes {
     bottomLeft: Radius.circular(12),
     bottomRight: Radius.circular(24),
   );
+  static const focusInsetPressed = BorderRadius.all(Radius.circular(14));
   static const activePlans = BorderRadius.only(
     topLeft: Radius.circular(16),
     topRight: Radius.circular(28),
@@ -268,6 +269,44 @@ abstract final class ExpressiveTrainShapes {
     topRight: Radius.circular(30),
     bottomLeft: Radius.circular(18),
     bottomRight: Radius.circular(30),
+  );
+  static const planRowAlternate = BorderRadius.only(
+    topLeft: Radius.circular(30),
+    topRight: Radius.circular(18),
+    bottomLeft: Radius.circular(30),
+    bottomRight: Radius.circular(14),
+  );
+  static const planRowPressed = BorderRadius.all(Radius.circular(15));
+  static const planIdentityBlock = BorderRadius.only(
+    topLeft: Radius.circular(14),
+    topRight: Radius.circular(22),
+    bottomLeft: Radius.circular(22),
+    bottomRight: Radius.circular(10),
+  );
+  static const planIdentityBlockAlternate = BorderRadius.only(
+    topLeft: Radius.circular(22),
+    topRight: Radius.circular(14),
+    bottomLeft: Radius.circular(10),
+    bottomRight: Radius.circular(22),
+  );
+  static const compactControl = BorderRadius.only(
+    topLeft: Radius.circular(17),
+    topRight: Radius.circular(9),
+    bottomLeft: Radius.circular(9),
+    bottomRight: Radius.circular(17),
+  );
+  static const compactControlPressed = BorderRadius.all(Radius.circular(10));
+  static const menu = BorderRadius.only(
+    topLeft: Radius.circular(26),
+    topRight: Radius.circular(12),
+    bottomLeft: Radius.circular(12),
+    bottomRight: Radius.circular(26),
+  );
+  static const showMore = BorderRadius.only(
+    topLeft: Radius.circular(24),
+    topRight: Radius.circular(11),
+    bottomLeft: Radius.circular(11),
+    bottomRight: Radius.circular(24),
   );
   static const section = BorderRadius.only(
     topLeft: Radius.circular(28),

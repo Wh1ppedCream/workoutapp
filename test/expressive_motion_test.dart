@@ -119,6 +119,46 @@ Widget _pressHost({
   );
 }
 
+Widget _ambientHost({
+  required bool disableAnimations,
+  required bool tickerEnabled,
+  bool enabled = true,
+}) {
+  return _host(
+    TonosExpressiveAmbientMotion(
+      enabled: enabled,
+      child: const SizedBox(width: 40, height: 40, key: ValueKey('ambient')),
+      builder: (context, phase, child) => Transform.translate(
+        key: const ValueKey('ambient-transform'),
+        offset: Offset(phase * 12, 0),
+        transformHitTests: false,
+        child: child,
+      ),
+    ),
+    disableAnimations: disableAnimations,
+    tickerEnabled: tickerEnabled,
+  );
+}
+
+Widget _revealHost({
+  required bool disableAnimations,
+  required VoidCallback onTap,
+}) {
+  return _host(
+    TonosExpressiveReveal(
+      staggerIndex: 2,
+      child: Material(
+        child: InkWell(
+          key: const ValueKey('reveal-action'),
+          onTap: onTap,
+          child: const SizedBox(width: 160, height: 64),
+        ),
+      ),
+    ),
+    disableAnimations: disableAnimations,
+  );
+}
+
 BorderRadius _pressRadius(WidgetTester tester) {
   return tester
           .widget<ClipRRect>(
@@ -527,6 +567,178 @@ void main() {
       } finally {
         semanticsHandle.dispose();
       }
+    },
+  );
+
+  testWidgets('press scale keeps the full child hit target and callback', (
+    tester,
+  ) async {
+    var tapCount = 0;
+    await tester.pumpWidget(
+      _host(
+        TonosExpressivePressResponse(
+          enabled: true,
+          pressedScale: 0.84,
+          borderRadius: BorderRadius.circular(22),
+          pressedBorderRadius: BorderRadius.circular(12),
+          child: Material(
+            child: InkWell(
+              key: const ValueKey('scaled-action'),
+              onTap: () => tapCount++,
+              child: const SizedBox(width: 160, height: 64),
+            ),
+          ),
+        ),
+      ),
+    );
+    final action = find.byKey(const ValueKey('scaled-action'));
+    final target = tester.getRect(action);
+    final gesture = await tester.startGesture(
+      Offset(target.right - 1, target.center.dy),
+    );
+    await tester.pump();
+    expect(tester.getRect(action).width, lessThan(target.width));
+    await gesture.up();
+    await tester.pump();
+    expect(tapCount, 1);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('ambient motion breathes in the resumed active region', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _ambientHost(disableAnimations: false, tickerEnabled: true),
+    );
+    final start = tester.getRect(find.byKey(const ValueKey('ambient')));
+    await tester.pump(const Duration(seconds: 4));
+    final middle = tester.getRect(find.byKey(const ValueKey('ambient')));
+    await tester.pump(const Duration(seconds: 4));
+    final peak = tester.getRect(find.byKey(const ValueKey('ambient')));
+
+    expect(middle.left, greaterThan(start.left));
+    expect(peak.left, greaterThan(middle.left));
+    await tester.pump(const Duration(seconds: 8));
+    expect(
+      tester.getRect(find.byKey(const ValueKey('ambient'))).left,
+      closeTo(start.left, 0.1),
+    );
+  });
+
+  testWidgets('ambient motion snaps for reduced motion and disabled tickers', (
+    tester,
+  ) async {
+    var disableAnimations = true;
+    var tickerEnabled = true;
+    Widget host() => _ambientHost(
+      disableAnimations: disableAnimations,
+      tickerEnabled: tickerEnabled,
+    );
+
+    await tester.pumpWidget(host());
+    final start = tester.getRect(find.byKey(const ValueKey('ambient')));
+    await tester.pump(const Duration(seconds: 5));
+    expect(tester.getRect(find.byKey(const ValueKey('ambient'))), start);
+
+    disableAnimations = false;
+    tickerEnabled = false;
+    await tester.pumpWidget(host());
+    await tester.pump(const Duration(seconds: 5));
+    expect(tester.getRect(find.byKey(const ValueKey('ambient'))), start);
+  });
+
+  testWidgets('ambient motion stops while its visual owner is inactive', (
+    tester,
+  ) async {
+    var enabled = false;
+    Widget host() => _ambientHost(
+      disableAnimations: false,
+      tickerEnabled: true,
+      enabled: enabled,
+    );
+
+    await tester.pumpWidget(host());
+    final start = tester.getRect(find.byKey(const ValueKey('ambient')));
+    await tester.pump(const Duration(seconds: 4));
+    expect(tester.getRect(find.byKey(const ValueKey('ambient'))), start);
+
+    enabled = true;
+    await tester.pumpWidget(host());
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      tester.getRect(find.byKey(const ValueKey('ambient'))).left,
+      greaterThan(start.left),
+    );
+  });
+
+  testWidgets('ambient motion stops when app is inactive and resumes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _ambientHost(disableAnimations: false, tickerEnabled: true),
+    );
+    await tester.pump(const Duration(seconds: 2));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    final paused = tester.getRect(find.byKey(const ValueKey('ambient')));
+    await tester.pump(const Duration(seconds: 3));
+    expect(tester.getRect(find.byKey(const ValueKey('ambient'))), paused);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    expect(
+      tester.getRect(find.byKey(const ValueKey('ambient'))).left,
+      greaterThan(paused.left),
+    );
+  });
+
+  testWidgets('ambient controller disposes while looping', (tester) async {
+    await tester.pumpWidget(
+      _ambientHost(disableAnimations: false, tickerEnabled: true),
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpWidget(const MaterialApp(home: SizedBox.shrink()));
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'reveal staggers, stays interactive, and snaps for reduced motion',
+    (tester) async {
+      var tapCount = 0;
+      await tester.pumpWidget(
+        _revealHost(disableAnimations: false, onTap: () => tapCount++),
+      );
+      final action = find.byKey(const ValueKey('reveal-action'));
+      final initial = tester.getRect(action);
+      await tester.pump(const Duration(milliseconds: 170));
+      final arriving = tester.getRect(action);
+      expect(arriving.top, lessThan(initial.top));
+      await tester.tap(action);
+      await tester.pump();
+      expect(tapCount, 1);
+      await tester.pumpAndSettle();
+
+      var disableAnimations = true;
+      await tester.pumpWidget(
+        _host(
+          TonosExpressiveReveal(
+            staggerIndex: 4,
+            child: const SizedBox(
+              key: ValueKey('reduced-reveal-child'),
+              width: 100,
+              height: 40,
+            ),
+          ),
+          disableAnimations: disableAnimations,
+        ),
+      );
+      final child = find.byKey(const ValueKey('reduced-reveal-child'));
+      expect(tester.getSize(child), const Size(100, 40));
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.getSize(child), const Size(100, 40));
     },
   );
 }

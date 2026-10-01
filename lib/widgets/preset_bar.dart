@@ -2,6 +2,7 @@
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../repositories/app_repository.dart';
 import '../providers/active_session.dart';
@@ -9,7 +10,9 @@ import '../providers/preset_session.dart';
 import '../screens/exercise/preset_detail_screen.dart';
 import 'body_heatmap.dart';
 import 'generic_bar.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../theme/widgets/workout_thumbnail_frame.dart';
 
@@ -27,6 +30,8 @@ class PresetBar extends StatelessWidget {
 
   /// Uniform scale factor for padding, font sizes, badge sizes, etc.
   final double scale;
+  final bool useExpressiveTrainPresentation;
+  final bool expressiveMotionEnabled;
 
   const PresetBar({
     super.key,
@@ -40,20 +45,31 @@ class PresetBar extends StatelessWidget {
     this.onSetActivePlan,
     required this.onRefresh,
     this.scale = 1.0,
+    this.useExpressiveTrainPresentation = false,
+    this.expressiveMotionEnabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final title =
-        label.trim().isNotEmpty
-            ? _planDisplayText(label)
-            : strings.planDefaultName(index + 1);
+    final title = label.trim().isNotEmpty
+        ? _planDisplayText(label)
+        : strings.planDefaultName(index + 1);
     // pull theme defaults if needed (but we'll still use the passed‐in color)
     final accent = color;
     final usesInkRecipe = context.usesNeoPresentation;
-    final trailingColor =
-        usesInkRecipe ? context.cs.onPrimaryContainer : accent;
+    final trailingColor = usesInkRecipe
+        ? context.cs.onPrimaryContainer
+        : accent;
+
+    if (useExpressiveTrainPresentation && context.usesExpressivePresentation) {
+      return _buildExpressiveCard(
+        context: context,
+        title: title,
+        accent: accent,
+        strings: strings,
+      );
+    }
 
     return GenericBar(
       label: title,
@@ -76,51 +92,195 @@ class PresetBar extends StatelessWidget {
               size: 24 * scale, // scale the icon
             ),
             onSelected: (action) => _handleMenu(context, action),
-            itemBuilder:
-                (_) => [
-                  if (isActivePlan != null)
-                    PopupMenuItem(
-                      value: isActivePlan! ? 'archive' : 'activate',
-                      child: Text(
-                        isActivePlan!
-                            ? strings.planArchive
-                            : strings.planActivate,
-                      ),
-                    ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(strings.commonDelete),
+            itemBuilder: (_) => [
+              if (isActivePlan != null)
+                PopupMenuItem(
+                  value: isActivePlan! ? 'archive' : 'activate',
+                  child: Text(
+                    isActivePlan! ? strings.planArchive : strings.planActivate,
                   ),
-                  PopupMenuItem(
-                    value: 'rename',
-                    child: Text(strings.commonRename),
-                  ),
-                ],
+                ),
+              PopupMenuItem(value: 'delete', child: Text(strings.commonDelete)),
+              PopupMenuItem(value: 'rename', child: Text(strings.commonRename)),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Widget _buildExpressiveCard({
+    required BuildContext context,
+    required String title,
+    required Color accent,
+    required AppLocalizations strings,
+  }) {
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+    final isActive = isActivePlan ?? true;
+    final neutralContainer = theme.colorScheme.surfaceContainerLow;
+    final cardFill = Color.alphaBlend(
+      accent.withValues(alpha: isActive ? 0.16 : 0.13),
+      neutralContainer,
+    );
+    final menuFill = Color.alphaBlend(
+      accent.withValues(alpha: 0.20),
+      neutralContainer,
+    );
+    final textColor = theme.colorScheme.onSurface;
+    final scaleFactor = scale;
+    final radius = index.isEven
+        ? ExpressiveTrainShapes.planRow
+        : ExpressiveTrainShapes.planRowAlternate;
+    final identityRadius = index.isEven
+        ? ExpressiveTrainShapes.planIdentityBlock
+        : ExpressiveTrainShapes.planIdentityBlockAlternate;
+    final rowShape = RoundedRectangleBorder(borderRadius: radius);
+    final effects = context.effectTokens;
+    final shadows = effects.cardShadowBlur > 0 && effects.cardShadow.a > 0
+        ? <BoxShadow>[
+            BoxShadow(
+              color: effects.cardShadow,
+              blurRadius: effects.cardShadowBlur,
+              offset: effects.cardShadowOffset,
+            ),
+          ]
+        : const <BoxShadow>[];
+    final usesLocalizedLayout =
+        Localizations.localeOf(context).languageCode != 'en';
+
+    final card = TonosExpressivePressResponse(
+      enabled: expressiveMotionEnabled,
+      borderRadius: radius,
+      pressedBorderRadius: ExpressiveTrainShapes.planRowPressed,
+      pressedScale: 0.965,
+      pressedOffset: const Offset(0, 1.5),
+      child: Material(
+        color: cardFill,
+        shape: rowShape,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openDetail(context),
+          customBorder: rowShape,
+          child: DecoratedBox(
+            decoration: ShapeDecoration(shape: rowShape, shadows: shadows),
+            child: Padding(
+              padding: EdgeInsets.all(5 * scaleFactor),
+              child: Row(
+                children: [
+                  Container(
+                    width: 72 * scaleFactor,
+                    height: 70 * scaleFactor,
+                    padding: EdgeInsets.all(5 * scaleFactor),
+                    decoration: BoxDecoration(
+                      color: accent,
+                      borderRadius: identityRadius,
+                    ),
+                    child: Center(
+                      child: _PresetFocusBadge(
+                        frequencyMap: focusFrequencyMap,
+                        scale: scaleFactor * 0.9,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10 * scaleFactor),
+                  Expanded(
+                    child: Text(
+                      title,
+                      maxLines: usesLocalizedLayout ? 2 : 1,
+                      overflow: usesLocalizedLayout
+                          ? TextOverflow.ellipsis
+                          : TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (isAutomatic) _AutomaticBadge(scale: scaleFactor),
+                  SizedBox(width: 2 * scaleFactor),
+                  TonosExpressivePressResponse(
+                    enabled: expressiveMotionEnabled,
+                    borderRadius: ExpressiveTrainShapes.compactControl,
+                    pressedBorderRadius:
+                        ExpressiveTrainShapes.compactControlPressed,
+                    pressedScale: 0.84,
+                    pressedRotation: 0.055,
+                    child: PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: ExpressiveTrainShapes.menu,
+                      ),
+                      color: tokens.librarySurface,
+                      iconColor: theme.colorScheme.onSurface,
+                      icon: Container(
+                        width: 38 * scaleFactor,
+                        height: 38 * scaleFactor,
+                        decoration: BoxDecoration(
+                          color: menuFill,
+                          borderRadius: ExpressiveTrainShapes.compactControl,
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.more_horiz,
+                          color: textColor,
+                          size: 22 * scaleFactor,
+                        ),
+                      ),
+                      onSelected: (action) => _handleMenu(context, action),
+                      itemBuilder: (_) => [
+                        if (isActivePlan != null)
+                          PopupMenuItem(
+                            value: isActivePlan! ? 'archive' : 'activate',
+                            child: Text(
+                              isActivePlan!
+                                  ? strings.planArchive
+                                  : strings.planActivate,
+                            ),
+                          ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(strings.commonDelete),
+                        ),
+                        PopupMenuItem(
+                          value: 'rename',
+                          child: Text(strings.commonRename),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return TonosExpressiveReveal(
+      key: ValueKey<String>('expressive-plan-$presetId'),
+      staggerIndex: index % 5,
+      enabled: expressiveMotionEnabled,
+      child: card,
+    );
+  }
+
   void _openDetail(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder:
-            (ctx) => MultiProvider(
-              providers: [
-                ChangeNotifierProvider<ActiveSession>.value(
-                  value: ctx.read<ActiveSession>(),
-                ),
-                ChangeNotifierProvider(
-                  create:
-                      (context) => PresetSession(
-                        presetId,
-                        repository: context.read<AppRepository>(),
-                      ),
-                ),
-              ],
-              child: const PresetDetailScreen(),
+        builder: (ctx) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ActiveSession>.value(
+              value: ctx.read<ActiveSession>(),
             ),
+            ChangeNotifierProvider(
+              create: (context) => PresetSession(
+                presetId,
+                repository: context.read<AppRepository>(),
+              ),
+            ),
+          ],
+          child: const PresetDetailScreen(),
+        ),
       ),
     );
   }
@@ -140,23 +300,22 @@ class PresetBar extends StatelessWidget {
       final repo = context.read<AppRepository>();
       final confirm = await showDialog<bool>(
         context: context,
-        builder:
-            (dCtx) => TonosDialogFrame(
-              child: AlertDialog(
-                title: Text(strings.planDeleteTitle),
-                content: Text(strings.planDeleteConfirmation),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dCtx, false),
-                    child: Text(strings.commonCancel),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(dCtx, true),
-                    child: Text(strings.commonDelete),
-                  ),
-                ],
+        builder: (dCtx) => TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.planDeleteTitle),
+            content: Text(strings.planDeleteConfirmation),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dCtx, false),
+                child: Text(strings.commonCancel),
               ),
-            ),
+              TextButton(
+                onPressed: () => Navigator.pop(dCtx, true),
+                child: Text(strings.commonDelete),
+              ),
+            ],
+          ),
+        ),
       );
       if (!context.mounted) return;
       if (confirm == true) {
@@ -167,11 +326,10 @@ class PresetBar extends StatelessWidget {
       final repo = context.read<AppRepository>();
       final newName = await showDialog<String>(
         context: context,
-        builder:
-            (_) => TonosDialogFrame(
-              styleFormControls: true,
-              child: _PresetRenameDialog(initialName: _planDisplayText(label)),
-            ),
+        builder: (_) => TonosDialogFrame(
+          styleFormControls: true,
+          child: _PresetRenameDialog(initialName: _planDisplayText(label)),
+        ),
       );
       if (!context.mounted) return;
       if (newName != null && newName.isNotEmpty && newName != label) {
