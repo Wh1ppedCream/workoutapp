@@ -1,12 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/semantics.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_workout_shapes.dart';
 import 'package:env_test/widgets/weight_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,8 +68,9 @@ void main() {
           for (final element in fields.evaluate()) {
             final fieldTheme = Theme.of(element);
             final inputTheme = fieldTheme.inputDecorationTheme;
-            final expectedInk =
-                usesWorkoutTheme ? scopedInk : theme.textTheme.bodyLarge?.color;
+            final expectedInk = usesWorkoutTheme
+                ? scopedInk
+                : theme.textTheme.bodyLarge?.color;
 
             expect(
               fieldTheme.colorScheme.onSurface,
@@ -344,8 +349,7 @@ void main() {
                 child: MaterialApp(
                   theme: outlinedTheme,
                   themeAnimationDuration: Duration.zero,
-                  localizationsDelegates:
-                      tonosLocalizationDelegates,
+                  localizationsDelegates: tonosLocalizationDelegates,
                   supportedLocales: AppLocalizations.supportedLocales,
                   home: Scaffold(
                     body: SingleChildScrollView(
@@ -475,4 +479,150 @@ void main() {
       }
     },
   );
+
+  testWidgets('Expressive active workout uses the primary focus outline', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final units = UnitPreferenceProvider();
+    await units.ready;
+    addTearDown(units.dispose);
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    for (final theme in [
+      ExpressiveThemeDefinition.light(),
+      ExpressiveThemeDefinition.dark(),
+    ]) {
+      final focusNode = FocusNode();
+      addTearDown(focusNode.dispose);
+      final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+      final exercise = WeightExercise(
+        name: 'Squat',
+        equipment: 'Barbell',
+        sets: [ExerciseSet(weight: 100, reps: 5)],
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<UnitPreferenceProvider>.value(
+          value: units,
+          child: MaterialApp(
+            theme: theme,
+            themeAnimationDuration: Duration.zero,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+              child: Scaffold(
+                body: SingleChildScrollView(
+                  child: WeightCard(
+                    exercise: exercise,
+                    expressiveWorkoutPresentation: true,
+                    firstSetWeightFocusNode: focusNode,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final weightField = find.byType(TextFormField).first;
+      final repsField = find.byType(TextFormField).at(1);
+      final card = find.descendant(
+        of: find.byType(WeightCard),
+        matching: find.byType(Card),
+      );
+      expect(
+        tester.widget<Card>(card).color,
+        theme.colorScheme.surfaceContainerLow,
+      );
+      final header = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).borderRadius ==
+                TonosExpressiveWorkoutShapes.exerciseHeader,
+      );
+      expect(
+        (tester.widget<Container>(header).decoration! as BoxDecoration).color,
+        theme.colorScheme.primaryContainer,
+      );
+      final setRow = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).borderRadius ==
+                TonosExpressiveWorkoutShapes.setRow,
+      );
+      expect(
+        (tester.widget<Container>(setRow).decoration! as BoxDecoration).color,
+        theme.colorScheme.surfaceContainer,
+      );
+      final strings = AppLocalizations.of(tester.element(weightField));
+      final weightLabel = strings.weightLabel('lbs');
+      final repsLabel = strings.weightReps;
+
+      expect(find.text(weightLabel), findsOneWidget);
+      expect(find.text(repsLabel), findsOneWidget);
+      expect(
+        tester.getBottomLeft(find.text(weightLabel)).dy,
+        lessThan(tester.getTopLeft(weightField).dy),
+      );
+      expect(
+        tester.getBottomLeft(find.text(repsLabel)).dy,
+        lessThan(tester.getTopLeft(repsField).dy),
+      );
+
+      final checkbox = tester.widget<Checkbox>(find.byType(Checkbox).first);
+      expect(checkbox.side?.color, tokens.actionPrimary);
+      expect(checkbox.activeColor, theme.semanticColors.workoutCompleted);
+      final removeButtonFinder = find.ancestor(
+        of: find.byIcon(Icons.remove_circle_outline),
+        matching: find.byType(IconButton),
+      );
+      final removeButton = tester.widget<IconButton>(removeButtonFinder.first);
+      expect(
+        removeButton.style!.foregroundColor!.resolve(const <WidgetState>{}),
+        tokens.actionPrimary,
+      );
+
+      final semantics = tester.ensureSemantics();
+      try {
+        final fieldSemantics = tester
+            .getSemantics(weightField)
+            .getSemanticsData();
+        expect(fieldSemantics.label, weightLabel);
+        expect(fieldSemantics.value, contains('100'));
+        expect(fieldSemantics.flagsCollection.isTextField, isTrue);
+        expect(fieldSemantics.hasAction(SemanticsAction.tap), isTrue);
+        expect(fieldSemantics.hasAction(SemanticsAction.focus), isTrue);
+      } finally {
+        semantics.dispose();
+      }
+
+      await tester.tap(weightField);
+      await tester.pump();
+      final inputTheme = Theme.of(tester.element(weightField))
+          .inputDecorationTheme;
+      expect(
+        inputTheme.contentPadding,
+        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      );
+      final focusedBorder = inputTheme.focusedBorder! as OutlineInputBorder;
+      expect(focusNode.hasFocus, isTrue);
+      expect(inputTheme.fillColor, theme.colorScheme.surfaceContainerHigh);
+      expect(
+        focusedBorder.borderRadius,
+        TonosExpressiveWorkoutShapes.numericField,
+      );
+      expect(focusedBorder.borderSide.color, tokens.actionPrimary);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
 }

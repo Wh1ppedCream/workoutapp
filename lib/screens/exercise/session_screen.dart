@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+
 import '../../l10n/generated/app_localizations.dart';
 import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
@@ -17,6 +18,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/app_test_keys.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../theme/widgets/workout_actions.dart';
 
 class SessionScreen extends StatefulWidget {
@@ -97,11 +99,16 @@ class _SessionScreenState extends State<SessionScreen> {
     final strings = AppLocalizations.of(context);
     final timerTextStyle =
         Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     _queueWorkoutTutorial();
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: expressiveTokens?.pageCanvas,
       drawer: Drawer(
+        backgroundColor: expressiveTokens?.pageCanvas,
         child: SafeArea(
           child: Column(
             children: [
@@ -109,7 +116,12 @@ class _SessionScreenState extends State<SessionScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   strings.sessionTimerTitle,
-                  style: timerTextStyle.copyWith(fontSize: 20),
+                  style: timerTextStyle.copyWith(
+                    fontSize: 20,
+                    color: expressiveTokens == null
+                        ? null
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
               ValueListenableBuilder<int>(
@@ -119,7 +131,13 @@ class _SessionScreenState extends State<SessionScreen> {
                   final s = seconds % 60;
                   return Text(
                     '$m:${s.toString().padLeft(2, '0')}',
-                    style: timerTextStyle.copyWith(fontSize: 48),
+                    style: timerTextStyle.copyWith(
+                      fontSize: 48,
+                      color: expressiveTokens?.actionPrimary,
+                      fontWeight: expressiveTokens == null
+                          ? null
+                          : FontWeight.w600,
+                    ),
                   );
                 },
               ),
@@ -128,22 +146,25 @@ class _SessionScreenState extends State<SessionScreen> {
         ),
       ),
       appBar: AppBar(
+        backgroundColor: expressiveTokens?.pageCanvas,
         leading: Builder(
-          builder:
-              (innerCtx) => IconButton(
-                tooltip: strings.sessionTimerTitle,
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(innerCtx).openDrawer(),
-              ),
+          builder: (innerCtx) => IconButton(
+            tooltip: strings.sessionTimerTitle,
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(innerCtx).openDrawer(),
+          ),
         ),
         title: Text(strings.sessionTitle),
         centerTitle: true,
       ),
 
-      body:
-          session.exercises.isEmpty
-              ? Center(child: Text(strings.sessionNoExercises))
-              : ListView.builder(
+      body: session.exercises.isEmpty
+          ? Center(child: Text(strings.sessionNoExercises))
+          : Padding(
+              padding: EdgeInsets.only(
+                bottom: expressiveTokens == null ? 0 : 80,
+              ),
+              child: ListView.builder(
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.all(16),
@@ -156,61 +177,59 @@ class _SessionScreenState extends State<SessionScreen> {
                     child: ExerciseCard(
                       exercise: ex,
                       cardType: type,
+                      expressiveWorkoutPresentation:
+                          context.usesExpressivePresentation,
                       animateExpansion:
                           ctx.usesClassicPresentation ||
                           ctx.usesExpressivePresentation,
-                      onDetails:
-                          type == CardType.weight
-                              ? () async {
-                                final repo = context.read<AppRepository>();
-                                final defId = await repo
-                                    .findOrCreateExerciseDefinition(
-                                      ex.name,
-                                      ex.equipment,
-                                    );
-                                final def = await repo.fetchDefinitionById(
-                                  defId,
-                                );
-                                if (def != null && context.mounted) {
-                                  ExerciseDetailSheet.show(
-                                    context: context,
-                                    definition: def,
-                                    defId: defId,
+                      onDetails: type == CardType.weight
+                          ? () async {
+                              final repo = context.read<AppRepository>();
+                              final defId = await repo
+                                  .findOrCreateExerciseDefinition(
+                                    ex.name,
+                                    ex.equipment,
                                   );
-                                }
+                              final def = await repo.fetchDefinitionById(defId);
+                              if (def != null && context.mounted) {
+                                ExerciseDetailSheet.show(
+                                  context: context,
+                                  definition: def,
+                                  defId: defId,
+                                );
                               }
-                              : null,
-                      initialCompletedParents:
-                          type == CardType.weight
-                              ? (ex as WeightExercise).completedParents
-                              : null,
-                      initialCompletedChildren:
-                          type == CardType.weight
-                              ? (ex as WeightExercise).completedChildren
-                              : null,
-                      onDeleteExercise:
-                          () => context.read<ActiveSession>().removeExercise(i),
+                            }
+                          : null,
+                      initialCompletedParents: type == CardType.weight
+                          ? (ex as WeightExercise).completedParents
+                          : null,
+                      initialCompletedChildren: type == CardType.weight
+                          ? (ex as WeightExercise).completedChildren
+                          : null,
+                      onDeleteExercise: () =>
+                          context.read<ActiveSession>().removeExercise(i),
                       onSetAdded: () => context.read<ActiveSession>().refresh(),
-                      onSetDeleted:
-                          () => context.read<ActiveSession>().refresh(),
-                      onValueChanged:
-                          () => context.read<ActiveSession>().refresh(),
+                      onSetDeleted: () =>
+                          context.read<ActiveSession>().refresh(),
+                      onValueChanged: () =>
+                          context.read<ActiveSession>().refresh(),
                     ),
                   );
                 },
               ),
+            ),
 
       floatingActionButton: KeyedSubtree(
         key: _addExerciseTutorialKey,
         child: AddExerciseFab(
+          expressiveWorkoutPresentation: context.usesExpressivePresentation,
           onWeightPicked: (def) async {
             // build a brand-new WeightExercise with one empty set:
             final ex = WeightExercise(
               name: def.name,
-              equipment:
-                  def.equipmentList.isNotEmpty
-                      ? def.equipmentList.first.name
-                      : '',
+              equipment: def.equipmentList.isNotEmpty
+                  ? def.equipmentList.first.name
+                  : '',
               sets: [ExerciseSet()],
             );
             context.read<ActiveSession>().addExercise(ex, CardType.weight);
@@ -228,51 +247,50 @@ class _SessionScreenState extends State<SessionScreen> {
               buttonKey: AppTestKeys.sessionFinish,
               label: strings.sessionFinishWorkout,
               busy: session.isFinishing,
-              onPressed:
-                  session.isFinishing
-                      ? null
-                      : () async {
-                        try {
-                          final sid = await session.finish();
-                          if (!context.mounted) return;
-                          if (sid == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(strings.sessionNeedCompletedSet),
-                              ),
-                            );
-                            return;
-                          }
-                          await showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            enableDrag: false,
-                            backgroundColor:
-                                context.surfaceDecorationTokens.sheet.outlined
-                                    ? Colors.transparent
-                                    : null,
-                            elevation:
-                                context.surfaceDecorationTokens.sheet.outlined
-                                    ? 0
-                                    : null,
-                            builder:
-                                (_) => SessionCompleteSheet(sessionId: sid),
-                          );
-                          if (!context.mounted) return;
-                          Navigator.of(context).pop();
-                        } catch (error) {
-                          if (!context.mounted) return;
+              expressiveWorkoutPresentation: context.usesExpressivePresentation,
+              onPressed: session.isFinishing
+                  ? null
+                  : () async {
+                      try {
+                        final sid = await session.finish();
+                        if (!context.mounted) return;
+                        if (sid == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(
-                                strings.sessionSaveFailed(
-                                  safeFailureMessage(strings, error),
-                                ),
-                              ),
+                              content: Text(strings.sessionNeedCompletedSet),
                             ),
                           );
+                          return;
                         }
-                      },
+                        await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          enableDrag: false,
+                          backgroundColor:
+                              context.surfaceDecorationTokens.sheet.outlined
+                              ? Colors.transparent
+                              : null,
+                          elevation:
+                              context.surfaceDecorationTokens.sheet.outlined
+                              ? 0
+                              : null,
+                          builder: (_) => SessionCompleteSheet(sessionId: sid),
+                        );
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                      } catch (error) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              strings.sessionSaveFailed(
+                                safeFailureMessage(strings, error),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
             ),
           ),
         ),

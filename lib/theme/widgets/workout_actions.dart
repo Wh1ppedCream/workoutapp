@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme_extensions.dart';
+import '../tokens/app_expressive_train_tokens.dart';
 import 'tonos_action_depth.dart';
+import 'tonos_expressive_motion.dart';
 
 /// Swap actions keep their original Material defaults and vertical padding.
 class WorkoutSwapAction extends StatelessWidget {
@@ -109,14 +111,12 @@ class WorkoutEquipmentFilter extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final filterSurface = surfaces.planFilter;
-    final filterForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, filterSurface)
-            : null;
-    final filterSecondary =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(context, filterSurface)
-            : theme.colorScheme.onSurfaceVariant;
+    final filterForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, filterSurface)
+        : null;
+    final filterSecondary = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, filterSurface)
+        : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -213,29 +213,61 @@ class WorkoutFinishAction extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.busy = false,
+    this.expressiveWorkoutPresentation = false,
   });
 
   final Key? buttonKey;
   final String label;
   final VoidCallback? onPressed;
   final bool busy;
+  final bool expressiveWorkoutPresentation;
 
   @override
-  Widget build(BuildContext context) => tonosWithPrimaryActionDepth(
-    context,
-    ElevatedButton(
+  Widget build(BuildContext context) {
+    final expressiveTokens = expressiveWorkoutPresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final restingShape = BorderRadius.only(
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(28),
+      bottomLeft: const Radius.circular(28),
+      bottomRight: const Radius.circular(18),
+    );
+    Widget button = ElevatedButton(
       key: buttonKey,
       onPressed: busy ? null : onPressed,
-      child:
-          busy
-              ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-              : Text(label),
-    ),
-    enabled: !busy && onPressed != null,
-  );
+      style: expressiveTokens == null
+          ? null
+          : ElevatedButton.styleFrom(
+              backgroundColor: expressiveTokens.actionPrimary,
+              foregroundColor: expressiveTokens.actionPrimaryForeground,
+              shape: RoundedRectangleBorder(borderRadius: restingShape),
+            ),
+      child: busy
+          ? SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: expressiveTokens?.actionPrimaryForeground,
+              ),
+            )
+          : Text(label),
+    );
+    if (expressiveTokens != null) {
+      button = TonosExpressivePressResponse(
+        enabled: !busy && onPressed != null,
+        allowReleaseOvershoot: false,
+        pressedScale: TonosExpressiveMotionTiers.focalScale,
+        pressedOffset: TonosExpressiveMotionTiers.focalOffset,
+        child: button,
+      );
+    }
+    return tonosWithPrimaryActionDepth(
+      context,
+      button,
+      enabled: !busy && onPressed != null,
+    );
+  }
 }
 
 /// Completion keeps Material's filled styling and the original touch-target height.

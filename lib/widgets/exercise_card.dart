@@ -1,6 +1,7 @@
 // File: lib/widgets/exercise_card.dart
 
 import 'package:material_ui/material_ui.dart';
+
 import '../models/models.dart';
 import 'weight_card.dart';
 
@@ -21,6 +22,7 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback? onSwapExercise;
   final bool forceCollapsed;
   final bool animateExpansion;
+  final bool expressiveWorkoutPresentation;
   final Key? firstSetWeightKey;
   final Key? firstSetRepsKey;
   final Key? addSetKey;
@@ -45,6 +47,7 @@ class ExerciseCard extends StatelessWidget {
     this.onSwapExercise,
     this.forceCollapsed = false,
     this.animateExpansion = false,
+    this.expressiveWorkoutPresentation = false,
     this.firstSetWeightKey,
     this.firstSetRepsKey,
     this.addSetKey,
@@ -72,6 +75,7 @@ class ExerciseCard extends StatelessWidget {
           onSwapExercise: onSwapExercise,
           forceCollapsed: forceCollapsed,
           animateExpansion: animateExpansion,
+          expressiveWorkoutPresentation: expressiveWorkoutPresentation,
           firstSetWeightKey: firstSetWeightKey,
           firstSetRepsKey: firstSetRepsKey,
           addSetKey: addSetKey,
