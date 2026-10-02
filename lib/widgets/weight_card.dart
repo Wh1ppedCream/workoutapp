@@ -538,7 +538,7 @@ class _WeightCardState extends State<WeightCard> {
             // Header
             Container(
               margin: usesExpressiveWorkout
-                  ? const EdgeInsets.fromLTRB(8, 8, 8, 0)
+                  ? const EdgeInsets.fromLTRB(8, 8, 8, 8)
                   : null,
               decoration: usesExpressiveWorkout
                   ? BoxDecoration(
@@ -722,7 +722,7 @@ class _WeightCardState extends State<WeightCard> {
               duration: expansionDuration,
               curve: context.motionTokens.standardCurve,
               contentPadding: usesExpressiveWorkout
-                  ? const EdgeInsets.all(16)
+                  ? const EdgeInsets.fromLTRB(16, 0, 16, 16)
                   : EdgeInsets.zero,
               contentBuilder: (_) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -819,9 +819,9 @@ class _WeightCardState extends State<WeightCard> {
                               ? shapes.workoutCompletedSet
                               : shapes.control,
                         ),
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 10,
+                          vertical: usesExpressiveWorkout ? 0 : 10,
                         ),
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         child: LayoutBuilder(
@@ -843,29 +843,46 @@ class _WeightCardState extends State<WeightCard> {
                             Widget withExpressiveFieldLabel(
                               String label,
                               Widget field,
-                              VoidCallback onTapLabel,
-                            ) {
+                              VoidCallback onTapLabel, {
+                              required bool isWeightField,
+                            }) {
                               if (!usesExpressiveWorkout) return field;
+                              final verticalHitPadding = !stackFields
+                                  ? const EdgeInsets.symmetric(vertical: 10)
+                                  : isWeightField
+                                  ? EdgeInsets.only(
+                                      top: 10,
+                                      bottom: fieldGap / 2,
+                                    )
+                                  : EdgeInsets.only(
+                                      top: fieldGap / 2,
+                                      bottom: 10,
+                                    );
                               return GestureDetector(
                                 behavior: HitTestBehavior.opaque,
                                 excludeFromSemantics: true,
                                 onTap: onTapLabel,
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(bottom: 3),
-                                      child: Text(
-                                        label,
-                                        style: workoutFieldLabelStyle,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                child: Padding(
+                                  padding: verticalHitPadding,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 3,
+                                        ),
+                                        child: Text(
+                                          label,
+                                          style: workoutFieldLabelStyle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                    ),
-                                    Semantics(label: label, child: field),
-                                  ],
+                                      Semantics(label: label, child: field),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
@@ -915,6 +932,7 @@ class _WeightCardState extends State<WeightCard> {
                                 label,
                                 field,
                                 () => focusNode?.requestFocus(),
+                                isWeightField: true,
                               );
                             }
 
@@ -958,6 +976,7 @@ class _WeightCardState extends State<WeightCard> {
                                 label,
                                 field,
                                 () => focusNode?.requestFocus(),
+                                isWeightField: false,
                               );
                             }
 
@@ -967,7 +986,8 @@ class _WeightCardState extends State<WeightCard> {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       buildWeightField(),
-                                      SizedBox(height: fieldGap),
+                                      if (!usesExpressiveWorkout)
+                                        SizedBox(height: fieldGap),
                                       buildRepsField(),
                                     ],
                                   )

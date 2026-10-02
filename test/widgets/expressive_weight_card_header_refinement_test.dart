@@ -59,6 +59,15 @@ void main() {
       final repsLabel = find.text(localized.weightReps).first;
       expect(find.text(localized.weightLabel('lbs')), findsNWidgets(3));
       expect(find.text(localized.weightReps), findsNWidgets(3));
+      final firstDivider = find.byType(Divider).first;
+      final headerWidget = tester.widget<Container>(header);
+      final headerBandBottom =
+          tester.getRect(header).bottom -
+          (headerWidget.margin?.resolve(TextDirection.ltr).bottom ?? 0);
+      expect(
+        tester.getRect(firstDivider).top,
+        closeTo(headerBandBottom + 8, 1),
+      );
       final weightHitRegion = find
           .ancestor(of: weightLabel, matching: find.byType(GestureDetector))
           .first;
@@ -69,6 +78,40 @@ void main() {
         tester.getRect(weightHitRegion).overlaps(tester.getRect(repsHitRegion)),
         isFalse,
       );
+      final firstRow = find.byType(AnimatedContainer).first;
+      final firstRowSize = tester.getSize(firstRow);
+      final weightHitRect = tester.getRect(weightHitRegion);
+      final repsHitRect = tester.getRect(repsHitRegion);
+      expect(
+        weightHitRect.height,
+        greaterThanOrEqualTo(firstRowSize.height - 13),
+      );
+      expect(
+        repsHitRect.height,
+        greaterThanOrEqualTo(firstRowSize.height - 13),
+      );
+      expect(firstRowSize.height, lessThanOrEqualTo(80));
+      expect(
+        weightHitRect.overlaps(tester.getRect(find.byType(Checkbox).first)),
+        isFalse,
+      );
+      expect(
+        repsHitRect.overlaps(
+          tester.getRect(find.byTooltip(localized.weightRemoveSetTitle).first),
+        ),
+        isFalse,
+      );
+
+      final outerCard = find.descendant(of: card, matching: find.byType(Card));
+      await tester.tap(find.byTooltip(localized.weightCollapseSets));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextFormField), findsNothing);
+      expect(
+        tester.getRect(outerCard).bottom - headerBandBottom,
+        closeTo(24, 1),
+      );
+      await tester.tap(find.byTooltip(localized.weightExpandSets));
+      await tester.pumpAndSettle();
 
       await tester.tap(weightLabel);
       await tester.pump();
@@ -221,6 +264,54 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('stacked field hit regions split the gap without growing rows', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 850));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_host(_exercise(), textScale: 2));
+    await tester.pumpAndSettle();
+
+    final localized = AppLocalizations.of(
+      tester.element(find.byType(WeightCard)),
+    );
+    final firstRow = find.byType(AnimatedContainer).first;
+    final firstRowRect = tester.getRect(firstRow);
+    final weightHitRegion = find
+        .ancestor(
+          of: find.text(localized.weightLabel('lbs')).first,
+          matching: find.byType(GestureDetector),
+        )
+        .first;
+    final repsHitRegion = find
+        .ancestor(
+          of: find.text(localized.weightReps).first,
+          matching: find.byType(GestureDetector),
+        )
+        .first;
+    final weightRect = tester.getRect(weightHitRegion);
+    final repsRect = tester.getRect(repsHitRegion);
+
+    expect(tester.getSize(firstRow).height, closeTo(200, 2));
+    expect(weightRect.top, lessThanOrEqualTo(firstRowRect.top + 7));
+    expect(repsRect.bottom, greaterThanOrEqualTo(firstRowRect.bottom - 7));
+    expect(weightRect.bottom, closeTo(repsRect.top, 1));
+    expect(weightRect.overlaps(repsRect), isFalse);
+    expect(
+      weightRect.overlaps(tester.getRect(find.byType(Checkbox).first)),
+      isFalse,
+    );
+    expect(
+      repsRect.overlaps(
+        tester.getRect(find.byTooltip(localized.weightRemoveSetTitle).first),
+      ),
+      isFalse,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 double _contrastRatio(Color foreground, Color background) {
@@ -248,6 +339,7 @@ Widget _host(
   FocusNode? repsFocus,
   VoidCallback? onDetails,
   bool disableAnimations = false,
+  double textScale = 1,
 }) => Provider<AppRepository>.value(
   value: _EmptyRepository(),
   child: MaterialApp(
@@ -259,8 +351,10 @@ Widget _host(
     home: Scaffold(
       body: Builder(
         builder: (context) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(disableAnimations: disableAnimations),
+          data: MediaQuery.of(context).copyWith(
+            disableAnimations: disableAnimations,
+            textScaler: TextScaler.linear(textScale),
+          ),
           child: SingleChildScrollView(
             child: WeightCard(
               exercise: exercise,

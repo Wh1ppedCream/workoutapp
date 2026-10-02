@@ -34,11 +34,11 @@ void main() {
         );
         expect(
           semantic.workoutExerciseCompleted,
-          isDark ? const Color(0xFF286A3A) : const Color(0xFF4F9560),
+          isDark ? const Color(0xFF286A3A) : const Color(0xFF6D9A73),
         );
         expect(
           semantic.workoutSetCompleted,
-          isDark ? const Color(0xFF83C98F) : const Color(0xFFC2E7C7),
+          isDark ? const Color(0xFF4B8A56) : const Color(0xFF78A87F),
         );
         expect(
           semantic.workoutCompleted,
@@ -48,6 +48,11 @@ void main() {
         expect(
           semantic.workoutExerciseCompleted,
           isNot(semantic.workoutSetCompleted),
+        );
+        expect(
+          semantic.workoutExerciseCompleted.computeLuminance(),
+          lessThan(semantic.workoutSetCompleted.computeLuminance()),
+          reason: 'The completed header remains slightly deeper than set rows',
         );
         if (!isDark) {
           expect(
@@ -59,8 +64,8 @@ void main() {
             lessThan(semantic.workoutSetCompleted.computeLuminance()),
           );
         }
-        expect(surfaces.workoutCardCompleteFill, 0.18);
-        expect(surfaces.workoutSetCompleteFill, isDark ? 0.42 : 0.56);
+        expect(surfaces.workoutCardCompleteFill, isDark ? 0.18 : 0.34);
+        expect(surfaces.workoutSetCompleteFill, isDark ? 0.72 : 0.92);
 
         expect(
           _contrastRatio(
@@ -78,11 +83,11 @@ void main() {
           theme.colorScheme.surfaceContainerLow,
         );
         expect(
-          _contrastRatio(semantic.workoutCompleted, completedCard),
+          _contrastRatio(theme.colorScheme.onSurface, completedCard),
           greaterThanOrEqualTo(4.5),
           reason:
-              'Completion label contrast in ${theme.brightness}: '
-              '${semantic.workoutCompleted} on $completedCard',
+              'Completed-card copy uses onSurface in ${theme.brightness}: '
+              '${theme.colorScheme.onSurface} on $completedCard',
         );
         expect(
           _contrastRatio(

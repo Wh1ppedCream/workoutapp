@@ -159,3 +159,68 @@ No video was produced because the existing `scrcpy.exe -S` process was left
 untouched. Still captures and live interaction checks were used instead.
 The preview was left in its isolated dark Active Workout session with the
 keyboard hidden.
+
+## User-requested Active Workout refinement — 2026-10-02
+
+This dated follow-up is authoritative for the current refinement candidate and
+supersedes the completion colors/fill factors recorded in the preceding
+production-preview section. It remains limited to the isolated Active Workout
+preview.
+
+### Completed-state color hierarchy
+
+- The completed exercise header and completed set row now use closely related
+  greens, with the header slightly deeper: light `#6D9A73` / `#78A87F` and dark
+  `#286A3A` / `#4B8A56`.
+- The semantic success role remains distinct from the header and row roles.
+  Completion green remains reserved for completion feedback and is not used as
+  a general action accent.
+- The outer completed-card fill is stronger in light mode (`0.34`, previously
+  `0.18`) so it reads as a related success surface rather than a dull gray-green
+  wash. Dark mode remains restrained at `0.18`. Completed set-row fill factors
+  are `0.92` light and `0.72` dark.
+- Pixel 7 light captures show the completed header, rows, and outer surface as
+  one success family with distinct tonal layers. The dark completed-card wash
+  was left unchanged.
+
+### Header and expanded-card spacing
+
+- The Expressive header now has a consistent `8 dp` inset below it in both
+  states. Expanded content starts with no extra top padding, so the divider
+  follows that same inset; the remaining body keeps `16 dp` lower/side padding.
+- The expanded header-to-divider gap and collapsed header-to-card-bottom
+  spacing are covered by focused geometry assertions. The Pixel captures show
+  the same header band and deliberate breathing room without the former large
+  empty gap under expanded headers.
+
+### Weight and Reps hit regions
+
+- The visible fields, their styling, and the set-row height are unchanged at
+  normal scale. In the normal horizontal layout, the two independently routed
+  focus regions use the row's existing vertical padding (`10 dp` above and
+  below each field); the checkbox and remove-set control remain outside those
+  regions.
+- At compact width with `2x` text, the existing gap between stacked fields is
+  split evenly between their hit regions. This makes the regions meet without
+  overlapping or adding extra row height. Focus routing still targets the
+  matching Weight or Reps field.
+- Widget tests verify the regions approach the full set-row height, remain
+  disjoint from one another and neighboring controls, and do not inflate the
+  row. Pixel 7 captures show Weight focused from its top edge and Reps focused
+  from its bottom edge. Those field captures predate the final color-only
+  adjustment; the hit-region implementation was unchanged afterward.
+
+### Focused validation and evidence
+
+- Focused tests: **39 passed, 0 failed**, exit code 0.
+- Scoped Dart analysis on the five changed source/test files: **no issues
+  found**. Formatting check reported no changes, and `git diff --check` passed.
+- Full repository test suite remains intentionally deferred for this visual
+  refinement.
+- Final light completed-expanded and completed-collapsed captures are
+  `review/refinement-20261002-followup/27-final-light-completed-expanded.png`
+  and `26-final-light-completed-collapsed.png`. Dark completed-expanded is
+  `22-completed-expanded-dark.png`. Weight/Reps focus evidence is in
+  `07-weight-row-top-focus.png` and `08-reps-row-bottom-focus.png` in the same
+  directory. The preview used the isolated `com.tonos.expressivepreview`
+  package and database; normal Tonos data was not used.

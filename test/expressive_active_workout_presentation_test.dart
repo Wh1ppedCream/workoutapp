@@ -153,79 +153,76 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets(
-    'focused field contrast and header geometry work in both themes',
-    (tester) async {
-      final cases = <({String name, ThemeData theme})>[
-        (name: 'light', theme: ExpressiveThemeDefinition.light()),
-        (name: 'dark', theme: ExpressiveThemeDefinition.dark()),
-      ];
+  testWidgets('focused field contrast and header geometry work in both themes', (
+    tester,
+  ) async {
+    final cases = <({String name, ThemeData theme})>[
+      (name: 'light', theme: ExpressiveThemeDefinition.light()),
+      (name: 'dark', theme: ExpressiveThemeDefinition.dark()),
+    ];
 
-      for (final testCase in cases) {
-        final focusNode = FocusNode(
-          debugLabel: '${testCase.name} weight field',
-        );
-        addTearDown(focusNode.dispose);
-        await tester.pumpWidget(
-          _weightCardHost(
-            _exercise(),
-            theme: testCase.theme,
-            expressiveWorkoutPresentation: true,
-            firstSetWeightFocusNode: focusNode,
-          ),
-        );
-        await tester.pumpAndSettle();
+    for (final testCase in cases) {
+      final focusNode = FocusNode(debugLabel: '${testCase.name} weight field');
+      addTearDown(focusNode.dispose);
+      await tester.pumpWidget(
+        _weightCardHost(
+          _exercise(),
+          theme: testCase.theme,
+          expressiveWorkoutPresentation: true,
+          firstSetWeightFocusNode: focusNode,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        final weightField = find.byKey(_weightKey);
-        await tester.ensureVisible(weightField);
-        focusNode.requestFocus();
-        await tester.pump();
+      final weightField = find.byKey(_weightKey);
+      await tester.ensureVisible(weightField);
+      focusNode.requestFocus();
+      await tester.pump();
 
-        final fieldTheme = Theme.of(tester.element(weightField));
-        final tokens = testCase.theme.extension<AppExpressiveTrainTokens>()!;
-        final focusedBorder =
-            fieldTheme.inputDecorationTheme.focusedBorder!
-                as OutlineInputBorder;
-        expect(
-          focusedBorder.borderRadius,
-          TonosExpressiveWorkoutShapes.numericField,
-          reason: testCase.name,
-        );
-        expect(
-          focusedBorder.borderSide.color,
-          tokens.actionPrimary,
-          reason: testCase.name,
-        );
-        expect(
-          _contrastRatio(tokens.actionPrimary, tokens.activePlansSurface),
-          greaterThanOrEqualTo(3),
-          reason: '${testCase.name} focus outline contrast',
-        );
+      final fieldTheme = Theme.of(tester.element(weightField));
+      final tokens = testCase.theme.extension<AppExpressiveTrainTokens>()!;
+      final focusedBorder =
+          fieldTheme.inputDecorationTheme.focusedBorder! as OutlineInputBorder;
+      expect(
+        focusedBorder.borderRadius,
+        TonosExpressiveWorkoutShapes.numericField,
+        reason: testCase.name,
+      );
+      expect(
+        focusedBorder.borderSide.color,
+        tokens.actionPrimary,
+        reason: testCase.name,
+      );
+      expect(
+        _contrastRatio(tokens.actionPrimary, tokens.activePlansSurface),
+        greaterThanOrEqualTo(3),
+        reason: '${testCase.name} focus outline contrast',
+      );
 
-        final header = find.byWidgetPredicate(
-          (widget) =>
-              widget is Container &&
-              widget.decoration is BoxDecoration &&
-              (widget.decoration! as BoxDecoration).borderRadius ==
-                  TonosExpressiveWorkoutShapes.exerciseHeader,
-        );
-        expect(header, findsOneWidget);
-        final headerWidget = tester.widget<Container>(header);
-        expect(
-          headerWidget.padding,
-          const EdgeInsets.symmetric(horizontal: 8),
-          reason: '${testCase.name} header keeps compact horizontal padding',
-        );
-        expect(
-          tester.getSize(header).height,
-          closeTo(56, 0.1),
-          reason: '${testCase.name} header makes room for the larger thumbnail',
-        );
-        expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox.shrink());
-      }
-    },
-  );
+      final header = find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).borderRadius ==
+                TonosExpressiveWorkoutShapes.exerciseHeader,
+      );
+      expect(header, findsOneWidget);
+      final headerWidget = tester.widget<Container>(header);
+      expect(
+        headerWidget.padding,
+        const EdgeInsets.symmetric(horizontal: 8),
+        reason: '${testCase.name} header keeps compact horizontal padding',
+      );
+      expect(
+        tester.getSize(header).height,
+        closeTo(64, 0.1),
+        reason:
+            '${testCase.name} header keeps the 56dp thumbnail and 8dp bottom inset',
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
 
   testWidgets(
     'Expressive workout roles retain completion semantics and fit compact 2x rows',
