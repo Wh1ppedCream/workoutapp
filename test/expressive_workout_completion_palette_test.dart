@@ -34,11 +34,11 @@ void main() {
         );
         expect(
           semantic.workoutExerciseCompleted,
-          isDark ? const Color(0xFF286A3A) : const Color(0xFF6D9A73),
+          isDark ? const Color(0xFF286A3A) : const Color(0xFF35A457),
         );
         expect(
           semantic.workoutSetCompleted,
-          isDark ? const Color(0xFF4B8A56) : const Color(0xFF78A87F),
+          isDark ? const Color(0xFF4B8A56) : const Color(0xFF7BCB8B),
         );
         expect(
           semantic.workoutCompleted,
@@ -65,6 +65,10 @@ void main() {
           );
         }
         expect(surfaces.workoutCardCompleteFill, isDark ? 0.18 : 0.34);
+        expect(
+          surfaces.workoutCardCompleteColor,
+          isDark ? isNull : const Color(0xFFD9F0DC),
+        );
         expect(surfaces.workoutSetCompleteFill, isDark ? 0.72 : 0.92);
 
         expect(

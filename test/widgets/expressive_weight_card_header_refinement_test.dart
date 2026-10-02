@@ -178,7 +178,14 @@ void main() {
           matching: find.byType(Card),
         ),
       );
-      expect(card.color!.a, closeTo(surfaces.workoutCardCompleteFill, 0.01));
+      expect(
+        card.color,
+        theme.brightness == Brightness.light
+            ? surfaces.workoutCardCompleteColor
+            : semantic.workoutExerciseCompleted.withValues(
+                alpha: surfaces.workoutCardCompleteFill,
+              ),
+      );
       expect(find.byType(TextFormField), findsNothing);
 
       final header = find.byWidgetPredicate(

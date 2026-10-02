@@ -517,9 +517,10 @@ class _WeightCardState extends State<WeightCard> {
 
     final cardColor = usesExpressiveWorkout
         ? allSetsComplete
-              ? semantic.workoutExerciseCompleted.withValues(
-                  alpha: surfaces.workoutCardCompleteFill,
-                )
+              ? surfaces.workoutCardCompleteColor ??
+                    semantic.workoutExerciseCompleted.withValues(
+                      alpha: surfaces.workoutCardCompleteFill,
+                    )
               : theme.colorScheme.surfaceContainerLow
         : allSetsComplete
         ? completedCardColor.withValues(alpha: surfaces.workoutCardCompleteFill)

@@ -82,10 +82,10 @@ abstract final class ExpressiveThemeDefinition {
               ? const Color(0xFF286F3A)
               : const Color(0xFF5EB171),
           workoutExerciseCompleted: brightness == Brightness.light
-              ? const Color(0xFF6D9A73)
+              ? const Color(0xFF35A457)
               : const Color(0xFF286A3A),
           workoutSetCompleted: brightness == Brightness.light
-              ? const Color(0xFF78A87F)
+              ? const Color(0xFF7BCB8B)
               : const Color(0xFF4B8A56),
         );
     final shapeTokens = AppShapeTokens.classic.copyWith(
@@ -98,10 +98,16 @@ abstract final class ExpressiveThemeDefinition {
     final surfaceTokens = switch (treatment) {
       ExpressivePaletteTreatment.generated => generatedSurfaces.copyWith(
         workoutCardCompleteFill: brightness == Brightness.light ? 0.34 : 0.18,
+        workoutCardCompleteColor: brightness == Brightness.light
+            ? const Color(0xFFD9F0DC)
+            : null,
         workoutSetCompleteFill: brightness == Brightness.light ? 0.92 : 0.72,
       ),
       ExpressivePaletteTreatment.curated => generatedSurfaces.copyWith(
         workoutCardCompleteFill: brightness == Brightness.light ? 0.34 : 0.18,
+        workoutCardCompleteColor: brightness == Brightness.light
+            ? const Color(0xFFD9F0DC)
+            : null,
         workoutSetCompleteFill: brightness == Brightness.light ? 0.92 : 0.72,
         panel: colorScheme.surfaceContainerLow,
         panelRaised: colorScheme.surfaceContainer,

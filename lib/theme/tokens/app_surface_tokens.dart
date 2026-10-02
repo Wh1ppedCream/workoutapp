@@ -24,6 +24,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     this.recordBadgeFill = 0.14,
     this.recordBadgeBorder = 0.62,
     this.workoutCardCompleteFill = 24 / 255,
+    this.workoutCardCompleteColor,
     this.workoutSetCompleteFill = 76 / 255,
     this.workoutInputHintOpacity = 0.7,
     this.workoutTextSelectionOpacity = 0.2,
@@ -234,6 +235,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
   final double recordBadgeFill;
   final double recordBadgeBorder;
   final double workoutCardCompleteFill;
+  final Color? workoutCardCompleteColor;
   final double workoutSetCompleteFill;
   final double workoutInputHintOpacity;
   final double workoutTextSelectionOpacity;
@@ -345,6 +347,7 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
     double? recordBadgeFill,
     double? recordBadgeBorder,
     double? workoutCardCompleteFill,
+    Color? workoutCardCompleteColor,
     double? workoutSetCompleteFill,
     double? workoutInputHintOpacity,
     double? workoutTextSelectionOpacity,
@@ -468,6 +471,8 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       recordBadgeBorder: recordBadgeBorder ?? this.recordBadgeBorder,
       workoutCardCompleteFill:
           workoutCardCompleteFill ?? this.workoutCardCompleteFill,
+      workoutCardCompleteColor:
+          workoutCardCompleteColor ?? this.workoutCardCompleteColor,
       workoutSetCompleteFill:
           workoutSetCompleteFill ?? this.workoutSetCompleteFill,
       workoutInputHintOpacity:
@@ -672,6 +677,11 @@ class AppSurfaceTokens extends ThemeExtension<AppSurfaceTokens> {
       workoutCardCompleteFill:
           workoutCardCompleteFill +
           (other.workoutCardCompleteFill - workoutCardCompleteFill) * t,
+      workoutCardCompleteColor: Color.lerp(
+        workoutCardCompleteColor,
+        other.workoutCardCompleteColor,
+        t,
+      ),
       workoutSetCompleteFill:
           workoutSetCompleteFill +
           (other.workoutSetCompleteFill - workoutSetCompleteFill) * t,
