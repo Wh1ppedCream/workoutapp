@@ -539,7 +539,12 @@ class _WeightCardState extends State<WeightCard> {
             // Header
             Container(
               margin: usesExpressiveWorkout
-                  ? const EdgeInsets.fromLTRB(8, 8, 8, 8)
+                  ? EdgeInsets.fromLTRB(
+                      8,
+                      8,
+                      8,
+                      effectiveCollapsed ? 8 : 6,
+                    )
                   : null,
               decoration: usesExpressiveWorkout
                   ? BoxDecoration(
@@ -723,14 +728,14 @@ class _WeightCardState extends State<WeightCard> {
               duration: expansionDuration,
               curve: context.motionTokens.standardCurve,
               contentPadding: usesExpressiveWorkout
-                  ? const EdgeInsets.fromLTRB(16, 0, 16, 16)
+                  ? const EdgeInsets.fromLTRB(16, 0, 16, 8)
                   : EdgeInsets.zero,
               contentBuilder: (_) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Divider(
-                    height: 16,
+                    height: usesExpressiveWorkout ? 1 : 16,
                     color: usesExpressiveWorkout
                         ? expressiveTokens!.focusSurface.withValues(alpha: 0.3)
                         : null,

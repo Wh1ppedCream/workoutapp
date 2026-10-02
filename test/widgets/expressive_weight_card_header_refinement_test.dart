@@ -65,9 +65,14 @@ void main() {
           tester.getRect(header).bottom -
           (headerWidget.margin?.resolve(TextDirection.ltr).bottom ?? 0);
       expect(
-        tester.getRect(firstDivider).top,
-        closeTo(headerBandBottom + 8, 1),
+        headerWidget.margin?.resolve(TextDirection.ltr).bottom,
+        6,
       );
+      expect(
+        tester.getRect(firstDivider).top,
+        closeTo(headerBandBottom + 6, 1),
+      );
+      expect(tester.widget<Divider>(firstDivider).height, 1);
       final weightHitRegion = find
           .ancestor(of: weightLabel, matching: find.byType(GestureDetector))
           .first;
@@ -80,6 +85,11 @@ void main() {
       );
       final firstRow = find.byType(AnimatedContainer).first;
       final firstRowSize = tester.getSize(firstRow);
+      final firstRowWidget = tester.widget<AnimatedContainer>(firstRow);
+      expect(
+        firstRowWidget.margin,
+        const EdgeInsets.symmetric(vertical: 6),
+      );
       final weightHitRect = tester.getRect(weightHitRegion);
       final repsHitRect = tester.getRect(repsHitRegion);
       expect(
@@ -319,6 +329,42 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('Expressive Add Set keeps its target and trims only bottom space', (
+    tester,
+  ) async {
+    var added = false;
+    final exercise = _exercise();
+    await tester.pumpWidget(
+      _host(exercise, onSetAdded: () => added = true),
+    );
+    await tester.pumpAndSettle();
+
+    final localized = AppLocalizations.of(
+      tester.element(find.byType(WeightCard)),
+    );
+    final firstRow = find.byType(AnimatedContainer).first;
+    final originalRowSize = tester.getSize(firstRow);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Padding &&
+            widget.padding == const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      ),
+      findsOneWidget,
+    );
+
+    final addSet = find.widgetWithText(TextButton, localized.weightAddSet);
+    expect(tester.getSize(addSet).height, greaterThanOrEqualTo(48));
+    await tester.tap(addSet);
+    await tester.pumpAndSettle();
+
+    expect(added, isTrue);
+    expect(find.byType(AnimatedContainer), findsNWidgets(4));
+    expect(tester.getSize(find.byType(AnimatedContainer).first), originalRowSize);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 double _contrastRatio(Color foreground, Color background) {
@@ -345,6 +391,7 @@ Widget _host(
   FocusNode? weightFocus,
   FocusNode? repsFocus,
   VoidCallback? onDetails,
+  VoidCallback? onSetAdded,
   bool disableAnimations = false,
   double textScale = 1,
 }) => Provider<AppRepository>.value(
@@ -373,6 +420,7 @@ Widget _host(
               firstSetWeightFocusNode: weightFocus,
               firstSetRepsFocusNode: repsFocus,
               onDetails: onDetails,
+              onSetAdded: onSetAdded,
             ),
           ),
         ),
