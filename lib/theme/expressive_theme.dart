@@ -78,6 +78,15 @@ abstract final class ExpressiveThemeDefinition {
           onPrimaryAction: colorScheme.onPrimary,
           startWorkoutAction: colorScheme.primary,
           onStartWorkoutAction: colorScheme.onPrimary,
+          workoutCompleted: brightness == Brightness.light
+              ? const Color(0xFF286F3A)
+              : const Color(0xFF5EB171),
+          workoutExerciseCompleted: brightness == Brightness.light
+              ? const Color(0xFF4F9560)
+              : const Color(0xFF286A3A),
+          workoutSetCompleted: brightness == Brightness.light
+              ? const Color(0xFFC2E7C7)
+              : const Color(0xFF83C98F),
         );
     final shapeTokens = AppShapeTokens.classic.copyWith(
       card: BorderRadius.circular(18),
@@ -87,8 +96,13 @@ abstract final class ExpressiveThemeDefinition {
     );
     final generatedSurfaces = AppSurfaceTokens.fromColorScheme(colorScheme);
     final surfaceTokens = switch (treatment) {
-      ExpressivePaletteTreatment.generated => generatedSurfaces,
+      ExpressivePaletteTreatment.generated => generatedSurfaces.copyWith(
+        workoutCardCompleteFill: 0.18,
+        workoutSetCompleteFill: brightness == Brightness.light ? 0.56 : 0.42,
+      ),
       ExpressivePaletteTreatment.curated => generatedSurfaces.copyWith(
+        workoutCardCompleteFill: 0.18,
+        workoutSetCompleteFill: brightness == Brightness.light ? 0.56 : 0.42,
         panel: colorScheme.surfaceContainerLow,
         panelRaised: colorScheme.surfaceContainer,
         card: colorScheme.surfaceContainer,

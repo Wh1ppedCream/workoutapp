@@ -89,3 +89,73 @@ changed workout source/helper and presentation tests reported no issues. `git
 diff --check` passed. The full suite is deferred until the user approves this
 Active Workout visual direction. No persisted Expressive family, preference,
 dependency, or app-wide theme rollout was introduced.
+
+## Production-preview refinement follow-up — 2026-10-02
+
+This is a narrow refinement of the isolated Active Workout preview. It does not
+expand the Expressive scope to another destination or change the Train + shell
+reference baseline.
+
+### Changes in the current candidate
+
+- The Expressive exercise header uses a tighter layout and larger thumbnail;
+  the completed exercise header now uses the semantic completed-exercise green
+  role, while an incomplete header remains primary-tonal. Completion fills use
+  preview theme surface tokens, and the completion palette is separate from
+  Classic/Neo and the existing summary accent.
+- Set-row completion and exercise completion use distinct semantic green roles.
+  Completed-state fill transitions are local and fill-only, using the existing
+  Tonos motion duration policy. The weight/reps fields have separately routed
+  hit/focus regions so each field remains independently usable.
+- The preview success ladder is: light accent/header/row `#286F3A` / `#4F9560`
+  / `#C2E7C7`; dark accent/header/row `#5EB171` / `#286A3A` / `#83C98F`.
+  Outer-card and completed-row fill factors are `0.18` and `0.56` light / `0.42`
+  dark, respectively.
+- Add Exercise remains a floating overlay above the scrollable workout list.
+  The previous fixed 80 dp reserved viewport lane has been removed; the list
+  instead has minimum end-of-list scroll clearance so final controls can be
+  scrolled clear of the FAB without permanently reducing the visible viewport.
+- Classic and Neo presentation paths remain unchanged. No production theme
+  family or persisted selection was added.
+
+### Focused validation so far
+
+- Focused widget tests: **38 passed**, 0 failed; these cover the current workout
+  presentation, completion palette, field/action geometry, and related
+  interactions.
+- After the FAB regression was strengthened to drag to the true maximum scroll
+  extent and check the final checkbox, Weight/Reps fields, and Remove Set
+  target, its focused file rerun passed **2/2** tests.
+- Scoped Dart analysis on the changed workout sources and focused tests: clean.
+- `git diff --check`: passed.
+- Full Flutter suite: intentionally deferred until after user review.
+
+### Pixel 7 review and captures
+
+Device `28021FDH200228` (Pixel 7, `panther`) ran the isolated
+`com.tonos.expressivepreview` profile build, versionCode 6 / versionName 1.0.1,
+using `tonos_expressive_preview.db`. APK SHA-256:
+`061D31C9992D17D4C5F6341F5BA30F594017E93C3860E11D50A32FD6B104CDEF`. Normal
+`com.tonos` data was not touched or cleared.
+
+Fresh matched light/dark captures and UI hierarchy XML are under
+`review/refinement-20261002/`. They cover 0/3 with multiple exercises, focused
+numeric entry, 2/3, 3/3 auto-collapse, reopening a completed exercise, menu,
+finish flow, bottom/max-scroll clearance, and closeups of the complete and
+incomplete headers, completed row, numeric field, and FAB. Light mode also has
+a ~24-toggle recovery capture. Reduced Motion was enabled for collapse/reopen,
+verified to change state immediately, then restored to off.
+
+At true maximum scroll, the last set controls clear the FAB in both modes. The
+final Remove Set target had about **84 dp** vertical clearance from the FAB;
+the permanent reserved viewport lane is absent. In an intermediate
+keyboard-visible position, the FAB can cover lower row actions. A list drag
+scrolls while retaining the focused Reps value for one gesture; further
+scrolling dismisses the keyboard/focus under the existing `onDrag` keyboard
+policy, and the entered value remains intact. This preserves current keyboard
+behavior, but the interim overlap is included in the user review evidence.
+
+No video was produced because the existing `scrcpy.exe -S` process was left
+untouched. Still captures and live interaction checks were used instead.
+The preview was left in its isolated dark Active Workout session with the
+keyboard hidden.

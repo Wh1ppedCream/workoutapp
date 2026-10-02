@@ -160,63 +160,61 @@ class _SessionScreenState extends State<SessionScreen> {
 
       body: session.exercises.isEmpty
           ? Center(child: Text(strings.sessionNoExercises))
-          : Padding(
-              padding: EdgeInsets.only(
-                bottom: expressiveTokens == null ? 0 : 80,
+          : ListView.builder(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                expressiveTokens == null ? 16 : 72,
               ),
-              child: ListView.builder(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.all(16),
-                itemCount: session.exercises.length,
-                itemBuilder: (ctx, i) {
-                  final ex = session.exercises[i];
-                  final type = session.cardTypes[i];
-                  return KeyedSubtree(
-                    key: i == 0 ? _firstExerciseTutorialKey : null,
-                    child: ExerciseCard(
-                      exercise: ex,
-                      cardType: type,
-                      expressiveWorkoutPresentation:
-                          context.usesExpressivePresentation,
-                      animateExpansion:
-                          ctx.usesClassicPresentation ||
-                          ctx.usesExpressivePresentation,
-                      onDetails: type == CardType.weight
-                          ? () async {
-                              final repo = context.read<AppRepository>();
-                              final defId = await repo
-                                  .findOrCreateExerciseDefinition(
-                                    ex.name,
-                                    ex.equipment,
-                                  );
-                              final def = await repo.fetchDefinitionById(defId);
-                              if (def != null && context.mounted) {
-                                ExerciseDetailSheet.show(
-                                  context: context,
-                                  definition: def,
-                                  defId: defId,
+              itemCount: session.exercises.length,
+              itemBuilder: (ctx, i) {
+                final ex = session.exercises[i];
+                final type = session.cardTypes[i];
+                return KeyedSubtree(
+                  key: i == 0 ? _firstExerciseTutorialKey : null,
+                  child: ExerciseCard(
+                    exercise: ex,
+                    cardType: type,
+                    expressiveWorkoutPresentation:
+                        context.usesExpressivePresentation,
+                    animateExpansion:
+                        ctx.usesClassicPresentation ||
+                        ctx.usesExpressivePresentation,
+                    onDetails: type == CardType.weight
+                        ? () async {
+                            final repo = context.read<AppRepository>();
+                            final defId = await repo
+                                .findOrCreateExerciseDefinition(
+                                  ex.name,
+                                  ex.equipment,
                                 );
-                              }
+                            final def = await repo.fetchDefinitionById(defId);
+                            if (def != null && context.mounted) {
+                              ExerciseDetailSheet.show(
+                                context: context,
+                                definition: def,
+                                defId: defId,
+                              );
                             }
-                          : null,
-                      initialCompletedParents: type == CardType.weight
-                          ? (ex as WeightExercise).completedParents
-                          : null,
-                      initialCompletedChildren: type == CardType.weight
-                          ? (ex as WeightExercise).completedChildren
-                          : null,
-                      onDeleteExercise: () =>
-                          context.read<ActiveSession>().removeExercise(i),
-                      onSetAdded: () => context.read<ActiveSession>().refresh(),
-                      onSetDeleted: () =>
-                          context.read<ActiveSession>().refresh(),
-                      onValueChanged: () =>
-                          context.read<ActiveSession>().refresh(),
-                    ),
-                  );
-                },
-              ),
+                          }
+                        : null,
+                    initialCompletedParents: type == CardType.weight
+                        ? (ex as WeightExercise).completedParents
+                        : null,
+                    initialCompletedChildren: type == CardType.weight
+                        ? (ex as WeightExercise).completedChildren
+                        : null,
+                    onDeleteExercise: () =>
+                        context.read<ActiveSession>().removeExercise(i),
+                    onSetAdded: () => context.read<ActiveSession>().refresh(),
+                    onSetDeleted: () => context.read<ActiveSession>().refresh(),
+                    onValueChanged: () =>
+                        context.read<ActiveSession>().refresh(),
+                  ),
+                );
+              },
             ),
 
       floatingActionButton: KeyedSubtree(

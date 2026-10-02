@@ -214,19 +214,12 @@ void main() {
         expect(
           headerWidget.padding,
           const EdgeInsets.symmetric(horizontal: 8),
-          reason:
-              '${testCase.name} header keeps the 48dp action row uninflated',
+          reason: '${testCase.name} header keeps compact horizontal padding',
         );
         expect(
           tester.getSize(header).height,
-          tester
-              .getSize(
-                find
-                    .descendant(of: header, matching: find.byType(IconButton))
-                    .first,
-              )
-              .height,
-          reason: '${testCase.name} header height follows its expansion action',
+          closeTo(56, 0.1),
+          reason: '${testCase.name} header makes room for the larger thumbnail',
         );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -403,97 +396,84 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('Expressive session FAB does not overlap visible set controls', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(432, 936));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    SharedPreferences.setMockInitialValues(<String, Object>{
-      'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
-    });
-    final repository = _EmptyRepository();
-    final session = ActiveSession(
-      repository: repository,
-      retryDelay: (_) async {},
-    );
-    final units = UnitPreferenceProvider();
-    addTearDown(session.dispose);
-    addTearDown(units.dispose);
-    await Future.wait<void>([session.ready, units.ready]);
-    session
-      ..exercises.add(_exercise(setCount: 3))
-      ..cardTypes.add(CardType.weight)
-      ..exercises.add(_exercise(setCount: 3))
-      ..cardTypes.add(CardType.weight);
-
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<ActiveSession>.value(value: session),
-          ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
-          Provider<AppRepository>.value(value: repository),
-        ],
-        child: MaterialApp(
-          theme: ExpressiveThemeDefinition.light(),
-          themeAnimationDuration: Duration.zero,
-          locale: const Locale('en'),
-          localizationsDelegates: tonosLocalizationDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const SessionScreen(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.pump(const Duration(milliseconds: 421));
-    await tester.pumpAndSettle();
-
-    final addFab = find.byType(AddExerciseFab);
-    final fabRect = tester.getRect(addFab);
-    final listViewport = tester.getRect(find.byType(ListView));
-    final removeSetButtons = find.byWidgetPredicate(
-      (widget) =>
-          widget is IconButton &&
-          widget.tooltip ==
-              AppLocalizations.of(tester.element(find.byType(SessionScreen)))
-                  .weightRemoveSetTitle,
-    );
-    expect(removeSetButtons, findsNWidgets(6));
-    final highFrequencyControls = <Finder>[
-      ...find
-          .byType(Checkbox)
-          .evaluate()
-          .map((element) => find.byWidget(element.widget)),
-      ...find
-          .byType(TextFormField)
-          .evaluate()
-          .map((element) => find.byWidget(element.widget)),
-      ...removeSetButtons.evaluate().map(
-        (element) => find.byWidget(element.widget),
-      ),
-    ];
-    expect(listViewport.bottom, lessThanOrEqualTo(fabRect.top));
-    for (final control in highFrequencyControls) {
-      final visibleControlRect = tester
-          .getRect(control)
-          .intersect(listViewport);
-      expect(
-        fabRect.overlaps(visibleControlRect),
-        isFalse,
-        reason: 'FAB must not cover the visible part of a set control',
+  testWidgets(
+    'Expressive session FAB floats over content and final controls scroll clear',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(432, 936));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
+      });
+      final repository = _EmptyRepository();
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
       );
-    }
-    final lastRemoveSet = removeSetButtons.last;
-    await tester.ensureVisible(lastRemoveSet);
-    await tester.pumpAndSettle();
-    final reachableRemoveSetRect = tester.getRect(lastRemoveSet);
-    expect(reachableRemoveSetRect.overlaps(fabRect), isFalse);
-    expect(
-      reachableRemoveSetRect.bottom,
-      lessThanOrEqualTo(listViewport.bottom),
-    );
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+      final units = UnitPreferenceProvider();
+      addTearDown(session.dispose);
+      addTearDown(units.dispose);
+      await Future.wait<void>([session.ready, units.ready]);
+      session
+        ..exercises.add(_exercise(setCount: 3))
+        ..cardTypes.add(CardType.weight)
+        ..exercises.add(_exercise(setCount: 3))
+        ..cardTypes.add(CardType.weight);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ActiveSession>.value(value: session),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+            Provider<AppRepository>.value(value: repository),
+          ],
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            themeAnimationDuration: Duration.zero,
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const SessionScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 421));
+      await tester.pumpAndSettle();
+
+      final addFab = find.byType(AddExerciseFab);
+      final fabRect = tester.getRect(addFab);
+      final listViewport = tester.getRect(find.byType(ListView));
+      final removeSetButtons = find.byWidgetPredicate(
+        (widget) =>
+            widget is IconButton &&
+            widget.tooltip ==
+                AppLocalizations.of(tester.element(find.byType(SessionScreen)))
+                    .weightRemoveSetTitle,
+      );
+      expect(removeSetButtons, findsNWidgets(6));
+      expect(listViewport.bottom, greaterThan(fabRect.top));
+      final finalCardRect = tester
+          .getRect(find.byType(ExerciseCard).last)
+          .intersect(listViewport);
+      expect(finalCardRect.isEmpty, isFalse);
+      expect(
+        fabRect.overlaps(finalCardRect),
+        isTrue,
+        reason: 'Exercise content should be able to continue behind the FAB',
+      );
+      final lastRemoveSet = removeSetButtons.last;
+      await tester.ensureVisible(lastRemoveSet);
+      await tester.pumpAndSettle();
+      final reachableRemoveSetRect = tester.getRect(lastRemoveSet);
+      expect(reachableRemoveSetRect.overlaps(fabRect), isFalse);
+      expect(
+        reachableRemoveSetRect.bottom,
+        lessThanOrEqualTo(listViewport.bottom),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
 
 WeightExercise _exercise({int setCount = 2}) => WeightExercise(

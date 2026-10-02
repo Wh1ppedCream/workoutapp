@@ -83,6 +83,8 @@ class _WeightCardState extends State<WeightCard> {
   /// Parent set controllers stay in index order with [widget.exercise.sets].
   List<TextEditingController> _weightControllers = [];
   List<TextEditingController> _repsControllers = [];
+  List<FocusNode> _weightFieldFocusNodes = [];
+  List<FocusNode> _repsFieldFocusNodes = [];
   late final FocusNode _exerciseMenuFocusNode = FocusNode(
     debugLabel: 'WeightCard exercise actions',
   );
@@ -118,11 +120,21 @@ class _WeightCardState extends State<WeightCard> {
     if (exerciseChanged || unitChanged) {
       _syncFromExercise(resetCollapsed: exerciseChanged);
     }
+    _syncFieldFocusNodes(
+      _usesExpressiveWorkout ? widget.exercise.sets.length : 0,
+    );
   }
+
+  bool get _usesExpressiveWorkout =>
+      widget.expressiveWorkoutPresentation &&
+      context.usesExpressivePresentation;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncFieldFocusNodes(
+      _usesExpressiveWorkout ? widget.exercise.sets.length : 0,
+    );
     final previewUnit = widget.previewWeightUnit;
     if (previewUnit != null) {
       if (previewUnit == _weightUnit) return;
@@ -187,6 +199,52 @@ class _WeightCardState extends State<WeightCard> {
     _disposeControllers([..._weightControllers, ..._repsControllers]);
     _weightControllers = [];
     _repsControllers = [];
+    for (final node in [..._weightFieldFocusNodes, ..._repsFieldFocusNodes]) {
+      node.dispose();
+    }
+    _weightFieldFocusNodes = [];
+    _repsFieldFocusNodes = [];
+  }
+
+  void _syncFieldFocusNodes(int setCount) {
+    final removedNodes = <FocusNode>[];
+    if (_weightFieldFocusNodes.length > setCount) {
+      removedNodes.addAll(_weightFieldFocusNodes.skip(setCount));
+      _weightFieldFocusNodes.removeRange(
+        setCount,
+        _weightFieldFocusNodes.length,
+      );
+    }
+    if (_repsFieldFocusNodes.length > setCount) {
+      removedNodes.addAll(_repsFieldFocusNodes.skip(setCount));
+      _repsFieldFocusNodes.removeRange(setCount, _repsFieldFocusNodes.length);
+    }
+    while (_weightFieldFocusNodes.length < setCount) {
+      _weightFieldFocusNodes.add(
+        FocusNode(
+          debugLabel:
+              'WeightCard weight field set ${_weightFieldFocusNodes.length + 1}',
+        ),
+      );
+    }
+    while (_repsFieldFocusNodes.length < setCount) {
+      _repsFieldFocusNodes.add(
+        FocusNode(
+          debugLabel:
+              'WeightCard reps field set ${_repsFieldFocusNodes.length + 1}',
+        ),
+      );
+    }
+    _disposeFocusNodesAfterFrame(removedNodes);
+  }
+
+  void _disposeFocusNodesAfterFrame(List<FocusNode> nodes) {
+    if (nodes.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final node in nodes) {
+        node.dispose();
+      }
+    });
   }
 
   void _disposeControllers(List<TextEditingController> controllers) {
@@ -347,9 +405,10 @@ class _WeightCardState extends State<WeightCard> {
           ? semantic.onWorkoutContainer
           : null,
     );
+    final workoutCompletedHeaderForeground = theme.colorScheme.onSurface;
     final doneColor = usesExpressiveWorkout
         ? allSetsComplete
-              ? semantic.workoutCompleted
+              ? workoutCompletedHeaderForeground
               : theme.colorScheme.onPrimaryContainer
         : surfaces.useSemanticWorkoutCardFill
         ? semantic.onWorkoutContainer
@@ -458,7 +517,9 @@ class _WeightCardState extends State<WeightCard> {
 
     final cardColor = usesExpressiveWorkout
         ? allSetsComplete
-              ? semantic.workoutExerciseCompleted.withValues(alpha: 0.18)
+              ? semantic.workoutExerciseCompleted.withValues(
+                  alpha: surfaces.workoutCardCompleteFill,
+                )
               : theme.colorScheme.surfaceContainerLow
         : allSetsComplete
         ? completedCardColor.withValues(alpha: surfaces.workoutCardCompleteFill)
@@ -468,15 +529,22 @@ class _WeightCardState extends State<WeightCard> {
     final cardContent = Theme(
       data: cardTheme,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: usesExpressiveWorkout
+            ? EdgeInsets.zero
+            : const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
             Container(
+              margin: usesExpressiveWorkout
+                  ? const EdgeInsets.fromLTRB(8, 8, 8, 0)
+                  : null,
               decoration: usesExpressiveWorkout
                   ? BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
+                      color: allSetsComplete
+                          ? semantic.workoutExerciseCompleted
+                          : theme.colorScheme.primaryContainer,
                       borderRadius: TonosExpressiveWorkoutShapes.exerciseHeader,
                     )
                   : null,
@@ -487,7 +555,9 @@ class _WeightCardState extends State<WeightCard> {
                 data: usesExpressiveWorkout
                     ? IconButtonThemeData(
                         style: IconButton.styleFrom(
-                          foregroundColor: theme.colorScheme.onPrimaryContainer,
+                          foregroundColor: allSetsComplete
+                              ? workoutCompletedHeaderForeground
+                              : theme.colorScheme.onPrimaryContainer,
                         ),
                       )
                     : IconButtonThemeData(style: theme.iconButtonTheme.style),
@@ -513,13 +583,21 @@ class _WeightCardState extends State<WeightCard> {
                         children: [
                           Text(
                             we.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: usesExpressiveWorkout
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : surfaces.useSemanticWorkoutCardFill
-                                  ? semantic.onWorkoutContainer
-                                  : null,
-                            ),
+                            style:
+                                (usesExpressiveWorkout
+                                        ? theme.textTheme.titleLarge
+                                        : theme.textTheme.titleMedium)
+                                    ?.copyWith(
+                                      color: usesExpressiveWorkout
+                                          ? allSetsComplete
+                                                ? workoutCompletedHeaderForeground
+                                                : theme
+                                                      .colorScheme
+                                                      .onPrimaryContainer
+                                          : surfaces.useSemanticWorkoutCardFill
+                                          ? semantic.onWorkoutContainer
+                                          : null,
+                                    ),
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -560,6 +638,7 @@ class _WeightCardState extends State<WeightCard> {
                           definitionId: widget.definitionId,
                           exercise: we,
                           onTap: widget.onDetails!,
+                          expressivePresentation: usesExpressiveWorkout,
                         ),
                       ),
                     MenuAnchor(
@@ -611,8 +690,11 @@ class _WeightCardState extends State<WeightCard> {
                                   .showMenuTooltip,
                               icon: Icon(
                                 Icons.more_vert,
+                                size: usesExpressiveWorkout ? 20 : null,
                                 color: usesExpressiveWorkout
-                                    ? theme.colorScheme.onPrimaryContainer
+                                    ? allSetsComplete
+                                          ? workoutCompletedHeaderForeground
+                                          : theme.colorScheme.onPrimaryContainer
                                     : usesInkRecipe &&
                                           theme.brightness == Brightness.dark
                                     ? semantic.onWorkoutContainer
@@ -639,6 +721,9 @@ class _WeightCardState extends State<WeightCard> {
               expanded: !effectiveCollapsed,
               duration: expansionDuration,
               curve: context.motionTokens.standardCurve,
+              contentPadding: usesExpressiveWorkout
+                  ? const EdgeInsets.all(16)
+                  : EdgeInsets.zero,
               contentBuilder: (_) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -670,7 +755,14 @@ class _WeightCardState extends State<WeightCard> {
                     }
                     // Parent set row
                     children.add(
-                      Container(
+                      AnimatedContainer(
+                        duration: usesExpressiveWorkout
+                            ? appMotionDuration(
+                                context,
+                                context.motionTokens.quick,
+                              )
+                            : Duration.zero,
+                        curve: context.motionTokens.standardCurve,
                         decoration: BoxDecoration(
                           color: isSetComplete
                               ? completedSetColor.withValues(
@@ -751,23 +843,30 @@ class _WeightCardState extends State<WeightCard> {
                             Widget withExpressiveFieldLabel(
                               String label,
                               Widget field,
+                              VoidCallback onTapLabel,
                             ) {
                               if (!usesExpressiveWorkout) return field;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 3),
-                                    child: Text(
-                                      label,
-                                      style: workoutFieldLabelStyle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                              return GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                excludeFromSemantics: true,
+                                onTap: onTapLabel,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 3),
+                                      child: Text(
+                                        label,
+                                        style: workoutFieldLabelStyle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                  Semantics(label: label, child: field),
-                                ],
+                                    Semantics(label: label, child: field),
+                                  ],
+                                ),
                               );
                             }
 
@@ -775,13 +874,20 @@ class _WeightCardState extends State<WeightCard> {
                               final label = strings.weightLabel(
                                 _weightUnit.shortLabel,
                               );
+                              final focusNode = usesExpressiveWorkout
+                                  ? index == 0 &&
+                                            widget.firstSetWeightFocusNode !=
+                                                null
+                                        ? widget.firstSetWeightFocusNode!
+                                        : _weightFieldFocusNodes[index]
+                                  : index == 0
+                                  ? widget.firstSetWeightFocusNode
+                                  : null;
                               final field = TextFormField(
                                 key: index == 0
                                     ? widget.firstSetWeightKey
                                     : null,
-                                focusNode: index == 0
-                                    ? widget.firstSetWeightFocusNode
-                                    : null,
+                                focusNode: focusNode,
                                 textInputAction:
                                     index == 0 &&
                                         widget.onFirstSetWeightSubmitted != null
@@ -805,16 +911,26 @@ class _WeightCardState extends State<WeightCard> {
                                           ?.call()
                                     : null,
                               );
-                              return withExpressiveFieldLabel(label, field);
+                              return withExpressiveFieldLabel(
+                                label,
+                                field,
+                                () => focusNode?.requestFocus(),
+                              );
                             }
 
                             Widget buildRepsField() {
                               final label = strings.weightReps;
+                              final focusNode = usesExpressiveWorkout
+                                  ? index == 0 &&
+                                            widget.firstSetRepsFocusNode != null
+                                        ? widget.firstSetRepsFocusNode!
+                                        : _repsFieldFocusNodes[index]
+                                  : index == 0
+                                  ? widget.firstSetRepsFocusNode
+                                  : null;
                               final field = TextFormField(
                                 key: index == 0 ? widget.firstSetRepsKey : null,
-                                focusNode: index == 0
-                                    ? widget.firstSetRepsFocusNode
-                                    : null,
+                                focusNode: focusNode,
                                 textInputAction:
                                     index == 0 &&
                                         widget.onFirstSetRepsSubmitted != null
@@ -838,7 +954,11 @@ class _WeightCardState extends State<WeightCard> {
                                           widget.onFirstSetRepsSubmitted?.call()
                                     : null,
                               );
-                              return withExpressiveFieldLabel(label, field);
+                              return withExpressiveFieldLabel(
+                                label,
+                                field,
+                                () => focusNode?.requestFocus(),
+                              );
                             }
 
                             final fields = stackFields
@@ -992,6 +1112,11 @@ class _WeightCardState extends State<WeightCard> {
                                             if (confirm == true) {
                                               setState(() {
                                                 sets.removeAt(index);
+                                                _syncFieldFocusNodes(
+                                                  _usesExpressiveWorkout
+                                                      ? sets.length
+                                                      : 0,
+                                                );
                                                 _weightControllers
                                                     .removeAt(index)
                                                     .dispose();
@@ -1232,6 +1357,9 @@ class _WeightCardState extends State<WeightCard> {
                                     reps: last.reps,
                                   ),
                                 );
+                                _syncFieldFocusNodes(
+                                  _usesExpressiveWorkout ? sets.length : 0,
+                                );
                                 _weightControllers.add(
                                   TextEditingController(
                                     text: WeightUnitFormatter.formatInputWeight(
@@ -1295,6 +1423,7 @@ class _WeightCardExpansionRegion extends StatefulWidget {
   final Duration duration;
   final Curve curve;
   final WidgetBuilder contentBuilder;
+  final EdgeInsets contentPadding;
 
   const _WeightCardExpansionRegion({
     super.key,
@@ -1302,6 +1431,7 @@ class _WeightCardExpansionRegion extends StatefulWidget {
     required this.duration,
     required this.curve,
     required this.contentBuilder,
+    this.contentPadding = EdgeInsets.zero,
   });
 
   @override
@@ -1326,7 +1456,12 @@ class _WeightCardExpansionRegionState
   @override
   Widget build(BuildContext context) {
     final shouldBuildContent = widget.expanded || _retainContentWhileClosing;
-    final content = shouldBuildContent ? widget.contentBuilder(context) : null;
+    final content = shouldBuildContent
+        ? Padding(
+            padding: widget.contentPadding,
+            child: widget.contentBuilder(context),
+          )
+        : null;
     if (widget.duration == Duration.zero) {
       return content ?? const SizedBox.shrink();
     }
@@ -1373,11 +1508,13 @@ class _WeightExerciseThumbnailButton extends StatefulWidget {
   final int? definitionId;
   final WeightExercise exercise;
   final VoidCallback onTap;
+  final bool expressivePresentation;
 
   const _WeightExerciseThumbnailButton({
     required this.definitionId,
     required this.exercise,
     required this.onTap,
+    this.expressivePresentation = false,
   });
 
   @override
@@ -1423,6 +1560,7 @@ class _WeightExerciseThumbnailButtonState
 
   @override
   Widget build(BuildContext context) {
+    final thumbnailSize = widget.expressivePresentation ? 56.0 : 48.0;
     return FutureBuilder<ExerciseDefinition?>(
       future: _definitionFuture,
       builder: (context, snapshot) {
@@ -1430,7 +1568,7 @@ class _WeightExerciseThumbnailButtonState
         if (definition != null) {
           return ExerciseMediaThumbnail(
             definition: definition,
-            size: 48,
+            size: thumbnailSize,
             borderRadius: context.shapeTokens.mediaThumbnail,
             padding: EdgeInsets.zero,
             framed: false,
@@ -1439,7 +1577,7 @@ class _WeightExerciseThumbnailButtonState
         }
 
         return SizedBox.square(
-          dimension: 48,
+          dimension: thumbnailSize,
           child: InkWell(
             borderRadius: context.shapeTokens.mediaThumbnail,
             onTap: widget.onTap,
