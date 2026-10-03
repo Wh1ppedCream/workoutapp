@@ -1039,12 +1039,13 @@ class _ExerciseProgressStatsColumn extends StatelessWidget {
     if (context.usesExpressivePresentation) {
       return _ExpressiveExerciseProgressSummaryRail(
         layout: layout,
-        actualLabel: strings.exerciseProgressOneRepMax,
+        actualLabel: strings.exerciseProgressActual,
         actualIsMissing: actualOneRm == null,
         actualValue:
             actualOneRm == null
-                ? strings.exerciseProgressNoActual
+                ? '—'
                 : _formatWeight(actualOneRm, weightUnit, locale: locale),
+        noActualValue: strings.exerciseProgressNoActual,
         actualDelta: actualDelta,
         estimatedLabel: strings.exerciseProgressEstimatedOneRepMax,
         estimatedValue:
@@ -1095,6 +1096,7 @@ class _ExpressiveExerciseProgressSummaryRail extends StatelessWidget {
   final String actualLabel;
   final bool actualIsMissing;
   final String actualValue;
+  final String noActualValue;
   final double? actualDelta;
   final String estimatedLabel;
   final String estimatedValue;
@@ -1105,6 +1107,7 @@ class _ExpressiveExerciseProgressSummaryRail extends StatelessWidget {
     required this.actualLabel,
     required this.actualIsMissing,
     required this.actualValue,
+    required this.noActualValue,
     required this.actualDelta,
     required this.estimatedLabel,
     required this.estimatedValue,
@@ -1133,6 +1136,7 @@ class _ExpressiveExerciseProgressSummaryRail extends StatelessWidget {
       String value,
       double? delta, {
       bool supportingValue = false,
+      bool showDelta = true,
     }) {
       final deltaIcon = _deltaIcon(delta);
       final deltaColor = _deltaColor(context, delta);
@@ -1165,22 +1169,24 @@ class _ExpressiveExerciseProgressSummaryRail extends StatelessWidget {
                       fontWeight: FontWeight.w900,
                     ),
           ),
-          SizedBox(height: layout.value(3)),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: layout.value(3),
-            children: [
-              if (deltaIcon != null)
-                Icon(deltaIcon, size: layout.value(14), color: deltaColor),
-              Text(
-                _formatDeltaWeight(delta, weightUnit, locale: locale),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: deltaColor,
-                  fontWeight: FontWeight.w800,
+          if (showDelta) ...[
+            SizedBox(height: layout.value(3)),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: layout.value(3),
+              children: [
+                if (deltaIcon != null)
+                  Icon(deltaIcon, size: layout.value(14), color: deltaColor),
+                Text(
+                  _formatDeltaWeight(delta, weightUnit, locale: locale),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: deltaColor,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ],
       );
     }
@@ -1198,12 +1204,22 @@ class _ExpressiveExerciseProgressSummaryRail extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          metric(
-            actualLabel,
-            actualValue,
-            actualDelta,
-            supportingValue: actualIsMissing,
-          ),
+          if (actualIsMissing)
+            Semantics(
+              container: true,
+              label: actualLabel,
+              value: noActualValue,
+              excludeSemantics: true,
+              child: metric(
+                actualLabel,
+                actualValue,
+                actualDelta,
+                supportingValue: true,
+                showDelta: false,
+              ),
+            )
+          else
+            metric(actualLabel, actualValue, actualDelta),
           Padding(
             padding: EdgeInsets.symmetric(vertical: layout.value(8)),
             child: Divider(height: 1, color: dividerColor),

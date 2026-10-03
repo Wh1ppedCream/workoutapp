@@ -12,6 +12,7 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_data_visualization_tokens.dart';
 import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/utils/weight_unit_formatter.dart';
 import 'package:env_test/widgets/exercise_progress_section.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -725,17 +726,61 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(
-          find.byKey(
-            const ValueKey('exercise-progress-expressive-summary-rail'),
-          ),
-          findsOneWidget,
+        final rail = find.byKey(
+          const ValueKey('exercise-progress-expressive-summary-rail'),
         );
+        expect(rail, findsOneWidget);
+        final railRect = tester.getRect(rail);
+        expect(railRect.left, greaterThanOrEqualTo(0));
+        expect(railRect.right, lessThanOrEqualTo(320));
         expect(
           find.byKey(const ValueKey('exercise-progress-header-edit')),
           findsOneWidget,
         );
-        expect(find.text(strings.exerciseProgressNoActual), findsOneWidget);
+        expect(
+          find.descendant(
+            of: rail,
+            matching: find.text(strings.exerciseProgressActual),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: rail, matching: find.text('—')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: rail,
+            matching: find.text(strings.exerciseProgressEstimatedOneRepMax),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: rail,
+            matching: find.text(
+              WeightUnitFormatter.formatWeight(
+                111,
+                units.weightUnit,
+                locale: const Locale('en'),
+              ),
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: rail, matching: find.text('0 lbs')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: rail, matching: find.text('--')),
+          findsNothing,
+        );
+        final actualSemantics = tester
+            .getSemantics(find.bySemanticsLabel(strings.exerciseProgressActual))
+            .getSemanticsData();
+        expect(actualSemantics.label, strings.exerciseProgressActual);
+        expect(actualSemantics.value, strings.exerciseProgressNoActual);
         expect(tester.takeException(), isNull);
       }
 
@@ -878,7 +923,12 @@ class _ExerciseProgressRepository extends AppRepository {
                   DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
               'training_day': '2026-01-01',
               'actual_one_rm': compactTrendValues ? 100 : 1000000,
-              'estimated_one_rm': compactTrendValues ? 101 : 1000001,
+              'estimated_one_rm':
+                  noLatestActual && compactTrendValues
+                      ? 111
+                      : compactTrendValues
+                      ? 101
+                      : 1000001,
             },
             <String, dynamic>{
               'session_id': definitionId * 10 + 2,

@@ -16,6 +16,12 @@ Exercise Progress is composed as one asymmetric tonal module. A left-aligned ide
 
 A compact, accessible teal **Edit** action sits beside the section heading. Selection, add, and remove workflows stay available in edit mode, and the selector keeps its accessibility labels and actions. The amplified treatment removes the large isolated selector edit tile from the Expressive composition.
 
+#### Actual 1RM summary refinement
+
+Exercise Progress displays the localized **Actual 1RM** label and an em dash when no actual value exists; accessibility semantics exposes **“No actual 1RM.”** Only the missing Actual delta row is omitted. Estimated 1RM and its delta remain visible. Chart and data behavior are unchanged. Same-state captures: [light](exercise-progress-summary-light.png) · [dark](exercise-progress-summary-dark.png).
+
+The focused responsive widget test passed (**7 passed**), scoped analysis passed with no issues, and `git diff --check` passed. The full suite is intentionally deferred for this scoped refinement; this note does not claim broad qualification.
+
 ### Health Trends
 
 The intended review covers the empty state, metric-card shapes, **+ Metric** action, and horizontal scrolling. Empty measurements remain honestly represented as empty; no trend values are fabricated for the candidate.
