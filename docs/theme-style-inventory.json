@@ -1181,7 +1181,7 @@
         "shadow"
       ],
       "target": "WeightCard completion surfaces, set/change-set decoration, field geometry, and token-owned effects",
-      "rationale": "This exact kind-limited rule covers only the WeightCard recipes backed by semantic, surface, shape, and effect roles. New named tokens preserve selection and hint opacity, Neo square completed-set radius, and 1px/3px completion borders. Four-mode rendered contracts check completed card/row fills, family-specific row radius and border, effects, change-set outline, and fields; the separate input-theme contract checks transparent fill, label/hint/suffix colors, field borders, and Classic inheritance. Text-style candidates are assigned to the separate migrated weight-card-popup-text rule. The user accepted WeightCard in Classic and Neo, light and dark, on 2026-09-25; keep this classification exact-path and kind-limited."
+      "rationale": "This exact kind-limited rule covers only the WeightCard recipes backed by semantic, surface, shape, and effect roles, including its approved Expressive-only card, set-row, field, and expansion-shape branches. The Expressive adaptation increased the current recipe findings from the 23-candidate Classic/Neo snapshot to 31; the ownership contract pins the exact current per-kind counts. New named tokens preserve selection and hint opacity, Neo square completed-set radius, and 1px/3px completion borders. Four-mode rendered contracts check completed card/row fills, family-specific row radius and border, effects, change-set outline, and fields; the separate input-theme contract checks transparent fill, label/hint/suffix colors, field borders, and Classic inheritance. Text-style candidates are assigned to the separate migrated weight-card-popup-text rule. The user accepted WeightCard in Classic and Neo, light and dark, on 2026-09-25; keep this classification exact-path and kind-limited."
     },
     {
       "id": "weight-card-popup-text",
@@ -1520,6 +1520,18 @@
       "rationale": "The existing C2 recipe resolves media, detail cards/tags, timeframe, records, metric summaries/lists, state panels, chart grid/area/tooltip, and the drag handle through focused surface/shape/motion tokens and ColorScheme roles. Chart series, tags, and metric accents remain semantic/data colors; transparent Material layers and chart paint are intentional component ownership. The source/role contract pins these consumers and preserved Classic values, and an exact inventory contract pins all current candidate kinds/counts. No runtime styling changes or device-visual acceptance are implied."
     },
     {
+      "id": "expressive-active-workout-add-fab-outline",
+      "pattern": "lib/widgets/add_exercise_fab.dart",
+      "sourcePattern": "final\\s+fabShape\\s*=\\s*BorderRadius\\.only\\([\\s\\S]*?\\);|shape:\\s*expressiveTokens\\s*==\\s*null\\s*\\?\\s*null\\s*:\\s*RoundedRectangleBorder\\(borderRadius:\\s*fabShape\\)",
+      "classification": "intentional_one_off",
+      "status": "allowlisted",
+      "kinds": [
+        "geometry"
+      ],
+      "target": "Expressive-only Add Exercise FAB outline; Classic keeps the Material default shape",
+      "rationale": "This exact source-limited exception owns only the asymmetric fabShape declaration and its conditional RoundedRectangleBorder assignment in the approved Active Workout Expressive presentation. The shape is selected only when expressiveWorkoutPresentation supplies the Expressive tokens; Classic passes a null shape and keeps its Material default. It remains a component-specific geometry recipe rather than a new shared token, so only these two geometry findings are allowlisted. The inventory ownership contract pins both findings and the Classic fallback."
+    },
+    {
       "id": "release-widgets",
       "pattern": "lib/widgets/**",
       "classification": "release_surface",
@@ -1569,11 +1581,12 @@
         "lib/screens/exercise/session_detail_screen.dart",
         "lib/widgets/active_session_durability_banner.dart",
         "lib/widgets/ongoing_session_fab.dart",
+        "lib/widgets/add_exercise_fab.dart",
         "lib/widgets/session_complete_sheet.dart",
         "lib/widgets/weight_card.dart"
       ],
       "target": "Tonos surfaces/actions, workout semantic roles, and stable input component themes",
-      "rationale": "This flow is interaction-critical and should preserve set semantics, completion state, and tap targets while its visual ownership changes."
+      "rationale": "This flow is interaction-critical and should preserve set semantics, completion state, and tap targets while its visual ownership changes. The exact AddExerciseFab path is included for its approved Expressive-only action shape and existing Classic fallback."
     },
     {
       "id": "catalog-detail",

@@ -367,10 +367,25 @@ void main() {
     String source(String path) => File(path).readAsStringSync();
 
     final sessionSource = source('lib/screens/exercise/session_screen.dart');
+    final compactSessionSource = sessionSource.replaceAll(RegExp(r'\s+'), '');
     expect(sessionSource, contains('WorkoutFinishAction('));
     expect(sessionSource, contains('AppTestKeys.sessionFinish'));
-    expect(sessionSource, contains('timerTextStyle.copyWith(fontSize: 20)'));
-    expect(sessionSource, contains('timerTextStyle.copyWith(fontSize: 48)'));
+    expect(
+      compactSessionSource,
+      contains('timerTextStyle=Theme.of(context).textTheme.bodyMedium??constTextStyle()'),
+    );
+    expect(
+      compactSessionSource,
+      contains(
+        'timerTextStyle.copyWith(fontSize:20,color:expressiveTokens==null?null:Theme.of(context).colorScheme.onSurfaceVariant,)',
+      ),
+    );
+    expect(
+      compactSessionSource,
+      contains(
+        'timerTextStyle.copyWith(fontSize:48,color:expressiveTokens?.actionPrimary,fontWeight:expressiveTokens==null?null:FontWeight.w600,)',
+      ),
+    );
     expect(sessionSource, contains('const Duration(milliseconds: 420)'));
     expect(sessionSource, isNot(contains('style: const TextStyle(fontSize:')));
 

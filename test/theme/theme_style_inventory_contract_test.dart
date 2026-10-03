@@ -597,7 +597,26 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == 'weight-card-recipes')
         .toList();
-    expect(findings, hasLength(23));
+    expect(
+      findings,
+      hasLength(31),
+      reason: 'The approved Expressive WeightCard branches add eight candidates to the 23-candidate Classic/Neo snapshot.',
+    );
+    final countsByKind = <String, int>{};
+    for (final finding in findings) {
+      countsByKind.update(
+        finding.kind,
+        (count) => count + 1,
+        ifAbsent: () => 1,
+      );
+    }
+    expect(countsByKind, <String, int>{
+      'color': 1,
+      'color_transform': 7,
+      'decoration': 7,
+      'geometry': 15,
+      'shadow': 1,
+    });
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
 
     final popupTextFindings = report.findings
@@ -609,6 +628,81 @@ void main() {
       everyElement('migrated'),
     );
   });
+
+  test(
+    'Expressive AddExerciseFab outline has exact opt-in geometry ownership',
+    () {
+      final inventory = loadThemeStyleInventory(
+        'docs/theme-style-inventory.json',
+      );
+      final rule = inventory.pathRules.singleWhere(
+        (rule) => rule.id == 'expressive-active-workout-add-fab-outline',
+      );
+      expect(rule.pattern, 'lib/widgets/add_exercise_fab.dart');
+      expect(rule.kinds, unorderedEquals(<String>['geometry']));
+      expect(rule.classification, 'intentional_one_off');
+      expect(rule.status, 'allowlisted');
+      expect(rule.sourcePattern, isNotNull);
+      expect(
+        inventory.reviewQueue
+            .singleWhere((item) => item.id == 'active-workout')
+            .patterns,
+        contains('lib/widgets/add_exercise_fab.dart'),
+      );
+
+      final source = File('lib/widgets/add_exercise_fab.dart')
+          .readAsStringSync();
+      expect(source, contains('final fabShape = BorderRadius.only('));
+      expect(
+        source,
+        contains('final expressiveTokens = expressiveWorkoutPresentation'),
+      );
+      expect(
+        RegExp(
+          r'shape:\s*expressiveTokens\s*==\s*null\s*\?\s*null\s*:\s*RoundedRectangleBorder\(borderRadius:\s*fabShape\),',
+        ).hasMatch(source),
+        isTrue,
+        reason: 'Classic keeps the Material default with a null shape.',
+      );
+      expect(
+        source,
+        contains(': RoundedRectangleBorder(borderRadius: fabShape),'),
+      );
+
+      final report = scanThemeStyleInventory(
+        root: Directory('lib'),
+        inventory: inventory,
+      );
+      final findings = report.findings
+          .where(
+            (finding) =>
+                finding.ruleId == 'expressive-active-workout-add-fab-outline',
+          )
+          .toList();
+      expect(findings, hasLength(2));
+      expect(findings.map((finding) => finding.kind), everyElement('geometry'));
+      expect(
+        findings.map((finding) => finding.status),
+        everyElement('allowlisted'),
+      );
+      expect(
+        findings.map((finding) => finding.snippet),
+        unorderedEquals(<String>[
+          'final fabShape = BorderRadius.only(',
+          ': RoundedRectangleBorder(borderRadius: fabShape),',
+        ]),
+      );
+      expect(
+        report.findings.where((finding) => finding.status == 'pending'),
+        isEmpty,
+      );
+      expect(
+        report.reviewQueueCoverage['pendingOutsideQueueCandidateCount'],
+        0,
+      );
+      expect(report.reviewQueueCoverage['overlappingCandidateCount'], 0);
+    },
+  );
 
   test('Train panel ink theme is an exact migrated local scope', () {
     final inventory = loadThemeStyleInventory(

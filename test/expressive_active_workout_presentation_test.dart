@@ -207,6 +207,9 @@ void main() {
                 TonosExpressiveWorkoutShapes.exerciseHeader,
       );
       expect(header, findsOneWidget);
+      final paintedHeader = find
+          .descendant(of: header, matching: find.byType(DecoratedBox))
+          .first;
       final headerWidget = tester.widget<Container>(header);
       expect(
         headerWidget.padding,
@@ -214,10 +217,19 @@ void main() {
         reason: '${testCase.name} header keeps compact horizontal padding',
       );
       expect(
-        tester.getSize(header).height,
-        closeTo(64, 0.1),
-        reason:
-            '${testCase.name} header keeps the 56dp thumbnail and 8dp bottom inset',
+        tester.getSize(paintedHeader).height,
+        closeTo(48, 0.1),
+        reason: '${testCase.name} preserves the visible header surface height',
+      );
+      expect(
+        tester.getRect(paintedHeader).top - tester.getRect(header).top,
+        closeTo(8, 0.1),
+        reason: '${testCase.name} preserves the visible header top inset',
+      );
+      expect(
+        headerWidget.margin?.resolve(TextDirection.ltr).bottom,
+        6,
+        reason: '${testCase.name} reserves the 6dp expanded divider gap',
       );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());

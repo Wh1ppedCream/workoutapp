@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Handoff
 
-**Current status (2026-10-01): TRAIN + SHELL EXPRESSIVE REFERENCE BASELINE QUALIFIED.** The user-approved Train Overview, Train Plans, and shared shell visual/motion language passed final technical qualification and is the reference for continuation. This does not approve production rollout, a stored Expressive choice, app-wide theme completion, or other-destination adaptation. TalkBack remains untested. Sections 1–25 preserve implementation and dated checkpoint history; section 26 is the final current authority.
+**Current status (2026-10-02): TRAIN + SHELL AND ACTIVE WORKOUT REFERENCE BASELINES QUALIFIED.** Both slices remain isolated-preview, non-persisted work. Host qualification passed and is recorded in section 27. The user approved inclusion of the unchanged pre-existing geometry test correction in this qualification checkpoint; other protected working-tree changes are excluded. This does not approve production rollout, a stored Expressive choice, app-wide theme completion, or Progress adaptation. TalkBack and profile frame-time qualification remain untested. Sections 1–26 preserve implementation and dated checkpoint history; section 27 is the current authority.
 
 ## 1. Checkpoint summary
 
@@ -452,4 +452,39 @@ The final host suite, device run, analyzer, inventory/ratchet, parity and access
 
 ### Next phase
 
-**Documentation/planning only:** adapt the approved Expressive reference language to Active Workout in a future phase. Preserve its dense logging utility while reusing the accepted color, shape, containment, tactile and Reduced Motion rules. Do not reinterpret the Train/shell system from scratch. This qualification does not implement that adaptation.
+**Historical next-phase note (superseded by section 27):** adapt the approved Expressive reference language to Active Workout. That adaptation is now recorded as an approved reference slice; Progress is the next destination phase.
+
+## 27. Current reference slices and final qualification checkpoint — 2026-10-02
+
+### Scope and boundary
+
+Train → Overview, Train → Plans, the existing five-destination shell, and Active Workout are the approved Expressive reference slices. Expressive is still available only in the isolated preview and is not persisted as an app theme choice. The normal `com.tonos` package/data, Classic, and Neo remain separate. **Progress has not been adapted.** Do not broaden this checkpoint into Catalog, Logbook, Profile, or another destination.
+
+### Active Workout recipe now authoritative
+
+- Light completion roles: header `#35A457`, completed set row `#7BCB8B`, completed outer surface `#D9F0DC`. The existing dark-mode completion palette is unchanged. Completion green remains semantic; this recipe does not alter Classic or Neo.
+- Card rhythm: 6 dp header-to-content inset, 1 dp divider, 6 dp set-content inset. Add Set uses an 8 dp bottom inset with a target of at least 48 dp. The representative expanded-card geometry is approximately 25 dp shorter than the earlier spacing candidate.
+- WeightCard reveal stays controlled at 180 ms; Reduced Motion makes expansion/collapse immediate. State ownership and final-set auto-collapse remain in the existing session flow.
+- Completion touch target, anchored `MenuAnchor`, and independent Weight/Reps field hit regions remain approved. Add Exercise remains a floating overlay with no permanent reserved viewport lane. Maximum-scroll end clearance, fixed Finish action, and elapsed-session timer/drawer remain part of the slice.
+- Historical Active Workout palette and reserved-lane descriptions in earlier dated checkpoints are superseded by the current recipe in `docs/proposals/tonos-expressive-active-workout/active-workout-adaptation-results.md` and the dated evidence index in `docs/proposals/tonos-expressive-active-workout/review/README.md`.
+
+### Pixel evidence
+
+Pixel 7 `28021FDH200228` ran the isolated `com.tonos.expressivepreview` package against `tonos_expressive_preview.db`; normal `com.tonos` data was not targeted. Current captures are under `docs/proposals/tonos-expressive-active-workout/review/spacing-polish-20261002/`. `04-multiple-exercises.png` shows two exercise cards at once (one collapsed, one expanded). These are local/untracked review evidence and are not included by this handoff's documentation changes.
+
+### Final host qualification — technical gates passed
+
+- Toolchain: Flutter 3.47.5 / bundled Dart 3.13.4. The full suite used the normal C: `TEMP`/`TMP` paths and default concurrency.
+- Final uninterrupted command: `flutter test --no-pub --reporter expanded`. Result: **1,320 passed, 0 failed, 0 skipped, exit 0**, elapsed **728.9 seconds (12m 8.9s)**. Log and machine-readable results: `%TEMP%\tonos_full_suite_qualification_final_20261002_run2`.
+- Repository-wide `dart analyze`: **0 errors, 0 warnings, 80 informational deprecation notices, exit 0**. Notices concern Flutter APIs deprecated in favor of newer equivalents; they are not analyzer errors or warnings.
+- Theme inventory: **297 Dart files / 2,473 candidates / 132 allowlisted / 2,341 migrated / 0 pending / 0 unassigned / 0 overlaps**; 1,002 candidates are in exactly one configured queue and 1,471 outside configured queues. Ratchet report and enforcement passed unchanged for **18 protected files, 158 approval entries, 154 unique fingerprints, and 180 occurrences**.
+- Focused qualification runs: responsive-scale/compact-width additions **7/7**; theme token contracts **18/18**; inventory and ratchet contracts **71/71**; focused interaction coverage **8/8**. Runs overlap and must not be summed into a unique test total.
+- Pixel 7 `28021FDH200228` checks used the isolated `com.tonos.expressivepreview` package and `tonos_expressive_preview.db`. Current light/dark/Reduced Motion evidence and multi-exercise capture are indexed in the Active Workout review README. Live checks covered set editing, rapid completion, non-final expansion, final-set collapse/reopen, and menu Back handling. One coordinate-driven Add Set attempt was a harness positioning issue; it did not indicate an app defect or change normal data.
+- No obvious architecture blocker was found in the read-only performance review. Profile frame-time qualification and native TalkBack remain untested.
+- `git diff --check`: technical changes passed. The user approved inclusion of the unchanged, user-authored geometry correction in `test/expressive_active_workout_presentation_test.dart`; other protected working-tree changes are excluded from this qualification checkpoint.
+
+An earlier 1,308-pass / 4-fail run exposed stale source and inventory-contract expectations, which were subsequently corrected narrowly. A later 1,104-test run was interrupted and is not a result. The uninterrupted 1,320-pass run above is authoritative for the current technical test gates.
+
+### Continuation boundary
+
+The next adaptation is Progress using Train + shell and Active Workout as the existing Expressive reference system. Do not redesign the frozen slices or claim Progress is complete.

@@ -1,8 +1,8 @@
 # Tonos Expressive reference baseline
 
-**Status (2026-10-01):** the Train + shared navigation-shell visual and motion language is approved by the user and technically qualified for continuation. It is the reference for later Expressive adaptations.
+**Current status (2026-10-02):** Train + shared navigation shell and Active Workout are the approved, host-qualified Expressive reference slices for later adaptations. The user approved inclusion of the unchanged pre-existing geometry test correction in this qualification checkpoint; other protected working-tree changes are excluded. See the dated record in [qualification results](tonos-expressive-train-proving-ground-results.md#26-current-reference-slice-and-qualification-status--2026-10-02).
 
-This approval covers the isolated preview treatment of **Train → Overview**, **Train → Plans**, and the existing bottom-navigation shell. It does not approve production rollout, a stored Expressive theme choice, app-wide rollout, or visual adaptation of Active Workout, Progress, Catalog, Logbook, or Profile. Expressive remains preview-only; Classic and Neo remain the persisted theme families. The Workout checks in this qualification verify compatibility only.
+This reference covers the isolated preview treatment of **Train → Overview**, **Train → Plans**, the existing bottom-navigation shell, and **Active Workout**. Expressive remains preview-only and non-persisted; Classic and Neo remain the persisted theme families. **Progress adaptation is not done.** Catalog, Logbook, and Profile have not been adapted.
 
 ## Color
 
@@ -40,6 +40,17 @@ Automated responsive coverage includes 1×, 1.15×, 1.5×, 2× and compact 320 d
 
 ## Next phase boundary
 
-The next Expressive implementation phase is **adapt the approved language to Active Workout**. Reuse this color, shape, containment, tactile, and Reduced Motion contract while preserving the workout logger's dense utility. Do not reinterpret Train/shell or implement another destination as part of this qualification.
+The next destination phase, when authorized, is **adapt the approved reference language to Progress**. Treat Train + shell and Active Workout as the existing reference system; do not restart their visual design.
 
 See the [qualification results](tonos-expressive-train-proving-ground-results.md), [handoff](tonos-expressive-train-proving-ground-handoff.md), [motion inventory](proposals/tonos-expressive-train-proving-ground/amplified-review/motion-inventory.md), and [Pixel device record](proposals/tonos-expressive-train-proving-ground/qualification/device-qualification.md) for evidence and limits.
+
+## Current Active Workout reference — 2026-10-02
+
+The Active Workout slice uses the production `SessionScreen → ExerciseCard → WeightCard` composition in the isolated preview. `ActiveSession` remains the workout-state owner. The preview preserves the logger's current order, content, and dense set-row workflow.
+
+- Completed-state colors in light mode: exercise header `#35A457`, completed set rows `#7BCB8B`, and completed exercise outer surface `#D9F0DC`. These are Expressive success/completion roles only. The current dark-mode completion palette is unchanged from its existing recipe; Classic and Neo remain untouched.
+- Expanded card rhythm is 6 dp below the header, a 1 dp divider, then 6 dp before set content. Add Set has an 8 dp bottom inset and a touch target of at least 48 dp. The representative expanded card is approximately 25 dp shorter than the earlier spacing candidate.
+- Controlled expansion remains 180 ms; Reduced Motion resolves expansion and collapse immediately. Set completion keeps the existing non-final-open/final-set-auto-collapse rule and completion state on reopen. The completion target, `MenuAnchor` menu, and independently routed Weight/Reps field hit regions remain in place.
+- Add Exercise remains a floating overlay; there is no permanent reserved dead lane. End-of-list clearance lets the last controls scroll clear of the FAB at maximum scroll. Finish stays fixed and reachable, and the elapsed-session timer retains its existing drawer interaction.
+
+These current values supersede older Active Workout color and fixed-lane descriptions in historical records. The preview remains isolated at `com.tonos.expressivepreview` with `tonos_expressive_preview.db`; it does not add a persisted Expressive choice or alter normal Tonos data.

@@ -86,9 +86,9 @@ flutter test --no-pub test/expressive_active_workout_presentation_test.dart test
 
 Result: 31 passed, 0 failed, 0 skipped, exit code 0. Scoped analysis on the
 changed workout source/helper and presentation tests reported no issues. `git
-diff --check` passed. The full suite is deferred until the user approves this
-Active Workout visual direction. No persisted Expressive family, preference,
-dependency, or app-wide theme rollout was introduced.
+diff --check` passed. At that earlier review checkpoint the full suite was
+deferred; the final completed qualification is recorded below. No persisted
+Expressive family, preference, dependency, or app-wide theme rollout was introduced.
 
 ## Production-preview refinement follow-up — 2026-10-02
 
@@ -224,3 +224,36 @@ preview.
   `07-weight-row-top-focus.png` and `08-reps-row-bottom-focus.png` in the same
   directory. The preview used the isolated `com.tonos.expressivepreview`
   package and database; normal Tonos data was not used.
+
+## Current reference recipe and freeze — 2026-10-02
+
+This section is the current authority for the Active Workout preview and supersedes earlier color and reserved-lane values above. It is an approved reference slice alongside Train + shell, not a persisted Expressive theme or production rollout. Progress has not been adapted.
+
+### Completion palette and geometry
+
+- Light-mode completed exercise header: `#35A457`.
+- Light-mode completed set rows: `#7BCB8B`.
+- Light-mode completed exercise outer surface: `#D9F0DC`.
+- Dark-mode completion palette: unchanged from the existing dark recipe. These success/completion colors do not change Classic, Neo, incomplete exercise headers, or completion logic.
+- Expanded card rhythm: 6 dp after the header, a 1 dp divider, and 6 dp before set content. Add Set has an 8 dp bottom inset and a target of at least 48 dp. The representative expanded card is approximately 25 dp shorter than the earlier spacing candidate.
+
+### Frozen behavior
+
+- `SessionScreen → ExerciseCard → WeightCard` remains the real production composition used for the preview, with `ActiveSession` owning workout state. The controlled reveal remains 180 ms; Reduced Motion resolves open/close immediately.
+- Set-completion touch target, existing final-set auto-collapse, completion retention on reopen, anchored `MenuAnchor`, and separate Weight/Reps field hit regions remain. No new workout semantics or completion motion was added.
+- Add Exercise stays a floating overlay. The permanent reserved viewport lane is absent; end-of-list clearance allows the last row controls to scroll above the FAB at maximum scroll. Finish retains its fixed placement, and the elapsed-session timer keeps its current drawer behavior.
+- No other destination or navigation was changed. Train + shell remains the first Expressive reference slice; Progress remains future work.
+
+### Current Pixel evidence
+
+Pixel 7 `28021FDH200228` ran the isolated `com.tonos.expressivepreview` build with `tonos_expressive_preview.db`; normal `com.tonos` data was not targeted. The current-source stills in `review/spacing-polish-20261002/` are indexed by exact filename in `review/README.md`. The multi-exercise capture shows two cards simultaneously (collapsed completed Ab Wheel and expanded Arm Circles). The captures are local/untracked evidence; this documentation update does not add the image/XML assets to version control.
+
+### Final combined qualification — host gates passed
+
+- Toolchain: Flutter 3.47.5 / Dart 3.13.4; normal C: `TEMP`/`TMP` and default concurrency.
+- Focused responsive-scale/compact-width tests: **7/7**. The added cases cover WeightCard and SessionScreen at 320 dp across 1.15×, 1.5×, and 2× text scales, including menu activation. Separate focused runs passed theme token contracts **18/18**, inventory/ratchet contracts **71/71**, and interaction amplification **8/8**; the runs overlap and are not additive.
+- Repository-wide `dart analyze`: **0 errors, 0 warnings, 80 informational deprecation notices, exit 0**.
+- Full uninterrupted `flutter test --no-pub --reporter expanded`: **1,320 passed, 0 failed, 0 skipped, exit 0**, 728.9 seconds (12m 8.9s). Log and JSON result: `%TEMP%\tonos_full_suite_qualification_final_20261002_run2`.
+- Theme inventory: **297 Dart files / 2,473 candidates / 132 allowlisted / 2,341 migrated / 0 pending / 0 unassigned / 0 overlaps**; 1,002 uniquely queued and 1,471 outside configured queues. Ratchet report/enforcement passed unchanged for 18 protected files, 158 approval entries, 154 unique fingerprints, and 180 occurrences. `git diff --check` passed for technical changes.
+- Pixel 7 `28021FDH200228` live checks used only `com.tonos.expressivepreview` and `tonos_expressive_preview.db`; current light/dark/reduced-motion and multi-exercise stills are indexed in `review/README.md`. Session editing, rapid completion, non-final set, final-set collapse/reopen, and menu Back were checked. Profile frame-time measurement and native TalkBack remain untested.
+- The user approved inclusion of the unchanged user-authored geometry correction in `test/expressive_active_workout_presentation_test.dart`; other protected working-tree changes are excluded from this qualification checkpoint. An earlier 1,308-pass / 4-fail run was due to stale source/inventory contracts later corrected; a later 1,104-test run was interrupted. The uninterrupted 1,320-pass run above is authoritative.

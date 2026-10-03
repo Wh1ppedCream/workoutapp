@@ -1,6 +1,6 @@
 # Tonos Expressive Train Proving Ground — Results
 
-**Current status (2026-10-01): TRAIN + SHELL EXPRESSIVE REFERENCE BASELINE QUALIFIED.** The user-approved visual and motion language for Train → Overview, Train → Plans, and the existing navigation shell is technically qualified for continuation. Expressive remains isolated and preview-only; no stored family, production rollout, app-wide theme completion, or other-destination visual approval is implied. TalkBack was not tested. At native 2×, horizontal navigation scrolling is required to reveal Profile and long plan names can ellipsize. Classic and Neo remain the stored theme families. The isolated preview retains Curated/Generated, light/dark, locale, text-scale, and motion controls.
+**Current status (2026-10-02): TRAIN + SHELL AND ACTIVE WORKOUT EXPRESSIVE REFERENCE BASELINES QUALIFIED.** The user-approved visual and motion language for Train → Overview, Train → Plans, the existing navigation shell, and Active Workout is technically qualified for continuation. Expressive remains isolated and preview-only; no stored family, production rollout, app-wide theme completion, or other-destination visual approval is implied. TalkBack and profile frame-time qualification were not tested. At native 2×, horizontal navigation scrolling is required to reveal Profile and long plan names can ellipsize. Classic and Neo remain the stored theme families. The isolated preview retains Curated/Generated, light/dark, locale, text-scale, and motion controls. The user approved inclusion of the unchanged pre-existing geometry test correction in this qualification checkpoint; other protected working-tree changes are excluded.
 
 ## Qualification record — 2026-09-30 (historical checkpoint; superseded by section 25)
 
@@ -184,4 +184,34 @@ An early full-suite run exposed stale source-rule expectations and `pumpAndSettl
 
 The final Focused Sets wave captures and normal/reduced-motion clips remain indexed in [the wave refinement review](proposals/tonos-expressive-train-proving-ground/amplified-review/manual-review.md#focused-sets-wave-polish--2026-10-01). Earlier matched Overview/Plans stills, plan identity/heatmap evidence and tactile clips remain in that guide and [review-final index](proposals/tonos-expressive-train-proving-ground/review-final/README.md). The current specification is summarized in [the Expressive reference baseline](tonos-expressive-reference-baseline.md).
 
-The approved Train + shell slice is technically qualified for continuation. It is not production released or a completed app-wide theme. The next phase is documentation/planning for adapting this approved language to Active Workout; this qualification did not begin that implementation.
+The approved Train + shell slice is technically qualified for continuation. It is not production released or a completed app-wide theme. This historical next-phase note is superseded by section 26, which records Active Workout as an approved reference slice and Progress as the next adaptation.
+
+### 26. Current reference-slice and qualification status — 2026-10-02
+
+Train → Overview, Train → Plans, the shared five-destination shell, and Active Workout are the approved Expressive reference slices. They remain in the isolated, non-persisted preview. **Progress has not been adapted.** Classic and Neo remain the normal persisted theme families; no app-wide rollout is implied.
+
+#### Current Active Workout reference recipe
+
+- Light completion colors are header `#35A457`, completed set row `#7BCB8B`, and completed exercise outer surface `#D9F0DC`. Dark completion colors remain exactly on the existing dark recipe. Green is reserved for semantic completion/success; Classic and Neo recipes are unchanged.
+- Expanded-card rhythm is 6 dp below the header, a 1 dp divider, then 6 dp before the set content. Add Set has an 8 dp bottom inset and a target of at least 48 dp. The representative expanded card is approximately 25 dp shorter than the prior spacing candidate.
+- Controlled exercise reveal remains 180 ms; Reduced Motion makes expansion/collapse immediate. Existing session state ownership, non-final-set-open behavior, final-set auto-collapse, and checked-state retention on reopen remain the interaction contract.
+- The completion target, anchored `MenuAnchor`, and independent Weight/Reps field hit regions remain. Add Exercise is a floating overlay without a permanently reserved viewport lane; end-of-list clearance supports scrolling final controls clear of the FAB at maximum scroll. Finish remains fixed/reachable, and the elapsed-session timer keeps its existing drawer.
+
+These are the current values; older Active Workout colors, fill factors, and fixed-lane descriptions in prior dated records are historical and superseded by the current section in [adaptation results](proposals/tonos-expressive-active-workout/active-workout-adaptation-results.md#user-requested-active-workout-refinement--2026-10-02).
+
+#### Pixel 7 current-source evidence
+
+Pixel 7 `28021FDH200228` ran package `com.tonos.expressivepreview` with database `tonos_expressive_preview.db`; normal `com.tonos` data was not targeted. Current captures are in `docs/proposals/tonos-expressive-active-workout/review/spacing-polish-20261002/`. `01-expanded-completed.png`, `02-expanded-partial.png`, and `03-collapsed.png` show matched completion states; `08-dark-expanded.png` shows the dark-mode counterpart. `04-multiple-exercises.png` visibly contains two cards together: one completed/collapsed Ab Wheel card and an expanded Arm Circles card. The Reduced Motion pair is `06-reduced-motion-expanded.png` and `07-rm-collapse.png`; `restore-controls-verified.png` records controls restored afterward. These files are local/untracked evidence and are not linked as checked-in assets; the [review README](proposals/tonos-expressive-active-workout/review/README.md#current-spacing-polish-captures--2026-10-02) indexes them by exact filename.
+
+#### Final combined qualification — host gates passed
+
+- Toolchain: Flutter **3.47.5** / bundled Dart **3.13.4**; normal C: `TEMP`/`TMP`; default concurrency.
+- Final uninterrupted `flutter test --no-pub --reporter expanded`: **1,320 passed, 0 failed, 0 skipped, exit 0**, elapsed **728.9 seconds (12m 8.9s)**. Log and JSON result: `%TEMP%\tonos_full_suite_qualification_final_20261002_run2`.
+- Repository-wide `dart analyze`: **0 errors, 0 warnings, 80 informational deprecation notices, exit 0**.
+- Theme inventory: **297 Dart files / 2,473 candidates / 132 allowlisted / 2,341 migrated / 0 pending / 0 unassigned / 0 overlaps**; **1,002** candidates in exactly one queue and **1,471** outside configured queues. Ratchet report and enforcement passed unchanged: **18 protected files, 158 approval entries, 154 unique fingerprints, 180 occurrences**.
+- Focused qualification runs: responsive-scale/compact-width **7/7**, theme token contracts **18/18**, inventory/ratchet contracts **71/71**, and focused interaction coverage **8/8**. These runs overlap and are not additive.
+- Pixel 7 `28021FDH200228` current-source checks used the isolated preview package/database. Light, dark, Reduced Motion, and multiple-exercise evidence is indexed in the [Active Workout review README](proposals/tonos-expressive-active-workout/review/README.md). Live checks covered editing, rapid completion, non-final set behavior, final-set collapse/reopen, and menu Back handling. The normal `com.tonos` data was not targeted.
+- Read-only performance review found no obvious architecture blocker. Profile frame-time qualification and native TalkBack remain untested.
+- `git diff --check` passed for the technical changes. The user approved inclusion of the unchanged pre-existing user-authored geometry correction in `test/expressive_active_workout_presentation_test.dart`; other protected working-tree changes are excluded from this qualification checkpoint.
+
+An earlier 1,308-pass / 4-fail run reflected stale source and inventory-contract expectations, later fixed narrowly. A subsequent 1,104-test run was interrupted and is not a completed result. The uninterrupted 1,320-pass run above is the authoritative current host-suite result.

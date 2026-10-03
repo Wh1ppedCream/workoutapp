@@ -1,52 +1,52 @@
 Theme style inventory (report-only)
 Scanned root: lib
-Dart files: 294
-Style candidates: 2294
+Dart files: 297
+Style candidates: 2473
 
 Candidates by kind:
-- color: 165
-- color_literal: 256
-- color_literal_candidate: 244
-- color_transform: 392
+- color: 168
+- color_literal: 308
+- color_literal_candidate: 296
+- color_transform: 401
 - component_style: 30
-- decoration: 285
-- geometry: 743
+- decoration: 296
+- geometry: 794
 - gradient: 6
 - local_theme: 15
-- shadow: 26
+- shadow: 27
 - text_style: 132
 Candidates by classification:
-- application_shell: 2
+- application_shell: 1
 - data_visualization: 28
 - illustration_media: 25
-- intentional_one_off: 41
+- intentional_one_off: 43
 - material_component: 9
 - release_surface: 5
 - stable_category_data: 40
-- structural_theme: 834
-- theme_system: 1305
+- structural_theme: 876
+- theme_system: 1441
 - tonos_semantic: 5
 Candidates by status:
-- allowlisted: 130
-- migrated: 2164
+- allowlisted: 132
+- migrated: 2341
 
 Pending candidates without a review queue: 0
 Review queue coverage:
-- 957 candidates in exactly one queue
-- 1337 candidates outside configured queues
+- 1002 candidates in exactly one queue
+- 1471 candidates outside configured queues
 - 0 candidates in multiple queues
-- application-shell: 55 candidates (allowlisted=7, migrated=48)
+- application-shell: 62 candidates (allowlisted=7, migrated=55)
 - shared-settings: 222 candidates (allowlisted=16, migrated=206)
-- active-workout: 50 candidates (migrated=50)
+- active-workout: 60 candidates (allowlisted=2, migrated=58)
 - catalog-detail: 90 candidates (allowlisted=13, migrated=77)
 - dashboard-progress-health: 157 candidates (allowlisted=16, migrated=141)
 - onboarding-and-development: 112 candidates (allowlisted=10, migrated=102)
-- exercise-planning-analytics: 144 candidates (allowlisted=3, migrated=141)
+- exercise-planning-analytics: 156 candidates (allowlisted=3, migrated=153)
 - nutrition-workflows: 50 candidates (allowlisted=12, migrated=38)
-- history-measurement-support: 32 candidates (allowlisted=6, migrated=26)
+- history-measurement-support: 41 candidates (allowlisted=6, migrated=35)
 - shared-flow-controls: 14 candidates (migrated=14)
 - catalog-conditioning-browse: 8 candidates (migrated=8)
-- navigation-anatomy-support: 23 candidates (allowlisted=5, migrated=18)
+- navigation-anatomy-support: 30 candidates (allowlisted=5, migrated=25)
 
 Unassigned candidates: 0
 
@@ -66,7 +66,6 @@ Pending review queue (12):
 
 Sample findings (first 20):
 - lib/main.dart:339 color [application_shell/migrated] statusBarColor: Colors.transparent,
-- lib/main.dart:451 local_theme [application_shell/migrated] return Theme(
 - lib/screens/catalog_page.dart:540 decoration [structural_theme/migrated] decoration: BoxDecoration(
 - lib/screens/catalog_page.dart:543 geometry [structural_theme/migrated] border: Border.all(
 - lib/screens/catalog_page.dart:553 shadow [structural_theme/migrated] BoxShadow(
@@ -85,4 +84,5 @@ Sample findings (first 20):
 - lib/screens/exercise/analytics_dashboard_screen.dart:514 decoration [structural_theme/migrated] decoration: BoxDecoration(
 - lib/screens/exercise/analytics_dashboard_screen.dart:517 geometry [structural_theme/migrated] border: Border.all(
 - lib/screens/exercise/analytics_dashboard_screen.dart:582 decoration [structural_theme/migrated] decoration: BoxDecoration(
-- ... 2274 more; use --format json for all.
+- lib/screens/exercise/analytics_dashboard_screen.dart:583 color_transform [structural_theme/migrated] color: scheme.primaryContainer.withValues(alpha: 0.55),
+- ... 2453 more; use --format json for all.

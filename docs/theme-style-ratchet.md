@@ -1,9 +1,10 @@
 # Theme Style Ratchet
 
-Status: eighteen exact production scopes are listed for enforcement. Their
-manifest contains 125 approval entries (123 unique fingerprint hashes) and 137
-approved occurrences, all mapped in the manifest. The latest 2026-09-27
-verification passed all 1,137 Flutter tests (exit 0), repository-wide
+Status: eighteen exact production scopes are listed for enforcement. The current
+manifest contains 158 approval entries (154 unique fingerprint hashes) and 180
+approved occurrences, all mapped in the manifest. The 2026-10-02 read-only
+ratchet report and enforcement both passed for all 18 scopes. The latest full
+verification on 2026-09-27 passed all 1,137 Flutter tests (exit 0), repository-wide
 `dart analyze`, inventory `--check` (279 Dart files / 2,239 candidates;
 130 allowlisted, 2,109 migrated/classified, zero pending), and detailed
 report/enforcement for all 18 scopes. Final onboarding qualification used
