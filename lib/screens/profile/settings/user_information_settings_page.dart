@@ -9,6 +9,9 @@ import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../utils/weight_unit_formatter.dart';
 import '../../../utils/app_test_keys.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/tokens/app_shape_tokens.dart';
+import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/theme_extensions.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -100,6 +103,12 @@ class _UserInformationSettingsPageState
       initialDate: _dob ?? DateTime(1990, 1, 1),
       firstDate: DateTime(1900, 1, 1),
       lastDate: DateTime.now(),
+      builder: context.usesExpressivePresentation
+          ? (dialogContext, child) => _withExpressiveProfileTheme(
+              dialogContext,
+              child ?? const SizedBox.shrink(),
+            )
+          : null,
     );
     if (picked == null) return;
 
@@ -128,21 +137,20 @@ class _UserInformationSettingsPageState
       );
       await repo.savePersonalInfoWithBodyWeight(
         info: info,
-        bodyWeightValue:
-            enteredWeight != null && enteredWeight > 0 ? enteredWeight : null,
+        bodyWeightValue: enteredWeight != null && enteredWeight > 0
+            ? enteredWeight
+            : null,
         bodyWeightUnit: weightUnit,
         measurementNote: strings.userInfoProfileUpdateNote,
       );
       if (!mounted) return;
       setState(() => _dirty = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(strings.userInfoChangesSaved)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.userInfoChangesSaved)));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(strings.userInfoSaveFailed)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.userInfoSaveFailed)));
     }
   }
 
@@ -186,14 +194,12 @@ class _UserInformationSettingsPageState
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive = context.usesExpressivePresentation;
     final dropdownInk = usesInkRecipe ? context.cs.onPrimaryContainer : null;
     final inputTextStyle = settingsInputTextStyle(context);
-    final dropdownStyle =
-        usesInkRecipe
-            ? Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: dropdownInk)
-            : null;
+    final dropdownStyle = usesInkRecipe
+        ? Theme.of(context).textTheme.titleMedium?.copyWith(color: dropdownInk)
+        : null;
     final bodyFatOptions = <String>[
       '0-5%',
       '5-10%',
@@ -218,220 +224,238 @@ class _UserInformationSettingsPageState
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return SettingsPageScaffold(
-      title: strings.userInfoTitle,
-      subtitle: strings.userInfoSubtitle,
-      icon: Icons.badge_outlined,
-      heroAccentColor: SettingsAccent.account,
-      bottomNavigationBar: SettingsSaveBar(
-        buttonKey: AppTestKeys.userInformationSave,
-        label: strings.userInfoSaveChanges,
-        isVisible: _dirty,
-        onPressed: _save,
-        animate: true,
-      ),
-      children: [
-        SettingsSection(
-          title: strings.userInfoIdentityTitle,
-          subtitle: strings.userInfoIdentitySubtitle,
-          accentColor: SettingsAccent.account,
-          surfaceColor: usesInkRecipe ? surfaces.settingsSection : null,
-          children: [
-            _FieldPadding(
-              child: TextFormField(
-                key: AppTestKeys.userInformationName,
-                controller: _nameController,
-                style: inputTextStyle,
-                cursorColor: inputTextStyle?.color,
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoName,
-                  hint: strings.userInfoNameHint,
-                  icon: Icons.person_outline,
+    return _withExpressiveProfileTheme(
+      context,
+      SettingsPageScaffold(
+        title: strings.userInfoTitle,
+        subtitle: strings.userInfoSubtitle,
+        icon: Icons.badge_outlined,
+        heroAccentColor: SettingsAccent.account,
+        bottomNavigationBar: SettingsSaveBar(
+          buttonKey: AppTestKeys.userInformationSave,
+          label: strings.userInfoSaveChanges,
+          isVisible: _dirty,
+          onPressed: _save,
+          animate: true,
+        ),
+        children: [
+          SettingsSection(
+            title: strings.userInfoIdentityTitle,
+            subtitle: strings.userInfoIdentitySubtitle,
+            accentColor: SettingsAccent.account,
+            surfaceColor: usesExpressive
+                ? surfaces.settingsSection
+                : usesInkRecipe
+                ? surfaces.settingsSection
+                : null,
+            children: [
+              _FieldPadding(
+                child: TextFormField(
+                  key: AppTestKeys.userInformationName,
+                  controller: _nameController,
+                  style: inputTextStyle,
+                  cursorColor: inputTextStyle?.color,
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoName,
+                    hint: strings.userInfoNameHint,
+                    icon: Icons.person_outline,
+                  ),
                 ),
               ),
-            ),
-            _FieldPadding(
-              child: DropdownButtonFormField<String?>(
-                value: _gender,
-                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
-                style: dropdownStyle,
-                iconEnabledColor: dropdownInk,
-                isExpanded: true,
-                itemHeight: null,
-                items:
-                    genderOptions
-                        .map(
-                          (gender) => DropdownMenuItem<String?>(
-                            value: gender,
-                            child: Text(_genderLabel(strings, gender)),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
-                  _gender = value;
-                  _markDirty();
-                },
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoGender,
-                  icon: Icons.wc_outlined,
+              _FieldPadding(
+                child: DropdownButtonFormField<String?>(
+                  value: _gender,
+                  dropdownColor: usesInkRecipe || usesExpressive
+                      ? surfaces.settingsInput
+                      : null,
+                  style: dropdownStyle,
+                  iconEnabledColor: dropdownInk,
+                  isExpanded: true,
+                  itemHeight: null,
+                  items: genderOptions
+                      .map(
+                        (gender) => DropdownMenuItem<String?>(
+                          value: gender,
+                          child: Text(_genderLabel(strings, gender)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    _gender = value;
+                    _markDirty();
+                  },
+                  decoration: settingsInputDecoration(
+                    context,
+                    label: strings.userInfoGender,
+                    icon: Icons.wc_outlined,
+                  ),
                 ),
               ),
-            ),
-            _FieldPadding(
-              child: GestureDetector(
-                onTap: _pickDob,
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    controller: _dobController,
-                    style: inputTextStyle,
-                    cursorColor: inputTextStyle?.color,
-                    decoration: settingsInputDecoration(
-                      context,
-                      label: strings.userInfoDateOfBirth,
-                      hint: strings.userInfoDateHint,
-                      icon: Icons.calendar_today,
+              _FieldPadding(
+                child: GestureDetector(
+                  onTap: _pickDob,
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _dobController,
+                      style: inputTextStyle,
+                      cursorColor: inputTextStyle?.color,
+                      decoration: _profileInputDecoration(
+                        context,
+                        label: strings.userInfoDateOfBirth,
+                        hint: strings.userInfoDateHint,
+                        icon: Icons.calendar_today,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        SettingsSection(
-          title: strings.userInfoBodyMetricsTitle,
-          subtitle: strings.userInfoBodyMetricsSubtitle,
-          accentColor: SettingsAccent.progress,
-          surfaceColor: usesInkRecipe ? surfaces.planDuration : null,
-          children: [
-            _FieldPadding(
-              child: TextFormField(
-                controller: _heightController,
-                style: inputTextStyle,
-                cursorColor: inputTextStyle?.color,
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoHeight,
-                  hint: strings.userInfoHeightHint,
-                  icon: Icons.height,
+            ],
+          ),
+          SettingsSection(
+            title: strings.userInfoBodyMetricsTitle,
+            subtitle: strings.userInfoBodyMetricsSubtitle,
+            accentColor: SettingsAccent.progress,
+            surfaceColor: usesExpressive
+                ? surfaces.settingsSection
+                : usesInkRecipe
+                ? surfaces.planDuration
+                : null,
+            children: [
+              _FieldPadding(
+                child: TextFormField(
+                  controller: _heightController,
+                  style: inputTextStyle,
+                  cursorColor: inputTextStyle?.color,
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoHeight,
+                    hint: strings.userInfoHeightHint,
+                    icon: Icons.height,
+                  ),
                 ),
               ),
-            ),
-            _FieldPadding(
-              child: TextFormField(
-                controller: _weightController,
-                style: inputTextStyle,
-                cursorColor: inputTextStyle?.color,
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoCurrentWeight,
-                  hint:
-                      weightUnit == WeightUnit.pounds
-                          ? strings.userInfoWeightPoundsHint
-                          : strings.userInfoWeightKilogramsHint,
-                  icon: Icons.monitor_weight_outlined,
-                  suffixText: weightUnit.shortLabel,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            _FieldPadding(
-              child: DropdownButtonFormField<String?>(
-                value: _bodyFatEstimate,
-                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
-                style: dropdownStyle,
-                iconEnabledColor: dropdownInk,
-                isExpanded: true,
-                itemHeight: null,
-                items:
-                    bodyFatOptions
-                        .map(
-                          (option) => DropdownMenuItem<String?>(
-                            value: option,
-                            child: Text(option),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
-                  _bodyFatEstimate = value;
-                  _markDirty();
-                },
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoBodyFat,
-                  icon: Icons.percent,
+              _FieldPadding(
+                child: TextFormField(
+                  controller: _weightController,
+                  style: inputTextStyle,
+                  cursorColor: inputTextStyle?.color,
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoCurrentWeight,
+                    hint: weightUnit == WeightUnit.pounds
+                        ? strings.userInfoWeightPoundsHint
+                        : strings.userInfoWeightKilogramsHint,
+                    icon: Icons.monitor_weight_outlined,
+                    suffixText: weightUnit.shortLabel,
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
               ),
-            ),
-          ],
-        ),
-        SettingsSection(
-          title: strings.userInfoActivityTitle,
-          subtitle: strings.userInfoActivitySubtitle,
-          accentColor: SettingsAccent.training,
-          surfaceColor: usesInkRecipe ? surfaces.flowControl : null,
-          children: [
-            _FieldPadding(
-              child: DropdownButtonFormField<String?>(
-                value: _weightTrend,
-                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
-                style: dropdownStyle,
-                iconEnabledColor: dropdownInk,
-                isExpanded: true,
-                itemHeight: null,
-                items:
-                    trendOptions
-                        .map(
-                          (option) => DropdownMenuItem<String?>(
-                            value: option,
-                            child: Text(_weightTrendLabel(strings, option)),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
-                  _weightTrend = value;
-                  _markDirty();
-                },
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoWeightTrend,
-                  icon: Icons.trending_up,
+              _FieldPadding(
+                child: DropdownButtonFormField<String?>(
+                  value: _bodyFatEstimate,
+                  dropdownColor: usesInkRecipe || usesExpressive
+                      ? surfaces.settingsInput
+                      : null,
+                  style: dropdownStyle,
+                  iconEnabledColor: dropdownInk,
+                  isExpanded: true,
+                  itemHeight: null,
+                  items: bodyFatOptions
+                      .map(
+                        (option) => DropdownMenuItem<String?>(
+                          value: option,
+                          child: Text(option),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    _bodyFatEstimate = value;
+                    _markDirty();
+                  },
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoBodyFat,
+                    icon: Icons.percent,
+                  ),
                 ),
               ),
-            ),
-            _FieldPadding(
-              child: DropdownButtonFormField<String?>(
-                value: _activityLevel,
-                dropdownColor: usesInkRecipe ? surfaces.settingsInput : null,
-                style: dropdownStyle,
-                iconEnabledColor: dropdownInk,
-                isExpanded: true,
-                itemHeight: null,
-                items:
-                    activityOptions
-                        .map(
-                          (option) => DropdownMenuItem<String?>(
-                            value: option,
-                            child: Text(_activityLevelLabel(strings, option)),
-                          ),
-                        )
-                        .toList(),
-                onChanged: (value) {
-                  _activityLevel = value;
-                  _markDirty();
-                },
-                decoration: settingsInputDecoration(
-                  context,
-                  label: strings.userInfoAverageSteps,
-                  icon: Icons.directions_walk,
+            ],
+          ),
+          SettingsSection(
+            title: strings.userInfoActivityTitle,
+            subtitle: strings.userInfoActivitySubtitle,
+            accentColor: SettingsAccent.training,
+            surfaceColor: usesExpressive
+                ? surfaces.settingsSection
+                : usesInkRecipe
+                ? surfaces.flowControl
+                : null,
+            children: [
+              _FieldPadding(
+                child: DropdownButtonFormField<String?>(
+                  value: _weightTrend,
+                  dropdownColor: usesInkRecipe || usesExpressive
+                      ? surfaces.settingsInput
+                      : null,
+                  style: dropdownStyle,
+                  iconEnabledColor: dropdownInk,
+                  isExpanded: true,
+                  itemHeight: null,
+                  items: trendOptions
+                      .map(
+                        (option) => DropdownMenuItem<String?>(
+                          value: option,
+                          child: Text(_weightTrendLabel(strings, option)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    _weightTrend = value;
+                    _markDirty();
+                  },
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoWeightTrend,
+                    icon: Icons.trending_up,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 72),
-      ],
+              _FieldPadding(
+                child: DropdownButtonFormField<String?>(
+                  value: _activityLevel,
+                  dropdownColor: usesInkRecipe || usesExpressive
+                      ? surfaces.settingsInput
+                      : null,
+                  style: dropdownStyle,
+                  iconEnabledColor: dropdownInk,
+                  isExpanded: true,
+                  itemHeight: null,
+                  items: activityOptions
+                      .map(
+                        (option) => DropdownMenuItem<String?>(
+                          value: option,
+                          child: Text(_activityLevelLabel(strings, option)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    _activityLevel = value;
+                    _markDirty();
+                  },
+                  decoration: settingsInputDecoration(
+                    context,
+                    label: strings.userInfoAverageSteps,
+                    icon: Icons.directions_walk,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 72),
+        ],
+      ),
     );
   }
 
@@ -477,4 +501,78 @@ class _FieldPadding extends StatelessWidget {
       child: child,
     );
   }
+}
+
+InputDecoration _profileInputDecoration(
+  BuildContext context, {
+  required String label,
+  String? hint,
+  required IconData icon,
+  String? suffixText,
+}) {
+  final decoration = settingsInputDecoration(
+    context,
+    label: label,
+    hint: hint,
+    icon: icon,
+    suffixText: suffixText,
+  );
+  if (!context.usesExpressivePresentation) return decoration;
+
+  InputBorder? expressiveBorder(InputBorder? border) {
+    if (border is! OutlineInputBorder) return border;
+    return border.copyWith(borderRadius: ExpressiveTrainShapes.compactControl);
+  }
+
+  return decoration.copyWith(
+    border: expressiveBorder(decoration.border),
+    enabledBorder: expressiveBorder(decoration.enabledBorder),
+    focusedBorder: expressiveBorder(decoration.focusedBorder),
+    errorBorder: expressiveBorder(decoration.errorBorder),
+    focusedErrorBorder: expressiveBorder(decoration.focusedErrorBorder),
+    disabledBorder: expressiveBorder(decoration.disabledBorder),
+  );
+}
+
+Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
+  final theme = Theme.of(context);
+  final expressive = theme.extension<AppExpressiveTrainTokens>();
+  if (!context.usesExpressivePresentation || expressive == null) return child;
+
+  final updatedExtensions = theme.extensions.values
+      .where(
+        (extension) =>
+            extension is! AppShapeTokens &&
+            extension is! AppSettingsPresentationTokens,
+      )
+      .toList();
+  updatedExtensions.add(
+    theme.shapeTokens.copyWith(
+      hero: ExpressiveTrainShapes.focusHero,
+      sheet: ExpressiveTrainShapes.section,
+      settingsPanel: ExpressiveTrainShapes.section,
+      settingsAction: ExpressiveTrainShapes.compactControl,
+      settingsInput: ExpressiveTrainShapes.compactControl,
+      settingsField: ExpressiveTrainShapes.compactControl,
+      dialogChoice: ExpressiveTrainShapes.menu,
+    ),
+  );
+  updatedExtensions.add(
+    theme.settingsPresentationTokens.copyWith(
+      sectionHeaderUsesLabel: true,
+      sectionHeaderFill: expressive.selectorTrack,
+      sectionHeaderForeground: expressive.navigationLabel,
+    ),
+  );
+
+  return Theme(
+    data: theme.copyWith(
+      scaffoldBackgroundColor: expressive.pageCanvas,
+      dialogTheme: theme.dialogTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+      ),
+      extensions: updatedExtensions,
+    ),
+    child: child,
+  );
 }

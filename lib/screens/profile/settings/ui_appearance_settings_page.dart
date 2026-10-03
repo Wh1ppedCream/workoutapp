@@ -13,9 +13,14 @@ import '../../../providers/onboarding_provider.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/unit_preference_provider.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/tokens/app_shape_tokens.dart';
+import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/app_theme_family.dart';
 import '../../../theme/app_theme_factory.dart';
+import '../../../theme/theme_extensions.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import '../../../theme/widgets/tonos_surface.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
@@ -81,112 +86,213 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final themeMode = themeProvider.mode;
+    final expressiveTokens = Theme.of(context)
+        .extension<AppExpressiveTrainTokens>();
+    final expressive = context.usesExpressivePresentation;
     final onboarding = context.watch<OnboardingConfig>();
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final language = context.watch<LocalePreferenceProvider>().preference;
     final strings = AppLocalizations.of(context);
+    final themeFamilyTile = themeProvider.availableFamilies.length > 1
+        ? SettingsActionTile(
+            key: AppTestKeys.uiAppearanceThemeFamily,
+            icon: Icons.palette_outlined,
+            iconColor: expressive && expressiveTokens != null
+                ? expressiveTokens.focusWarm
+                : SettingsAccent.appearance,
+            title: strings.themeFamilyTitle,
+            subtitle: strings.themeFamilySubtitle,
+            trailing: SettingsValueText(
+              value: _themeFamilyLabel(strings, themeProvider.family),
+            ),
+            onTap: () => _showThemeFamilyDialog(
+              context,
+              themeProvider.family,
+              themeProvider.availableFamilies,
+            ),
+          )
+        : null;
+    final darkModeTile = SettingsSwitchTile(
+      icon: Icons.dark_mode_outlined,
+      iconColor: expressive && expressiveTokens != null
+          ? expressiveTokens.focusWarm
+          : SettingsAccent.appearance,
+      title: strings.darkModeTitle,
+      subtitle: strings.darkModeSubtitle,
+      value: themeMode == ThemeMode.dark,
+      onChanged: (on) =>
+          unawaited(_setThemeMode(on ? ThemeMode.dark : ThemeMode.light)),
+    );
+    final replayOnboardingTile = SettingsSwitchTile(
+      icon: Icons.auto_awesome_outlined,
+      iconColor: expressive && expressiveTokens != null
+          ? expressiveTokens.focusCool
+          : SettingsAccent.appearance,
+      title: strings.replayOnboardingTitle,
+      subtitle: strings.replayOnboardingSubtitle,
+      value: onboarding.showOnboarding,
+      onChanged: context.read<OnboardingConfig>().setShowOnboarding,
+    );
+    final weightUnitsTile = SettingsActionTile(
+      icon: Icons.monitor_weight_outlined,
+      iconColor: expressive && expressiveTokens != null
+          ? expressiveTokens.focusWarm
+          : SettingsAccent.progress,
+      title: strings.weightUnitsTitle,
+      subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
+      trailing: SettingsValueText(value: _weightUnitLabel(strings, weightUnit)),
+      onTap: () => _showWeightUnitDialog(context, weightUnit),
+    );
+    final languageTile = KeyedSubtree(
+      key: AppTestKeys.uiAppearanceLanguage,
+      child: SettingsActionTile(
+        icon: Icons.language_outlined,
+        iconColor: expressive && expressiveTokens != null
+            ? expressiveTokens.focusCool
+            : SettingsAccent.appearance,
+        title: strings.languageTitle,
+        subtitle: strings.languageSubtitle,
+        trailing: SettingsValueText(value: _languageLabel(strings, language)),
+        onTap: () => _showLanguageDialog(context, language),
+      ),
+    );
+    final navigationTile = KeyedSubtree(
+      key: AppTestKeys.uiAppearanceNavigation,
+      child: SettingsActionTile(
+        icon: Icons.space_dashboard_outlined,
+        iconColor: expressive && expressiveTokens != null
+            ? expressiveTokens.focusCool
+            : SettingsAccent.data,
+        title: strings.editBottomTabsTitle,
+        subtitle: strings.editBottomTabsSubtitle,
+        onTap: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const NavBarSettingsPage())),
+      ),
+    );
 
-    return SettingsPageScaffold(
-      title: strings.uiAppearanceTitle,
-      subtitle: strings.uiAppearanceSubtitle,
-      icon: Icons.palette_outlined,
-      heroAccentColor: SettingsAccent.appearance,
-      children: [
-        KeyedSubtree(
-          key: _displayTutorialKey,
-          child: SettingsSection(
-            title: strings.displaySettingsTitle,
-            subtitle: strings.displaySettingsSubtitle,
-            accentColor: SettingsAccent.appearance,
-            children: settingsTilesWithDividers(context, [
-              if (themeProvider.availableFamilies.length > 1)
-                SettingsActionTile(
-                  key: AppTestKeys.uiAppearanceThemeFamily,
-                  icon: Icons.palette_outlined,
-                  iconColor: SettingsAccent.appearance,
-                  title: strings.themeFamilyTitle,
-                  subtitle: strings.themeFamilySubtitle,
-                  trailing: SettingsValueText(
-                    value: _themeFamilyLabel(strings, themeProvider.family),
+    if (expressive && expressiveTokens != null) {
+      return _withExpressiveProfileTheme(
+        context,
+        Scaffold(
+          backgroundColor: expressiveTokens.pageCanvas,
+          body: SafeArea(
+            child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    tooltip: strings.commonBack,
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: const Icon(Icons.arrow_back),
                   ),
-                  onTap:
-                      () => _showThemeFamilyDialog(
-                        context,
-                        themeProvider.family,
-                        themeProvider.availableFamilies,
+                ),
+                const SizedBox(height: 4),
+                _ExpressiveAppearanceHero(
+                  title: strings.uiAppearanceTitle,
+                  subtitle: strings.uiAppearanceSubtitle,
+                ),
+                const SizedBox(height: 20),
+                KeyedSubtree(
+                  key: _displayTutorialKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _ExpressivePreferenceHeading(
+                        title: strings.displaySettingsTitle,
+                        subtitle: strings.displaySettingsSubtitle,
                       ),
-                ),
-              SettingsSwitchTile(
-                icon: Icons.dark_mode_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.darkModeTitle,
-                subtitle: strings.darkModeSubtitle,
-                value: themeMode == ThemeMode.dark,
-                onChanged:
-                    (on) => unawaited(
-                      _setThemeMode(on ? ThemeMode.dark : ThemeMode.light),
-                    ),
-              ),
-              SettingsSwitchTile(
-                icon: Icons.auto_awesome_outlined,
-                iconColor: SettingsAccent.appearance,
-                title: strings.replayOnboardingTitle,
-                subtitle: strings.replayOnboardingSubtitle,
-                value: onboarding.showOnboarding,
-                onChanged: context.read<OnboardingConfig>().setShowOnboarding,
-              ),
-              SettingsActionTile(
-                icon: Icons.monitor_weight_outlined,
-                iconColor: SettingsAccent.progress,
-                title: strings.weightUnitsTitle,
-                subtitle: strings.weightUnitsSubtitle(weightUnit.shortLabel),
-                trailing: SettingsValueText(
-                  value: _weightUnitLabel(strings, weightUnit),
-                ),
-                onTap: () => _showWeightUnitDialog(context, weightUnit),
-              ),
-              KeyedSubtree(
-                key: AppTestKeys.uiAppearanceLanguage,
-                child: SettingsActionTile(
-                  icon: Icons.language_outlined,
-                  iconColor: SettingsAccent.appearance,
-                  title: strings.languageTitle,
-                  subtitle: strings.languageSubtitle,
-                  trailing: SettingsValueText(
-                    value: _languageLabel(strings, language),
-                  ),
-                  onTap: () => _showLanguageDialog(context, language),
-                ),
-              ),
-            ]),
-          ),
-        ),
-        KeyedSubtree(
-          key: _navigationTutorialKey,
-          child: SettingsSection(
-            title: strings.navigationSettingsTitle,
-            subtitle: strings.navigationSettingsSubtitle,
-            accentColor: SettingsAccent.data,
-            children: [
-              KeyedSubtree(
-                key: AppTestKeys.uiAppearanceNavigation,
-                child: SettingsActionTile(
-                  icon: Icons.space_dashboard_outlined,
-                  iconColor: SettingsAccent.data,
-                  title: strings.editBottomTabsTitle,
-                  subtitle: strings.editBottomTabsSubtitle,
-                  onTap:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const NavBarSettingsPage(),
+                      if (themeFamilyTile != null) ...[
+                        const SizedBox(height: 12),
+                        TonosSurface(
+                          variant: TonosSurfaceVariant.card,
+                          color: expressiveTokens.selectorTrack,
+                          borderRadius: ExpressiveTrainShapes.focusHero,
+                          padding: const EdgeInsets.all(5),
+                          child: themeFamilyTile,
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      TonosSurface(
+                        variant: TonosSurfaceVariant.card,
+                        color: expressiveTokens.activePlansSurface,
+                        borderRadius: ExpressiveTrainShapes.section,
+                        padding: const EdgeInsets.all(5),
+                        child: Column(
+                          children: settingsTilesWithDividers(context, [
+                            darkModeTile,
+                            replayOnboardingTile,
+                          ]),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      TonosSurface(
+                        variant: TonosSurfaceVariant.card,
+                        color: expressiveTokens.archivedPlansSurface,
+                        borderRadius: ExpressiveTrainShapes.section,
+                        padding: const EdgeInsets.all(5),
+                        child: Column(
+                          children: settingsTilesWithDividers(context, [
+                            weightUnitsTile,
+                            languageTile,
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                KeyedSubtree(
+                  key: _navigationTutorialKey,
+                  child: SettingsSection(
+                    title: strings.navigationSettingsTitle,
+                    subtitle: strings.navigationSettingsSubtitle,
+                    accentColor: SettingsAccent.data,
+                    children: [navigationTile],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ],
+      );
+    }
+
+    return _withExpressiveProfileTheme(
+      context,
+      SettingsPageScaffold(
+        title: strings.uiAppearanceTitle,
+        subtitle: strings.uiAppearanceSubtitle,
+        icon: Icons.palette_outlined,
+        heroAccentColor: SettingsAccent.appearance,
+        children: [
+          KeyedSubtree(
+            key: _displayTutorialKey,
+            child: SettingsSection(
+              title: strings.displaySettingsTitle,
+              subtitle: strings.displaySettingsSubtitle,
+              accentColor: SettingsAccent.appearance,
+              children: settingsTilesWithDividers(context, [
+                if (themeFamilyTile != null) themeFamilyTile,
+                darkModeTile,
+                replayOnboardingTile,
+                weightUnitsTile,
+                languageTile,
+              ]),
+            ),
+          ),
+          KeyedSubtree(
+            key: _navigationTutorialKey,
+            child: SettingsSection(
+              title: strings.navigationSettingsTitle,
+              subtitle: strings.navigationSettingsSubtitle,
+              accentColor: SettingsAccent.data,
+              children: [navigationTile],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -211,22 +317,22 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final strings = AppLocalizations.of(context);
     final nextFamily = await showDialog<AppThemeFamily>(
       context: context,
-      builder:
-          (dialogContext) => TonosChoiceDialog<AppThemeFamily>(
-            title: strings.themeFamilyTitle,
-            values: availableFamilies,
-            selected: selectedFamily,
-            label: (family) => _themeFamilyLabel(strings, family),
-            subtitle: (family) => _themeFamilyDescription(strings, family),
-            choicePreview:
-                (family) => _ThemeFamilyPreview(
-                  family: family,
-                  brightness: Theme.of(context).brightness,
-                ),
-            choiceKey:
-                (family) =>
-                    AppTestKeys.uiAppearanceThemeFamilyOption(family.code),
+      builder: (dialogContext) => _withExpressiveProfileTheme(
+        dialogContext,
+        TonosChoiceDialog<AppThemeFamily>(
+          title: strings.themeFamilyTitle,
+          values: availableFamilies,
+          selected: selectedFamily,
+          label: (family) => _themeFamilyLabel(strings, family),
+          subtitle: (family) => _themeFamilyDescription(strings, family),
+          choicePreview: (family) => _ThemeFamilyPreview(
+            family: family,
+            brightness: Theme.of(context).brightness,
           ),
+          choiceKey: (family) =>
+              AppTestKeys.uiAppearanceThemeFamilyOption(family.code),
+        ),
+      ),
     );
     if (nextFamily == null || !context.mounted) return;
     await _setThemeFamily(nextFamily);
@@ -259,14 +365,16 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final strings = AppLocalizations.of(context);
     final nextUnit = await showDialog<WeightUnit>(
       context: context,
-      builder:
-          (dialogContext) => TonosChoiceDialog<WeightUnit>(
-            title: strings.weightUnitsTitle,
-            values: WeightUnit.values,
-            selected: selectedUnit,
-            label: (unit) => _weightUnitLabel(strings, unit),
-            subtitle: (unit) => unit.shortLabel,
-          ),
+      builder: (dialogContext) => _withExpressiveProfileTheme(
+        dialogContext,
+        TonosChoiceDialog<WeightUnit>(
+          title: strings.weightUnitsTitle,
+          values: WeightUnit.values,
+          selected: selectedUnit,
+          label: (unit) => _weightUnitLabel(strings, unit),
+          subtitle: (unit) => unit.shortLabel,
+        ),
+      ),
     );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
@@ -313,21 +421,26 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final nextLanguage = await showDialog<AppLanguagePreference>(
       context: context,
       builder: (dialogContext) {
-        return TonosDialogFrame(
-          child: AlertDialog(
-            title: Text(strings.languageTitle),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final language in AppLanguagePreference.values)
-                  RadioListTile<AppLanguagePreference>(
-                    value: language,
-                    groupValue: selectedLanguage,
-                    title: Text(_languageLabel(strings, language)),
-                    onChanged:
-                        (value) => Navigator.of(dialogContext).pop(value),
-                  ),
-              ],
+        final languageChoices = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final language in AppLanguagePreference.values)
+              RadioListTile<AppLanguagePreference>(
+                value: language,
+                groupValue: selectedLanguage,
+                title: Text(_languageLabel(strings, language)),
+                onChanged: (value) => Navigator.of(dialogContext).pop(value),
+              ),
+          ],
+        );
+        return _withExpressiveProfileTheme(
+          dialogContext,
+          TonosDialogFrame(
+            child: AlertDialog(
+              title: Text(strings.languageTitle),
+              content: context.usesExpressivePresentation
+                  ? SingleChildScrollView(child: languageChoices)
+                  : languageChoices,
             ),
           ),
         );
@@ -338,6 +451,169 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
   }
 }
 
+class _ExpressiveAppearanceHero extends StatelessWidget {
+  const _ExpressiveAppearanceHero({
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final expressive = theme.extension<AppExpressiveTrainTokens>()!;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.panelRaised,
+      color: expressive.focusSurface,
+      borderRadius: ExpressiveTrainShapes.focusHero,
+      outlined: false,
+      clipBehavior: Clip.antiAlias,
+      padding: EdgeInsets.all(textScale >= 1.75 ? 16 : 20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked = textScale > 1.15 || constraints.maxWidth < 340;
+          final icon = Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: expressive.focusInset,
+              borderRadius: ExpressiveTrainShapes.focusInset,
+            ),
+            child: Icon(
+              Icons.palette_outlined,
+              color: expressive.focusWarm,
+              size: 28,
+            ),
+          );
+          final copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: expressive.focusForeground,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: expressive.focusForeground.withValues(alpha: 0.88),
+                ),
+              ),
+            ],
+          );
+
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [icon, const SizedBox(height: 12), copy],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              icon,
+              const SizedBox(width: 16),
+              Expanded(child: copy),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ExpressivePreferenceHeading extends StatelessWidget {
+  const _ExpressivePreferenceHeading({
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
+  final theme = Theme.of(context);
+  final expressive = theme.extension<AppExpressiveTrainTokens>();
+  if (!context.usesExpressivePresentation || expressive == null) return child;
+
+  final updatedExtensions = theme.extensions.values
+      .where(
+        (extension) =>
+            extension is! AppShapeTokens &&
+            extension is! AppSettingsPresentationTokens,
+      )
+      .toList();
+  updatedExtensions.add(
+    theme.shapeTokens.copyWith(
+      hero: ExpressiveTrainShapes.focusHero,
+      sheet: ExpressiveTrainShapes.section,
+      settingsPanel: ExpressiveTrainShapes.section,
+      settingsAction: ExpressiveTrainShapes.compactControl,
+      settingsInput: ExpressiveTrainShapes.compactControl,
+      settingsField: ExpressiveTrainShapes.compactControl,
+      dialogChoice: ExpressiveTrainShapes.menu,
+    ),
+  );
+  updatedExtensions.add(
+    theme.settingsPresentationTokens.copyWith(
+      sectionHeaderUsesLabel: true,
+      sectionHeaderFill: expressive.selectorTrack,
+      sectionHeaderForeground: expressive.navigationLabel,
+    ),
+  );
+
+  return Theme(
+    data: theme.copyWith(
+      scaffoldBackgroundColor: expressive.pageCanvas,
+      dialogTheme: theme.dialogTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+      ),
+      extensions: updatedExtensions,
+    ),
+    child: child,
+  );
+}
+
 class _ThemeFamilyPreview extends StatelessWidget {
   const _ThemeFamilyPreview({required this.family, required this.brightness});
 
@@ -346,10 +622,9 @@ class _ThemeFamilyPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme =
-        brightness == Brightness.dark
-            ? AppThemeFactory.dark(family)
-            : AppThemeFactory.light(family);
+    final theme = brightness == Brightness.dark
+        ? AppThemeFactory.dark(family)
+        : AppThemeFactory.light(family);
     final scheme = theme.colorScheme;
     final isNeo = family == AppThemeFamily.neoBrutalism;
     final panel = isNeo ? scheme.primary : scheme.surfaceContainerHighest;
@@ -365,12 +640,9 @@ class _ThemeFamilyPreview extends StatelessWidget {
             color: panel,
             border: Border.all(color: foreground, width: isNeo ? 1.5 : 1),
             borderRadius: isNeo ? BorderRadius.zero : BorderRadius.circular(6),
-            boxShadow:
-                isNeo
-                    ? const [
-                      BoxShadow(color: Colors.black, offset: Offset(2, 2)),
-                    ]
-                    : null,
+            boxShadow: isNeo
+                ? const [BoxShadow(color: Colors.black, offset: Offset(2, 2))]
+                : null,
           ),
           child: Padding(
             padding: const EdgeInsets.all(5),

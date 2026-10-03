@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localization_extensions.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../providers/nav_bar_config.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/tonos_surface.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -23,10 +25,12 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   void initState() {
     super.initState();
     final config = context.read<NavBarConfig>();
-    _activeTabs =
-        config.order.where((tab) => config.enabledTabs.contains(tab)).toList();
-    _inactiveTabs =
-        config.order.where((tab) => !config.enabledTabs.contains(tab)).toList();
+    _activeTabs = config.order
+        .where((tab) => config.enabledTabs.contains(tab))
+        .toList();
+    _inactiveTabs = config.order
+        .where((tab) => !config.enabledTabs.contains(tab))
+        .toList();
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -67,19 +71,20 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
     );
     setState(() {
       _activeTabs = newOrder.where((tab) => newEnabled.contains(tab)).toList();
-      _inactiveTabs =
-          newOrder.where((tab) => !newEnabled.contains(tab)).toList();
+      _inactiveTabs = newOrder
+          .where((tab) => !newEnabled.contains(tab))
+          .toList();
     });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(strings.navEditorSavedMessage)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(strings.navEditorSavedMessage)));
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final inactiveDisplay =
-        _inactiveTabs.where((tab) => tab != TabItem.profile).toList();
+    final inactiveDisplay = _inactiveTabs
+        .where((tab) => tab != TabItem.profile)
+        .toList();
 
     return SettingsPageScaffold(
       title: strings.navEditorTitle,
@@ -135,23 +140,22 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
           title: strings.navEditorInactiveTitle,
           subtitle: strings.navEditorInactiveSubtitle,
           accentColor: SettingsAccent.muted,
-          children:
-              inactiveDisplay.isEmpty
-                  ? [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(strings.navEditorNoInactiveTabs),
+          children: inactiveDisplay.isEmpty
+              ? [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(strings.navEditorNoInactiveTabs),
+                  ),
+                ]
+              : settingsTilesWithDividers(context, [
+                  for (final tab in inactiveDisplay)
+                    _NavTabTile(
+                      key: ValueKey('inactive-${tab.name}'),
+                      tab: tab,
+                      isActive: false,
+                      onToggle: (value) => _toggleTab(tab, value),
                     ),
-                  ]
-                  : settingsTilesWithDividers(context, [
-                    for (final tab in inactiveDisplay)
-                      _NavTabTile(
-                        key: ValueKey('inactive-${tab.name}'),
-                        tab: tab,
-                        isActive: false,
-                        onToggle: (value) => _toggleTab(tab, value),
-                      ),
-                  ]),
+                ]),
         ),
         const SizedBox(height: 72),
       ],
@@ -180,23 +184,23 @@ class _NavTabTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-
-    return ListTile(
+    final expressive = context.usesExpressivePresentation;
+    final trainTokens = theme.extension<AppExpressiveTrainTokens>();
+    final tile = ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      leading:
-          dragIndex == null
-              ? _IconBadge(icon: tab.icon)
-              : ReorderableDragStartListener(
-                index: dragIndex!,
-                child: _IconBadge(
-                  icon: tab.icon,
-                  trailingIcon: Icons.drag_handle,
-                ),
+      leading: dragIndex == null
+          ? _IconBadge(icon: tab.icon)
+          : ReorderableDragStartListener(
+              index: dragIndex!,
+              child: _IconBadge(
+                icon: tab.icon,
+                trailingIcon: Icons.drag_handle,
               ),
+            ),
       title: Text(
         tab.localizedTitle(strings),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        maxLines: expressive ? null : 1,
+        overflow: expressive ? null : TextOverflow.ellipsis,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w900,
         ),
@@ -213,6 +217,16 @@ class _NavTabTile extends StatelessWidget {
       ),
       trailing: Switch(value: isActive, onChanged: isLocked ? null : onToggle),
     );
+
+    if (!expressive || trainTokens == null) return tile;
+    final surface = isActive
+        ? trainTokens.navigationSurface
+        : context.surfaceTokens.settingsSection;
+    return TonosSurface(
+      variant: TonosSurfaceVariant.compactCard,
+      color: surface,
+      child: tile,
+    );
   }
 }
 
@@ -226,6 +240,14 @@ class _IconBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
+    final expressive = context.usesExpressivePresentation;
+    final trainTokens = Theme.of(context).extension<AppExpressiveTrainTokens>();
+    final badgeColor = expressive && trainTokens != null
+        ? trainTokens.navigationSelected
+        : scheme.primary;
+    final badgeForeground = expressive && trainTokens != null
+        ? trainTokens.navigationSelectedForeground
+        : scheme.primary;
 
     return SizedBox(
       width: 48,
@@ -237,10 +259,14 @@ class _IconBadge extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.16),
-              borderRadius: shapes.settingsAction,
+              color: expressive && trainTokens != null
+                  ? badgeColor
+                  : scheme.primary.withValues(alpha: 0.16),
+              borderRadius: expressive
+                  ? ExpressiveTrainShapes.focusInset
+                  : shapes.settingsAction,
             ),
-            child: Icon(icon, color: scheme.primary, size: 22),
+            child: Icon(icon, color: badgeForeground, size: 22),
           ),
           if (trailingIcon != null)
             Positioned(

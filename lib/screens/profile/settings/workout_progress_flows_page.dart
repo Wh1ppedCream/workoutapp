@@ -7,6 +7,7 @@ import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -54,10 +55,9 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
       ]);
       final appDefinition = initialResults[0] as FlowDefinition;
       final profiles = initialResults[1] as List<GymProfile>;
-      final groups =
-          (await Future.wait(
-            profiles.map(_loadProfileGroup),
-          )).whereType<_ProfileFlowGroup>().toList();
+      final groups = (await Future.wait(profiles.map(_loadProfileGroup)))
+          .whereType<_ProfileFlowGroup>()
+          .toList();
 
       if (!mounted || request != _loadRequest) return;
       setState(() {
@@ -113,6 +113,10 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
+    final expressive = context.usesExpressivePresentation;
+    final expressiveTokens = expressive
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
     final appColor = scheme.primary;
     final profileColor = _profileColor(context);
     final planColor = _planColor(context);
@@ -150,6 +154,8 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
         else ...[
           _FlowScopeCard(
             color: appColor,
+            expressiveSurface: expressiveTokens?.focusSurface,
+            expressiveForeground: expressiveTokens?.focusForeground,
             icon: Icons.apps_outlined,
             title: strings.rulesAppDefaultsTitle,
             subtitle: strings.flowAppDefaultsSubtitle,
@@ -159,8 +165,8 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
               icon: Icons.account_tree_outlined,
               title: strings.flowAppDefaultEntry,
               summary: _appSummary,
-              onTap:
-                  () => _openEditor(const AutoPresetFlowScreen.appDefaults()),
+              onTap: () =>
+                  _openEditor(const AutoPresetFlowScreen.appDefaults()),
             ),
           ),
           const SizedBox(height: 22),
@@ -179,16 +185,14 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
                 profileColor: profileColor,
                 planColor: planColor,
                 initiallyExpanded: index == 0,
-                onOpenProfile:
-                    () => _openEditor(
-                      AutoPresetFlowScreen.profileDefaults(
-                        profileId: _profiles[index].profile.id!,
-                        profileName: _profiles[index].profile.name,
-                      ),
-                    ),
-                onOpenPlan:
-                    (plan) =>
-                        _openEditor(AutoPresetFlowScreen(presetId: plan.id)),
+                onOpenProfile: () => _openEditor(
+                  AutoPresetFlowScreen.profileDefaults(
+                    profileId: _profiles[index].profile.id!,
+                    profileName: _profiles[index].profile.name,
+                  ),
+                ),
+                onOpenPlan: (plan) =>
+                    _openEditor(AutoPresetFlowScreen(presetId: plan.id)),
               ),
               if (index < _profiles.length - 1) const SizedBox(height: 12),
             ],
@@ -238,15 +242,14 @@ class _FlowSummary {
   factory _FlowSummary.fromDefinition(FlowDefinition definition) {
     return _FlowSummary(
       nodes: definition.nodes.length,
-      branches:
-          definition.edges
-              .where(
-                (edge) =>
-                    edge.outcome == 'success' || edge.outcome == 'failure',
-              )
-              .length,
-      actions:
-          definition.edges.where((edge) => edge.outcome == 'method').length,
+      branches: definition.edges
+          .where(
+            (edge) => edge.outcome == 'success' || edge.outcome == 'failure',
+          )
+          .length,
+      actions: definition.edges
+          .where((edge) => edge.outcome == 'method')
+          .length,
     );
   }
 
@@ -297,6 +300,8 @@ class _FlowScopeCard extends StatelessWidget {
   final String subtitle;
   final bool initiallyExpanded;
   final Widget child;
+  final Color? expressiveSurface;
+  final Color? expressiveForeground;
 
   const _FlowScopeCard({
     required this.color,
@@ -305,6 +310,8 @@ class _FlowScopeCard extends StatelessWidget {
     required this.subtitle,
     required this.child,
     this.initiallyExpanded = false,
+    this.expressiveSurface,
+    this.expressiveForeground,
   });
 
   @override
@@ -313,49 +320,68 @@ class _FlowScopeCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final expressive = context.usesExpressivePresentation;
     final neo = context.usesNeoPresentation;
-    final cardSurface =
-        neo
-            ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: .28);
-    final cardForeground =
-        neo
-            ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
-    final cardSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, cardSurface)
-            : scheme.onSurfaceVariant;
+    final cardSurface = expressive
+        ? expressiveSurface ?? surfaces.settingsSection
+        : neo
+        ? surfaces.settingsSection
+        : scheme.surfaceContainerHighest.withValues(alpha: .28);
+    final cardForeground = expressive
+        ? expressiveForeground ?? scheme.onSurface
+        : neo
+        ? tonosForegroundForSurface(context, cardSurface)
+        : scheme.onSurface;
+    final cardSecondary = expressive
+        ? cardForeground
+        : neo
+        ? tonosSecondaryForegroundForSurface(context, cardSurface)
+        : scheme.onSurfaceVariant;
+    final cardRadius = expressive
+        ? ExpressiveTrainShapes.activePlans
+        : shapes.settingsPanel;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: cardSurface,
-        borderRadius: shapes.settingsPanel,
-        border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, cardSurface)
-                  : color.withValues(alpha: .52),
-          width: shapes.outlineWidth,
-        ),
+        borderRadius: cardRadius,
+        border: expressive
+            ? null
+            : Border.all(
+                color: neo
+                    ? tonosOutlineForSurface(context, cardSurface)
+                    : color.withValues(alpha: .52),
+                width: shapes.outlineWidth,
+              ),
       ),
       child: TonosSurfaceTheme(
         surface: cardSurface,
         child: ExpansionTile(
           initiallyExpanded: initiallyExpanded,
+          iconColor: cardForeground,
+          collapsedIconColor: cardForeground,
           tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
           childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          collapsedBackgroundColor:
-              neo ? cardSurface : color.withValues(alpha: .08),
-          backgroundColor: neo ? cardSurface : color.withValues(alpha: .04),
+          collapsedBackgroundColor: neo || expressive
+              ? cardSurface
+              : color.withValues(alpha: .08),
+          backgroundColor: neo || expressive
+              ? cardSurface
+              : color.withValues(alpha: .04),
           leading: Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
               color: color.withValues(alpha: .17),
-              borderRadius: shapes.settingsScopeIcon,
+              borderRadius: expressive
+                  ? ExpressiveTrainShapes.focusInset
+                  : shapes.settingsScopeIcon,
             ),
-            child: Icon(icon, color: neo ? cardForeground : color, size: 22),
+            child: Icon(
+              icon,
+              color: neo || expressive ? cardForeground : color,
+              size: 22,
+            ),
           ),
           title: Text(
             title,
@@ -363,7 +389,7 @@ class _FlowScopeCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
-              color: neo ? cardForeground : null,
+              color: neo || expressive ? cardForeground : null,
             ),
           ),
           subtitle: Text(
@@ -399,8 +425,12 @@ class _ProfileFlowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
     return _FlowScopeCard(
       color: profileColor,
+      expressiveSurface: expressiveTokens?.activePlansSurface,
       icon: Icons.fitness_center_outlined,
       title: group.profile.name,
       subtitle: strings.flowPlansAvailable(group.plans.length),
@@ -421,10 +451,8 @@ class _ProfileFlowCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 strings.rulesPlansTitle,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: planColor,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: planColor, fontWeight: FontWeight.w900),
               ),
             ],
           ),
@@ -468,33 +496,50 @@ class _FlowEntryTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final expressive = context.usesExpressivePresentation;
+    final expressiveTokens = expressive
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        : null;
     final neo = context.usesNeoPresentation;
-    final tileSurface = neo ? surfaces.dialogChoice : null;
-    final tileForeground =
-        neo && tileSurface != null
-            ? tonosForegroundForSurface(context, tileSurface)
-            : scheme.onSurface;
-    final tileSecondary =
-        neo && tileSurface != null
-            ? tonosSecondaryForegroundForSurface(context, tileSurface)
-            : scheme.onSurfaceVariant;
+    final tileSurface = expressive
+        ? expressiveTokens!.focusInset
+        : neo
+        ? surfaces.dialogChoice
+        : null;
+    final tileForeground = expressive
+        ? expressiveTokens!.focusInsetForeground
+        : neo && tileSurface != null
+        ? tonosForegroundForSurface(context, tileSurface)
+        : scheme.onSurface;
+    final tileSecondary = expressive
+        ? expressiveTokens!.focusInsetForeground
+        : neo && tileSurface != null
+        ? tonosSecondaryForegroundForSurface(context, tileSurface)
+        : scheme.onSurfaceVariant;
     return Material(
-      color: neo ? tileSurface! : color.withValues(alpha: .06),
-      borderRadius: shapes.card,
+      color: expressive
+          ? tileSurface!
+          : neo
+          ? tileSurface!
+          : color.withValues(alpha: .06),
+      borderRadius: expressive ? ExpressiveTrainShapes.planRow : shapes.card,
       child: InkWell(
-        borderRadius: shapes.card,
+        borderRadius: expressive ? ExpressiveTrainShapes.planRow : shapes.card,
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           decoration: BoxDecoration(
-            borderRadius: shapes.card,
-            border: Border.all(
-              color:
-                  neo
-                      ? tonosOutlineForSurface(context, tileSurface!)
-                      : color.withValues(alpha: .34),
-              width: neo ? shapes.outlineWidth : 1,
-            ),
+            borderRadius: expressive
+                ? ExpressiveTrainShapes.planRow
+                : shapes.card,
+            border: expressive
+                ? null
+                : Border.all(
+                    color: neo
+                        ? tonosOutlineForSurface(context, tileSurface!)
+                        : color.withValues(alpha: .34),
+                    width: neo ? shapes.outlineWidth : 1,
+                  ),
           ),
           child: Row(
             children: [
@@ -503,11 +548,13 @@ class _FlowEntryTile extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: .16),
-                  borderRadius: shapes.control,
+                  borderRadius: expressive
+                      ? ExpressiveTrainShapes.compactControl
+                      : shapes.control,
                 ),
                 child: Icon(
                   icon,
-                  color: neo ? tileForeground : color,
+                  color: neo || expressive ? tileForeground : color,
                   size: 20,
                 ),
               ),
@@ -522,7 +569,7 @@ class _FlowEntryTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: neo ? tileForeground : null,
+                        color: neo || expressive ? tileForeground : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -530,9 +577,8 @@ class _FlowEntryTile extends StatelessWidget {
                       summary.label(AppLocalizations.of(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: tileSecondary),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: tileSecondary),
                     ),
                   ],
                 ),
@@ -541,7 +587,7 @@ class _FlowEntryTile extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: neo ? tileForeground : color,
+                color: neo || expressive ? tileForeground : color,
               ),
             ],
           ),
@@ -575,9 +621,8 @@ class _SectionHeading extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 2),
               Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
@@ -602,27 +647,23 @@ class _EmptyFlowsCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
     final emptySurface = neo ? surfaces.panel : null;
-    final foreground =
-        neo && emptySurface != null
-            ? tonosForegroundForSurface(context, emptySurface)
-            : scheme.onSurfaceVariant;
-    final secondary =
-        neo && emptySurface != null
-            ? tonosSecondaryForegroundForSurface(context, emptySurface)
-            : scheme.onSurfaceVariant;
+    final foreground = neo && emptySurface != null
+        ? tonosForegroundForSurface(context, emptySurface)
+        : scheme.onSurfaceVariant;
+    final secondary = neo && emptySurface != null
+        ? tonosSecondaryForegroundForSurface(context, emptySurface)
+        : scheme.onSurfaceVariant;
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
-        color:
-            neo
-                ? emptySurface
-                : scheme.surfaceContainerHighest.withValues(alpha: .24),
+        color: neo
+            ? emptySurface
+            : scheme.surfaceContainerHighest.withValues(alpha: .24),
         borderRadius: shapes.card,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, emptySurface!)
-                  : scheme.outlineVariant.withValues(alpha: .5),
+          color: neo
+              ? tonosOutlineForSurface(context, emptySurface!)
+              : scheme.outlineVariant.withValues(alpha: .5),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -633,9 +674,8 @@ class _EmptyFlowsCard extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: secondary),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: secondary),
             ),
           ),
         ],

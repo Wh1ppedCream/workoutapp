@@ -2,6 +2,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/tokens/app_shape_tokens.dart';
+import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/theme_extensions.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -11,197 +14,202 @@ class TutorialsSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    return SettingsPageScaffold(
-      title: strings.tutorialsSettingsTitle,
-      subtitle: strings.tutorialsSettingsSubtitle,
-      icon: Icons.school_outlined,
-      heroAccentColor: SettingsAccent.appearance,
-      children: [
-        SettingsSection(
-          title: strings.tutorialsControlsTitle,
-          subtitle: strings.tutorialsControlsSubtitle,
-          accentColor: SettingsAccent.data,
-          children: settingsTilesWithDividers(context, [
-            SettingsActionTile(
-              icon: Icons.restart_alt,
-              title: strings.tutorialsResetAllTitle,
-              subtitle: strings.tutorialsResetAllSubtitle,
-              trailing: _tutorialResetPill(context, strings.tutorialsResetAll),
-              onTap:
-                  () => _resetAllTutorials(
-                    context,
-                    strings.tutorialsResetAllMessage,
-                  ),
-            ),
-          ]),
-        ),
-        SettingsInfoCard(
-          icon: Icons.lightbulb_outline,
-          title: strings.tutorialsHowItWorksTitle,
-          body: strings.tutorialsHowItWorksBody,
-        ),
-        const SizedBox(height: 16),
-        SettingsExpansionSection(
-          title: strings.tutorialsMainTabsTitle,
-          subtitle: strings.tutorialsMainTabsSubtitle,
-          icon: Icons.school_outlined,
-          accentColor: SettingsAccent.appearance,
-          children: settingsTilesWithDividers(context, [
-            _tutorialResetTile(
-              context,
-              icon: Icons.fitness_center,
-              tutorialId: TutorialIds.trainHome,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.menu_book_outlined,
-              tutorialId: TutorialIds.catalogHome,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.history_outlined,
-              tutorialId: TutorialIds.logbookHome,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.trending_up,
-              tutorialId: TutorialIds.progressHome,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.person_outline,
-              tutorialId: TutorialIds.profileHome,
-            ),
-          ]),
-        ),
-        SettingsExpansionSection(
-          title: strings.tutorialsWorkoutTitle,
-          subtitle: strings.tutorialsWorkoutSubtitle,
-          icon: Icons.school_outlined,
-          accentColor: SettingsAccent.training,
-          children: settingsTilesWithDividers(context, [
-            _tutorialResetTile(
-              context,
-              icon: Icons.play_circle_outline,
-              tutorialId: TutorialIds.firstWorkoutSession,
-            ),
-          ]),
-        ),
-        SettingsExpansionSection(
-          title: strings.tutorialsPlansTitle,
-          subtitle: strings.tutorialsPlansSubtitle,
-          icon: Icons.school_outlined,
-          accentColor: SettingsAccent.training,
-          children: settingsTilesWithDividers(context, [
-            _tutorialResetTile(
-              context,
-              icon: Icons.auto_awesome,
-              tutorialId: TutorialIds.generatePlans,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.tune,
-              tutorialId: TutorialIds.optimizedWorkoutSettings,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.library_books_outlined,
-              tutorialId: TutorialIds.premadePlans,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.fact_check_outlined,
-              tutorialId: TutorialIds.planManagement,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.edit_note,
-              tutorialId: TutorialIds.planDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.school_outlined,
-              tutorialId: TutorialIds.onboardingManualPlan,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.receipt_long,
-              tutorialId: TutorialIds.workoutDetail,
-            ),
-          ]),
-        ),
-        SettingsExpansionSection(
-          title: strings.tutorialsCatalogTitle,
-          subtitle: strings.tutorialsCatalogSubtitle,
-          icon: Icons.school_outlined,
-          accentColor: SettingsAccent.advanced,
-          children: settingsTilesWithDividers(context, [
-            _tutorialResetTile(
-              context,
-              icon: Icons.search,
-              tutorialId: TutorialIds.exerciseCatalog,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.info_outline,
-              tutorialId: TutorialIds.exerciseDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.accessibility_new,
-              tutorialId: TutorialIds.targetAnatomy,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.accessibility,
-              tutorialId: TutorialIds.bodypartDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.fitness_center,
-              tutorialId: TutorialIds.muscleDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.analytics_outlined,
-              tutorialId: TutorialIds.weeklySetsOverview,
-            ),
-          ]),
-        ),
-        SettingsExpansionSection(
-          title: strings.tutorialsProgressTitle,
-          subtitle: strings.tutorialsProgressSubtitle,
-          icon: Icons.school_outlined,
-          accentColor: SettingsAccent.progress,
-          children: settingsTilesWithDividers(context, [
-            _tutorialResetTile(
-              context,
-              icon: Icons.show_chart,
-              tutorialId: TutorialIds.exerciseProgressDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.monitor_heart_outlined,
-              tutorialId: TutorialIds.measurementTrendDetail,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.home_work_outlined,
-              tutorialId: TutorialIds.gymProfileEditor,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.palette_outlined,
-              tutorialId: TutorialIds.uiAppearanceSettings,
-            ),
-            _tutorialResetTile(
-              context,
-              icon: Icons.storage_outlined,
-              tutorialId: TutorialIds.databaseSettings,
-            ),
-          ]),
-        ),
-      ],
+    return _withExpressiveProfileTheme(
+      context,
+      SettingsPageScaffold(
+        title: strings.tutorialsSettingsTitle,
+        subtitle: strings.tutorialsSettingsSubtitle,
+        icon: Icons.school_outlined,
+        heroAccentColor: SettingsAccent.appearance,
+        children: [
+          SettingsSection(
+            title: strings.tutorialsControlsTitle,
+            subtitle: strings.tutorialsControlsSubtitle,
+            accentColor: SettingsAccent.data,
+            children: settingsTilesWithDividers(context, [
+              SettingsActionTile(
+                icon: Icons.restart_alt,
+                title: strings.tutorialsResetAllTitle,
+                subtitle: strings.tutorialsResetAllSubtitle,
+                trailing: _tutorialResetPill(
+                  context,
+                  strings.tutorialsResetAll,
+                ),
+                onTap: () => _resetAllTutorials(
+                  context,
+                  strings.tutorialsResetAllMessage,
+                ),
+              ),
+            ]),
+          ),
+          SettingsInfoCard(
+            icon: Icons.lightbulb_outline,
+            title: strings.tutorialsHowItWorksTitle,
+            body: strings.tutorialsHowItWorksBody,
+          ),
+          const SizedBox(height: 16),
+          SettingsExpansionSection(
+            title: strings.tutorialsMainTabsTitle,
+            subtitle: strings.tutorialsMainTabsSubtitle,
+            icon: Icons.school_outlined,
+            accentColor: SettingsAccent.appearance,
+            children: settingsTilesWithDividers(context, [
+              _tutorialResetTile(
+                context,
+                icon: Icons.fitness_center,
+                tutorialId: TutorialIds.trainHome,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.menu_book_outlined,
+                tutorialId: TutorialIds.catalogHome,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.history_outlined,
+                tutorialId: TutorialIds.logbookHome,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.trending_up,
+                tutorialId: TutorialIds.progressHome,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.person_outline,
+                tutorialId: TutorialIds.profileHome,
+              ),
+            ]),
+          ),
+          SettingsExpansionSection(
+            title: strings.tutorialsWorkoutTitle,
+            subtitle: strings.tutorialsWorkoutSubtitle,
+            icon: Icons.school_outlined,
+            accentColor: SettingsAccent.training,
+            children: settingsTilesWithDividers(context, [
+              _tutorialResetTile(
+                context,
+                icon: Icons.play_circle_outline,
+                tutorialId: TutorialIds.firstWorkoutSession,
+              ),
+            ]),
+          ),
+          SettingsExpansionSection(
+            title: strings.tutorialsPlansTitle,
+            subtitle: strings.tutorialsPlansSubtitle,
+            icon: Icons.school_outlined,
+            accentColor: SettingsAccent.training,
+            children: settingsTilesWithDividers(context, [
+              _tutorialResetTile(
+                context,
+                icon: Icons.auto_awesome,
+                tutorialId: TutorialIds.generatePlans,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.tune,
+                tutorialId: TutorialIds.optimizedWorkoutSettings,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.library_books_outlined,
+                tutorialId: TutorialIds.premadePlans,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.fact_check_outlined,
+                tutorialId: TutorialIds.planManagement,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.edit_note,
+                tutorialId: TutorialIds.planDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.school_outlined,
+                tutorialId: TutorialIds.onboardingManualPlan,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.receipt_long,
+                tutorialId: TutorialIds.workoutDetail,
+              ),
+            ]),
+          ),
+          SettingsExpansionSection(
+            title: strings.tutorialsCatalogTitle,
+            subtitle: strings.tutorialsCatalogSubtitle,
+            icon: Icons.school_outlined,
+            accentColor: SettingsAccent.advanced,
+            children: settingsTilesWithDividers(context, [
+              _tutorialResetTile(
+                context,
+                icon: Icons.search,
+                tutorialId: TutorialIds.exerciseCatalog,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.info_outline,
+                tutorialId: TutorialIds.exerciseDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.accessibility_new,
+                tutorialId: TutorialIds.targetAnatomy,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.accessibility,
+                tutorialId: TutorialIds.bodypartDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.fitness_center,
+                tutorialId: TutorialIds.muscleDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.analytics_outlined,
+                tutorialId: TutorialIds.weeklySetsOverview,
+              ),
+            ]),
+          ),
+          SettingsExpansionSection(
+            title: strings.tutorialsProgressTitle,
+            subtitle: strings.tutorialsProgressSubtitle,
+            icon: Icons.school_outlined,
+            accentColor: SettingsAccent.progress,
+            children: settingsTilesWithDividers(context, [
+              _tutorialResetTile(
+                context,
+                icon: Icons.show_chart,
+                tutorialId: TutorialIds.exerciseProgressDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.monitor_heart_outlined,
+                tutorialId: TutorialIds.measurementTrendDetail,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.home_work_outlined,
+                tutorialId: TutorialIds.gymProfileEditor,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.palette_outlined,
+                tutorialId: TutorialIds.uiAppearanceSettings,
+              ),
+              _tutorialResetTile(
+                context,
+                icon: Icons.storage_outlined,
+                tutorialId: TutorialIds.databaseSettings,
+              ),
+            ]),
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,12 +225,11 @@ class TutorialsSettingsPage extends StatelessWidget {
       title: strings.tutorialsReplayTitle(topic),
       subtitle: strings.tutorialsShownNextTime(topic),
       trailing: _tutorialResetPill(context, strings.tutorialsReset),
-      onTap:
-          () => _resetTutorial(
-            context,
-            tutorialId,
-            strings.tutorialsWillReplayNextTime(topic),
-          ),
+      onTap: () => _resetTutorial(
+        context,
+        tutorialId,
+        strings.tutorialsWillReplayNextTime(topic),
+      ),
     );
   }
 
@@ -233,17 +240,15 @@ class TutorialsSettingsPage extends StatelessWidget {
   ) async {
     await const TutorialStateStore().reset(tutorialId);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _resetAllTutorials(BuildContext context, String message) async {
     await const TutorialStateStore().resetAll();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _tutorialTopic(AppLocalizations strings, String tutorialId) {
@@ -281,13 +286,78 @@ class TutorialsSettingsPage extends StatelessWidget {
 }
 
 Widget _tutorialResetPill(BuildContext context, String label) {
+  final theme = Theme.of(context);
+  final expressive = theme.extension<AppExpressiveTrainTokens>();
+  if (context.usesExpressivePresentation && expressive != null) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: expressive.focusInset,
+        borderRadius: ExpressiveTrainShapes.compactControl,
+        border: Border.all(
+          color: expressive.focusInsetForeground.withValues(alpha: 0.32),
+        ),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: expressive.focusInsetForeground,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
   return SettingsAccentPill(
     label: label,
-    color: Theme.of(context).colorScheme.primary,
+    color: theme.colorScheme.primary,
     parentSurface: context.surfaceTokens.settingsSection,
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
     backgroundAlpha: 0.13,
     borderAlpha: 0.42,
     fontWeight: FontWeight.w900,
+  );
+}
+
+Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
+  final theme = Theme.of(context);
+  final expressive = theme.extension<AppExpressiveTrainTokens>();
+  if (!context.usesExpressivePresentation || expressive == null) return child;
+
+  final updatedExtensions = theme.extensions.values
+      .where(
+        (extension) =>
+            extension is! AppShapeTokens &&
+            extension is! AppSettingsPresentationTokens,
+      )
+      .toList();
+  updatedExtensions.add(
+    theme.shapeTokens.copyWith(
+      hero: ExpressiveTrainShapes.focusHero,
+      sheet: ExpressiveTrainShapes.section,
+      settingsPanel: ExpressiveTrainShapes.section,
+      settingsAction: ExpressiveTrainShapes.compactControl,
+      settingsInput: ExpressiveTrainShapes.compactControl,
+      settingsField: ExpressiveTrainShapes.compactControl,
+      dialogChoice: ExpressiveTrainShapes.menu,
+    ),
+  );
+  updatedExtensions.add(
+    theme.settingsPresentationTokens.copyWith(
+      sectionHeaderUsesLabel: true,
+      sectionHeaderFill: expressive.selectorTrack,
+      sectionHeaderForeground: expressive.navigationLabel,
+    ),
+  );
+
+  return Theme(
+    data: theme.copyWith(
+      scaffoldBackgroundColor: expressive.pageCanvas,
+      dialogTheme: theme.dialogTheme.copyWith(
+        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+      ),
+      extensions: updatedExtensions,
+    ),
+    child: child,
   );
 }
