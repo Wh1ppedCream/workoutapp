@@ -15,7 +15,9 @@ import '../../services/catalog_entity_localizer.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_surface.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_formatters.dart';
@@ -930,6 +932,9 @@ class _SessionSummaryCard extends StatelessWidget {
       AppLocalizations.of(context),
       session.duration,
     );
+    if (context.usesExpressivePresentation) {
+      return _buildExpressive(context, durationText, weightUnit);
+    }
 
     return Card(
       child: Padding(
@@ -1042,6 +1047,170 @@ class _SessionSummaryCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildExpressive(
+    BuildContext context,
+    String durationText,
+    WeightUnit weightUnit,
+  ) {
+    final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final surfaces = context.surfaceTokens;
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+    final locale = Localizations.localeOf(context);
+    final volume = WeightUnitFormatter.formatVolume(
+      summary.totalVolume,
+      weightUnit,
+      locale: locale,
+    );
+    final exerciseCount = LocalizedFormatters.number(
+      summary.exerciseCount,
+      locale,
+      maximumFractionDigits: 0,
+    );
+
+    Widget metricRail() {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final scale = MediaQuery.textScalerOf(context).scale(1);
+          final columnCount =
+              constraints.maxWidth < 430 || scale > 1.15 ? 2 : 3;
+          final gap = 8.0;
+          final tileWidth =
+              (constraints.maxWidth - gap * (columnCount - 1)) / columnCount;
+
+          Widget metric(String label, String value) => SizedBox(
+            width: tileWidth,
+            child: _SummaryMetricTile(label: label, value: value),
+          );
+
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              metric(strings.workoutDetailVolume, volume),
+              metric(strings.workoutDetailDuration, durationText),
+              metric(strings.workoutDetailExercises, exerciseCount),
+            ],
+          );
+        },
+      );
+    }
+
+    Widget bodyPartInset() {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final scale = MediaQuery.textScalerOf(context).scale(1);
+          final stacked = constraints.maxWidth < 390 || scale > 1.15;
+          final heatmapSize =
+              (constraints.maxWidth * 0.42).clamp(132.0, 176.0).toDouble();
+          final heatmap = SizedBox.square(
+            dimension: heatmapSize,
+            child: Center(
+              child: BodyHeatmap(
+                frequencyMap: summary.frequencyMap,
+                lowColor: tonosHeatmapLowForSurface(context, surfaces.card),
+                highColor: tonosHeatmapHighForSurface(context, surfaces.card),
+                width: heatmapSize,
+                height: heatmapSize,
+              ),
+            ),
+          );
+          final focusList = FocusedSetsList(
+            hits: summary.bodyPartHits,
+            titleWeight: FontWeight.w800,
+          );
+
+          return TonosSurface(
+            variant: TonosSurfaceVariant.panel,
+            color: surfaces.workoutMetricDetails,
+            padding: const EdgeInsets.all(10),
+            borderRadius: ExpressiveTrainShapes.focusInset,
+            outlined: false,
+            child:
+                stacked
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(child: heatmap),
+                        const SizedBox(height: 8),
+                        focusList,
+                      ],
+                    )
+                    : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        heatmap,
+                        const SizedBox(width: 14),
+                        Expanded(child: focusList),
+                      ],
+                    ),
+          );
+        },
+      );
+    }
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.card,
+      color: surfaces.dashboardSection,
+      padding: const EdgeInsets.all(10),
+      borderRadius: ExpressiveTrainShapes.focusHero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TonosSurface(
+            variant: TonosSurfaceVariant.panel,
+            color: tokens.focusSurface,
+            padding: const EdgeInsets.all(14),
+            borderRadius: ExpressiveTrainShapes.focusInset,
+            outlined: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  strings.workoutDetailPastWorkout,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: tokens.focusForeground,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  dateText,
+                  softWrap: true,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: tokens.focusForeground,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  strings.workoutDetailCompletedSets(summary.totalSets),
+                  softWrap: true,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.focusForeground,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          TonosSurface(
+            variant: TonosSurfaceVariant.panel,
+            color: surfaces.workoutMetricDetails,
+            padding: const EdgeInsets.all(8),
+            borderRadius: ExpressiveTrainShapes.focusInset,
+            outlined: false,
+            child: metricRail(),
+          ),
+          if (summary.bodyPartHits.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            bodyPartInset(),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _SummaryMetricTile extends StatelessWidget {
@@ -1055,13 +1224,20 @@ class _SummaryMetricTile extends StatelessWidget {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens =
+        usesExpressive ? theme.extension<AppExpressiveTrainTokens>() : null;
     final neo = context.usesNeoPresentation;
     final valueForeground =
-        neo
+        usesExpressive
+            ? expressiveTokens!.actionSecondaryForeground
+            : neo
             ? tonosForegroundForSurface(context, surfaces.sessionSummary)
             : null;
     final labelForeground =
-        neo
+        usesExpressive
+            ? expressiveTokens!.actionSecondaryForeground
+            : neo
             ? tonosSecondaryForegroundForSurface(
               context,
               surfaces.sessionSummary,
@@ -1070,16 +1246,23 @@ class _SummaryMetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: surfaces.sessionSummary,
-        borderRadius: shapes.metric,
+        color:
+            usesExpressive
+                ? expressiveTokens!.actionSecondary
+                : surfaces.sessionSummary,
+        borderRadius:
+            usesExpressive
+                ? ExpressiveTrainShapes.compactControl
+                : shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             value,
-            maxLines: 1,
+            maxLines: usesExpressive ? 2 : 1,
             overflow: TextOverflow.ellipsis,
+            softWrap: usesExpressive,
             style: theme.textTheme.titleMedium?.copyWith(
               color: valueForeground ?? theme.colorScheme.primary,
               fontWeight: FontWeight.w900,
@@ -1087,8 +1270,9 @@ class _SummaryMetricTile extends StatelessWidget {
           ),
           Text(
             label,
-            maxLines: 1,
+            maxLines: usesExpressive ? 2 : 1,
             overflow: TextOverflow.ellipsis,
+            softWrap: usesExpressive,
             style: theme.textTheme.bodySmall?.copyWith(color: labelForeground),
           ),
         ],
@@ -1141,6 +1325,7 @@ class _CompletedWeightCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rows = _setRows(exercise);
+    final surfaces = context.surfaceTokens;
     final equipment = [
       if (definition != null)
         ...definition!.equipmentList
@@ -1153,129 +1338,132 @@ class _CompletedWeightCard extends StatelessWidget {
             ),
     ];
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _exerciseTitle(exercise),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+    final content = Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _exerciseTitle(exercise),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
-                      if (exercise.equipment.trim().isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        if (equipment.isEmpty)
-                          Text(
-                            exercise.equipment,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              color:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          )
-                        else
-                          LocalizedCatalogEntityNamesBuilder(
-                            entities: equipment,
-                            builder:
-                                (context, names) => Text(
-                                  names.join(', '),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
-                                    color:
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                          ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (onDetails != null && definition != null)
-                  Semantics(
-                    button: true,
-                    label: AppLocalizations.of(context).catalogOpenExerciseInfo,
-                    child: ExerciseMediaThumbnail(
-                      definition: definition!,
-                      size: 56,
-                      borderRadius: context.shapeTokens.mediaThumbnail,
-                      padding: EdgeInsets.zero,
-                      framed: false,
-                      onTap: onDetails,
                     ),
-                  )
-                else if (onDetails != null)
-                  IconButton(
-                    tooltip:
-                        AppLocalizations.of(context).workoutDetailExerciseInfo,
-                    onPressed: onDetails,
-                    icon: const Icon(Icons.info_outline),
+                    if (exercise.equipment.trim().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      if (equipment.isEmpty)
+                        Text(
+                          exercise.equipment,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      else
+                        LocalizedCatalogEntityNamesBuilder(
+                          entities: equipment,
+                          builder:
+                              (context, names) => Text(
+                                names.join(', '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium?.copyWith(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+              if (onDetails != null && definition != null)
+                Semantics(
+                  button: true,
+                  label: AppLocalizations.of(context).catalogOpenExerciseInfo,
+                  child: ExerciseMediaThumbnail(
+                    definition: definition!,
+                    size: 56,
+                    borderRadius: context.shapeTokens.mediaThumbnail,
+                    padding: EdgeInsets.zero,
+                    framed: false,
+                    onTap: onDetails,
                   ),
-              ],
-            ),
-            if (badges.isFirstRecord) ...[
-              const SizedBox(height: 2),
-              const Align(
-                alignment: Alignment.centerRight,
-                child: FirstRecordBadge(compact: true),
-              ),
-              Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ] else ...[
-              const SizedBox(height: 6),
-              Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
+                )
+              else if (onDetails != null)
+                IconButton(
+                  tooltip:
+                      AppLocalizations.of(context).workoutDetailExerciseInfo,
+                  onPressed: onDetails,
+                  icon: const Icon(Icons.info_outline),
+                ),
             ],
+          ),
+          if (badges.isFirstRecord) ...[
+            const SizedBox(height: 2),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: FirstRecordBadge(compact: true),
+            ),
+            Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ] else ...[
             const SizedBox(height: 6),
-            for (var i = 0; i < rows.length; i++)
-              _CompletedSetRow(
-                row: rows[i],
-                badges:
-                    rows[i].parentIndex == null
-                        ? const <WorkoutRecordBadge>[]
-                        : badges
-                            .forSet(rows[i].parentIndex!)
-                            .where(
-                              (badge) =>
-                                  badge.type ==
-                                      WorkoutRecordBadgeType.repBest ||
-                                  badge.type ==
-                                      WorkoutRecordBadgeType.volumeBest,
-                            )
-                            .toList(growable: false),
-              ),
+            Divider(
+              height: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ],
-        ),
+          const SizedBox(height: 6),
+          for (var i = 0; i < rows.length; i++)
+            _CompletedSetRow(
+              row: rows[i],
+              badges:
+                  rows[i].parentIndex == null
+                      ? const <WorkoutRecordBadge>[]
+                      : badges
+                          .forSet(rows[i].parentIndex!)
+                          .where(
+                            (badge) =>
+                                badge.type == WorkoutRecordBadgeType.repBest ||
+                                badge.type == WorkoutRecordBadgeType.volumeBest,
+                          )
+                          .toList(growable: false),
+            ),
+        ],
       ),
     );
+    if (context.usesExpressivePresentation) {
+      return TonosSurface(
+        variant: TonosSurfaceVariant.card,
+        color: surfaces.dashboardSection,
+        margin: const EdgeInsets.only(bottom: 14),
+        borderRadius: ExpressiveTrainShapes.focusInset,
+        child: content,
+      );
+    }
+    return Card(margin: const EdgeInsets.only(bottom: 14), child: content);
   }
 
   static String _exerciseTitle(WeightExercise exercise) {

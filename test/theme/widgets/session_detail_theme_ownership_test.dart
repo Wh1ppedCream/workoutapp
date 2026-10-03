@@ -14,18 +14,20 @@ import 'package:env_test/screens/exercise/session_detail_screen.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/utils/app_test_keys.dart';
+
 import '../../../tools/theme_style_inventory.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Session Detail surfaces use existing theme owners', (
@@ -65,15 +67,15 @@ void main() {
 
         final surfaces = theme.extension<AppSurfaceTokens>()!;
         final shapes = theme.extension<AppShapeTokens>()!;
-        final metricTiles =
-            tester.widgetList<Container>(find.byType(Container)).where((
-              container,
-            ) {
+        final metricTiles = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((container) {
               final decoration = container.decoration;
               return decoration is BoxDecoration &&
                   decoration.color == surfaces.sessionSummary &&
                   decoration.borderRadius == shapes.metric;
-            }).toList();
+            })
+            .toList();
         expect(metricTiles, hasLength(3));
 
         final setIndex = tester.widget<Container>(
@@ -110,8 +112,8 @@ void main() {
           inputDecoratorFinder,
         );
         expect(inputDecorator.decoration.labelText, isNotNull);
-        final dialogInputTheme =
-            Theme.of(tester.element(fieldFinder)).inputDecorationTheme;
+        final dialogInputTheme = Theme.of(tester.element(fieldFinder))
+            .inputDecorationTheme;
         if (family == AppThemeFamily.neoBrutalism) {
           expect(dialogInputTheme.filled, isTrue);
           expect(dialogInputTheme.fillColor, surfaces.dialogChoice);
@@ -126,6 +128,162 @@ void main() {
       });
     }
   }
+
+  testWidgets(
+    'Expressive Session Detail retains summary data and save action',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
+      });
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+
+      final theme = ExpressiveThemeDefinition.light();
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: _SessionDetailRepository()),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: theme,
+            themeAnimationDuration: Duration.zero,
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SessionDetailScreen(
+              WorkoutSession(
+                id: 4,
+                date: DateTime(2026, 9, 26, 12),
+                duration: 2700,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(SessionDetailScreen)),
+      );
+      final title = find.text(strings.workoutDetailPastWorkout);
+      expect(title, findsOneWidget);
+      expect(
+        tester.widget<Text>(title).style?.color,
+        theme.extension<AppExpressiveTrainTokens>()!.focusForeground,
+      );
+      expect(find.text(strings.workoutDetailCompletedSets(1)), findsOneWidget);
+      expect(find.text(strings.workoutDetailVolume), findsOneWidget);
+      expect(find.text(strings.workoutDetailDuration), findsOneWidget);
+      expect(find.text(strings.workoutDetailExercises), findsOneWidget);
+      expect(find.text('Squat'), findsOneWidget);
+
+      final saveAsPlan = find.byKey(AppTestKeys.workoutSaveAsPlan);
+      expect(saveAsPlan, findsOneWidget);
+      expect(tester.widget<OutlinedButton>(saveAsPlan).onPressed, isNotNull);
+      await tester.ensureVisible(saveAsPlan);
+      await tester.tap(saveAsPlan);
+      await tester.pumpAndSettle();
+      expect(find.byKey(AppTestKeys.workoutPlanName), findsOneWidget);
+      await tester.tap(find.text(strings.commonCancel));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
+
+  testWidgets(
+    'Expressive Session Detail remains usable at 320dp across text scales',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
+      });
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(320, 1800));
+
+      final repository = _SessionDetailRepository();
+      for (final brightness in Brightness.values) {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                themeAnimationDuration: Duration.zero,
+                locale: const Locale('en'),
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(scale),
+                    disableAnimations: true,
+                  ),
+                  child: child!,
+                ),
+                home: SessionDetailScreen(
+                  WorkoutSession(
+                    id: 4,
+                    date: DateTime(2026, 9, 26, 12),
+                    duration: 2700,
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(SessionDetailScreen)),
+          );
+          expect(find.text(strings.workoutDetailPastWorkout), findsOneWidget);
+          expect(
+            find.text(strings.workoutDetailCompletedSets(1)),
+            findsOneWidget,
+          );
+          expect(find.text(strings.workoutDetailVolume), findsOneWidget);
+          expect(find.text(strings.workoutDetailDuration), findsOneWidget);
+          expect(find.text(strings.workoutDetailExercises), findsOneWidget);
+
+          final saveAsPlan = find.byKey(AppTestKeys.workoutSaveAsPlan);
+          expect(saveAsPlan, findsOneWidget);
+          expect(
+            tester.widget<OutlinedButton>(saveAsPlan).onPressed,
+            isNotNull,
+          );
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${brightness.name}, text scale $scale',
+          );
+
+          await tester.ensureVisible(saveAsPlan);
+          await tester.tap(saveAsPlan);
+          await tester.pumpAndSettle();
+          expect(find.byKey(AppTestKeys.workoutPlanName), findsOneWidget);
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${brightness.name}, dialog at scale $scale',
+          );
+          await tester.tap(find.text(strings.commonCancel));
+          await tester.pumpAndSettle();
+        }
+      }
+    },
+    semanticsEnabled: true,
+  );
 
   test('active-workout screen styles have exact measured ownership', () {
     final inventory = loadThemeStyleInventory(
@@ -177,20 +335,18 @@ void main() {
       everyElement('migrated'),
     );
 
-    final sessionSource =
-        File('lib/screens/exercise/session_screen.dart').readAsStringSync();
+    final sessionSource = File('lib/screens/exercise/session_screen.dart')
+        .readAsStringSync();
     expect(sessionSource, contains('Theme.of(context).textTheme.bodyMedium'));
     expect(
       sessionSource,
       contains('context.surfaceDecorationTokens.sheet.outlined'),
     );
-    final detailSource =
-        File(
-          'lib/screens/exercise/session_detail_screen.dart',
-        ).readAsStringSync();
+    final detailSource = File('lib/screens/exercise/session_detail_screen.dart')
+        .readAsStringSync();
     expect(detailSource, contains('styleFormControls: true'));
-    expect(detailSource, contains('color: surfaces.sessionSummary'));
-    expect(detailSource, contains('borderRadius: shapes.metric'));
+    expect(detailSource, contains(': surfaces.sessionSummary,'));
+    expect(detailSource, contains(': shapes.metric,'));
     expect(detailSource, contains('color: surfaces.panelRaised'));
     expect(detailSource, contains('shape: BoxShape.circle'));
   });

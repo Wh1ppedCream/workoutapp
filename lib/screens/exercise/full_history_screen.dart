@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
+import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../theme/widgets/tonos_surface.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_formatters.dart';
@@ -37,6 +40,7 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final usesExpressive = context.usesExpressivePresentation;
     return Scaffold(
       appBar: AppBar(title: Text(strings.fullHistoryTitle)),
       body: FutureBuilder<List<WorkoutSession>>(
@@ -66,20 +70,101 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                 strings,
                 s.duration,
               );
+              final semanticLabel = strings.fullHistorySessionSummary(
+                dateStr,
+                duration,
+              );
+              Future<void> openSession() async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => SessionDetailScreen(s)),
+                );
+                if (mounted) _reload();
+              }
+
+              if (usesExpressive) {
+                final surfaces = context.surfaceTokens;
+                final tokens =
+                    Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+                return MergeSemantics(
+                  child: Semantics(
+                    button: true,
+                    label: semanticLabel,
+                    child: TonosSurface(
+                      variant: TonosSurfaceVariant.card,
+                      color: surfaces.dashboardSection,
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      borderRadius: ExpressiveTrainShapes.focusInset,
+                      onTap: openSession,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: tokens.focusSurface,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    dateStr,
+                                    softWrap: true,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w900),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    duration,
+                                    softWrap: true,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.copyWith(
+                                      color: tonosSecondaryForegroundForSurface(
+                                        context,
+                                        surfaces.dashboardSection,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_right,
+                              color: tokens.actionSecondaryForeground,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
               return TonosThemeReadyCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
                   title: Text(
-                    strings.fullHistorySessionSummary(dateStr, duration),
+                    semanticLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => SessionDetailScreen(s)),
-                    );
-                    if (mounted) _reload();
-                  },
+                  onTap: openSession,
                 ),
               );
             },

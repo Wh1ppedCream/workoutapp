@@ -5,24 +5,27 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/utils/localized_formatters.dart';
 import 'package:env_test/widgets/workout_history_calendar.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_support.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Workout History calendar preserves owned recipes', (
@@ -105,15 +108,14 @@ void main() {
             locale,
           ),
         );
-        final weekdayTexts =
-            tester
-                .widgetList<Text>(find.byType(Text))
-                .where(
-                  (text) =>
-                      weekdayLabels.contains(text.data) &&
-                      text.style?.fontWeight == FontWeight.w800,
-                )
-                .toList();
+        final weekdayTexts = tester
+            .widgetList<Text>(find.byType(Text))
+            .where(
+              (text) =>
+                  weekdayLabels.contains(text.data) &&
+                  text.style?.fontWeight == FontWeight.w800,
+            )
+            .toList();
         expect(weekdayTexts, hasLength(DateTime.daysPerWeek));
         for (final weekday in weekdayTexts) {
           expect(weekday.style?.fontSize, greaterThan(0));
@@ -122,6 +124,17 @@ void main() {
 
         _expectModeTab(tester, label: 'M', selected: true, theme: theme);
         _expectModeTab(tester, label: '3M', selected: false, theme: theme);
+        final selectedModeSemantics = find.ancestor(
+          of: find.text('M').first,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics && widget.properties.selected == true,
+          ),
+        );
+        expect(
+          selectedModeSemantics,
+          theme.usesExpressivePresentation ? findsOneWidget : findsNothing,
+        );
         final rail = tester.widget<Container>(
           find.byWidgetPredicate(
             (widget) =>
@@ -150,6 +163,10 @@ void main() {
         }
         final selectedDay = _dayButton(today, locale);
         expect(selectedDay, findsOneWidget);
+        expect(
+          tester.widget<Semantics>(selectedDay).properties.selected,
+          theme.usesExpressivePresentation ? isTrue : isNull,
+        );
         final selectedDayFill = _dayFill(tester, selectedDay);
         expect(
           selectedDayFill.color,
@@ -195,9 +212,9 @@ void main() {
           selectedDayText.style?.color,
           outlined
               ? tonosForegroundForSurface(
-                tester.element(selectedDay),
-                surfaces.settingsHero,
-              )
+                  tester.element(selectedDay),
+                  surfaces.settingsHero,
+                )
               : theme.colorScheme.onPrimary,
         );
 
@@ -220,33 +237,29 @@ void main() {
           summaryDecoration.color,
           outlined ? surfaces.catalogSelection : surfaces.historySelectedPeriod,
         );
-        final summaryTexts =
-            tester
-                .widgetList<Text>(
-                  find.descendant(
-                    of: summaryPanel,
-                    matching: find.byType(Text),
-                  ),
-                )
-                .toList();
+        final summaryTexts = tester
+            .widgetList<Text>(
+              find.descendant(of: summaryPanel, matching: find.byType(Text)),
+            )
+            .toList();
         expect(summaryTexts.first.style?.fontWeight, FontWeight.w900);
         expect(summaryTexts.first.style?.fontSize, greaterThan(0));
         expect(
           summaryTexts.first.style?.color,
           outlined
               ? tonosForegroundForSurface(
-                tester.element(summaryPanel),
-                surfaces.catalogSelection,
-              )
+                  tester.element(summaryPanel),
+                  surfaces.catalogSelection,
+                )
               : theme.colorScheme.onSurface,
         );
         expect(
           summaryTexts[1].style?.color,
           outlined
               ? tonosSecondaryForegroundForSurface(
-                tester.element(summaryPanel),
-                surfaces.catalogSelection,
-              )
+                  tester.element(summaryPanel),
+                  surfaces.catalogSelection,
+                )
               : theme.colorScheme.onSurfaceVariant,
         );
         expect(summaryTexts[1].style?.fontSize, greaterThan(0));
@@ -281,9 +294,9 @@ void main() {
           metricTexts.first.style?.color,
           outlined
               ? tonosForegroundForSurface(
-                tester.element(workoutMetric),
-                surfaces.workoutMetricRange,
-              )
+                  tester.element(workoutMetric),
+                  surfaces.workoutMetricRange,
+                )
               : theme.semanticColors.strongContent,
         );
         expect(metricTexts.last.style?.fontSize, 9);
@@ -291,14 +304,21 @@ void main() {
           metricTexts.last.style?.color,
           outlined
               ? tonosSecondaryForegroundForSurface(
-                tester.element(workoutMetric),
-                surfaces.workoutMetricRange,
-              )
+                  tester.element(workoutMetric),
+                  surfaces.workoutMetricRange,
+                )
               : theme.semanticColors.mutedContent,
         );
 
         final sessionTile = find.byKey(AppTestKeys.historySession(1));
         expect(sessionTile, findsOneWidget);
+        final laterSessionTile = find.byKey(AppTestKeys.historySession(2));
+        expect(laterSessionTile, findsOneWidget);
+        expect(
+          tester.getTopLeft(laterSessionTile).dy,
+          lessThan(tester.getTopLeft(sessionTile).dy),
+          reason: 'Sessions in the selected period should be newest first.',
+        );
         final sessionTitle = tester.widget<Text>(
           find.descendant(of: sessionTile, matching: find.byType(Text)).first,
         );
@@ -338,25 +358,24 @@ void main() {
             offMonthText.style?.color,
             outlined
                 ? tonosForegroundForSurface(
-                  tester.element(offMonthButton),
-                  surfaces.calendarDayEmpty,
-                )
+                    tester.element(offMonthButton),
+                    surfaces.calendarDayEmpty,
+                  )
                 : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
           );
         }
 
         final activeDay = _dayButton(earlierDay, locale);
         final activeDecoration = _dayFill(tester, activeDay);
-        Color activityFill(double intensity) =>
-            outlined
-                ? Color.lerp(
-                  surfaces.calendarDayEmpty,
-                  surfaces.catalogSelection,
-                  0.45 + intensity * 0.55,
-                )!
-                : theme.colorScheme.primary.withValues(
-                  alpha: 0.22 + intensity * 0.48,
-                );
+        Color activityFill(double intensity) => outlined
+            ? Color.lerp(
+                surfaces.calendarDayEmpty,
+                surfaces.catalogSelection,
+                0.45 + intensity * 0.55,
+              )!
+            : theme.colorScheme.primary.withValues(
+                alpha: 0.22 + intensity * 0.48,
+              );
         final expectedActivityFill = activityFill(0.5);
         expect(activeDecoration.color, expectedActivityFill);
 
@@ -436,8 +455,9 @@ void main() {
               LocalizedFormatters.month(today, locale),
             );
             expect(monthPanelTitle, findsOneWidget);
-            final monthPanelTitleStyle =
-                tester.widget<Text>(monthPanelTitle).style;
+            final monthPanelTitleStyle = tester
+                .widget<Text>(monthPanelTitle)
+                .style;
             expect(monthPanelTitleStyle?.fontSize, greaterThan(0));
             expect(monthPanelTitleStyle?.fontWeight, FontWeight.w900);
 
@@ -457,9 +477,9 @@ void main() {
               activeWeekText.style?.color,
               outlined
                   ? tonosForegroundForSurface(
-                    tester.element(activeWeek),
-                    activityFill(1 / 3),
-                  )
+                      tester.element(activeWeek),
+                      activityFill(1 / 3),
+                    )
                   : theme.colorScheme.onSurface,
             );
           }
@@ -534,6 +554,236 @@ void main() {
       });
     }
   }
+
+  testWidgets(
+    'Expressive calendar exposes selected semantics and newest-first sessions',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      await tester.binding.setSurfaceSize(const Size(390, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final today = DateTime(2026, 10, 28);
+      const locale = Locale('en');
+      final repository = _CalendarRepository([
+        _session(1, DateTime(today.year, today.month, today.day, 12)),
+        _session(2, DateTime(today.year, today.month, today.day, 13)),
+      ]);
+      final theme = ExpressiveThemeDefinition.light();
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: repository),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: theme,
+            locale: locale,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: WorkoutHistoryCalendar(referenceDate: today),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Finder modeSelection(String label, bool selected) => find.ancestor(
+        of: find.text(label).first,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics && widget.properties.selected == selected,
+        ),
+      );
+
+      expect(modeSelection('M', true), findsOneWidget);
+      expect(modeSelection('3M', false), findsOneWidget);
+      final selectedDay = _dayButton(today, locale);
+      expect(selectedDay, findsOneWidget);
+      expect(tester.widget<Semantics>(selectedDay).properties.selected, isTrue);
+      final focusForeground = theme
+          .extension<AppExpressiveTrainTokens>()!
+          .focusForeground;
+      final selectedDayNumber = LocalizedFormatters.number(
+        today.day,
+        locale,
+        maximumFractionDigits: 0,
+      );
+      final selectedDayText = tester.widget<Text>(
+        find.descendant(
+          of: selectedDay,
+          matching: find.text(selectedDayNumber),
+        ),
+      );
+      expect(selectedDayText.style?.color, focusForeground);
+
+      final newerSession = find.byKey(AppTestKeys.historySession(2));
+      final olderSession = find.byKey(AppTestKeys.historySession(1));
+      expect(newerSession, findsOneWidget);
+      expect(olderSession, findsOneWidget);
+      expect(
+        tester.getTopLeft(newerSession).dy,
+        lessThan(tester.getTopLeft(olderSession).dy),
+        reason: 'The selected period should list its newest session first.',
+      );
+      for (final rowText in tester.widgetList<Text>(
+        find.descendant(of: newerSession, matching: find.byType(Text)),
+      )) {
+        expect(rowText.style?.color, focusForeground);
+      }
+      final fullHistoryAction = find.byTooltip(
+        AppLocalizations.of(tester.element(find.byType(WorkoutHistoryCalendar)))
+            .logbookViewAllSessions,
+      );
+      final fullHistoryButton = find.ancestor(
+        of: fullHistoryAction,
+        matching: find.byType(IconButton),
+      );
+      expect(
+        tester.widget<IconButton>(fullHistoryButton).color,
+        focusForeground,
+      );
+
+      await tester.tap(find.text('3M'));
+      await tester.pumpAndSettle();
+      expect(modeSelection('M', false), findsOneWidget);
+      expect(modeSelection('3M', true), findsOneWidget);
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(WorkoutHistoryCalendar)),
+      );
+      final selectedWeek = _semanticButton(
+        strings.logbookMonthWeek(LocalizedFormatters.month(today, locale), 4),
+      );
+      expect(selectedWeek, findsOneWidget);
+      expect(
+        tester.widget<Semantics>(selectedWeek).properties.selected,
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
+
+  testWidgets(
+    'Expressive calendar remains usable at 320dp across text scales',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(320, 1800));
+
+      final today = DateTime(2026, 10, 28);
+      const locale = Locale('en');
+      final repository = _CalendarRepository([
+        _session(1, DateTime(today.year, today.month, today.day, 12)),
+      ]);
+
+      for (final brightness in Brightness.values) {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+          var openedFullHistory = false;
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                locale: locale,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(scale),
+                    disableAnimations: true,
+                  ),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: SingleChildScrollView(
+                    child: WorkoutHistoryCalendar(
+                      key: ValueKey('responsive-$scale'),
+                      referenceDate: today,
+                      onOpenFullHistory: () => openedFullHistory = true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(WorkoutHistoryCalendar)),
+          );
+          expect(
+            find.text(
+              LocalizedFormatters.monthYear(today, locale).toUpperCase(),
+            ),
+            findsOneWidget,
+          );
+          expect(_dayButton(today, locale), findsOneWidget);
+          expect(find.byKey(AppTestKeys.historySession(1)), findsOneWidget);
+          final fullHistoryAction = find.byTooltip(
+            strings.logbookViewAllSessions,
+          );
+          expect(fullHistoryAction, findsOneWidget);
+          final fullHistoryButton = find.ancestor(
+            of: fullHistoryAction,
+            matching: find.byType(IconButton),
+          );
+          expect(fullHistoryButton, findsOneWidget);
+          expect(
+            tester.widget<IconButton>(fullHistoryButton).onPressed,
+            isNotNull,
+          );
+
+          await tester.tap(find.text('3M'));
+          await tester.pumpAndSettle();
+          expect(
+            _semanticButton(
+              strings.logbookMonthWeek(
+                LocalizedFormatters.month(today, locale),
+                4,
+              ),
+            ),
+            findsOneWidget,
+          );
+          await tester.tap(find.text('Y'));
+          await tester.pumpAndSettle();
+          expect(
+            _semanticButton(LocalizedFormatters.monthYear(today, locale)),
+            findsOneWidget,
+          );
+          await tester.tap(find.text('4Y'));
+          await tester.pumpAndSettle();
+          expect(
+            _semanticButton(LocalizedFormatters.year(today.year, locale)),
+            findsOneWidget,
+          );
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${brightness.name}, text scale $scale',
+          );
+          expect(openedFullHistory, isFalse);
+        }
+      }
+    },
+    semanticsEnabled: true,
+  );
 
   testWidgets('days 22 through month-end select the fourth period', (
     tester,
@@ -683,8 +933,8 @@ void _expectModeTab(
     decoration.color,
     selected
         ? outlined
-            ? theme.surfaceTokens.settingsHero
-            : theme.colorScheme.primary
+              ? theme.surfaceTokens.settingsHero
+              : theme.colorScheme.primary
         : Colors.transparent,
   );
   expect(
@@ -702,17 +952,16 @@ void _expectModeTab(
     );
     expect(border.top.width, theme.shapeTokens.outlineWidth);
   }
-  final expectedForeground =
-      outlined
-          ? tonosForegroundForSurface(
-            tester.element(tabText),
-            selected
-                ? theme.surfaceTokens.settingsHero
-                : theme.surfaceTokens.calendarModeSelector,
-          )
-          : selected
-          ? theme.colorScheme.onPrimary
-          : theme.colorScheme.onSurface;
+  final expectedForeground = outlined
+      ? tonosForegroundForSurface(
+          tester.element(tabText),
+          selected
+              ? theme.surfaceTokens.settingsHero
+              : theme.surfaceTokens.calendarModeSelector,
+        )
+      : selected
+      ? theme.colorScheme.onPrimary
+      : theme.colorScheme.onSurface;
   expect(tester.widget<Text>(tabText).style?.color, expectedForeground);
   expect(tester.widget<Text>(tabText).style?.fontSize, greaterThan(0));
   expect(tester.widget<Text>(tabText).style?.fontWeight, FontWeight.w900);
