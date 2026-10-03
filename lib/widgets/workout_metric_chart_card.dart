@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
@@ -152,11 +154,15 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     final strings = AppLocalizations.of(context);
     final dataVisualization = context.dataVisualizationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     final surfaces = context.surfaceTokens;
     final shellForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.settingsHero)
-            : null;
+            : expressiveTokens?.actionPrimary;
 
     Widget shell(Widget child) {
       if (usesInkRecipe) {
@@ -166,6 +172,17 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: EdgeInsets.zero,
           borderRadius: context.shapeTokens.card,
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      }
+      if (usesExpressiveRecipe) {
+        return Card(
+          color: surfaces.card,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: context.shapeTokens.card,
+          ),
           clipBehavior: Clip.antiAlias,
           child: child,
         );
@@ -201,7 +218,7 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               child: Text(
                 strings.workoutReportLoadFailed,
                 style:
-                    usesInkRecipe
+                    usesInkRecipe || usesExpressiveRecipe
                         ? Theme.of(
                           context,
                         ).textTheme.bodyMedium?.copyWith(color: shellForeground)
@@ -786,6 +803,10 @@ class _ReportStat extends StatelessWidget {
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     final unselectedFill =
         usesInkRecipe
             ? surfaces.workoutMetricRange
@@ -793,7 +814,9 @@ class _ReportStat extends StatelessWidget {
     final selectedFill =
         usesInkRecipe
             ? surfaces.exerciseProgressSelector
-            : progressColors.accent.withValues(alpha: 0.14);
+            : usesExpressiveRecipe
+                ? surfaces.workoutMetricStat
+                : progressColors.accent.withValues(alpha: 0.14);
     final unselectedForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, unselectedFill)
@@ -805,21 +828,28 @@ class _ReportStat extends StatelessWidget {
               selectedFill,
               parentSurface: unselectedFill,
             )
-            : progressColors.accent;
+            : expressiveTokens?.selectorActive ?? progressColors.accent;
     final unitForeground =
         usesInkRecipe
             ? (selected ? selectedForeground : unselectedForeground).withValues(
               alpha: 0.78,
             )
-            : cs.onSurfaceVariant;
+            : usesExpressiveRecipe
+                ? (selected ? selectedForeground : unselectedForeground)
+                    .withValues(alpha: 0.78)
+                : cs.onSurfaceVariant;
     final unselectedBorder =
         usesInkRecipe
             ? tonosOutlineForSurface(context, unselectedFill)
-            : cs.outlineVariant.withValues(alpha: 0.7);
+            : usesExpressiveRecipe
+                ? surfaces.subtleOutline
+                : cs.outlineVariant.withValues(alpha: 0.7);
     final selectedBorder =
         usesInkRecipe
             ? tonosOutlineForSurface(context, selectedFill)
-            : progressColors.accent.withValues(alpha: 0.75);
+            : usesExpressiveRecipe
+                ? expressiveTokens!.selectorActive
+                : progressColors.accent.withValues(alpha: 0.75);
     final strings = AppLocalizations.of(context);
     final trendSurface = selected ? selectedFill : unselectedFill;
     final trendColor = _trendColor(context, trendSurface);
@@ -837,6 +867,7 @@ class _ReportStat extends StatelessWidget {
             borderRadius: shapes.workoutMetricStat,
             border: Border.all(
               color: selected ? selectedBorder : unselectedBorder,
+              width: selected && usesExpressiveRecipe ? 2 : 1,
             ),
           ),
           child: InkWell(
@@ -1068,10 +1099,26 @@ class _MetricChartPage extends StatelessWidget {
                       buckets: buckets,
                       metric: metric,
                       interval: interval,
+                      range: range,
                       showValueLabels: buckets.length <= 6,
                       weightUnit: weightUnit,
                     )
-                    : _EmptyMetricChartMessage(metric: metric),
+                    : Semantics(
+                      key: const ValueKey('workout-report-chart-semantics'),
+                      container: true,
+                      label: _chartSemanticsLabel(
+                        metric: metric,
+                        range: range,
+                        strings: strings,
+                      ),
+                      value: _emptyChartSemanticsValue(
+                        metric: metric,
+                        strings: strings,
+                      ),
+                      child: ExcludeSemantics(
+                        child: _EmptyMetricChartMessage(metric: metric),
+                      ),
+                    ),
           ),
         ],
       ),
@@ -1083,6 +1130,7 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
   final List<WorkoutReportBucket> buckets;
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
+  final WorkoutReportRange range;
   final bool showValueLabels;
   final WeightUnit weightUnit;
 
@@ -1090,6 +1138,7 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
     required this.buckets,
     required this.metric,
     required this.interval,
+    required this.range,
     required this.showValueLabels,
     required this.weightUnit,
   });
@@ -1102,6 +1151,13 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
 class _InteractiveWorkoutLineChartState
     extends State<_InteractiveWorkoutLineChart> {
   int? _selectedIndex;
+  final FocusNode _focusNode = FocusNode(debugLabel: 'workout-report-chart');
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   void didUpdateWidget(covariant _InteractiveWorkoutLineChart oldWidget) {
@@ -1123,13 +1179,52 @@ class _InteractiveWorkoutLineChartState
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final textScaler = MediaQuery.textScalerOf(context);
+        final textDirection = Directionality.of(context);
+        final locale = Localizations.localeOf(context);
+        final strings = AppLocalizations.of(context);
+        final latestIndex =
+            widget.buckets.isEmpty ? null : widget.buckets.length - 1;
+        final semanticIndex = _selectedIndex ?? latestIndex;
+        final semanticsValue =
+            semanticIndex == null
+                ? _emptyChartSemanticsValue(
+                  metric: widget.metric,
+                  strings: strings,
+                )
+                : _chartPointSemanticsValue(
+                  bucket: widget.buckets[semanticIndex],
+                  metric: widget.metric,
+                  interval: widget.interval,
+                  weightUnit: widget.weightUnit,
+                  strings: strings,
+                  locale: locale,
+                  isLatest: _selectedIndex == null,
+                );
+        String? adjacentPointValue(int delta) {
+          final current = semanticIndex;
+          if (current == null) return null;
+          final index = current + delta;
+          if (index < 0 || index >= widget.buckets.length) return null;
+          return _chartPointSemanticsValue(
+            bucket: widget.buckets[index],
+            metric: widget.metric,
+            interval: widget.interval,
+            weightUnit: widget.weightUnit,
+            strings: strings,
+            locale: locale,
+            isLatest: _selectedIndex == null && index == latestIndex,
+          );
+        }
+
         final chart = CustomPaint(
+          key: const ValueKey('workout-report-chart-canvas'),
           size: size,
           painter: _WorkoutLineChartPainter(
             buckets: widget.buckets,
             metric: widget.metric,
             interval: widget.interval,
-            strings: AppLocalizations.of(context),
+            strings: strings,
             accent: tonosPrimarySeriesForSurface(
               context,
               surfaces.workoutMetricChart,
@@ -1142,29 +1237,103 @@ class _InteractiveWorkoutLineChartState
             showValueLabels: widget.showValueLabels,
             selectedIndex: _selectedIndex,
             weightUnit: widget.weightUnit,
-            locale: Localizations.localeOf(context),
+            locale: locale,
+            textScaler: textScaler,
+            textDirection: textDirection,
           ),
         );
 
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (details) {
-            final selected = _nearestBucketIndex(details.localPosition, size);
-            if (selected == null) return;
-            setState(() => _selectedIndex = selected);
-          },
-          child: chart,
+        return Semantics(
+          key: const ValueKey('workout-report-chart-semantics'),
+          container: true,
+          focusable: widget.buckets.isNotEmpty,
+          selected: _selectedIndex != null,
+          label: _chartSemanticsLabel(
+            metric: widget.metric,
+            range: widget.range,
+            strings: strings,
+          ),
+          value: semanticsValue,
+          increasedValue: adjacentPointValue(1),
+          decreasedValue: adjacentPointValue(-1),
+          liveRegion: _selectedIndex != null,
+          onTap: widget.buckets.isEmpty ? null : _selectLatestBucket,
+          onIncrease: adjacentPointValue(1) == null
+              ? null
+              : () => _moveSelection(1),
+          onDecrease: adjacentPointValue(-1) == null
+              ? null
+              : () => _moveSelection(-1),
+          child: Focus(
+            focusNode: _focusNode,
+            canRequestFocus: widget.buckets.isNotEmpty,
+            onKeyEvent: _handleKeyEvent,
+            child: ExcludeSemantics(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) {
+                  final selected = _nearestBucketIndex(
+                    details.localPosition,
+                    size,
+                    textScale: textScaler.scale(1),
+                    textDirection: textDirection,
+                  );
+                  if (selected == null) return;
+                  _focusNode.requestFocus();
+                  setState(() => _selectedIndex = selected);
+                },
+                child: chart,
+              ),
+            ),
+          ),
         );
       },
     );
   }
 
-  int? _nearestBucketIndex(Offset tapPosition, Size size) {
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent || widget.buckets.isEmpty) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+        event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      _moveSelection(1);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      _moveSelection(-1);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  void _selectLatestBucket() {
+    if (widget.buckets.isEmpty) return;
+    setState(() => _selectedIndex = widget.buckets.length - 1);
+  }
+
+  void _moveSelection(int delta) {
+    if (widget.buckets.isEmpty) return;
+    final current = _selectedIndex ?? widget.buckets.length - 1;
+    final next = (current + delta).clamp(0, widget.buckets.length - 1).toInt();
+    if (next == current) return;
+    setState(() => _selectedIndex = next);
+  }
+
+  int? _nearestBucketIndex(
+    Offset tapPosition,
+    Size size, {
+    required double textScale,
+    required TextDirection textDirection,
+  }) {
     if (widget.buckets.isEmpty) return null;
     final geometry = _WorkoutLineChartGeometry(
       buckets: widget.buckets,
       metric: widget.metric,
       size: size,
+      textScale: textScale,
+      textDirection: textDirection,
     );
     if (!geometry.plotRect.inflate(28).contains(tapPosition)) return null;
 
@@ -1179,6 +1348,43 @@ class _InteractiveWorkoutLineChartState
     }
     return bestIndex;
   }
+}
+
+String _emptyChartSemanticsValue({
+  required WorkoutReportMetric metric,
+  required AppLocalizations strings,
+}) {
+  return '${_emptyMetricTitle(metric, strings)}. '
+      '${_emptyMetricSubtitle(metric, strings)}';
+}
+
+String _chartSemanticsLabel({
+  required WorkoutReportMetric metric,
+  required WorkoutReportRange range,
+  required AppLocalizations strings,
+}) {
+  return '${strings.workoutReportTitle}, ${_chartTitle(metric, range, strings)}';
+}
+
+String _chartPointSemanticsValue({
+  required WorkoutReportBucket bucket,
+  required WorkoutReportMetric metric,
+  required _ReportBucketInterval interval,
+  required WeightUnit weightUnit,
+  required AppLocalizations strings,
+  required Locale locale,
+  required bool isLatest,
+}) {
+  final unit = _metricTooltipValue(
+    bucket.valueFor(metric),
+    metric,
+    weightUnit,
+    strings,
+    locale,
+  );
+  final date = _bucketTooltipLabel(bucket, interval, locale);
+  final point = strings.workoutReportUnitOnDate(unit, date);
+  return isLatest ? '${strings.healthLatest}: $point' : point;
 }
 
 class _EmptyMetricChartMessage extends StatelessWidget {
@@ -1236,7 +1442,12 @@ class _RangeSelector extends StatelessWidget {
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
     final usesInkRecipe = context.usesNeoPresentation;
-    final selectedFill = progressColors.accent;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final selectedFill =
+        expressiveTokens?.selectorActive ?? progressColors.accent;
     final unselectedForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.workoutMetricRange)
@@ -1248,14 +1459,14 @@ class _RangeSelector extends StatelessWidget {
               selectedFill,
               parentSurface: surfaces.workoutMetricRange,
             )
-            : context.cs.onPrimary;
+            : expressiveTokens?.selectorActiveForeground ?? context.cs.onPrimary;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: surfaces.workoutMetricRange,
         borderRadius: shapes.workoutMetricRange,
         border:
-            usesInkRecipe
+        usesInkRecipe || usesExpressiveRecipe
                 ? Border.all(
                   color: tonosOutlineForSurface(
                     context,
@@ -1340,7 +1551,7 @@ class _RangeSelectorOption extends StatelessWidget {
             borderRadius: borderRadius.resolve(Directionality.of(context)),
             onTap: onTap,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
+              duration: appMotionDuration(context, context.motionTokens.quick),
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
@@ -1424,6 +1635,9 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     // In Flutter 3.47.5, a muted Progress tab can build AnimatedSize through
     // AnimatedCrossFade with zero duration and mark layout dirty while sizing.
     // Keep this compatibility path preview-only and preserve the parent's
@@ -1479,7 +1693,7 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                       expanded
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
-                      color: cs.onSurfaceVariant,
+                      color: expressiveTokens?.focusCool ?? cs.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -1577,6 +1791,9 @@ class _ReportInsightTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
     final usesClassicPresentation = context.usesClassicPresentation;
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final classicNormalScale = usesClassicPresentation && textScale <= 1.15;
     final compactClassicTile = classicNormalScale && textScale > 1.0;
@@ -1605,7 +1822,11 @@ class _ReportInsightTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(insight.icon, size: 18, color: progressColors.accent),
+              Icon(
+                insight.icon,
+                size: 18,
+                color: expressiveTokens?.focusCool ?? progressColors.accent,
+              ),
               const SizedBox(width: 9),
               Expanded(
                 child: LayoutBuilder(
@@ -1696,26 +1917,40 @@ class _ReportInsightTile extends StatelessWidget {
 }
 
 class _WorkoutLineChartGeometry {
-  static const left = 42.0;
-  static const right = 14.0;
-  static const top = 18.0;
-  static const bottom = 32.0;
+  static const _axisWidth = 42.0;
+  static const _outerMargin = 14.0;
+  static const _topMargin = 18.0;
+  static const _bottomMargin = 32.0;
 
   final List<WorkoutReportBucket> buckets;
   final WorkoutReportMetric metric;
   final Size size;
+  final double textScale;
+  final TextDirection textDirection;
 
   _WorkoutLineChartGeometry({
     required this.buckets,
     required this.metric,
     required this.size,
+    required this.textScale,
+    required this.textDirection,
   });
 
+  double get _scaledText => textScale.clamp(1.0, 2.0).toDouble();
+  double get axisWidth => math.min(size.width * 0.32, _axisWidth * _scaledText);
+  double get outerMargin => _outerMargin * _scaledText;
+  double get topMargin => _topMargin * _scaledText;
+  double get bottomMargin => _bottomMargin * _scaledText;
+  double get leftInset =>
+      textDirection == TextDirection.ltr ? axisWidth : outerMargin;
+  double get rightInset =>
+      textDirection == TextDirection.ltr ? outerMargin : axisWidth;
+
   late final Rect plotRect = Rect.fromLTWH(
-    left,
-    top,
-    math.max(1.0, size.width - left - right),
-    math.max(1.0, size.height - top - bottom),
+    leftInset,
+    topMargin,
+    math.max(1.0, size.width - leftInset - rightInset),
+    math.max(1.0, size.height - topMargin - bottomMargin),
   );
 
   late final List<double> values =
@@ -1758,6 +1993,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final int? selectedIndex;
   final WeightUnit weightUnit;
   final Locale locale;
+  final TextScaler textScaler;
+  final TextDirection textDirection;
 
   const _WorkoutLineChartPainter({
     required this.buckets,
@@ -1774,6 +2011,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
     this.selectedIndex,
     required this.weightUnit,
     required this.locale,
+    required this.textScaler,
+    required this.textDirection,
   });
 
   @override
@@ -1782,6 +2021,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
       buckets: buckets,
       metric: metric,
       size: size,
+      textScale: textScaler.scale(1),
+      textDirection: textDirection,
     );
     final values = geometry.values;
     final yMax = geometry.yMax;
@@ -1797,29 +2038,45 @@ class _WorkoutLineChartPainter extends CustomPainter {
       fontWeight: FontWeight.w600,
     );
 
-    for (var i = 0; i <= 5; i++) {
-      final y = geometry.yFor(yMax * (i / 5));
-      final value = yMax * (i / 5);
+    const gridLineCount = 5;
+    final tickLabelEvery = textScaler.scale(1) >= 1.5 ? 2 : 1;
+    for (var i = 0; i <= gridLineCount; i++) {
+      final y = geometry.yFor(yMax * (i / gridLineCount));
+      final value = yMax * (i / gridLineCount);
       _drawDashedLine(
         canvas,
         Offset(plotRect.left, y),
         Offset(plotRect.right, y),
         gridPaint,
       );
-      _drawText(
-        canvas,
-        _formatAxis(value, metric, weightUnit, locale),
-        Offset(0, y - 8),
-        labelStyle,
-        maxWidth: _WorkoutLineChartGeometry.left - 8,
-        align: TextAlign.right,
-      );
+      if (i == 0 || i == gridLineCount || i % tickLabelEvery == 0) {
+        _drawText(
+          canvas,
+          _formatAxis(value, metric, weightUnit, locale),
+          Offset(
+            textDirection == TextDirection.ltr
+                ? 0
+                : size.width - geometry.axisWidth,
+            y - textScaler.scale(8),
+          ),
+          labelStyle,
+          maxWidth: geometry.axisWidth - textScaler.scale(8),
+          align:
+              textDirection == TextDirection.ltr
+                  ? TextAlign.right
+                  : TextAlign.left,
+        );
+      }
     }
 
     if (buckets.isEmpty) return;
 
     final pointCount = buckets.length;
-    final labelEvery = math.max(1, (pointCount / 4).ceil());
+    final maxDateLabels = math.max(
+      2,
+      (plotRect.width / textScaler.scale(56)).floor(),
+    );
+    final labelEvery = math.max(1, (pointCount / maxDateLabels).ceil());
     final points = geometry.points;
 
     final fillPath =
@@ -1867,27 +2124,41 @@ class _WorkoutLineChartPainter extends CustomPainter {
       );
 
       if (showValueLabels && value > 0) {
+        final valueLabelWidth = textScaler.scale(36);
         _drawText(
           canvas,
           _formatAxis(value, metric, weightUnit, locale),
-          Offset(point.dx - 18, math.max(0, point.dy - 20)),
+          Offset(
+            (point.dx - valueLabelWidth / 2).clamp(
+              geometry.plotRect.left,
+              geometry.plotRect.right - valueLabelWidth,
+            ),
+            math.max(0, point.dy - textScaler.scale(20)),
+          ),
           labelStyle.copyWith(
             color: labelColor.withValues(alpha: 0.95),
             fontSize: 10,
             fontWeight: FontWeight.w800,
           ),
-          maxWidth: 36,
+          maxWidth: valueLabelWidth,
           align: TextAlign.center,
         );
       }
 
       if (i % labelEvery == 0 || i == buckets.length - 1) {
+        final dateLabelWidth = textScaler.scale(56);
         _drawText(
           canvas,
           _chartDateLabel(buckets[i], interval, locale),
-          Offset(point.dx - 28, plotRect.bottom + 8),
+          Offset(
+            (point.dx - dateLabelWidth / 2).clamp(
+              geometry.plotRect.left,
+              geometry.plotRect.right - dateLabelWidth,
+            ),
+            plotRect.bottom + textScaler.scale(8),
+          ),
           labelStyle.copyWith(fontSize: 10),
-          maxWidth: 56,
+          maxWidth: dateLabelWidth,
           align: TextAlign.center,
         );
       }
@@ -1943,13 +2214,22 @@ class _WorkoutLineChartPainter extends CustomPainter {
         bodyStyle,
       ),
     ];
+    final maxTooltipTextWidth = math.max(
+      1.0,
+      math.min(size.width - textScaler.scale(20), textScaler.scale(150)),
+    );
     final painters =
         tooltipLines
             .map(
               (line) => TextPainter(
                 text: TextSpan(text: line.$1, style: line.$2),
-                textDirection: ui.TextDirection.ltr,
-              )..layout(maxWidth: 150),
+                textDirection: textDirection,
+                textScaler: textScaler,
+                textAlign:
+                    textDirection == TextDirection.ltr
+                        ? TextAlign.left
+                        : TextAlign.right,
+              )..layout(maxWidth: maxTooltipTextWidth),
             )
             .toList();
     final width =
@@ -1957,14 +2237,18 @@ class _WorkoutLineChartPainter extends CustomPainter {
           0,
           (maxWidth, painter) => math.max(maxWidth, painter.width),
         ) +
-        20;
+        textScaler.scale(20);
     final height =
-        painters.fold<double>(0, (sum, painter) => sum + painter.height) + 16;
+        painters.fold<double>(0, (sum, painter) => sum + painter.height) +
+        textScaler.scale(16);
     final left = math.max(
       2.0,
       math.min(size.width - width - 2, point.dx - width / 2),
     );
-    final top = math.max(2.0, geometry.plotRect.top - height + 16);
+    final top = math.max(
+      2.0,
+      geometry.plotRect.top - height + textScaler.scale(16),
+    );
     final rect = Rect.fromLTWH(left, top, width, height);
     canvas.drawRRect(
       tooltipBorderRadius.toRRect(rect),
@@ -1973,9 +2257,17 @@ class _WorkoutLineChartPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    var y = rect.top + 8;
+    var y = rect.top + textScaler.scale(8);
     for (final painter in painters) {
-      painter.paint(canvas, Offset(rect.left + 10, y));
+      painter.paint(
+        canvas,
+        Offset(
+          textDirection == TextDirection.ltr
+              ? rect.left + textScaler.scale(10)
+              : rect.right - textScaler.scale(10) - painter.width,
+          y,
+        ),
+      );
       y += painter.height;
     }
   }
@@ -1995,7 +2287,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
         oldDelegate.weightUnit != weightUnit ||
-        oldDelegate.locale != locale;
+        oldDelegate.locale != locale ||
+        oldDelegate.textScaler != textScaler ||
+        oldDelegate.textDirection != textDirection;
   }
 
   static double _niceMax(WorkoutReportMetric metric, double value) {
@@ -2050,7 +2344,7 @@ class _WorkoutLineChartPainter extends CustomPainter {
     }
   }
 
-  static void _drawText(
+  void _drawText(
     Canvas canvas,
     String text,
     Offset offset,
@@ -2060,8 +2354,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
   }) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: style),
-      textDirection: ui.TextDirection.ltr,
+      textDirection: textDirection,
       textAlign: align,
+      textScaler: textScaler,
       maxLines: 2,
     )..layout(maxWidth: maxWidth);
     painter.paint(canvas, offset);

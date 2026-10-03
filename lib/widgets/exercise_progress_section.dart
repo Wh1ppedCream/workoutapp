@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,7 +16,9 @@ import '../screens/exercise/session_detail_screen.dart';
 import '../services/exercise_content_localizer.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/tokens/app_progress_colors.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/localized_formatters.dart';
 import '../utils/tutorial_launcher.dart';
@@ -250,9 +253,10 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
     final theme = Theme.of(context);
     final dataVisualization = context.dataVisualizationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive = context.usesExpressivePresentation;
     final surfaces = context.surfaceTokens;
     final sectionForeground =
-        usesInkRecipe
+        usesInkRecipe || usesExpressive
             ? tonosForegroundForSurface(
               context,
               surfaces.exerciseProgressSelector,
@@ -276,12 +280,12 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
             );
 
             Widget shell(Widget child) {
-              if (usesInkRecipe) {
+              if (usesInkRecipe || usesExpressive) {
                 return TonosSurface(
                   variant: TonosSurfaceVariant.panelRaised,
                   color: surfaces.exerciseProgressSelector,
                   padding: EdgeInsets.all(layout.cardPadding),
-                  borderRadius: context.shapeTokens.card,
+                  borderRadius: context.shapeTokens.exerciseProgressSelector,
                   clipBehavior: Clip.antiAlias,
                   child: child,
                 );
@@ -582,8 +586,10 @@ class _ExerciseProgressHero extends StatelessWidget {
       surfaces.exerciseProgressHero,
     );
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens = theme.extension<AppExpressiveTrainTokens>();
     final tooltipForeground =
-        usesInkRecipe
+        usesInkRecipe || usesExpressive
             ? tonosForegroundForSurface(
               context,
               surfaces.exerciseProgressTooltip,
@@ -691,9 +697,18 @@ class _ExerciseProgressHero extends StatelessWidget {
     final content = Material(
       color: Colors.transparent,
       child: Ink(
+        key: const ValueKey('exercise-progress-hero-surface'),
         decoration: BoxDecoration(
           color: surfaces.exerciseProgressHero,
           borderRadius: shapes.exerciseProgressHero * layout.scale,
+          border: usesExpressive
+              ? Border.all(
+                  color: (expressiveTokens?.selectorActive ??
+                          surfaces.subtleOutline)
+                      .withValues(alpha: 0.36),
+                  width: shapes.outlineWidth,
+                )
+              : null,
         ),
         child: Stack(
           children: [
@@ -801,6 +816,7 @@ class _ExerciseProgressHeroChart extends StatelessWidget {
             points: tile.points,
             showEmptyLabel: true,
             showAxes: true,
+            exerciseName: localizedName,
             weightUnit: weightUnit,
             tooltipTextColor: tooltipTextColor,
             actualColor: tonosPrimarySeriesForSurface(
@@ -1013,11 +1029,26 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
     final delta = _deltaFromPrevious(tile.points);
     final accent = progressColors.accent;
     final usesInkRecipe = context.usesNeoPresentation;
-    final selectedFill = accent.withValues(alpha: 0.14);
+    final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens = theme.extension<AppExpressiveTrainTokens>();
+    final selectedFill = usesExpressive
+        ? expressiveTokens?.selectorActive ?? accent.withValues(alpha: 0.14)
+        : accent.withValues(alpha: 0.14);
     final tileFill =
         isSelected ? selectedFill : surfaces.exerciseProgressSelector;
+    final chartSeriesSurface =
+        usesInkRecipe && isSelected
+            ? surfaces.exerciseProgressSelector
+            : tileFill;
     final tileForeground =
-        usesInkRecipe
+        usesExpressive && isSelected
+            ? expressiveTokens?.selectorActiveForeground ??
+                tonosForegroundForSurface(
+                  context,
+                  tileFill,
+                  parentSurface: surfaces.card,
+                )
+            : usesInkRecipe || usesExpressive
             ? tonosForegroundForSurface(
               context,
               tileFill,
@@ -1025,7 +1056,12 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
             )
             : theme.colorScheme.onSurface;
     final tileSecondaryForeground =
-        usesInkRecipe
+        usesExpressive && isSelected
+            ? expressiveTokens?.selectorActiveForeground.withValues(
+                alpha: 0.76,
+              ) ??
+                tileForeground.withValues(alpha: 0.76)
+            : usesInkRecipe || usesExpressive
             ? tonosSecondaryForegroundForSurface(
               context,
               tileFill,
@@ -1033,7 +1069,7 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
             )
             : theme.colorScheme.onSurfaceVariant;
     final tooltipForeground =
-        usesInkRecipe
+        usesInkRecipe || usesExpressive
             ? tonosForegroundForSurface(
               context,
               surfaces.exerciseProgressTooltip,
@@ -1103,11 +1139,11 @@ class _ExerciseProgressSelectorTile extends StatelessWidget {
                   tooltipTextColor: tooltipForeground,
                   actualColor: tonosPrimarySeriesForSurface(
                     context,
-                    surfaces.exerciseProgressSelector,
+                    chartSeriesSurface,
                   ),
                   estimatedColor: tonosSecondarySeriesForSurface(
                     context,
-                    surfaces.exerciseProgressSelector,
+                    chartSeriesSurface,
                   ),
                 ),
               ),
@@ -1545,6 +1581,9 @@ class _AddExerciseProgressTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final dataVisualization = context.dataVisualizationTokens;
     final strings = AppLocalizations.of(context);
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
     return Semantics(
       button: true,
       label: strings.commonAdd,
@@ -1561,6 +1600,7 @@ class _AddExerciseProgressTile extends StatelessWidget {
             margin: EdgeInsets.only(right: layout.addTileMarginRight),
             child: Ink(
               decoration: BoxDecoration(
+                color: expressiveTokens?.actionSecondary,
                 border: Border.all(
                   color:
                       context.surfaceDecorationTokens.panel.outlined
@@ -1580,7 +1620,9 @@ class _AddExerciseProgressTile extends StatelessWidget {
                   child: Icon(
                     Icons.add,
                     size: layout.addIconSize,
-                    color: dataVisualization.label,
+                    color:
+                        expressiveTokens?.actionSecondaryForeground ??
+                        dataVisualization.label,
                   ),
                 ),
               ),
@@ -1604,42 +1646,60 @@ class _EditExerciseProgressTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final dataVisualization = context.dataVisualizationTokens;
     final strings = AppLocalizations.of(context);
+    final expressive = context.usesExpressivePresentation;
+    final expressiveTokens = expressive
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final addTileRadius = shapes.exerciseProgressAddTile * layout.scale;
     return Semantics(
       button: true,
       label: strings.commonEdit,
       onTap: onTap,
       child: Tooltip(
         message: strings.commonEdit,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            width: layout.addTileWidth,
-            constraints: BoxConstraints(
-              minHeight: layout.selectorActionMinHeight,
-            ),
-            margin: EdgeInsets.only(right: layout.addTileMarginRight),
-            child: Ink(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color:
-                      context.surfaceDecorationTokens.panel.outlined
-                          ? tonosOutlineForSurface(
-                            context,
-                            context.cs.surface,
-                            neutral: true,
-                          )
-                          : surfaces.subtleOutline,
-                ),
-                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
+        child: TonosExpressivePressResponse(
+          enabled: expressive,
+          borderRadius: expressive ? addTileRadius : null,
+          pressedBorderRadius: expressive
+              ? ExpressiveTrainShapes.compactControlPressed
+              : null,
+          pressedScale: TonosExpressiveMotionTiers.supportingScale,
+          pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+          allowReleaseOvershoot: false,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: layout.addTileWidth,
+              constraints: BoxConstraints(
+                minHeight: layout.selectorActionMinHeight,
               ),
-              child: InkWell(
-                borderRadius: shapes.exerciseProgressAddTile * layout.scale,
-                onTap: onTap,
-                child: Center(
-                  child: Icon(
-                    Icons.edit,
-                    size: layout.value(26),
-                    color: dataVisualization.label,
+              margin: EdgeInsets.only(right: layout.addTileMarginRight),
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: expressiveTokens?.actionSecondary,
+                  border: Border.all(
+                    color:
+                        context.surfaceDecorationTokens.panel.outlined
+                            ? tonosOutlineForSurface(
+                              context,
+                              context.cs.surface,
+                              neutral: true,
+                            )
+                            : surfaces.subtleOutline,
+                  ),
+                  borderRadius: addTileRadius,
+                ),
+                child: InkWell(
+                  borderRadius: addTileRadius,
+                  onTap: onTap,
+                  child: Center(
+                    child: Icon(
+                      Icons.edit,
+                      size: layout.value(26),
+                      color:
+                          expressiveTokens?.actionSecondaryForeground ??
+                          dataVisualization.label,
+                    ),
                   ),
                 ),
               ),
@@ -1744,6 +1804,22 @@ class _ExerciseProgressDetailPageState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    Widget chartSurface(Widget child) {
+      if (context.usesExpressivePresentation) {
+        return TonosSurface(
+          variant: TonosSurfaceVariant.card,
+          color: context.surfaceTokens.exerciseProgressHero,
+          padding: const EdgeInsets.all(16),
+          borderRadius: context.shapeTokens.exerciseProgressHero,
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        );
+      }
+      return Card(
+        child: Padding(padding: const EdgeInsets.all(16), child: child),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: LocalizedExerciseName(definition: widget.tile.definition),
@@ -1754,10 +1830,8 @@ class _ExerciseProgressDetailPageState
         children: [
           KeyedSubtree(
             key: _chartTutorialKey,
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+            child: chartSurface(
+              Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
@@ -1767,17 +1841,21 @@ class _ExerciseProgressDetailPageState
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      height: 220,
-                      child: _ExerciseProgressChart(
-                        points: widget.tile.points,
-                        showEmptyLabel: true,
-                        showAxes: true,
-                        interactive: true,
-                        weightUnit: weightUnit,
-                        estimatedColor: tonosSecondarySeriesForSurface(
-                          context,
-                          context.surfaceTokens.exerciseProgressStat,
+                    LocalizedExerciseNameBuilder(
+                      definition: widget.tile.definition,
+                      builder: (context, localizedName) => SizedBox(
+                        height: 220,
+                        child: _ExerciseProgressChart(
+                          points: widget.tile.points,
+                          showEmptyLabel: true,
+                          showAxes: true,
+                          interactive: true,
+                          exerciseName: localizedName,
+                          weightUnit: weightUnit,
+                          estimatedColor: tonosSecondarySeriesForSurface(
+                            context,
+                            context.surfaceTokens.exerciseProgressStat,
+                          ),
                         ),
                       ),
                     ),
@@ -1789,7 +1867,6 @@ class _ExerciseProgressDetailPageState
                       ),
                     ),
                   ],
-                ),
               ),
             ),
           ),
@@ -1967,6 +2044,7 @@ class _ExerciseProgressChart extends StatefulWidget {
   final bool showEmptyLabel;
   final bool showAxes;
   final bool interactive;
+  final String? exerciseName;
   final WeightUnit weightUnit;
   final Color? tooltipTextColor;
   final Color? actualColor;
@@ -1977,6 +2055,7 @@ class _ExerciseProgressChart extends StatefulWidget {
     this.showEmptyLabel = false,
     this.showAxes = false,
     this.interactive = false,
+    this.exerciseName,
     this.weightUnit = WeightUnit.pounds,
     this.tooltipTextColor,
     this.actualColor,
@@ -1989,11 +2068,20 @@ class _ExerciseProgressChart extends StatefulWidget {
 
 class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
   int? _selectedIndex;
+  final FocusNode _chartFocusNode = FocusNode(
+    debugLabel: 'exercise-progress-chart',
+  );
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = _initialSelectedIndex;
+  }
+
+  @override
+  void dispose() {
+    _chartFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -2016,11 +2104,20 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.points.isEmpty && widget.showEmptyLabel) {
+      final strings = AppLocalizations.of(context);
       return Center(
-        child: Text(
-          AppLocalizations.of(context).exerciseProgressNoRecordings,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: Semantics(
+          key: const ValueKey('exercise-progress-chart-empty-semantics'),
+          container: true,
+          label: _chartSemanticLabel(context),
+          value: strings.exerciseProgressNoRecordings,
+          child: ExcludeSemantics(
+            child: Text(
+              strings.exerciseProgressNoRecordings,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ),
       );
@@ -2033,9 +2130,20 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
     final progressColors = context.progressColors;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final textDirection = Directionality.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final scale = _ExerciseProgressChartScale(
+          points: widget.points,
+          size: size,
+          showAxes: widget.showAxes,
+          textScaler: textScaler,
+          textDirection: textDirection,
+          weightUnit: widget.weightUnit,
+          locale: locale,
+        );
         final chart = CustomPaint(
           size: size,
           painter: _ExerciseProgressChartPainter(
@@ -2064,32 +2172,142 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
             estimatedValueLabel: strings.exerciseProgressEstimatedValue,
             actualValueLabel: strings.exerciseProgressActualValue,
             noActualLabel: strings.exerciseProgressNoActual,
+            textScaler: textScaler,
+            textDirection: textDirection,
           ),
         );
+    final chartPresentation = context.usesExpressivePresentation
+        ? RepaintBoundary(
+            key: ValueKey(
+              widget.interactive
+                  ? 'exercise-progress-detail-plot'
+                  : widget.showAxes
+                  ? 'exercise-progress-hero-plot'
+                  : 'exercise-progress-selector-plot',
+            ),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: shapes.exerciseProgressStat,
+              ),
+              child: chart,
+            ),
+          )
+        : chart;
 
-        if (!widget.interactive || widget.points.isEmpty) return chart;
+    if (!widget.interactive || widget.points.isEmpty) return chartPresentation;
 
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (details) {
-            final selected = _nearestPointIndex(details.localPosition, size);
-            if (selected == null) return;
-            setState(() => _selectedIndex = selected);
-          },
-          child: chart,
+        final currentIndex = _selectedIndex ?? _initialSelectedIndex!;
+        final previousIndex = currentIndex - 1;
+        final nextIndex = currentIndex + 1;
+        final selectedValue = _pointSemanticValue(
+          context,
+          widget.points[currentIndex],
+        );
+        return Semantics(
+          key: const ValueKey('exercise-progress-chart-semantics'),
+          container: true,
+          focusable: true,
+          label: _chartSemanticLabel(context),
+          value: selectedValue,
+          increasedValue: nextIndex < widget.points.length
+              ? _pointSemanticValue(context, widget.points[nextIndex])
+              : null,
+          decreasedValue: previousIndex >= 0
+              ? _pointSemanticValue(context, widget.points[previousIndex])
+              : null,
+          hint: AppLocalizations.of(context).exerciseProgressTrendBody,
+          onTap: () => _selectPoint(_selectedIndex ?? _initialSelectedIndex!),
+          onIncrease: nextIndex < widget.points.length
+              ? () => _selectPoint(nextIndex)
+              : null,
+          onDecrease: previousIndex >= 0
+              ? () => _selectPoint(previousIndex)
+              : null,
+          child: Focus(
+            focusNode: _chartFocusNode,
+            canRequestFocus: true,
+            onKeyEvent: (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+                  event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                if (nextIndex < widget.points.length) _selectPoint(nextIndex);
+                return KeyEventResult.handled;
+              }
+              if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+                  event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                if (previousIndex >= 0) _selectPoint(previousIndex);
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (details) {
+                final selected = _nearestPointIndex(
+                  details.localPosition,
+                  size,
+                  scale,
+                );
+                if (selected == null) return;
+                _chartFocusNode.requestFocus();
+                _selectPoint(selected);
+              },
+      child: chartPresentation,
+            ),
+          ),
         );
       },
     );
   }
 
-  int? _nearestPointIndex(Offset tapPosition, Size size) {
-    if (widget.points.isEmpty) return null;
+  void _selectPoint(int index) {
+    if (_selectedIndex == index) return;
+    setState(() => _selectedIndex = index);
+  }
 
-    final scale = _ExerciseProgressChartScale(
-      points: widget.points,
-      size: size,
-      showAxes: widget.showAxes,
-    );
+  String _chartSemanticLabel(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final exerciseName = widget.exerciseName;
+    return [
+      if (exerciseName != null && exerciseName.isNotEmpty) exerciseName,
+      strings.exerciseProgressTitle,
+      strings.exerciseProgressEstimated,
+      strings.exerciseProgressActual,
+      widget.weightUnit.shortLabel,
+    ].join(', ');
+  }
+
+  String _pointSemanticValue(
+    BuildContext context,
+    _ExerciseProgressPoint point,
+  ) {
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    final actual = point.actualOneRm == null
+        ? strings.exerciseProgressNoActual
+        : strings.exerciseProgressActualValue(
+            _formatWeight(
+              point.actualOneRm!,
+              widget.weightUnit,
+              locale: locale,
+            ),
+          );
+    return [
+      LocalizedFormatters.dateTime(point.displayDateTime, locale),
+      strings.exerciseProgressEstimatedValue(
+        _formatWeight(point.estimatedOneRm, widget.weightUnit, locale: locale),
+      ),
+      actual,
+    ].join(', ');
+  }
+
+  int? _nearestPointIndex(
+    Offset tapPosition,
+    Size size,
+    _ExerciseProgressChartScale scale,
+  ) {
+    if (widget.points.isEmpty) return null;
     if (!scale.plotRect.inflate(28).contains(tapPosition)) return null;
 
     var bestIndex = 0;
@@ -2122,6 +2340,8 @@ class _ExerciseProgressChartPainter extends CustomPainter {
   final String Function(String value) estimatedValueLabel;
   final String Function(String value) actualValueLabel;
   final String noActualLabel;
+  final TextScaler textScaler;
+  final ui.TextDirection textDirection;
 
   const _ExerciseProgressChartPainter({
     required this.points,
@@ -2139,6 +2359,8 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     required this.estimatedValueLabel,
     required this.actualValueLabel,
     required this.noActualLabel,
+    required this.textScaler,
+    required this.textDirection,
   });
 
   @override
@@ -2147,6 +2369,10 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       points: points,
       size: size,
       showAxes: showAxes,
+      textScaler: textScaler,
+      textDirection: textDirection,
+      weightUnit: weightUnit,
+      locale: locale,
     );
     if (!scale.hasUsableValues) return;
 
@@ -2171,6 +2397,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
             fontSize: 10,
             fontWeight: FontWeight.w700,
           ),
+          maxWidth: scale.axisLabelMaxWidth,
         );
       }
     }
@@ -2226,7 +2453,8 @@ class _ExerciseProgressChartPainter extends CustomPainter {
       );
       final painter = TextPainter(
         text: TextSpan(text: label, style: dateStyle),
-        textDirection: ui.TextDirection.ltr,
+        textDirection: textDirection,
+        textScaler: textScaler,
       )..layout();
       final x = math.max(
         scale.plotRect.left,
@@ -2321,8 +2549,11 @@ class _ExerciseProgressChartPainter extends CustomPainter {
             .map(
               (line) => TextPainter(
                 text: TextSpan(text: line.$1, style: line.$2),
-                textDirection: ui.TextDirection.ltr,
-              )..layout(maxWidth: 150),
+                textDirection: textDirection,
+                textScaler: textScaler,
+              )..layout(
+                maxWidth: math.min(150 * textScaler.scale(1), size.width - 20),
+              ),
             )
             .toList();
     final width =
@@ -2349,11 +2580,19 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     }
   }
 
-  void _drawText(Canvas canvas, String text, Offset offset, TextStyle style) {
+  void _drawText(
+    Canvas canvas,
+    String text,
+    Offset offset,
+    TextStyle style, {
+    required double maxWidth,
+  }) {
     final painter = TextPainter(
       text: TextSpan(text: text, style: style),
-      textDirection: ui.TextDirection.ltr,
-    )..layout(maxWidth: 40);
+      textDirection: textDirection,
+      textScaler: textScaler,
+      maxLines: 2,
+    )..layout(maxWidth: maxWidth);
     painter.paint(canvas, offset);
   }
 
@@ -2414,7 +2653,9 @@ class _ExerciseProgressChartPainter extends CustomPainter {
         oldDelegate.selectedIndex != selectedIndex ||
         oldDelegate.weightUnit != weightUnit ||
         oldDelegate.locale != locale ||
-        oldDelegate.noActualLabel != noActualLabel;
+        oldDelegate.noActualLabel != noActualLabel ||
+        oldDelegate.textScaler != textScaler ||
+        oldDelegate.textDirection != textDirection;
   }
 }
 
@@ -2422,11 +2663,19 @@ class _ExerciseProgressChartScale {
   final List<_ExerciseProgressPoint> points;
   final Size size;
   final bool showAxes;
+  final TextScaler textScaler;
+  final ui.TextDirection textDirection;
+  final WeightUnit weightUnit;
+  final Locale locale;
 
   _ExerciseProgressChartScale({
     required this.points,
     required this.size,
     required this.showAxes,
+    required this.textScaler,
+    required this.textDirection,
+    required this.weightUnit,
+    required this.locale,
   });
 
   late final List<double> _values = <double>[
@@ -2439,10 +2688,10 @@ class _ExerciseProgressChartScale {
   late final Rect plotRect =
       showAxes
           ? Rect.fromLTWH(
-            26,
-            18,
-            math.max(1.0, size.width - 30),
-            math.max(1.0, size.height - 42),
+            axisGutter,
+            topGutter,
+            math.max(1.0, size.width - axisGutter - 4),
+            math.max(1.0, size.height - topGutter - bottomGutter),
           )
           : Rect.fromLTWH(
             0,
@@ -2450,6 +2699,42 @@ class _ExerciseProgressChartScale {
             math.max(1.0, size.width),
             math.max(1.0, size.height - 12),
           );
+
+  late final double axisLabelMaxWidth = math.max(1.0, axisGutter - 6);
+  late final double axisGutter = math.max(26, _axisLabelWidth + 8);
+  late final double topGutter = math.max(18, _axisLabelHeight / 2 + 7);
+  late final double bottomGutter = math.max(42, _dateLabelHeight + 12);
+  late final double _axisLabelWidth = _measureLabels([
+    for (final tick in yTicks) _formatAxisWeight(tick, weightUnit, locale),
+  ], const TextStyle(fontSize: 10, fontWeight: FontWeight.w700));
+  late final double _axisLabelHeight = _measureLabelHeight(
+    const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+  );
+  late final double _dateLabelHeight = _measureLabelHeight(
+    const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+  );
+
+  double _measureLabels(List<String> labels, TextStyle style) {
+    var width = 0.0;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: textDirection,
+        textScaler: textScaler,
+      )..layout();
+      width = math.max(width, painter.width);
+    }
+    return width;
+  }
+
+  double _measureLabelHeight(TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: '0', style: style),
+      textDirection: textDirection,
+      textScaler: textScaler,
+    )..layout();
+    return painter.height;
+  }
 
   late final double _rawMinY = _values.isEmpty ? 0 : _values.reduce(math.min);
   late final double _rawMaxY = _values.isEmpty ? 1 : _values.reduce(math.max);

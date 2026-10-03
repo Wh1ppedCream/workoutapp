@@ -97,7 +97,7 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
           Padding(
             padding: EdgeInsets.zero,
             child: DropdownButtonFormField<int>(
-              value: dropdownValue,
+              initialValue: dropdownValue,
               decoration: InputDecoration(
                 labelText: strings.onboardingSummaryGymProfile,
                 contentPadding: EdgeInsets.symmetric(

@@ -12,6 +12,8 @@ import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
 import '../services/measurement_validation.dart';
 import '../services/safe_failure.dart';
+import '../theme/tokens/app_data_visualization_tokens.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../theme/widgets/tonos_surface.dart';
@@ -31,6 +33,9 @@ Widget _withHealthCardForeground(BuildContext context, Widget child) {
 Color _healthTrendCardSurface(BuildContext context) {
   if (context.usesNeoPresentation) {
     return context.surfaceTokens.catalogSelection;
+  }
+  if (context.usesExpressivePresentation) {
+    return context.progressColors.healthCard;
   }
   return context.progressColors.healthCard;
 }
@@ -98,13 +103,11 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         a.entries.isNotEmpty ? 1 : 0,
       );
       if (usedCompare != 0) return usedCompare;
-      final orderCompare = _definitionOrder(
-        a.definition,
-      ).compareTo(_definitionOrder(b.definition));
+      final orderCompare = _definitionOrder(a.definition)
+          .compareTo(_definitionOrder(b.definition));
       if (orderCompare != 0) return orderCompare;
-      return _measurementSortName(
-        a.definition,
-      ).compareTo(_measurementSortName(b.definition));
+      return _measurementSortName(a.definition)
+          .compareTo(_measurementSortName(b.definition));
     });
     return trends;
   }
@@ -112,8 +115,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   Future<void> _openTrend(_MeasurementTrend trend) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder:
-            (_) => MeasurementTrendDetailPage(definition: trend.definition),
+        builder: (_) =>
+            MeasurementTrendDetailPage(definition: trend.definition),
       ),
     );
     if (changed == true && mounted) {
@@ -126,20 +129,19 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
     final input = await showDialog<_MeasurementEntryInput>(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            styleFormControls: true,
-            styleDarkNeoPickerSurfaces: true,
-            child: _MeasurementEntryDialog(
-              title: _strings.healthLogMeasurement(
-                _measurementTitle(trend.definition, _strings),
-              ),
-              definition: trend.definition,
-              defaultUnit:
-                  trend.latest?.unit ??
-                  _defaultUnitFor(trend.definition, weightUnit),
-            ),
+      builder: (_) => TonosDialogFrame(
+        styleFormControls: true,
+        styleDarkNeoPickerSurfaces: true,
+        child: _MeasurementEntryDialog(
+          title: _strings.healthLogMeasurement(
+            _measurementTitle(trend.definition, _strings),
           ),
+          definition: trend.definition,
+          defaultUnit:
+              trend.latest?.unit ??
+              _defaultUnitFor(trend.definition, weightUnit),
+        ),
+      ),
     );
     if (input == null) return;
 
@@ -160,11 +162,10 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   Future<void> _createCustomMetric() async {
     final input = await showDialog<_MeasurementDefinitionInput>(
       context: context,
-      builder:
-          (_) => const TonosDialogFrame(
-            styleFormControls: true,
-            child: _MeasurementDefinitionDialog(),
-          ),
+      builder: (_) => const TonosDialogFrame(
+        styleFormControls: true,
+        child: _MeasurementDefinitionDialog(),
+      ),
     );
     if (input == null) return;
 
@@ -208,6 +209,10 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressive
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
 
     final header = Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -223,26 +228,33 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
             onPressed: _createCustomMetric,
             icon: const Icon(Icons.add, size: 18),
             label: Text(strings.healthMetric),
-            style:
-                usesInkRecipe
-                    ? TextButton.styleFrom(
-                      backgroundColor: context.cs.primary,
-                      foregroundColor: tonosForegroundForSurface(
+            style: usesInkRecipe
+                ? TextButton.styleFrom(
+                    backgroundColor: context.cs.primary,
+                    foregroundColor: tonosForegroundForSurface(
+                      context,
+                      context.cs.primary,
+                    ),
+                    side: BorderSide(
+                      color: tonosOutlineForSurface(
                         context,
                         context.cs.primary,
                       ),
-                      side: BorderSide(
-                        color: tonosOutlineForSurface(
-                          context,
-                          context.cs.primary,
-                        ),
-                        width: context.shapeTokens.outlineWidth,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: context.shapeTokens.control,
-                      ),
-                    )
-                    : null,
+                      width: context.shapeTokens.outlineWidth,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: context.shapeTokens.control,
+                    ),
+                  )
+                : usesExpressive
+                ? TextButton.styleFrom(
+                    backgroundColor: expressiveTokens!.actionSecondary,
+                    foregroundColor: expressiveTokens.actionSecondaryForeground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: context.shapeTokens.healthTrendEntry,
+                    ),
+                  )
+                : null,
           ),
         ],
       ),
@@ -251,7 +263,10 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     if (widget.fullPage) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [header, Expanded(child: _buildTrends(strings))],
+        children: [
+          header,
+          Expanded(child: _buildTrends(strings)),
+        ],
       );
     }
 
@@ -296,13 +311,14 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         }
 
         if (widget.fullPage) {
+          final textScale = MediaQuery.textScalerOf(context).scale(1);
           return GridView.builder(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 0.88,
+              childAspectRatio: textScale <= 1.15 ? 0.88 : 0.88 / textScale,
             ),
             itemBuilder: (context, index) {
               if (index == trends.length) {
@@ -323,12 +339,14 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
           );
         }
 
-        final shadowBottom =
-            context.usesNeoPresentation
-                ? math.max(0.0, context.effectTokens.cardShadowOffset.dy)
-                : 0.0;
+        final shadowBottom = context.usesNeoPresentation
+            ? math.max(0.0, context.effectTokens.cardShadowOffset.dy)
+            : 0.0;
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final tileHeight = (162 + math.max(0.0, (textScale - 1) * 72))
+            .toDouble();
         return SizedBox(
-          height: 162 + shadowBottom,
+          height: tileHeight + shadowBottom,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.fromLTRB(16, 0, 16, shadowBottom),
@@ -341,6 +359,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                 trend: trend,
                 onTap: () => _openTrend(trend),
                 onAdd: () => _logEntry(trend),
+                height: tileHeight,
               );
             },
             separatorBuilder: (_, _) => const SizedBox(width: 10),
@@ -450,21 +469,19 @@ class _MeasurementTrendDetailPageState
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
     final input = await showDialog<_MeasurementEntryInput>(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            styleFormControls: true,
-            styleDarkNeoPickerSurfaces: true,
-            child: _MeasurementEntryDialog(
-              title: _strings.healthLogMeasurement(
-                _measurementTitle(widget.definition, _strings),
-              ),
-              definition: widget.definition,
-              defaultUnit:
-                  entries.isNotEmpty
-                      ? entries.last.unit
-                      : _defaultUnitFor(widget.definition, weightUnit),
-            ),
+      builder: (_) => TonosDialogFrame(
+        styleFormControls: true,
+        styleDarkNeoPickerSurfaces: true,
+        child: _MeasurementEntryDialog(
+          title: _strings.healthLogMeasurement(
+            _measurementTitle(widget.definition, _strings),
           ),
+          definition: widget.definition,
+          defaultUnit: entries.isNotEmpty
+              ? entries.last.unit
+              : _defaultUnitFor(widget.definition, weightUnit),
+        ),
+      ),
     );
     if (input == null) return;
 
@@ -482,19 +499,18 @@ class _MeasurementTrendDetailPageState
   Future<void> _editEntry(Measurement entry) async {
     final input = await showDialog<_MeasurementEntryInput>(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            styleFormControls: true,
-            styleDarkNeoPickerSurfaces: true,
-            child: _MeasurementEntryDialog(
-              title: _strings.healthEditMeasurement(
-                _measurementTitle(widget.definition, _strings),
-              ),
-              definition: widget.definition,
-              defaultUnit: entry.unit,
-              entry: entry,
-            ),
+      builder: (_) => TonosDialogFrame(
+        styleFormControls: true,
+        styleDarkNeoPickerSurfaces: true,
+        child: _MeasurementEntryDialog(
+          title: _strings.healthEditMeasurement(
+            _measurementTitle(widget.definition, _strings),
           ),
+          definition: widget.definition,
+          defaultUnit: entry.unit,
+          entry: entry,
+        ),
+      ),
     );
     if (input == null) return;
 
@@ -512,31 +528,30 @@ class _MeasurementTrendDetailPageState
   Future<void> _deleteEntry(Measurement entry) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.healthDeleteEntryTitle),
-              content: Text(
-                _strings.healthDeleteEntryBody(
-                  _formatMeasurement(entry, Localizations.localeOf(context)),
-                  _formatDateTime(
-                    entry.displayDateTime,
-                    Localizations.localeOf(context),
-                  ),
-                ),
+      builder: (context) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.healthDeleteEntryTitle),
+          content: Text(
+            _strings.healthDeleteEntryBody(
+              _formatMeasurement(entry, Localizations.localeOf(context)),
+              _formatDateTime(
+                entry.displayDateTime,
+                Localizations.localeOf(context),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(_strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(_strings.commonDelete),
-                ),
-              ],
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(_strings.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(_strings.commonDelete),
+            ),
+          ],
+        ),
+      ),
     );
     if (confirmed != true) return;
 
@@ -670,12 +685,14 @@ class _TrendTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onAdd;
   final bool fillCell;
+  final double? height;
 
   const _TrendTile({
     required this.trend,
     required this.onTap,
     required this.onAdd,
     this.fillCell = false,
+    this.height,
   });
 
   @override
@@ -691,25 +708,27 @@ class _TrendTile extends StatelessWidget {
     final delta = trend.delta;
     final deltaColor = _deltaColor(context, delta);
     final usesInkRecipe = context.usesNeoPresentation;
+    final cardShape = context.usesExpressivePresentation
+        ? shapes.healthTrendCard
+        : shapes.card;
     final cardSurface = _healthTrendCardSurface(context);
-    final cardForeground =
-        usesInkRecipe ? tonosForegroundForSurface(context, cardSurface) : null;
-    final cardSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(context, cardSurface)
-            : null;
+    final cardForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, cardSurface)
+        : null;
+    final cardSecondaryForeground = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, cardSurface)
+        : null;
     final effects = context.effectTokens;
-    final borderColor =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, cardSurface)
-            : surfaces.subtleOutline;
+    final borderColor = usesInkRecipe
+        ? tonosOutlineForSurface(context, cardSurface)
+        : surfaces.subtleOutline;
 
     final card = Material(
       color: cardSurface,
-      borderRadius: shapes.card,
+      borderRadius: cardShape,
       child: InkWell(
         onTap: onTap,
-        borderRadius: shapes.card,
+        borderRadius: cardShape,
         child: Container(
           key: AppTestKeys.measurementTrend(trend.definition.id),
           width: fillCell ? double.infinity : 154,
@@ -719,7 +738,7 @@ class _TrendTile extends StatelessWidget {
               color: borderColor,
               width: usesInkRecipe ? shapes.outlineWidth : 1,
             ),
-            borderRadius: shapes.card,
+            borderRadius: cardShape,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -763,11 +782,11 @@ class _TrendTile extends StatelessWidget {
               const SizedBox(height: 10),
               Expanded(
                 child: _MeasurementSparkline(
+                  definition: trend.definition,
                   entries: trend.entries,
-                  lineColor:
-                      usesInkRecipe
-                          ? tonosPrimarySeriesForSurface(context, cardSurface)
-                          : dataVisualization.tertiarySeries,
+                  lineColor: usesInkRecipe
+                      ? tonosPrimarySeriesForSurface(context, cardSurface)
+                      : dataVisualization.tertiarySeries,
                   emptyColor: cardSecondaryForeground,
                 ),
               ),
@@ -799,25 +818,26 @@ class _TrendTile extends StatelessWidget {
         ),
       ),
     );
-    return _withHealthCardForeground(
+    final tile = _withHealthCardForeground(
       context,
       usesInkRecipe
           // The opaque Material must cover the shadow's interior.
           ? DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: shapes.card,
-              boxShadow: [
-                BoxShadow(
-                  color: effects.cardShadow,
-                  blurRadius: 0,
-                  offset: effects.cardShadowOffset,
-                ),
-              ],
-            ),
-            child: card,
-          )
+              decoration: BoxDecoration(
+                borderRadius: shapes.card,
+                boxShadow: [
+                  BoxShadow(
+                    color: effects.cardShadow,
+                    blurRadius: 0,
+                    offset: effects.cardShadowOffset,
+                  ),
+                ],
+              ),
+              child: card,
+            )
           : card,
     );
+    return height == null ? tile : SizedBox(height: height, child: tile);
   }
 }
 
@@ -835,15 +855,18 @@ class _AddTrendTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final dataVisualization = context.dataVisualizationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final fill = usesInkRecipe ? context.cs.primary : Colors.transparent;
-    final foreground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, fill)
-            : dataVisualization.label;
-    final borderColor =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, fill)
-            : surfaces.subtleOutline;
+    final usesExpressive = context.usesExpressivePresentation;
+    final fill = usesInkRecipe
+        ? context.cs.primary
+        : usesExpressive
+        ? context.progressColors.healthCard
+        : Colors.transparent;
+    final foreground = usesInkRecipe
+        ? tonosForegroundForSurface(context, fill)
+        : dataVisualization.label;
+    final borderColor = usesInkRecipe
+        ? tonosOutlineForSurface(context, fill)
+        : surfaces.subtleOutline;
     return Semantics(
       button: true,
       label: strings.healthCreateMetric,
@@ -851,16 +874,20 @@ class _AddTrendTile extends StatelessWidget {
       child: ExcludeSemantics(
         child: Material(
           color: fill,
-          borderRadius: shapes.card,
+          borderRadius: usesExpressive ? shapes.healthTrendEntry : shapes.card,
           child: InkWell(
             onTap: onTap,
-            borderRadius: shapes.card,
+            borderRadius: usesExpressive
+                ? shapes.healthTrendEntry
+                : shapes.card,
             child: Container(
               width: fillCell ? double.infinity : 132,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 border: Border.all(color: borderColor),
-                borderRadius: shapes.card,
+                borderRadius: usesExpressive
+                    ? shapes.healthTrendEntry
+                    : shapes.card,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -885,11 +912,13 @@ class _AddTrendTile extends StatelessWidget {
 }
 
 class _MeasurementSparkline extends StatelessWidget {
+  final MeasurementDefinition definition;
   final List<Measurement> entries;
   final Color lineColor;
   final Color? emptyColor;
 
   const _MeasurementSparkline({
+    required this.definition,
     required this.entries,
     required this.lineColor,
     this.emptyColor,
@@ -897,42 +926,73 @@ class _MeasurementSparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
     if (entries.length < 2) {
-      return Center(
-        child: Icon(
-          Icons.show_chart,
-          color:
-              emptyColor ??
-              Theme.of(context).iconTheme.color?.withValues(alpha: 0.25),
+      return Semantics(
+        key: ValueKey('measurement-sparkline-${definition.id}-semantics'),
+        container: true,
+        label: _measurementTrendSemanticsLabel(
+          definition,
+          entries,
+          strings,
+          locale,
+        ),
+        child: ExcludeSemantics(
+          child: Center(
+            child: Icon(
+              Icons.show_chart,
+              color:
+                  emptyColor ??
+                  Theme.of(context).iconTheme.color?.withValues(alpha: 0.25),
+            ),
+          ),
         ),
       );
     }
 
     final spots = _spotsFor(entries);
     final bounds = _chartBounds(entries.map((m) => m.value).toList());
-    return LineChart(
-      LineChartData(
-        minX: spots.first.x,
-        maxX: spots.last.x,
-        minY: bounds.minY,
-        maxY: bounds.maxY,
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-        lineTouchData: LineTouchData(enabled: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: spots,
-            isCurved: true,
-            barWidth: 2,
-            color: lineColor,
-            dotData: FlDotData(show: entries.length <= 4),
-            belowBarData: BarAreaData(
-              show: true,
-              color: lineColor.withValues(alpha: 0.12),
-            ),
+    return Semantics(
+      key: ValueKey('measurement-sparkline-${definition.id}-semantics'),
+      container: true,
+      label: _measurementTrendSemanticsLabel(
+        definition,
+        entries,
+        strings,
+        locale,
+      ),
+      child: ExcludeSemantics(
+        child: LineChart(
+          LineChartData(
+            minX: spots.first.x,
+            maxX: spots.last.x,
+            minY: bounds.minY,
+            maxY: bounds.maxY,
+            gridData: FlGridData(show: false),
+            titlesData: FlTitlesData(show: false),
+            borderData: FlBorderData(show: false),
+            lineTouchData: LineTouchData(enabled: false),
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                barWidth: 2,
+                color: lineColor,
+                dotData: FlDotData(show: entries.length <= 4),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: lineColor.withValues(alpha: 0.12),
+                ),
+              ),
+            ],
           ),
-        ],
+          duration: appMotionDuration(
+            context,
+            const Duration(milliseconds: 150),
+          ),
+          curve: Curves.linear,
+        ),
       ),
     );
   }
@@ -955,10 +1015,42 @@ class _MeasurementSummaryCard extends StatelessWidget {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = entries.isEmpty ? null : entries.last;
     final previous = entries.length < 2 ? null : entries[entries.length - 2];
-    final delta =
-        latest == null || previous == null
-            ? null
-            : latest.value - previous.value;
+    final delta = latest == null || previous == null
+        ? null
+        : latest.value - previous.value;
+    final summaryStats = [
+      _SummaryStat(
+        label: strings.healthLatest,
+        value: latest == null
+            ? strings.healthNoEntry
+            : _formatMeasurement(latest, locale),
+        detail: latest == null
+            ? strings.healthNotTrackedYet
+            : LocalizedFormatters.date(
+                latest.calendarDay.toLocalDateTime(),
+                locale,
+              ),
+      ),
+      _SummaryStat(
+        label: strings.healthChange,
+        value: delta == null
+            ? strings.healthNoChange
+            : _formatDelta(delta, strings, locale),
+        detail: entries.length < 2
+            ? strings.healthNeedTwoEntries
+            : strings.healthVersusPrevious,
+        valueColor: _deltaColor(context, delta),
+      ),
+      _SummaryStat(
+        label: strings.healthRecords,
+        value: LocalizedFormatters.number(
+          entries.length,
+          locale,
+          maximumFractionDigits: 0,
+        ),
+        detail: _defaultUnitFor(definition, weightUnit),
+      ),
+    ];
 
     return _withHealthCardForeground(
       context,
@@ -968,52 +1060,31 @@ class _MeasurementSummaryCard extends StatelessWidget {
           color: _healthTrendCardSurface(context),
           borderRadius: shapes.healthTrendCard,
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _SummaryStat(
-                label: strings.healthLatest,
-                value:
-                    latest == null
-                        ? strings.healthNoEntry
-                        : _formatMeasurement(latest, locale),
-                detail:
-                    latest == null
-                        ? strings.healthNotTrackedYet
-                        : LocalizedFormatters.date(
-                          latest.calendarDay.toLocalDateTime(),
-                          locale,
-                        ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _SummaryStat(
-                label: strings.healthChange,
-                value:
-                    delta == null
-                        ? strings.healthNoChange
-                        : _formatDelta(delta, strings, locale),
-                detail:
-                    entries.length < 2
-                        ? strings.healthNeedTwoEntries
-                        : strings.healthVersusPrevious,
-                valueColor: _deltaColor(context, delta),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _SummaryStat(
-                label: strings.healthRecords,
-                value: LocalizedFormatters.number(
-                  entries.length,
-                  locale,
-                  maximumFractionDigits: 0,
-                ),
-                detail: _defaultUnitFor(definition, weightUnit),
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final textScale = MediaQuery.textScalerOf(context).scale(1);
+            final useStackedLayout =
+                constraints.maxWidth < 420 || textScale > 1.15;
+            if (useStackedLayout) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var index = 0; index < summaryStats.length; index++) ...[
+                    if (index > 0) const SizedBox(height: 12),
+                    summaryStats[index],
+                  ],
+                ],
+              );
+            }
+            return Row(
+              children: [
+                for (var index = 0; index < summaryStats.length; index++) ...[
+                  if (index > 0) const SizedBox(width: 10),
+                  Expanded(child: summaryStats[index]),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1069,7 +1140,7 @@ class _SummaryStat extends StatelessWidget {
   }
 }
 
-class _MeasurementChartCard extends StatelessWidget {
+class _MeasurementChartCard extends StatefulWidget {
   final MeasurementDefinition definition;
   final List<Measurement> entries;
   final double height;
@@ -1081,153 +1152,244 @@ class _MeasurementChartCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  State<_MeasurementChartCard> createState() => _MeasurementChartCardState();
+}
 
+class _MeasurementChartCardState extends State<_MeasurementChartCard> {
+  int? _selectedIndex;
+
+  @override
+  void didUpdateWidget(covariant _MeasurementChartCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entries != widget.entries) {
+      _selectedIndex = null;
+    }
+  }
+
+  void _selectIndex(int index) {
+    if (index < 0 ||
+        index >= widget.entries.length ||
+        _selectedIndex == index) {
+      return;
+    }
+    setState(() => _selectedIndex = index);
+  }
+
+  void _selectNext() {
+    if (widget.entries.isEmpty) return;
+    final currentIndex = _selectedIndex ?? widget.entries.length - 1;
+    if (currentIndex + 1 >= widget.entries.length) return;
+    _selectIndex(currentIndex + 1);
+  }
+
+  void _selectPrevious() {
+    if (widget.entries.isEmpty) return;
+    final currentIndex = _selectedIndex ?? widget.entries.length - 1;
+    if (currentIndex <= 0) return;
+    _selectIndex(currentIndex - 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final dataVisualization = context.dataVisualizationTokens;
+    final entries = widget.entries;
     final spots = _spotsFor(entries);
     final bounds = _chartBounds(entries.map((m) => m.value).toList());
-    final title = _measurementTitle(definition, strings);
-    final latest =
-        entries.isEmpty
-            ? strings.healthNoEntry
-            : _formatMeasurement(entries.last, locale);
-    final chartSemantics = strings.healthTrendChartSemantics(
-      title,
-      entries.length,
-      latest,
+    final chartSemantics = _measurementTrendSemanticsLabel(
+      widget.definition,
+      entries,
+      strings,
+      locale,
     );
+    final selectedIndex = _selectedIndex;
+    final currentIndex = entries.isEmpty
+        ? null
+        : (selectedIndex ?? entries.length - 1)
+              .clamp(0, entries.length - 1)
+              .toInt();
+    final currentPoint = currentIndex == null ? null : entries[currentIndex];
+    final nextPoint = currentIndex != null && currentIndex + 1 < entries.length
+        ? entries[currentIndex + 1]
+        : null;
+    final previousPoint = currentIndex != null && currentIndex > 0
+        ? entries[currentIndex - 1]
+        : null;
+    final canIncrease = nextPoint != null;
+    final canDecrease = previousPoint != null;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final responsiveHeight =
+        (widget.height + math.max(0.0, (textScale - 1) * 80)).toDouble();
 
     return Semantics(
+      key: const ValueKey('measurement-trend-chart-semantics'),
       container: true,
       label: chartSemantics,
+      value: currentPoint == null
+          ? null
+          : _measurementPointSemanticsValue(currentPoint, locale),
+      increasedValue: nextPoint == null
+          ? null
+          : _measurementPointSemanticsValue(nextPoint, locale),
+      decreasedValue: previousPoint == null
+          ? null
+          : _measurementPointSemanticsValue(previousPoint, locale),
+      focusable: canIncrease || canDecrease,
+      onIncrease: canIncrease ? _selectNext : null,
+      onDecrease: canDecrease ? _selectPrevious : null,
       child: ExcludeSemantics(
         child: Container(
-          height: height,
+          height: responsiveHeight,
           padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
           decoration: BoxDecoration(
-            color:
-                context.usesNeoPresentation
-                    ? context.surfaceTokens.card
-                    : context.progressColors.healthCard,
+            color: context.usesNeoPresentation
+                ? context.surfaceTokens.card
+                : context.usesExpressivePresentation
+                ? context.progressColors.healthCard
+                : context.progressColors.healthCard,
             borderRadius: shapes.healthTrendCard,
           ),
-          child:
-              entries.length < 2
-                  ? Center(
-                    child: Text(
-                      entries.isEmpty
-                          ? strings.healthTrendNeedEntries
-                          : strings.healthTrendNeedOneMore,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  )
-                  : LineChart(
-                    LineChartData(
-                      minX: spots.first.x,
-                      maxX: spots.last.x,
-                      minY: bounds.minY,
-                      maxY: bounds.maxY,
-                      gridData: FlGridData(
-                        drawVerticalLine: false,
-                        getDrawingHorizontalLine:
-                            (_) => FlLine(
-                              color: context.progressColors.healthGrid
-                                  .withValues(alpha: 0.35),
-                              strokeWidth: 1,
-                            ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      titlesData: FlTitlesData(
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 42,
-                            interval: bounds.interval,
-                            getTitlesWidget:
-                                (value, _) => Text(
-                                  _compactNumber(value, locale),
-                                  style: theme.textTheme.labelSmall,
-                                ),
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 28,
-                            interval: math.max(1.0, (spots.length - 1) / 2),
-                            getTitlesWidget: (value, _) {
-                              final index =
-                                  value
-                                      .round()
-                                      .clamp(0, entries.length - 1)
-                                      .toInt();
-                              if ((value - index).abs() > 0.2) {
-                                return const SizedBox.shrink();
-                              }
-                              return Text(
-                                _shortDate(
-                                  entries[index].calendarDay.toLocalDateTime(),
-                                  locale,
-                                ),
-                                style: theme.textTheme.labelSmall,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      lineTouchData: LineTouchData(
-                        touchTooltipData: LineTouchTooltipData(
-                          getTooltipColor: (_) => theme.colorScheme.surface,
-                          getTooltipItems:
-                              (touchedSpots) =>
-                                  touchedSpots.map((spot) {
-                                    final index =
-                                        spot.spotIndex
-                                            .clamp(0, entries.length - 1)
-                                            .toInt();
-                                    final entry = entries[index];
-                                    return LineTooltipItem(
-                                      '${_formatDateTime(entry.displayDateTime, locale)}\n${_formatMeasurement(entry, locale)}',
-                                      theme.textTheme.labelSmall?.copyWith(
-                                            color: theme.colorScheme.onSurface,
-                                          ) ??
-                                          TextStyle(
-                                            color: theme.colorScheme.onSurface,
-                                          ),
-                                    );
-                                  }).toList(),
-                        ),
-                      ),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: dataVisualization.tertiarySeries,
-                          barWidth: 3,
-                          dotData: FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: dataVisualization.tertiarySeries.withValues(
-                              alpha: 0.12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          child: _buildChart(
+            context: context,
+            strings: strings,
+            locale: locale,
+            dataVisualization: dataVisualization,
+            entries: entries,
+            spots: spots,
+            bounds: bounds,
+            selectedIndex: selectedIndex,
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildChart({
+    required BuildContext context,
+    required AppLocalizations strings,
+    required Locale locale,
+    required AppDataVisualizationTokens dataVisualization,
+    required List<Measurement> entries,
+    required List<FlSpot> spots,
+    required _ChartBounds bounds,
+    required int? selectedIndex,
+  }) {
+    final theme = Theme.of(context);
+    if (entries.length < 2) {
+      return Center(
+        child: Text(
+          entries.isEmpty
+              ? strings.healthTrendNeedEntries
+              : strings.healthTrendNeedOneMore,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium,
+        ),
+      );
+    }
+
+    final chartLine = LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      color: dataVisualization.tertiarySeries,
+      barWidth: 3,
+      dotData: FlDotData(show: true),
+      belowBarData: BarAreaData(
+        show: true,
+        color: dataVisualization.tertiarySeries.withValues(alpha: 0.12),
+      ),
+    );
+    final showingTooltipIndicators = selectedIndex == null
+        ? const <ShowingTooltipIndicators>[]
+        : <ShowingTooltipIndicators>[
+            ShowingTooltipIndicators([
+              LineBarSpot(chartLine, 0, spots[selectedIndex]),
+            ]),
+          ];
+
+    return LineChart(
+      LineChartData(
+        minX: spots.first.x,
+        maxX: spots.last.x,
+        minY: bounds.minY,
+        maxY: bounds.maxY,
+        gridData: FlGridData(
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: context.progressColors.healthGrid.withValues(alpha: 0.35),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 42,
+              interval: bounds.interval,
+              getTitlesWidget: (value, _) => Text(
+                _compactNumber(value, locale),
+                style: theme.textTheme.labelSmall,
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: math.max(1.0, (spots.length - 1) / 2),
+              getTitlesWidget: (value, _) {
+                final index = value
+                    .round()
+                    .clamp(0, entries.length - 1)
+                    .toInt();
+                if ((value - index).abs() > 0.2) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  _shortDate(
+                    entries[index].calendarDay.toLocalDateTime(),
+                    locale,
+                  ),
+                  style: theme.textTheme.labelSmall,
+                );
+              },
+            ),
+          ),
+        ),
+        lineTouchData: LineTouchData(
+          touchCallback: (event, response) {
+            final touchedSpots = response?.lineBarSpots;
+            if (touchedSpots == null || touchedSpots.isEmpty) return;
+            _selectIndex(touchedSpots.first.spotIndex);
+          },
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => theme.colorScheme.surface,
+            getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              final index = spot.spotIndex.clamp(0, entries.length - 1).toInt();
+              final entry = entries[index];
+              return LineTooltipItem(
+                '${_formatDateTime(entry.displayDateTime, locale)}\n${_formatMeasurement(entry, locale)}',
+                theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ) ??
+                    TextStyle(color: theme.colorScheme.onSurface),
+              );
+            }).toList(),
+          ),
+        ),
+        lineBarsData: [chartLine],
+        showingTooltipIndicators: showingTooltipIndicators,
+      ),
+      duration: appMotionDuration(context, const Duration(milliseconds: 150)),
+      curve: Curves.linear,
     );
   }
 }
@@ -1269,17 +1431,16 @@ class _MeasurementEntryTile extends StatelessWidget {
               if (value == 'edit') onTap();
               if (value == 'delete') onDelete();
             },
-            itemBuilder:
-                (_) => [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Text(AppLocalizations.of(context).commonEdit),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(AppLocalizations.of(context).commonDelete),
-                  ),
-                ],
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Text(AppLocalizations.of(context).commonEdit),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(AppLocalizations.of(context).commonDelete),
+              ),
+            ],
           ),
           shape: RoundedRectangleBorder(borderRadius: shapes.healthTrendEntry),
           tileColor: _healthTrendCardSurface(context),
@@ -1309,13 +1470,9 @@ class _HealthTrendMessageCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     final shapes = context.shapeTokens;
-    final foreground =
-        context.usesNeoPresentation
-            ? tonosForegroundForSurface(
-              context,
-              _healthTrendCardSurface(context),
-            )
-            : theme.colorScheme.onSurface;
+    final foreground = context.usesNeoPresentation
+        ? tonosForegroundForSurface(context, _healthTrendCardSurface(context))
+        : theme.colorScheme.onSurface;
     return _withHealthCardForeground(
       context,
       Padding(
@@ -1346,13 +1503,12 @@ class _HealthTrendMessageCard extends StatelessWidget {
                     Text(
                       message,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            context.usesNeoPresentation
-                                ? tonosSecondaryForegroundForSurface(
-                                  context,
-                                  _healthTrendCardSurface(context),
-                                )
-                                : theme.colorScheme.onSurfaceVariant,
+                        color: context.usesNeoPresentation
+                            ? tonosSecondaryForegroundForSurface(
+                                context,
+                                _healthTrendCardSurface(context),
+                              )
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -1487,10 +1643,9 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   }
 
   void _save() {
-    final value =
-        _heightUsesFeetAndInches
-            ? _heightInchesValue()
-            : double.tryParse(_valueController.text.trim());
+    final value = _heightUsesFeetAndInches
+        ? _heightInchesValue()
+        : double.tryParse(_valueController.text.trim());
     final unit = _heightUsesFeetAndInches ? 'in' : _unitController.text.trim();
     if (value == null || unit.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1586,8 +1741,9 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       }
     } else {
       final totalInches = _heightInchesValue();
-      _valueController.text =
-          totalInches == null ? '' : _cleanNumber(totalInches * 2.54);
+      _valueController.text = totalInches == null
+          ? ''
+          : _cleanNumber(totalInches * 2.54);
     }
     setState(() {
       _heightUsesFeetAndInches = useFeetAndInches;
@@ -1699,8 +1855,8 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _withPump,
-                onChanged:
-                    (value) => setState(() => _withPump = value ?? false),
+                onChanged: (value) =>
+                    setState(() => _withPump = value ?? false),
                 title: Text(strings.measurementWithPump),
               ),
             TextField(
@@ -1764,8 +1920,9 @@ class _MeasurementDefinitionDialogState
     final name = _nameController.text.trim();
     final unit = _unitController.text.trim();
     final initialText = _initialValueController.text.trim();
-    final initialValue =
-        initialText.isEmpty ? null : double.tryParse(initialText);
+    final initialValue = initialText.isEmpty
+        ? null
+        : double.tryParse(initialText);
 
     if (name.isEmpty ||
         unit.isEmpty ||
@@ -1804,10 +1961,9 @@ class _MeasurementDefinitionDialogState
         name: name,
         unit: unit,
         initialValue: initialValue,
-        note:
-            _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
       ),
     );
   }
@@ -1835,9 +1991,8 @@ class _MeasurementDefinitionDialogState
               controller: _unitController,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).healthUnit,
-                hintText: AppLocalizations.of(
-                  context,
-                ).healthUnitHint(weightUnit.shortLabel),
+                hintText: AppLocalizations.of(context)
+                    .healthUnitHint(weightUnit.shortLabel),
               ),
             ),
             const SizedBox(height: 10),
@@ -1895,6 +2050,36 @@ class _MeasurementTrend {
   }
 }
 
+String _measurementTrendSemanticsLabel(
+  MeasurementDefinition definition,
+  List<Measurement> entries,
+  AppLocalizations strings,
+  Locale locale,
+) {
+  final latest = entries.isEmpty ? null : entries.last;
+  final latestValue = latest == null
+      ? strings.healthNoEntry
+      : _formatMeasurement(latest, locale);
+  final summary = strings.healthTrendChartSemantics(
+    _measurementTitle(definition, strings),
+    entries.length,
+    latestValue,
+  );
+  final latestDate = latest == null
+      ? null
+      : '${strings.healthLatest}: ${LocalizedFormatters.dateTime(latest.displayDateTime, locale)}';
+  final sparseState = entries.isEmpty
+      ? strings.healthTrendNeedEntries
+      : entries.length == 1
+      ? strings.healthTrendNeedOneMore
+      : null;
+  return [summary, latestDate, sparseState].whereType<String>().join(' ');
+}
+
+String _measurementPointSemanticsValue(Measurement entry, Locale locale) {
+  return '${LocalizedFormatters.dateTime(entry.displayDateTime, locale)}, ${_formatMeasurement(entry, locale)}';
+}
+
 class _MeasurementEntryInput {
   final DateTime timestamp;
   final double value;
@@ -1923,8 +2108,8 @@ String _measurementValidationMessage(
     MeasurementValidationError.unsupportedUnit ||
     MeasurementValidationError.invalidValue ||
     MeasurementValidationError.implausibleValue ||
-    MeasurementValidationError
-        .invalidContext => strings.healthMeasurementEntryInvalid,
+    MeasurementValidationError.invalidContext =>
+      strings.healthMeasurementEntryInvalid,
   };
 }
 

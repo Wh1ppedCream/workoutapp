@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../services/tutorial_state_store.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../widgets/exercise_progress_section.dart';
 import '../widgets/guided_tutorial_overlay.dart';
 import '../widgets/health_trends_section.dart';
@@ -46,7 +48,7 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (TickerMode.of(context)) {
+    if (TickerMode.valuesOf(context).enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueProgressTutorial();
       });
@@ -58,7 +60,11 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
   }
 
   void _queueProgressTutorial() {
-    if (!mounted || _progressTutorialQueued || !TickerMode.of(context)) return;
+    if (!mounted ||
+        _progressTutorialQueued ||
+        !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
     _progressTutorialQueued = true;
     unawaited(_showProgressTutorialIfNeeded());
   }
@@ -66,7 +72,7 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
   Future<void> _showProgressTutorialIfNeeded() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 550));
-      if (!mounted || !TickerMode.of(context)) return;
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
 
       final completed = await _tutorialStore.isCompleted(
         TutorialIds.progressHome,
@@ -79,28 +85,24 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
           GuidedTutorialStep(
             targetKey: _workoutReportTutorialKey,
             icon: Icons.show_chart_outlined,
-            title:
-                AppLocalizations.of(context).progressTutorialWorkoutReportTitle,
-            body:
-                AppLocalizations.of(context).progressTutorialWorkoutReportBody,
+            title: AppLocalizations.of(context)
+                .progressTutorialWorkoutReportTitle,
+            body: AppLocalizations.of(context)
+                .progressTutorialWorkoutReportBody,
           ),
           GuidedTutorialStep(
             targetKey: _exerciseProgressTutorialKey,
             icon: Icons.trending_up,
-            title:
-                AppLocalizations.of(
-                  context,
-                ).progressTutorialExerciseProgressTitle,
-            body:
-                AppLocalizations.of(
-                  context,
-                ).progressTutorialExerciseProgressBody,
+            title: AppLocalizations.of(context)
+                .progressTutorialExerciseProgressTitle,
+            body: AppLocalizations.of(context)
+                .progressTutorialExerciseProgressBody,
           ),
           GuidedTutorialStep(
             targetKey: _healthTrendsTutorialKey,
             icon: Icons.monitor_heart_outlined,
-            title:
-                AppLocalizations.of(context).progressTutorialHealthTrendsTitle,
+            title: AppLocalizations.of(context)
+                .progressTutorialHealthTrendsTitle,
             body: AppLocalizations.of(context).progressTutorialHealthTrendsBody,
           ),
         ],
@@ -124,6 +126,9 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
     }
 
     return Scaffold(
+      backgroundColor: context.usesExpressivePresentation
+          ? Theme.of(context).extension<AppExpressiveTrainTokens>()!.pageCanvas
+          : null,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(

@@ -5,7 +5,10 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_data_visualization_tokens.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:material_ui/material_ui.dart';
@@ -587,6 +590,155 @@ void main() {
       expect(tester.takeException(), isNull);
     },
     timeout: const Timeout(Duration(minutes: 1)),
+  );
+
+  testWidgets(
+    'Expressive Workout Report uses preview chrome and keeps chart roles intact',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      addTearDown(units.dispose);
+      await units.ready;
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final theme = ExpressiveThemeDefinition.light();
+      final expressiveTokens = theme.extension<AppExpressiveTrainTokens>()!;
+      final surfaces = theme.surfaceTokens;
+      final shapes = theme.shapeTokens;
+      expect(theme.usesExpressivePresentation, isTrue);
+      final expectedDataTokens =
+          AppDataVisualizationTokens.fromBrightness(Brightness.light);
+      expect(
+        theme.dataVisualizationTokens.primarySeries,
+        expectedDataTokens.primarySeries,
+      );
+      expect(
+        theme.dataVisualizationTokens.secondarySeries,
+        expectedDataTokens.secondarySeries,
+      );
+      expect(
+        theme.dataVisualizationTokens.selection,
+        expectedDataTokens.selection,
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: _ReportRepository()),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(
+              value: units,
+            ),
+          ],
+          child: MaterialApp(
+            theme: theme,
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: const [Locale('en')],
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
+            home: const Scaffold(
+              body: SingleChildScrollView(child: WorkoutMetricChartCard()),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final reportCard = tester.widget<Card>(
+        find.descendant(
+          of: find.byType(WorkoutMetricChartCard),
+          matching: find.byType(Card),
+        ).first,
+      );
+      expect(reportCard.color, surfaces.card);
+      expect(
+        (reportCard.shape! as RoundedRectangleBorder).borderRadius,
+        shapes.card,
+      );
+
+      final selectedMetric = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.label ==
+                strings.workoutReportMetricSemantics(
+                  strings.workoutReportWorkouts,
+                ),
+      );
+      final metricInk = tester.widget<Ink>(
+        find.descendant(of: selectedMetric, matching: find.byType(Ink)).first,
+      );
+      expect(
+        (metricInk.decoration! as BoxDecoration).color,
+        surfaces.workoutMetricStat,
+      );
+      final metricDecoration = metricInk.decoration! as BoxDecoration;
+      expect(metricDecoration.border!.top.color, expressiveTokens.selectorActive);
+      expect(metricDecoration.border!.top.width, 2);
+      final selectedMetricLabel = find.descendant(
+        of: selectedMetric,
+        matching: find.text(strings.workoutReportWorkouts),
+      );
+      expect(
+        tester.widget<Text>(selectedMetricLabel).style!.color,
+        expressiveTokens.selectorActive,
+      );
+      final trendText = find.descendant(
+        of: selectedMetric,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.style?.fontWeight == FontWeight.w800 &&
+              widget.style?.height == 1.05,
+        ),
+      );
+      expect(trendText, findsOneWidget);
+      expect(
+        _contrastRatio(
+          tester.widget<Text>(trendText).style!.color!,
+          metricDecoration.color!,
+        ),
+        greaterThanOrEqualTo(4.5),
+      );
+      final selectedRange = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.button == true &&
+            widget.properties.selected == true &&
+            widget.properties.label == strings.workoutReportRangeAll,
+      );
+      final rangeOption = tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: selectedRange,
+          matching: find.byType(AnimatedContainer),
+        ).first,
+      );
+      expect(
+        (rangeOption.decoration! as BoxDecoration).color,
+        expressiveTokens.selectorActive,
+      );
+      expect(rangeOption.duration, Duration.zero);
+
+      final chartSurface = tester.widget<Container>(
+        find.ancestor(
+          of: find.byKey(const ValueKey('workout-report-chart-canvas')),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.decoration is BoxDecoration &&
+                (widget.decoration! as BoxDecoration).color ==
+                    surfaces.workoutMetricChart,
+          ),
+        ).first,
+      );
+      expect(
+        (chartSurface.decoration! as BoxDecoration).color,
+        surfaces.workoutMetricChart,
+      );
+      expect(tester.takeException(), isNull);
+    },
   );
 }
 
