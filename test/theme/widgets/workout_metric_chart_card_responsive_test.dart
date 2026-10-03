@@ -593,7 +593,7 @@ void main() {
   );
 
   testWidgets(
-    'Expressive Workout Report uses preview chrome and keeps chart roles intact',
+    'Expressive Workout Report keeps its tonal composition responsive',
     (tester) async {
       SharedPreferences.setMockInitialValues({});
       final units = UnitPreferenceProvider();
@@ -602,142 +602,376 @@ void main() {
       final strings = await AppLocalizations.delegate.load(const Locale('en'));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      final theme = ExpressiveThemeDefinition.light();
-      final expressiveTokens = theme.extension<AppExpressiveTrainTokens>()!;
-      final surfaces = theme.surfaceTokens;
-      final shapes = theme.shapeTokens;
-      expect(theme.usesExpressivePresentation, isTrue);
-      final expectedDataTokens =
-          AppDataVisualizationTokens.fromBrightness(Brightness.light);
-      expect(
-        theme.dataVisualizationTokens.primarySeries,
-        expectedDataTokens.primarySeries,
-      );
-      expect(
-        theme.dataVisualizationTokens.secondarySeries,
-        expectedDataTokens.secondarySeries,
-      );
-      expect(
-        theme.dataVisualizationTokens.selection,
-        expectedDataTokens.selection,
-      );
+      const configurations = [
+        (
+          width: 320.0,
+          scale: 1.0,
+          brightness: Brightness.light,
+          reduced: false,
+        ),
+        (width: 320.0, scale: 1.15, brightness: Brightness.dark, reduced: true),
+        (width: 320.0, scale: 1.5, brightness: Brightness.light, reduced: true),
+        (width: 320.0, scale: 2.0, brightness: Brightness.dark, reduced: false),
+        (width: 420.0, scale: 1.0, brightness: Brightness.light, reduced: true),
+      ];
 
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            Provider<AppRepository>.value(value: _ReportRepository()),
-            ChangeNotifierProvider<UnitPreferenceProvider>.value(
-              value: units,
-            ),
-          ],
-          child: MaterialApp(
-            theme: theme,
-            locale: const Locale('en'),
-            localizationsDelegates: tonosLocalizationDelegates,
-            supportedLocales: const [Locale('en')],
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(disableAnimations: true),
-              child: child!,
-            ),
-            home: const Scaffold(
-              body: SingleChildScrollView(child: WorkoutMetricChartCard()),
+      for (
+        var configurationIndex = 0;
+        configurationIndex < configurations.length;
+        configurationIndex++
+      ) {
+        final configuration = configurations[configurationIndex];
+        final theme =
+            configuration.brightness == Brightness.light
+                ? ExpressiveThemeDefinition.light()
+                : ExpressiveThemeDefinition.dark();
+        final expressiveTokens = theme.extension<AppExpressiveTrainTokens>()!;
+        final surfaces = theme.surfaceTokens;
+        final shapes = theme.shapeTokens;
+        expect(theme.usesExpressivePresentation, isTrue);
+        final expectedDataTokens = AppDataVisualizationTokens.fromBrightness(
+          configuration.brightness,
+        );
+        expect(
+          theme.dataVisualizationTokens.primarySeries,
+          expectedDataTokens.primarySeries,
+        );
+        expect(
+          theme.dataVisualizationTokens.secondarySeries,
+          expectedDataTokens.secondarySeries,
+        );
+        expect(
+          theme.dataVisualizationTokens.selection,
+          expectedDataTokens.selection,
+        );
+
+        await tester.binding.setSurfaceSize(Size(configuration.width, 1400));
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: _ReportRepository()),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
+            ],
+            child: MaterialApp(
+              key: ValueKey('expressive-report-$configurationIndex'),
+              theme: theme,
+              locale: const Locale('en'),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: const [Locale('en')],
+              builder:
+                  (context, child) => MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(configuration.scale),
+                      disableAnimations: configuration.reduced,
+                    ),
+                    child: child!,
+                  ),
+              home: const Scaffold(
+                body: SingleChildScrollView(child: WorkoutMetricChartCard()),
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final reportCard = tester.widget<Card>(
-        find.descendant(
-          of: find.byType(WorkoutMetricChartCard),
-          matching: find.byType(Card),
-        ).first,
-      );
-      expect(reportCard.color, surfaces.card);
-      expect(
-        (reportCard.shape! as RoundedRectangleBorder).borderRadius,
-        shapes.card,
-      );
+        final reportCard = tester.widget<Card>(
+          find
+              .descendant(
+                of: find.byType(WorkoutMetricChartCard),
+                matching: find.byType(Card),
+              )
+              .first,
+        );
+        expect(reportCard.color, surfaces.card);
+        expect(
+          (reportCard.shape! as RoundedRectangleBorder).borderRadius,
+          shapes.card,
+        );
 
-      final selectedMetric = find.byWidgetPredicate(
-        (widget) =>
-            widget is Semantics &&
-            widget.properties.label ==
-                strings.workoutReportMetricSemantics(
-                  strings.workoutReportWorkouts,
-                ),
-      );
-      final metricInk = tester.widget<Ink>(
-        find.descendant(of: selectedMetric, matching: find.byType(Ink)).first,
-      );
-      expect(
-        (metricInk.decoration! as BoxDecoration).color,
-        surfaces.workoutMetricStat,
-      );
-      final metricDecoration = metricInk.decoration! as BoxDecoration;
-      expect(metricDecoration.border!.top.color, expressiveTokens.selectorActive);
-      expect(metricDecoration.border!.top.width, 2);
-      final selectedMetricLabel = find.descendant(
-        of: selectedMetric,
-        matching: find.text(strings.workoutReportWorkouts),
-      );
-      expect(
-        tester.widget<Text>(selectedMetricLabel).style!.color,
-        expressiveTokens.selectorActive,
-      );
-      final trendText = find.descendant(
-        of: selectedMetric,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is Text &&
-              widget.style?.fontWeight == FontWeight.w800 &&
-              widget.style?.height == 1.05,
-        ),
-      );
-      expect(trendText, findsOneWidget);
-      expect(
-        _contrastRatio(
-          tester.widget<Text>(trendText).style!.color!,
-          metricDecoration.color!,
-        ),
-        greaterThanOrEqualTo(4.5),
-      );
-      final selectedRange = find.byWidgetPredicate(
-        (widget) =>
-            widget is Semantics &&
-            widget.properties.button == true &&
-            widget.properties.selected == true &&
-            widget.properties.label == strings.workoutReportRangeAll,
-      );
-      final rangeOption = tester.widget<AnimatedContainer>(
-        find.descendant(
-          of: selectedRange,
-          matching: find.byType(AnimatedContainer),
-        ).first,
-      );
-      expect(
-        (rangeOption.decoration! as BoxDecoration).color,
-        expressiveTokens.selectorActive,
-      );
-      expect(rangeOption.duration, Duration.zero);
+        final reportTitle = tester.widget<Text>(
+          find.byKey(const ValueKey('workout-report-expressive-title')),
+        );
+        expect(reportTitle.textAlign, TextAlign.start);
+        expect(reportTitle.style!.color, expressiveTokens.actionPrimary);
+        expect(
+          find.byKey(const ValueKey('workout-report-expressive-title-rule')),
+          findsOneWidget,
+        );
 
-      final chartSurface = tester.widget<Container>(
-        find.ancestor(
-          of: find.byKey(const ValueKey('workout-report-chart-canvas')),
+        final cluster = tester.widget<Container>(
+          find.byKey(
+            const ValueKey('workout-report-expressive-metric-cluster'),
+          ),
+        );
+        final clusterDecoration = cluster.decoration! as BoxDecoration;
+        expect(clusterDecoration.color, expressiveTokens.selectorTrack);
+        expect(clusterDecoration.border, isNull);
+
+        final metricLabels = [
+          strings.workoutReportWorkouts,
+          strings.workoutReportTime,
+          strings.workoutReportVolume,
+        ];
+        final metricSemantics = [
+          for (final label in metricLabels)
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Semantics &&
+                  widget.properties.button == true &&
+                  widget.properties.label ==
+                      strings.workoutReportMetricSemantics(label),
+            ),
+        ];
+        for (final metric in metricSemantics) {
+          expect(metric, findsOneWidget);
+        }
+        final selectedMetric = metricSemantics.first;
+        expect(
+          tester.widget<Semantics>(selectedMetric).properties.selected,
+          isTrue,
+        );
+        for (final peerMetric in metricSemantics.skip(1)) {
+          final peerSemantics = tester.widget<Semantics>(peerMetric);
+          expect(peerSemantics.properties.selected, isFalse);
+          expect(peerSemantics.properties.onTap, isNotNull);
+        }
+        final metricInk = tester.widget<Ink>(
+          find.descendant(of: selectedMetric, matching: find.byType(Ink)).first,
+        );
+        final metricDecoration = metricInk.decoration! as BoxDecoration;
+        expect(
+          metricDecoration.color,
+          Color.lerp(expressiveTokens.focusSurface, Colors.black, 0.36),
+        );
+        expect(metricDecoration.border, isA<BorderDirectional>());
+        expect((metricDecoration.border! as BorderDirectional).start.width, 4);
+        final selectedMetricLabel = find.descendant(
+          of: selectedMetric,
+          matching: find.text(strings.workoutReportWorkouts),
+        );
+        expect(
+          tester.widget<Text>(selectedMetricLabel).style!.color,
+          expressiveTokens.focusForeground,
+        );
+        final trendText = find.descendant(
+          of: selectedMetric,
           matching: find.byWidgetPredicate(
             (widget) =>
-                widget is Container &&
-                widget.decoration is BoxDecoration &&
-                (widget.decoration! as BoxDecoration).color ==
-                    surfaces.workoutMetricChart,
+                widget is Text &&
+                widget.style?.fontWeight == FontWeight.w800 &&
+                widget.style?.height == 1.05,
           ),
-        ).first,
-      );
-      expect(
-        (chartSurface.decoration! as BoxDecoration).color,
-        surfaces.workoutMetricChart,
-      );
-      expect(tester.takeException(), isNull);
+        );
+        expect(trendText, findsOneWidget);
+        expect(
+          _contrastRatio(
+            tester.widget<Text>(trendText).style!.color!,
+            metricDecoration.color!,
+          ),
+          greaterThanOrEqualTo(4.5),
+        );
+
+        final rangeLabels = [
+          strings.workoutReportRangeOneWeekShort,
+          strings.workoutReportRangeOneMonthShort,
+          strings.workoutReportRangeThreeMonthsShort,
+          strings.workoutReportRangeSixMonthsShort,
+          strings.workoutReportRangeOneYearShort,
+          strings.workoutReportRangeAll,
+        ];
+        final rangeOptions = find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.button == true &&
+              rangeLabels.contains(widget.properties.label),
+        );
+        expect(rangeOptions, findsNWidgets(6));
+        final selectedRange = find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              widget.properties.button == true &&
+              widget.properties.selected == true &&
+              widget.properties.label == strings.workoutReportRangeAll,
+        );
+        expect(selectedRange, findsOneWidget);
+        if (configuration.scale <= 1.15) {
+          final rangeOption = tester.widget<AnimatedContainer>(
+            find
+                .descendant(
+                  of: selectedRange,
+                  matching: find.byType(AnimatedContainer),
+                )
+                .first,
+          );
+          expect(
+            (rangeOption.decoration! as BoxDecoration).color,
+            expressiveTokens.selectorActive,
+          );
+          expect(rangeOption.duration == Duration.zero, configuration.reduced);
+        }
+
+        expect(
+          tester
+              .getSize(
+                find.byKey(
+                  const ValueKey('workout-report-expressive-chart-viewport'),
+                ),
+              )
+              .height,
+          220,
+        );
+        final chartSurface = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byKey(const ValueKey('workout-report-chart-canvas')),
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Container &&
+                      widget.decoration is BoxDecoration &&
+                      (widget.decoration! as BoxDecoration).color ==
+                          surfaces.workoutMetricChart,
+                ),
+              )
+              .first,
+        );
+        expect(
+          (chartSurface.decoration! as BoxDecoration).color,
+          surfaces.workoutMetricChart,
+        );
+        expect(tester.takeException(), isNull);
+
+        if (configurationIndex == 0) {
+          await tester.tap(
+            find.descendant(
+              of: metricSemantics[2],
+              matching: find.text(strings.workoutReportVolume),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester.widget<Semantics>(metricSemantics[2]).properties.selected,
+            isTrue,
+          );
+          await tester.tap(find.text(strings.workoutReportRangeOneMonthShort));
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<Semantics>(
+                  find.byWidgetPredicate(
+                    (widget) =>
+                        widget is Semantics &&
+                        widget.properties.button == true &&
+                        widget.properties.label ==
+                            strings.workoutReportRangeOneMonthShort,
+                  ),
+                )
+                .properties
+                .selected,
+            isTrue,
+          );
+          await tester.tap(find.text(strings.workoutReportAdditionalDetails));
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(
+              const ValueKey('workout-report-insight-grid-one-column'),
+            ),
+            findsOneWidget,
+          );
+          expect(tester.takeException(), isNull);
+        }
+      }
+    },
+  );
+
+  testWidgets(
+    'Expressive focal metric preserves positive and negative delta colors',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      addTearDown(units.dispose);
+      await units.ready;
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(360, 1200));
+
+      for (final counts in [
+        (current: 2, previous: 1),
+        (current: 1, previous: 2),
+        (current: 2, previous: 2),
+      ]) {
+        for (final brightness in Brightness.values) {
+          final theme =
+              brightness == Brightness.light
+                  ? ExpressiveThemeDefinition.light()
+                  : ExpressiveThemeDefinition.dark();
+          final progressColors = theme.extension<AppProgressColors>()!;
+          final expressiveTokens = theme.extension<AppExpressiveTrainTokens>()!;
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(
+                  value: _DirectionalTrendRepository(
+                    currentCount: counts.current,
+                    previousCount: counts.previous,
+                  ),
+                ),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                key: ValueKey(
+                  'expressive-trend-${brightness.name}-${counts.current}-${counts.previous}',
+                ),
+                theme: theme,
+                locale: const Locale('en'),
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: const [Locale('en')],
+                home: const Scaffold(
+                  body: SingleChildScrollView(child: WorkoutMetricChartCard()),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final workoutsTile = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label ==
+                    strings.workoutReportMetricSemantics(
+                      strings.workoutReportWorkouts,
+                    ),
+          );
+          final trendText = find.descendant(
+            of: workoutsTile,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Text &&
+                  widget.style?.fontWeight == FontWeight.w800 &&
+                  widget.style?.height == 1.05,
+            ),
+          );
+          expect(trendText, findsOneWidget);
+          final color = tester.widget<Text>(trendText).style!.color!;
+          final direction = counts.current.compareTo(counts.previous);
+          if (direction > 0) {
+            expect(color, progressColors.workoutIncrease);
+          } else if (direction < 0) {
+            expect(color, progressColors.workoutDecrease);
+          } else {
+            expect(color, expressiveTokens.focusForeground);
+          }
+          final statInk = tester.widget<Ink>(
+            find.ancestor(of: trendText, matching: find.byType(Ink)).first,
+          );
+          final statSurface = (statInk.decoration! as BoxDecoration).color!;
+          expect(_contrastRatio(color, statSurface), greaterThanOrEqualTo(4.5));
+          expect(tester.takeException(), isNull);
+        }
+      }
     },
   );
 }

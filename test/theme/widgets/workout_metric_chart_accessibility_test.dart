@@ -5,6 +5,7 @@ import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_motion_tokens.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:flutter/services.dart';
@@ -256,16 +257,170 @@ void main() {
         ),
       );
       expect(options, isNotEmpty);
-      final expected = reduceMotion
-          ? AppThemeFactory.light(AppThemeFamily.classic)
-                .extension<AppMotionTokens>()!
-                .reduced
-          : AppThemeFactory.light(AppThemeFamily.classic)
-                .extension<AppMotionTokens>()!
-                .quick;
+      final expected =
+          reduceMotion
+              ? AppThemeFactory.light(
+                AppThemeFamily.classic,
+              ).extension<AppMotionTokens>()!.reduced
+              : AppThemeFactory.light(
+                AppThemeFamily.classic,
+              ).extension<AppMotionTokens>()!.quick;
+      expect(options.first.duration, expected);
+    }
+
+    for (final reduceMotion in [false, true]) {
+      final theme =
+          reduceMotion
+              ? ExpressiveThemeDefinition.dark()
+              : ExpressiveThemeDefinition.light();
+      await tester.pumpWidget(
+        _host(
+          units: units,
+          repository: _ReportRepository(),
+          reduceMotion: reduceMotion,
+          theme: theme,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final options = tester.widgetList<AnimatedContainer>(
+        find.descendant(
+          of: find.byType(WorkoutMetricChartCard),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      expect(options, isNotEmpty);
+      final expected =
+          reduceMotion
+              ? theme.extension<AppMotionTokens>()!.reduced
+              : theme.extension<AppMotionTokens>()!.quick;
       expect(options.first.duration, expected);
     }
   });
+
+  testWidgets(
+    'Expressive workout report keeps chart and control semantics across scales',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      try {
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.binding.setSurfaceSize(const Size(320, 1400));
+        final units = UnitPreferenceProvider();
+        addTearDown(units.dispose);
+        await units.ready;
+        final strings = await AppLocalizations.delegate.load(
+          const Locale('en'),
+        );
+
+        for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+          final theme =
+              scale <= 1.15
+                  ? ExpressiveThemeDefinition.light()
+                  : ExpressiveThemeDefinition.dark();
+          await tester.pumpWidget(
+            _host(
+              units: units,
+              repository: _ReportRepository(),
+              textScale: scale,
+              theme: theme,
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final chart = find.byKey(
+            const ValueKey('workout-report-chart-semantics'),
+          );
+          var chartData = tester.getSemantics(chart).getSemanticsData();
+          expect(
+            chartData.label,
+            contains(
+              strings.workoutReportChartTitle(
+                strings.workoutReportWorkouts,
+                strings.workoutReportRangeAll,
+              ),
+            ),
+          );
+          expect(chartData.value, contains('${strings.healthLatest}:'));
+          expect(chartData.hasAction(SemanticsAction.tap), isTrue);
+          expect(chartData.hasAction(SemanticsAction.decrease), isTrue);
+
+          final metric = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.button == true &&
+                widget.properties.selected == true &&
+                widget.properties.label ==
+                    strings.workoutReportMetricSemantics(
+                      strings.workoutReportWorkouts,
+                    ),
+          );
+          expect(metric, findsOneWidget);
+          final rangeLabels = [
+            strings.workoutReportRangeOneWeekShort,
+            strings.workoutReportRangeOneMonthShort,
+            strings.workoutReportRangeThreeMonthsShort,
+            strings.workoutReportRangeSixMonthsShort,
+            strings.workoutReportRangeOneYearShort,
+            strings.workoutReportRangeAll,
+          ];
+          final rangeOptions = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.button == true &&
+                rangeLabels.contains(widget.properties.label),
+          );
+          expect(rangeOptions, findsNWidgets(6));
+
+          await tester.tap(
+            find.descendant(
+              of: find.byWidgetPredicate(
+                (widget) =>
+                    widget is Semantics &&
+                    widget.properties.button == true &&
+                    widget.properties.label ==
+                        strings.workoutReportMetricSemantics(
+                          strings.workoutReportTime,
+                        ),
+              ),
+              matching: find.text(strings.workoutReportTime),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<Semantics>(
+                  find.byWidgetPredicate(
+                    (widget) =>
+                        widget is Semantics &&
+                        widget.properties.button == true &&
+                        widget.properties.selected == true &&
+                        widget.properties.label ==
+                            strings.workoutReportMetricSemantics(
+                              strings.workoutReportTime,
+                            ),
+                  ),
+                )
+                .properties
+                .selected,
+            isTrue,
+          );
+          chartData = tester.getSemantics(chart).getSemanticsData();
+          expect(
+            chartData.label,
+            contains(
+              strings.workoutReportChartTitle(
+                strings.workoutReportTime,
+                strings.workoutReportRangeAll,
+              ),
+            ),
+          );
+          expect(tester.takeException(), isNull, reason: 'scale=$scale');
+        }
+      } finally {
+        semantics.dispose();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 }
 
 Widget _host({
@@ -274,6 +429,7 @@ Widget _host({
   double textScale = 1,
   TextDirection textDirection = TextDirection.ltr,
   bool reduceMotion = false,
+  ThemeData? theme,
 }) {
   return MultiProvider(
     providers: [
@@ -282,7 +438,7 @@ Widget _host({
     ],
     child: MaterialApp(
       key: ValueKey('workout-chart-$textScale-$textDirection-$reduceMotion'),
-      theme: AppThemeFactory.light(AppThemeFamily.classic),
+      theme: theme ?? AppThemeFactory.light(AppThemeFamily.classic),
       locale: const Locale('en'),
       localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: const [Locale('en')],

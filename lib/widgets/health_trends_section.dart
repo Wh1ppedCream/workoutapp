@@ -16,6 +16,7 @@ import '../theme/tokens/app_data_visualization_tokens.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/app_test_keys.dart';
@@ -23,11 +24,23 @@ import '../utils/localized_formatters.dart';
 import 'guided_tutorial_overlay.dart';
 import 'safe_error_view.dart';
 
-Widget _withHealthCardForeground(BuildContext context, Widget child) {
+Widget _withHealthCardForeground(
+  BuildContext context,
+  Widget child, {
+  Color? surface,
+}) {
   return TonosSurfaceTheme(
-    surface: _healthTrendCardSurface(context),
+    surface: surface ?? _healthTrendCardSurface(context),
     child: child,
   );
+}
+
+Color _expressiveHealthTrendSurface(
+  BuildContext context, {
+  bool alternate = false,
+}) {
+  final tokens = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+  return alternate ? tokens.creationSurface : tokens.activePlansSurface;
 }
 
 Color _healthTrendCardSurface(BuildContext context) {
@@ -213,6 +226,45 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     final expressiveTokens = usesExpressive
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()
         : null;
+    final metricButton = TextButton.icon(
+      onPressed: _createCustomMetric,
+      icon: const Icon(Icons.add, size: 18),
+      label: Text(strings.healthMetric),
+      style: usesInkRecipe
+          ? TextButton.styleFrom(
+              backgroundColor: context.cs.primary,
+              foregroundColor: tonosForegroundForSurface(
+                context,
+                context.cs.primary,
+              ),
+              side: BorderSide(
+                color: tonosOutlineForSurface(context, context.cs.primary),
+                width: context.shapeTokens.outlineWidth,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: context.shapeTokens.control,
+              ),
+            )
+          : usesExpressive
+          ? TextButton.styleFrom(
+              backgroundColor: expressiveTokens!.actionSecondary,
+              foregroundColor: expressiveTokens.actionSecondaryForeground,
+              shape: RoundedRectangleBorder(
+                borderRadius: context.shapeTokens.healthTrendEntry,
+              ),
+            )
+          : null,
+    );
+    final styledMetricButton = usesExpressive
+        ? TonosExpressivePressResponse(
+            enabled: true,
+            borderRadius: context.shapeTokens.healthTrendEntry,
+            pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+            pressedScale: TonosExpressiveMotionTiers.compactScale,
+            pressedOffset: TonosExpressiveMotionTiers.compactOffset,
+            child: metricButton,
+          )
+        : metricButton;
 
     final header = Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -224,38 +276,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
               style: theme.textTheme.titleLarge,
             ),
           ),
-          TextButton.icon(
-            onPressed: _createCustomMetric,
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(strings.healthMetric),
-            style: usesInkRecipe
-                ? TextButton.styleFrom(
-                    backgroundColor: context.cs.primary,
-                    foregroundColor: tonosForegroundForSurface(
-                      context,
-                      context.cs.primary,
-                    ),
-                    side: BorderSide(
-                      color: tonosOutlineForSurface(
-                        context,
-                        context.cs.primary,
-                      ),
-                      width: context.shapeTokens.outlineWidth,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: context.shapeTokens.control,
-                    ),
-                  )
-                : usesExpressive
-                ? TextButton.styleFrom(
-                    backgroundColor: expressiveTokens!.actionSecondary,
-                    foregroundColor: expressiveTokens.actionSecondaryForeground,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: context.shapeTokens.healthTrendEntry,
-                    ),
-                  )
-                : null,
-          ),
+          styledMetricButton,
         ],
       ),
     );
@@ -325,6 +346,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                 return _AddTrendTile(
                   onTap: _createCustomMetric,
                   fillCell: true,
+                  arrivalIndex: index,
                 );
               }
               final trend = trends[index];
@@ -332,6 +354,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                 trend: trend,
                 onTap: () => _openTrend(trend),
                 onAdd: () => _logEntry(trend),
+                alternateSurface: index.isOdd,
+                arrivalIndex: index,
                 fillCell: true,
               );
             },
@@ -352,13 +376,18 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
             padding: EdgeInsets.fromLTRB(16, 0, 16, shadowBottom),
             itemBuilder: (context, index) {
               if (index == trends.length) {
-                return _AddTrendTile(onTap: _createCustomMetric);
+                return _AddTrendTile(
+                  onTap: _createCustomMetric,
+                  arrivalIndex: index,
+                );
               }
               final trend = trends[index];
               return _TrendTile(
                 trend: trend,
                 onTap: () => _openTrend(trend),
                 onAdd: () => _logEntry(trend),
+                alternateSurface: index.isOdd,
+                arrivalIndex: index,
                 height: tileHeight,
               );
             },
@@ -685,6 +714,8 @@ class _TrendTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onAdd;
   final bool fillCell;
+  final bool alternateSurface;
+  final int arrivalIndex;
   final double? height;
 
   const _TrendTile({
@@ -692,6 +723,8 @@ class _TrendTile extends StatelessWidget {
     required this.onTap,
     required this.onAdd,
     this.fillCell = false,
+    this.alternateSurface = false,
+    this.arrivalIndex = 0,
     this.height,
   });
 
@@ -708,20 +741,69 @@ class _TrendTile extends StatelessWidget {
     final delta = trend.delta;
     final deltaColor = _deltaColor(context, delta);
     final usesInkRecipe = context.usesNeoPresentation;
-    final cardShape = context.usesExpressivePresentation
-        ? shapes.healthTrendCard
-        : shapes.card;
-    final cardSurface = _healthTrendCardSurface(context);
+    final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressive
+        ? theme.extension<AppExpressiveTrainTokens>()!
+        : null;
+    final cardShape = usesExpressive ? shapes.healthTrendCard : shapes.card;
+    final cardSurface = usesExpressive
+        ? _expressiveHealthTrendSurface(context, alternate: alternateSurface)
+        : _healthTrendCardSurface(context);
     final cardForeground = usesInkRecipe
         ? tonosForegroundForSurface(context, cardSurface)
+        : usesExpressive
+        ? theme.colorScheme.onSurface
         : null;
     final cardSecondaryForeground = usesInkRecipe
         ? tonosSecondaryForegroundForSurface(context, cardSurface)
+        : usesExpressive
+        ? theme.colorScheme.onSurfaceVariant
         : null;
     final effects = context.effectTokens;
     final borderColor = usesInkRecipe
         ? tonosOutlineForSurface(context, cardSurface)
         : surfaces.subtleOutline;
+    final logButton = usesExpressive
+        ? Semantics(
+            key: ValueKey(
+              'measurement-trend-${trend.definition.id}-log-semantics',
+            ),
+            container: true,
+            button: true,
+            label: strings.healthLogMeasurement(title),
+            onTap: onAdd,
+            child: ExcludeSemantics(
+              child: IconButton(
+                key: AppTestKeys.measurementTrendAdd(trend.definition.id),
+                onPressed: onAdd,
+                style: IconButton.styleFrom(
+                  backgroundColor: expressiveTokens!.actionSecondary,
+                  foregroundColor: expressiveTokens.actionSecondaryForeground,
+                ),
+                icon: Icon(
+                  Icons.add,
+                  color: expressiveTokens.actionSecondaryForeground,
+                ),
+              ),
+            ),
+          )
+        : Semantics(
+            button: true,
+            label: strings.healthLogMeasurement(title),
+            onTap: onAdd,
+            child: ExcludeSemantics(
+              child: InkResponse(
+                key: AppTestKeys.measurementTrendAdd(trend.definition.id),
+                onTap: onAdd,
+                radius: 18,
+                child: Icon(
+                  Icons.add_circle_outline,
+                  size: 18,
+                  color: cardSecondaryForeground ?? dataVisualization.label,
+                ),
+              ),
+            ),
+          );
 
     final card = Material(
       color: cardSurface,
@@ -734,10 +816,12 @@ class _TrendTile extends StatelessWidget {
           width: fillCell ? double.infinity : 154,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: borderColor,
-              width: usesInkRecipe ? shapes.outlineWidth : 1,
-            ),
+            border: usesExpressive
+                ? null
+                : Border.all(
+                    color: borderColor,
+                    width: usesInkRecipe ? shapes.outlineWidth : 1,
+                  ),
             borderRadius: cardShape,
           ),
           child: Column(
@@ -748,7 +832,7 @@ class _TrendTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      maxLines: usesInkRecipe ? 2 : 1,
+                      maxLines: usesInkRecipe || usesExpressive ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: cardForeground,
@@ -756,27 +840,7 @@ class _TrendTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Semantics(
-                    button: true,
-                    label: strings.healthLogMeasurement(title),
-                    onTap: onAdd,
-                    child: ExcludeSemantics(
-                      child: InkResponse(
-                        key: AppTestKeys.measurementTrendAdd(
-                          trend.definition.id,
-                        ),
-                        onTap: onAdd,
-                        radius: 18,
-                        child: Icon(
-                          Icons.add_circle_outline,
-                          size: 18,
-                          color:
-                              cardSecondaryForeground ??
-                              dataVisualization.label,
-                        ),
-                      ),
-                    ),
-                  ),
+                  logButton,
                 ],
               ),
               const SizedBox(height: 10),
@@ -788,6 +852,7 @@ class _TrendTile extends StatelessWidget {
                       ? tonosPrimarySeriesForSurface(context, cardSurface)
                       : dataVisualization.tertiarySeries,
                   emptyColor: cardSecondaryForeground,
+                  useExpressiveEmptyState: usesExpressive,
                 ),
               ),
               const SizedBox(height: 8),
@@ -810,7 +875,9 @@ class _TrendTile extends StatelessWidget {
                 maxLines: usesInkRecipe ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: cardSecondaryForeground ?? deltaColor,
+                  color: usesExpressive && latest != null
+                      ? deltaColor
+                      : cardSecondaryForeground ?? deltaColor,
                 ),
               ),
             ],
@@ -836,16 +903,36 @@ class _TrendTile extends StatelessWidget {
               child: card,
             )
           : card,
+      surface: cardSurface,
     );
-    return height == null ? tile : SizedBox(height: height, child: tile);
+    final sizedTile = height == null
+        ? tile
+        : SizedBox(height: height, child: tile);
+    if (!usesExpressive) return sizedTile;
+    return TonosExpressiveReveal(
+      staggerIndex: arrivalIndex,
+      child: TonosExpressivePressResponse(
+        enabled: true,
+        borderRadius: cardShape,
+        pressedBorderRadius: ExpressiveTrainShapes.focusInsetPressed,
+        pressedScale: TonosExpressiveMotionTiers.supportingScale,
+        pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+        child: sizedTile,
+      ),
+    );
   }
 }
 
 class _AddTrendTile extends StatelessWidget {
   final VoidCallback onTap;
   final bool fillCell;
+  final int arrivalIndex;
 
-  const _AddTrendTile({required this.onTap, this.fillCell = false});
+  const _AddTrendTile({
+    required this.onTap,
+    this.fillCell = false,
+    this.arrivalIndex = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -856,18 +943,23 @@ class _AddTrendTile extends StatelessWidget {
     final dataVisualization = context.dataVisualizationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressive = context.usesExpressivePresentation;
+    final expressiveTokens = usesExpressive
+        ? theme.extension<AppExpressiveTrainTokens>()!
+        : null;
     final fill = usesInkRecipe
         ? context.cs.primary
         : usesExpressive
-        ? context.progressColors.healthCard
+        ? expressiveTokens!.actionSecondary
         : Colors.transparent;
     final foreground = usesInkRecipe
         ? tonosForegroundForSurface(context, fill)
+        : usesExpressive
+        ? expressiveTokens!.actionSecondaryForeground
         : dataVisualization.label;
     final borderColor = usesInkRecipe
         ? tonosOutlineForSurface(context, fill)
         : surfaces.subtleOutline;
-    return Semantics(
+    final addTile = Semantics(
       button: true,
       label: strings.healthCreateMetric,
       onTap: onTap,
@@ -884,19 +976,24 @@ class _AddTrendTile extends StatelessWidget {
               width: fillCell ? double.infinity : 132,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                border: Border.all(color: borderColor),
+                border: usesExpressive ? null : Border.all(color: borderColor),
                 borderRadius: usesExpressive
                     ? shapes.healthTrendEntry
                     : shapes.card,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: usesExpressive
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.add, color: foreground, size: 30),
                   const SizedBox(height: 8),
                   Text(
                     strings.healthCustomMetric,
-                    textAlign: TextAlign.center,
+                    textAlign: usesExpressive
+                        ? TextAlign.start
+                        : TextAlign.center,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: foreground,
                     ),
@@ -908,6 +1005,18 @@ class _AddTrendTile extends StatelessWidget {
         ),
       ),
     );
+    if (!usesExpressive) return addTile;
+    return TonosExpressiveReveal(
+      staggerIndex: arrivalIndex,
+      child: TonosExpressivePressResponse(
+        enabled: true,
+        borderRadius: shapes.healthTrendEntry,
+        pressedBorderRadius: ExpressiveTrainShapes.compactControlPressed,
+        pressedScale: TonosExpressiveMotionTiers.supportingScale,
+        pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+        child: addTile,
+      ),
+    );
   }
 }
 
@@ -916,12 +1025,14 @@ class _MeasurementSparkline extends StatelessWidget {
   final List<Measurement> entries;
   final Color lineColor;
   final Color? emptyColor;
+  final bool useExpressiveEmptyState;
 
   const _MeasurementSparkline({
     required this.definition,
     required this.entries,
     required this.lineColor,
     this.emptyColor,
+    this.useExpressiveEmptyState = false,
   });
 
   @override
@@ -940,12 +1051,61 @@ class _MeasurementSparkline extends StatelessWidget {
         ),
         child: ExcludeSemantics(
           child: Center(
-            child: Icon(
-              Icons.show_chart,
-              color:
-                  emptyColor ??
-                  Theme.of(context).iconTheme.color?.withValues(alpha: 0.25),
-            ),
+            child: useExpressiveEmptyState
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      final prompt = entries.isEmpty
+                          ? strings.healthTrendNeedEntries
+                          : strings.healthTrendNeedOneMore;
+                      final promptStyle = Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          );
+                      final promptPainter = TextPainter(
+                        text: TextSpan(text: prompt, style: promptStyle),
+                        textAlign: TextAlign.center,
+                        textDirection: Directionality.of(context),
+                        textScaler: MediaQuery.textScalerOf(context),
+                        maxLines: 2,
+                        ellipsis: '\u2026',
+                      )..layout(maxWidth: constraints.maxWidth);
+                      final icon = Icon(
+                        Icons.show_chart,
+                        size: 19,
+                        color:
+                            emptyColor ??
+                            Theme.of(context).iconTheme.color
+                                ?.withValues(alpha: 0.55),
+                      );
+                      if (constraints.maxHeight < promptPainter.height + 23) {
+                        return icon;
+                      }
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          icon,
+                          const SizedBox(height: 4),
+                          Text(
+                            prompt,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: promptStyle,
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                : Icon(
+                    Icons.show_chart,
+                    color:
+                        emptyColor ??
+                        Theme.of(context).iconTheme.color
+                            ?.withValues(alpha: 0.25),
+                  ),
           ),
         ),
       );
@@ -1468,8 +1628,100 @@ class _HealthTrendMessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final actionLabel = this.actionLabel;
 
     final shapes = context.shapeTokens;
+    if (context.usesExpressivePresentation) {
+      final expressiveTokens = Theme.of(context)
+          .extension<AppExpressiveTrainTokens>()!;
+      final surface = expressiveTokens.activePlansSurface;
+      final stateCard = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: TonosSurfaceTheme(
+          surface: surface,
+          child: Material(
+            color: surface,
+            borderRadius: shapes.healthTrendCard,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: expressiveTokens.actionSecondary,
+                          borderRadius: ExpressiveTrainShapes.compactControl,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: expressiveTokens.actionSecondaryForeground,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              message,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (actionLabel != null && onAction != null) ...[
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TonosExpressivePressResponse(
+                        enabled: true,
+                        borderRadius: shapes.healthTrendEntry,
+                        pressedBorderRadius:
+                            ExpressiveTrainShapes.compactControlPressed,
+                        pressedScale: TonosExpressiveMotionTiers.compactScale,
+                        pressedOffset: TonosExpressiveMotionTiers.compactOffset,
+                        child: TextButton.icon(
+                          onPressed: onAction,
+                          icon: const Icon(Icons.add, size: 18),
+                          label: Text(actionLabel),
+                          style: TextButton.styleFrom(
+                            backgroundColor: expressiveTokens.actionSecondary,
+                            foregroundColor:
+                                expressiveTokens.actionSecondaryForeground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: shapes.healthTrendEntry,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      return TonosExpressiveReveal(child: stateCard);
+    }
+
     final foreground = context.usesNeoPresentation
         ? tonosForegroundForSurface(context, _healthTrendCardSurface(context))
         : theme.colorScheme.onSurface;
@@ -1519,7 +1771,7 @@ class _HealthTrendMessageCard extends StatelessWidget {
                 TextButton(
                   onPressed: onAction,
                   style: TextButton.styleFrom(foregroundColor: foreground),
-                  child: Text(actionLabel!),
+                  child: Text(actionLabel),
                 ),
               ],
             ],

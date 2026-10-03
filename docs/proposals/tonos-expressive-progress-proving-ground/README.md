@@ -1,5 +1,7 @@
 # Tonos Expressive Progress review
 
+**Current amplified candidate:** [Expressive Progress — amplified review (2026-10-03)](amplified-review/20261003/README.md). Focused and integrated QA have passed, and fresh light/dark Pixel captures are ready for user review. The foundation captures and notes below remain the original baseline evidence and are preserved as before; Progress qualification and full-suite qualification remain deferred until user approval.
+
 Pixel 7 review captures for the isolated Expressive preview.
 
 - Device: Pixel 7 (`28021FDH200228`), Android 16, 1080 × 2400.

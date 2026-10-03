@@ -336,6 +336,57 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
           ),
         ];
 
+        final chartViewport = SizedBox(
+          key:
+              usesExpressiveRecipe
+                  ? const ValueKey('workout-report-expressive-chart-viewport')
+                  : null,
+          height: 220,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: _metrics.length,
+            onPageChanged: (index) {
+              setState(() => _selectedMetricIndex = index);
+            },
+            itemBuilder: (context, index) {
+              final metric = _metrics[index];
+              return _MetricChartPage(
+                buckets: buckets,
+                metric: metric,
+                interval: bucketSet.interval,
+                range: _range,
+                weightUnit: weightUnit,
+              );
+            },
+          ),
+        );
+        final rangeSelector = _RangeSelector(
+          selectedRange: _range,
+          onSelectRange: _selectRange,
+        );
+        final additionalDetails = _AdditionalDetailsDropdown(
+          expanded: _showAdditionalDetails,
+          insights: insights.insights,
+          onToggle: () {
+            setState(() {
+              _showAdditionalDetails = !_showAdditionalDetails;
+            });
+          },
+        );
+
+        if (usesExpressiveRecipe) {
+          return shell(
+            _ExpressiveWorkoutReportComposition(
+              title: strings.workoutReportTitle,
+              stats: reportStats,
+              selectedMetricIndex: _selectedMetricIndex,
+              chartViewport: chartViewport,
+              rangeSelector: rangeSelector,
+              additionalDetails: additionalDetails,
+            ),
+          );
+        }
+
         return shell(
           Padding(
             padding: const EdgeInsets.all(16),
@@ -393,41 +444,11 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                   },
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 220,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: _metrics.length,
-                    onPageChanged: (index) {
-                      setState(() => _selectedMetricIndex = index);
-                    },
-                    itemBuilder: (context, index) {
-                      final metric = _metrics[index];
-                      return _MetricChartPage(
-                        buckets: buckets,
-                        metric: metric,
-                        interval: bucketSet.interval,
-                        range: _range,
-                        weightUnit: weightUnit,
-                      );
-                    },
-                  ),
-                ),
+                chartViewport,
                 const SizedBox(height: 12),
-                _RangeSelector(
-                  selectedRange: _range,
-                  onSelectRange: _selectRange,
-                ),
+                rangeSelector,
                 const SizedBox(height: 8),
-                _AdditionalDetailsDropdown(
-                  expanded: _showAdditionalDetails,
-                  insights: insights.insights,
-                  onToggle: () {
-                    setState(() {
-                      _showAdditionalDetails = !_showAdditionalDetails;
-                    });
-                  },
-                ),
+                additionalDetails,
               ],
             ),
           ),
@@ -779,6 +800,114 @@ class _MetricTrend {
   const _MetricTrend({required this.label, required this.direction});
 }
 
+class _ExpressiveWorkoutReportComposition extends StatelessWidget {
+  const _ExpressiveWorkoutReportComposition({
+    required this.title,
+    required this.stats,
+    required this.selectedMetricIndex,
+    required this.chartViewport,
+    required this.rangeSelector,
+    required this.additionalDetails,
+  });
+
+  final String title;
+  final List<Widget> stats;
+  final int selectedMetricIndex;
+  final Widget chartViewport;
+  final Widget rangeSelector;
+  final Widget additionalDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    final expressive = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    return Padding(
+      key: const ValueKey('workout-report-expressive-composition'),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            key: const ValueKey('workout-report-expressive-title'),
+            textAlign: TextAlign.start,
+            maxLines: 2,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: expressive.actionPrimary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Stack(
+            key: const ValueKey('workout-report-expressive-title-rule'),
+            children: [
+              Container(
+                height: 3,
+                decoration: BoxDecoration(
+                  color: expressive.selectorTrack,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
+                  width: 48,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: expressive.selectorActive,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            key: const ValueKey('workout-report-expressive-metric-cluster'),
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: expressive.selectorTrack,
+              borderRadius: context.shapeTokens.workoutMetricRange,
+            ),
+            child: LayoutBuilder(
+              builder: (context, _) {
+                if (textScale <= 1.15) {
+                  return Row(
+                    children: [
+                      for (var index = 0; index < stats.length; index++)
+                        Expanded(
+                          flex: index == selectedMetricIndex ? 6 : 5,
+                          child: stats[index],
+                        ),
+                    ],
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final stat in stats)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: stat,
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+          chartViewport,
+          const SizedBox(height: 12),
+          rangeSelector,
+          const SizedBox(height: 10),
+          additionalDetails,
+        ],
+      ),
+    );
+  }
+}
+
 class _ReportStat extends StatelessWidget {
   final String label;
   final String value;
@@ -804,22 +933,29 @@ class _ReportStat extends StatelessWidget {
     final progressColors = context.progressColors;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
-    final expressiveTokens = usesExpressiveRecipe
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-        : null;
+    final expressiveTokens =
+        usesExpressiveRecipe
+            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+            : null;
     final unselectedFill =
         usesInkRecipe
             ? surfaces.workoutMetricRange
+            : usesExpressiveRecipe
+            ? Colors.transparent
             : surfaces.workoutMetricStat;
     final selectedFill =
         usesInkRecipe
             ? surfaces.exerciseProgressSelector
             : usesExpressiveRecipe
-                ? surfaces.workoutMetricStat
-                : progressColors.accent.withValues(alpha: 0.14);
+            ? Color.lerp(expressiveTokens!.focusSurface, Colors.black, 0.36)!
+            : progressColors.accent.withValues(alpha: 0.14);
     final unselectedForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, unselectedFill)
+            : usesExpressiveRecipe
+            ? Theme.of(context).brightness == Brightness.light
+                ? expressiveTokens!.focusSurface
+                : expressiveTokens!.focusForeground
             : cs.onSurface;
     final selectedForeground =
         usesInkRecipe
@@ -828,31 +964,44 @@ class _ReportStat extends StatelessWidget {
               selectedFill,
               parentSurface: unselectedFill,
             )
-            : expressiveTokens?.selectorActive ?? progressColors.accent;
+            : expressiveTokens?.focusForeground ?? progressColors.accent;
     final unitForeground =
         usesInkRecipe
             ? (selected ? selectedForeground : unselectedForeground).withValues(
               alpha: 0.78,
             )
             : usesExpressiveRecipe
-                ? (selected ? selectedForeground : unselectedForeground)
-                    .withValues(alpha: 0.78)
-                : cs.onSurfaceVariant;
+            ? (selected ? selectedForeground : unselectedForeground).withValues(
+              alpha: 0.78,
+            )
+            : cs.onSurfaceVariant;
     final unselectedBorder =
         usesInkRecipe
             ? tonosOutlineForSurface(context, unselectedFill)
             : usesExpressiveRecipe
-                ? surfaces.subtleOutline
-                : cs.outlineVariant.withValues(alpha: 0.7);
+            ? Colors.transparent
+            : cs.outlineVariant.withValues(alpha: 0.7);
     final selectedBorder =
         usesInkRecipe
             ? tonosOutlineForSurface(context, selectedFill)
             : usesExpressiveRecipe
-                ? expressiveTokens!.selectorActive
-                : progressColors.accent.withValues(alpha: 0.75);
+            ? Colors.transparent
+            : progressColors.accent.withValues(alpha: 0.75);
     final strings = AppLocalizations.of(context);
-    final trendSurface = selected ? selectedFill : unselectedFill;
-    final trendColor = _trendColor(context, trendSurface);
+    final trendSurface =
+        usesExpressiveRecipe
+            ? selected
+                ? selectedFill
+                : expressiveTokens!.selectorTrack
+            : selected
+            ? selectedFill
+            : unselectedFill;
+    final trendColor =
+        usesExpressiveRecipe &&
+                selected &&
+                trend.direction == _MetricTrendDirection.flat
+            ? expressiveTokens!.focusForeground
+            : _trendColor(context, trendSurface);
     final compactLayout = MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Semantics(
       button: true,
@@ -865,10 +1014,20 @@ class _ReportStat extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? selectedFill : unselectedFill,
             borderRadius: shapes.workoutMetricStat,
-            border: Border.all(
-              color: selected ? selectedBorder : unselectedBorder,
-              width: selected && usesExpressiveRecipe ? 2 : 1,
-            ),
+            border:
+                usesExpressiveRecipe
+                    ? selected
+                        ? BorderDirectional(
+                          start: BorderSide(
+                            color: expressiveTokens!.selectorActive,
+                            width: 4,
+                          ),
+                        )
+                        : null
+                    : Border.all(
+                      color: selected ? selectedBorder : unselectedBorder,
+                      width: 1,
+                    ),
           ),
           child: InkWell(
             borderRadius: shapes.workoutMetricStat,
@@ -925,7 +1084,7 @@ class _ReportStat extends StatelessWidget {
                                       context,
                                     ).textTheme.labelSmall?.copyWith(
                                       color:
-                                          usesInkRecipe
+                                          usesInkRecipe || usesExpressiveRecipe
                                               ? unitForeground
                                               : cs.onSurfaceVariant,
                                     ),
@@ -1451,6 +1610,10 @@ class _RangeSelector extends StatelessWidget {
     final unselectedForeground =
         usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.workoutMetricRange)
+            : usesExpressiveRecipe
+            ? Theme.of(context).brightness == Brightness.light
+                ? expressiveTokens!.focusSurface
+                : expressiveTokens!.focusForeground
             : context.cs.onSurface;
     final selectedForeground =
         usesInkRecipe
@@ -1459,14 +1622,15 @@ class _RangeSelector extends StatelessWidget {
               selectedFill,
               parentSurface: surfaces.workoutMetricRange,
             )
-            : expressiveTokens?.selectorActiveForeground ?? context.cs.onPrimary;
+            : expressiveTokens?.selectorActiveForeground ??
+                context.cs.onPrimary;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: surfaces.workoutMetricRange,
+        color: expressiveTokens?.selectorTrack ?? surfaces.workoutMetricRange,
         borderRadius: shapes.workoutMetricRange,
         border:
-        usesInkRecipe || usesExpressiveRecipe
+            usesInkRecipe
                 ? Border.all(
                   color: tonosOutlineForSurface(
                     context,
@@ -1635,9 +1799,11 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final expressiveTokens = context.usesExpressivePresentation
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-        : null;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final expressiveTokens =
+        usesExpressiveRecipe
+            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+            : null;
     // In Flutter 3.47.5, a muted Progress tab can build AnimatedSize through
     // AnimatedCrossFade with zero duration and mark layout dirty while sizing.
     // Keep this compatibility path preview-only and preserve the parent's
@@ -1653,18 +1819,23 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
-              color: surfaces.workoutMetricDetails,
+              color:
+                  expressiveTokens?.selectorTrack ??
+                  surfaces.workoutMetricDetails,
               borderRadius: shapes.workoutMetricDetails,
-              border: Border.all(
-                color:
-                    usesInkRecipe
-                        ? tonosOutlineForSurface(
-                          context,
-                          surfaces.workoutMetricDetails,
-                          neutral: true,
-                        )
-                        : cs.outlineVariant.withValues(alpha: 0.55),
-              ),
+              border:
+                  usesExpressiveRecipe
+                      ? null
+                      : Border.all(
+                        color:
+                            usesInkRecipe
+                                ? tonosOutlineForSurface(
+                                  context,
+                                  surfaces.workoutMetricDetails,
+                                  neutral: true,
+                                )
+                                : cs.outlineVariant.withValues(alpha: 0.55),
+                      ),
             ),
             child: InkWell(
               borderRadius: shapes.workoutMetricDetails,
@@ -1676,6 +1847,17 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
+                    if (usesExpressiveRecipe) ...[
+                      Container(
+                        width: 3,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: expressiveTokens!.selectorActive,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
                     Expanded(
                       child: Text(
                         AppLocalizations.of(
@@ -1683,7 +1865,8 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                         ).workoutReportAdditionalDetails,
                         maxLines: 2,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: cs.onSurface,
+                          color:
+                              expressiveTokens?.actionPrimary ?? cs.onSurface,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1791,9 +1974,10 @@ class _ReportInsightTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
     final usesClassicPresentation = context.usesClassicPresentation;
-    final expressiveTokens = context.usesExpressivePresentation
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-        : null;
+    final expressiveTokens =
+        context.usesExpressivePresentation
+            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+            : null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final classicNormalScale = usesClassicPresentation && textScale <= 1.15;
     final compactClassicTile = classicNormalScale && textScale > 1.0;
@@ -1809,15 +1993,18 @@ class _ReportInsightTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: surfaces.workoutMetricInsight,
             borderRadius: shapes.workoutMetricInsight,
-            border: Border.all(
-              color:
-                  context.surfaceDecorationTokens.panel.outlined
-                      ? tonosOutlineForSurface(
-                        context,
-                        surfaces.workoutMetricInsight,
-                      )
-                      : cs.outlineVariant.withValues(alpha: 0.55),
-            ),
+            border:
+                context.usesExpressivePresentation
+                    ? null
+                    : Border.all(
+                      color:
+                          context.surfaceDecorationTokens.panel.outlined
+                              ? tonosOutlineForSurface(
+                                context,
+                                surfaces.workoutMetricInsight,
+                              )
+                              : cs.outlineVariant.withValues(alpha: 0.55),
+                    ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

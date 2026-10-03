@@ -10,7 +10,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
-import 'package:env_test/theme/tokens/app_progress_colors.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/health_trends_section.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -63,6 +63,7 @@ void main() {
     (tester) async {
       final units = await _readyUnits();
       addTearDown(units.dispose);
+      final semantics = tester.ensureSemantics();
       SharedPreferences.setMockInitialValues({});
       final theme = ExpressiveThemeDefinition.light();
       await tester.pumpWidget(_healthApp(units, entryCount: 3, theme: theme));
@@ -70,7 +71,9 @@ void main() {
 
       final context = tester.element(find.byType(HealthTrendsSection));
       expect(context.usesExpressivePresentation, isTrue);
-      final cardColor = theme.extension<AppProgressColors>()!.healthCard;
+      final cardColor = theme
+          .extension<AppExpressiveTrainTokens>()!
+          .activePlansSurface;
       final shapes = theme.shapeTokens;
       final trendTile = tester.widget<Container>(
         find.byKey(AppTestKeys.measurementTrend(1)),
@@ -79,6 +82,7 @@ void main() {
         (trendTile.decoration! as BoxDecoration).borderRadius,
         shapes.healthTrendCard,
       );
+      expect((trendTile.decoration! as BoxDecoration).border, isNull);
       expect(
         tester
             .widgetList<Material>(find.byType(Material))
@@ -111,6 +115,93 @@ void main() {
       expect(
         find.byKey(const ValueKey('measurement-sparkline-1-semantics')),
         findsOneWidget,
+      );
+      final logButton = find.byKey(AppTestKeys.measurementTrendAdd(1));
+      expect(tester.getSize(logButton).width, greaterThanOrEqualTo(44));
+      final cardSemanticsNode = tester.getSemantics(
+        find.byKey(AppTestKeys.measurementTrend(1)),
+      );
+      final cardSemantics = cardSemanticsNode.getSemanticsData();
+      final logSemanticsFinder = find.byKey(
+        const ValueKey('measurement-trend-1-log-semantics'),
+      );
+      final logSemanticsNode = tester.getSemantics(logSemanticsFinder);
+      final logSemantics = logSemanticsNode.getSemanticsData();
+      expect(cardSemantics.hasAction(SemanticsAction.tap), isTrue);
+      expect(cardSemantics.label, contains('Body weight'));
+      expect(logSemantics.label, 'Log Body weight');
+      expect(logSemantics.hasAction(SemanticsAction.tap), isTrue);
+      expect(logSemanticsNode.id, isNot(cardSemanticsNode.id));
+      expect(find.semantics.byLabel('Log Body weight'), findsOneWidget);
+      expect(
+        tester.getSemantics(logButton).getSemanticsData().label,
+        'Log Body weight',
+      );
+      expect(tester.takeException(), isNull);
+      semantics.dispose();
+      await tester.pump();
+    },
+  );
+
+  testWidgets(
+    'Expressive Health gives empty metric and entry states an action',
+    (tester) async {
+      final units = await _readyUnits();
+      addTearDown(units.dispose);
+      await tester.binding.setSurfaceSize(const Size(320, 740));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues({});
+
+      await tester.pumpWidget(
+        _healthApp(
+          units,
+          entryCount: 0,
+          metricCount: 0,
+          theme: ExpressiveThemeDefinition.light(),
+          textScale: 1.5,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No measurements yet'), findsOneWidget);
+      expect(
+        find.text('Create a metric to start tracking progress.'),
+        findsOneWidget,
+      );
+      expect(find.text('Metric'), findsOneWidget);
+      expect(find.text('Create metric'), findsOneWidget);
+      expect(
+        tester.widgetList<TextButton>(find.byType(TextButton)),
+        everyElement(
+          predicate<TextButton>((button) => button.onPressed != null),
+        ),
+      );
+      final theme = ExpressiveThemeDefinition.light();
+      expect(
+        tester
+            .widgetList<Material>(find.byType(Material))
+            .any(
+              (material) =>
+                  material.color ==
+                  theme
+                      .extension<AppExpressiveTrainTokens>()!
+                      .activePlansSurface,
+            ),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(_healthApp(units, entryCount: 0, theme: theme));
+      await tester.pumpAndSettle();
+      expect(find.text('Tap + to log'), findsOneWidget);
+      final emptySparkline = find.byKey(
+        const ValueKey('measurement-sparkline-1-semantics'),
+      );
+      expect(emptySparkline, findsOneWidget);
+      expect(
+        tester.getSemantics(emptySparkline).getSemanticsData().label,
+        contains('Log entries to build a trend.'),
       );
       expect(tester.takeException(), isNull);
     },
@@ -157,6 +248,63 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     }
+  });
+
+  testWidgets('Expressive Health rail keeps the next card peeking', (
+    tester,
+  ) async {
+    final units = await _readyUnits();
+    addTearDown(units.dispose);
+    await tester.binding.setSurfaceSize(const Size(320, 740));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      _healthApp(
+        units,
+        entryCount: 3,
+        metricCount: 3,
+        theme: ExpressiveThemeDefinition.light(),
+        disableAnimations: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final first = tester.getRect(find.byKey(AppTestKeys.measurementTrend(1)));
+    final second = tester.getRect(find.byKey(AppTestKeys.measurementTrend(2)));
+    expect(first.left, greaterThanOrEqualTo(0));
+    expect(second.left, lessThan(320));
+    expect(second.right, greaterThan(320));
+    expect(find.text('Metric'), findsOneWidget);
+
+    final reveals = find.byType(TonosExpressiveReveal);
+    expect(reveals, findsWidgets);
+    for (final reveal in reveals.evaluate()) {
+      final opacityFinder = find.descendant(
+        of: find.byWidget(reveal.widget),
+        matching: find.byType(Opacity),
+      );
+      expect(
+        tester
+            .widgetList<Opacity>(opacityFinder)
+            .map((widget) => widget.opacity),
+        everyElement(1.0),
+      );
+    }
+    final pressResponses = find.byType(TonosExpressivePressResponse);
+    for (final pressResponse in pressResponses.evaluate()) {
+      final transforms = tester.widgetList<Transform>(
+        find.descendant(
+          of: find.byWidget(pressResponse.widget),
+          matching: find.byType(Transform),
+        ),
+      );
+      expect(
+        transforms.map((transform) => transform.transform.getMaxScaleOnAxis()),
+        everyElement(1.0),
+      );
+    }
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('detail chart supports semantic point navigation', (
@@ -350,6 +498,7 @@ Future<UnitPreferenceProvider> _readyUnits() async {
 Widget _healthApp(
   UnitPreferenceProvider units, {
   required int entryCount,
+  int metricCount = 1,
   ThemeData? theme,
   double textScale = 1,
   bool disableAnimations = false,
@@ -357,7 +506,10 @@ Widget _healthApp(
   return MultiProvider(
     providers: [
       Provider<AppRepository>.value(
-        value: _MeasurementRepository(entryCount: entryCount),
+        value: _MeasurementRepository(
+          entryCount: entryCount,
+          metricCount: metricCount,
+        ),
       ),
       ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
     ],
@@ -399,9 +551,10 @@ Widget _progressApp({
 }
 
 class _MeasurementRepository extends AppRepository {
-  _MeasurementRepository({required this.entryCount});
+  _MeasurementRepository({required this.entryCount, this.metricCount = 1});
 
   final int entryCount;
+  final int metricCount;
 
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
@@ -427,11 +580,12 @@ class _MeasurementRepository extends AppRepository {
   @override
   Future<List<MeasurementDefinition>> fetchClassMeasurementDefinitions() async {
     return [
-      MeasurementDefinition(
-        id: 1,
-        name: 'Body weight',
-        type: MeasurementType.Custom,
-      ),
+      for (var index = 1; index <= metricCount; index++)
+        MeasurementDefinition(
+          id: index,
+          name: index == 1 ? 'Body weight' : 'Metric $index',
+          type: MeasurementType.Custom,
+        ),
     ];
   }
 
@@ -442,7 +596,7 @@ class _MeasurementRepository extends AppRepository {
     return [
       for (var index = 0; index < entryCount; index++)
         Measurement(
-          id: index + 1,
+          id: defId * 100 + index,
           defId: defId,
           timestamp: DateTime(2026, 1, 10 + index, 8),
           value: 70 + index.toDouble(),

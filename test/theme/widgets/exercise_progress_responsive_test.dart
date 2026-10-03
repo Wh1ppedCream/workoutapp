@@ -363,15 +363,64 @@ void main() {
       );
       final heroDecoration = heroSurface.decoration as BoxDecoration;
       expect(heroDecoration.color, surfaces.exerciseProgressHero);
+      expect(heroDecoration.border, isNull);
+
+      final identity = find.byKey(
+        const ValueKey('exercise-progress-expressive-identity'),
+      );
+      final identitySurface = tester.widget<Container>(
+        find.ancestor(of: identity, matching: find.byType(Container)).first,
+      );
       expect(
-        (heroDecoration.border! as Border).top.color,
-        expressiveTokens.selectorActive.withValues(alpha: 0.36),
+        (identitySurface.decoration! as BoxDecoration).color,
+        expressiveTokens.focusSurface,
+      );
+      expect(
+        tester.widget<Text>(identity).style?.color,
+        expressiveTokens.focusForeground,
+      );
+
+      final action = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('exercise-progress-header-edit')),
+      );
+      expect(
+        action.style?.backgroundColor?.resolve(const <WidgetState>{}),
+        expressiveTokens.actionSecondary,
+      );
+      expect(
+        action.style?.foregroundColor?.resolve(const <WidgetState>{}),
+        expressiveTokens.actionSecondaryForeground,
+      );
+
+      final chartInset = tester.widget<Container>(
+        find.byKey(const ValueKey('exercise-progress-expressive-chart-inset')),
+      );
+      expect(
+        (chartInset.decoration! as BoxDecoration).color,
+        surfaces.exerciseProgressTooltip,
+      );
+
+      final summaryRail = tester.widget<Container>(
+        find.byKey(const ValueKey('exercise-progress-expressive-summary-rail')),
+      );
+      expect(
+        (summaryRail.decoration! as BoxDecoration).color,
+        surfaces.exerciseProgressStat,
       );
 
       final plot = find.byKey(const ValueKey('exercise-progress-hero-plot'));
-      final plotDecoration = tester.widget<DecoratedBox>(
-        find.descendant(of: plot, matching: find.byType(DecoratedBox)).first,
-      ).decoration as BoxDecoration;
+      final plotDecoration =
+          tester
+                  .widget<DecoratedBox>(
+                    find
+                        .descendant(
+                          of: plot,
+                          matching: find.byType(DecoratedBox),
+                        )
+                        .first,
+                  )
+                  .decoration
+              as BoxDecoration;
       expect(plotDecoration.color, expressiveTheme.colorScheme.surface);
 
       final plotContext = tester.element(plot);
@@ -397,140 +446,385 @@ void main() {
     semanticsEnabled: true,
   );
 
-  testWidgets('Exercise Progress chart exposes one navigable semantic point', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'exercise_progress_tile_ids_v1': <String>['2'],
-      'guided_tutorial_completed.exercise_progress_detail_v1': true,
-    });
-    final repository = _ExerciseProgressRepository(compactTrendValues: true);
-    final units = UnitPreferenceProvider();
-    await units.ready;
-    addTearDown(units.dispose);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.binding.setSurfaceSize(const Size(320, 1800));
+  testWidgets(
+    'Classic and Neo Exercise Progress resolve selected and selector series by surface',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'exercise_progress_tile_ids_v1': <String>['2'],
+      });
+      final repository = _ExerciseProgressRepository(compactTrendValues: true);
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(390, 1600));
 
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          Provider<AppRepository>.value(value: repository),
-          ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
-        ],
-        child: MaterialApp(
-          theme: AppThemeFactory.light(AppThemeFamily.classic),
-          locale: const Locale('en'),
-          localizationsDelegates: tonosLocalizationDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            body: SingleChildScrollView(child: ExerciseProgressSection()),
+      for (final family in [
+        AppThemeFamily.classic,
+        AppThemeFamily.neoBrutalism,
+      ]) {
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
+            ],
+            child: MaterialApp(
+              theme:
+                  family == AppThemeFamily.classic
+                      ? AppThemeFactory.light(family)
+                      : AppThemeFactory.dark(family),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const Scaffold(
+                body: SingleChildScrollView(child: ExerciseProgressSection()),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final surfaces = tester.element(find.byType(Scaffold)).surfaceTokens;
+        final hero = find.byKey(
+          const ValueKey('exercise-progress-hero-surface'),
+        );
+        final heroChart =
+            find.descendant(of: hero, matching: find.byType(CustomPaint)).first;
+        final heroContext = tester.element(heroChart);
+        expect(
+          tonosPrimarySeriesForSurface(
+            heroContext,
+            surfaces.exerciseProgressHero,
+          ),
+          isNot(
+            tonosSecondarySeriesForSurface(
+              heroContext,
+              surfaces.exerciseProgressHero,
+            ),
+          ),
+        );
+
+        final selector = find.byKey(
+          const ValueKey('exercise-progress-selector-2'),
+        );
+        final selectorChart =
+            find
+                .descendant(of: selector, matching: find.byType(CustomPaint))
+                .first;
+        final selectorContext = tester.element(selectorChart);
+        expect(
+          tonosPrimarySeriesForSurface(
+            selectorContext,
+            surfaces.exerciseProgressSelector,
+          ),
+          isNot(
+            tonosSecondarySeriesForSurface(
+              selectorContext,
+              surfaces.exerciseProgressSelector,
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets(
+    'Exercise Progress chart exposes one navigable semantic point',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'exercise_progress_tile_ids_v1': <String>['2'],
+        'guided_tutorial_completed.exercise_progress_detail_v1': true,
+      });
+      final repository = _ExerciseProgressRepository(compactTrendValues: true);
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(320, 1800));
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: repository),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: AppThemeFactory.light(AppThemeFamily.classic),
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: SingleChildScrollView(child: ExerciseProgressSection()),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final hero = find.byKey(const ValueKey('exercise-progress-hero-stacked'));
-    await tester.ensureVisible(hero);
-    await tester.tap(
-      find.ancestor(of: hero, matching: find.byType(InkWell)).first,
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
+      final hero = find.byKey(const ValueKey('exercise-progress-hero-stacked'));
+      await tester.ensureVisible(hero);
+      await tester.tap(
+        find.ancestor(of: hero, matching: find.byType(InkWell)).first,
+      );
+      await tester.pumpAndSettle();
 
-    final chart = find.byKey(
-      const ValueKey('exercise-progress-chart-semantics'),
-    );
-    expect(chart, findsOneWidget);
-    var data = tester.getSemantics(chart).getSemanticsData();
-    expect(data.flagsCollection.isFocused, isNot(Tristate.none));
-    expect(data.label, contains('Very long barbell pressing exercise'));
-    expect(data.label, contains('Estimated 1RM'));
-    expect(data.label, contains('Actual 1RM'));
-    expect(data.label, contains('lbs'));
-    expect(data.value, contains('Est.'));
-    expect(data.value, contains('Actual'));
-    expect(data.hasAction(SemanticsAction.increase), isFalse);
-    expect(data.hasAction(SemanticsAction.decrease), isTrue);
+      final chart = find.byKey(
+        const ValueKey('exercise-progress-chart-semantics'),
+      );
+      expect(chart, findsOneWidget);
+      var data = tester.getSemantics(chart).getSemanticsData();
+      expect(data.flagsCollection.isFocused, isNot(Tristate.none));
+      expect(data.label, contains('Very long barbell pressing exercise'));
+      expect(data.label, contains('Estimated 1RM'));
+      expect(data.label, contains('Actual 1RM'));
+      expect(data.label, contains('lbs'));
+      expect(data.value, contains('Est.'));
+      expect(data.value, contains('Actual'));
+      expect(data.hasAction(SemanticsAction.increase), isFalse);
+      expect(data.hasAction(SemanticsAction.decrease), isTrue);
 
-    final chartBox = tester.getRect(chart);
-    final latestPointValue = data.value;
-    await tester.ensureVisible(chart);
-    await tester.tapAt(chartBox.topLeft + const Offset(28, 100));
-    await tester.pump();
-    data = tester.getSemantics(chart).getSemanticsData();
-    expect(data.value, contains('100'));
-    expect(data.hasAction(SemanticsAction.increase), isTrue);
-    final firstPointValue = data.value;
-    expect(firstPointValue, isNot(latestPointValue));
+      final chartBox = tester.getRect(chart);
+      final latestPointValue = data.value;
+      await tester.ensureVisible(chart);
+      await tester.tapAt(chartBox.topLeft + const Offset(28, 100));
+      await tester.pump();
+      data = tester.getSemantics(chart).getSemanticsData();
+      expect(data.value, contains('100'));
+      expect(data.hasAction(SemanticsAction.increase), isTrue);
+      final firstPointValue = data.value;
+      expect(firstPointValue, isNot(latestPointValue));
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-    await tester.pump();
-    data = tester.getSemantics(chart).getSemanticsData();
-    expect(data.value, latestPointValue);
-    expect(data.hasAction(SemanticsAction.increase), isFalse);
-    expect(tester.takeException(), isNull);
-  }, semanticsEnabled: true);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pump();
+      data = tester.getSemantics(chart).getSemanticsData();
+      expect(data.value, latestPointValue);
+      expect(data.hasAction(SemanticsAction.increase), isFalse);
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
 
-  testWidgets('Exercise Progress chart reports an honest empty state', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'exercise_progress_tile_ids_v1': <String>['2'],
-      'guided_tutorial_completed.exercise_progress_detail_v1': true,
-    });
-    final repository = _ExerciseProgressRepository(emptyTrend: true);
-    final units = UnitPreferenceProvider();
-    await units.ready;
-    addTearDown(units.dispose);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.binding.setSurfaceSize(const Size(320, 1800));
+  testWidgets(
+    'Exercise Progress chart reports an honest empty state',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'exercise_progress_tile_ids_v1': <String>['2'],
+        'guided_tutorial_completed.exercise_progress_detail_v1': true,
+      });
+      final repository = _ExerciseProgressRepository(emptyTrend: true);
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(320, 1800));
 
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          Provider<AppRepository>.value(value: repository),
-          ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
-        ],
-        child: MaterialApp(
-          theme: AppThemeFactory.light(AppThemeFamily.classic),
-          locale: const Locale('en'),
-          localizationsDelegates: tonosLocalizationDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
-            body: SingleChildScrollView(child: ExerciseProgressSection()),
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: repository),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: AppThemeFactory.light(AppThemeFamily.classic),
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: SingleChildScrollView(child: ExerciseProgressSection()),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    final hero = find.byKey(const ValueKey('exercise-progress-hero-stacked'));
-    await tester.ensureVisible(hero);
-    await tester.tap(
-      find.ancestor(of: hero, matching: find.byType(InkWell)).first,
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
+      final hero = find.byKey(const ValueKey('exercise-progress-hero-stacked'));
+      await tester.ensureVisible(hero);
+      await tester.tap(
+        find.ancestor(of: hero, matching: find.byType(InkWell)).first,
+      );
+      await tester.pumpAndSettle();
 
-    final emptyChart = find.byKey(
-      const ValueKey('exercise-progress-chart-empty-semantics'),
-    );
-    expect(emptyChart, findsOneWidget);
-    final data = tester.getSemantics(emptyChart).getSemanticsData();
-    expect(data.label, contains('Very long barbell pressing exercise'));
-    expect(data.value, 'No recordings yet');
-    expect(
-      find.byKey(const ValueKey('exercise-progress-chart-semantics')),
-      findsNothing,
-    );
-    expect(tester.takeException(), isNull);
-  }, semanticsEnabled: true);
+      final emptyChart = find.byKey(
+        const ValueKey('exercise-progress-chart-empty-semantics'),
+      );
+      expect(emptyChart, findsOneWidget);
+      final data = tester.getSemantics(emptyChart).getSemanticsData();
+      expect(data.label, contains('Very long barbell pressing exercise'));
+      expect(data.value, 'No recordings yet');
+      expect(
+        find.byKey(const ValueKey('exercise-progress-chart-semantics')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
+
+  testWidgets(
+    'Expressive Exercise Progress composes home and recordings accessibly',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'exercise_progress_tile_ids_v1': <String>['2'],
+        'guided_tutorial_completed.exercise_progress_detail_v1': true,
+      });
+      final repository = _ExerciseProgressRepository(
+        compactTrendValues: true,
+        noLatestActual: true,
+      );
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      Future<void> pumpExpressive({
+        required double width,
+        required double textScale,
+        Brightness brightness = Brightness.light,
+      }) async {
+        await tester.binding.setSurfaceSize(Size(width, 2100));
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
+            ],
+            child: MaterialApp(
+              theme:
+                  brightness == Brightness.dark
+                      ? ExpressiveThemeDefinition.dark()
+                      : ExpressiveThemeDefinition.light(),
+              locale: const Locale('en'),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder:
+                  (context, child) => MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(textScale),
+                      disableAnimations: true,
+                    ),
+                    child: child!,
+                  ),
+              home: const Scaffold(
+                body: SingleChildScrollView(child: ExerciseProgressSection()),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+      }
+
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+        await pumpExpressive(width: 320, textScale: scale);
+        expect(
+          find.byKey(
+            const ValueKey('exercise-progress-expressive-hero-stacked'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(
+            const ValueKey('exercise-progress-expressive-summary-rail'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('exercise-progress-header-edit')),
+          findsOneWidget,
+        );
+        expect(find.text(strings.exerciseProgressNoActual), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+
+      for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+        await pumpExpressive(width: 420, textScale: scale);
+        expect(
+          find.byKey(const ValueKey('exercise-progress-expressive-title')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      }
+
+      await pumpExpressive(
+        width: 390,
+        textScale: 1,
+        brightness: Brightness.dark,
+      );
+      final edit = find.byKey(const ValueKey('exercise-progress-header-edit'));
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+      expect(find.text(strings.commonDone), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.commonAdd), findsOneWidget);
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+
+      // The most-used fixture (definition 1) is the default selection; choose
+      // definition 2, then verify its selected hero semantics and session rows.
+      final selector = find.byKey(
+        const ValueKey('exercise-progress-selector-2'),
+      );
+      await tester.ensureVisible(selector);
+      await tester.tap(selector);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .getSemantics(
+              find.bySemanticsLabel(
+                'Very long Romanian deadlift exercise name for layout testing',
+              ),
+            )
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
+
+      final heroSurface = find.byKey(
+        const ValueKey('exercise-progress-hero-surface'),
+      );
+      // The keyed tonal surface wraps the semantic InkWell rather than being
+      // its descendant, so tap the surface's center and assert the detail
+      // navigation it exposes.
+      await tester.tap(heroSurface);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('exercise-progress-expressive-detail-chart')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey('exercise-progress-expressive-detail-plot-inset'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(
+          const ValueKey('exercise-progress-expressive-recordings-group'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('exercise-progress-expressive-recording-22')),
+        findsOneWidget,
+      );
+      expect(find.text(strings.exerciseProgressNoActual), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
 }
 
 class _ExerciseProgressRepository extends AppRepository {
   final bool emptyTrend;
   final bool compactTrendValues;
+  final bool noLatestActual;
 
   _ExerciseProgressRepository({
     this.emptyTrend = false,
     this.compactTrendValues = false,
+    this.noLatestActual = false,
   });
 
   final _definitions = <ExerciseDefinition>[
@@ -577,21 +871,28 @@ class _ExerciseProgressRepository extends AppRepository {
       emptyTrend
           ? []
           : [
-              <String, dynamic>{
-                'session_id': definitionId * 10 + 1,
-                'session_date': '2026-01-01T00:00:00.000Z',
-                'completed_at_ms': DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
-                'training_day': '2026-01-01',
-                'actual_one_rm': compactTrendValues ? 100 : 1000000,
-                'estimated_one_rm': compactTrendValues ? 101 : 1000001,
-              },
-              <String, dynamic>{
-                'session_id': definitionId * 10 + 2,
-                'session_date': '2026-01-02T00:00:00.000Z',
-                'completed_at_ms': DateTime.utc(2026, 1, 2).millisecondsSinceEpoch,
-                'training_day': '2026-01-02',
-                'actual_one_rm': compactTrendValues ? 110 : 9999999,
-                'estimated_one_rm': compactTrendValues ? 111 : 10000000,
-              },
-            ];
+            <String, dynamic>{
+              'session_id': definitionId * 10 + 1,
+              'session_date': '2026-01-01T00:00:00.000Z',
+              'completed_at_ms':
+                  DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
+              'training_day': '2026-01-01',
+              'actual_one_rm': compactTrendValues ? 100 : 1000000,
+              'estimated_one_rm': compactTrendValues ? 101 : 1000001,
+            },
+            <String, dynamic>{
+              'session_id': definitionId * 10 + 2,
+              'session_date': '2026-01-02T00:00:00.000Z',
+              'completed_at_ms':
+                  DateTime.utc(2026, 1, 2).millisecondsSinceEpoch,
+              'training_day': '2026-01-02',
+              'actual_one_rm':
+                  noLatestActual
+                      ? null
+                      : compactTrendValues
+                      ? 110
+                      : 9999999,
+              'estimated_one_rm': compactTrendValues ? 111 : 10000000,
+            },
+          ];
 }
