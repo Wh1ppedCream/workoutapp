@@ -490,6 +490,12 @@ void main() {
             );
             final selectedMonth = _semanticButton(selectedMonthLabel);
             expect(selectedMonth, findsOneWidget);
+            final selectedMonthDecoration = _dayFill(tester, selectedMonth);
+            expect(selectedMonthDecoration.shape, BoxShape.circle);
+            expect(
+              selectedMonthDecoration.color,
+              outlined ? surfaces.settingsHero : theme.colorScheme.primary,
+            );
             final monthButtonText = tester.widget<Text>(
               _buttonLabelText(selectedMonth),
             );
@@ -503,6 +509,12 @@ void main() {
             );
             final selectedYear = _semanticButton(selectedYearLabel);
             expect(selectedYear, findsOneWidget);
+            final selectedYearDecoration = _dayFill(tester, selectedYear);
+            expect(selectedYearDecoration.shape, BoxShape.circle);
+            expect(
+              selectedYearDecoration.color,
+              outlined ? surfaces.settingsHero : theme.colorScheme.primary,
+            );
             final yearButtonText = tester.widget<Text>(
               _buttonLabelText(selectedYear),
             );
@@ -606,9 +618,10 @@ void main() {
       final selectedDay = _dayButton(today, locale);
       expect(selectedDay, findsOneWidget);
       expect(tester.widget<Semantics>(selectedDay).properties.selected, isTrue);
-      final focusForeground = theme
-          .extension<AppExpressiveTrainTokens>()!
-          .focusForeground;
+      final expressiveTokens = theme.extension<AppExpressiveTrainTokens>()!;
+      final focusForeground = expressiveTokens.focusForeground;
+      final focusSurface = expressiveTokens.focusSurface;
+      expect(_dayFill(tester, selectedDay).shape, BoxShape.circle);
       final selectedDayNumber = LocalizedFormatters.number(
         today.day,
         locale,
@@ -659,15 +672,275 @@ void main() {
       final selectedWeek = _semanticButton(
         strings.logbookMonthWeek(LocalizedFormatters.month(today, locale), 4),
       );
-      expect(selectedWeek, findsOneWidget);
-      expect(
-        tester.widget<Semantics>(selectedWeek).properties.selected,
-        isTrue,
+      _expectExpressivePeriodButton(
+        tester,
+        selectedWeek,
+        selectedColor: focusSurface,
+        foregroundColor: focusForeground,
+      );
+
+      await tester.tap(find.text('Y'));
+      await tester.pumpAndSettle();
+      final selectedMonth = _semanticButton(
+        LocalizedFormatters.monthYear(today, locale),
+      );
+      _expectExpressivePeriodButton(
+        tester,
+        selectedMonth,
+        selectedColor: focusSurface,
+        foregroundColor: focusForeground,
+      );
+
+      await tester.tap(find.text('4Y'));
+      await tester.pumpAndSettle();
+      final selectedYear = _semanticButton(
+        LocalizedFormatters.year(today.year, locale),
+      );
+      _expectExpressivePeriodButton(
+        tester,
+        selectedYear,
+        selectedColor: focusSurface,
+        foregroundColor: focusForeground,
       );
       expect(tester.takeException(), isNull);
     },
     semanticsEnabled: true,
   );
+
+  testWidgets(
+    'Expressive selected period scrolls 15 same-day sessions at 320dp',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(320, 1800));
+
+      final today = DateTime(2026, 10, 28);
+      const locale = Locale('en');
+      final repository = _CalendarRepository(
+        List<WorkoutReportSession>.generate(
+          15,
+          (index) => _session(
+            index + 1,
+            DateTime(today.year, today.month, today.day, 6 + index),
+          ),
+        ),
+      );
+
+      for (final brightness in Brightness.values) {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+          var openedFullHistory = false;
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                locale: locale,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(scale),
+                    disableAnimations: true,
+                  ),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: SingleChildScrollView(
+                    child: WorkoutHistoryCalendar(
+                      key: ValueKey('dense-$brightness-$scale'),
+                      referenceDate: today,
+                      onOpenFullHistory: () => openedFullHistory = true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(WorkoutHistoryCalendar)),
+          );
+          for (var id = 1; id <= 15; id++) {
+            expect(find.byKey(AppTestKeys.historySession(id)), findsOneWidget);
+          }
+
+          final newestRow = find.byKey(AppTestKeys.historySession(15));
+          final oldestRow = find.byKey(AppTestKeys.historySession(1));
+          expect(
+            tester.getTopLeft(newestRow).dy,
+            lessThan(tester.getTopLeft(oldestRow).dy),
+            reason: 'The selected period should remain newest-first.',
+          );
+
+          await tester.ensureVisible(find.text('4Y'));
+          await tester.tap(find.text('4Y'));
+          await tester.pumpAndSettle();
+          final selectedYear = _semanticButton(
+            LocalizedFormatters.year(today.year, locale),
+          );
+          expect(selectedYear, findsOneWidget);
+          expect(
+            tester.widget<Semantics>(selectedYear).properties.selected,
+            isTrue,
+          );
+
+          await tester.ensureVisible(oldestRow);
+          await tester.pumpAndSettle();
+          expect(oldestRow.hitTestable(), findsOneWidget);
+
+          final fullHistoryAction = find.byTooltip(
+            strings.logbookViewAllSessions,
+          );
+          expect(fullHistoryAction, findsOneWidget);
+          final fullHistoryButton = find.ancestor(
+            of: fullHistoryAction,
+            matching: find.byType(IconButton),
+          );
+          expect(
+            tester.widget<IconButton>(fullHistoryButton).onPressed,
+            isNotNull,
+          );
+          await tester.ensureVisible(fullHistoryButton);
+          await tester.pumpAndSettle();
+          await tester.tap(fullHistoryButton);
+          expect(openedFullHistory, isTrue);
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${brightness.name}, text scale $scale',
+          );
+        }
+      }
+    },
+    semanticsEnabled: true,
+  );
+
+  testWidgets('Expressive empty selected period remains clear at 320dp', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final units = UnitPreferenceProvider();
+    await units.ready;
+    addTearDown(units.dispose);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(320, 1800));
+
+    final today = DateTime(2026, 10, 28);
+    const locale = Locale('en');
+    final repository = _CalendarRepository(const <WorkoutReportSession>[]);
+
+    for (final brightness in Brightness.values) {
+      final theme = brightness == Brightness.light
+          ? ExpressiveThemeDefinition.light()
+          : ExpressiveThemeDefinition.dark();
+      final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+      for (final scale in [1.0, 1.15, 1.5, 2.0]) {
+        var openedFullHistory = false;
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
+            ],
+            child: MaterialApp(
+              theme: theme,
+              locale: locale,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(scale),
+                  disableAnimations: true,
+                ),
+                child: child!,
+              ),
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: WorkoutHistoryCalendar(
+                    key: ValueKey('empty-$brightness-$scale'),
+                    referenceDate: today,
+                    onOpenFullHistory: () => openedFullHistory = true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(WorkoutHistoryCalendar)),
+        );
+        final noWorkouts = find.text(strings.logbookNoWorkouts);
+        expect(noWorkouts, findsOneWidget);
+        final summaryCard = find.ancestor(
+          of: noWorkouts,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.decoration is BoxDecoration &&
+                (widget.decoration! as BoxDecoration).color ==
+                    tokens.focusSurface,
+          ),
+        );
+        expect(summaryCard, findsOneWidget);
+        expect(
+          find.text(LocalizedFormatters.weekdayShortDate(today, locale)),
+          findsOneWidget,
+        );
+
+        expect(find.text('0'), findsOneWidget);
+        expect(find.text(strings.logbookWorkouts), findsOneWidget);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget.key is ValueKey<String> &&
+                (widget.key! as ValueKey<String>).value.startsWith(
+                  'history-session-',
+                ),
+          ),
+          findsNothing,
+        );
+
+        final fullHistoryAction = find.descendant(
+          of: summaryCard,
+          matching: find.byTooltip(strings.logbookViewAllSessions),
+        );
+        expect(fullHistoryAction, findsOneWidget);
+        final fullHistoryButton = find.ancestor(
+          of: fullHistoryAction,
+          matching: find.byType(IconButton),
+        );
+        expect(
+          tester.widget<IconButton>(fullHistoryButton).onPressed,
+          isNotNull,
+        );
+        await tester.ensureVisible(fullHistoryButton);
+        await tester.pumpAndSettle();
+        await tester.tap(fullHistoryButton);
+        expect(openedFullHistory, isTrue);
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '${brightness.name}, text scale $scale',
+        );
+      }
+    }
+  }, semanticsEnabled: true);
 
   testWidgets(
     'Expressive calendar remains usable at 320dp across text scales',
@@ -900,6 +1173,24 @@ BoxDecoration _dayFill(WidgetTester tester, Finder day) {
     matching: find.byType(AnimatedContainer),
   );
   return tester.widget<AnimatedContainer>(fill).decoration! as BoxDecoration;
+}
+
+void _expectExpressivePeriodButton(
+  WidgetTester tester,
+  Finder button, {
+  required Color selectedColor,
+  required Color foregroundColor,
+}) {
+  expect(button, findsOneWidget);
+  expect(tester.widget<Semantics>(button).properties.selected, isTrue);
+
+  final decoration = _dayFill(tester, button);
+  expect(decoration.shape, BoxShape.rectangle);
+  expect(decoration.borderRadius, ExpressiveTrainShapes.compactControl);
+  expect(decoration.color, selectedColor);
+
+  final label = tester.widget<Text>(_buttonLabelText(button));
+  expect(label.style?.color, foregroundColor);
 }
 
 Finder _badgeIn(WidgetTester tester, Finder day, {double size = 17}) =>

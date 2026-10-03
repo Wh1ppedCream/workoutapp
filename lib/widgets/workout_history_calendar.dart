@@ -1155,6 +1155,8 @@ class _PeriodCircleButton extends StatelessWidget {
     final shapes = context.shapeTokens;
     final usesExpressive = context.usesExpressivePresentation;
     final usesInkRecipe = context.usesNeoPresentation;
+    final cellBorderRadius =
+        usesExpressive ? ExpressiveTrainShapes.compactControl : shapes.pill;
     final expressiveTokens =
         usesExpressive
             ? Theme.of(context).extension<AppExpressiveTrainTokens>()
@@ -1206,7 +1208,7 @@ class _PeriodCircleButton extends StatelessWidget {
       label: semanticLabel,
       selected: usesExpressive ? isSelected : null,
       child: InkWell(
-        borderRadius: shapes.pill,
+        borderRadius: cellBorderRadius,
         onTap: onTap,
         child: Stack(
           fit: StackFit.expand,
@@ -1217,7 +1219,8 @@ class _PeriodCircleButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: backgroundColor,
-                shape: BoxShape.circle,
+                borderRadius: usesExpressive ? cellBorderRadius : null,
+                shape: usesExpressive ? BoxShape.rectangle : BoxShape.circle,
                 border:
                     usesExpressive && isSelected
                         ? Border.all(
