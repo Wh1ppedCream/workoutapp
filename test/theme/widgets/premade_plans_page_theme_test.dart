@@ -7,6 +7,8 @@ import 'package:env_test/screens/exercise/premade_plans_page.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_planning_tokens.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,10 +35,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode onboarding plan action bar keeps theme ownership', (
@@ -209,13 +210,12 @@ void main() {
           );
           expect(durationDecoration, findsOneWidget);
 
-          final durationRow =
-              find
-                  .ancestor(
-                    of: find.text(strings.premadeOneHour),
-                    matching: find.byType(Row),
-                  )
-                  .first;
+          final durationRow = find
+              .ancestor(
+                of: find.text(strings.premadeOneHour),
+                matching: find.byType(Row),
+              )
+              .first;
           final durationSwitch = find.descendant(
             of: durationRow,
             matching: find.byType(Switch),
@@ -301,6 +301,127 @@ void main() {
       );
     }
   }
+
+  for (final entry in <(String, ThemeData, AppExpressivePlanningTokens)>[
+    (
+      'light',
+      ExpressiveThemeDefinition.light(),
+      AppExpressivePlanningTokens.light,
+    ),
+    (
+      'dark',
+      ExpressiveThemeDefinition.dark(),
+      AppExpressivePlanningTokens.dark,
+    ),
+  ]) {
+    testWidgets('Expressive ${entry.$1} premade plans preserve filter state', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'guided_tutorial_completed.${TutorialIds.premadePlans}': true,
+      });
+      tester.view.physicalSize = const Size(320, 1800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final original = _definition(
+        id: 1001,
+        catalogId: targetExercise.catalogId!,
+        name: targetExercise.name,
+        equipment: targetExercise.equipment,
+      );
+      final replacement = _definition(
+        id: 1002,
+        catalogId: 'tonos.exercise.9999',
+        name: replacementName,
+        equipment: 'Dumbbell',
+      );
+      final repository = _PremadePlansRepository(
+        original: original,
+        replacement: replacement,
+      );
+
+      await tester.pumpWidget(
+        Provider<AppRepository>.value(
+          value: repository,
+          child: _app(
+            entry.$2,
+            PremadePlansPage(
+              profileId: 1,
+              onPlanAdded: () {},
+              onboardingMode: true,
+            ),
+            textScale: 2.0,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      final page = find.byType(PremadePlansPage);
+      final context = tester.element(page);
+      final strings = AppLocalizations.of(context);
+      final scaffold = tester.widget<Scaffold>(
+        find.descendant(of: page, matching: find.byType(Scaffold)).first,
+      );
+      expect(scaffold.backgroundColor, entry.$3.pageCanvas);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Card && widget.color == entry.$3.equipmentSurface,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Card && widget.color == entry.$3.planFocalSurface,
+        ),
+        findsWidgets,
+      );
+
+      final durationRow = find
+          .ancestor(
+            of: find.text(strings.premadeOneHour),
+            matching: find.byType(Row),
+          )
+          .first;
+      final durationSwitch = find.descendant(
+        of: durationRow,
+        matching: find.byType(Switch),
+      );
+      expect(tester.widget<Switch>(durationSwitch).value, isFalse);
+      await tester.tap(durationSwitch);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Switch>(durationSwitch).value, isTrue);
+
+      final equipmentRow = find
+          .ancestor(
+            of: find.text(strings.swapFilterProfileEquipment),
+            matching: find.byType(Row),
+          )
+          .first;
+      final equipmentSwitch = find.descendant(
+        of: equipmentRow,
+        matching: find.byType(Switch),
+      );
+      expect(tester.widget<Switch>(equipmentSwitch).value, isTrue);
+      await tester.tap(equipmentSwitch);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Switch>(equipmentSwitch).value, isFalse);
+      expect(find.text(strings.premadeEquipmentExact), findsOneWidget);
+
+      final saveButton = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, strings.premadeReviewPlans),
+      );
+      expect(saveButton.onPressed, isNull);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 }
 
 Widget _app(ThemeData theme, Widget child, {double textScale = 1}) =>
@@ -309,13 +430,11 @@ Widget _app(ThemeData theme, Widget child, {double textScale = 1}) =>
       themeAnimationDuration: Duration.zero,
       localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      builder:
-          (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
-            child: child!,
-          ),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(textScale)),
+        child: child!,
+      ),
       home: Scaffold(body: child),
     );
 

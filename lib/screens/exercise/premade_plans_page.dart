@@ -15,6 +15,7 @@ import '../../services/exercise_equipment_compatibility.dart';
 import '../../services/exercise_content_localizer.dart';
 import '../../services/premade_plan_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/localized_formatters.dart';
@@ -101,9 +102,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
           plan,
           locale,
           oneHourDurationLabel: strings.premadeOneHour,
-          oneHourDescriptionBuilder:
-              (duration, planName) =>
-                  strings.premadeOneHourDescription(duration, planName),
+          oneHourDescriptionBuilder: (duration, planName) =>
+              strings.premadeOneHourDescription(duration, planName),
         ),
       ),
     );
@@ -166,9 +166,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   ) async {
     final profileId = widget.profileId;
     if (profileId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_strings.premadeSelectProfile)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_strings.premadeSelectProfile)));
       return;
     }
 
@@ -260,10 +259,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       );
     }
 
-    final plans =
-        premadeTrainingPlans
-            .where((plan) => plan.durationMinutes == _selectedDurationMinutes)
-            .toList();
+    final plans = premadeTrainingPlans
+        .where((plan) => plan.durationMinutes == _selectedDurationMinutes)
+        .toList();
     final candidates = await _loadProfileCandidateEntries(
       normalizedProfileEquipmentNames,
     );
@@ -296,10 +294,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
           continue;
         }
 
-        final replacement =
-            replacementCache.containsKey(cacheKey)
-                ? replacementCache[cacheKey]
-                : await _findReplacementExercise(exercise, candidates);
+        final replacement = replacementCache.containsKey(cacheKey)
+            ? replacementCache[cacheKey]
+            : await _findReplacementExercise(exercise, candidates);
         replacementCache[cacheKey] = replacement;
 
         if (replacement == null) {
@@ -348,22 +345,23 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     Set<String> normalizedProfileEquipmentNames,
   ) async {
     final definitions = await _repo.lookupDefsDetailed();
-    final entries = await mapWithConcurrency<
-      ExerciseDefinition,
-      _PremadeExerciseMatchEntry?
-    >(
-      definitions,
-      maxConcurrency: _replacementBuildConcurrency,
-      mapper: (definition, _) async {
-        if (!_definitionFitsProfile(
-          definition,
-          normalizedProfileEquipmentNames,
-        )) {
-          return null;
-        }
-        return _buildMatchEntry(definition);
-      },
-    );
+    final entries =
+        await mapWithConcurrency<
+          ExerciseDefinition,
+          _PremadeExerciseMatchEntry?
+        >(
+          definitions,
+          maxConcurrency: _replacementBuildConcurrency,
+          mapper: (definition, _) async {
+            if (!_definitionFitsProfile(
+              definition,
+              normalizedProfileEquipmentNames,
+            )) {
+              return null;
+            }
+            return _buildMatchEntry(definition);
+          },
+        );
 
     return [
       for (final entry in entries)
@@ -586,9 +584,8 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
 
   void _finishOnboardingPlanSelection() {
     if (_onboardingCreatedPlanIds.isEmpty) return;
-    Navigator.of(
-      context,
-    ).pop<List<int>>(List<int>.unmodifiable(_onboardingCreatedPlanIds));
+    Navigator.of(context)
+        .pop<List<int>>(List<int>.unmodifiable(_onboardingCreatedPlanIds));
   }
 
   Future<String> _uniqueAddedPlanName(String baseName, int profileId) async {
@@ -621,29 +618,32 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final groupedPlans = _plansBySource();
     final homemadePlans =
         groupedPlans.remove(_homemadeSourceName) ??
         const <PremadeTrainingPlan>[];
     final adaptationFuture = _ensureAdaptationData();
-    final localizedPlansFuture =
-        _localizedPlansFuture ??= _loadLocalizedPlans(
-          Localizations.localeOf(context),
-        );
+    final localizedPlansFuture = _localizedPlansFuture ??= _loadLocalizedPlans(
+      Localizations.localeOf(context),
+    );
     final content = Scaffold(
-      appBar: AppBar(title: Text(strings.premadePlansTitle)),
-      bottomNavigationBar:
-          widget.onboardingMode
-              ? OnboardingPlanActionBar(
-                addedCount: _onboardingCreatedPlanIds.length,
-                isBusy: _isDiscardingOnboardingPlans,
-                onCancel: _discardOnboardingPlans,
-                onSave:
-                    _onboardingCreatedPlanIds.isEmpty
-                        ? null
-                        : _finishOnboardingPlanSelection,
-              )
-              : null,
+      backgroundColor: expressive?.pageCanvas,
+      appBar: AppBar(
+        title: Text(strings.premadePlansTitle),
+        backgroundColor: expressive?.pageCanvas,
+        foregroundColor: expressive?.onPage,
+      ),
+      bottomNavigationBar: widget.onboardingMode
+          ? OnboardingPlanActionBar(
+              addedCount: _onboardingCreatedPlanIds.length,
+              isBusy: _isDiscardingOnboardingPlans,
+              onCancel: _discardOnboardingPlans,
+              onSave: _onboardingCreatedPlanIds.isEmpty
+                  ? null
+                  : _finishOnboardingPlanSelection,
+            )
+          : null,
       body: FutureBuilder<_PremadePlanAdaptationData>(
         future: adaptationFuture,
         builder: (context, snapshot) {
@@ -655,14 +655,13 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                   localizationSnapshot.data ?? _canonicalLocalizedPlans();
               final loadedAdaptationData =
                   snapshot.data ?? _PremadePlanAdaptationData.empty;
-              final adaptationData =
-                  _filterForProfileEquipment
-                      ? loadedAdaptationData
-                      : _PremadePlanAdaptationData(
-                        profileEquipmentNames:
-                            loadedAdaptationData.profileEquipmentNames,
-                        adaptations: const <String, _PremadePlanAdaptation>{},
-                      );
+              final adaptationData = _filterForProfileEquipment
+                  ? loadedAdaptationData
+                  : _PremadePlanAdaptationData(
+                      profileEquipmentNames:
+                          loadedAdaptationData.profileEquipmentNames,
+                      adaptations: const <String, _PremadePlanAdaptation>{},
+                    );
               final isPreparingFilter =
                   _filterForProfileEquipment &&
                   snapshot.connectionState != ConnectionState.done;
@@ -778,21 +777,25 @@ class OnboardingPlanActionBar extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
-    final actionForeground =
-        neo ? tonosForegroundForSurface(context, surfaces.planActionBar) : null;
-    final actionDisabledForeground =
-        neo ? actionForeground!.withValues(alpha: 0.45) : null;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final actionForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.planActionBar)
+        : null;
+    final actionDisabledForeground = neo
+        ? actionForeground!.withValues(alpha: 0.45)
+        : null;
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         decoration: BoxDecoration(
-          color: surfaces.planActionBar,
+          color: expressive?.actionSecondary ?? surfaces.planActionBar,
           border: Border(
             top: BorderSide(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.6),
+              color:
+                  expressive?.outline ??
+                  Theme.of(context).colorScheme.outlineVariant
+                      .withValues(alpha: 0.6),
             ),
           ),
         ),
@@ -801,6 +804,12 @@ class OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: isBusy ? null : onCancel,
+                style: expressive == null
+                    ? null
+                    : OutlinedButton.styleFrom(
+                        foregroundColor: expressive.actionSecondaryForeground,
+                        side: BorderSide(color: expressive.outline),
+                      ),
                 child: Text(
                   isBusy ? strings.premadeDiscarding : strings.commonCancel,
                 ),
@@ -810,13 +819,17 @@ class OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton.icon(
-                style:
-                    neo
-                        ? FilledButton.styleFrom(
-                          foregroundColor: actionForeground,
-                          disabledForegroundColor: actionDisabledForeground,
-                        )
-                        : null,
+                style: expressive != null
+                    ? FilledButton.styleFrom(
+                        backgroundColor: expressive.actionPrimary,
+                        foregroundColor: expressive.actionPrimaryForeground,
+                      )
+                    : neo
+                    ? FilledButton.styleFrom(
+                        foregroundColor: actionForeground,
+                        disabledForegroundColor: actionDisabledForeground,
+                      )
+                    : null,
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
                 label: Text(strings.premadeReviewPlans),
@@ -941,70 +954,99 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final filterForeground =
-        neo ? tonosForegroundForSurface(context, surfaces.planFilter) : null;
+        expressive?.equipmentForeground ??
+        (neo ? tonosForegroundForSurface(context, surfaces.planFilter) : null);
     final filterSecondary =
-        neo
+        expressive?.equipmentForeground ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planFilter)
-            : scheme.onSurfaceVariant;
-    final subtitle =
-        !enabled
-            ? strings.premadeEquipmentSelectProfile
-            : !value
-            ? strings.premadeEquipmentExact
-            : isLoading
-            ? strings.premadeEquipmentChecking
-            : !hasProfileEquipment
-            ? strings.premadeEquipmentMissing
-            : replacementCount > 0
-            ? strings.premadeEquipmentReplacements(replacementCount)
-            : strings.premadeEquipmentFits;
+            : scheme.onSurfaceVariant);
+    final subtitle = !enabled
+        ? strings.premadeEquipmentSelectProfile
+        : !value
+        ? strings.premadeEquipmentExact
+        : isLoading
+        ? strings.premadeEquipmentChecking
+        : !hasProfileEquipment
+        ? strings.premadeEquipmentMissing
+        : replacementCount > 0
+        ? strings.premadeEquipmentReplacements(replacementCount)
+        : strings.premadeEquipmentFits;
 
     return Card(
-      color: surfaces.planFilter,
+      color: expressive?.equipmentSurface ?? surfaces.planFilter,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
-        child: Row(
-          children: [
-            Icon(Icons.tune, color: neo ? filterForeground : scheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    strings.swapFilterProfileEquipment,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: neo ? filterForeground : null,
-                      fontWeight: FontWeight.w800,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactExpressive =
+                expressive != null &&
+                (constraints.maxWidth < 340 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 18);
+            final control = isLoading
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
+                  )
+                : Switch(
+                    value: value,
+                    onChanged: enabled ? onChanged : null,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+            final copy = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  strings.swapFilterProfileEquipment,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: filterForeground,
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: filterSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-              )
-            else
-              Switch(
-                value: value,
-                onChanged: enabled ? onChanged : null,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-          ],
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: filterSecondary,
+                  ),
+                ),
+              ],
+            );
+            return Row(
+              children: [
+                Icon(
+                  Icons.tune,
+                  color: expressive != null
+                      ? filterForeground
+                      : neo
+                      ? filterForeground
+                      : scheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: compactExpressive
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            copy,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: control,
+                            ),
+                          ],
+                        )
+                      : copy,
+                ),
+                if (!compactExpressive) control,
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1070,11 +1112,17 @@ class _PremadeDurationSwitch extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final shapes = context.shapeTokens;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final durationForeground =
-        neo ? tonosForegroundForSurface(context, surfaces.planDuration) : null;
+        expressive?.configurationForeground ??
+        (neo
+            ? tonosForegroundForSurface(context, surfaces.planDuration)
+            : null);
     final isTwoHour = durationMinutes == 120;
     final activeStyle = theme.textTheme.labelLarge?.copyWith(
-      color: neo ? durationForeground : theme.colorScheme.primary,
+      color:
+          expressive?.selectedSurface ??
+          (neo ? durationForeground : theme.colorScheme.primary),
       fontWeight: FontWeight.w800,
     );
     final inactiveStyle = theme.textTheme.labelLarge?.copyWith(
@@ -1084,28 +1132,50 @@ class _PremadeDurationSwitch extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: surfaces.planDuration,
+        color: expressive?.configurationSurface ?? surfaces.planDuration,
         borderRadius: shapes.planCard,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactExpressive =
+                expressive != null &&
+                (constraints.maxWidth < 280 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 18);
+            final oneHour = Text(
               strings.premadeOneHour,
+              textAlign: TextAlign.end,
+              softWrap: compactExpressive,
+              maxLines: compactExpressive ? 2 : null,
               style: isTwoHour ? inactiveStyle : activeStyle,
-            ),
-            Switch(
+            );
+            final twoHours = Text(
+              strings.premadeTwoHours,
+              textAlign: TextAlign.start,
+              softWrap: compactExpressive,
+              maxLines: compactExpressive ? 2 : null,
+              style: isTwoHour ? activeStyle : inactiveStyle,
+            );
+            final durationSwitch = Switch(
               value: isTwoHour,
               onChanged: (value) => onChanged(value ? 120 : 60),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            Text(
-              strings.premadeTwoHours,
-              style: isTwoHour ? activeStyle : inactiveStyle,
-            ),
-          ],
+            );
+            if (compactExpressive) {
+              return Row(
+                children: [
+                  Flexible(child: oneHour),
+                  durationSwitch,
+                  Flexible(child: twoHours),
+                ],
+              );
+            }
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [oneHour, durationSwitch, twoHours],
+            );
+          },
         ),
       ),
     );
@@ -1188,26 +1258,33 @@ class _PremadeSourceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final grouped = _plansByGroup();
     final orderedGroupNames = _orderedGroupNames(grouped);
     final planCount = plans.length;
 
     return Card(
+      color: expressive?.planFocalSurface,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        iconColor: expressive?.planFocalForeground,
+        collapsedIconColor: expressive?.planFocalForeground,
         title: Text(
           _localizedSourceName(),
           style: theme.textTheme.titleLarge?.copyWith(
+            color: expressive?.planFocalForeground,
             fontWeight: FontWeight.w900,
           ),
         ),
         subtitle: Text(
           strings.premadePlansAvailable(planCount),
           style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color:
+                expressive?.planFocalForeground ??
+                theme.colorScheme.onSurfaceVariant,
           ),
         ),
         children: [
@@ -1257,15 +1334,18 @@ class _PremadePlanGroupTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final planCount = plans.length;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final groupForeground =
-        neo ? tonosForegroundForSurface(context, surfaces.planGroup) : null;
+        expressive?.planSupportForeground ??
+        (neo ? tonosForegroundForSurface(context, surfaces.planGroup) : null);
     final groupSecondary =
-        neo
+        expressive?.planSupportForeground ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planGroup)
-            : theme.colorScheme.onSurfaceVariant;
+            : theme.colorScheme.onSurfaceVariant);
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      color: surfaces.planGroup,
+      color: expressive?.planSupportSurface ?? surfaces.planGroup,
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: false,
@@ -1276,7 +1356,11 @@ class _PremadePlanGroupTile extends StatelessWidget {
         title: Text(
           groupName,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: neo ? groupForeground : null,
+            color: expressive != null
+                ? groupForeground
+                : neo
+                ? groupForeground
+                : null,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -1367,6 +1451,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
     final theme = Theme.of(context);
     final motion = context.motionTokens;
     final strings = AppLocalizations.of(context);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final exercises = widget.exercises;
     final totalSets = exercises.fold<int>(
       0,
@@ -1379,7 +1464,9 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
         Text(
           widget.localizedPlan.description,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color:
+                expressive?.configurationForeground ??
+                theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 12),
@@ -1396,6 +1483,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
         Text(
           widget.localizedPlan.name,
           style: theme.textTheme.titleMedium?.copyWith(
+            color: expressive?.configurationForeground,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -1415,15 +1503,20 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       ],
     );
     final addButton = FilledButton.tonalIcon(
+      style: expressive == null
+          ? null
+          : FilledButton.styleFrom(
+              backgroundColor: expressive.actionPrimary,
+              foregroundColor: expressive.actionPrimaryForeground,
+            ),
       onPressed: widget.isAdding || widget.isPreparing ? null : widget.onAdd,
-      icon:
-          widget.isAdding || widget.isPreparing
-              ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-              : const Icon(Icons.add),
+      icon: widget.isAdding || widget.isPreparing
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.add),
       label: Text(
         widget.isAdding
             ? strings.premadeAdding
@@ -1434,6 +1527,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
     );
 
     return Card(
+      color: expressive?.configurationSurface,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _toggleExpanded,
@@ -1451,7 +1545,9 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                         _isExpanded
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color:
+                            expressive?.configurationForeground ??
+                            theme.colorScheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: titleBlock),
@@ -1485,10 +1581,9 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: details,
               ),
-              crossFadeState:
-                  _isExpanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
+              crossFadeState: _isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               duration: appMotionDuration(context, motion.quick),
               firstCurve: Curves.easeOutCubic,
               secondCurve: Curves.easeOutCubic,
@@ -1552,13 +1647,12 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
       key: ValueKey(_localeKey),
       future: _nameFuture,
       initialData: widget.exercise.name,
-      builder:
-          (context, snapshot) => _buildRow(
-            context,
-            theme,
-            strings,
-            snapshot.data ?? widget.exercise.name,
-          ),
+      builder: (context, snapshot) => _buildRow(
+        context,
+        theme,
+        strings,
+        snapshot.data ?? widget.exercise.name,
+      ),
     );
   }
 
@@ -1581,80 +1675,74 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
 
     return LocalizedCatalogEntityNamesBuilder(
       entities: equipment,
-      builder:
-          (context, equipmentNames) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.fitness_center,
-                  size: 16,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text.rich(
+      builder: (context, equipmentNames) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.fitness_center,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
                         TextSpan(
-                          children: [
-                            TextSpan(
-                              text: displayName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (equipmentNames.isNotEmpty)
-                              TextSpan(
-                                text: ' - ${equipmentNames.join(', ')}',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                ),
-                              ),
-                            TextSpan(
-                              text:
-                                  ' - ${LocalizedFormatters.number(widget.exercise.sets, locale, maximumFractionDigits: 0)}'
-                                  ' x ${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)}',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                          text: displayName,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        if (equipmentNames.isNotEmpty)
+                          TextSpan(
+                            text: ' - ${equipmentNames.join(', ')}',
+                            style: TextStyle(color: theme.colorScheme.primary),
+                          ),
+                        TextSpan(
+                          text:
+                              ' - ${LocalizedFormatters.number(widget.exercise.sets, locale, maximumFractionDigits: 0)}'
+                              ' x ${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)}',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.wasSwapped)
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(
+                          alpha: surfaces.planSwapBadgeOpacity,
+                        ),
+                        borderRadius: shapes.pill,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          strings.premadeProfileSwap,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                      if (widget.wasSwapped)
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer
-                                .withValues(
-                                  alpha: surfaces.planSwapBadgeOpacity,
-                                ),
-                            borderRadius: shapes.pill,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            child: Text(
-                              strings.premadeProfileSwap,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_field.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -118,12 +119,12 @@ class _OptimizedWorkoutSettingsPageState
 
   void _resetToDefaults() {
     setState(() {
-      _minutesController.text =
-          SessionSpec.defaultSessionDurationMinutes.toString();
-      _minSetsController.text =
-          SessionSpec.preferredMinSetsPerExercise.toString();
-      _maxSetsController.text =
-          SessionSpec.defaultMaxSetsPerExercise.toString();
+      _minutesController.text = SessionSpec.defaultSessionDurationMinutes
+          .toString();
+      _minSetsController.text = SessionSpec.preferredMinSetsPerExercise
+          .toString();
+      _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise
+          .toString();
       _targetRepsController.text = SessionSpec.defaultTargetRepCount.toString();
       _repWeightMode = RepWeightGenerationMode.mixed;
       _starterWeightIntensity = StarterWeightIntensity.medium;
@@ -230,7 +231,9 @@ class _OptimizedWorkoutSettingsPageState
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     return Scaffold(
+      backgroundColor: planning?.pageCanvas,
       body: SafeArea(
         child: Stack(
           children: [
@@ -240,6 +243,17 @@ class _OptimizedWorkoutSettingsPageState
                 KeyedSubtree(
                   key: _budgetTutorialKey,
                   child: Card(
+                    color: planning?.configurationSurface,
+                    shape: planning == null
+                        ? null
+                        : const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(28),
+                              topRight: Radius.circular(16),
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(28),
+                            ),
+                          ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -248,6 +262,7 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedTutorialBudgetTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
+                              color: planning?.configurationForeground,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -255,7 +270,9 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedBudgetDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color:
+                                  planning?.configurationForeground ??
+                                  theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -294,6 +311,17 @@ class _OptimizedWorkoutSettingsPageState
                 KeyedSubtree(
                   key: _repWeightTutorialKey,
                   child: Card(
+                    color: planning?.planSupportSurface,
+                    shape: planning == null
+                        ? null
+                        : const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(28),
+                              bottomLeft: Radius.circular(28),
+                              bottomRight: Radius.circular(16),
+                            ),
+                          ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -302,6 +330,7 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedRepsWeightsTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
+                              color: planning?.planSupportForeground,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -309,7 +338,9 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedRepsWeightsDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color:
+                                  planning?.planSupportForeground ??
+                                  theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -330,9 +361,8 @@ class _OptimizedWorkoutSettingsPageState
                                 label: strings.repModeConsistent,
                               ),
                             ],
-                            onChanged:
-                                (value) =>
-                                    setState(() => _repWeightMode = value),
+                            onChanged: (value) =>
+                                setState(() => _repWeightMode = value),
                           ),
                           const SizedBox(height: 12),
                           TonosFormField(
@@ -361,10 +391,8 @@ class _OptimizedWorkoutSettingsPageState
                                 label: strings.intensityHard,
                               ),
                             ],
-                            onChanged:
-                                (value) => setState(
-                                  () => _starterWeightIntensity = value,
-                                ),
+                            onChanged: (value) =>
+                                setState(() => _starterWeightIntensity = value),
                           ),
                         ],
                       ),
@@ -375,6 +403,17 @@ class _OptimizedWorkoutSettingsPageState
                 KeyedSubtree(
                   key: _focusTutorialKey,
                   child: Card(
+                    color: planning?.equipmentSurface,
+                    shape: planning == null
+                        ? null
+                        : const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(28),
+                              topRight: Radius.circular(16),
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(28),
+                            ),
+                          ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -383,6 +422,7 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedBodypartFocusTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
+                              color: planning?.equipmentForeground,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -390,7 +430,9 @@ class _OptimizedWorkoutSettingsPageState
                           Text(
                             strings.optimizedBodypartFocusDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color:
+                                  planning?.equipmentForeground ??
+                                  theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -399,13 +441,12 @@ class _OptimizedWorkoutSettingsPageState
                             preferredBodypartIds: _preferredBodypartIds,
                             blacklistedBodypartIds: _blacklistedBodypartIds,
                             emptyText: strings.optimizedBodypartsUnavailable,
-                            onChanged:
-                                (selection) => setState(() {
-                                  _preferredBodypartIds =
-                                      selection.preferredBodypartIds;
-                                  _blacklistedBodypartIds =
-                                      selection.blacklistedBodypartIds;
-                                }),
+                            onChanged: (selection) => setState(() {
+                              _preferredBodypartIds =
+                                  selection.preferredBodypartIds;
+                              _blacklistedBodypartIds =
+                                  selection.blacklistedBodypartIds;
+                            }),
                           ),
                         ],
                       ),
@@ -446,11 +487,16 @@ class _OptimizedWorkoutSettingsPageState
             children: [
               Expanded(
                 child: FilledButton(
-                  onPressed:
-                      () => _submit(OptimizedWorkoutSettingsAction.startNow),
+                  onPressed: () =>
+                      _submit(OptimizedWorkoutSettingsAction.startNow),
                   style: FilledButton.styleFrom(
                     backgroundColor: semantic.startWorkoutAction,
                     foregroundColor: semantic.onStartWorkoutAction,
+                    shape: planning == null
+                        ? null
+                        : const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(16)),
+                          ),
                   ),
                   child: Text(strings.commonStartNow),
                 ),
@@ -459,6 +505,15 @@ class _OptimizedWorkoutSettingsPageState
               Expanded(
                 child: FilledButton(
                   onPressed: () => _submit(OptimizedWorkoutSettingsAction.save),
+                  style: planning == null
+                      ? null
+                      : FilledButton.styleFrom(
+                          backgroundColor: planning.actionSecondary,
+                          foregroundColor: planning.actionSecondaryForeground,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(16)),
+                          ),
+                        ),
                   child: Text(strings.commonSave),
                 ),
               ),
@@ -493,6 +548,7 @@ class _SettingsChoice<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -506,15 +562,28 @@ class _SettingsChoice<T> extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children:
-              options.map((option) {
-                final selected = option.value == value;
-                return ChoiceChip(
-                  label: Text(option.label),
-                  selected: selected,
-                  onSelected: (_) => onChanged(option.value),
-                );
-              }).toList(),
+          children: options.map((option) {
+            final selected = option.value == value;
+            return ChoiceChip(
+              label: Text(option.label),
+              selected: selected,
+              selectedColor: planning?.selectedSurface,
+              labelStyle: selected && planning != null
+                  ? TextStyle(color: planning.actionPrimaryForeground)
+                  : null,
+              shape: planning == null
+                  ? null
+                  : const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        topRight: Radius.circular(8),
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(12),
+                      ),
+                    ),
+              onSelected: (_) => onChanged(option.value),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -538,13 +607,15 @@ class _FloatingHeaderButton extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     final foreground =
-        neo
+        planning?.planFocalForeground ??
+        (neo
             ? tonosForegroundForSurface(context, surfaces.optimizedAction)
-            : null;
+            : null);
     return Material(
-      color: surfaces.optimizedAction,
-      borderRadius: shapes.pill,
+      color: planning?.planFocalSurface ?? surfaces.optimizedAction,
+      borderRadius: planning == null ? shapes.pill : BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPressed,

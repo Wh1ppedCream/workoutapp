@@ -8,6 +8,8 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/preset_detail_screen.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_planning_tokens.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,7 +40,7 @@ void main() {
       unorderedEquals(<String>['decoration', 'geometry', 'text_style']),
     );
     final findings = report.findings.where((f) => f.ruleId == rule.id).toList();
-    expect(findings, hasLength(3));
+    expect(findings, hasLength(8));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
     expect(
       report.findings.where(
@@ -51,10 +53,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
 
       testWidgets(
         '${family.code} ${brightness.name} resolves the guided plan-name field',
@@ -98,6 +99,80 @@ void main() {
         },
       );
     }
+  }
+
+  for (final brightness in Brightness.values) {
+    final theme = brightness == Brightness.light
+        ? ExpressiveThemeDefinition.light()
+        : ExpressiveThemeDefinition.dark();
+    testWidgets(
+      'Expressive ${brightness.name} plan detail styling and edit toggle',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues(<String, Object>{});
+
+        final repository = _PresetRepository();
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider(
+                create: (_) => PresetSession(1, repository: repository),
+              ),
+            ],
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(2)),
+                child: child!,
+              ),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PresetDetailScreen(startInEditingMode: true),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final pageContext = tester.element(find.byType(PresetDetailScreen));
+        final planning = AppExpressivePlanningTokens.maybeOf(pageContext)!;
+        final pageScaffold = tester.widget<Scaffold>(
+          find.descendant(
+            of: find.byType(PresetDetailScreen),
+            matching: find.byType(Scaffold),
+          ),
+        );
+        expect(pageScaffold.backgroundColor, planning.pageCanvas);
+        expect(
+          tester.widget<AppBar>(find.byType(AppBar)).backgroundColor,
+          planning.planSupportSurface,
+        );
+        expect(
+          tester.widget<AppBar>(find.byType(AppBar)).foregroundColor,
+          planning.planSupportForeground,
+        );
+
+        final saveButton = tester.widget<ElevatedButton>(
+          find.byKey(AppTestKeys.planSave),
+        );
+        expect(
+          saveButton.style?.backgroundColor?.resolve(const <WidgetState>{}),
+          planning.actionPrimary,
+        );
+        expect(
+          saveButton.style?.foregroundColor?.resolve(const <WidgetState>{}),
+          planning.actionPrimaryForeground,
+        );
+        await tester.tap(find.byKey(AppTestKeys.planEdit));
+        await tester.pumpAndSettle();
+        expect(find.byKey(AppTestKeys.planSave), findsNothing);
+        expect(find.byKey(AppTestKeys.planStartSession), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }
 

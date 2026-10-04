@@ -9,6 +9,7 @@ import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/expressive_planning_tokens.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -59,19 +60,17 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
       final rows = await repository.fetchPresetSummariesRaw(
         profileId: widget.profileId,
       );
-      final plans =
-          rows.map((row) {
-            final rawName = (row['name'] as String?)?.trim();
-            final id = (row['id'] as num).toInt();
-            return _ManagedPlan(
-              id: id,
-              name:
-                  rawName?.isNotEmpty == true
-                      ? _planDisplayText(rawName!)
-                      : strings.planManagementDefaultName(id),
-              isAutomatic: ((row['is_automatic'] as num?) ?? 0).toInt() == 1,
-            );
-          }).toList();
+      final plans = rows.map((row) {
+        final rawName = (row['name'] as String?)?.trim();
+        final id = (row['id'] as num).toInt();
+        return _ManagedPlan(
+          id: id,
+          name: rawName?.isNotEmpty == true
+              ? _planDisplayText(rawName!)
+              : strings.planManagementDefaultName(id),
+          isAutomatic: ((row['is_automatic'] as num?) ?? 0).toInt() == 1,
+        );
+      }).toList();
       final activeIds = await activePlanStore.load(widget.profileId);
       final validPlanIds = plans.map((plan) => plan.id).toSet();
       final validActiveIds = activeIds.intersection(validPlanIds);
@@ -174,70 +173,85 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
-    final activePlans =
-        _plans.where((plan) => _activePlanIds.contains(plan.id)).toList();
-    final archivedPlans =
-        _plans.where((plan) => !_activePlanIds.contains(plan.id)).toList();
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final activePlans = _plans
+        .where((plan) => _activePlanIds.contains(plan.id))
+        .toList();
+    final archivedPlans = _plans
+        .where((plan) => !_activePlanIds.contains(plan.id))
+        .toList();
 
     return Scaffold(
+      backgroundColor: expressive?.pageCanvas,
       appBar: AppBar(
         title: Text(strings.planManagementTitle),
         centerTitle: true,
+        backgroundColor: expressive?.pageCanvas,
+        foregroundColor: expressive?.onPage,
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _failure != null
-              ? SafeErrorView(
-                title: strings.planManagementLoadFailed,
-                failure: _failure!,
-                onRetry: _loadPlans,
-              )
-              : RefreshIndicator(
-                onRefresh: _loadPlans,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-                  children: [
-                    Text(
-                      strings.planManagementIntro,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _failure != null
+          ? SafeErrorView(
+              title: strings.planManagementLoadFailed,
+              failure: _failure!,
+              onRetry: _loadPlans,
+            )
+          : RefreshIndicator(
+              onRefresh: _loadPlans,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+                children: [
+                  Text(
+                    strings.planManagementIntro,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: expressive?.onPage ?? colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 16),
-                    KeyedSubtree(
-                      key: _activePlansTutorialKey,
-                      child: _PlanManagementSection(
-                        title: strings.trainActivePlans,
-                        subtitle: strings.planManagementActiveSubtitle,
-                        emptyMessage: strings.planManagementNoActive,
-                        plans: activePlans,
-                        activePlanIds: _activePlanIds,
-                        savingPlanIds: _savingPlanIds,
-                        actionLabel: strings.planManagementArchive,
-                        actionIcon: Icons.archive_outlined,
-                        onAction: (plan) => _setPlanActive(plan, false),
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: _activePlansTutorialKey,
+                    child: _PlanManagementSection(
+                      title: strings.trainActivePlans,
+                      subtitle: strings.planManagementActiveSubtitle,
+                      emptyMessage: strings.planManagementNoActive,
+                      plans: activePlans,
+                      activePlanIds: _activePlanIds,
+                      savingPlanIds: _savingPlanIds,
+                      actionLabel: strings.planManagementArchive,
+                      actionIcon: Icons.archive_outlined,
+                      surfaceColor: expressive?.planFocalSurface,
+                      foregroundColor: expressive?.planFocalForeground,
+                      tileSurfaceColor: expressive?.planSupportSurface,
+                      tileForegroundColor: expressive?.planSupportForeground,
+                      outlineColor: expressive?.outline,
+                      onAction: (plan) => _setPlanActive(plan, false),
                     ),
-                    const SizedBox(height: 16),
-                    KeyedSubtree(
-                      key: _archivedPlansTutorialKey,
-                      child: _PlanManagementSection(
-                        title: strings.trainArchivedPlans,
-                        subtitle: strings.planManagementArchivedSubtitle,
-                        emptyMessage: strings.planManagementNoArchived,
-                        plans: archivedPlans,
-                        activePlanIds: _activePlanIds,
-                        savingPlanIds: _savingPlanIds,
-                        actionLabel: strings.planManagementActivate,
-                        actionIcon: Icons.check_circle_outline,
-                        onAction: (plan) => _setPlanActive(plan, true),
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: _archivedPlansTutorialKey,
+                    child: _PlanManagementSection(
+                      title: strings.trainArchivedPlans,
+                      subtitle: strings.planManagementArchivedSubtitle,
+                      emptyMessage: strings.planManagementNoArchived,
+                      plans: archivedPlans,
+                      activePlanIds: _activePlanIds,
+                      savingPlanIds: _savingPlanIds,
+                      actionLabel: strings.planManagementActivate,
+                      actionIcon: Icons.check_circle_outline,
+                      surfaceColor: expressive?.planSupportSurface,
+                      foregroundColor: expressive?.planSupportForeground,
+                      tileSurfaceColor: expressive?.configurationSurface,
+                      tileForegroundColor: expressive?.configurationForeground,
+                      outlineColor: expressive?.outline,
+                      onAction: (plan) => _setPlanActive(plan, true),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
     );
   }
 }
@@ -251,6 +265,11 @@ class _PlanManagementSection extends StatelessWidget {
   final Set<int> savingPlanIds;
   final String actionLabel;
   final IconData actionIcon;
+  final Color? surfaceColor;
+  final Color? foregroundColor;
+  final Color? tileSurfaceColor;
+  final Color? tileForegroundColor;
+  final Color? outlineColor;
   final ValueChanged<_ManagedPlan> onAction;
 
   const _PlanManagementSection({
@@ -262,6 +281,11 @@ class _PlanManagementSection extends StatelessWidget {
     required this.savingPlanIds,
     required this.actionLabel,
     required this.actionIcon,
+    this.surfaceColor,
+    this.foregroundColor,
+    this.tileSurfaceColor,
+    this.tileForegroundColor,
+    this.outlineColor,
     required this.onAction,
   });
 
@@ -271,6 +295,7 @@ class _PlanManagementSection extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card(
+      color: surfaceColor,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -282,6 +307,7 @@ class _PlanManagementSection extends StatelessWidget {
                   child: Text(
                     title,
                     style: theme.textTheme.titleLarge?.copyWith(
+                      color: foregroundColor,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -293,7 +319,7 @@ class _PlanManagementSection extends StatelessWidget {
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                color: foregroundColor ?? colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -303,7 +329,7 @@ class _PlanManagementSection extends StatelessWidget {
                 child: Text(
                   emptyMessage,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                    color: foregroundColor ?? colorScheme.onSurfaceVariant,
                   ),
                 ),
               )
@@ -315,6 +341,9 @@ class _PlanManagementSection extends StatelessWidget {
                   isSaving: savingPlanIds.contains(plans[index].id),
                   actionLabel: actionLabel,
                   actionIcon: actionIcon,
+                  surfaceColor: tileSurfaceColor,
+                  foregroundColor: tileForegroundColor,
+                  outlineColor: outlineColor,
                   onAction: () => onAction(plans[index]),
                 ),
                 if (index != plans.length - 1) const SizedBox(height: 8),
@@ -332,6 +361,9 @@ class _PlanManagementTile extends StatelessWidget {
   final bool isSaving;
   final String actionLabel;
   final IconData actionIcon;
+  final Color? surfaceColor;
+  final Color? foregroundColor;
+  final Color? outlineColor;
   final VoidCallback onAction;
 
   const _PlanManagementTile({
@@ -340,6 +372,9 @@ class _PlanManagementTile extends StatelessWidget {
     required this.isSaving,
     required this.actionLabel,
     required this.actionIcon,
+    this.surfaceColor,
+    this.foregroundColor,
+    this.outlineColor,
     required this.onAction,
   });
 
@@ -350,31 +385,35 @@ class _PlanManagementTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final strings = AppLocalizations.of(context);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final neo = context.usesNeoPresentation;
-    final planForeground =
-        neo ? tonosForegroundForSurface(context, surfaces.planCard) : null;
-    final planSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, surfaces.planCard)
-            : colorScheme.onSurfaceVariant;
-    final statusColor =
-        isActive
-            ? colorScheme.primary
-            : neo
-            ? planForeground!
-            : colorScheme.onSurfaceVariant;
+    final planForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.planCard)
+        : null;
+    final planSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, surfaces.planCard)
+        : colorScheme.onSurfaceVariant;
+    final statusColor = isActive
+        ? colorScheme.primary
+        : neo
+        ? planForeground!
+        : colorScheme.onSurfaceVariant;
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: surfaces.planCard,
+        color: surfaceColor ?? surfaces.planCard,
         borderRadius: shapes.planCard,
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: outlineColor ?? colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-        child: Row(
-          children: [
-            CircleAvatar(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compactExpressive =
+                expressive != null &&
+                (constraints.maxWidth < 280 ||
+                    MediaQuery.textScalerOf(context).scale(14) > 18);
+            final status = CircleAvatar(
               radius: 18,
               backgroundColor: statusColor.withValues(alpha: 0.16),
               child: Icon(
@@ -382,51 +421,79 @@ class _PlanManagementTile extends StatelessWidget {
                 color: statusColor,
                 size: 19,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    plan.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: neo ? planForeground : null,
-                      fontWeight: FontWeight.w800,
-                    ),
+            );
+            final details = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  plan.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: foregroundColor ?? (neo ? planForeground : null),
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    plan.isAutomatic
-                        ? strings.planManagementAutomatic
-                        : isActive
-                        ? strings.planManagementVisible
-                        : strings.planManagementHidden,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: planSecondary,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  plan.isAutomatic
+                      ? strings.planManagementAutomatic
+                      : isActive
+                      ? strings.planManagementVisible
+                      : strings.planManagementHidden,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: foregroundColor ?? planSecondary,
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            OutlinedButton.icon(
+                ),
+              ],
+            );
+            final action = OutlinedButton.icon(
               onPressed: isSaving ? null : onAction,
-              icon:
-                  isSaving
-                      ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : Icon(actionIcon, size: 16),
+              style: expressive == null
+                  ? null
+                  : OutlinedButton.styleFrom(
+                      foregroundColor: expressive.actionSecondaryForeground,
+                      side: BorderSide(color: expressive.outline),
+                    ),
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(actionIcon, size: 16),
               label: Text(actionLabel),
-            ),
-          ],
+            );
+
+            if (compactExpressive) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      status,
+                      const SizedBox(width: 12),
+                      Expanded(child: details),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  action,
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                status,
+                const SizedBox(width: 12),
+                Expanded(child: details),
+                const SizedBox(width: 10),
+                action,
+              ],
+            );
+          },
         ),
       ),
     );

@@ -24,6 +24,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
+import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_action_depth.dart';
 import '../../theme/widgets/tonos_dialog.dart';
@@ -439,9 +440,20 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     required VoidCallback onPressed,
     required String label,
   }) {
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     final button = ElevatedButton(
       key: key,
       onPressed: onPressed,
+      style:
+          planning == null
+              ? null
+              : ElevatedButton.styleFrom(
+                backgroundColor: planning.actionPrimary,
+                foregroundColor: planning.actionPrimaryForeground,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
       child: Text(label),
     );
     return tonosWithPrimaryActionDepth(context, button, enabled: true);
@@ -484,6 +496,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final preset = context.watch<PresetSession>();
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     final onboardingPlanGuideStep = _buildOnboardingPlanGuideStep();
     final isNamingPlan =
         _showsOnboardingPlanGuide &&
@@ -507,7 +520,10 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       child: Stack(
         children: [
           Scaffold(
+            backgroundColor: planning?.pageCanvas,
             appBar: AppBar(
+              backgroundColor: planning?.planSupportSurface,
+              foregroundColor: planning?.planSupportForeground,
               leading: const BackButton(),
               title:
                   _isEditing
@@ -523,6 +539,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                     ? UnderlineInputBorder(
                                       borderSide: BorderSide(
                                         color:
+                                            planning?.actionPrimary ??
                                             Theme.of(
                                               context,
                                             ).colorScheme.primary,
@@ -868,22 +885,36 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     : null,
 
             bottomNavigationBar: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: KeyedSubtree(
-                  key: _actionTutorialKey,
-                  child:
-                      _isEditing
-                          ? _buildPrimaryAction(
-                            key: AppTestKeys.planSave,
-                            onPressed: _savePlan,
-                            label: strings.planSavePreset,
-                          )
-                          : _buildPrimaryAction(
-                            key: AppTestKeys.planStartSession,
-                            onPressed: _startPlanSession,
-                            label: strings.planStartSession,
+              child: Container(
+                decoration:
+                    planning == null
+                        ? null
+                        : BoxDecoration(
+                          color: planning.planSupportSurface,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(24),
                           ),
+                          border: Border(
+                            top: BorderSide(color: planning.outline),
+                          ),
+                        ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: KeyedSubtree(
+                    key: _actionTutorialKey,
+                    child:
+                        _isEditing
+                            ? _buildPrimaryAction(
+                              key: AppTestKeys.planSave,
+                              onPressed: _savePlan,
+                              label: strings.planSavePreset,
+                            )
+                            : _buildPrimaryAction(
+                              key: AppTestKeys.planStartSession,
+                              onPressed: _startPlanSession,
+                              label: strings.planStartSession,
+                            ),
+                  ),
                 ),
               ),
             ),
