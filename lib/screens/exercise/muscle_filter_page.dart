@@ -10,6 +10,7 @@ import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/theme_extensions.dart';
 import '../../utils/localized_body_part_name.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/body_heatmap.dart';
@@ -22,8 +23,13 @@ import 'definitions_by_muscle_page.dart';
 /// Browse the exercise library by bodypart or individual muscle.
 class MuscleFilterPage extends StatefulWidget {
   final int initialTabIndex;
+  final bool expressiveCatalogPresentation;
 
-  const MuscleFilterPage({super.key, this.initialTabIndex = 0});
+  const MuscleFilterPage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.expressiveCatalogPresentation = false,
+  });
 
   @override
   State<MuscleFilterPage> createState() => _MuscleFilterPageState();
@@ -145,20 +151,31 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
+    final expressive =
+        widget.expressiveCatalogPresentation &&
+        context.usesExpressivePresentation;
     return DefaultTabController(
       length: 2,
       initialIndex: widget.initialTabIndex <= 0 ? 0 : 1,
       child: Scaffold(
         appBar: AppBar(
-          title:
-              isSpanish
-                  ? FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(strings.anatomyLibraryTitle),
-                  )
-                  : Text(strings.anatomyLibraryTitle),
+          title: isSpanish
+              ? FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(strings.anatomyLibraryTitle),
+                )
+              : Text(strings.anatomyLibraryTitle),
           bottom: TabBar(
+            indicatorSize:
+                expressive ? TabBarIndicatorSize.tab : null,
+            labelColor: expressive
+                ? Theme.of(context).colorScheme.primary
+                : null,
+            indicatorColor: expressive
+                ? Theme.of(context).colorScheme.primary
+                : null,
+            indicatorWeight: expressive ? 4 : 2,
             tabs: [
               Tab(text: strings.anatomyBodyParts),
               Tab(text: strings.anatomyMuscles),
@@ -177,29 +194,27 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
 
             final data = snapshot.data!;
             final query = _query.trim().toLowerCase();
-            final bodyParts =
-                data.bodyParts
-                    .where(
-                      (part) =>
-                          query.isEmpty ||
-                          part.name.toLowerCase().contains(query) ||
-                          localizedBodyPartName(
-                            context,
-                            part.name,
-                          ).toLowerCase().contains(query),
-                    )
-                    .toList();
-            final muscles =
-                data.muscles
-                    .where(
-                      (muscle) =>
-                          query.isEmpty ||
-                          muscle.name.toLowerCase().contains(query) ||
-                          (data.muscleDisplayNames[muscle.id] ?? '')
-                              .toLowerCase()
-                              .contains(query),
-                    )
-                    .toList();
+            final bodyParts = data.bodyParts
+                .where(
+                  (part) =>
+                      query.isEmpty ||
+                      part.name.toLowerCase().contains(query) ||
+                      localizedBodyPartName(
+                        context,
+                        part.name,
+                      ).toLowerCase().contains(query),
+                )
+                .toList();
+            final muscles = data.muscles
+                .where(
+                  (muscle) =>
+                      query.isEmpty ||
+                      muscle.name.toLowerCase().contains(query) ||
+                      (data.muscleDisplayNames[muscle.id] ?? '')
+                          .toLowerCase()
+                          .contains(query),
+                )
+                .toList();
 
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _queueTutorial();
@@ -213,18 +228,41 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                     key: _searchTutorialKey,
                     child: TextField(
                       decoration: InputDecoration(
-                        labelText:
-                            isSpanish ? null : strings.anatomySearchLabel,
-                        label:
-                            isSpanish
-                                ? FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(strings.anatomySearchLabel),
-                                )
-                                : null,
+                        labelText: isSpanish
+                            ? null
+                            : strings.anatomySearchLabel,
+                        label: isSpanish
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(strings.anatomySearchLabel),
+                              )
+                            : null,
                         prefixIcon: const Icon(Icons.search),
-                        border: const OutlineInputBorder(),
+                        filled: expressive,
+                        fillColor: expressive
+                            ? Theme.of(context).colorScheme.surfaceContainerLow
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            expressive ? 18 : 4,
+                          ),
+                        ),
+                        enabledBorder: expressive
+                            ? OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide.none,
+                              )
+                            : null,
+                        focusedBorder: expressive
+                            ? OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                ),
+                              )
+                            : null,
                       ),
                       onChanged: (value) => setState(() => _query = value),
                     ),
@@ -237,48 +275,47 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                       children: [
                         _FocusList<BodyPart>(
                           emptyText: strings.anatomyNoBodyParts,
+                          expressive: expressive,
                           items: bodyParts,
-                          titleFor:
-                              (part) =>
-                                  localizedBodyPartName(context, part.name),
+                          titleFor: (part) =>
+                              localizedBodyPartName(context, part.name),
                           subtitleFor: (part) {
                             final count =
                                 data.bodyPartExerciseCounts[part.id] ?? 0;
                             return _exerciseCountLabel(count);
                           },
-                          leadingFor:
-                              (part) => SharedEntityMediaThumbnail(
-                                entityType: SharedMediaEntityType.bodypart,
-                                entityId: part.id,
-                                size: 54,
-                                padding: EdgeInsets.zero,
-                                fallbackBuilder:
-                                    (context, contentSize) =>
-                                        SingleBodyPartHeatmap(
-                                          bodyPartName: part.name,
-                                          size: contentSize,
-                                          padding: 3,
-                                          backgroundColor: Colors.transparent,
-                                          borderRadius: BorderRadius.zero,
-                                        ),
-                              ),
+                          leadingFor: (part) => SharedEntityMediaThumbnail(
+                            entityType: SharedMediaEntityType.bodypart,
+                            entityId: part.id,
+                            size: 54,
+                            padding: EdgeInsets.zero,
+                            fallbackBuilder: (context, contentSize) =>
+                                SingleBodyPartHeatmap(
+                                  bodyPartName: part.name,
+                                  size: contentSize,
+                                  padding: 3,
+                                  backgroundColor: Colors.transparent,
+                                  borderRadius: BorderRadius.zero,
+                                ),
+                          ),
                           onTap: (part) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder:
-                                    (_) => DefinitionsByBodyPartPage(
-                                      bodyPart: part,
-                                    ),
+                                builder: (_) => DefinitionsByBodyPartPage(
+                                  bodyPart: part,
+                                  expressiveCatalogPresentation: expressive,
+                                ),
                               ),
                             );
                           },
                         ),
                         _FocusList<Muscle>(
                           emptyText: strings.anatomyNoMuscles,
+                          expressive: expressive,
                           items: muscles,
                           titleFor: (muscle) => muscle.name,
-                          titleWidgetFor:
-                              (context, muscle) => LocalizedCatalogEntityName(
+                          titleWidgetFor: (context, muscle) =>
+                              LocalizedCatalogEntityName(
                                 entity: CatalogEntityDisplayName(
                                   catalogId: muscle.catalogId,
                                   canonicalName: muscle.name,
@@ -291,30 +328,27 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
                                 data.muscleExerciseCounts[muscle.id] ?? 0;
                             return _exerciseCountLabel(count);
                           },
-                          leadingFor:
-                              (muscle) => SharedEntityMediaThumbnail(
-                                entityType: SharedMediaEntityType.muscle,
-                                entityId: muscle.id,
-                                size: 44,
-                                borderRadius: BorderRadius.circular(22),
-                                fallbackBuilder:
-                                    (context, contentSize) => Icon(
-                                      Icons.fitness_center,
-                                      size: contentSize * 0.48,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimary,
-                                    ),
-                                backgroundColor:
-                                    Theme.of(context).colorScheme.primary,
-                              ),
+                          leadingFor: (muscle) => SharedEntityMediaThumbnail(
+                            entityType: SharedMediaEntityType.muscle,
+                            entityId: muscle.id,
+                            size: 44,
+                            borderRadius: BorderRadius.circular(22),
+                            fallbackBuilder: (context, contentSize) => Icon(
+                              Icons.fitness_center,
+                              size: contentSize * 0.48,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary,
+                          ),
                           onTap: (muscle) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder:
-                                    (_) =>
-                                        DefinitionsByMusclePage(muscle: muscle),
+                                builder: (_) => DefinitionsByMusclePage(
+                                  muscle: muscle,
+                                  expressiveCatalogPresentation: expressive,
+                                ),
                               ),
                             );
                           },
@@ -339,6 +373,7 @@ class _MuscleFilterPageState extends State<MuscleFilterPage> {
 class _FocusList<T> extends StatelessWidget {
   final List<T> items;
   final String emptyText;
+  final bool expressive;
   final String Function(T item) titleFor;
   final Widget Function(BuildContext context, T item)? titleWidgetFor;
   final String Function(T item) subtitleFor;
@@ -349,6 +384,7 @@ class _FocusList<T> extends StatelessWidget {
   const _FocusList({
     required this.items,
     required this.emptyText,
+    required this.expressive,
     required this.titleFor,
     this.titleWidgetFor,
     required this.subtitleFor,
@@ -364,12 +400,24 @@ class _FocusList<T> extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: expressive
+          ? const EdgeInsets.fromLTRB(12, 4, 12, 16)
+          : const EdgeInsets.only(bottom: 16),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, __) =>
+          expressive ? const SizedBox(height: 6) : const Divider(height: 1),
       itemBuilder: (context, index) {
         final item = items[index];
         return ListTile(
+          tileColor: expressive
+              ? Theme.of(context).colorScheme.surfaceContainerLow
+              : null,
+          shape: expressive
+              ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+              : null,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: expressive ? 14 : 16,
+          ),
           leading:
               leadingFor?.call(item) ??
               CircleAvatar(child: Icon(icon ?? Icons.chevron_right, size: 20)),
@@ -379,6 +427,10 @@ class _FocusList<T> extends StatelessWidget {
                 titleFor(item),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                style: expressive
+                    ? Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600)
+                    : null,
               ),
           subtitle: Text(
             subtitleFor(item),

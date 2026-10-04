@@ -69,12 +69,14 @@ class _LoadedExerciseMedia {
 class _ExerciseMediaPreviewCard extends StatelessWidget {
   final File previewFile;
   final Widget? heatmapOverlay;
+  final bool expressive;
   final VoidCallback onImageTap;
   final VoidCallback onImageLoadFailed;
 
   const _ExerciseMediaPreviewCard({
     required this.previewFile,
     required this.heatmapOverlay,
+    this.expressive = false,
     required this.onImageTap,
     required this.onImageLoadFailed,
   });
@@ -85,10 +87,20 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.surfaceTokens.mediaPlaceholder,
-        borderRadius: theme.mediaTokens.previewShape,
-        border: Border.all(color: theme.surfaceTokens.mediaOutline),
+        color:
+            expressive
+                ? theme.colorScheme.surfaceContainerLowest
+                : theme.surfaceTokens.mediaPlaceholder,
+        borderRadius:
+            expressive
+                ? const BorderRadius.all(Radius.circular(24))
+                : theme.mediaTokens.previewShape,
+        border:
+            expressive
+                ? null
+                : Border.all(color: theme.surfaceTokens.mediaOutline),
       ),
+      padding: expressive ? const EdgeInsets.all(6) : EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: AspectRatio(
         // A 4:3 frame keeps square source art compact while preserving the
@@ -149,10 +161,17 @@ class ExerciseDetailSheet extends StatefulWidget {
   final ExerciseDefinition definition;
   final int defId;
 
+  /// Enables the Catalog-only Expressive treatment for the Details tab.
+  ///
+  /// The detail sheet is also used by workout, plan, and history flows, so
+  /// callers outside the Catalog browser keep the existing presentation.
+  final bool expressiveCatalogPresentation;
+
   const ExerciseDetailSheet({
     super.key,
     required this.definition,
     required this.defId,
+    this.expressiveCatalogPresentation = false,
   });
 
   /// Presents the detail sheet with one owner for its draggable handle.
@@ -160,6 +179,7 @@ class ExerciseDetailSheet extends StatefulWidget {
     required BuildContext context,
     required ExerciseDefinition definition,
     required int defId,
+    bool expressiveCatalogPresentation = false,
   }) {
     final neoSheet = context.surfaceDecorationTokens.sheet.outlined;
     return showModalBottomSheet<T>(
@@ -168,7 +188,12 @@ class ExerciseDetailSheet extends StatefulWidget {
       backgroundColor: neoSheet ? Colors.transparent : null,
       elevation: neoSheet ? 0 : null,
       showDragHandle: neoSheet ? false : null,
-      builder: (_) => ExerciseDetailSheet(definition: definition, defId: defId),
+      builder:
+          (_) => ExerciseDetailSheet(
+            definition: definition,
+            defId: defId,
+            expressiveCatalogPresentation: expressiveCatalogPresentation,
+          ),
     );
   }
 
@@ -490,47 +515,50 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FutureBuilder<_LoadedExerciseMedia?>(
-            future: _primaryMediaFuture,
-            builder: (context, snapshot) {
-              final loadedMedia = snapshot.data;
-              if (loadedMedia == null) {
-                return Center(
-                  child: _buildHeatmapButton(
-                    definition: def,
-                    frequencyMap: heatmapFrequencyMap,
-                    lowColor: heatmapLow,
-                    highColor: heatmapHigh,
-                    size: 220,
-                    padding: 12,
-                    borderRadius: context.mediaTokens.previewShape,
-                  ),
-                );
-              }
-
-              return _ExerciseMediaPreviewCard(
-                previewFile: loadedMedia.previewFile,
-                heatmapOverlay:
-                    heatmapFrequencyMap.isEmpty
-                        ? null
-                        : _buildHeatmapButton(
-                          definition: def,
-                          frequencyMap: heatmapFrequencyMap,
-                          lowColor: heatmapLow,
-                          highColor: heatmapHigh,
-                          size: 98,
-                          padding: 6,
-                          borderRadius: context.mediaTokens.overlayShape,
-                          elevated: true,
-                        ),
-                onImageTap:
-                    () => _showImageViewer(
-                      loadedMedia.previewFile,
+          _buildDetailsMediaFocal(
+            FutureBuilder<_LoadedExerciseMedia?>(
+              future: _primaryMediaFuture,
+              builder: (context, snapshot) {
+                final loadedMedia = snapshot.data;
+                if (loadedMedia == null) {
+                  return Center(
+                    child: _buildHeatmapButton(
                       definition: def,
+                      frequencyMap: heatmapFrequencyMap,
+                      lowColor: heatmapLow,
+                      highColor: heatmapHigh,
+                      size: 220,
+                      padding: 12,
+                      borderRadius: context.mediaTokens.previewShape,
                     ),
-                onImageLoadFailed: _recoverFromMissingPreview,
-              );
-            },
+                  );
+                }
+
+                return _ExerciseMediaPreviewCard(
+                  previewFile: loadedMedia.previewFile,
+                  heatmapOverlay:
+                      heatmapFrequencyMap.isEmpty
+                          ? null
+                          : _buildHeatmapButton(
+                            definition: def,
+                            frequencyMap: heatmapFrequencyMap,
+                            lowColor: heatmapLow,
+                            highColor: heatmapHigh,
+                            size: 98,
+                            padding: 6,
+                            borderRadius: context.mediaTokens.overlayShape,
+                            elevated: true,
+                          ),
+                  expressive: widget.expressiveCatalogPresentation,
+                  onImageTap:
+                      () => _showImageViewer(
+                        loadedMedia.previewFile,
+                        definition: def,
+                      ),
+                  onImageLoadFailed: _recoverFromMissingPreview,
+                );
+              },
+            ),
           ),
           const SizedBox(height: 14),
           _buildFormGuideCard(def),
@@ -540,6 +568,18 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           _buildTargetAnatomyCard(def),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailsMediaFocal(Widget media) {
+    if (!widget.expressiveCatalogPresentation) return media;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
+      ),
+      child: media,
     );
   }
 
@@ -571,6 +611,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       icon: Icons.fitness_center_outlined,
       title: strings.catalogEquipment,
       accent: theme.colorScheme.primary,
+      expressiveContainer: theme.colorScheme.primaryContainer,
+      expressiveOnContainer: theme.colorScheme.onPrimaryContainer,
+      expressive: widget.expressiveCatalogPresentation,
       isExpanded: _equipmentExpanded,
       onExpandedChanged:
           (expanded) => setState(() => _equipmentExpanded = expanded),
@@ -594,6 +637,12 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                                 (name) => _buildDetailTag(
                                   name,
                                   color: theme.colorScheme.primary,
+                                  expressiveContainer:
+                                      theme.colorScheme.primaryContainer,
+                                  expressiveForeground:
+                                      theme.colorScheme.onPrimaryContainer,
+                                  expressive:
+                                      widget.expressiveCatalogPresentation,
                                 ),
                               )
                               .toList(),
@@ -605,6 +654,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget _buildTargetAnatomyCard(
     ExerciseDefinition definition, {
     bool expandable = true,
+    bool expressive = true,
   }) {
     final theme = Theme.of(context);
     final strings = _strings;
@@ -625,6 +675,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       icon: Icons.accessibility_new,
       title: strings.exerciseDetailTargetAnatomy,
       accent: theme.colorScheme.tertiary,
+      expressiveContainer: theme.colorScheme.tertiaryContainer,
+      expressiveOnContainer: theme.colorScheme.onTertiaryContainer,
+      expressive: expressive && widget.expressiveCatalogPresentation,
       isExpanded: expandable ? _targetAnatomyExpanded : true,
       onExpandedChanged:
           expandable
@@ -652,6 +705,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         (item) => _buildDetailTag(
                           item,
                           color: theme.colorScheme.tertiary,
+                          expressiveContainer:
+                              theme.colorScheme.tertiaryContainer,
+                          expressiveForeground:
+                              theme.colorScheme.onTertiaryContainer,
+                          expressive:
+                              expressive &&
+                              widget.expressiveCatalogPresentation,
                         ),
                       )
                       .toList(),
@@ -682,6 +742,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                               (name) => _buildDetailTag(
                                 name,
                                 color: theme.colorScheme.secondary,
+                                expressiveContainer:
+                                    theme.colorScheme.secondaryContainer,
+                                expressiveForeground:
+                                    theme.colorScheme.onSecondaryContainer,
+                                expressive:
+                                    expressive &&
+                                    widget.expressiveCatalogPresentation,
                               ),
                             )
                             .toList(),
@@ -695,6 +762,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget _buildFormGuideCard(
     ExerciseDefinition definition, {
     bool expandable = true,
+    bool expressive = true,
   }) {
     final fallback = ExerciseInstructionContent.fromDefinition(definition);
     return FutureBuilder<ExerciseInstructionContent>(
@@ -704,6 +772,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           (context, snapshot) => _buildLocalizedFormGuideCard(
             snapshot.data ?? fallback,
             expandable: expandable,
+            expressive: expressive,
           ),
     );
   }
@@ -711,6 +780,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget _buildLocalizedFormGuideCard(
     ExerciseInstructionContent instructions, {
     required bool expandable,
+    required bool expressive,
   }) {
     final theme = Theme.of(context);
     final strings = _strings;
@@ -745,6 +815,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       icon: Icons.menu_book_outlined,
       title: strings.exerciseDetailFormGuide,
       accent: theme.colorScheme.secondary,
+      expressiveContainer: theme.colorScheme.secondaryContainer,
+      expressiveOnContainer: theme.colorScheme.onSecondaryContainer,
+      expressive: expressive && widget.expressiveCatalogPresentation,
       isExpanded: expandable ? _formGuideExpanded : true,
       onExpandedChanged:
           expandable
@@ -769,6 +842,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required IconData icon,
     required String title,
     required Color accent,
+    required Color expressiveContainer,
+    required Color expressiveOnContainer,
+    required bool expressive,
     required bool isExpanded,
     required ValueChanged<bool>? onExpandedChanged,
     required Widget child,
@@ -785,13 +861,19 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: surfaces.exerciseDetailCard,
-          borderRadius: shapes.exerciseDetailCard,
-          border: Border.all(
-            color: accent.withValues(
-              alpha: surfaces.exerciseDetailCardBorderOpacity,
-            ),
-          ),
+          color: expressive ? expressiveContainer : surfaces.exerciseDetailCard,
+          borderRadius:
+              expressive
+                  ? const BorderRadius.all(Radius.circular(20))
+                  : shapes.exerciseDetailCard,
+          border:
+              expressive
+                  ? null
+                  : Border.all(
+                    color: accent.withValues(
+                      alpha: surfaces.exerciseDetailCardBorderOpacity,
+                    ),
+                  ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,18 +892,32 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: accent.withValues(
-                          alpha: surfaces.exerciseDetailIconFillOpacity,
-                        ),
-                        borderRadius: shapes.exerciseDetailIcon,
+                        color:
+                            expressive
+                                ? expressiveContainer
+                                : accent.withValues(
+                                  alpha: surfaces.exerciseDetailIconFillOpacity,
+                                ),
+                        borderRadius:
+                            expressive
+                                ? const BorderRadius.all(Radius.circular(11))
+                                : shapes.exerciseDetailIcon,
                       ),
-                      child: Icon(icon, color: accent, size: 19),
+                      child: Icon(
+                        icon,
+                        color: expressive ? expressiveOnContainer : accent,
+                        size: 19,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         title,
                         style: theme.textTheme.titleSmall?.copyWith(
+                          color:
+                              expressive
+                                  ? expressiveOnContainer
+                                  : theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -831,7 +927,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         isExpanded
                             ? Icons.keyboard_arrow_up_rounded
                             : Icons.keyboard_arrow_down_rounded,
-                        color: accent,
+                        color: expressive ? expressiveOnContainer : accent,
                       ),
                   ],
                 ),
@@ -862,7 +958,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         .toColor();
   }
 
-  Widget _buildDetailTag(String label, {required Color color}) {
+  Widget _buildDetailTag(
+    String label, {
+    required Color color,
+    required Color expressiveContainer,
+    required Color expressiveForeground,
+    required bool expressive,
+  }) {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
@@ -870,24 +972,31 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         context.usesNeoPresentation && theme.brightness == Brightness.light
             ? _vividLightNeoTagColor(color)
             : color;
-    final tagSurface = tagColor.withValues(
-      alpha: surfaces.exerciseDetailTagFillOpacity,
-    );
+    final tagSurface =
+        expressive
+            ? expressiveContainer
+            : tagColor.withValues(alpha: surfaces.exerciseDetailTagFillOpacity);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: tagSurface,
-        borderRadius: shapes.exerciseDetailTag,
-        border: Border.all(
-          color: tagColor.withValues(
-            alpha: surfaces.exerciseDetailTagBorderOpacity,
-          ),
-        ),
+        borderRadius:
+            expressive
+                ? const BorderRadius.all(Radius.circular(11))
+                : shapes.exerciseDetailTag,
+        border:
+            expressive
+                ? null
+                : Border.all(
+                  color: tagColor.withValues(
+                    alpha: surfaces.exerciseDetailTagBorderOpacity,
+                  ),
+                ),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: tagColor,
+          color: expressive ? expressiveForeground : tagColor,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -1001,7 +1110,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       imageLabel: _strings.exerciseEditorMediaImage,
       zoomHint: _strings.exerciseDetailZoomHint,
       closeLabel: _strings.commonClose,
-      footer: _buildFormGuideCard(definition, expandable: false),
+      footer: _buildFormGuideCard(
+        definition,
+        expandable: false,
+        expressive: false,
+      ),
     );
   }
 
@@ -1066,6 +1179,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                           _buildTargetAnatomyCard(
                             definition,
                             expandable: false,
+                            expressive: false,
                           ),
                         ],
                       ),

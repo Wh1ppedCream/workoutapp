@@ -54,8 +54,8 @@ class _CatalogPageState extends State<CatalogPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final isActiveTab = TickerMode.of(context);
-    final completedSessionVersion =
-        Provider.of<ActiveSession>(context).completedSessionVersion;
+    final completedSessionVersion = Provider.of<ActiveSession>(context)
+        .completedSessionVersion;
 
     if (_seenCompletedSessionVersion == null) {
       _seenCompletedSessionVersion = completedSessionVersion;
@@ -92,11 +92,10 @@ class _CatalogPageState extends State<CatalogPage> {
     final musclesFuture = repo.fetchAllMusclesFull();
 
     final exerciseRows = await exerciseRowsFuture;
-    final definitionIds =
-        exerciseRows
-            .map((row) => (row['definition_id'] as num?)?.toInt())
-            .whereType<int>()
-            .toList();
+    final definitionIds = exerciseRows
+        .map((row) => (row['definition_id'] as num?)?.toInt())
+        .whereType<int>()
+        .toList();
     final definitions = await repo.lookupDefsDetailedByIds(definitionIds);
     final definitionsById = {for (final def in definitions) def.id: def};
     final exerciseStats = <_ExerciseUsageSummary>[
@@ -143,15 +142,22 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   void _openExerciseCatalog() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const ExerciseCatalogPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogPage(
+          expressiveCatalogPresentation: context.usesExpressivePresentation,
+        ),
+      ),
+    );
   }
 
   void _openFocusLibrary(int initialTabIndex) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => MuscleFilterPage(initialTabIndex: initialTabIndex),
+        builder: (_) => MuscleFilterPage(
+          initialTabIndex: initialTabIndex,
+          expressiveCatalogPresentation: context.usesExpressivePresentation,
+        ),
       ),
     );
   }
@@ -287,20 +293,23 @@ class _ExerciseCatalogCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final panelForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              surfaces.exerciseProgressSelector,
-            )
-            : theme.colorScheme.onSurface;
-    final panelSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.exerciseProgressSelector,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final usesTonalRecipe = usesInkRecipe || usesExpressiveRecipe;
+    final expressiveScheme = theme.colorScheme;
+    final expressivePanelColor = expressiveScheme.primaryContainer;
+    final panelForeground = usesExpressiveRecipe
+        ? expressiveScheme.onPrimaryContainer
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.exerciseProgressSelector)
+        : theme.colorScheme.onSurface;
+    final panelSecondaryForeground = usesExpressiveRecipe
+        ? expressiveScheme.onPrimaryContainer.withValues(alpha: 0.78)
+        : usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            surfaces.exerciseProgressSelector,
+          )
+        : theme.colorScheme.onSurfaceVariant;
     final content = Padding(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -309,19 +318,28 @@ class _ExerciseCatalogCard extends StatelessWidget {
           _CatalogCardHeader(
             icon: Icons.fitness_center,
             title: strings.catalogExerciseTitle,
-            iconBackground: usesInkRecipe ? surfaces.settingsHero : null,
-            iconForeground:
-                usesInkRecipe
-                    ? tonosForegroundForSurface(context, surfaces.settingsHero)
-                    : null,
+            iconBackground: usesExpressiveRecipe
+                ? expressiveScheme.secondaryContainer
+                : usesInkRecipe
+                ? surfaces.settingsHero
+                : null,
+            iconForeground: usesExpressiveRecipe
+                ? expressiveScheme.onSecondaryContainer
+                : usesInkRecipe
+                ? tonosForegroundForSurface(context, surfaces.settingsHero)
+                : null,
             titleForeground: panelForeground,
+            expressive: usesExpressiveRecipe,
+            trailing: usesExpressiveRecipe ? Icons.arrow_forward_rounded : null,
           ),
           const SizedBox(height: 16),
           Text(
             strings.catalogMostUsedExercises,
             style: theme.textTheme.titleMedium?.copyWith(
               color: panelForeground,
-              fontWeight: FontWeight.w800,
+              fontWeight: usesExpressiveRecipe
+                  ? FontWeight.w700
+                  : FontWeight.w800,
             ),
           ),
           const SizedBox(height: 10),
@@ -343,12 +361,15 @@ class _ExerciseCatalogCard extends StatelessWidget {
       ),
     );
 
-    if (usesInkRecipe) {
+    if (usesTonalRecipe) {
       return TonosSurface(
         variant: TonosSurfaceVariant.panelRaised,
-        color: surfaces.exerciseProgressSelector,
+        color: usesExpressiveRecipe
+            ? expressivePanelColor
+            : surfaces.exerciseProgressSelector,
         padding: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
+        borderRadius: usesExpressiveRecipe ? BorderRadius.circular(24) : null,
         onTap: onTap,
         child: content,
       );
@@ -380,11 +401,19 @@ class _TargetAnatomyCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final panelColor = usesInkRecipe ? surfaces.settingsHero : surfaces.card;
-    final panelForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, panelColor)
-            : theme.colorScheme.onSurface;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final usesTonalRecipe = usesInkRecipe || usesExpressiveRecipe;
+    final expressiveScheme = theme.colorScheme;
+    final panelColor = usesExpressiveRecipe
+        ? expressiveScheme.surfaceContainerLow
+        : usesInkRecipe
+        ? surfaces.settingsHero
+        : surfaces.card;
+    final panelForeground = usesExpressiveRecipe
+        ? expressiveScheme.onSurface
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, panelColor)
+        : theme.colorScheme.onSurface;
     final content = Padding(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -393,20 +422,25 @@ class _TargetAnatomyCard extends StatelessWidget {
           _CatalogCardHeader(
             icon: Icons.bubble_chart_outlined,
             title: strings.catalogTargetAnatomyTitle,
-            iconBackground:
-                usesInkRecipe ? surfaces.exerciseProgressSelector : null,
-            iconForeground:
-                usesInkRecipe
-                    ? tonosForegroundForSurface(
-                      context,
-                      surfaces.exerciseProgressSelector,
-                    )
-                    : null,
+            iconBackground: usesExpressiveRecipe
+                ? expressiveScheme.tertiaryContainer
+                : usesInkRecipe
+                ? surfaces.exerciseProgressSelector
+                : null,
+            iconForeground: usesExpressiveRecipe
+                ? expressiveScheme.onTertiaryContainer
+                : usesInkRecipe
+                ? tonosForegroundForSurface(
+                    context,
+                    surfaces.exerciseProgressSelector,
+                  )
+                : null,
             titleForeground: panelForeground,
           ),
           const SizedBox(height: 16),
-          IntrinsicHeight(
-            child: Row(
+          if (usesExpressiveRecipe)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: _FocusSummaryPane(
@@ -417,15 +451,6 @@ class _TargetAnatomyCard extends StatelessWidget {
                     onTap: onBodyPartsTap,
                     localizeBuiltInBodyPartNames: true,
                   ),
-                ),
-                const SizedBox(width: 12),
-                VerticalDivider(
-                  width: usesInkRecipe ? 2 : 1,
-                  thickness: usesInkRecipe ? 2 : 1,
-                  color:
-                      usesInkRecipe
-                          ? tonosOutlineForSurface(context, panelColor)
-                          : theme.colorScheme.outlineVariant,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -439,18 +464,54 @@ class _TargetAnatomyCard extends StatelessWidget {
                   ),
                 ),
               ],
+            )
+          else
+            IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FocusSummaryPane(
+                      title: strings.catalogBodyparts,
+                      icon: Icons.accessibility_new,
+                      items: bodyParts,
+                      emptyText: strings.catalogNoBodypartHistory,
+                      onTap: onBodyPartsTap,
+                      localizeBuiltInBodyPartNames: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  VerticalDivider(
+                    width: usesInkRecipe ? 2 : 1,
+                    thickness: usesInkRecipe ? 2 : 1,
+                    color: usesInkRecipe
+                        ? tonosOutlineForSurface(context, panelColor)
+                        : theme.colorScheme.outlineVariant,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _FocusSummaryPane(
+                      title: strings.catalogMuscles,
+                      icon: Icons.fitness_center,
+                      items: muscles,
+                      emptyText: strings.catalogNoMuscleHistory,
+                      onTap: onMusclesTap,
+                      localizeBuiltInBodyPartNames: false,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
 
-    if (usesInkRecipe) {
+    if (usesTonalRecipe) {
       return TonosSurface(
         variant: TonosSurfaceVariant.panelRaised,
         color: panelColor,
         padding: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
+        borderRadius: usesExpressiveRecipe ? BorderRadius.circular(24) : null,
         child: content,
       );
     }
@@ -465,6 +526,8 @@ class _CatalogCardHeader extends StatelessWidget {
   final Color? iconBackground;
   final Color? iconForeground;
   final Color? titleForeground;
+  final bool expressive;
+  final IconData? trailing;
 
   const _CatalogCardHeader({
     required this.icon,
@@ -472,6 +535,8 @@ class _CatalogCardHeader extends StatelessWidget {
     this.iconBackground,
     this.iconForeground,
     this.titleForeground,
+    this.expressive = false,
+    this.trailing,
   });
 
   @override
@@ -479,23 +544,42 @@ class _CatalogCardHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        CircleAvatar(
-          backgroundColor: iconBackground ?? theme.colorScheme.primaryContainer,
-          child: Icon(
-            icon,
-            color: iconForeground ?? theme.colorScheme.onPrimaryContainer,
+        if (expressive)
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: iconBackground ?? theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              color: iconForeground ?? theme.colorScheme.onPrimaryContainer,
+            ),
+          )
+        else
+          CircleAvatar(
+            backgroundColor:
+                iconBackground ?? theme.colorScheme.primaryContainer,
+            child: Icon(
+              icon,
+              color: iconForeground ?? theme.colorScheme.onPrimaryContainer,
+            ),
           ),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             title,
             style: theme.textTheme.titleLarge?.copyWith(
               color: titleForeground,
-              fontWeight: FontWeight.w800,
+              fontWeight: expressive ? FontWeight.w700 : FontWeight.w800,
             ),
           ),
         ),
+        if (trailing != null) ...[
+          const SizedBox(width: 8),
+          Icon(trailing, color: titleForeground, size: 22),
+        ],
       ],
     );
   }
@@ -512,16 +596,22 @@ class _ExerciseUsageBar extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final rowColor =
-        usesInkRecipe ? surfaces.catalogSelection : surfaces.catalogUsage;
-    final rowForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, rowColor)
-            : theme.colorScheme.onSurface;
-    final rowSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(context, rowColor)
-            : theme.colorScheme.onSurfaceVariant;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final rowColor = usesExpressiveRecipe
+        ? theme.colorScheme.surfaceContainerHigh
+        : usesInkRecipe
+        ? surfaces.catalogSelection
+        : surfaces.catalogUsage;
+    final rowForeground = usesExpressiveRecipe
+        ? theme.colorScheme.onSurface
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, rowColor)
+        : theme.colorScheme.onSurface;
+    final rowSecondaryForeground = usesExpressiveRecipe
+        ? theme.colorScheme.onSurfaceVariant
+        : usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, rowColor)
+        : theme.colorScheme.onSurfaceVariant;
     final effects = context.effectTokens;
     final strings = AppLocalizations.of(context);
     final equipment = summary.definition.equipmentList
@@ -539,24 +629,29 @@ class _ExerciseUsageBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: rowColor,
-        borderRadius: shapes.catalogUsageRow,
-        border: Border.all(
-          color:
-              usesInkRecipe
-                  ? tonosOutlineForSurface(context, rowColor)
-                  : surfaces.catalogOutline,
-          width: shapes.outlineWidth,
-        ),
-        boxShadow:
-            usesInkRecipe
-                ? [
-                  BoxShadow(
-                    color: effects.cardShadow,
-                    blurRadius: 0,
-                    offset: effects.cardShadowOffset,
-                  ),
-                ]
-                : null,
+        borderRadius: usesExpressiveRecipe
+            ? BorderRadius.circular(16)
+            : shapes.catalogUsageRow,
+        border: usesExpressiveRecipe
+            ? Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+                width: 1,
+              )
+            : Border.all(
+                color: usesInkRecipe
+                    ? tonosOutlineForSurface(context, rowColor)
+                    : surfaces.catalogOutline,
+                width: shapes.outlineWidth,
+              ),
+        boxShadow: usesInkRecipe && !usesExpressiveRecipe
+            ? [
+                BoxShadow(
+                  color: effects.cardShadow,
+                  blurRadius: 0,
+                  offset: effects.cardShadowOffset,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
@@ -567,7 +662,7 @@ class _ExerciseUsageBar extends StatelessWidget {
               children: [
                 LocalizedExerciseName(
                   definition: summary.definition,
-                  maxLines: usesInkRecipe ? 2 : 1,
+                  maxLines: usesInkRecipe || usesExpressiveRecipe ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: rowForeground,
@@ -577,18 +672,17 @@ class _ExerciseUsageBar extends StatelessWidget {
                 const SizedBox(height: 3),
                 LocalizedCatalogEntityNamesBuilder(
                   entities: equipment,
-                  builder:
-                      (context, names) => Text(
-                        [
-                          if (names.isNotEmpty) names.join(', '),
-                          strings.catalogTimesUsed(summary.useCount),
-                        ].join(' - '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: rowSecondaryForeground,
-                        ),
-                      ),
+                  builder: (context, names) => Text(
+                    [
+                      if (names.isNotEmpty) names.join(', '),
+                      strings.catalogTimesUsed(summary.useCount),
+                    ].join(' - '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: rowSecondaryForeground,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -599,7 +693,7 @@ class _ExerciseUsageBar extends StatelessWidget {
             size: 52,
             borderRadius: shapes.catalogUsageMedia,
             padding: EdgeInsets.zero,
-            framed: usesInkRecipe,
+            framed: usesInkRecipe || usesExpressiveRecipe,
           ),
         ],
       ),
@@ -629,31 +723,29 @@ class _FocusSummaryPane extends StatelessWidget {
     final theme = Theme.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
     final shapes = context.shapeTokens;
-    final iconColor =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsHero,
-            )
-            : theme.colorScheme.primary;
+    final iconColor = usesExpressiveRecipe
+        ? theme.colorScheme.tertiary
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, context.surfaceTokens.settingsHero)
+        : theme.colorScheme.primary;
     final radius = shapes.catalogFocusPane;
-    final paneForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsHero,
-            )
-            : theme.colorScheme.onSurface;
-    final paneSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsHero,
-            )
-            : theme.colorScheme.onSurfaceVariant;
-    return InkWell(
-      borderRadius: radius,
+    final paneForeground = usesExpressiveRecipe
+        ? theme.colorScheme.onSurface
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, context.surfaceTokens.settingsHero)
+        : theme.colorScheme.onSurface;
+    final paneSecondaryForeground = usesExpressiveRecipe
+        ? theme.colorScheme.onSurfaceVariant
+        : usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            context.surfaceTokens.settingsHero,
+          )
+        : theme.colorScheme.onSurfaceVariant;
+    final paneContent = InkWell(
+      borderRadius: usesExpressiveRecipe ? BorderRadius.circular(16) : radius,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -669,13 +761,14 @@ class _FocusSummaryPane extends StatelessWidget {
                     title,
                     maxLines: isSpanish ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
-                    style: (isSpanish
-                            ? theme.textTheme.titleSmall
-                            : theme.textTheme.titleMedium)
-                        ?.copyWith(
-                          color: paneForeground,
-                          fontWeight: FontWeight.w800,
-                        ),
+                    style:
+                        (isSpanish
+                                ? theme.textTheme.titleSmall
+                                : theme.textTheme.titleMedium)
+                            ?.copyWith(
+                              color: paneForeground,
+                              fontWeight: FontWeight.w800,
+                            ),
                   ),
                 ),
               ],
@@ -698,6 +791,17 @@ class _FocusSummaryPane extends StatelessWidget {
         ),
       ),
     );
+    if (usesExpressiveRecipe) {
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: paneContent,
+      );
+    }
+    return paneContent;
   }
 }
 
@@ -716,66 +820,75 @@ class _FocusUsageRow extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
     final usesInkRecipe = context.usesNeoPresentation;
-    final nameForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsHero,
-            )
-            : theme.colorScheme.onSurface;
-    final setUnitColor =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsHero,
-            )
-            : theme.colorScheme.primary;
-    final displayName =
-        localizeBuiltInBodyPartNames
-            ? localizedBodyPartName(context, summary.name)
-            : summary.name;
-    final nameWidget =
-        summary.entity == null
-            ? Text(
-              displayName,
-              maxLines: usesInkRecipe ? 2 : 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: nameForeground,
-              ),
-            )
-            : LocalizedCatalogEntityName(
-              entity: summary.entity!,
-              maxLines: usesInkRecipe ? 2 : 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: nameForeground,
-              ),
-            );
+    final usesExpressiveRecipe = context.usesExpressivePresentation;
+    final nameForeground = usesExpressiveRecipe
+        ? theme.colorScheme.onSurface
+        : usesInkRecipe
+        ? tonosForegroundForSurface(context, context.surfaceTokens.settingsHero)
+        : theme.colorScheme.onSurface;
+    final setUnitColor = usesExpressiveRecipe
+        ? theme.colorScheme.primary
+        : usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            context.surfaceTokens.settingsHero,
+          )
+        : theme.colorScheme.primary;
+    final displayName = localizeBuiltInBodyPartNames
+        ? localizedBodyPartName(context, summary.name)
+        : summary.name;
+    final countLabel = strings.catalogSetUnits(summary.units.round());
+    final countStyle = theme.textTheme.bodySmall?.copyWith(
+      color: setUnitColor,
+      fontWeight: FontWeight.w800,
+    );
+    final nameWidget = summary.entity == null
+        ? Text(
+            displayName,
+            maxLines: usesInkRecipe || usesExpressiveRecipe ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(color: nameForeground),
+          )
+        : LocalizedCatalogEntityName(
+            entity: summary.entity!,
+            maxLines: usesInkRecipe || usesExpressiveRecipe ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(color: nameForeground),
+          );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child:
+      child: usesExpressiveRecipe
+          ? OverflowBar(
+              alignment: MainAxisAlignment.spaceBetween,
+              overflowAlignment: OverflowBarAlignment.end,
+              spacing: 8,
+              overflowSpacing: 2,
+              children: [
                 isSpanish && localizeBuiltInBodyPartNames
                     ? FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: nameWidget,
-                    )
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: nameWidget,
+                      )
                     : nameWidget,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            strings.catalogSetUnits(summary.units.round()),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: setUnitColor,
-              fontWeight: FontWeight.w800,
+                Text(countLabel, style: countStyle),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: isSpanish && localizeBuiltInBodyPartNames
+                      ? FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: nameWidget,
+                        )
+                      : nameWidget,
+                ),
+                const SizedBox(width: 8),
+                Text(countLabel, style: countStyle),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

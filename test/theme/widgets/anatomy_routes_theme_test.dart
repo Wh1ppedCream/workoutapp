@@ -60,7 +60,7 @@ void main() {
         ['decoration'],
       ),
       'anatomy-filter-fallback-artwork': (
-        3,
+        10,
         'intentional_one_off',
         'allowlisted',
         ['color', 'geometry'],

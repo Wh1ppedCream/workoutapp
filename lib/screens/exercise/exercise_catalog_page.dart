@@ -30,6 +30,12 @@ import '../../theme/widgets/tonos_dialog.dart';
 /// returns it to the caller instead of only opening details.
 class ExerciseCatalogPage extends StatefulWidget {
   final void Function(ExerciseDefinition)? onExercisePicked;
+
+  /// Enables the Expressive browser recipe for the Catalog route only.
+  ///
+  /// This page is also used by workout, plan, and settings pickers, so the
+  /// default keeps those callers on their existing presentation.
+  final bool expressiveCatalogPresentation;
   final bool showPlanBuilderGuide;
   final ValueChanged<bool>? onPlanBuilderSelectionChanged;
   final VoidCallback? onPlanBuilderExerciseAdded;
@@ -38,6 +44,7 @@ class ExerciseCatalogPage extends StatefulWidget {
   const ExerciseCatalogPage({
     super.key,
     this.onExercisePicked,
+    this.expressiveCatalogPresentation = false,
     this.showPlanBuilderGuide = false,
     this.onPlanBuilderSelectionChanged,
     this.onPlanBuilderExerciseAdded,
@@ -343,6 +350,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive =
+        widget.expressiveCatalogPresentation &&
+        context.usesExpressivePresentation;
     final isDarkNeo = usesInkRecipe && theme.brightness == Brightness.dark;
     final fieldForeground =
         usesInkRecipe
@@ -386,12 +396,42 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           : DefaultTextStyle.merge(style: style, child: child);
     }
 
+    InputDecoration filterFieldDecoration(String label) => InputDecoration(
+      labelText: label,
+      filled: usesExpressive,
+      fillColor: usesExpressive ? theme.colorScheme.surfaceContainerLow : null,
+      border: usesExpressive
+          ? OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            )
+          : null,
+      enabledBorder: usesExpressive
+          ? OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+            )
+          : null,
+    );
+
     // Dialog local copies
     bool useProfile = _useProfileFilter;
     int? chosenProfile = _dialogProfileId;
     String eq = _filterEquipment;
     String area = _filterArea;
     String muscle = _filterMuscle;
+
+    void saveFilters(BuildContext dialogContext) {
+      setState(() {
+        _useProfileFilter = useProfile;
+        _dialogProfileId = chosenProfile;
+        _filterEquipment = eq;
+        _filterArea = area;
+        _filterMuscle = muscle;
+      });
+      Navigator.of(dialogContext).pop();
+      _applyAllFilters();
+    }
 
     showDialog(
       context: context,
@@ -401,7 +441,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 (ctx, setDialogState) => TonosDialogFrame(
                   styleFormControls: true,
                   child: AlertDialog(
-                    title: Text(strings.catalogSelectedFilters),
+                    title: Text(
+                      strings.catalogSelectedFilters,
+                      style: usesExpressive
+                          ? theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            )
+                          : null,
+                    ),
                     content: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -418,8 +465,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             style: fieldTextStyle,
                             iconEnabledColor: fieldForeground,
                             dropdownColor: isDarkNeo ? filterMenuSurface : null,
-                            decoration: InputDecoration(
-                              labelText: strings.catalogWorkspaceProfile,
+                            decoration: filterFieldDecoration(
+                              strings.catalogWorkspaceProfile,
                             ),
                             value: chosenProfile,
                             items:
@@ -456,9 +503,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             style: fieldTextStyle,
                             iconEnabledColor: fieldForeground,
                             dropdownColor: isDarkNeo ? filterMenuSurface : null,
-                            decoration: InputDecoration(
-                              labelText: strings.catalogEquipment,
-                            ),
+                            decoration: filterFieldDecoration(strings.catalogEquipment),
                             value: eq,
                             items: [
                               DropdownMenuItem<String>(
@@ -502,9 +547,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             style: fieldTextStyle,
                             iconEnabledColor: fieldForeground,
                             dropdownColor: isDarkNeo ? filterMenuSurface : null,
-                            decoration: InputDecoration(
-                              labelText: strings.catalogFocusArea,
-                            ),
+                            decoration: filterFieldDecoration(strings.catalogFocusArea),
                             value: area,
                             items:
                                 _areaOptions
@@ -546,8 +589,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                             style: fieldTextStyle,
                             iconEnabledColor: fieldForeground,
                             dropdownColor: isDarkNeo ? filterMenuSurface : null,
-                            decoration: InputDecoration(
-                              labelText: strings.catalogSpecificMuscle,
+                            decoration: filterFieldDecoration(
+                              strings.catalogSpecificMuscle,
                             ),
                             value: muscle,
                             items: [
@@ -594,20 +637,15 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                         onPressed: () => Navigator.of(ctx).pop(),
                         child: Text(strings.commonCancel),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _useProfileFilter = useProfile;
-                            _dialogProfileId = chosenProfile;
-                            _filterEquipment = eq;
-                            _filterArea = area;
-                            _filterMuscle = muscle;
-                          });
-                          Navigator.of(ctx).pop();
-                          _applyAllFilters();
-                        },
-                        child: Text(strings.commonSave),
-                      ),
+                      usesExpressive
+                          ? FilledButton(
+                            onPressed: () => saveFilters(ctx),
+                            child: Text(strings.commonSave),
+                          )
+                          : ElevatedButton(
+                            onPressed: () => saveFilters(ctx),
+                            child: Text(strings.commonSave),
+                          ),
                     ],
                   ),
                 ),
@@ -616,13 +654,23 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   }
 
   void _openExerciseDetails(ExerciseDefinition def) {
-    ExerciseDetailSheet.show(context: context, definition: def, defId: def.id);
+    ExerciseDetailSheet.show(
+      context: context,
+      definition: def,
+      defId: def.id,
+      expressiveCatalogPresentation:
+          widget.expressiveCatalogPresentation &&
+          context.usesExpressivePresentation,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final planBuilderGuideStep = _planBuilderGuideStep();
     final strings = AppLocalizations.of(context);
+    final usesExpressive =
+        widget.expressiveCatalogPresentation &&
+        context.usesExpressivePresentation;
     return Stack(
       children: [
         Scaffold(
@@ -646,34 +694,55 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                           decoration: InputDecoration(
                             labelText: strings.catalogSearchExercises,
                             prefixIcon: const Icon(Icons.search),
-                            border: const OutlineInputBorder(),
+                            filled: usesExpressive,
+                            fillColor: usesExpressive
+                                ? Theme.of(context).colorScheme.surfaceContainerLow
+                                : null,
+                            border: usesExpressive
+                                ? OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    borderSide: BorderSide.none,
+                                  )
+                                : const OutlineInputBorder(),
                           ),
                           onChanged: _onSearchChanged,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: SizedBox(
-                        height: 56,
-                        child: KeyedSubtree(
-                          key: _filterTutorialKey,
-                          child: ElevatedButton(
-                            onPressed: _openFilterDialog,
-                            child: FittedBox(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.filter_list),
-                                  SizedBox(width: 6),
-                                  Text(strings.catalogFilters),
-                                ],
+                    if (usesExpressive) ...[
+                      const SizedBox(width: 8),
+                      KeyedSubtree(
+                        key: _filterTutorialKey,
+                        child: IconButton.filledTonal(
+                          tooltip: strings.catalogFilters,
+                          onPressed: _openFilterDialog,
+                          icon: const Icon(Icons.filter_list),
+                        ),
+                      ),
+                    ] else ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: KeyedSubtree(
+                            key: _filterTutorialKey,
+                            child: ElevatedButton(
+                              onPressed: _openFilterDialog,
+                              child: FittedBox(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.filter_list),
+                                    SizedBox(width: 6),
+                                    Text(strings.catalogFilters),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -691,6 +760,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                                 final def = _displayedDefs[i];
                                 return _ExerciseCatalogBar(
                                   definition: def,
+                                  expressive: usesExpressive,
                                   selected:
                                       widget.onExercisePicked != null &&
                                       _selectedDef == def,
@@ -764,12 +834,14 @@ class _ExerciseCatalogBar extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
   final VoidCallback onHeatmapTap;
+  final bool expressive;
 
   const _ExerciseCatalogBar({
     required this.definition,
     required this.selected,
     required this.onTap,
     required this.onHeatmapTap,
+    required this.expressive,
   });
 
   @override
@@ -780,6 +852,7 @@ class _ExerciseCatalogBar extends StatelessWidget {
     final shapes = context.shapeTokens;
     final effects = context.effectTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final usesExpressive = expressive && context.usesExpressivePresentation;
     final equipment = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -832,6 +905,43 @@ class _ExerciseCatalogBar extends StatelessWidget {
                 colorScheme,
                 equipment,
                 rowForeground,
+                rowSurface,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (usesExpressive) {
+      final rowSurface = selected
+          ? colorScheme.secondaryContainer
+          : colorScheme.surfaceContainerLow;
+      final rowShape = RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: selected
+              ? colorScheme.secondary
+              : colorScheme.outlineVariant.withValues(alpha: 0.55),
+          width: selected ? 1.5 : 0.8,
+        ),
+      );
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Material(
+          color: rowSurface,
+          shape: rowShape,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: _buildContent(
+                context,
+                theme,
+                colorScheme,
+                equipment,
+                colorScheme.onSurface,
                 rowSurface,
               ),
             ),
