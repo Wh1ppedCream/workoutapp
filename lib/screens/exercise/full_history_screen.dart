@@ -2,6 +2,7 @@
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/models.dart';
 import '../../repositories/app_repository.dart';
@@ -59,9 +60,20 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: sessions.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, index) {
+              if (!usesExpressive) return const Divider(height: 1);
+              final sameDay =
+                  sessions[index].calendarDay ==
+                  sessions[index + 1].calendarDay;
+              return SizedBox(height: sameDay ? 0 : 4);
+            },
             itemBuilder: (context, i) {
               final s = sessions[i];
+              final sameAsPreviousDay =
+                  i > 0 && sessions[i - 1].calendarDay == s.calendarDay;
+              final sameAsNextDay =
+                  i + 1 < sessions.length &&
+                  sessions[i + 1].calendarDay == s.calendarDay;
               final dateStr = LocalizedFormatters.date(
                 s.calendarDay.toLocalDateTime(),
                 Localizations.localeOf(context),
@@ -83,8 +95,8 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
 
               if (usesExpressive) {
                 final surfaces = context.surfaceTokens;
-                final tokens =
-                    Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+                final tokens = Theme.of(context)
+                    .extension<AppExpressiveTrainTokens>()!;
                 return MergeSemantics(
                   child: Semantics(
                     button: true,
@@ -92,11 +104,14 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                     child: TonosSurface(
                       variant: TonosSurfaceVariant.card,
                       color: surfaces.dashboardSection,
-                      margin: const EdgeInsets.symmetric(
+                      margin: EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 6,
+                        vertical: sameAsPreviousDay || sameAsNextDay ? 2 : 4,
                       ),
-                      borderRadius: ExpressiveTrainShapes.focusInset,
+                      borderRadius: _expressiveHistoryRowShape(
+                        sameAsPreviousDay: sameAsPreviousDay,
+                        sameAsNextDay: sameAsNextDay,
+                      ),
                       onTap: openSession,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -131,14 +146,16 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                                   Text(
                                     duration,
                                     softWrap: true,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      color: tonosSecondaryForegroundForSurface(
-                                        context,
-                                        surfaces.dashboardSection,
-                                      ),
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color:
+                                              tonosSecondaryForegroundForSurface(
+                                                context,
+                                                surfaces.dashboardSection,
+                                              ),
+                                        ),
                                   ),
                                 ],
                               ),
@@ -173,4 +190,30 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
       ),
     );
   }
+}
+
+BorderRadiusGeometry _expressiveHistoryRowShape({
+  required bool sameAsPreviousDay,
+  required bool sameAsNextDay,
+}) {
+  if (sameAsPreviousDay && sameAsNextDay) {
+    return const BorderRadius.all(Radius.circular(14));
+  }
+  if (sameAsNextDay) {
+    return const BorderRadius.only(
+      topLeft: Radius.circular(30),
+      topRight: Radius.circular(14),
+      bottomLeft: Radius.circular(14),
+      bottomRight: Radius.circular(14),
+    );
+  }
+  if (sameAsPreviousDay) {
+    return const BorderRadius.only(
+      topLeft: Radius.circular(14),
+      topRight: Radius.circular(14),
+      bottomLeft: Radius.circular(14),
+      bottomRight: Radius.circular(30),
+    );
+  }
+  return ExpressiveTrainShapes.focusInset;
 }

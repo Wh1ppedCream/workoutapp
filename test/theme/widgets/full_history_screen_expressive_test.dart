@@ -127,6 +127,95 @@ void main() {
   );
 
   testWidgets(
+    'Expressive Full History uses a date-aware shape rhythm for same-day sessions',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
+      });
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+
+      final sameDay = DateTime(2026, 9, 27, 12);
+      final sessions = [
+        WorkoutSession(id: 7, date: sameDay, duration: 2700),
+        WorkoutSession(id: 6, date: DateTime(2026, 9, 27, 10), duration: 1800),
+        WorkoutSession(id: 5, date: DateTime(2026, 9, 27, 8), duration: 1200),
+        WorkoutSession(id: 4, date: DateTime(2026, 9, 26, 12), duration: 1500),
+      ];
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(
+              value: _FullHistoryRepository(sessions),
+            ),
+            ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ],
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            themeAnimationDuration: Duration.zero,
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const FullHistoryScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rows = tester
+          .widgetList<TonosSurface>(find.byType(TonosSurface))
+          .toList();
+      expect(rows, hasLength(4));
+      expect(rows.map((row) => row.borderRadius).toList(), const [
+        BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(14),
+          bottomLeft: Radius.circular(14),
+          bottomRight: Radius.circular(14),
+        ),
+        BorderRadius.all(Radius.circular(14)),
+        BorderRadius.only(
+          topLeft: Radius.circular(14),
+          topRight: Radius.circular(14),
+          bottomLeft: Radius.circular(14),
+          bottomRight: Radius.circular(30),
+        ),
+        BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(12),
+          bottomLeft: Radius.circular(12),
+          bottomRight: Radius.circular(24),
+        ),
+      ]);
+      expect(
+        rows.take(3).map((row) => row.margin).toList(),
+        List<EdgeInsets>.filled(
+          3,
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        ),
+      );
+      expect(
+        rows.last.margin,
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      );
+      expect(rows.every((row) => row.onTap != null), isTrue);
+      expect(
+        find.text(
+          LocalizedFormatters.date(
+            sessions.first.calendarDay.toLocalDateTime(),
+            const Locale('en'),
+          ),
+        ),
+        findsNWidgets(3),
+        reason: 'Each session keeps its own date and remains independently scannable.',
+      );
+      expect(tester.takeException(), isNull);
+    },
+    semanticsEnabled: true,
+  );
+
+  testWidgets(
     'Expressive Full History remains usable at 320dp across text scales',
     (tester) async {
       SharedPreferences.setMockInitialValues(<String, Object>{
@@ -139,12 +228,12 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(320, 1800));
 
       const locale = Locale('en');
-      final session = WorkoutSession(
-        id: 5,
-        date: DateTime(2026, 9, 27, 12),
-        duration: 2700,
-      );
-      final repository = _FullHistoryRepository([session]);
+      final sessions = [
+        WorkoutSession(id: 5, date: DateTime(2026, 9, 27, 12), duration: 2700),
+        WorkoutSession(id: 4, date: DateTime(2026, 9, 27, 10), duration: 1800),
+        WorkoutSession(id: 3, date: DateTime(2026, 9, 26, 12), duration: 1500),
+      ];
+      final repository = _FullHistoryRepository(sessions);
 
       for (final brightness in Brightness.values) {
         final theme = brightness == Brightness.light
@@ -182,15 +271,15 @@ void main() {
             tester.element(find.byType(FullHistoryScreen)),
           );
           final date = LocalizedFormatters.date(
-            session.calendarDay.toLocalDateTime(),
+            sessions.first.calendarDay.toLocalDateTime(),
             locale,
           );
           final duration = formatCompletedWorkoutDuration(
             strings,
-            session.duration,
+            sessions.first.duration,
           );
-          final dateFinder = find.text(date);
-          expect(dateFinder, findsOneWidget);
+          final dateFinder = find.text(date).first;
+          expect(find.text(date), findsNWidgets(2));
           expect(find.text(duration), findsOneWidget);
           expect(tester.widget<Text>(dateFinder).softWrap, isTrue);
           final semanticRow = find.ancestor(
