@@ -5,6 +5,7 @@ import 'classic_theme.dart';
 import 'theme_extensions.dart';
 import 'tokens/app_data_visualization_tokens.dart';
 import 'tokens/app_effect_tokens.dart';
+import 'tokens/app_expressive_destination_tokens.dart';
 import 'tokens/app_expressive_train_tokens.dart';
 import 'tokens/app_flow_tokens.dart';
 import 'tokens/app_generation_tokens.dart';
@@ -93,9 +94,32 @@ abstract final class ExpressiveThemeDefinition {
       planCard: BorderRadius.circular(18),
       trainTab: BorderRadius.circular(16),
       trainTabButton: BorderRadius.circular(12),
+      exerciseProgressHero: ExpressiveTrainShapes.focusHero,
+      exerciseProgressStat: ExpressiveTrainShapes.focusInset,
+      exerciseProgressSelector: ExpressiveTrainShapes.compactControl,
+      exerciseProgressTooltip: const BorderRadius.only(
+        topLeft: Radius.circular(12),
+        topRight: Radius.circular(8),
+        bottomLeft: Radius.circular(8),
+        bottomRight: Radius.circular(12),
+      ),
+      workoutMetricStat: ExpressiveTrainShapes.focusInset,
+      workoutMetricChart: ExpressiveTrainShapes.focusHero,
+      workoutMetricTooltip: const BorderRadius.only(
+        topLeft: Radius.circular(12),
+        topRight: Radius.circular(8),
+        bottomLeft: Radius.circular(8),
+        bottomRight: Radius.circular(12),
+      ),
+      workoutMetricRange: ExpressiveTrainShapes.compactControl,
+      workoutMetricRangeOption: ExpressiveTrainShapes.compactControlPressed,
+      workoutMetricDetails: ExpressiveTrainShapes.section,
+      workoutMetricInsight: ExpressiveTrainShapes.focusInset,
+      healthTrendCard: ExpressiveTrainShapes.section,
+      healthTrendEntry: ExpressiveTrainShapes.compactControl,
     );
     final generatedSurfaces = AppSurfaceTokens.fromColorScheme(colorScheme);
-    final surfaceTokens = switch (treatment) {
+    final generatedTreatmentSurfaces = switch (treatment) {
       ExpressivePaletteTreatment.generated => generatedSurfaces.copyWith(
         workoutCardCompleteFill: brightness == Brightness.light ? 0.34 : 0.18,
         workoutCardCompleteColor: brightness == Brightness.light
@@ -119,10 +143,28 @@ abstract final class ExpressiveThemeDefinition {
         dashboardHero: colorScheme.surfaceContainerLow,
       ),
     };
+    final surfaceTokens = generatedTreatmentSurfaces.copyWith(
+      workoutMetricStat: colorScheme.surfaceContainer,
+      workoutMetricChart: colorScheme.surfaceContainerLow,
+      workoutMetricTooltip: colorScheme.surfaceContainerHigh,
+      workoutMetricRange: colorScheme.surfaceContainerLow,
+      workoutMetricDetails: colorScheme.surfaceContainer,
+      workoutMetricInsight: colorScheme.surfaceContainerLow,
+      exerciseProgressHero: colorScheme.surfaceContainer,
+      exerciseProgressStat: colorScheme.surfaceContainerLow,
+      exerciseProgressSelector: colorScheme.surfaceContainer,
+      exerciseProgressTooltip: colorScheme.surfaceContainerHigh,
+    );
     final base = AppMaterialTheme.fromColorScheme(colorScheme: colorScheme);
     final classicProgressColors = brightness == Brightness.light
         ? _classicLightProgress
         : _classicDarkProgress;
+    final progressColors = classicProgressColors.copyWith(
+      healthCard: AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.progress,
+        brightness,
+      ).surfaceAccent,
+    );
 
     return base.copyWith(
       extensions: <ThemeExtension<dynamic>>[
@@ -139,13 +181,13 @@ abstract final class ExpressiveThemeDefinition {
         AppEffectTokens.classic(brightness),
         AppMotionTokens.classic,
         AppDataVisualizationTokens.fromBrightness(brightness),
-        classicProgressColors,
+        progressColors,
         AppSettingsPresentationTokens.classic,
         AppTutorialTokens.classic,
         AppMediaTokens.classic,
-        AppFlowTokens.classic(brightness),
+        AppFlowTokens.expressive(brightness),
         AppGenerationTokens.fromColorScheme(colorScheme),
-        AppNutritionTokens.classic(brightness),
+        AppNutritionTokens.fromColorScheme(colorScheme),
       ],
     );
   }

@@ -6,16 +6,49 @@ import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 
 void main() {
+  testWidgets('Expressive Catalog treatment remains opt-in for this tile', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ExpressiveThemeDefinition.light(),
+        themeAnimationDuration: Duration.zero,
+        localizationsDelegates: tonosLocalizationDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: ExerciseDefinitionInfoTile(
+            definition: ExerciseDefinition(
+              id: 1,
+              name: 'Bench Press',
+              useManualBodyparts: false,
+              multiplyByRating: false,
+            ),
+            subtitle: const Text('Barbell'),
+            expressiveCatalogPresentation: false,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TonosExpressivePressResponse), findsNothing);
+    expect(find.byType(Card), findsOneWidget);
+    final infoButton = tester.widget<IconButton>(find.byType(IconButton));
+    expect(infoButton.style, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.dark
-              ? AppThemeFactory.dark(family)
-              : AppThemeFactory.light(family);
+      final theme = brightness == Brightness.dark
+          ? AppThemeFactory.dark(family)
+          : AppThemeFactory.light(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode title emphasis preserves inherited ListTile style', (
@@ -47,10 +80,12 @@ void main() {
         final title = tester.widget<Text>(titleFinder);
         expect(title.style, const TextStyle(fontWeight: FontWeight.w700));
 
-        final inheritedStyle =
-            DefaultTextStyle.of(tester.element(titleFinder)).style;
-        final renderedStyle =
-            tester.renderObject<RenderParagraph>(titleFinder).text.style;
+        final inheritedStyle = DefaultTextStyle.of(tester.element(titleFinder))
+            .style;
+        final renderedStyle = tester
+            .renderObject<RenderParagraph>(titleFinder)
+            .text
+            .style;
         expect(renderedStyle, inheritedStyle.merge(title.style));
         expect(renderedStyle?.fontWeight, FontWeight.w700);
         expect(renderedStyle?.fontSize, inheritedStyle.fontSize);

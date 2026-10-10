@@ -117,7 +117,7 @@ void main() {
       final neo = entry.key.startsWith('Neo');
       final planning = AppExpressivePlanningTokens.maybeOf(pageContext);
       final profileSurface =
-          planning?.configurationSurface ??
+          planning?.planFocalSurface ??
           (neo
               ? surfaces.settingsSection
               : scheme.surfaceContainerHighest.withValues(alpha: 0.42));
@@ -171,7 +171,7 @@ void main() {
           );
       expect(
         nameDecoration.fillColor,
-        planning?.configurationSurface ??
+        planning?.planSupportSurface ??
             (neo
                 ? surfaces.settingsInput
                 : scheme.surface.withValues(alpha: 0.45)),
@@ -179,7 +179,7 @@ void main() {
       expect(
         (nameDecoration.border! as OutlineInputBorder).borderRadius,
         planning != null
-            ? BorderRadius.circular(16)
+            ? planning.rowShape
             : neo
             ? shapes.settingsField
             : BorderRadius.circular(16),
@@ -196,7 +196,7 @@ void main() {
       expect(
         (searchDecoration.border! as OutlineInputBorder).borderRadius,
         planning != null
-            ? BorderRadius.circular(16)
+            ? planning.rowShape
             : neo
             ? shapes.settingsPicker
             : const BorderRadius.all(Radius.circular(999)),
@@ -226,12 +226,7 @@ void main() {
               decoration.color == profileSurface &&
               decoration.borderRadius ==
                   (planning != null
-                      ? const BorderRadius.only(
-                          topLeft: Radius.circular(28),
-                          topRight: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(28),
-                        )
+                      ? planning.focalShape
                       : neo
                       ? shapes.settingsPanel
                       : BorderRadius.circular(24)),
@@ -247,12 +242,7 @@ void main() {
               decoration.color == sectionSurface &&
               decoration.borderRadius ==
                   (planning != null
-                      ? const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(28),
-                          bottomLeft: Radius.circular(28),
-                          bottomRight: Radius.circular(16),
-                        )
+                      ? planning.supportShape
                       : neo
                       ? shapes.settingsPanel
                       : BorderRadius.circular(22)),
@@ -264,7 +254,7 @@ void main() {
           (decoration) =>
               decoration.shape == BoxShape.circle &&
               decoration.color ==
-                  (planning?.planFocalSurface ??
+                  (planning?.planAccent ??
                       (neo
                           ? surfaces.dialogChoice
                           : scheme.primaryContainer.withValues(alpha: 0.75))),
@@ -424,7 +414,7 @@ void main() {
             decoration.color == saveSurface &&
             decoration.borderRadius ==
                 (planning != null
-                    ? const BorderRadius.vertical(top: Radius.circular(24))
+                    ? planning.supportShape
                     : neo
                     ? shapes.actionBar
                     : BorderRadius.zero),
@@ -477,12 +467,7 @@ void main() {
               decoration.color == emptySurface &&
               decoration.borderRadius ==
                   (planning != null
-                      ? const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(28),
-                          bottomLeft: Radius.circular(28),
-                          bottomRight: Radius.circular(16),
-                        )
+                      ? planning.supportShape
                       : BorderRadius.circular(20)) &&
               (planning != null
                   ? decoration.border == Border.all(color: planning.outline)

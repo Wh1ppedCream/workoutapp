@@ -22,8 +22,8 @@ void main() {
   test(
     'C2 detail sections use focused roles and preserve state boundaries',
     () {
-      final source =
-          File('lib/widgets/exercise_detail_sheet.dart').readAsStringSync();
+      final source = File('lib/widgets/exercise_detail_sheet.dart')
+          .readAsStringSync();
       final mediaPreview = _section(
         source,
         'class _ExerciseMediaPreviewCard',
@@ -135,9 +135,17 @@ void main() {
       expect(metricCard, contains('shapes.exerciseDetailMetric'));
       expect(metricList, contains('surfaces.exerciseDetailMetricList'));
       expect(
-        metricList,
-        contains('surfaces.exerciseDetailMetricRepFillOpacity'),
+        RegExp(r'surfaces\s*\.\s*exerciseDetailMetricRepFillOpacity')
+            .hasMatch(metricList),
+        isTrue,
       );
+      expect(
+        RegExp(
+          r'expressive\s*\?\s*theme\.colorScheme\.surfaceContainerLow\s*:\s*surfaces\.exerciseDetailMetricList',
+        ).hasMatch(metricList),
+        isTrue,
+      );
+      expect(metricList, contains('surfaceSelected'));
       expect(stateCard, contains('surfaces.exerciseDetailState'));
       expect(stateCard, contains('shapes.exerciseDetailState'));
       expect(chart, contains('surfaces.exerciseDetailChart'));
@@ -247,8 +255,8 @@ void main() {
   });
 
   test('C2 roles copy and interpolate independently', () {
-    final surfaces =
-        AppThemeFactory.light(AppThemeFamily.classic).surfaceTokens;
+    final surfaces = AppThemeFactory.light(AppThemeFamily.classic)
+        .surfaceTokens;
     final target = surfaces.copyWith(
       exerciseDetailCard: const Color(0xFF112233),
       exerciseDetailTimeframe: const Color(0xFF223344),

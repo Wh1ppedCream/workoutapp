@@ -7,6 +7,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/guided_tutorial_overlay.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -108,7 +110,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     if (context.usesExpressivePresentation) {
-      return _buildExpressiveProfile(context, strings);
+      return AppExpressiveDestinationTheme(
+        family: AppExpressiveDestinationFamily.profile,
+        child: Builder(
+          builder: (profileContext) =>
+              _buildExpressiveProfile(profileContext, strings),
+        ),
+      );
     }
 
     return SettingsPageScaffold(
@@ -245,10 +253,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   SettingsAccent.account,
                 ),
                 children: settingsTilesWithDividers(context, [
-                  _ExpressiveProfileFeatureTile(
+                  SettingsActionTile(
                     key: AppTestKeys.profileUserInformation,
                     icon: Icons.badge_outlined,
-                    accentColor: SettingsAccent.account,
+                    iconColor: SettingsAccent.account,
                     title: strings.profileUserInformationTitle,
                     subtitle: strings.profileUserInformationSubtitle,
                     onTap: () =>
@@ -331,7 +339,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SettingsActionTile(
                     icon: Icons.shield_outlined,
-                    iconColor: SettingsAccent.progress,
+                    iconColor: SettingsAccent.data,
                     title: strings.profileDiagnosticsTitle,
                     subtitle: strings.profileDiagnosticsSubtitle,
                     onTap: () =>
@@ -354,7 +362,14 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _open(BuildContext context, Widget page) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.profile,
+          child: page,
+        ),
+      ),
+    );
   }
 
   Widget _disabledNutritionTile(BuildContext context) {
@@ -389,11 +404,12 @@ class _ExpressiveProfileHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final destination = _profileTokens(context);
     final shapes = context.shapeTokens;
 
     return TonosSurface(
       variant: TonosSurfaceVariant.panelRaised,
-      color: scheme.primary,
+      color: destination?.surfacePrimary ?? scheme.primary,
       padding: const EdgeInsets.all(20),
       borderRadius: shapes.exerciseProgressHero,
       outlined: false,
@@ -410,7 +426,8 @@ class _ExpressiveProfileHero extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: scheme.onPrimary.withValues(alpha: 0.09),
+                    color: (destination?.onSurfacePrimary ?? scheme.onPrimary)
+                        .withValues(alpha: 0.09),
                     width: 30,
                   ),
                 ),
@@ -425,12 +442,13 @@ class _ExpressiveProfileHero extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: scheme.onPrimary.withValues(alpha: 0.14),
+                  color: (destination?.onSurfacePrimary ?? scheme.onPrimary)
+                      .withValues(alpha: 0.14),
                   borderRadius: shapes.settingsIcon,
                 ),
                 child: Icon(
                   Icons.person_outline,
-                  color: scheme.onPrimary,
+                  color: destination?.onSurfacePrimary ?? scheme.onPrimary,
                   size: 28,
                 ),
               );
@@ -442,7 +460,8 @@ class _ExpressiveProfileHero extends StatelessWidget {
                     child: Text(
                       title,
                       style: theme.textTheme.headlineSmall?.copyWith(
-                        color: scheme.onPrimary,
+                        color:
+                            destination?.onSurfacePrimary ?? scheme.onPrimary,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -451,7 +470,8 @@ class _ExpressiveProfileHero extends StatelessWidget {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onPrimary.withValues(alpha: 0.88),
+                      color: (destination?.onSurfacePrimary ?? scheme.onPrimary)
+                          .withValues(alpha: 0.88),
                     ),
                   ),
                 ],
@@ -500,6 +520,18 @@ class _ExpressiveProfileSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
+    final destination = _profileTokens(context);
+    final sectionForeground = switch (backgroundColor) {
+      final color when color == destination?.surfacePrimary =>
+        destination?.onSurfacePrimary,
+      final color when color == destination?.surfaceSecondary =>
+        destination?.onSurfaceSecondary,
+      final color when color == destination?.surfaceTertiary =>
+        destination?.onSurfaceTertiary,
+      final color when color == destination?.surfaceAccent =>
+        destination?.onSurfaceAccent,
+      _ => null,
+    };
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -543,6 +575,9 @@ class _ExpressiveProfileSection extends StatelessWidget {
                             title,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w900,
+                              color:
+                                  sectionForeground ??
+                                  theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -550,7 +585,9 @@ class _ExpressiveProfileSection extends StatelessWidget {
                         Text(
                           subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                            color:
+                                sectionForeground?.withValues(alpha: 0.78) ??
+                                theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -559,7 +596,27 @@ class _ExpressiveProfileSection extends StatelessWidget {
                 ],
               ),
             ),
-            Column(mainAxisSize: MainAxisSize.min, children: children),
+            Theme(
+              data: theme.copyWith(
+                colorScheme: theme.colorScheme.copyWith(
+                  onSurface: sectionForeground ?? theme.colorScheme.onSurface,
+                  onSurfaceVariant:
+                      sectionForeground?.withValues(alpha: 0.78) ??
+                      theme.colorScheme.onSurfaceVariant,
+                ),
+                textTheme: sectionForeground == null
+                    ? theme.textTheme
+                    : theme.textTheme.apply(
+                        bodyColor: sectionForeground,
+                        displayColor: sectionForeground,
+                      ),
+                listTileTheme: theme.listTileTheme.copyWith(
+                  textColor: sectionForeground ?? theme.colorScheme.onSurface,
+                  iconColor: sectionForeground ?? theme.colorScheme.onSurface,
+                ),
+              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: children),
+            ),
             const SizedBox(height: 6),
           ],
         ),
@@ -569,71 +626,25 @@ class _ExpressiveProfileSection extends StatelessWidget {
 }
 
 Color _profileGroupSurface(BuildContext context, Color accent) =>
-    Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!;
+    switch (accent) {
+      SettingsAccent.account || SettingsAccent.appearance =>
+        _profileTokens(context)?.surfacePrimary ??
+            Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!,
+      SettingsAccent.training =>
+        _profileTokens(context)?.surfaceSecondary ??
+            Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!,
+      SettingsAccent.progress =>
+        _profileTokens(context)?.surfaceTertiary ??
+            Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!,
+      SettingsAccent.data || SettingsAccent.advanced =>
+        _profileTokens(context)?.surfaceAccent ??
+            Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!,
+      _ => Color.lerp(context.surfaceTokens.dashboardSection, accent, 0.18)!,
+    };
 
-/// A featured route inside Profile's personal setup cluster.
-class _ExpressiveProfileFeatureTile extends StatelessWidget {
-  const _ExpressiveProfileFeatureTile({
-    super.key,
-    required this.icon,
-    required this.accentColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color accentColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final shapes = context.shapeTokens;
-    final foreground = scheme.onPrimaryContainer;
-
-    return TonosSurface(
-      variant: TonosSurfaceVariant.card,
-      color: scheme.primaryContainer,
-      borderRadius: shapes.exerciseProgressStat,
-      outlined: false,
-      padding: EdgeInsets.zero,
-      margin: const EdgeInsets.all(9),
-      child: ListTile(
-        minVerticalPadding: 10,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: accentColor.withValues(alpha: 0.18),
-            borderRadius: shapes.settingsAction,
-          ),
-          child: Icon(icon, color: foreground),
-        ),
-        title: Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: foreground,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: foreground.withValues(alpha: 0.82),
-          ),
-        ),
-        trailing: Icon(Icons.chevron_right, color: foreground),
-        onTap: onTap,
-      ),
-    );
-  }
+AppExpressiveDestinationTokens? _profileTokens(BuildContext context) {
+  final tokens = Theme.of(context).extension<AppExpressiveDestinationTokens>();
+  return tokens?.family == AppExpressiveDestinationFamily.profile
+      ? tokens
+      : null;
 }

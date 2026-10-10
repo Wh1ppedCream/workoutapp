@@ -10,6 +10,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -199,6 +200,17 @@ void main() {
           final strings = AppLocalizations.of(context);
           final surfaces = context.surfaceTokens;
           final shapes = context.shapeTokens;
+          final sourceExpansion = find.byType(ExpansionTile).first;
+          final sourcePressResponse = find.ancestor(
+            of: sourceExpansion,
+            matching: find.byType(TonosExpressivePressResponse),
+          );
+          expect(
+            sourcePressResponse,
+            AppExpressivePlanningTokens.maybeOf(context) == null
+                ? findsNothing
+                : findsOneWidget,
+          );
           final durationDecoration = find.byWidgetPredicate(
             (widget) =>
                 widget is DecoratedBox &&
@@ -422,6 +434,90 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets('Premade plan adapts across layouts', (tester) async {
+    const layouts = <({Size size, double scale})>[
+      (size: Size(320, 900), scale: 1),
+      (size: Size(320, 900), scale: 2),
+      (size: Size(390, 844), scale: 1.5),
+      (size: Size(600, 1000), scale: 1.5),
+      (size: Size(800, 390), scale: 1.5),
+      (size: Size(1024, 768), scale: 2),
+    ];
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final brightness in Brightness.values) {
+      for (final layout in layouts) {
+        await tester.binding.setSurfaceSize(layout.size);
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.premadePlans}': true,
+        });
+        final original = _definition(
+          id: 1001,
+          catalogId: targetExercise.catalogId!,
+          name: targetExercise.name,
+          equipment: targetExercise.equipment,
+        );
+        final replacement = _definition(
+          id: 1002,
+          catalogId: 'tonos.exercise.9999',
+          name: replacementName,
+          equipment: 'Dumbbell',
+        );
+        final repository = _PremadePlansRepository(
+          original: original,
+          replacement: replacement,
+        );
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repository,
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(layout.scale)),
+                child: child!,
+              ),
+              home: PremadePlansPage(
+                profileId: 1,
+                onPlanAdded: () {},
+                onboardingMode: true,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final page = find.byType(PremadePlansPage);
+        final strings = AppLocalizations.of(tester.element(page));
+        final durationLabel = find.text(strings.premadeOneHour);
+        await tester.ensureVisible(durationLabel);
+        final durationRow = find.ancestor(
+          of: durationLabel,
+          matching: find.byType(Row),
+        );
+        final durationSwitch = find.descendant(
+          of: durationRow.first,
+          matching: find.byType(Switch),
+        );
+        expect(durationSwitch.hitTestable(), findsOneWidget, reason: '$layout');
+        await tester.tap(durationSwitch);
+        await tester.pumpAndSettle();
+        expect(tester.widget<Switch>(durationSwitch).value, isTrue);
+        expect(tester.takeException(), isNull, reason: '$brightness $layout');
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    }
+  });
 }
 
 Widget _app(ThemeData theme, Widget child, {double textScale = 1}) =>

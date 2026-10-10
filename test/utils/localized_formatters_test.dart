@@ -53,6 +53,20 @@ void main() async {
         'Mon',
       );
       expect(
+        LocalizedFormatters.weekdayLong(
+          DateTime(2026, 8, 10),
+          const Locale('en'),
+        ),
+        'Monday',
+      );
+      expect(
+        LocalizedFormatters.weekdayLong(
+          DateTime(2026, 8, 10),
+          const Locale('fr'),
+        ),
+        'lundi',
+      );
+      expect(
         LocalizedFormatters.weekdayNarrow(
           DateTime(2026, 8, 10),
           const Locale('en'),

@@ -19,12 +19,12 @@ void main() {
       report: report,
       id: 'exercise-detail-sheet-theme-ownership',
       path: 'lib/widgets/exercise_detail_sheet.dart',
-      rationale: 'Classic values',
+      rationale: 'Catalog Expressive destination wrapping',
       kindCounts: const {
-        'color': 4,
-        'color_transform': 22,
-        'decoration': 22,
-        'geometry': 15,
+        'color': 8,
+        'color_transform': 24,
+        'decoration': 30,
+        'geometry': 47,
         'text_style': 1,
       },
     );
@@ -62,8 +62,9 @@ void _expectMigratedRule({
   expect(rule.rationale, contains(rationale));
   expect(rule.matches(path, 'shadow'), isFalse);
 
-  final findings =
-      report.findings.where((finding) => finding.ruleId == id).toList();
+  final findings = report.findings
+      .where((finding) => finding.ruleId == id)
+      .toList();
   final expectedCount = kindCounts.values.fold<int>(
     0,
     (sum, count) => sum + count,

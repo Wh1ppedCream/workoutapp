@@ -228,7 +228,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
           Text(strings.appTitle),
           const SizedBox(height: 12),
           DropdownButtonFormField<AppThemeFamily>(
-            value: _family,
+            initialValue: _family,
             decoration: const InputDecoration(labelText: 'Theme family'),
             items: [
               for (final family in _families)
@@ -243,7 +243,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<Locale>(
-            value: _locale,
+            initialValue: _locale,
             decoration: const InputDecoration(labelText: 'Locale'),
             items: [
               for (final locale in AppLocalizations.supportedLocales)
@@ -512,7 +512,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: const ValueKey('theme-lab-material-dropdown'),
-            value: 'Workout',
+            initialValue: 'Workout',
             decoration: const InputDecoration(labelText: 'Dropdown'),
             items: const [
               DropdownMenuItem(value: 'Workout', child: Text('Workout')),

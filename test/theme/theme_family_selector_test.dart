@@ -15,6 +15,9 @@ import 'package:env_test/theme/app_theme_capabilities.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_preferences.dart';
+import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 
 void main() {
@@ -52,6 +55,12 @@ void main() {
       find.byKey(AppTestKeys.uiAppearanceThemeFamilyOption('classic')),
       findsOneWidget,
     );
+    final classicRadio = tester.widget<RadioListTile<AppThemeFamily>>(
+      find.byKey(AppTestKeys.uiAppearanceThemeFamilyOption('classic')),
+    );
+    expect(classicRadio.tileColor, isNull);
+    expect(classicRadio.selectedTileColor, isNull);
+    expect(classicRadio.shape, isNull);
     expect(neoOption, findsOneWidget);
     final neoRadio = tester.widget<RadioListTile<AppThemeFamily>>(neoOption);
     expect(neoRadio.value, AppThemeFamily.neoBrutalism);
@@ -71,6 +80,94 @@ void main() {
     expect(find.text(strings.themeFamilyNeoBrutalism), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'Expressive preview frames theme-family options without adding a family',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'guided_tutorial_completed.ui_appearance_settings_v1': true,
+      });
+      final themeProvider = ThemeProvider(
+        capabilities: const AppThemeCapabilities(
+          experimentalThemesEnabled: true,
+          isReleaseMode: false,
+        ),
+      );
+      final harness = _AppearanceHarness(themeProvider);
+      addTearDown(harness.dispose);
+      await harness.pump(
+        tester,
+        themeOverride: ExpressiveThemeDefinition.light(),
+      );
+
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      final pageContext = tester.element(find.byType(UIAppearanceSettingsPage));
+      expect(pageContext.usesExpressivePresentation, isTrue);
+      expect(themeProvider.availableFamilies, <AppThemeFamily>[
+        AppThemeFamily.classic,
+        AppThemeFamily.neoBrutalism,
+      ]);
+      expect(themeProvider.family, AppThemeFamily.classic);
+      expect(find.text(strings.themeFamilyClassic), findsOneWidget);
+
+      await tester.tap(find.byKey(AppTestKeys.uiAppearanceThemeFamily));
+      await tester.pumpAndSettle();
+
+      final profile = AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.profile,
+        Brightness.light,
+      );
+      final selectedOption = find.byKey(
+        AppTestKeys.uiAppearanceThemeFamilyOption(AppThemeFamily.classic.code),
+      );
+      final selectedRadio = tester.widget<RadioListTile<AppThemeFamily>>(
+        selectedOption,
+      );
+      expect(selectedRadio.selected, isTrue);
+      expect(
+        selectedRadio.tileColor,
+        Color.lerp(profile.surfacePrimary, profile.surfaceAccent, 0.14),
+      );
+      expect(selectedRadio.selectedTileColor, profile.surfaceSelected);
+      final selectedShape = selectedRadio.shape! as RoundedRectangleBorder;
+      expect(selectedShape.side.color, profile.outlineAccent);
+      expect(selectedShape.side.width, 2);
+      expect(selectedRadio.secondary, isNotNull);
+      expect(
+        tester
+            .widget<Text>(
+              find.descendant(
+                of: selectedOption,
+                matching: find.text(strings.themeFamilyClassic),
+              ),
+            )
+            .style
+            ?.fontWeight,
+        FontWeight.w800,
+      );
+
+      final neoOption = find.byKey(
+        AppTestKeys.uiAppearanceThemeFamilyOption(
+          AppThemeFamily.neoBrutalism.code,
+        ),
+      );
+      final neoRadio = tester.widget<RadioListTile<AppThemeFamily>>(neoOption);
+      expect(neoRadio.selected, isFalse);
+      final neoShape = neoRadio.shape! as RoundedRectangleBorder;
+      expect(neoShape.side.width, 1);
+      expect(neoRadio.secondary, isNotNull);
+
+      await tester.tap(neoOption);
+      await tester.pumpAndSettle();
+      expect(themeProvider.family, AppThemeFamily.neoBrutalism);
+      expect(
+        Theme.of(tester.element(find.byType(UIAppearanceSettingsPage)))
+            .usesExpressivePresentation,
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final mode in [ThemeMode.light, ThemeMode.dark]) {
     testWidgets(
@@ -105,10 +202,9 @@ void main() {
           final decoration =
               tester.widget<DecoratedBox>(preview).decoration as BoxDecoration;
           final neo = family == AppThemeFamily.neoBrutalism;
-          final theme =
-              mode == ThemeMode.dark
-                  ? AppThemeFactory.dark(family)
-                  : AppThemeFactory.light(family);
+          final theme = mode == ThemeMode.dark
+              ? AppThemeFactory.dark(family)
+              : AppThemeFactory.light(family);
           final scheme = theme.colorScheme;
           final panel = neo ? scheme.primary : scheme.surfaceContainerHighest;
           final foreground = neo ? scheme.onPrimary : scheme.onSurface;
@@ -130,16 +226,12 @@ void main() {
             expect(decoration.boxShadow, isNull);
           }
 
-          final colorBars =
-              tester
-                  .widgetList<ColoredBox>(
-                    find.descendant(
-                      of: option,
-                      matching: find.byType(ColoredBox),
-                    ),
-                  )
-                  .map((box) => box.color)
-                  .toList();
+          final colorBars = tester
+              .widgetList<ColoredBox>(
+                find.descendant(of: option, matching: find.byType(ColoredBox)),
+              )
+              .map((box) => box.color)
+              .toList();
           expect(colorBars, <Color>[
             foreground,
             accent,
@@ -186,9 +278,8 @@ void main() {
       expect(provider.family, AppThemeFamily.neoBrutalism);
       expect(provider.mode, mode);
       expect(
-        Theme.of(
-          tester.element(find.byType(UIAppearanceSettingsPage)),
-        ).brightness,
+        Theme.of(tester.element(find.byType(UIAppearanceSettingsPage)))
+            .brightness,
         mode == ThemeMode.light ? Brightness.light : Brightness.dark,
       );
 
@@ -397,7 +488,11 @@ class _AppearanceHarness {
   final UnitPreferenceProvider unitPreferences;
   final LocalePreferenceProvider localePreferences;
 
-  Future<void> pump(WidgetTester tester, {double textScale = 1.0}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    double textScale = 1.0,
+    ThemeData? themeOverride,
+  }) async {
     await Future.wait([
       themeProvider.ready,
       unitPreferences.ready,
@@ -416,24 +511,25 @@ class _AppearanceHarness {
           ),
         ],
         child: Consumer<ThemeProvider>(
-          builder:
-              (context, provider, _) => MaterialApp(
-                theme: AppThemeFactory.light(provider.family),
-                darkTheme: AppThemeFactory.dark(provider.family),
-                themeMode: provider.mode,
-                themeAnimationDuration: Duration.zero,
-                localizationsDelegates: tonosLocalizationDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                home: Builder(
-                  builder:
-                      (context) => MediaQuery(
-                        data: MediaQuery.of(
-                          context,
-                        ).copyWith(textScaler: TextScaler.linear(textScale)),
-                        child: const UIAppearanceSettingsPage(),
-                      ),
-                ),
+          builder: (context, provider, _) => MaterialApp(
+            theme: themeOverride ?? AppThemeFactory.light(provider.family),
+            darkTheme: themeOverride ?? AppThemeFactory.dark(provider.family),
+            themeMode: themeOverride == null
+                ? provider.mode
+                : (themeOverride.brightness == Brightness.dark
+                      ? ThemeMode.dark
+                      : ThemeMode.light),
+            themeAnimationDuration: Duration.zero,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(textScale)),
+                child: const UIAppearanceSettingsPage(),
               ),
+            ),
+          ),
         ),
       ),
     );

@@ -14,6 +14,8 @@ import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../services/safe_failure.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../utils/localized_body_part_name.dart';
 import '../../utils/completed_workout_duration_formatter.dart';
 import '../../utils/localized_formatters.dart';
@@ -228,139 +230,219 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.analytics,
+      child: Builder(builder: _buildScreen),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     final data = _data;
     final strings = AppLocalizations.of(context);
+    final destinationTokens = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     return Scaffold(
-      appBar: AppBar(title: Text(strings.weeklySetsTitle)),
-      body:
-          _isLoading && data == null
-              ? const Center(child: CircularProgressIndicator())
-              : _failure != null && data == null
-              ? SafeErrorView(
-                title: strings.weeklySetsLoadError,
-                failure: _failure!,
-                onRetry: _loadData,
-              )
-              : Column(
-                children: [
-                  KeyedSubtree(
-                    key: _headerTutorialKey,
-                    child: _WeeklyOverviewHeader(
-                      data: data ?? _emptyWeeklyData,
-                    ),
-                  ),
-                  KeyedSubtree(
-                    key: _tabsTutorialKey,
-                    child: TabBar(
-                      controller: _tabController,
-                      tabs: [
-                        Tab(text: strings.weeklySetsBodyParts),
-                        Tab(text: strings.weeklySetsMuscles),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: KeyedSubtree(
-                      key: _listTutorialKey,
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _BodyPartSetList(
-                            items: data?.bodyParts ?? const [],
-                            onTap: _openBodyPart,
-                          ),
-                          _MuscleSetList(
-                            items: data?.muscles ?? const [],
-                            onTap: _openMuscle,
-                          ),
-                        ],
+      backgroundColor: destinationTokens?.pageCanvas,
+      appBar: AppBar(
+        title: Text(strings.weeklySetsTitle),
+        backgroundColor: destinationTokens?.surfacePrimary,
+        foregroundColor: destinationTokens?.onSurfacePrimary,
+        scrolledUnderElevation: 0,
+      ),
+      body: _isLoading && data == null
+          ? const Center(child: CircularProgressIndicator())
+          : _failure != null && data == null
+          ? SafeErrorView(
+              title: strings.weeklySetsLoadError,
+              failure: _failure!,
+              onRetry: _loadData,
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final compactLandscape =
+                    constraints.maxWidth > constraints.maxHeight &&
+                    constraints.maxHeight < 380;
+                return Column(
+                  children: [
+                    KeyedSubtree(
+                      key: _headerTutorialKey,
+                      child: _WeeklyOverviewHeader(
+                        data: data ?? _emptyWeeklyData,
+                        compactLandscape: compactLandscape,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: KeyedSubtree(
+                        key: _tabsTutorialKey,
+                        child: TabBar(
+                          controller: _tabController,
+                          labelColor: destinationTokens?.actionPrimary,
+                          unselectedLabelColor:
+                              destinationTokens?.supportingForeground,
+                          indicatorColor: destinationTokens?.outlineAccent,
+                          tabs: [
+                            Tab(text: strings.weeklySetsBodyParts),
+                            Tab(text: strings.weeklySetsMuscles),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: KeyedSubtree(
+                        key: _listTutorialKey,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _BodyPartSetList(
+                              items: data?.bodyParts ?? const [],
+                              onTap: _openBodyPart,
+                            ),
+                            _MuscleSetList(
+                              items: data?.muscles ?? const [],
+                              onTap: _openMuscle,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
     );
   }
 }
 
 class _WeeklyOverviewHeader extends StatelessWidget {
   final _WeeklySetOverviewData data;
+  final bool compactLandscape;
 
-  const _WeeklyOverviewHeader({required this.data});
+  const _WeeklyOverviewHeader({
+    required this.data,
+    this.compactLandscape = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final surfaces = context.surfaceTokens;
+    final destinationTokens = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       child: Card(
+        color: surfaces.card,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final heatmapBox =
-                  (constraints.maxWidth * 0.48).clamp(128.0, 184.0).toDouble();
-              final heatmapSize =
-                  (heatmapBox - 6).clamp(120.0, 176.0).toDouble();
+              final textScale = MediaQuery.textScalerOf(context).scale(1);
+              final stacked =
+                  constraints.maxWidth < 420 ||
+                  (textScale > 1.3 && constraints.maxWidth < 640);
+              final heatmapBox = compactLandscape
+                  ? 140.0
+                  : stacked
+                  ? (constraints.maxWidth * 0.54).clamp(128.0, 184.0).toDouble()
+                  : (constraints.maxWidth * 0.48)
+                        .clamp(128.0, 184.0)
+                        .toDouble();
+              final heatmapSize = (heatmapBox - 6)
+                  .clamp(120.0, 176.0)
+                  .toDouble();
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: heatmapBox,
-                    height: heatmapBox,
-                    child: Center(
-                      child: BodyHeatmap(
-                        frequencyMap: data.heatmapFrequencyMap,
-                        lowColor: tonosHeatmapLowForSurface(
-                          context,
-                          surfaces.card,
-                        ),
-                        highColor: tonosHeatmapHighForSurface(
-                          context,
-                          surfaces.card,
-                        ),
-                        width: heatmapSize,
-                        height: heatmapSize,
-                      ),
+              final heatmap = SizedBox(
+                width: heatmapBox,
+                height: heatmapBox,
+                child: Center(
+                  child: BodyHeatmap(
+                    frequencyMap: data.heatmapFrequencyMap,
+                    lowColor: tonosHeatmapLowForSurface(context, surfaces.card),
+                    highColor: tonosHeatmapHighForSurface(
+                      context,
+                      surfaces.card,
                     ),
+                    width: heatmapSize,
+                    height: heatmapSize,
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
+                ),
+              );
+              final statBoxes = [
+                _SummaryStatBox(
+                  label: AppLocalizations.of(context).weeklySetsTotal,
+                  value: LocalizedFormatters.number(
+                    data.totalSets,
+                    Localizations.localeOf(context),
+                    maximumFractionDigits: 0,
+                  ),
+                  fill: destinationTokens?.surfaceSecondary,
+                  foreground: destinationTokens?.onSurfaceSecondary,
+                ),
+                _SummaryStatBox(
+                  label: AppLocalizations.of(context).weeklySetsTime,
+                  value: _durationLabel(
+                    AppLocalizations.of(context),
+                    data.totalDurationSeconds,
+                  ),
+                  fill: destinationTokens?.surfaceTertiary,
+                  foreground: destinationTokens?.onSurfaceTertiary,
+                ),
+                _SummaryStatBox(
+                  label: AppLocalizations.of(context).weeklySetsVolume,
+                  value: WeightUnitFormatter.formatVolume(
+                    data.totalVolume,
+                    weightUnit,
+                    locale: Localizations.localeOf(context),
+                  ),
+                  fill: destinationTokens?.surfaceAccent,
+                  foreground: destinationTokens?.onSurfaceAccent,
+                ),
+              ];
+              final stats = compactLandscape
+                  ? Row(
+                      children: [
+                        for (var index = 0; index < statBoxes.length; index++)
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: index == statBoxes.length - 1 ? 0 : 8,
+                              ),
+                              child: statBoxes[index],
+                            ),
+                          ),
+                      ],
+                    )
+                  : Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _SummaryStatBox(
-                          label: AppLocalizations.of(context).weeklySetsTotal,
-                          value: LocalizedFormatters.number(
-                            data.totalSets,
-                            Localizations.localeOf(context),
-                            maximumFractionDigits: 0,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _SummaryStatBox(
-                          label: AppLocalizations.of(context).weeklySetsTime,
-                          value: _durationLabel(
-                            AppLocalizations.of(context),
-                            data.totalDurationSeconds,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _SummaryStatBox(
-                          label: AppLocalizations.of(context).weeklySetsVolume,
-                          value: WeightUnitFormatter.formatVolume(
-                            data.totalVolume,
-                            weightUnit,
-                            locale: Localizations.localeOf(context),
-                          ),
-                        ),
+                        for (var index = 0; index < statBoxes.length; index++)
+                          if (index == 0)
+                            statBoxes[index]
+                          else ...[
+                            const SizedBox(height: 8),
+                            statBoxes[index],
+                          ],
                       ],
-                    ),
-                  ),
-                ],
-              );
+                    );
+
+              return stacked
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(child: heatmap),
+                        const SizedBox(height: 12),
+                        stats,
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        heatmap,
+                        const SizedBox(width: 14),
+                        Expanded(child: stats),
+                      ],
+                    );
             },
           ),
         ),
@@ -372,8 +454,15 @@ class _WeeklyOverviewHeader extends StatelessWidget {
 class _SummaryStatBox extends StatelessWidget {
   final String label;
   final String value;
+  final Color? fill;
+  final Color? foreground;
 
-  const _SummaryStatBox({required this.label, required this.value});
+  const _SummaryStatBox({
+    required this.label,
+    required this.value,
+    this.fill,
+    this.foreground,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -381,7 +470,9 @@ class _SummaryStatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
+        color:
+            fill ??
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: theme.shapeTokens.dashboardRow,
       ),
       child: Column(
@@ -389,19 +480,17 @@ class _SummaryStatBox extends StatelessWidget {
         children: [
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: foreground ?? theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
             style: theme.textTheme.titleMedium?.copyWith(
+              color: foreground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -519,32 +608,31 @@ class _SetOverviewRow extends StatelessWidget {
               width: theme.shapeTokens.outlineWidth,
             ),
           ),
-          child: Row(
-            children: [
-              leading,
-              const SizedBox(width: 12),
-              Expanded(
-                child:
-                    entity == null
-                        ? Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        )
-                        : LocalizedCatalogEntityName(
-                          entity: entity!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-              ),
-              const SizedBox(width: 12),
-              Text(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact =
+                  constraints.maxWidth < 320 ||
+                  MediaQuery.textScalerOf(context).scale(1) > 1.3;
+              final titleMaxLines = compact ? null : 2;
+              final titleOverflow = compact ? null : TextOverflow.ellipsis;
+              final titleWidget = entity == null
+                  ? Text(
+                      title,
+                      maxLines: titleMaxLines,
+                      overflow: titleOverflow,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    )
+                  : LocalizedCatalogEntityName(
+                      entity: entity!,
+                      maxLines: titleMaxLines,
+                      overflow: titleOverflow,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    );
+              final countLabel = Text(
                 _setUnitsLabel(
                   AppLocalizations.of(context),
                   count,
@@ -553,8 +641,33 @@ class _SetOverviewRow extends StatelessWidget {
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
-              ),
-            ],
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        leading,
+                        const SizedBox(width: 12),
+                        Expanded(child: titleWidget),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Align(alignment: Alignment.centerRight, child: countLabel),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  leading,
+                  const SizedBox(width: 12),
+                  Expanded(child: titleWidget),
+                  const SizedBox(width: 12),
+                  countLabel,
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -573,9 +686,9 @@ class _MuscleLeadingIcon extends StatelessWidget {
     // primary foreground identical to its container fill.
     final iconColor =
         theme.brightness == Brightness.light &&
-                scheme.primary == scheme.primaryContainer
-            ? scheme.onPrimaryContainer
-            : scheme.primary;
+            scheme.primary == scheme.primaryContainer
+        ? scheme.onPrimaryContainer
+        : scheme.primary;
     return Container(
       width: 52,
       height: 52,

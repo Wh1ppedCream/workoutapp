@@ -4,14 +4,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
+import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 
 void main() {
   test('preset generation owns its route-specific presentation recipes', () {
-    final source =
-        File(
-          'lib/screens/exercise/preset_generation_qa.dart',
-        ).readAsStringSync();
+    final source = File('lib/screens/exercise/preset_generation_qa.dart')
+        .readAsStringSync();
 
     for (final role in [
       'context.generationTokens',
@@ -50,17 +49,31 @@ void main() {
     }
 
     expect(source, contains('TonosExpansionTileScope'));
+    expect(source, contains('_generationTokensForPresentation(context)'));
+    expect(source, contains('_expressivePlanningTokens(context)'));
+    expect(source, contains('introGradientStart: planning.planFocalSurface'));
+    expect(source, contains('choiceSelectedSurface: planning.planAccent'));
+    expect(source, contains('actionBarSurface: planning.planSupportSurface'));
     expect(
       source,
       contains('Theme.of(context).textTheme.titleLarge?.copyWith'),
     );
     expect(
       source,
-      contains('style: const TextStyle(fontWeight: FontWeight.w900)'),
+      matches(
+        RegExp(
+          r'style:\s*const TextStyle\(\s*fontWeight:\s*FontWeight\.w900\s*\)',
+        ),
+      ),
     );
+    expect(source, contains('color: expressive?.planFocalForeground'));
+    expect(source, contains('expressive.planAccentForeground'));
+    expect(source, contains('expressive.equipmentForeground'));
     expect(
       source,
-      contains('style: TextStyle(color: generation.secondaryText'),
+      matches(
+        RegExp(r'style:\s*TextStyle\(\s*color:\s*generation\.secondaryText'),
+      ),
     );
 
     for (final legacyStyle in [
@@ -129,5 +142,24 @@ void main() {
       BorderRadius.lerp(base.introShape, BorderRadius.circular(30), 0.5),
     );
     expect(midpoint.badge, Color.lerp(base.badge, Colors.red, 0.5));
+  });
+
+  test('Expressive selected choice foreground contrasts with its surface', () {
+    for (final planning in [
+      AppExpressivePlanningTokens.light,
+      AppExpressivePlanningTokens.dark,
+    ]) {
+      final foregroundLuminance = planning.planAccentForeground
+          .computeLuminance();
+      final surfaceLuminance = planning.planAccent.computeLuminance();
+      final lighter = foregroundLuminance > surfaceLuminance
+          ? foregroundLuminance
+          : surfaceLuminance;
+      final darker = foregroundLuminance > surfaceLuminance
+          ? surfaceLuminance
+          : foregroundLuminance;
+
+      expect((lighter + 0.05) / (darker + 0.05), greaterThanOrEqualTo(4.5));
+    }
   });
 }

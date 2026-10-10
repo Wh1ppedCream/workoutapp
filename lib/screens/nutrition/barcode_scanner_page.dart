@@ -1,6 +1,10 @@
 // File: lib/screens/nutrition/barcode_scanner_page.dart
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../services/barcode_scanner_session.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -78,12 +82,24 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.nutrition,
+      child: Builder(builder: _buildPage),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    final reticleColor = destination != null
+        ? Colors.white
+        : Colors.white.withValues(alpha: 0.9);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: destination?.surfacePrimary ?? Colors.black,
+        foregroundColor: destination?.onSurfacePrimary ?? Colors.white,
         title: Text(strings.barcodeScannerTitle),
         actions: [
           IconButton(
@@ -96,8 +112,9 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
             },
           ),
           IconButton(
-            tooltip:
-                _torchOn ? strings.barcodeTorchOff : strings.barcodeTorchOn,
+            tooltip: _torchOn
+                ? strings.barcodeTorchOff
+                : strings.barcodeTorchOn,
             icon: Icon(_torchOn ? Icons.flash_on : Icons.flash_off),
             onPressed: () async {
               try {
@@ -129,10 +146,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                 height: MediaQuery.of(context).size.width * 0.45,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    width: 2,
-                  ),
+                  border: Border.all(color: reticleColor, width: 2),
                 ),
               ),
             ),
@@ -143,11 +157,15 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-              color: const Color(0xAA000000),
+              color:
+                  destination?.surfaceSecondary.withValues(alpha: 0.94) ??
+                  const Color(0xAA000000),
               child: Text(
                 strings.barcodeAlignHint,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(
+                  color: destination?.onSurfaceSecondary ?? Colors.white70,
+                ),
               ),
             ),
           ),

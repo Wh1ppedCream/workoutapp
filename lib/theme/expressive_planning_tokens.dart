@@ -21,8 +21,13 @@ class AppExpressivePlanningTokens {
     required this.actionSecondary,
     required this.actionSecondaryForeground,
     required this.selectedSurface,
+    required this.planAccent,
+    required this.planAccentForeground,
     required this.outline,
     required this.onPage,
+    required this.focalShape,
+    required this.supportShape,
+    required this.rowShape,
   });
 
   final Color pageCanvas;
@@ -39,8 +44,15 @@ class AppExpressivePlanningTokens {
   final Color actionSecondary;
   final Color actionSecondaryForeground;
   final Color selectedSurface;
+
+  /// Warm identity marker used to pick out selected planning data.
+  final Color planAccent;
+  final Color planAccentForeground;
   final Color outline;
   final Color onPage;
+  final BorderRadius focalShape;
+  final BorderRadius supportShape;
+  final BorderRadius rowShape;
 
   /// Returns planning tokens only for a theme explicitly marked Expressive.
   static AppExpressivePlanningTokens? maybeOf(BuildContext context) {
@@ -64,8 +76,28 @@ class AppExpressivePlanningTokens {
     actionSecondary: Color(0xFFC7EEE2),
     actionSecondaryForeground: Color(0xFF123D35),
     selectedSurface: Color(0xFF54247C),
+    planAccent: Color(0xFFFFB77D),
+    planAccentForeground: Color(0xFF3E204D),
     outline: Color(0xFF855F8A),
     onPage: Color(0xFF39254A),
+    focalShape: BorderRadius.only(
+      topLeft: Radius.circular(36),
+      topRight: Radius.circular(16),
+      bottomLeft: Radius.circular(16),
+      bottomRight: Radius.circular(36),
+    ),
+    supportShape: BorderRadius.only(
+      topLeft: Radius.circular(16),
+      topRight: Radius.circular(32),
+      bottomLeft: Radius.circular(32),
+      bottomRight: Radius.circular(16),
+    ),
+    rowShape: BorderRadius.only(
+      topLeft: Radius.circular(22),
+      topRight: Radius.circular(12),
+      bottomLeft: Radius.circular(12),
+      bottomRight: Radius.circular(22),
+    ),
   );
 
   static const dark = AppExpressivePlanningTokens(
@@ -83,7 +115,27 @@ class AppExpressivePlanningTokens {
     actionSecondary: Color(0xFF204A43),
     actionSecondaryForeground: Color(0xFFC5F1E4),
     selectedSurface: Color(0xFFE4C4FF),
+    planAccent: Color(0xFFE2AD7D),
+    planAccentForeground: Color(0xFF1C1322),
     outline: Color(0xFFAB91B8),
     onPage: Color(0xFFE2D5EA),
+    focalShape: BorderRadius.only(
+      topLeft: Radius.circular(36),
+      topRight: Radius.circular(16),
+      bottomLeft: Radius.circular(16),
+      bottomRight: Radius.circular(36),
+    ),
+    supportShape: BorderRadius.only(
+      topLeft: Radius.circular(16),
+      topRight: Radius.circular(32),
+      bottomLeft: Radius.circular(32),
+      bottomRight: Radius.circular(16),
+    ),
+    rowShape: BorderRadius.only(
+      topLeft: Radius.circular(22),
+      topRight: Radius.circular(12),
+      bottomLeft: Radius.circular(12),
+      bottomRight: Radius.circular(22),
+    ),
   );
 }

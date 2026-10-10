@@ -9,10 +9,13 @@ import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../utils/localized_body_part_name.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
+import 'analytics_destination_surfaces.dart';
 
 class BodyPartMuscleMappingScreen extends StatefulWidget {
   const BodyPartMuscleMappingScreen({super.key});
@@ -134,39 +137,45 @@ class _BodyPartMuscleMappingScreenState
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.mappingTitle),
-        scrolledUnderElevation: 0,
-      ),
-      bottomNavigationBar:
-          _editing
-              ? SettingsSaveBar(
+    final destination = analyticsDestinationTokens(context);
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.analytics,
+      child: Scaffold(
+        backgroundColor: destination?.pageCanvas,
+        appBar: AppBar(
+          title: Text(strings.mappingTitle),
+          backgroundColor: destination?.surfacePrimary,
+          foregroundColor: destination?.onSurfacePrimary,
+          scrolledUnderElevation: 0,
+        ),
+        bottomNavigationBar: _editing
+            ? SettingsSaveBar(
                 label: _isSaving ? strings.nutritionSaving : strings.commonSave,
                 onPressed: _isSaving ? null : _saveMappings,
                 cancelLabel: strings.commonCancel,
                 onCancel: _isSaving ? null : _cancelEditing,
-                saveIcon:
-                    _isSaving
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.save),
+                saveIcon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save),
                 decorated: false,
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
-              : null,
-      body: SafeArea(child: _buildBody()),
-      floatingActionButton:
-          (!_editing && !_isLoading && _failure == null)
-              ? FloatingActionButton.extended(
+            : null,
+        body: SafeArea(child: _buildBody()),
+        floatingActionButton: (!_editing && !_isLoading && _failure == null)
+            ? FloatingActionButton.extended(
                 onPressed: _startEditing,
+                backgroundColor: destination?.actionPrimary,
+                foregroundColor: destination?.onActionPrimary,
                 icon: const Icon(Icons.edit),
                 label: Text(strings.commonEdit),
               )
-              : null,
+            : null,
+      ),
     );
   }
 
@@ -183,89 +192,92 @@ class _BodyPartMuscleMappingScreenState
       );
     }
 
-    final linkedMuscles =
-        _muscles.where((m) => _linkedMuscleIds.contains(m.id)).toList();
+    final linkedMuscles = _muscles
+        .where((m) => _linkedMuscleIds.contains(m.id))
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 112),
       children: [
-        SettingsHeroCard(
+        AnalyticsRouteHeader(
           title: strings.mappingTitle,
           subtitle: strings.mappingHero,
           icon: Icons.hub,
         ),
         const SizedBox(height: 16),
-        SettingsSection(
-          title: strings.mappingSelectedBodyPart,
-          accentColor: SettingsAccent.training,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: DropdownButtonFormField<BodyPart>(
-                isExpanded: true,
-                value: _selectedBodyPart,
-                dropdownColor: settingsDropdownMenuColor(context),
-                style: settingsInputTextStyle(context),
-                iconEnabledColor: settingsInputForeground(context),
-                iconDisabledColor: settingsInputForeground(
-                  context,
-                  enabled: false,
-                ),
-                decoration: settingsFieldDecoration(
-                  context,
-                  label: strings.mappingBodyPart,
-                ),
-                selectedItemBuilder:
-                    (_) =>
-                        _bodyParts
-                            .map(
-                              (bodyPart) => settingsDropdownTriggerLabel(
-                                context,
-                                Text(
-                                  localizedBodyPartName(context, bodyPart.name),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                items:
-                    _bodyParts
-                        .map(
-                          (bodyPart) => DropdownMenuItem(
-                            value: bodyPart,
-                            child: settingsDropdownMenuLabel(
-                              context,
-                              Text(
-                                localizedBodyPartName(context, bodyPart.name),
-                              ),
+        AnalyticsZone(
+          role: AnalyticsSurfaceRole.accent,
+          padding: const EdgeInsets.all(8),
+          child: SettingsSection(
+            title: strings.mappingSelectedBodyPart,
+            accentColor: SettingsAccent.training,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: DropdownButtonFormField<BodyPart>(
+                  isExpanded: true,
+                  initialValue: _selectedBodyPart,
+                  dropdownColor:
+                      analyticsDestinationTokens(context)?.surfaceAccent ??
+                      settingsDropdownMenuColor(context),
+                  style: settingsInputTextStyle(context),
+                  iconEnabledColor: settingsInputForeground(context),
+                  iconDisabledColor: settingsInputForeground(
+                    context,
+                    enabled: false,
+                  ),
+                  decoration: settingsFieldDecoration(
+                    context,
+                    label: strings.mappingBodyPart,
+                  ),
+                  selectedItemBuilder: (_) => _bodyParts
+                      .map(
+                        (bodyPart) => settingsDropdownTriggerLabel(
+                          context,
+                          Text(localizedBodyPartName(context, bodyPart.name)),
+                        ),
+                      )
+                      .toList(),
+                  items: _bodyParts
+                      .map(
+                        (bodyPart) => DropdownMenuItem(
+                          value: bodyPart,
+                          child: settingsDropdownMenuLabel(
+                            context,
+                            Text(
+                              localizedBodyPartName(context, bodyPart.name),
                             ),
                           ),
-                        )
-                        .toList(),
-                onChanged:
-                    !_editing
-                        ? (bodyPart) {
+                        ),
+                      )
+                      .toList(),
+                  onChanged: !_editing
+                      ? (bodyPart) {
                           setState(() => _selectedBodyPart = bodyPart);
                           if (bodyPart != null) _loadMappings(bodyPart.id);
                         }
-                        : null,
+                      : null,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        SettingsSection(
-          title:
-              _editing
-                  ? strings.mappingChooseLinkedMuscles
-                  : strings.mappingLinkedMuscles,
-          accentColor: SettingsAccent.advanced,
-          subtitle:
-              _editing
-                  ? strings.mappingChooseLinkedSubtitle
-                  : strings.mappingLinkedCount(linkedMuscles.length),
-          children:
-              _editing
-                  ? _editableMuscleTiles()
-                  : _readOnlyMuscleTiles(linkedMuscles),
+        AnalyticsZone(
+          role: AnalyticsSurfaceRole.secondary,
+          padding: const EdgeInsets.all(8),
+          borderRadius: 28,
+          child: SettingsSection(
+            title: _editing
+                ? strings.mappingChooseLinkedMuscles
+                : strings.mappingLinkedMuscles,
+            accentColor: SettingsAccent.advanced,
+            subtitle: _editing
+                ? strings.mappingChooseLinkedSubtitle
+                : strings.mappingLinkedCount(linkedMuscles.length),
+            children: _editing
+                ? _editableMuscleTiles()
+                : _readOnlyMuscleTiles(linkedMuscles),
+          ),
         ),
       ],
     );

@@ -39,8 +39,12 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       );
     }
     final activeSession = context.read<ActiveSession>();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return OverflowBar(
+      alignment: MainAxisAlignment.end,
+      spacing: 8,
+      overflowAlignment: OverflowBarAlignment.end,
+      overflowDirection: VerticalDirection.up,
+      overflowSpacing: 8,
       children: [
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionResume,
@@ -54,7 +58,6 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
             ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
           },
         ),
-        const SizedBox(width: 8),
         FloatingActionButton.extended(
           key: AppTestKeys.ongoingSessionExit,
           backgroundColor: semantic.ongoingSessionExit,
@@ -184,98 +187,107 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
                       ),
                       shape: RoundedRectangleBorder(borderRadius: shapes.sheet),
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 380),
+                        constraints: BoxConstraints(
+                          maxWidth: 380,
+                          maxHeight:
+                              MediaQuery.sizeOf(dialogThemeContext).height - 48,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 38,
-                                    height: 38,
-                                    decoration: BoxDecoration(
-                                      color: colors.primaryContainer,
-                                      borderRadius: shapes.control,
-                                    ),
-                                    child: Icon(
-                                      Icons.flag_outlined,
-                                      color: colors.onPrimaryContainer,
-                                      size: 21,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      strings.sessionEndQuestion,
-                                      style: textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.w700,
+                          child: SingleChildScrollView(
+                            primary: false,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: colors.primaryContainer,
+                                        borderRadius: shapes.control,
+                                      ),
+                                      child: Icon(
+                                        Icons.flag_outlined,
+                                        color: colors.onPrimaryContainer,
+                                        size: 21,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 18),
-                              WorkoutExitAction(
-                                discard: true,
-                                label: strings.sessionCancelDelete,
-                                onPressed:
-                                    () => Navigator.pop(
-                                      dialogContext,
-                                      _WorkoutExitDecision(
-                                        behavior: WorkoutExitBehavior.discard,
-                                        remember: remember,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        strings.sessionEndQuestion,
+                                        style: textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
-                              ),
-                              const SizedBox(height: 10),
-                              WorkoutExitAction(
-                                label: strings.sessionEndSave,
-                                onPressed:
-                                    () => Navigator.pop(
-                                      dialogContext,
-                                      _WorkoutExitDecision(
-                                        behavior:
-                                            WorkoutExitBehavior.saveCompleted,
-                                        remember: remember,
-                                      ),
-                                    ),
-                              ),
-                              const SizedBox(height: 12),
-                              Material(
-                                color: surfaces.dialogChoice,
-                                borderRadius: shapes.dialogChoice,
-                                child: CheckboxListTile(
-                                  value: remember,
-                                  dense: true,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading,
-                                  title: Text(
-                                    strings.sessionRememberChoice,
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      color: choiceForeground,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    strings.sessionRememberChoiceBody,
-                                    style: textTheme.bodySmall?.copyWith(
-                                      color: choiceSecondary,
-                                    ),
-                                  ),
-                                  onChanged:
-                                      (value) => setDialogState(
-                                        () => remember = value ?? false,
+                                  ],
+                                ),
+                                const SizedBox(height: 18),
+                                WorkoutExitAction(
+                                  discard: true,
+                                  label: strings.sessionCancelDelete,
+                                  onPressed:
+                                      () => Navigator.pop(
+                                        dialogContext,
+                                        _WorkoutExitDecision(
+                                          behavior:
+                                              WorkoutExitBehavior.discard,
+                                          remember: remember,
+                                        ),
                                       ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 10),
+                                WorkoutExitAction(
+                                  label: strings.sessionEndSave,
+                                  onPressed:
+                                      () => Navigator.pop(
+                                        dialogContext,
+                                        _WorkoutExitDecision(
+                                          behavior:
+                                              WorkoutExitBehavior.saveCompleted,
+                                          remember: remember,
+                                        ),
+                                      ),
+                                ),
+                                const SizedBox(height: 12),
+                                Material(
+                                  color: surfaces.dialogChoice,
+                                  borderRadius: shapes.dialogChoice,
+                                  child: CheckboxListTile(
+                                    value: remember,
+                                    dense: true,
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    title: Text(
+                                      strings.sessionRememberChoice,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: choiceForeground,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      strings.sessionRememberChoiceBody,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: choiceSecondary,
+                                      ),
+                                    ),
+                                    onChanged:
+                                        (value) => setDialogState(
+                                          () => remember = value ?? false,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

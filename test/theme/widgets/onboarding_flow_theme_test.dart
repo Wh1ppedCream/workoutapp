@@ -7,6 +7,7 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -224,6 +225,101 @@ void main() {
       });
     }
   }
+
+  const responsiveViewports = <({String label, Size size})>[
+    (label: '320dp compact phone', size: Size(320, 760)),
+    (label: '390dp phone', size: Size(390, 844)),
+    (label: '600dp compact tablet', size: Size(600, 900)),
+    (label: '800dp tablet', size: Size(800, 1100)),
+    (label: '640dp compact landscape', size: Size(640, 360)),
+  ];
+  for (final brightness in Brightness.values) {
+    final theme = brightness == Brightness.light
+        ? ExpressiveThemeDefinition.light()
+        : ExpressiveThemeDefinition.dark();
+    for (final viewport in responsiveViewports) {
+      for (final scale in [1.0, 1.5, 2.0]) {
+        testWidgets('Expressive onboarding keeps primary actions reachable at '
+            '${viewport.label}, ${scale}x, ${brightness.name}', (tester) async {
+          await _pumpOnboarding(
+            tester,
+            theme: theme,
+            size: viewport.size,
+            textScale: scale,
+            disableAnimations: true,
+          );
+          final strings = await AppLocalizations.delegate.load(
+            const Locale('en'),
+          );
+          final nextButton = find.widgetWithText(
+            FilledButton,
+            strings.onboardingNext,
+          );
+          final skipButton = find.widgetWithText(
+            TextButton,
+            strings.onboardingSkip,
+          );
+          expect(nextButton, findsOneWidget);
+          expect(skipButton, findsOneWidget);
+          void expectActionWithinViewport(Finder action) {
+            final rect = tester.getRect(action);
+            expect(rect.left, greaterThanOrEqualTo(0));
+            expect(rect.right, lessThanOrEqualTo(viewport.size.width));
+            expect(rect.top, greaterThanOrEqualTo(0));
+            expect(rect.bottom, lessThanOrEqualTo(viewport.size.height));
+          }
+
+          expectActionWithinViewport(nextButton);
+          expectActionWithinViewport(skipButton);
+          expect(find.byType(PageView), findsOneWidget);
+          expect(tester.takeException(), isNull);
+
+          await tester.tap(nextButton);
+          await tester.pumpAndSettle();
+          expect(find.text(strings.onboardingBasicsTitle), findsOneWidget);
+          final nameField = find.byType(TextField).first;
+          await tester.ensureVisible(nameField);
+          final fieldRect = tester.getRect(nameField);
+          expect(fieldRect.left, greaterThanOrEqualTo(0));
+          expect(fieldRect.right, lessThanOrEqualTo(viewport.size.width));
+          expect(fieldRect.top, greaterThanOrEqualTo(0));
+          expect(fieldRect.bottom, lessThanOrEqualTo(viewport.size.height));
+          expectActionWithinViewport(nextButton);
+          expectActionWithinViewport(skipButton);
+          expect(tester.takeException(), isNull);
+        });
+      }
+    }
+  }
+
+  testWidgets('Expressive onboarding keeps Next above a compact keyboard inset', (
+    tester,
+  ) async {
+    const size = Size(320, 780);
+    const keyboardInset = 280.0;
+    await _pumpOnboarding(
+      tester,
+      theme: ExpressiveThemeDefinition.light(),
+      size: size,
+      textScale: 2,
+      viewInsets: const EdgeInsets.only(bottom: keyboardInset),
+      disableAnimations: true,
+    );
+    final strings = await AppLocalizations.delegate.load(const Locale('en'));
+    await tester.tap(find.text(strings.onboardingNext));
+    await tester.pumpAndSettle();
+
+    final nameField = find.byType(TextField).first;
+    await tester.ensureVisible(nameField);
+    await tester.tap(nameField);
+    await tester.enterText(nameField, 'Alex');
+    final availableBottom = size.height - keyboardInset;
+    final nameRect = tester.getRect(nameField);
+    final nextRect = tester.getRect(find.text(strings.onboardingNext));
+    expect(nameRect.bottom, lessThanOrEqualTo(availableBottom));
+    expect(nextRect.bottom, lessThanOrEqualTo(availableBottom));
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Future<void> _pumpOnboarding(
@@ -232,6 +328,7 @@ Future<void> _pumpOnboarding(
   required Size size,
   AppRepository? repository,
   double textScale = 1,
+  EdgeInsets viewInsets = EdgeInsets.zero,
   bool disableAnimations = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -264,6 +361,7 @@ Future<void> _pumpOnboarding(
         builder: (context, child) {
           final mediaQuery = MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(textScale),
+            viewInsets: viewInsets,
             disableAnimations: disableAnimations,
           );
           return MediaQuery(data: mediaQuery, child: child!);

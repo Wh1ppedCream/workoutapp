@@ -9,9 +9,12 @@ import '../../../models/models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
+import 'analytics_destination_surfaces.dart';
 
 class MuscleRankingScreen extends StatefulWidget {
   const MuscleRankingScreen({super.key});
@@ -97,9 +100,8 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(
-              context,
-            ).rankingsSaved(AppLocalizations.of(context).anatomyMuscles),
+            AppLocalizations.of(context)
+                .rankingsSaved(AppLocalizations.of(context).anatomyMuscles),
           ),
         ),
       );
@@ -121,31 +123,37 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final destination = analyticsDestinationTokens(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.rankingsTitle(strings.anatomyMuscles)),
-        scrolledUnderElevation: 0,
-      ),
-      bottomNavigationBar:
-          _dirty
-              ? SettingsSaveBar(
-                label:
-                    _isSaving ? strings.nutritionSaving : strings.rankingsSave,
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.analytics,
+      child: Scaffold(
+        backgroundColor: destination?.pageCanvas,
+        appBar: AppBar(
+          title: Text(strings.rankingsTitle(strings.anatomyMuscles)),
+          backgroundColor: destination?.surfacePrimary,
+          foregroundColor: destination?.onSurfacePrimary,
+          scrolledUnderElevation: 0,
+        ),
+        bottomNavigationBar: _dirty
+            ? SettingsSaveBar(
+                label: _isSaving
+                    ? strings.nutritionSaving
+                    : strings.rankingsSave,
                 onPressed: _isSaving ? null : _saveAll,
-                saveIcon:
-                    _isSaving
-                        ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.save),
+                saveIcon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save),
                 decorated: false,
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               )
-              : null,
-      body: SafeArea(child: _buildBody()),
+            : null,
+        body: SafeArea(child: _buildBody()),
+      ),
     );
   }
 
@@ -165,53 +173,146 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
       return Center(child: Text(strings.rankingsNoMuscles));
     }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: SettingsHeroCard(
-            title: strings.rankingsTitle(strings.anatomyMuscles),
-            subtitle: strings.rankingsHero(
-              strings.anatomyMuscles.toLowerCase(),
+    if (analyticsDestinationTokens(context) == null) {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: SettingsHeroCard(
+              title: strings.rankingsTitle(strings.anatomyMuscles),
+              subtitle: strings.rankingsHero(
+                strings.anatomyMuscles.toLowerCase(),
+              ),
+              icon: Icons.fitness_center,
             ),
-            icon: Icons.fitness_center,
           ),
-        ),
-        Expanded(
-          child: ReorderableListView.builder(
-            itemCount: _muscles.length,
-            onReorder: _onReorder,
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-            itemBuilder: (context, index) {
-              final muscle = _muscles[index];
-              final rank = _ranks[muscle.id] ?? index + 1;
-              return SettingsRankingTile(
-                key: ValueKey(muscle.id),
-                index: index,
-                name: LocalizedCatalogEntityName(
-                  entity: CatalogEntityDisplayName(
-                    catalogId: muscle.catalogId,
-                    canonicalName: muscle.name,
+          Expanded(
+            child: ReorderableListView.builder(
+              itemCount: _muscles.length,
+              onReorder: _onReorder,
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+              itemBuilder: (context, index) {
+                final muscle = _muscles[index];
+                final rank = _ranks[muscle.id] ?? index + 1;
+                return SettingsRankingTile(
+                  key: ValueKey(muscle.id),
+                  index: index,
+                  name: LocalizedCatalogEntityName(
+                    entity: CatalogEntityDisplayName(
+                      catalogId: muscle.catalogId,
+                      canonicalName: muscle.name,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: settingsRankingNameTextStyle(context),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: settingsRankingNameTextStyle(context),
-                ),
-                rank: rank,
-                icon: Icons.fitness_center,
-                rankLabel: strings.rankingsRank,
-                onRankSubmitted: (value) {
-                  setState(() {
-                    _ranks[muscle.id] = int.tryParse(value) ?? rank;
-                    _sortByRank();
-                    _dirty = true;
-                  });
-                },
-              );
-            },
+                  rank: rank,
+                  icon: Icons.fitness_center,
+                  rankLabel: strings.rankingsRank,
+                  onRankSubmitted: (value) {
+                    setState(() {
+                      _ranks[muscle.id] = int.tryParse(value) ?? rank;
+                      _sortByRank();
+                      _dirty = true;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 2,
+            vertical: 8,
           ),
         ),
-      ],
+      ),
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            sliver: SliverToBoxAdapter(
+              child: AnalyticsRouteHeader(
+                title: strings.rankingsTitle(strings.anatomyMuscles),
+                subtitle: strings.rankingsHero(
+                  strings.anatomyMuscles.toLowerCase(),
+                ),
+                icon: Icons.fitness_center,
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            sliver: SliverReorderableList(
+              itemCount: _muscles.length,
+              onReorder: _onReorder,
+              itemBuilder: (context, index) {
+                final muscle = _muscles[index];
+                final rank = _ranks[muscle.id] ?? index + 1;
+                return _ExpressiveMuscleRankingRow(
+                  key: ValueKey(muscle.id),
+                  index: index,
+                  name: LocalizedCatalogEntityName(
+                    entity: CatalogEntityDisplayName(
+                      catalogId: muscle.catalogId,
+                      canonicalName: muscle.name,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: settingsRankingNameTextStyle(context),
+                  ),
+                  rank: rank,
+                  icon: Icons.fitness_center,
+                  rankLabel: strings.rankingsRank,
+                  onRankSubmitted: (value) {
+                    setState(() {
+                      _ranks[muscle.id] = int.tryParse(value) ?? rank;
+                      _sortByRank();
+                      _dirty = true;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _ExpressiveMuscleRankingRow extends StatelessWidget {
+  const _ExpressiveMuscleRankingRow({
+    super.key,
+    required this.index,
+    required this.name,
+    required this.rank,
+    required this.icon,
+    required this.rankLabel,
+    required this.onRankSubmitted,
+  });
+
+  final int index;
+  final Widget name;
+  final int rank;
+  final IconData icon;
+  final String rankLabel;
+  final ValueChanged<String> onRankSubmitted;
+
+  @override
+  Widget build(BuildContext context) => AnalyticsRankingRow(
+    index: index,
+    name: name,
+    rank: rank,
+    icon: icon,
+    rankLabel: rankLabel,
+    onRankSubmitted: onRankSubmitted,
+  );
 }

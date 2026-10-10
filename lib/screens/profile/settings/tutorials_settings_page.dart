@@ -2,10 +2,12 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/tutorial_state_store.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/tokens/app_shape_tokens.dart';
 import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class TutorialsSettingsPage extends StatelessWidget {
@@ -14,6 +16,9 @@ class TutorialsSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressiveProfile =
+        context.usesExpressivePresentation &&
+        Theme.of(context).extension<AppExpressiveTrainTokens>() != null;
     return _withExpressiveProfileTheme(
       context,
       SettingsPageScaffold(
@@ -24,7 +29,9 @@ class TutorialsSettingsPage extends StatelessWidget {
         children: [
           SettingsSection(
             title: strings.tutorialsControlsTitle,
-            subtitle: strings.tutorialsControlsSubtitle,
+            subtitle: expressiveProfile
+                ? strings.tutorialsExpressiveControlsSubtitle
+                : strings.tutorialsControlsSubtitle,
             accentColor: SettingsAccent.data,
             children: settingsTilesWithDividers(context, [
               SettingsActionTile(
@@ -45,7 +52,9 @@ class TutorialsSettingsPage extends StatelessWidget {
           SettingsInfoCard(
             icon: Icons.lightbulb_outline,
             title: strings.tutorialsHowItWorksTitle,
-            body: strings.tutorialsHowItWorksBody,
+            body: expressiveProfile
+                ? strings.tutorialsExpressiveHowItWorksBody
+                : strings.tutorialsHowItWorksBody,
           ),
           const SizedBox(height: 16),
           SettingsExpansionSection(
@@ -53,6 +62,9 @@ class TutorialsSettingsPage extends StatelessWidget {
             subtitle: strings.tutorialsMainTabsSubtitle,
             icon: Icons.school_outlined,
             accentColor: SettingsAccent.appearance,
+            compact: expressiveProfile,
+            compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
+            subtitleMaxLines: expressiveProfile ? 2 : 1,
             children: settingsTilesWithDividers(context, [
               _tutorialResetTile(
                 context,
@@ -84,8 +96,11 @@ class TutorialsSettingsPage extends StatelessWidget {
           SettingsExpansionSection(
             title: strings.tutorialsWorkoutTitle,
             subtitle: strings.tutorialsWorkoutSubtitle,
-            icon: Icons.school_outlined,
+            icon: Icons.fitness_center,
             accentColor: SettingsAccent.training,
+            compact: expressiveProfile,
+            compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
+            subtitleMaxLines: expressiveProfile ? 2 : 1,
             children: settingsTilesWithDividers(context, [
               _tutorialResetTile(
                 context,
@@ -97,8 +112,11 @@ class TutorialsSettingsPage extends StatelessWidget {
           SettingsExpansionSection(
             title: strings.tutorialsPlansTitle,
             subtitle: strings.tutorialsPlansSubtitle,
-            icon: Icons.school_outlined,
+            icon: Icons.auto_awesome_outlined,
             accentColor: SettingsAccent.training,
+            compact: expressiveProfile,
+            compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
+            subtitleMaxLines: expressiveProfile ? 2 : 1,
             children: settingsTilesWithDividers(context, [
               _tutorialResetTile(
                 context,
@@ -140,8 +158,11 @@ class TutorialsSettingsPage extends StatelessWidget {
           SettingsExpansionSection(
             title: strings.tutorialsCatalogTitle,
             subtitle: strings.tutorialsCatalogSubtitle,
-            icon: Icons.school_outlined,
+            icon: Icons.menu_book_outlined,
             accentColor: SettingsAccent.advanced,
+            compact: expressiveProfile,
+            compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
+            subtitleMaxLines: expressiveProfile ? 2 : 1,
             children: settingsTilesWithDividers(context, [
               _tutorialResetTile(
                 context,
@@ -178,8 +199,11 @@ class TutorialsSettingsPage extends StatelessWidget {
           SettingsExpansionSection(
             title: strings.tutorialsProgressTitle,
             subtitle: strings.tutorialsProgressSubtitle,
-            icon: Icons.school_outlined,
+            icon: Icons.trending_up,
             accentColor: SettingsAccent.progress,
+            compact: expressiveProfile,
+            compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
+            subtitleMaxLines: expressiveProfile ? 2 : 1,
             children: settingsTilesWithDividers(context, [
               _tutorialResetTile(
                 context,
@@ -220,17 +244,49 @@ class TutorialsSettingsPage extends StatelessWidget {
   }) {
     final strings = AppLocalizations.of(context);
     final topic = _tutorialTopic(strings, tutorialId);
+    final expressiveProfile =
+        context.usesExpressivePresentation &&
+        Theme.of(context).extension<AppExpressiveTrainTokens>() != null;
+    final expressiveTopic = expressiveProfile
+        ? _expressiveTutorialTopic(context, topic)
+        : topic;
     return SettingsActionTile(
       icon: icon,
-      title: strings.tutorialsReplayTitle(topic),
-      subtitle: strings.tutorialsShownNextTime(topic),
+      title: expressiveProfile
+          ? strings.tutorialsExpressiveTitle(expressiveTopic)
+          : strings.tutorialsReplayTitle(topic),
+      subtitle: expressiveProfile
+          ? strings.tutorialsExpressiveShownNextTime(expressiveTopic)
+          : strings.tutorialsShownNextTime(topic),
       trailing: _tutorialResetPill(context, strings.tutorialsReset),
+      compact: expressiveProfile,
+      compactVerticalPadding: expressiveProfile ? 0 : null,
       onTap: () => _resetTutorial(
         context,
         tutorialId,
         strings.tutorialsWillReplayNextTime(topic),
       ),
     );
+  }
+
+  String _expressiveTutorialTopic(BuildContext context, String topic) {
+    if (Localizations.localeOf(context).languageCode != 'en') return topic;
+    return switch (topic) {
+      'first workout' => 'First workout',
+      'optimized workout settings' => 'Optimized Workout Settings',
+      'plan management' => 'Plan Management',
+      'plan details' => 'Plan Details',
+      'plan builder' => 'Plan Builder',
+      'workout details' => 'Workout Details',
+      'exercise details' => 'Exercise Details',
+      'bodypart details' => 'Body Part Details',
+      'muscle details' => 'Muscle Details',
+      'exercise progress' => 'Exercise Progress',
+      'measurement trend' => 'Measurement Trend',
+      'Gym Profile editor' => 'Gym Profile Editor',
+      'guided help' => 'Guided Help',
+      _ => topic,
+    };
   }
 
   Future<void> _resetTutorial(
@@ -288,6 +344,27 @@ class TutorialsSettingsPage extends StatelessWidget {
 Widget _tutorialResetPill(BuildContext context, String label) {
   final theme = Theme.of(context);
   final expressive = theme.extension<AppExpressiveTrainTokens>();
+  final destination = theme.extension<AppExpressiveDestinationTokens>();
+  if (context.usesExpressivePresentation &&
+      destination?.family == AppExpressiveDestinationFamily.profile) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: destination!.surfaceSelected,
+        borderRadius: ExpressiveTrainShapes.compactControl,
+        border: Border.all(
+          color: destination.outlineAccent.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: destination.onSurfaceSelected,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
   if (context.usesExpressivePresentation && expressive != null) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -349,15 +426,40 @@ Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
       sectionHeaderForeground: expressive.navigationLabel,
     ),
   );
-
-  return Theme(
-    data: theme.copyWith(
-      scaffoldBackgroundColor: expressive.pageCanvas,
-      dialogTheme: theme.dialogTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
-      ),
-      extensions: updatedExtensions,
+  updatedExtensions.removeWhere(
+    (extension) => extension is AppExpressiveDestinationTokens,
+  );
+  final profilePalette = AppExpressiveDestinationTokens.forFamily(
+    AppExpressiveDestinationFamily.profile,
+    theme.brightness,
+  );
+  Color tint(Color role) => Color.lerp(profilePalette.pageCanvas, role, 0.16)!;
+  updatedExtensions.add(
+    profilePalette.copyWith(
+      surfacePrimary: profilePalette.surfacePrimary,
+      onSurfacePrimary: profilePalette.onSurfacePrimary,
+      surfaceSecondary: tint(profilePalette.surfaceSecondary),
+      onSurfaceSecondary: profilePalette.supportingForeground,
+      surfaceTertiary: tint(profilePalette.surfaceTertiary),
+      onSurfaceTertiary: profilePalette.supportingForeground,
+      surfaceAccent: tint(profilePalette.surfaceAccent),
+      onSurfaceAccent: profilePalette.supportingForeground,
     ),
-    child: child,
+  );
+
+  return AppExpressiveDestinationTheme(
+    family: AppExpressiveDestinationFamily.profile,
+    child: Theme(
+      data: theme.copyWith(
+        scaffoldBackgroundColor: expressive.pageCanvas,
+        dialogTheme: theme.dialogTheme.copyWith(
+          shape: RoundedRectangleBorder(
+            borderRadius: ExpressiveTrainShapes.menu,
+          ),
+        ),
+        extensions: updatedExtensions,
+      ),
+      child: child,
+    ),
   );
 }

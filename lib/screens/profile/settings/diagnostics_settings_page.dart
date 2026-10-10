@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/diagnostics_service.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -125,150 +127,148 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final configured = _diagnostics.anonymousDiagnosticsConfigured;
-    final diagnosticsBody =
-        !configured
-            ? strings.diagnosticsCrashUnavailable
-            : _anonymousDiagnosticsEnabled
-            ? strings.diagnosticsCrashEnabledBody
-            : strings.diagnosticsCrashDisabledBody;
+    final diagnosticsBody = !configured
+        ? strings.diagnosticsCrashUnavailable
+        : _anonymousDiagnosticsEnabled
+        ? strings.diagnosticsCrashEnabledBody
+        : strings.diagnosticsCrashDisabledBody;
 
-    return SettingsPageScaffold(
-      title: strings.diagnosticsTitle,
-      subtitle: strings.diagnosticsSubtitle,
-      icon: Icons.shield_outlined,
-      heroAccentColor: SettingsAccent.data,
-      children: [
-        SettingsSection(
-          title: strings.diagnosticsAppSection,
-          subtitle: strings.diagnosticsAppSectionSubtitle,
-          accentColor: SettingsAccent.data,
-          children: [
-            SettingsActionTile(
-              icon: Icons.info_outline,
-              iconColor: SettingsAccent.data,
-              title: strings.diagnosticsVersion,
-              subtitle:
-                  _loading
-                      ? strings.diagnosticsLoading
-                      : _version?.displayVersion ??
-                          strings.diagnosticsUnavailable,
-              trailing: const SizedBox.shrink(),
-            ),
-          ],
-        ),
-        SettingsSection(
-          title: strings.diagnosticsCrashSection,
-          subtitle: strings.diagnosticsCrashSectionSubtitle,
-          accentColor: SettingsAccent.safety,
-          children: settingsTilesWithDividers(context, [
-            SettingsSwitchTile(
-              icon: Icons.bug_report_outlined,
-              iconColor: SettingsAccent.safety,
-              title: strings.diagnosticsCrashReporting,
-              subtitle: diagnosticsBody,
-              value: configured && _anonymousDiagnosticsEnabled,
-              onChanged: configured ? _setAnonymousDiagnostics : null,
-            ),
-            if (_diagnostics.controlledTestAvailable)
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.profile,
+      child: SettingsPageScaffold(
+        title: strings.diagnosticsTitle,
+        subtitle: strings.diagnosticsSubtitle,
+        icon: Icons.shield_outlined,
+        heroAccentColor: SettingsAccent.data,
+        useExpressiveProfileHeroShape: true,
+        children: [
+          SettingsSection(
+            title: strings.diagnosticsAppSection,
+            subtitle: strings.diagnosticsAppSectionSubtitle,
+            accentColor: SettingsAccent.data,
+            children: [
               SettingsActionTile(
-                icon: Icons.send_outlined,
+                icon: Icons.info_outline,
+                iconColor: SettingsAccent.data,
+                title: strings.diagnosticsVersion,
+                subtitle: _loading
+                    ? strings.diagnosticsLoading
+                    : _version?.displayVersion ??
+                          strings.diagnosticsUnavailable,
+                trailing: const SizedBox.shrink(),
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: strings.diagnosticsCrashSection,
+            subtitle: strings.diagnosticsCrashSectionSubtitle,
+            accentColor: SettingsAccent.safety,
+            children: settingsTilesWithDividers(context, [
+              SettingsSwitchTile(
+                icon: Icons.bug_report_outlined,
                 iconColor: SettingsAccent.safety,
-                title: strings.diagnosticsSendTestReport,
-                subtitle: strings.diagnosticsSendTestReportBody,
-                trailing:
-                    _sendingTestEvent
-                        ? const SizedBox.square(
+                title: strings.diagnosticsCrashReporting,
+                subtitle: diagnosticsBody,
+                value: configured && _anonymousDiagnosticsEnabled,
+                onChanged: configured ? _setAnonymousDiagnostics : null,
+              ),
+              if (_diagnostics.controlledTestAvailable)
+                SettingsActionTile(
+                  icon: Icons.send_outlined,
+                  iconColor: SettingsAccent.safety,
+                  title: strings.diagnosticsSendTestReport,
+                  subtitle: strings.diagnosticsSendTestReportBody,
+                  trailing: _sendingTestEvent
+                      ? const SizedBox.square(
                           dimension: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                        : null,
-                onTap:
-                    _anonymousDiagnosticsEnabled && !_sendingTestEvent
-                        ? _sendTestEvent
-                        : null,
-              ),
-            SettingsInfoCard(
-              icon: Icons.visibility_off_outlined,
-              iconColor: SettingsAccent.safety,
-              title: strings.diagnosticsPrivacyPromiseTitle,
-              body: strings.diagnosticsPrivacyPromiseBody,
-            ),
-          ]),
-        ),
-        SettingsSection(
-          title: strings.diagnosticsSyncSection,
-          subtitle: strings.diagnosticsSyncSectionSubtitle,
-          accentColor: SettingsAccent.training,
-          children: [
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_events.isEmpty)
+                      : null,
+                  onTap: _anonymousDiagnosticsEnabled && !_sendingTestEvent
+                      ? _sendTestEvent
+                      : null,
+                ),
               SettingsInfoCard(
-                icon: Icons.sync_outlined,
-                iconColor: SettingsAccent.training,
-                title: strings.diagnosticsNoSyncEvents,
-                body: strings.diagnosticsNoSyncEventsBody,
-              )
-            else ...[
-              for (final event in _events.take(10))
-                _SyncEventTile(event: event),
-              Divider(
-                height: 1,
-                indent: 70,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              SettingsActionTile(
-                icon: Icons.delete_sweep_outlined,
+                icon: Icons.visibility_off_outlined,
                 iconColor: SettingsAccent.safety,
-                title: strings.diagnosticsClearHistory,
-                subtitle: strings.diagnosticsClearHistoryBody,
-                onTap: _clearHistory,
+                title: strings.diagnosticsPrivacyPromiseTitle,
+                body: strings.diagnosticsPrivacyPromiseBody,
               ),
+            ]),
+          ),
+          SettingsSection(
+            title: strings.diagnosticsSyncSection,
+            subtitle: strings.diagnosticsSyncSectionSubtitle,
+            accentColor: SettingsAccent.training,
+            children: [
+              if (_loading)
+                const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_events.isEmpty)
+                SettingsInfoCard(
+                  icon: Icons.sync_outlined,
+                  iconColor: SettingsAccent.training,
+                  title: strings.diagnosticsNoSyncEvents,
+                  body: strings.diagnosticsNoSyncEventsBody,
+                )
+              else ...[
+                for (final event in _events.take(10))
+                  _SyncEventTile(event: event),
+                Divider(
+                  height: 1,
+                  indent: 70,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                SettingsActionTile(
+                  icon: Icons.delete_sweep_outlined,
+                  iconColor: SettingsAccent.safety,
+                  title: strings.diagnosticsClearHistory,
+                  subtitle: strings.diagnosticsClearHistoryBody,
+                  onTap: _clearHistory,
+                ),
+              ],
             ],
-          ],
-        ),
-        SettingsSection(
-          title: strings.diagnosticsPrivacySection,
-          subtitle: strings.diagnosticsPrivacySectionSubtitle,
-          accentColor: SettingsAccent.progress,
-          children: [
-            SettingsInfoCard(
-              icon: Icons.phone_android_outlined,
-              iconColor: SettingsAccent.progress,
-              title: strings.diagnosticsLocalDataTitle,
-              body: strings.diagnosticsLocalDataBody,
-            ),
-            const SizedBox(height: 10),
-            SettingsInfoCard(
-              icon: Icons.delete_forever_outlined,
-              iconColor: SettingsAccent.progress,
-              title: strings.diagnosticsDeletionTitle,
-              body: strings.diagnosticsDeletionBody,
-            ),
-            const SizedBox(height: 10),
-            SettingsActionTile(
-              icon: Icons.delete_outline,
-              iconColor: SettingsAccent.safety,
-              title: strings.diagnosticsDeleteShared,
-              subtitle: strings.diagnosticsDeleteSharedBody,
-              trailing:
-                  _deletingSharedDiagnostics
-                      ? const SizedBox.square(
+          ),
+          SettingsSection(
+            title: strings.diagnosticsPrivacySection,
+            subtitle: strings.diagnosticsPrivacySectionSubtitle,
+            accentColor: SettingsAccent.progress,
+            children: [
+              SettingsInfoCard(
+                icon: Icons.phone_android_outlined,
+                iconColor: SettingsAccent.progress,
+                title: strings.diagnosticsLocalDataTitle,
+                body: strings.diagnosticsLocalDataBody,
+              ),
+              const SizedBox(height: 10),
+              SettingsInfoCard(
+                icon: Icons.delete_forever_outlined,
+                iconColor: SettingsAccent.progress,
+                title: strings.diagnosticsDeletionTitle,
+                body: strings.diagnosticsDeletionBody,
+              ),
+              const SizedBox(height: 10),
+              SettingsActionTile(
+                icon: Icons.delete_outline,
+                iconColor: SettingsAccent.safety,
+                title: strings.diagnosticsDeleteShared,
+                subtitle: strings.diagnosticsDeleteSharedBody,
+                trailing: _deletingSharedDiagnostics
+                    ? const SizedBox.square(
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                      : null,
-              onTap:
-                  _hasSharedDiagnostics && !_deletingSharedDiagnostics
-                      ? _deleteSharedDiagnostics
-                      : null,
-            ),
-          ],
-        ),
-      ],
+                    : null,
+                onTap: _hasSharedDiagnostics && !_deletingSharedDiagnostics
+                    ? _deleteSharedDiagnostics
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -283,18 +283,15 @@ class _SyncEventTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final succeeded = event.outcome == SyncDiagnosticOutcome.succeeded;
     final color = succeeded ? SettingsAccent.progress : SettingsAccent.safety;
-    final operation =
-        event.operation == 'exercise_media'
-            ? strings.diagnosticsExerciseMedia
-            : strings.diagnosticsSharedMedia;
-    final source =
-        event.source == 'remote'
-            ? strings.diagnosticsRemoteSource
-            : strings.diagnosticsBundledSource;
-    final outcome =
-        succeeded
-            ? strings.diagnosticsSyncSucceeded
-            : strings.diagnosticsSyncFailed;
+    final operation = event.operation == 'exercise_media'
+        ? strings.diagnosticsExerciseMedia
+        : strings.diagnosticsSharedMedia;
+    final source = event.source == 'remote'
+        ? strings.diagnosticsRemoteSource
+        : strings.diagnosticsBundledSource;
+    final outcome = succeeded
+        ? strings.diagnosticsSyncSucceeded
+        : strings.diagnosticsSyncFailed;
     final timestamp = LocalizedFormatters.dateTime(
       event.timestamp.toLocal(),
       Localizations.localeOf(context),

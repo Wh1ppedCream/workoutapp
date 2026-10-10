@@ -9,23 +9,215 @@ import 'package:env_test/screens/dashboard_page.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/widgets/dashboard_sections.dart';
 import 'package:env_test/widgets/dashboard_section_palette.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_support.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive Dashboard keeps its focal identity and editor actions at 320dp ${brightness.name}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 820));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final theme = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF4E2868),
+            brightness: brightness,
+          ),
+          extensions: const [
+            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+          ],
+        );
+        final config = await _pumpEmptyDashboard(tester, theme, textScale: 2);
+        final pageContext = tester.element(find.byType(DashboardPage));
+        final strings = AppLocalizations.of(pageContext);
+        final routeContext = tester.element(find.text(strings.dashboardTitle));
+        final tokens = Theme.of(routeContext)
+            .extension<AppExpressiveDestinationTokens>()!;
+
+        expect(tokens.family, AppExpressiveDestinationFamily.dashboard);
+        expect(find.text(strings.dashboardTitle), findsOneWidget);
+        expect(find.text(strings.dashboardEmptyTitle), findsOneWidget);
+        final hero = tester.widget<Container>(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.padding ==
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          ),
+        );
+        final heroDecoration = hero.decoration! as BoxDecoration;
+        expect(heroDecoration.gradient!.colors, [
+          tokens.surfacePrimary,
+          tokens.surfacePrimary,
+        ]);
+        expect(tester.takeException(), isNull);
+
+        final customizeButton = find.byTooltip(strings.dashboardCustomize);
+        await tester.ensureVisible(customizeButton);
+        await tester.tap(customizeButton);
+        await tester.pumpAndSettle();
+        expect(find.byType(ReorderableListView), findsOneWidget);
+        expect(find.text(strings.dashboardReorderHelp), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        expect(config.widgetOrder, DashboardConfig.defaultOrder);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+
+    testWidgets(
+      'Expressive Dashboard shows the full resume action at 320dp and 2x ${brightness.name}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 820));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final theme = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF4E2868),
+            brightness: brightness,
+          ),
+          extensions: const [
+            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+          ],
+        );
+        late final ActiveSession session;
+        await _pumpEmptyDashboard(
+          tester,
+          theme,
+          textScale: 2,
+          showResumeAction: true,
+          onSessionReady: (value) => session = value,
+        );
+
+        final pageContext = tester.element(find.byType(DashboardPage));
+        final strings = AppLocalizations.of(pageContext);
+        for (final label in [
+          strings.dashboardTitle,
+          strings.dashboardMeasurement,
+          strings.dashboardResumeWorkout,
+        ]) {
+          final finder = find.text(label);
+          expect(finder, findsOneWidget, reason: label);
+          final text = tester.widget<Text>(finder);
+          expect(text.maxLines, isNull, reason: label);
+          expect(text.overflow, isNull, reason: label);
+          expect(text.softWrap, isTrue, reason: label);
+          expect(
+            tester.renderObject<RenderParagraph>(finder).didExceedMaxLines,
+            isFalse,
+            reason: label,
+          );
+        }
+        expect(
+          find.ancestor(
+            of: find.text(strings.dashboardTitle),
+            matching: find.byType(FittedBox),
+          ),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await session.discard();
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  testWidgets(
+    'Expressive Dashboard stacks only compact actions and caps wide content',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4E2868)),
+        extensions: const [
+          AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+        ],
+      );
+      late ActiveSession session;
+
+      tester.view.physicalSize = const Size(320, 820);
+      await _pumpEmptyDashboard(
+        tester,
+        theme,
+        textScale: 2,
+        showResumeAction: true,
+        onSessionReady: (value) => session = value,
+      );
+      final compactActions = find.byType(DashboardQuickActions);
+      expect(compactActions, findsOneWidget);
+      expect(
+        find.descendant(of: compactActions, matching: find.byType(Row)),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+      await session.discard();
+
+      tester.view.physicalSize = const Size(390, 844);
+      await _pumpEmptyDashboard(
+        tester,
+        theme,
+        textScale: 1,
+        showResumeAction: true,
+        onSessionReady: (value) => session = value,
+      );
+      final standardActions = find.byType(DashboardQuickActions);
+      expect(standardActions, findsOneWidget);
+      expect(
+        find.descendant(of: standardActions, matching: find.byType(Row)),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .getRect(find.byKey(const PageStorageKey('dashboard_scroll')))
+            .width,
+        390,
+      );
+      expect(tester.takeException(), isNull);
+      await session.discard();
+
+      tester.view.physicalSize = const Size(1440, 900);
+      await _pumpEmptyDashboard(
+        tester,
+        theme,
+        textScale: 1,
+        showResumeAction: true,
+        onSessionReady: (value) => session = value,
+      );
+      expect(
+        tester
+            .getRect(find.byKey(const PageStorageKey('dashboard_scroll')))
+            .width,
+        960,
+      );
+      final pageContext = tester.element(find.byType(DashboardPage));
+      final strings = AppLocalizations.of(pageContext);
+      await tester.tap(find.byTooltip(strings.dashboardCustomize));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.byType(ReorderableListView)).width, 960);
+      expect(tester.takeException(), isNull);
+      await session.discard();
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode dashboard empty state resolves its surface recipe', (
@@ -227,12 +419,18 @@ void main() {
 
 Future<DashboardConfig> _pumpEmptyDashboard(
   WidgetTester tester,
-  ThemeData theme,
-) async {
+  ThemeData theme, {
+  double textScale = 1,
+  bool showResumeAction = false,
+  void Function(ActiveSession)? onSessionReady,
+}) async {
+  final hiddenOrder = DashboardConfig.defaultOrder
+      .where((id) => !showResumeAction || id != 'quickActions')
+      .toList();
   SharedPreferences.setMockInitialValues(<String, Object>{
     'dashboard_config': jsonEncode(<String, Object>{
       'order': DashboardConfig.defaultOrder,
-      'hidden': DashboardConfig.defaultOrder,
+      'hidden': hiddenOrder,
     }),
   });
   final config = DashboardConfig();
@@ -243,21 +441,26 @@ Future<DashboardConfig> _pumpEmptyDashboard(
   );
   addTearDown(config.dispose);
   addTearDown(session.dispose);
+  onSessionReady?.call(session);
   await session.ready;
+  if (showResumeAction) await session.start();
 
   await tester.pumpWidget(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<DashboardConfig>.value(value: config),
-        ChangeNotifierProvider<ActiveSession>.value(value: session),
-        Provider<AppRepository>.value(value: repository),
-      ],
-      child: MaterialApp(
-        theme: theme,
-        themeAnimationDuration: Duration.zero,
-        localizationsDelegates: tonosLocalizationDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const DashboardPage(),
+    MediaQuery(
+      data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<DashboardConfig>.value(value: config),
+          ChangeNotifierProvider<ActiveSession>.value(value: session),
+          Provider<AppRepository>.value(value: repository),
+        ],
+        child: MaterialApp(
+          theme: theme,
+          themeAnimationDuration: Duration.zero,
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DashboardPage(),
+        ),
       ),
     ),
   );
@@ -272,4 +475,14 @@ class _EmptyDashboardRepository extends AppRepository {
   @override
   Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>
       const [];
+
+  @override
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) async {}
+
+  @override
+  Future<void> clearActiveWorkoutDraft() async {}
 }

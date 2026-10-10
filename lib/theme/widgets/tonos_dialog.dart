@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme_extensions.dart';
+import '../tokens/app_shape_tokens.dart';
+import '../tokens/app_surface_tokens.dart';
 
 /// Applies hard depth to the dialog's Material shape, inside route insets.
 class TonosDialogFrame extends StatelessWidget {
@@ -42,40 +44,36 @@ class TonosDialogFrame extends StatelessWidget {
     // Picker and popup routes capture this theme, so give them the same
     // readable surface/foreground pairing as the dialog itself.
     final pickerSurface = needsDarkNeoPickerContrast ? dialogSurface : null;
-    final formButtonBackground =
-        needsDarkNeoPickerContrast && styleFormControls
-            ? WidgetStatePropertyAll<Color?>(context.surfaceTokens.dialogChoice)
-            : null;
+    final formButtonBackground = needsDarkNeoPickerContrast && styleFormControls
+        ? WidgetStatePropertyAll<Color?>(context.surfaceTokens.dialogChoice)
+        : null;
     final dialogButtonForeground = WidgetStateProperty.resolveWith<Color?>(
-      (states) =>
-          states.contains(WidgetState.disabled)
-              ? foreground.withValues(alpha: 0.38)
-              : foreground,
+      (states) => states.contains(WidgetState.disabled)
+          ? foreground.withValues(alpha: 0.38)
+          : foreground,
     );
     final outlinedButtonStyle = theme.outlinedButtonTheme.style?.copyWith(
       foregroundColor: dialogButtonForeground,
       backgroundColor: formButtonBackground,
     );
-    final formInputTheme =
-        styleFormControls
-            ? _neoDialogFormInputTheme(context, theme)
-            : theme.inputDecorationTheme;
-    final dialogTheme =
-        hasDepth
-            ? theme.dialogTheme.copyWith(
-              elevation: 0,
-              clipBehavior: Clip.none,
-              shape: TonosDialogShadowBorder(
-                border:
-                    theme.dialogTheme.shape ??
-                    RoundedRectangleBorder(
-                      borderRadius: context.shapeTokens.sheet,
-                    ),
-                color: effects.cardShadow,
-                offset: effects.dialogShadowOffset,
-              ),
-            )
-            : theme.dialogTheme;
+    final formInputTheme = styleFormControls
+        ? _neoDialogFormInputTheme(context, theme)
+        : theme.inputDecorationTheme;
+    final dialogTheme = hasDepth
+        ? theme.dialogTheme.copyWith(
+            elevation: 0,
+            clipBehavior: Clip.none,
+            shape: TonosDialogShadowBorder(
+              border:
+                  theme.dialogTheme.shape ??
+                  RoundedRectangleBorder(
+                    borderRadius: context.shapeTokens.sheet,
+                  ),
+              color: effects.cardShadow,
+              offset: effects.dialogShadowOffset,
+            ),
+          )
+        : theme.dialogTheme;
     return Theme(
       data: theme.copyWith(
         colorScheme: theme.colorScheme.copyWith(
@@ -100,12 +98,14 @@ class TonosDialogFrame extends StatelessWidget {
         inputDecorationTheme: formInputTheme,
         listTileTheme: theme.listTileTheme.copyWith(
           textColor: foreground,
-          titleTextStyle: (theme.listTileTheme.titleTextStyle ??
-                  theme.textTheme.titleMedium)
-              ?.copyWith(color: foreground),
-          subtitleTextStyle: (theme.listTileTheme.subtitleTextStyle ??
-                  theme.textTheme.bodyMedium)
-              ?.copyWith(color: secondaryForeground),
+          titleTextStyle:
+              (theme.listTileTheme.titleTextStyle ??
+                      theme.textTheme.titleMedium)
+                  ?.copyWith(color: foreground),
+          subtitleTextStyle:
+              (theme.listTileTheme.subtitleTextStyle ??
+                      theme.textTheme.bodyMedium)
+                  ?.copyWith(color: secondaryForeground),
           iconColor: foreground,
         ),
         radioTheme: theme.radioTheme.copyWith(
@@ -167,10 +167,9 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
     final usesNeoDialog = context.usesNeoPresentation;
     final dialogSurface =
         theme.dialogTheme.backgroundColor ?? context.surfaceTokens.dialog;
-    final foreground =
-        usesNeoDialog
-            ? tonosForegroundForSurface(context, dialogSurface)
-            : null;
+    final foreground = usesNeoDialog
+        ? tonosForegroundForSurface(context, dialogSurface)
+        : null;
 
     return DropdownButton<T>(
       value: value,
@@ -273,6 +272,33 @@ class TonosDialogShadowBorder extends ShapeBorder {
 }
 
 /// Shares choice colors, selection framing and radios with the preview.
+@immutable
+class TonosChoiceOptionStyle {
+  const TonosChoiceOptionStyle({
+    required this.surface,
+    required this.selectedSurface,
+    required this.foreground,
+    required this.selectedForeground,
+    required this.outline,
+    required this.selectedOutline,
+    required this.borderRadius,
+    this.compact = false,
+    this.outlineWidth = 1,
+    this.selectedOutlineWidth = 2,
+  });
+
+  final Color surface;
+  final Color selectedSurface;
+  final Color foreground;
+  final Color selectedForeground;
+  final Color outline;
+  final Color selectedOutline;
+  final BorderRadius borderRadius;
+  final bool compact;
+  final double outlineWidth;
+  final double selectedOutlineWidth;
+}
+
 class TonosChoiceDialog<T> extends StatelessWidget {
   const TonosChoiceDialog({
     super.key,
@@ -280,22 +306,27 @@ class TonosChoiceDialog<T> extends StatelessWidget {
     required this.values,
     required this.selected,
     required this.label,
-    required this.subtitle,
+    this.subtitle,
+    this.labelWidget,
     this.choiceKey,
     this.choicePreview,
+    this.optionStyle,
   });
 
   final String title;
   final List<T> values;
-  final T selected;
+  final T? selected;
   final String Function(T) label;
-  final String Function(T) subtitle;
+  final String Function(T)? subtitle;
+  final Widget Function(BuildContext context, T value)? labelWidget;
   final Key Function(T)? choiceKey;
   final Widget Function(T)? choicePreview;
+  final TonosChoiceOptionStyle? optionStyle;
 
   @override
   Widget build(BuildContext context) {
     final neo = context.usesNeoPresentation;
+    final style = optionStyle;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final ink = context.cs.onPrimaryContainer;
@@ -307,49 +338,114 @@ class TonosChoiceDialog<T> extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final value in values)
-              RadioListTile<T>(
-                key: choiceKey?.call(value),
-                value: value,
-                groupValue: selected,
-                fillColor: neo ? WidgetStatePropertyAll<Color?>(ink) : null,
-                tileColor:
-                    neo
-                        ? value == selected
-                            ? context.cs.primary
-                            : surfaces.planGroup
-                        : null,
-                shape:
-                    neo
-                        ? RoundedRectangleBorder(
-                          borderRadius: shapes.control,
-                          side: BorderSide(
-                            color: tonosOutlineForSurface(
-                              context,
-                              value == selected
-                                  ? context.cs.primary
-                                  : surfaces.planGroup,
-                            ),
-                            width:
-                                value == selected
-                                    ? shapes.focusRingWidth
-                                    : shapes.outlineWidth,
-                          ),
-                        )
-                        : null,
-                title: Text(
-                  label(value),
-                  style: neo ? TextStyle(color: ink) : null,
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: style?.compact == true ? 5 : 0,
                 ),
-                subtitle: Text(
-                  subtitle(value),
-                  style: neo ? TextStyle(color: ink) : null,
-                ),
-                secondary: choicePreview?.call(value),
-                onChanged: (value) => Navigator.of(context).pop(value),
+                child: _buildChoice(context, value, neo, surfaces, shapes, ink),
               ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildChoice(
+    BuildContext context,
+    T value,
+    bool neo,
+    AppSurfaceTokens surfaces,
+    AppShapeTokens shapes,
+    Color ink,
+  ) {
+    final isSelected = value == selected;
+    final style = optionStyle;
+    final shape = style == null
+        ? null
+        : RoundedRectangleBorder(
+            borderRadius: style.borderRadius,
+            side: BorderSide(
+              color: isSelected ? style.selectedOutline : style.outline,
+              width: isSelected
+                  ? style.selectedOutlineWidth
+                  : style.outlineWidth,
+            ),
+          );
+    final foreground = isSelected
+        ? style?.selectedForeground
+        : style?.foreground;
+
+    final tile = RadioListTile<T>(
+      key: choiceKey?.call(value),
+      value: value,
+      groupValue: selected,
+      selected: style != null && isSelected,
+      dense: style?.compact ?? false,
+      visualDensity: style?.compact == true ? VisualDensity.compact : null,
+      contentPadding: style?.compact == true
+          ? const EdgeInsets.symmetric(horizontal: 10)
+          : null,
+      minVerticalPadding: style?.compact == true ? 2.5 : null,
+      fillColor: style == null
+          ? (neo ? WidgetStatePropertyAll<Color?>(ink) : null)
+          : WidgetStatePropertyAll<Color?>(foreground),
+      tileColor: neo
+          ? isSelected
+                ? context.cs.primary
+                : surfaces.planGroup
+          : style?.surface,
+      selectedTileColor: style?.selectedSurface,
+      shape: neo
+          ? RoundedRectangleBorder(
+              borderRadius: shapes.control,
+              side: BorderSide(
+                color: tonosOutlineForSurface(
+                  context,
+                  isSelected ? context.cs.primary : surfaces.planGroup,
+                ),
+                width: isSelected ? shapes.focusRingWidth : shapes.outlineWidth,
+              ),
+            )
+          : shape,
+      title: labelWidget == null
+          ? Text(
+              label(value),
+              style: neo
+                  ? TextStyle(color: ink)
+                  : style == null
+                  ? null
+                  : TextStyle(
+                      color: foreground,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+            )
+          : DefaultTextStyle.merge(
+              style: TextStyle(
+                color: foreground,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+              ),
+              child: labelWidget!(context, value),
+            ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle!(value),
+              style: neo
+                  ? TextStyle(color: ink)
+                  : style == null
+                  ? null
+                  : TextStyle(color: foreground!.withValues(alpha: 0.78)),
+            ),
+      secondary: choicePreview?.call(value),
+      onChanged: (value) => Navigator.of(context).pop(value),
+    );
+    return style?.compact == true
+        ? ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: tile,
+          )
+        : tile;
   }
 }

@@ -92,7 +92,9 @@ void main() {
     expect(appearanceSource, contains('SettingsValueText('));
 
     final userInformationSource = source('user_information_settings_page');
-    expect(userInformationSource, contains('SettingsSaveBar('));
+    expect(userInformationSource, contains('floatingActionButton: _dirty'));
+    expect(userInformationSource, contains('FloatingActionButton.extended('));
+    expect(userInformationSource, isNot(contains('SettingsSaveBar(')));
     expect(userInformationSource, contains('settingsInputDecoration('));
     expect(userInformationSource, contains('SettingsSection('));
 
@@ -372,7 +374,9 @@ void main() {
     expect(sessionSource, contains('AppTestKeys.sessionFinish'));
     expect(
       compactSessionSource,
-      contains('timerTextStyle=Theme.of(context).textTheme.bodyMedium??constTextStyle()'),
+      contains(
+        'timerTextStyle=Theme.of(context).textTheme.bodyMedium??constTextStyle()',
+      ),
     );
     expect(
       compactSessionSource,

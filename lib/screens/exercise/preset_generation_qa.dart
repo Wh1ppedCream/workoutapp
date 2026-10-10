@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+
 import '../profile/settings/bodypart_ranking_screen.dart';
 import '../profile/settings/muscle_ranking_screen.dart';
 
@@ -16,6 +17,8 @@ import '../../services/preset_generation_service.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../models/training_plan_models.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/expressive_planning_tokens.dart';
+import '../../theme/tokens/app_generation_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_expansion_tile_scope.dart';
 import '../../widgets/bodypart_focus_chips.dart';
@@ -27,6 +30,48 @@ import '../../utils/tutorial_launcher.dart';
 /// The labels in the UI are intentionally friendlier than the enum names; these
 /// map onto [TrainingPriorityMode] before calling the generator.
 enum RequirementOption { equalSplitBodyPart, biasRankBodyPart, biasRankMuscle }
+
+AppExpressivePlanningTokens? _expressivePlanningTokens(BuildContext context) {
+  if (!context.usesExpressivePresentation) return null;
+  return Theme.of(context).brightness == Brightness.dark
+      ? AppExpressivePlanningTokens.dark
+      : AppExpressivePlanningTokens.light;
+}
+
+AppGenerationTokens _generationTokensForPresentation(BuildContext context) {
+  final generation = context.generationTokens;
+  final planning = _expressivePlanningTokens(context);
+  if (planning == null) return generation;
+  return generation.copyWith(
+    accent: planning.planAccent,
+    introGradientStart: planning.planFocalSurface,
+    introGradientEnd: planning.planFocalSurface,
+    introBorder: planning.outline,
+    introIconFill: planning.planAccent,
+    introShape: planning.focalShape,
+    introIconShape: planning.rowShape,
+    summarySurface: planning.planSupportSurface,
+    summaryBorder: planning.outline,
+    summaryPillShape: planning.rowShape,
+    sectionSurface: planning.configurationSurface,
+    sectionBorder: planning.outline,
+    sectionIconFill: planning.planAccent,
+    sectionShape: planning.supportShape,
+    sectionIconShape: planning.rowShape,
+    fieldLabel: planning.configurationForeground,
+    fieldBorder: planning.outline,
+    fieldFill: planning.configurationSurface,
+    fieldShape: planning.rowShape,
+    secondaryText: planning.configurationForeground,
+    choiceSelectedSurface: planning.planAccent,
+    choiceUnselectedSurface: planning.equipmentSurface,
+    choiceSelectedBorder: planning.outline,
+    choiceUnselectedBorder: planning.outline.withValues(alpha: 0.55),
+    choiceShape: planning.rowShape,
+    actionBarSurface: planning.planSupportSurface,
+    actionBarBorder: planning.outline,
+  );
+}
 
 /// Configuration screen for Generate Custom Preset.
 ///
@@ -51,6 +96,7 @@ class PresetGenerationQaScreen extends StatefulWidget {
 
 class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   AppRepository get _repo => context.read<AppRepository>();
+
   final _introTutorialKey = GlobalKey(debugLabel: 'generate_plans_intro');
   final _workoutSetupTutorialKey = GlobalKey(
     debugLabel: 'generate_plans_workout_setup',
@@ -91,8 +137,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     _sessionDurationController.text = '60';
     _weeklyFrequencyController.text = '1';
     _maxSetsController.text = SessionSpec.defaultMaxSetsPerExercise.toString();
-    _targetRepCountController.text =
-        SessionSpec.defaultTargetRepCount.toString();
+    _targetRepCountController.text = SessionSpec.defaultTargetRepCount
+        .toString();
     _requirementOption = RequirementOption.equalSplitBodyPart;
     _loadBodyParts();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -256,8 +302,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         spec,
         planCount: weeklyFrequency,
       );
-      final generatedPlanIds =
-          bundleResult.plans.map((result) => result.presetId).toList();
+      final generatedPlanIds = bundleResult.plans
+          .map((result) => result.presetId)
+          .toList();
 
       if (!mounted) return;
       if (generatedPlanIds.isEmpty) {
@@ -367,9 +414,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   void _finishOnboardingPlanGeneration() {
     if (_onboardingGeneratedPlanIds.isEmpty) return;
-    Navigator.of(
-      context,
-    ).pop<List<int>>(List<int>.unmodifiable(_onboardingGeneratedPlanIds));
+    Navigator.of(context)
+        .pop<List<int>>(List<int>.unmodifiable(_onboardingGeneratedPlanIds));
   }
 
   String _fieldValue(TextEditingController controller, String fallback) {
@@ -378,7 +424,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildIntroCard() {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(18),
@@ -403,7 +450,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   color: generation.introIconFill,
                   borderRadius: generation.introIconShape,
                 ),
-                child: Icon(Icons.auto_awesome, color: generation.accent),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: expressive?.planAccentForeground ?? generation.accent,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -414,13 +464,16 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                       strings.generateIntroTitle,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
+                        color: expressive?.planFocalForeground,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       strings.generateIntroBody,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: generation.secondaryText,
+                        color:
+                            expressive?.planFocalForeground ??
+                            generation.secondaryText,
                       ),
                     ),
                   ],
@@ -467,7 +520,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildSummaryPill({required IconData icon, required String text}) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
@@ -478,13 +532,25 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 17, color: generation.accent),
+          Icon(
+            icon,
+            size: 17,
+            color: expressive?.planSupportForeground ?? generation.accent,
+          ),
           const SizedBox(width: 8),
-          Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    expressive?.planSupportForeground ??
+                    generation.secondaryText,
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+              ),
+            ),
           ),
         ],
       ),
@@ -497,40 +563,52 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required String subtitle,
     required List<Widget> children,
   }) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
+      child: Material(
         color: generation.sectionSurface,
-        borderRadius: generation.sectionShape,
-        border: Border.all(color: generation.sectionBorder),
-      ),
-      child: TonosExpansionTileScope(
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          leading: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: generation.sectionIconFill,
-              borderRadius: generation.sectionIconShape,
+        shape: RoundedRectangleBorder(
+          borderRadius: generation.sectionShape,
+          side: BorderSide(color: generation.sectionBorder),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: TonosExpansionTileScope(
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            leading: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: generation.sectionIconFill,
+                borderRadius: generation.sectionIconShape,
+              ),
+              child: Icon(
+                icon,
+                color: expressive?.planAccentForeground ?? generation.accent,
+              ),
             ),
-            child: Icon(icon, color: generation.accent),
+            title: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w900)
+                  .copyWith(color: expressive?.configurationForeground),
+            ),
+            subtitle: Text(
+              subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    expressive?.configurationForeground ??
+                    generation.secondaryText,
+              ),
+            ),
+            children: children,
           ),
-          title: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: generation.secondaryText),
-          ),
-          children: children,
         ),
       ),
     );
@@ -543,7 +621,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required String helperText,
     String? suffixText,
   }) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     final border = OutlineInputBorder(
       borderRadius: generation.fieldShape,
       borderSide: BorderSide(color: generation.fieldBorder),
@@ -554,7 +633,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         Text(
           label,
           style: TextStyle(
-            color: generation.fieldLabel,
+            color: expressive?.configurationForeground ?? generation.fieldLabel,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -564,7 +643,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           controller: controller,
           keyboardType: TextInputType.number,
           onChanged: (_) => setState(() {}),
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: expressive?.configurationForeground,
+            fontWeight: FontWeight.w800,
+          ),
           decoration: InputDecoration(
             hintText: hintText,
             suffixText: suffixText,
@@ -584,7 +666,10 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           helperText,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: generation.secondaryText, fontSize: 12),
+          style: TextStyle(
+            color: generation.secondaryText,
+            fontSize: 12,
+          ).copyWith(color: expressive?.configurationForeground),
         ),
       ],
     );
@@ -597,36 +682,36 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     required T? groupValue,
     required ValueChanged<T?> onChanged,
   }) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     final selected = value == groupValue;
-    final coloredSelection = selected && context.usesNeoPresentation;
-    final selectedInk = context.cs.onPrimaryContainer;
+    final coloredSelection =
+        selected && (context.usesNeoPresentation || expressive != null);
+    final selectedInk =
+        expressive?.planAccentForeground ?? context.cs.onPrimaryContainer;
     final shape = RoundedRectangleBorder(
       borderRadius: generation.choiceShape,
       side: BorderSide(
-        color:
-            selected
-                ? generation.choiceSelectedBorder
-                : generation.choiceUnselectedBorder,
+        color: selected
+            ? generation.choiceSelectedBorder
+            : generation.choiceUnselectedBorder,
       ),
     );
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color:
-            selected
-                ? generation.choiceSelectedSurface
-                : generation.choiceUnselectedSurface,
+        color: selected
+            ? generation.choiceSelectedSurface
+            : generation.choiceUnselectedSurface,
         shape: shape,
         clipBehavior: Clip.antiAlias,
         child: RadioListTile<T>(
           value: value,
           groupValue: groupValue,
           selected: selected,
-          fillColor:
-              coloredSelection
-                  ? WidgetStatePropertyAll<Color?>(selectedInk)
-                  : null,
+          fillColor: coloredSelection
+              ? WidgetStatePropertyAll<Color?>(selectedInk)
+              : null,
           onChanged: onChanged,
           dense: true,
           contentPadding: const EdgeInsets.symmetric(
@@ -640,7 +725,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             title,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: coloredSelection ? selectedInk : null,
+              color: expressive != null && selected
+                  ? expressive.planAccentForeground
+                  : expressive != null
+                  ? expressive.equipmentForeground
+                  : coloredSelection
+                  ? selectedInk
+                  : null,
             ),
           ),
           subtitle: Text(
@@ -648,7 +739,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: coloredSelection ? selectedInk : generation.secondaryText,
+              color: expressive != null && selected
+                  ? expressive.planAccentForeground
+                  : expressive != null
+                  ? expressive.equipmentForeground
+                  : coloredSelection
+                  ? selectedInk
+                  : generation.secondaryText,
               fontSize: 12,
             ),
           ),
@@ -742,57 +839,56 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
     return showDialog<void>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.generateStarterDialogTitle),
-              content: Text(body),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(strings.commonOkay),
-                ),
-              ],
+      builder: (context) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.generateStarterDialogTitle),
+          content: Text(body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(strings.commonOkay),
             ),
-          ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressive = _expressivePlanningTokens(context);
     final content = Scaffold(
+      backgroundColor: expressive?.pageCanvas,
       appBar: AppBar(title: Text(strings.generatePageTitle)),
       floatingActionButton: KeyedSubtree(
         key: _generateTutorialKey,
         child: FloatingActionButton.extended(
-          onPressed:
-              _isGenerating || _isDiscardingOnboardingPlans
-                  ? null
-                  : _handleContinue,
-          icon:
-              _isGenerating
-                  ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : const Icon(Icons.auto_awesome),
+          backgroundColor: expressive?.actionPrimary,
+          foregroundColor: expressive?.actionPrimaryForeground,
+          onPressed: _isGenerating || _isDiscardingOnboardingPlans
+              ? null
+              : _handleContinue,
+          icon: _isGenerating
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.auto_awesome),
           label: Text(_generateButtonLabel()),
         ),
       ),
-      bottomNavigationBar:
-          widget.onboardingMode
-              ? _OnboardingPlanActionBar(
-                addedCount: _onboardingGeneratedPlanIds.length,
-                isBusy: _isDiscardingOnboardingPlans,
-                onCancel: _discardOnboardingPlans,
-                onSave:
-                    _onboardingGeneratedPlanIds.isEmpty
-                        ? null
-                        : _finishOnboardingPlanGeneration,
-              )
-              : null,
+      bottomNavigationBar: widget.onboardingMode
+          ? _OnboardingPlanActionBar(
+              addedCount: _onboardingGeneratedPlanIds.length,
+              isBusy: _isDiscardingOnboardingPlans,
+              onCancel: _discardOnboardingPlans,
+              onSave: _onboardingGeneratedPlanIds.isEmpty
+                  ? null
+                  : _finishOnboardingPlanGeneration,
+            )
+          : null,
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
           16,
@@ -868,10 +964,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     title: Text(strings.generateUseRecentTraining),
                     subtitle: Text(strings.generateUseRecentTrainingBody),
                     value: _useRecentTrainingHistory,
-                    onChanged:
-                        (value) => setState(
-                          () => _useRecentTrainingHistory = value ?? false,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _useRecentTrainingHistory = value ?? false,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -889,13 +984,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     preferredBodypartIds: _preferredBodypartIds,
                     blacklistedBodypartIds: _blacklistedBodypartIds,
                     emptyText: strings.optimizedBodypartsUnavailable,
-                    onChanged:
-                        (selection) => setState(() {
-                          _preferredBodypartIds =
-                              selection.preferredBodypartIds;
-                          _blacklistedBodypartIds =
-                              selection.blacklistedBodypartIds;
-                        }),
+                    onChanged: (selection) => setState(() {
+                      _preferredBodypartIds = selection.preferredBodypartIds;
+                      _blacklistedBodypartIds =
+                          selection.blacklistedBodypartIds;
+                    }),
                   ),
                 ],
               ),
@@ -919,36 +1012,30 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     subtitle: strings.generateMixedBody,
                     value: RepWeightGenerationMode.mixed,
                     groupValue: _repWeightMode,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _repWeightMode =
-                                  value ?? RepWeightGenerationMode.mixed,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _repWeightMode =
+                          value ?? RepWeightGenerationMode.mixed,
+                    ),
                   ),
                   _buildChoiceTile<RepWeightGenerationMode>(
                     title: strings.repModePyramid,
                     subtitle: strings.generatePyramidBody,
                     value: RepWeightGenerationMode.pyramid,
                     groupValue: _repWeightMode,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _repWeightMode =
-                                  value ?? RepWeightGenerationMode.pyramid,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _repWeightMode =
+                          value ?? RepWeightGenerationMode.pyramid,
+                    ),
                   ),
                   _buildChoiceTile<RepWeightGenerationMode>(
                     title: strings.repModeConsistent,
                     subtitle: strings.generateConsistentBody,
                     value: RepWeightGenerationMode.consistent,
                     groupValue: _repWeightMode,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _repWeightMode =
-                                  value ?? RepWeightGenerationMode.consistent,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _repWeightMode =
+                          value ?? RepWeightGenerationMode.consistent,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   _buildNumberField(
@@ -969,36 +1056,30 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     subtitle: strings.generateEasyBody,
                     value: StarterWeightIntensity.easy,
                     groupValue: _starterWeightIntensity,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _starterWeightIntensity =
-                                  value ?? StarterWeightIntensity.easy,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _starterWeightIntensity =
+                          value ?? StarterWeightIntensity.easy,
+                    ),
                   ),
                   _buildChoiceTile<StarterWeightIntensity>(
                     title: strings.intensityMedium,
                     subtitle: strings.generateMediumBody,
                     value: StarterWeightIntensity.medium,
                     groupValue: _starterWeightIntensity,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _starterWeightIntensity =
-                                  value ?? StarterWeightIntensity.medium,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _starterWeightIntensity =
+                          value ?? StarterWeightIntensity.medium,
+                    ),
                   ),
                   _buildChoiceTile<StarterWeightIntensity>(
                     title: strings.intensityHard,
                     subtitle: strings.generateHardBody,
                     value: StarterWeightIntensity.hard,
                     groupValue: _starterWeightIntensity,
-                    onChanged:
-                        (value) => setState(
-                          () =>
-                              _starterWeightIntensity =
-                                  value ?? StarterWeightIntensity.hard,
-                        ),
+                    onChanged: (value) => setState(
+                      () => _starterWeightIntensity =
+                          value ?? StarterWeightIntensity.hard,
+                    ),
                   ),
                 ],
               ),
@@ -1089,15 +1170,16 @@ class _OnboardingPlanActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
+    final expressive = _expressivePlanningTokens(context);
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
-    final actionForeground =
-        neo
-            ? tonosForegroundForSurface(context, generation.actionBarSurface)
-            : null;
-    final actionDisabledForeground =
-        neo ? actionForeground!.withValues(alpha: 0.45) : null;
+    final actionForeground = neo
+        ? tonosForegroundForSurface(context, generation.actionBarSurface)
+        : expressive?.actionPrimaryForeground;
+    final actionDisabledForeground = neo
+        ? actionForeground!.withValues(alpha: 0.45)
+        : null;
     return SafeArea(
       top: false,
       child: Container(
@@ -1120,13 +1202,13 @@ class _OnboardingPlanActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton.icon(
-                style:
-                    neo
-                        ? FilledButton.styleFrom(
-                          foregroundColor: actionForeground,
-                          disabledForegroundColor: actionDisabledForeground,
-                        )
-                        : null,
+                style: neo || expressive != null
+                    ? FilledButton.styleFrom(
+                        backgroundColor: expressive?.actionPrimary,
+                        foregroundColor: actionForeground,
+                        disabledForegroundColor: actionDisabledForeground,
+                      )
+                    : null,
                 onPressed: isBusy ? null : onSave,
                 icon: _PlanCountBadge(count: addedCount),
                 label: Text(strings.generateReviewPlans),
@@ -1146,7 +1228,7 @@ class _PlanCountBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final generation = context.generationTokens;
+    final generation = _generationTokensForPresentation(context);
     return Stack(
       clipBehavior: Clip.none,
       children: [

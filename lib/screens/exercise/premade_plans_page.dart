@@ -17,6 +17,7 @@ import '../../services/premade_plan_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/widgets/tonos_expressive_motion.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -714,6 +715,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                     key: _planListTutorialKey,
                     child: _PremadeSourceSection(
                       sourceName: _homemadeSourceName,
+                      isFeatured: true,
                       plans: homemadePlans,
                       planGroupNames: _homemadePlanGroups,
                       initiallyExpanded: true,
@@ -728,6 +730,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                   for (final entry in groupedPlans.entries) ...[
                     _PremadeSourceSection(
                       sourceName: entry.key,
+                      isFeatured: false,
                       plans: entry.value,
                       initiallyExpanded: false,
                       addingPlanIds: _addingPlanIds,
@@ -798,6 +801,7 @@ class OnboardingPlanActionBar extends StatelessWidget {
                       .withValues(alpha: 0.6),
             ),
           ),
+          borderRadius: expressive?.supportShape,
         ),
         child: Row(
           children: [
@@ -977,6 +981,15 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
 
     return Card(
       color: expressive?.equipmentSurface ?? surfaces.planFilter,
+      elevation: expressive == null ? null : 0,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: expressive.supportShape,
+              side: BorderSide(
+                color: expressive.outline.withValues(alpha: 0.42),
+              ),
+            ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
         child: LayoutBuilder(
@@ -1133,7 +1146,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: expressive?.configurationSurface ?? surfaces.planDuration,
-        borderRadius: shapes.planCard,
+        borderRadius: expressive?.rowShape ?? shapes.planCard,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1164,6 +1177,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
             );
             if (compactExpressive) {
               return Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Flexible(child: oneHour),
                   durationSwitch,
@@ -1184,6 +1198,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
 
 class _PremadeSourceSection extends StatelessWidget {
   final String sourceName;
+  final bool isFeatured;
   final List<PremadeTrainingPlan> plans;
   final List<String> planGroupNames;
   final bool initiallyExpanded;
@@ -1199,6 +1214,7 @@ class _PremadeSourceSection extends StatelessWidget {
 
   const _PremadeSourceSection({
     required this.sourceName,
+    required this.isFeatured,
     required this.plans,
     this.planGroupNames = const <String>[],
     required this.initiallyExpanded,
@@ -1262,29 +1278,44 @@ class _PremadeSourceSection extends StatelessWidget {
     final grouped = _plansByGroup();
     final orderedGroupNames = _orderedGroupNames(grouped);
     final planCount = plans.length;
+    final sourceSurface = isFeatured
+        ? expressive?.planFocalSurface
+        : expressive?.planSupportSurface;
+    final sourceForeground = isFeatured
+        ? expressive?.planFocalForeground
+        : expressive?.planSupportForeground;
 
-    return Card(
-      color: expressive?.planFocalSurface,
+    final groupCard = Card(
+      color: sourceSurface,
+      elevation: expressive == null ? null : 0,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: isFeatured
+                  ? expressive.focalShape
+                  : expressive.supportShape,
+              side: BorderSide(
+                color: expressive.outline.withValues(alpha: 0.5),
+              ),
+            ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        iconColor: expressive?.planFocalForeground,
-        collapsedIconColor: expressive?.planFocalForeground,
+        iconColor: sourceForeground,
+        collapsedIconColor: sourceForeground,
         title: Text(
           _localizedSourceName(),
           style: theme.textTheme.titleLarge?.copyWith(
-            color: expressive?.planFocalForeground,
+            color: sourceForeground,
             fontWeight: FontWeight.w900,
           ),
         ),
         subtitle: Text(
           strings.premadePlansAvailable(planCount),
           style: theme.textTheme.labelMedium?.copyWith(
-            color:
-                expressive?.planFocalForeground ??
-                theme.colorScheme.onSurfaceVariant,
+            color: sourceForeground ?? theme.colorScheme.onSurfaceVariant,
           ),
         ),
         children: [
@@ -1296,11 +1327,20 @@ class _PremadeSourceSection extends StatelessWidget {
               adaptationData: adaptationData,
               localizedPlans: localizedPlans,
               isPreparingFilter: isPreparingFilter,
+              isFeatured: isFeatured,
               onAddPlan: onAddPlan,
             ),
         ],
       ),
     );
+    return expressive == null
+        ? groupCard
+        : TonosExpressivePressResponse(
+            enabled: true,
+            pressedScale: TonosExpressiveMotionTiers.supportingScale,
+            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+            child: groupCard,
+          );
   }
 }
 
@@ -1311,6 +1351,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
   final _PremadePlanAdaptationData adaptationData;
   final Map<String, LocalizedPremadePlan> localizedPlans;
   final bool isPreparingFilter;
+  final bool isFeatured;
   final Future<void> Function(
     PremadeTrainingPlan plan,
     List<PremadeTrainingExercise> exercises,
@@ -1324,6 +1365,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
     required this.adaptationData,
     required this.localizedPlans,
     required this.isPreparingFilter,
+    required this.isFeatured,
     required this.onAddPlan,
   });
 
@@ -1335,17 +1377,33 @@ class _PremadePlanGroupTile extends StatelessWidget {
     final planCount = plans.length;
     final neo = context.usesNeoPresentation;
     final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final groupSurface = isFeatured
+        ? expressive?.configurationSurface
+        : expressive?.equipmentSurface;
     final groupForeground =
-        expressive?.planSupportForeground ??
+        (isFeatured
+            ? expressive?.configurationForeground
+            : expressive?.equipmentForeground) ??
         (neo ? tonosForegroundForSurface(context, surfaces.planGroup) : null);
     final groupSecondary =
-        expressive?.planSupportForeground ??
+        (isFeatured
+            ? expressive?.configurationForeground
+            : expressive?.equipmentForeground) ??
         (neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planGroup)
             : theme.colorScheme.onSurfaceVariant);
-    return Card(
+    final planCard = Card(
       margin: const EdgeInsets.only(bottom: 10),
-      color: expressive?.planSupportSurface ?? surfaces.planGroup,
+      color: groupSurface ?? surfaces.planGroup,
+      elevation: expressive == null ? null : 0,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: expressive.supportShape,
+              side: BorderSide(
+                color: expressive.outline.withValues(alpha: 0.35),
+              ),
+            ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: false,
@@ -1404,6 +1462,14 @@ class _PremadePlanGroupTile extends StatelessWidget {
         ],
       ),
     );
+    return expressive == null
+        ? planCard
+        : TonosExpressivePressResponse(
+            enabled: true,
+            pressedScale: TonosExpressiveMotionTiers.supportingScale,
+            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+            child: planCard,
+          );
   }
 }
 
@@ -1526,8 +1592,17 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       ),
     );
 
-    return Card(
+    final planCard = Card(
       color: expressive?.configurationSurface,
+      elevation: expressive == null ? null : 0,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: expressive.rowShape,
+              side: BorderSide(
+                color: expressive.outline.withValues(alpha: 0.46),
+              ),
+            ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _toggleExpanded,
@@ -1593,6 +1668,14 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
         ),
       ),
     );
+    return expressive == null
+        ? planCard
+        : TonosExpressivePressResponse(
+            enabled: true,
+            pressedScale: TonosExpressiveMotionTiers.supportingScale,
+            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+            child: planCard,
+          );
   }
 }
 

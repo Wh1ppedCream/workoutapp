@@ -1039,6 +1039,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get navEditorAlwaysShown => 'Siempre visible';
 
   @override
+  String get navEditorRequired => 'Obligatoria';
+
+  @override
   String get navEditorVisible => 'Visible en la navegación inferior';
 
   @override
@@ -2019,16 +2022,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Progresión predeterminada del gimnasio';
 
   @override
-  String get flowPlanSubtitle =>
-      'Define cómo progresa este plan después de cada entrenamiento.';
+  String get flowPlanSubtitle => 'Flujo de progresión de este plan.';
 
   @override
   String get flowAppDefaultSubtitle =>
-      'Define el flujo de progresión inicial para nuevos perfiles de gimnasio.';
+      'Flujo predeterminado para nuevos perfiles de gimnasio.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return 'Define el flujo de progresión inicial para nuevos planes en $profileName.';
+    return 'Flujo predeterminado para nuevos planes en $profileName.';
   }
 
   @override
@@ -2079,7 +2081,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get flowAddBranchSubtitle =>
-      'Elige a dónde debe llevar el próximo éxito o fallo.';
+      'Crea rutas de éxito o fallo desde un nodo.';
 
   @override
   String get flowBranchFrom => 'Ramificar desde';
@@ -2095,7 +2097,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get flowAttachActionSubtitle =>
-      'Aplica un ajuste de cada tipo a un nodo de flujo.';
+      'Asigna ajustes de progresión a los nodos.';
+
+  @override
+  String get flowFitToViewTooltip => 'Ajustar flujo a la vista.';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'Elige un nodo de origen para añadir una ruta.';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'Todos los nodos ya tienen rutas de éxito y fallo.';
+
+  @override
+  String get flowActionSelectNodeGuidance =>
+      'Elige un nodo para configurar sus acciones.';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'Elige una acción de progresión para este nodo.';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'Crea una acción antes de asignarla a un nodo.';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'Este nodo ya usa todos los tipos de acción disponibles.';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'Quita las ramas y acciones antes de eliminar este nodo.';
+
+  @override
+  String get flowActionRootGuidance =>
+      'El primer nodo no admite acciones ni se puede eliminar.';
 
   @override
   String get flowApplyActionTo => 'Aplicar acción a';
@@ -2326,11 +2363,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Define las rutas que deciden cómo se aplican las acciones de progresión después de los resultados del entrenamiento.';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'Configura cómo los resultados del entrenamiento activan las acciones de progresión.';
+
+  @override
   String get flowHowCopiedTitle => 'Cómo se copian los flujos';
 
   @override
   String get flowHowCopiedBody =>
       'Los flujos de la aplicación se convierten en punto de partida para nuevos perfiles de gimnasio. Los flujos del gimnasio se convierten en punto de partida para nuevos planes. Las ediciones posteriores se limitan al flujo que abras aquí.';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'Los perfiles de gimnasio nuevos parten de los valores predeterminados de la aplicación, y los planes nuevos, de los del gimnasio. Los cambios en un flujo no afectan a los demás.';
 
   @override
   String get flowLoadError =>
@@ -2355,6 +2400,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get flowNoSavedYet => 'Aún no hay flujo guardado';
 
   @override
+  String get flowTapToConfigure => 'Toca para configurar';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes nodos | $branches ramas | $actions acciones';
   }
@@ -2362,6 +2410,17 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '$count flujos de planes disponibles';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count planes disponibles',
+      one: '$count plan disponible',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2418,6 +2477,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get gymExitAskBody =>
       'Preguntar antes de finalizar el trabajo completado.';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'Elige qué ocurre al salir de un entrenamiento activo.';
 
   @override
   String get gymExitDiscardBody =>
@@ -3366,6 +3429,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tutorialsHowItWorksBody =>
       'Los tutoriales aparecen una vez y luego no estorban. Expande un grupo para restablecer un recorrido específico.';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'Empieza de cero con tus recorridos guiados.';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'Los tutoriales aparecen automáticamente una vez. Expande una categoría para volver a habilitar un recorrido individual.';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return 'Tutorial de $topic';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'Restablécelo para repetirlo la próxima vez que abras $topic.';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'Pestañas principales';
@@ -6919,4 +7000,45 @@ class AppLocalizationsEs extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return 'Versión de $duration de $planName con los movimientos principales de la plantilla completa.';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'Define reglas reutilizables para la progresión de peso, repeticiones y series.';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'Los perfiles de gimnasio nuevos empiezan con los valores de la aplicación, y los planes nuevos con los del perfil. Los cambios posteriores no actualizan automáticamente los perfiles ni los planes existentes.';
+
+  @override
+  String get rulesRuleTypeLabel => 'Tipo de regla';
+
+  @override
+  String get rulesOperationLabel => 'Operación';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope, cantidad de reglas: $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'Cantidad de reglas: $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'Total de reglas: $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'Cantidad de planes: $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'Reglas predeterminadas para nuevos planes.';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'Reglas específicas del plan.';
 }

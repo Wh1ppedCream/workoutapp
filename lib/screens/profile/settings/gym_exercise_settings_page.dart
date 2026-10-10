@@ -5,10 +5,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/workout_exit_preferences.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/settings_tiles.dart';
+import 'profile_expressive_selection.dart';
 import 'analytics_setting_screen.dart';
 import 'flow_methods_page.dart';
 import 'workout_progress_flows_page.dart';
@@ -28,6 +31,8 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final expressive = context.usesExpressivePresentation;
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     final expressiveTokens = expressive
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
         : null;
@@ -40,7 +45,10 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
                 icon: Icons.exit_to_app_outlined,
                 iconColor: SettingsAccent.training,
                 title: strings.gymSettingsExitTitle,
-                subtitle: _exitBehaviorLabel(behavior, strings),
+                subtitle:
+                    expressive && behavior == WorkoutExitBehavior.askEveryTime
+                    ? strings.gymExitAskExpressiveSubtitle
+                    : _exitBehaviorLabel(behavior, strings),
                 onTap: () => _chooseExitBehavior(behavior),
               )
             : SettingsActionTile(
@@ -62,7 +70,10 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
           _ExpressivePreferenceGroup(
             title: strings.gymSettingsLogicTitle,
             subtitle: strings.gymSettingsLogicSubtitle,
-            surface: expressiveTokens!.activePlansSurface,
+            surface:
+                destination?.family == AppExpressiveDestinationFamily.profile
+                ? destination!.surfaceSecondary
+                : expressiveTokens!.activePlansSurface,
             children: [
               _ExpressivePreferenceTile(
                 icon: Icons.bar_chart,
@@ -78,7 +89,10 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
           _ExpressivePreferenceGroup(
             title: strings.gymSettingsFlowToolsTitle,
             subtitle: strings.gymSettingsFlowToolsSubtitle,
-            surface: expressiveTokens.archivedPlansSurface,
+            surface:
+                destination?.family == AppExpressiveDestinationFamily.profile
+                ? destination!.surfaceAccent
+                : expressiveTokens!.archivedPlansSurface,
             children: [
               _ExpressivePreferenceTile(
                 icon: Icons.schema_outlined,
@@ -139,7 +153,14 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
   }
 
   void _open(BuildContext context, Widget page) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.profile,
+          child: page,
+        ),
+      ),
+    );
   }
 
   String _exitBehaviorLabel(
@@ -153,37 +174,57 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
     };
   }
 
+  String _exitBehaviorTitle(
+    WorkoutExitBehavior behavior,
+    AppLocalizations strings,
+  ) {
+    return switch (behavior) {
+      WorkoutExitBehavior.askEveryTime => strings.gymExitAsk,
+      WorkoutExitBehavior.discard => strings.gymExitDiscard,
+      WorkoutExitBehavior.saveCompleted => strings.gymExitSave,
+    };
+  }
+
   Future<void> _chooseExitBehavior(WorkoutExitBehavior current) async {
     final strings = AppLocalizations.of(context);
-    final selected = await showDialog<WorkoutExitBehavior>(
-      context: context,
-      builder: (dialogContext) {
-        final neo = context.usesNeoPresentation;
-        final ink = context.cs.onPrimaryContainer;
-        return TonosDialogFrame(
-          child: SimpleDialog(
-            title: Text(strings.gymSettingsExitTitle),
-            children: [
-              for (final behavior in WorkoutExitBehavior.values)
-                RadioListTile<WorkoutExitBehavior>(
-                  value: behavior,
-                  groupValue: current,
-                  title: Text(switch (behavior) {
-                    WorkoutExitBehavior.askEveryTime => strings.gymExitAsk,
-                    WorkoutExitBehavior.discard => strings.gymExitDiscard,
-                    WorkoutExitBehavior.saveCompleted => strings.gymExitSave,
-                  }, style: neo ? TextStyle(color: ink) : null),
-                  subtitle: Text(
-                    _exitBehaviorLabel(behavior, strings),
-                    style: neo ? TextStyle(color: ink) : null,
-                  ),
-                  onChanged: (value) => Navigator.pop(dialogContext, value),
+    final selected = context.usesExpressivePresentation
+        ? await showProfileExpressiveChoiceDialog<WorkoutExitBehavior>(
+            context: context,
+            title: strings.gymSettingsExitTitle,
+            values: WorkoutExitBehavior.values,
+            selected: current,
+            label: (behavior) => _exitBehaviorTitle(behavior, strings),
+            subtitle: (behavior) => _exitBehaviorLabel(behavior, strings),
+          )
+        : await showDialog<WorkoutExitBehavior>(
+            context: context,
+            builder: (dialogContext) {
+              final neo = context.usesNeoPresentation;
+              final ink = context.cs.onPrimaryContainer;
+              return TonosDialogFrame(
+                child: SimpleDialog(
+                  title: Text(strings.gymSettingsExitTitle),
+                  children: [
+                    for (final behavior in WorkoutExitBehavior.values)
+                      RadioListTile<WorkoutExitBehavior>(
+                        value: behavior,
+                        groupValue: current,
+                        title: Text(
+                          _exitBehaviorTitle(behavior, strings),
+                          style: neo ? TextStyle(color: ink) : null,
+                        ),
+                        subtitle: Text(
+                          _exitBehaviorLabel(behavior, strings),
+                          style: neo ? TextStyle(color: ink) : null,
+                        ),
+                        onChanged: (value) =>
+                            Navigator.pop(dialogContext, value),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        );
-      },
-    );
+              );
+            },
+          );
     if (selected == null) return;
     await _exitPreferences.save(selected);
     if (mounted) setState(() {});
@@ -206,6 +247,18 @@ class _ExpressivePreferenceGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final destinationForeground = switch (surface) {
+      final color when color == destination?.surfacePrimary =>
+        destination?.onSurfacePrimary,
+      final color when color == destination?.surfaceSecondary =>
+        destination?.onSurfaceSecondary,
+      final color when color == destination?.surfaceTertiary =>
+        destination?.onSurfaceTertiary,
+      final color when color == destination?.surfaceAccent =>
+        destination?.onSurfaceAccent,
+      _ => null,
+    };
     return TonosSurface(
       color: surface,
       variant: TonosSurfaceVariant.card,
@@ -218,13 +271,18 @@ class _ExpressivePreferenceGroup extends StatelessWidget {
             title,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
-              color: theme.colorScheme.onSurface,
+              color: destinationForeground ?? theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 3),
-          Text(subtitle, style: theme.textTheme.bodySmall),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: destinationForeground?.withValues(alpha: 0.78),
+            ),
+          ),
           const SizedBox(height: 8),
-          ...children,
+          ...settingsTilesWithDividers(context, children),
         ],
       ),
     );

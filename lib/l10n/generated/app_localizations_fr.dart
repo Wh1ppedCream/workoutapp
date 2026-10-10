@@ -1041,6 +1041,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get navEditorAlwaysShown => 'Toujours affiché';
 
   @override
+  String get navEditorRequired => 'Obligatoire';
+
+  @override
   String get navEditorVisible => 'Visible dans la navigation inférieure';
 
   @override
@@ -2023,16 +2026,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Progression par défaut du profil de gym';
 
   @override
-  String get flowPlanSubtitle =>
-      'Définissez comment ce plan progresse après chaque entraînement.';
+  String get flowPlanSubtitle => 'Flux de progression de ce plan.';
 
   @override
   String get flowAppDefaultSubtitle =>
-      'Définissez le flux de progression initial pour les nouveaux profils de gym.';
+      'Flux par défaut des nouveaux profils de gym.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return 'Définissez le flux de progression initial des nouveaux plans dans $profileName.';
+    return 'Flux par défaut des nouveaux plans de $profileName.';
   }
 
   @override
@@ -2084,7 +2086,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flowAddBranchSubtitle =>
-      'Choisissez où le prochain succès ou échec doit mener.';
+      'Créer des chemins de réussite ou d’échec depuis un nœud.';
 
   @override
   String get flowBranchFrom => 'Bifurquer depuis';
@@ -2100,7 +2102,42 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get flowAttachActionSubtitle =>
-      'Appliquez un ajustement de chaque type à un nœud du flux.';
+      'Attribuer les ajustements de progression aux nœuds.';
+
+  @override
+  String get flowFitToViewTooltip => 'Ajuster le flux à l’écran.';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'Choisissez un nœud source pour ajouter un chemin.';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'Tous les nœuds ont déjà leurs chemins de réussite et d’échec.';
+
+  @override
+  String get flowActionSelectNodeGuidance =>
+      'Choisissez un nœud pour régler ses actions.';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'Choisissez une action de progression pour ce nœud.';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'Créez une action avant de l’attribuer à un nœud.';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'Ce nœud utilise déjà tous les types d’action disponibles.';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'Retirez les branches et actions avant de supprimer ce nœud.';
+
+  @override
+  String get flowActionRootGuidance =>
+      'Le nœud de première tentative ne peut porter d’action ni être supprimé.';
 
   @override
   String get flowApplyActionTo => 'Appliquer l’action à';
@@ -2335,11 +2372,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Définissez les chemins qui déterminent comment les actions de progression sont appliquées après les résultats d’entraînement.';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'Configurez comment les résultats d’entraînement déclenchent les actions de progression.';
+
+  @override
   String get flowHowCopiedTitle => 'Copie des flux';
 
   @override
   String get flowHowCopiedBody =>
       'Les flux de l’application deviennent le point de départ des nouveaux profils de gym. Les flux du gym deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'Les nouveaux profils de gym reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du gym. Les modifications d’un flux n’affectent pas les autres.';
 
   @override
   String get flowLoadError =>
@@ -2364,6 +2409,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flowNoSavedYet => 'Aucun flux enregistré';
 
   @override
+  String get flowTapToConfigure => 'Touchez pour configurer';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes nœuds | $branches branches | $actions actions';
   }
@@ -2371,6 +2419,17 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '$count flux de plan disponibles';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans disponibles',
+      one: '$count plan disponible',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2427,6 +2486,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get gymExitAskBody =>
       'Demander avant de terminer le travail effectué.';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'Choisissez ce qui se passe lorsque vous quittez un entraînement en cours.';
 
   @override
   String get gymExitDiscardBody =>
@@ -3382,6 +3445,24 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get tutorialsHowItWorksBody =>
       'Les tutoriels apparaissent une fois, puis ne vous encombrent plus. Développez un groupe pour réinitialiser une visite précise.';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'Repartez avec vos visites guidées.';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'Les tutoriels apparaissent automatiquement une fois. Développez une catégorie pour rendre une visite individuelle disponible à nouveau.';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return 'Tutoriel $topic';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'Réinitialisez pour revoir le tutoriel à la prochaine ouverture de $topic.';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'Onglets principaux';
@@ -6949,6 +7030,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return 'Version de $duration de $planName avec les mouvements principaux du modèle complet.';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'Les nouveaux profils de gym reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du profil. Les modifications ultérieures ne mettent pas automatiquement à jour les profils ni les plans existants.';
+
+  @override
+  String get rulesRuleTypeLabel => 'Type de règle';
+
+  @override
+  String get rulesOperationLabel => 'Opération';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope : nombre de règles : $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'Nombre de règles : $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'Total des règles : $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'Nombre de plans : $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'Règles par défaut des nouveaux plans.';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'Règles propres à ce plan.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
@@ -7991,6 +8113,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get navEditorAlwaysShown => 'Toujours affiché';
 
   @override
+  String get navEditorRequired => 'Obligatoire';
+
+  @override
   String get navEditorVisible => 'Visible';
 
   @override
@@ -8988,16 +9113,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowProfileDefaultTitle => 'Progression par défaut de la salle';
 
   @override
-  String get flowPlanSubtitle =>
-      'Définissez comment ce plan progresse après chaque entraînement.';
+  String get flowPlanSubtitle => 'Flux de progression de ce plan.';
 
   @override
   String get flowAppDefaultSubtitle =>
-      'Définissez le flux de progression initial pour les nouveaux profils de salle.';
+      'Flux par défaut des nouveaux profils de salle.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return 'Définissez le flux de progression initial pour les nouveaux plans dans $profileName.';
+    return 'Flux par défaut des nouveaux plans de $profileName.';
   }
 
   @override
@@ -9049,7 +9173,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get flowAddBranchSubtitle =>
-      'Choisissez où la prochaine réussite ou le prochain échec mène.';
+      'Créer des chemins de réussite ou d’échec depuis un nœud.';
 
   @override
   String get flowBranchFrom => 'Créer une branche depuis';
@@ -9065,7 +9189,42 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get flowAttachActionSubtitle =>
-      'Appliquez un ajustement de chaque type à un nœud du flux.';
+      'Attribuer les ajustements de progression aux nœuds.';
+
+  @override
+  String get flowFitToViewTooltip => 'Ajuster le flux à l’écran.';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'Choisissez un nœud source pour ajouter un chemin.';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'Tous les nœuds ont déjà leurs chemins de réussite et d’échec.';
+
+  @override
+  String get flowActionSelectNodeGuidance =>
+      'Choisissez un nœud pour régler ses actions.';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'Choisissez une action de progression pour ce nœud.';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'Créez une action avant de l’attribuer à un nœud.';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'Ce nœud utilise déjà tous les types d’action disponibles.';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'Retirez les branches et actions avant de supprimer ce nœud.';
+
+  @override
+  String get flowActionRootGuidance =>
+      'Le nœud de première tentative ne peut porter d’action ni être supprimé.';
 
   @override
   String get flowApplyActionTo => 'Appliquer l’action à';
@@ -9301,11 +9460,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Définissez les parcours qui déterminent comment les actions de progression s’appliquent après les résultats d’un entraînement.';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'Configurez comment les résultats d’entraînement déclenchent les actions de progression.';
+
+  @override
   String get flowHowCopiedTitle => 'Copie des flux';
 
   @override
   String get flowHowCopiedBody =>
       'Les flux de l’application deviennent le point de départ des nouveaux profils de salle. Les flux de salle deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'Les nouveaux profils de salle reprennent les valeurs par défaut de l’application, et les nouveaux plans celles de la salle. Les modifications d’un flux n’affectent pas les autres.';
 
   @override
   String get flowLoadError =>
@@ -9330,6 +9497,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get flowNoSavedYet => 'Aucun flux enregistré';
 
   @override
+  String get flowTapToConfigure => 'Touchez pour configurer';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes nœuds | $branches branches | $actions actions';
   }
@@ -9337,6 +9507,17 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String flowPlansAvailable(int count) {
     return '$count flux de plan disponibles';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans disponibles',
+      one: '$count plan disponible',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -9393,6 +9574,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get gymExitAskBody =>
       'Affiche un choix lorsque vous quittez un entraînement en cours.';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'Choisissez ce qui se passe lorsque vous quittez un entraînement en cours.';
 
   @override
   String get gymExitDiscardBody =>
@@ -10343,6 +10528,24 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get tutorialsHowItWorksBody =>
       'Les tutoriels s’affichent une fois, puis restent discrets. Développez un groupe pour réinitialiser un guide précis.';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'Repartez avec vos visites guidées.';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'Les tutoriels apparaissent automatiquement une fois. Développez une catégorie pour rendre une visite individuelle disponible à nouveau.';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return 'Tutoriel $topic';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'Réinitialisez pour revoir le tutoriel à la prochaine ouverture de $topic.';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'Onglets principaux';
@@ -13894,4 +14097,45 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String premadeOneHourDescription(String duration, String planName) {
     return 'Version de $duration de $planName avec les mouvements principaux du modèle complet.';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'Les nouveaux profils de salle reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du profil. Les modifications ultérieures ne mettent pas automatiquement à jour les profils ni les plans existants.';
+
+  @override
+  String get rulesRuleTypeLabel => 'Type de règle';
+
+  @override
+  String get rulesOperationLabel => 'Opération';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope : nombre de règles : $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'Nombre de règles : $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'Total des règles : $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'Nombre de plans : $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'Règles par défaut des nouveaux plans.';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'Règles propres à ce plan.';
 }

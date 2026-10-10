@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/active_session.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/history_content.dart';
 
@@ -39,7 +41,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (TickerMode.of(context)) {
+    if (TickerMode.valuesOf(context).enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueLogbookTutorial();
       });
@@ -47,7 +49,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _queueLogbookTutorial() {
-    if (!mounted || _logbookTutorialQueued || !TickerMode.of(context)) return;
+    if (!mounted ||
+        _logbookTutorialQueued ||
+        !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
     _logbookTutorialQueued = true;
     unawaited(_showLogbookTutorialIfNeeded());
   }
@@ -55,7 +61,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _showLogbookTutorialIfNeeded() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 550));
-      if (!mounted || !TickerMode.of(context)) return;
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
 
       final completed = await _tutorialStore.isCompleted(
         TutorialIds.logbookHome,
@@ -82,6 +88,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.logbook,
+      child: Builder(builder: _buildScopedScreen),
+    );
+  }
+
+  Widget _buildScopedScreen(BuildContext context) {
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -92,7 +105,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _refreshToken++;
     }
 
+    final destinationTokens =
+        Theme.of(context).extension<AppExpressiveDestinationTokens>();
     return Scaffold(
+      backgroundColor: destinationTokens?.pageCanvas,
       body: SafeArea(
         bottom: false,
         child: Padding(

@@ -243,48 +243,81 @@ void main() {
     expect(find.text('Shoulders'), findsOneWidget);
   });
 
-  testWidgets('Expressive overview adapts at 1.5x text and 320dp width', (
-    tester,
-  ) async {
-    Future<void> pump({required Size size, required double textScale}) async {
-      await tester.binding.setSurfaceSize(size);
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ExpressiveThemeDefinition.light(),
-          localizationsDelegates: tonosLocalizationDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(textScale)),
-            child: child!,
-          ),
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: SevenDayFocusPresentation(
-                heatmapFrequencyMap: const {'Shoulders': 1},
-                hits: [
-                  FocusedSetHit(bodyPart: BodyPart(1, 'Shoulders'), units: 12),
-                  FocusedSetHit(bodyPart: BodyPart(2, 'Lower Back'), units: 3),
-                  FocusedSetHit(bodyPart: BodyPart(3, 'Core'), units: 2),
-                ],
-                onFocusedSetsTap: () {},
+  testWidgets(
+    'Expressive overview keeps its split layout until width or text requires reflow',
+    (tester) async {
+      Future<void> pump({
+        required Size size,
+        required double textScale,
+        required bool expectStacked,
+      }) async {
+        await tester.binding.setSurfaceSize(size);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: SevenDayFocusPresentation(
+                  heatmapFrequencyMap: const {'Shoulders': 1},
+                  hits: [
+                    FocusedSetHit(
+                      bodyPart: BodyPart(1, 'Shoulders'),
+                      units: 12,
+                    ),
+                    FocusedSetHit(
+                      bodyPart: BodyPart(2, 'Lower Back'),
+                      units: 3,
+                    ),
+                    FocusedSetHit(bodyPart: BodyPart(3, 'Core'), units: 2),
+                  ],
+                  onFocusedSetsTap: () {},
+                ),
               ),
             ),
           ),
-        ),
-      );
-      await _pumpFocusFrames(tester);
-      expect(tester.takeException(), isNull);
-      expect(
-        find.byKey(const ValueKey('seven-day-focus-stacked')),
-        findsOneWidget,
-      );
-    }
+        );
+        await _pumpFocusFrames(tester);
+        expect(tester.takeException(), isNull);
+        expect(
+          find.byKey(const ValueKey('seven-day-focus-stacked')),
+          expectStacked ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('seven-day-focus-side-by-side')),
+          expectStacked ? findsNothing : findsOneWidget,
+        );
+      }
 
-    await pump(size: const Size(411, 1000), textScale: 1.5);
-    await pump(size: const Size(320, 1000), textScale: 1);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-  });
+      await pump(
+        size: const Size(411, 1000),
+        textScale: 1.15,
+        expectStacked: false,
+      );
+      await pump(
+        size: const Size(411, 1000),
+        textScale: 1.5,
+        expectStacked: true,
+      );
+      await pump(
+        size: const Size(320, 1000),
+        textScale: 1,
+        expectStacked: true,
+      );
+      await pump(
+        size: const Size(411, 1000),
+        textScale: 2,
+        expectStacked: true,
+      );
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+    },
+  );
 
   testWidgets('Expressive focus data appears immediately with a size reveal', (
     tester,

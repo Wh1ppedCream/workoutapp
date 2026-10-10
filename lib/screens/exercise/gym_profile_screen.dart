@@ -510,17 +510,17 @@ class _ProfileSetupCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface =
-        planning?.configurationSurface ??
+        planning?.planFocalSurface ??
         (neo
             ? surfaces.settingsSection
             : scheme.surfaceContainerHighest.withValues(alpha: 0.42));
     final cardForeground =
-        planning?.configurationForeground ??
+        planning?.planFocalForeground ??
         (neo
             ? tonosForegroundForSurface(context, cardSurface)
             : scheme.onSurface);
     final cardSecondary =
-        planning?.configurationForeground ??
+        planning?.planFocalForeground ??
         (neo
             ? tonosSecondaryForegroundForSurface(context, cardSurface)
             : scheme.onSurfaceVariant);
@@ -535,12 +535,7 @@ class _ProfileSetupCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardSurface,
         borderRadius: planning != null
-            ? const BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(28),
-              )
+            ? planning.focalShape
             : neo
             ? shapes.settingsPanel
             : BorderRadius.circular(24),
@@ -559,7 +554,7 @@ class _ProfileSetupCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color:
-                      planning?.planFocalSurface ??
+                      planning?.planAccent ??
                       (neo
                           ? surfaces.dialogChoice
                           : scheme.primaryContainer.withValues(alpha: 0.75)),
@@ -568,7 +563,7 @@ class _ProfileSetupCard extends StatelessWidget {
                 child: Icon(
                   Icons.fitness_center,
                   color:
-                      planning?.planFocalForeground ??
+                      planning?.planAccentForeground ??
                       (neo ? cardForeground : scheme.onPrimaryContainer),
                 ),
               ),
@@ -581,7 +576,7 @@ class _ProfileSetupCard extends StatelessWidget {
                       strings.gymProfileSpace,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w900,
-                        color: neo ? cardForeground : null,
+                        color: planning != null || neo ? cardForeground : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -612,27 +607,27 @@ class _ProfileSetupCard extends StatelessWidget {
                       labelText: strings.gymProfileName,
                       hintText: strings.gymProfileNameHint,
                       filled: true,
-                      fillColor: planning.configurationSurface,
+                      fillColor: planning.planSupportSurface,
                       labelStyle: TextStyle(
-                        color: planning.configurationForeground,
+                        color: planning.planSupportForeground,
                       ),
                       hintStyle: TextStyle(
-                        color: planning.configurationForeground.withValues(
+                        color: planning.planSupportForeground.withValues(
                           alpha: 0.72,
                         ),
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: planning.rowShape,
                         borderSide: BorderSide(color: planning.outline),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: planning.rowShape,
                         borderSide: BorderSide(color: planning.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: planning.actionPrimary,
+                          color: planning.planAccent,
                           width: 2,
                         ),
                       ),
@@ -654,7 +649,7 @@ class _ProfileSetupCard extends StatelessWidget {
                     ),
               style: planning == null
                   ? settingsInputTextStyle(context)
-                  : TextStyle(color: planning.configurationForeground),
+                  : TextStyle(color: planning.planSupportForeground),
               validator: (value) => value == null || value.trim().isEmpty
                   ? strings.gymProfileNameRequired
                   : null,
@@ -695,7 +690,7 @@ class _EquipmentSearchField extends StatelessWidget {
             ? tonosOutlineForSurface(context, fieldSurface)
             : Colors.transparent);
     final fieldShape = planning != null
-        ? BorderRadius.circular(16)
+        ? planning.rowShape
         : neo
         ? shapes.settingsPicker
         : const BorderRadius.all(Radius.circular(999));
@@ -898,12 +893,7 @@ class _EquipmentCategorySection extends StatelessWidget {
       decoration: BoxDecoration(
         color: sectionSurface,
         borderRadius: planning != null
-            ? const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(28),
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(16),
-              )
+            ? planning.supportShape
             : neo
             ? shapes.settingsPanel
             : BorderRadius.circular(22),
@@ -1225,7 +1215,7 @@ class _SaveProfileBar extends StatelessWidget {
           ),
         ),
         borderRadius: planning != null
-            ? const BorderRadius.vertical(top: Radius.circular(24))
+            ? planning.supportShape
             : neo
             ? shapes.actionBar
             : BorderRadius.zero,
@@ -1241,8 +1231,8 @@ class _SaveProfileBar extends StatelessWidget {
                       foregroundColor: planning.actionSecondaryForeground,
                       backgroundColor: planning.actionSecondary,
                       side: BorderSide(color: planning.outline),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: planning.rowShape,
                       ),
                     ),
               child: Text(strings.commonCancel),
@@ -1258,8 +1248,8 @@ class _SaveProfileBar extends StatelessWidget {
                   : FilledButton.styleFrom(
                       backgroundColor: planning.actionPrimary,
                       foregroundColor: planning.actionPrimaryForeground,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: planning.rowShape,
                       ),
                     ),
               child: Text(
@@ -1307,12 +1297,7 @@ class _EmptyEquipmentSearch extends StatelessWidget {
       decoration: BoxDecoration(
         color: emptySurface,
         borderRadius: planning != null
-            ? const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(28),
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(16),
-              )
+            ? planning.supportShape
             : BorderRadius.circular(20),
         border: planning != null
             ? Border.all(color: planning.outline)

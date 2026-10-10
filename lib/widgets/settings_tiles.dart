@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/tokens/app_settings_presentation_tokens.dart';
 import '../theme/widgets/tonos_action_depth.dart';
 import '../theme/widgets/tonos_expansion_tile_scope.dart';
@@ -33,10 +35,9 @@ class SettingsValueText extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
-    final foreground =
-        context.usesNeoPresentation
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.primary;
+    final foreground = context.usesNeoPresentation
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.primary;
     return Text(
       value,
       maxLines: largeText ? 2 : null,
@@ -74,10 +75,9 @@ class SettingsStatusBadge extends StatelessWidget {
         (usesInkRecipe
             ? tonosForegroundForSurface(context, surfaces.panelRaised)
             : scheme.onSurfaceVariant);
-    final badgeBorder =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, surfaces.panelRaised)
-            : scheme.outlineVariant;
+    final badgeBorder = usesInkRecipe
+        ? tonosOutlineForSurface(context, surfaces.panelRaised)
+        : scheme.outlineVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -128,22 +128,20 @@ class SettingsAccentPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: backgroundAlpha),
         borderRadius: context.shapeTokens.pill,
-        border:
-            borderAlpha == null
-                ? null
-                : Border.all(color: color.withValues(alpha: borderAlpha!)),
+        border: borderAlpha == null
+            ? null
+            : Border.all(color: color.withValues(alpha: borderAlpha!)),
       ),
       child: Text(
         label,
         style: theme.textTheme.labelSmall?.copyWith(
-          color:
-              context.usesNeoPresentation
-                  ? tonosForegroundForSurface(
-                    context,
-                    color.withValues(alpha: backgroundAlpha),
-                    parentSurface: parentSurface ?? theme.colorScheme.surface,
-                  )
-                  : color,
+          color: context.usesNeoPresentation
+              ? tonosForegroundForSurface(
+                  context,
+                  color.withValues(alpha: backgroundAlpha),
+                  parentSurface: parentSurface ?? theme.colorScheme.surface,
+                )
+              : color,
           fontWeight: fontWeight,
         ),
       ),
@@ -166,18 +164,18 @@ class SettingsLegendChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final neo = context.usesNeoPresentation;
     final chipSurface = color.withValues(alpha: neo ? 0.18 : 0.12);
-    final foreground =
-        neo ? tonosForegroundForSurface(context, chipSurface) : color;
+    final foreground = neo
+        ? tonosForegroundForSurface(context, chipSurface)
+        : color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: chipSurface,
         borderRadius: context.shapeTokens.pill,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, chipSurface)
-                  : color.withValues(alpha: 0.36),
+          color: neo
+              ? tonosOutlineForSurface(context, chipSurface)
+              : color.withValues(alpha: 0.36),
         ),
       ),
       child: Row(
@@ -191,10 +189,8 @@ class SettingsLegendChip extends StatelessWidget {
           const SizedBox(width: 7),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: foreground,
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -217,29 +213,27 @@ class SettingsCountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final neo = context.usesNeoPresentation;
     final badgeSurface = color.withValues(alpha: neo ? 0.22 : 0.16);
-    final foreground =
-        neo ? tonosForegroundForSurface(context, badgeSurface) : color;
+    final foreground = neo
+        ? tonosForegroundForSurface(context, badgeSurface)
+        : color;
     return Container(
       constraints: const BoxConstraints(minWidth: 28),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: badgeSurface,
         borderRadius: context.shapeTokens.pill,
-        border:
-            neo
-                ? Border.all(
-                  color: tonosOutlineForSurface(context, badgeSurface),
-                  width: context.shapeTokens.outlineWidth,
-                )
-                : null,
+        border: neo
+            ? Border.all(
+                color: tonosOutlineForSurface(context, badgeSurface),
+                width: context.shapeTokens.outlineWidth,
+              )
+            : null,
       ),
       child: Text(
         '$count',
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w900,
-        ),
+        style: Theme.of(context).textTheme.labelMedium
+            ?.copyWith(color: foreground, fontWeight: FontWeight.w900),
       ),
     );
   }
@@ -352,9 +346,8 @@ InputDecoration settingsInputDecoration(
 /// a bright field.
 TextStyle? settingsInputTextStyle(BuildContext context, {bool enabled = true}) {
   if (!context.usesNeoPresentation) return null;
-  return Theme.of(context).textTheme.bodyLarge?.copyWith(
-    color: settingsInputForeground(context, enabled: enabled),
-  );
+  return Theme.of(context).textTheme.bodyLarge
+      ?.copyWith(color: settingsInputForeground(context, enabled: enabled));
 }
 
 /// Resolves enabled or disabled foreground ink for a colored settings field.
@@ -429,13 +422,9 @@ InputDecoration settingsFieldDecoration(
   final usesDarkNeoValidationInk =
       context.usesNeoPresentation &&
       Theme.of(context).brightness == Brightness.dark;
-  final errorColor =
-      usesDarkNeoValidationInk
-          ? tonosSettingsValidationErrorForSurface(
-            context,
-            surfaces.settingsInput,
-          )
-          : null;
+  final errorColor = usesDarkNeoValidationInk
+      ? tonosSettingsValidationErrorForSurface(context, surfaces.settingsInput)
+      : null;
   final fieldBorder = BorderSide(
     color: tonosOutlineForSurface(context, surfaces.settingsInput),
     width: shapes.outlineWidth,
@@ -453,26 +442,24 @@ InputDecoration settingsFieldDecoration(
     prefixIconColor: fieldInk,
     suffixStyle: TextStyle(color: fieldInk),
     errorStyle: errorColor == null ? null : TextStyle(color: errorColor),
-    errorBorder:
-        errorColor == null
-            ? null
-            : OutlineInputBorder(
-              borderRadius: shapes.settingsField,
-              borderSide: BorderSide(
-                color: errorColor,
-                width: shapes.outlineWidth,
-              ),
+    errorBorder: errorColor == null
+        ? null
+        : OutlineInputBorder(
+            borderRadius: shapes.settingsField,
+            borderSide: BorderSide(
+              color: errorColor,
+              width: shapes.outlineWidth,
             ),
-    focusedErrorBorder:
-        errorColor == null
-            ? null
-            : OutlineInputBorder(
-              borderRadius: shapes.settingsField,
-              borderSide: BorderSide(
-                color: errorColor,
-                width: shapes.focusRingWidth,
-              ),
+          ),
+    focusedErrorBorder: errorColor == null
+        ? null
+        : OutlineInputBorder(
+            borderRadius: shapes.settingsField,
+            borderSide: BorderSide(
+              color: errorColor,
+              width: shapes.focusRingWidth,
             ),
+          ),
     enabledBorder: OutlineInputBorder(
       borderRadius: shapes.settingsField,
       borderSide: fieldBorder,
@@ -505,7 +492,9 @@ class SettingsPageScaffold extends StatelessWidget {
   final IconData icon;
   final List<Widget> children;
   final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
   final Color? heroAccentColor;
+  final bool useExpressiveProfileHeroShape;
 
   /// Shows the compact in-page back affordance above the hero card.
   /// The profile tab disables this because it is a root bottom-tab screen.
@@ -518,16 +507,20 @@ class SettingsPageScaffold extends StatelessWidget {
     required this.icon,
     required this.children,
     this.bottomNavigationBar,
+    this.floatingActionButton,
     this.heroAccentColor,
+    this.useExpressiveProfileHeroShape = false,
     this.showBackButton = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final destination = _profileDestinationTokens(context);
 
     return Scaffold(
       bottomNavigationBar: bottomNavigationBar,
+      floatingActionButton: floatingActionButton,
       body: SafeArea(
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -549,13 +542,14 @@ class SettingsPageScaffold extends StatelessWidget {
               subtitle: subtitle,
               icon: icon,
               accentColor: heroAccentColor,
+              useExpressiveProfileHeroShape: useExpressiveProfileHeroShape,
             ),
             const SizedBox(height: 16),
             ...children,
           ],
         ),
       ),
-      backgroundColor: scheme.surface,
+      backgroundColor: destination?.pageCanvas ?? scheme.surface,
     );
   }
 }
@@ -565,6 +559,7 @@ class SettingsHeroCard extends StatelessWidget {
   final String? subtitle;
   final IconData icon;
   final Color? accentColor;
+  final bool useExpressiveProfileHeroShape;
 
   const SettingsHeroCard({
     super.key,
@@ -572,6 +567,7 @@ class SettingsHeroCard extends StatelessWidget {
     this.subtitle,
     required this.icon,
     this.accentColor,
+    this.useExpressiveProfileHeroShape = false,
   });
 
   @override
@@ -580,10 +576,15 @@ class SettingsHeroCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final destination = _profileDestinationTokens(context);
     final effects = context.effectTokens;
     final presentation = context.settingsPresentationTokens;
     final accent = accentColor ?? scheme.primary;
     final usesClassicPresentation = context.usesClassicPresentation;
+    final heroShape =
+        useExpressiveProfileHeroShape && context.usesExpressivePresentation
+        ? ExpressiveTrainShapes.focusHero
+        : shapes.hero;
 
     // Classic keeps its established compact hero at ordinary text sizes.
     // The responsive treatment remains available for large accessibility text.
@@ -594,7 +595,7 @@ class SettingsHeroCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          borderRadius: shapes.hero,
+          borderRadius: heroShape,
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -620,35 +621,34 @@ class SettingsHeroCard extends StatelessWidget {
                 children: [
                   usesLocalizedLayout
                       ? Text(
-                        title,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: scheme.onSurface,
-                        ),
-                      )
+                          title,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: scheme.onSurface,
+                          ),
+                        )
                       : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final fontSize =
-                              constraints.maxWidth >= 290
-                                  ? 28.0
-                                  : constraints.maxWidth >= 220
-                                  ? 25.0
-                                  : 22.0;
-                          return FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              title,
-                              maxLines: 1,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontSize: fontSize,
-                                fontWeight: FontWeight.w900,
-                                color: scheme.onSurface,
+                          builder: (context, constraints) {
+                            final fontSize = constraints.maxWidth >= 290
+                                ? 28.0
+                                : constraints.maxWidth >= 220
+                                ? 25.0
+                                : 22.0;
+                            return FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontSize: fontSize,
+                                  fontWeight: FontWeight.w900,
+                                  color: scheme.onSurface,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
+                            );
+                          },
+                        ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -665,44 +665,46 @@ class SettingsHeroCard extends StatelessWidget {
         ),
       );
     }
+    final heroSurface = destination?.surfacePrimary ?? surfaces.settingsHero;
     final heroForeground =
-        presentation.heroUsesGradient
+        destination?.onSurfacePrimary ??
+        (presentation.heroUsesGradient
             ? scheme.onSurface
-            : tonosForegroundForSurface(context, surfaces.settingsHero);
+            : tonosForegroundForSurface(context, heroSurface));
     final heroShadow =
         presentation.heroUsesHardShadow && effects.cardShadow.a > 0
-            ? <BoxShadow>[
-              BoxShadow(
-                color: effects.cardShadow,
-                blurRadius: effects.cardShadowBlur,
-                offset: effects.raisedPanelShadowOffset,
-              ),
-            ]
-            : null;
+        ? <BoxShadow>[
+            BoxShadow(
+              color: effects.cardShadow,
+              blurRadius: effects.cardShadowBlur,
+              offset: effects.raisedPanelShadowOffset,
+            ),
+          ]
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        borderRadius: shapes.hero,
-        color: presentation.heroUsesGradient ? null : surfaces.settingsHero,
-        gradient:
-            presentation.heroUsesGradient
-                ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    accent.withValues(
-                      alpha: presentation.heroAccentFillOpacity,
-                    ),
-                    surfaces.settingsHero,
-                  ],
-                )
-                : null,
+        borderRadius: heroShape,
+        color: presentation.heroUsesGradient && destination == null
+            ? null
+            : heroSurface,
+        gradient: presentation.heroUsesGradient && destination == null
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  accent.withValues(alpha: presentation.heroAccentFillOpacity),
+                  surfaces.settingsHero,
+                ],
+              )
+            : null,
         border: Border.all(
-          color:
-              presentation.heroUsesGradient
-                  ? accent.withValues(alpha: presentation.heroBorderOpacity)
-                  : tonosOutlineForSurface(context, surfaces.settingsHero),
+          color: destination != null
+              ? destination.outlineAccent
+              : presentation.heroUsesGradient
+              ? accent.withValues(alpha: presentation.heroBorderOpacity)
+              : tonosOutlineForSurface(context, heroSurface),
           width: shapes.outlineWidth,
         ),
         boxShadow: heroShadow,
@@ -723,7 +725,9 @@ class SettingsHeroCard extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              color: presentation.heroUsesGradient ? accent : heroForeground,
+              color: presentation.heroUsesGradient && destination == null
+                  ? accent
+                  : heroForeground,
               size: 28,
             ),
           );
@@ -742,10 +746,11 @@ class SettingsHeroCard extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color:
-                        presentation.heroUsesGradient
-                            ? scheme.onSurfaceVariant
-                            : heroForeground.withValues(alpha: 0.78),
+                    color: destination != null
+                        ? heroForeground.withValues(alpha: 0.78)
+                        : presentation.heroUsesGradient
+                        ? scheme.onSurfaceVariant
+                        : heroForeground.withValues(alpha: 0.78),
                   ),
                 ),
               ],
@@ -797,62 +802,64 @@ class SettingsSection extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
     final accent = accentColor;
-    final resolvedSurface = surfaceColor ?? surfaces.settingsSection;
+    final destination = _profileDestinationTokens(context);
+    final destinationRole = _profileSectionRole(destination, accent);
+    final resolvedSurface =
+        surfaceColor ?? destinationRole?.$1 ?? surfaces.settingsSection;
     final usesCategoryLabel =
         presentation.sectionHeaderUsesLabel && accent != null;
-    final controlForeground = tonosForegroundForSurface(
-      context,
-      resolvedSurface,
-    );
+    final controlForeground =
+        destinationRole?.$2 ??
+        tonosForegroundForSurface(context, resolvedSurface);
     final usesInkRecipe = context.usesNeoPresentation;
 
     final sectionContents = Column(children: children);
     final sectionChild =
-        usesInkRecipe ||
-                (accent != null && presentation.sectionUsesAccentForControls)
-            ? Theme(
-              data: theme.copyWith(
-                colorScheme: scheme.copyWith(
-                  surface: usesInkRecipe ? resolvedSurface : scheme.surface,
-                  primary:
-                      presentation.sectionUsesAccentForControls &&
-                              accent != null
-                          ? accent
-                          : scheme.primary,
-                  onSurface: controlForeground,
-                  onSurfaceVariant: tonosSecondaryForegroundForSurface(
-                    context,
-                    resolvedSurface,
-                  ),
-                ),
-                textTheme:
-                    usesInkRecipe
-                        ? theme.textTheme.apply(
-                          bodyColor: controlForeground,
-                          displayColor: controlForeground,
-                        )
-                        : theme.textTheme,
-                iconTheme:
-                    usesInkRecipe
-                        ? theme.iconTheme.copyWith(color: controlForeground)
-                        : theme.iconTheme,
-                listTileTheme:
-                    usesInkRecipe
-                        ? theme.listTileTheme.copyWith(
-                          textColor: controlForeground,
-                          iconColor: controlForeground,
-                        )
-                        : theme.listTileTheme,
-                progressIndicatorTheme:
-                    usesInkRecipe
-                        ? theme.progressIndicatorTheme.copyWith(
-                          color: controlForeground,
-                        )
-                        : theme.progressIndicatorTheme,
+        destination != null ||
+            usesInkRecipe ||
+            (accent != null && presentation.sectionUsesAccentForControls)
+        ? Theme(
+            data: theme.copyWith(
+              colorScheme: scheme.copyWith(
+                surface: usesInkRecipe || destination != null
+                    ? resolvedSurface
+                    : scheme.surface,
+                primary:
+                    presentation.sectionUsesAccentForControls && accent != null
+                    ? accent
+                    : scheme.primary,
+                onSurface: controlForeground,
+                onSurfaceVariant:
+                    destinationRole?.$2.withValues(alpha: 0.78) ??
+                    tonosSecondaryForegroundForSurface(
+                      context,
+                      resolvedSurface,
+                    ),
               ),
-              child: sectionContents,
-            )
-            : sectionContents;
+              textTheme: usesInkRecipe || destination != null
+                  ? theme.textTheme.apply(
+                      bodyColor: controlForeground,
+                      displayColor: controlForeground,
+                    )
+                  : theme.textTheme,
+              iconTheme: usesInkRecipe || destination != null
+                  ? theme.iconTheme.copyWith(color: controlForeground)
+                  : theme.iconTheme,
+              listTileTheme: usesInkRecipe || destination != null
+                  ? theme.listTileTheme.copyWith(
+                      textColor: controlForeground,
+                      iconColor: controlForeground,
+                    )
+                  : theme.listTileTheme,
+              progressIndicatorTheme: usesInkRecipe
+                  ? theme.progressIndicatorTheme.copyWith(
+                      color: controlForeground,
+                    )
+                  : theme.progressIndicatorTheme,
+            ),
+            child: sectionContents,
+          )
+        : sectionContents;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -861,78 +868,77 @@ class SettingsSection extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child:
-                usesCategoryLabel
-                    ? _SettingsCategoryLabelHeader(
-                      title: title,
-                      subtitle: subtitle,
-                      presentation: presentation,
-                    )
-                    : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (accent != null) ...[
-                          Container(
-                            width: 4,
-                            height: subtitle == null ? 22 : 38,
-                            margin: const EdgeInsets.only(top: 1, right: 9),
-                            decoration: BoxDecoration(
-                              color: accent,
-                              borderRadius: shapes.pill,
-                            ),
-                          ),
-                        ],
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: accent ?? scheme.onSurface,
-                                ),
-                              ),
-                              if (subtitle != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  subtitle!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ],
+            child: usesCategoryLabel
+                ? _SettingsCategoryLabelHeader(
+                    title: title,
+                    subtitle: subtitle,
+                    presentation: presentation,
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (accent != null) ...[
+                        Container(
+                          width: 4,
+                          height: subtitle == null ? 22 : 38,
+                          margin: const EdgeInsets.only(top: 1, right: 9),
+                          decoration: BoxDecoration(
+                            color: accent,
+                            borderRadius: shapes.pill,
                           ),
                         ),
                       ],
-                    ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: accent ?? scheme.onSurface,
+                              ),
+                            ),
+                            if (subtitle != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
           ),
           Container(
             decoration: BoxDecoration(
               color: resolvedSurface,
               borderRadius: shapes.sheet,
               border: Border.all(
-                color:
-                    usesInkRecipe
-                        ? tonosOutlineForSurface(
-                          context,
-                          resolvedSurface,
-                          neutral: neutralSurface,
-                        )
-                        : (usesCategoryLabel
-                            ? surfaces.subtleOutline
-                            : (accent ?? scheme.outlineVariant).withValues(
-                              alpha:
-                                  accent == null
-                                      ? presentation.sectionNeutralBorderOpacity
-                                      : presentation.sectionAccentBorderOpacity,
+                color: usesInkRecipe
+                    ? tonosOutlineForSurface(
+                        context,
+                        resolvedSurface,
+                        neutral: neutralSurface,
+                      )
+                    : (usesCategoryLabel
+                          ? surfaces.subtleOutline
+                          : (accent ?? scheme.outlineVariant).withValues(
+                              alpha: accent == null
+                                  ? presentation.sectionNeutralBorderOpacity
+                                  : presentation.sectionAccentBorderOpacity,
                             )),
                 width: shapes.outlineWidth,
               ),
             ),
             child: Material(
               type: MaterialType.transparency,
+              borderRadius: destination != null ? shapes.sheet : null,
+              clipBehavior: destination != null ? Clip.antiAlias : Clip.none,
               child: sectionChild,
             ),
           ),
@@ -1003,6 +1009,9 @@ class SettingsExpansionSection extends StatelessWidget {
   final IconData icon;
   final List<Widget> children;
   final Color accentColor;
+  final bool compact;
+  final double? compactHeaderVerticalPadding;
+  final int subtitleMaxLines;
 
   const SettingsExpansionSection({
     super.key,
@@ -1011,6 +1020,9 @@ class SettingsExpansionSection extends StatelessWidget {
     required this.icon,
     required this.children,
     required this.accentColor,
+    this.compact = false,
+    this.compactHeaderVerticalPadding,
+    this.subtitleMaxLines = 1,
   });
 
   @override
@@ -1021,24 +1033,25 @@ class SettingsExpansionSection extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final controlForeground = tonosForegroundForSurface(
-      context,
-      surfaces.settingsSection,
-    );
+    final destination = _profileDestinationTokens(context);
+    final destinationRole = _profileSectionRole(destination, accentColor);
+    final resolvedSurface = destinationRole?.$1 ?? surfaces.settingsSection;
+    final controlForeground =
+        destinationRole?.$2 ??
+        tonosForegroundForSurface(context, resolvedSurface);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         decoration: BoxDecoration(
-          color: surfaces.settingsSection,
+          color: resolvedSurface,
           borderRadius: shapes.sheet,
           border: Border.all(
-            color:
-                usesInkRecipe
-                    ? tonosOutlineForSurface(context, surfaces.settingsSection)
-                    : accentColor.withValues(
-                      alpha: presentation.sectionAccentBorderOpacity,
-                    ),
+            color: usesInkRecipe
+                ? tonosOutlineForSurface(context, resolvedSurface)
+                : accentColor.withValues(
+                    alpha: presentation.sectionAccentBorderOpacity,
+                  ),
             width: shapes.outlineWidth,
           ),
         ),
@@ -1047,49 +1060,53 @@ class SettingsExpansionSection extends StatelessWidget {
           child: Theme(
             data: theme.copyWith(
               colorScheme: scheme.copyWith(
-                primary:
-                    presentation.sectionUsesAccentForControls
-                        ? accentColor
-                        : scheme.primary,
-                onSurface: usesInkRecipe ? controlForeground : scheme.onSurface,
-                onSurfaceVariant:
-                    usesInkRecipe
-                        ? tonosSecondaryForegroundForSurface(
-                          context,
-                          surfaces.settingsSection,
-                        )
-                        : scheme.onSurfaceVariant,
+                primary: presentation.sectionUsesAccentForControls
+                    ? accentColor
+                    : scheme.primary,
+                surface: usesInkRecipe || destination != null
+                    ? resolvedSurface
+                    : scheme.surface,
+                onSurface: usesInkRecipe || destination != null
+                    ? controlForeground
+                    : scheme.onSurface,
+                onSurfaceVariant: usesInkRecipe || destination != null
+                    ? (destinationRole?.$2.withValues(alpha: 0.78) ??
+                          tonosSecondaryForegroundForSurface(
+                            context,
+                            resolvedSurface,
+                          ))
+                    : scheme.onSurfaceVariant,
               ),
-              textTheme:
-                  usesInkRecipe
-                      ? theme.textTheme.apply(
-                        bodyColor: controlForeground,
-                        displayColor: controlForeground,
-                      )
-                      : theme.textTheme,
+              textTheme: usesInkRecipe || destination != null
+                  ? theme.textTheme.apply(
+                      bodyColor: controlForeground,
+                      displayColor: controlForeground,
+                    )
+                  : theme.textTheme,
             ),
             child: TonosExpansionTileScope(
               child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(
+                tilePadding: EdgeInsets.symmetric(
                   horizontal: 14,
-                  vertical: 4,
+                  vertical: compact ? (compactHeaderVerticalPadding ?? 1) : 4,
                 ),
                 childrenPadding: EdgeInsets.zero,
                 leading: Container(
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color:
-                        usesInkRecipe
-                            ? accentColor.withValues(alpha: 0.28)
-                            : accentColor.withValues(
-                              alpha: presentation.iconFillOpacity,
-                            ),
+                    color: usesInkRecipe || destination != null
+                        ? accentColor.withValues(alpha: 0.28)
+                        : accentColor.withValues(
+                            alpha: presentation.iconFillOpacity,
+                          ),
                     borderRadius: shapes.settingsAction,
                   ),
                   child: Icon(
                     icon,
-                    color: usesInkRecipe ? controlForeground : accentColor,
+                    color: usesInkRecipe || destination != null
+                        ? controlForeground
+                        : accentColor,
                     size: 22,
                   ),
                 ),
@@ -1097,18 +1114,19 @@ class SettingsExpansionSection extends StatelessWidget {
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: usesInkRecipe ? controlForeground : null,
+                    color: usesInkRecipe || destination != null
+                        ? controlForeground
+                        : null,
                   ),
                 ),
                 subtitle: Text(
                   subtitle,
-                  maxLines: 1,
+                  maxLines: subtitleMaxLines,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color:
-                        usesInkRecipe
-                            ? controlForeground.withValues(alpha: 0.72)
-                            : scheme.onSurfaceVariant,
+                    color: usesInkRecipe || destination != null
+                        ? controlForeground.withValues(alpha: 0.72)
+                        : scheme.onSurfaceVariant,
                   ),
                 ),
                 children: children,
@@ -1126,13 +1144,12 @@ TextStyle? settingsRankingNameTextStyle(BuildContext context) {
   final theme = Theme.of(context);
   return theme.textTheme.titleSmall?.copyWith(
     fontWeight: FontWeight.w900,
-    color:
-        context.usesNeoPresentation
-            ? tonosForegroundForSurface(
-              context,
-              context.surfaceTokens.settingsSection,
-            )
-            : theme.textTheme.titleSmall?.color,
+    color: context.usesNeoPresentation
+        ? tonosForegroundForSurface(
+            context,
+            context.surfaceTokens.settingsSection,
+          )
+        : theme.textTheme.titleSmall?.color,
   );
 }
 
@@ -1163,17 +1180,12 @@ class SettingsRankingTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final presentation = context.settingsPresentationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
-    final rowForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.settingsSection)
-            : scheme.onSurface;
-    final rowSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.settingsSection,
-            )
-            : scheme.onSurfaceVariant;
+    final rowForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.settingsSection)
+        : scheme.onSurface;
+    final rowSecondaryForeground = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, surfaces.settingsSection)
+        : scheme.onSurfaceVariant;
     final rankFieldInk = settingsInputForeground(context);
 
     return Container(
@@ -1183,12 +1195,11 @@ class SettingsRankingTile extends StatelessWidget {
         color: surfaces.settingsSection,
         borderRadius: shapes.settingsPanel,
         border: Border.all(
-          color:
-              usesInkRecipe
-                  ? tonosOutlineForSurface(context, surfaces.settingsSection)
-                  : scheme.outlineVariant.withValues(
-                    alpha: presentation.sectionNeutralBorderOpacity,
-                  ),
+          color: usesInkRecipe
+              ? tonosOutlineForSurface(context, surfaces.settingsSection)
+              : scheme.outlineVariant.withValues(
+                  alpha: presentation.sectionNeutralBorderOpacity,
+                ),
           width: shapes.outlineWidth,
         ),
       ),
@@ -1234,16 +1245,12 @@ class SettingsRankingTile extends StatelessWidget {
                 isDense: true,
                 filled: usesInkRecipe,
                 fillColor: usesInkRecipe ? surfaces.settingsInput : null,
-                labelStyle:
-                    rankFieldInk == null
-                        ? null
-                        : TextStyle(
-                          color: rankFieldInk.withValues(alpha: 0.78),
-                        ),
-                floatingLabelStyle:
-                    rankFieldInk == null
-                        ? null
-                        : TextStyle(color: rankFieldInk),
+                labelStyle: rankFieldInk == null
+                    ? null
+                    : TextStyle(color: rankFieldInk.withValues(alpha: 0.78)),
+                floatingLabelStyle: rankFieldInk == null
+                    ? null
+                    : TextStyle(color: rankFieldInk),
                 border: OutlineInputBorder(borderRadius: shapes.settingsInput),
               ),
               onFieldSubmitted: onRankSubmitted,
@@ -1263,6 +1270,8 @@ class SettingsActionTile extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? trailing;
   final Color? iconColor;
+  final bool compact;
+  final double? compactVerticalPadding;
 
   const SettingsActionTile({
     super.key,
@@ -1273,6 +1282,8 @@ class SettingsActionTile extends StatelessWidget {
     this.onTap,
     this.trailing,
     this.iconColor,
+    this.compact = false,
+    this.compactVerticalPadding,
   });
 
   @override
@@ -1282,24 +1293,27 @@ class SettingsActionTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final presentation = context.settingsPresentationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final destination = _profileDestinationTokens(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final controlForeground = scheme.onSurface;
     final resolvedIconColor = iconColor ?? scheme.primary;
+    final profileInteractive = destination != null && onTap != null;
     final leading = Container(
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color:
-            usesInkRecipe
-                ? resolvedIconColor.withValues(alpha: 0.28)
-                : resolvedIconColor.withValues(
-                  alpha: presentation.iconFillOpacity,
-                ),
+        color: profileInteractive
+            ? destination.surfaceSelected
+            : usesInkRecipe
+            ? resolvedIconColor.withValues(alpha: 0.28)
+            : resolvedIconColor.withValues(alpha: presentation.iconFillOpacity),
         borderRadius: shapes.settingsAction,
       ),
       child: Icon(
         icon,
-        color: usesInkRecipe ? controlForeground : resolvedIconColor,
+        color: profileInteractive || usesInkRecipe
+            ? controlForeground
+            : resolvedIconColor,
         size: 22,
       ),
     );
@@ -1314,20 +1328,18 @@ class SettingsActionTile extends StatelessWidget {
             color: usesInkRecipe ? controlForeground : null,
           ),
         );
-    final subtitleContent =
-        subtitle == null
-            ? null
-            : Text(
-              subtitle!,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color:
-                    usesInkRecipe
-                        ? controlForeground.withValues(alpha: 0.72)
-                        : scheme.onSurfaceVariant,
-              ),
-            );
+    final subtitleContent = subtitle == null
+        ? null
+        : Text(
+            subtitle!,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: usesInkRecipe
+                  ? controlForeground.withValues(alpha: 0.72)
+                  : scheme.onSurfaceVariant,
+            ),
+          );
     final hasExplicitTrailing = trailing != null;
     final trailingContent =
         trailing ??
@@ -1335,27 +1347,26 @@ class SettingsActionTile extends StatelessWidget {
           Icons.chevron_right,
           color: usesInkRecipe ? controlForeground : scheme.onSurfaceVariant,
         );
-    final tile =
-        largeText
-            ? _buildLargeTextSettingsAction(
-              leading: leading,
-              title: titleContent,
-              subtitle: subtitleContent,
-              trailing: trailingContent,
-              hasExplicitTrailing: hasExplicitTrailing,
-              onTap: onTap,
-            )
-            : ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 7,
-              ),
-              leading: leading,
-              title: titleContent,
-              subtitle: subtitleContent,
-              trailing: trailingContent,
-              onTap: onTap,
-            );
+    final tile = largeText
+        ? _buildLargeTextSettingsAction(
+            leading: leading,
+            title: titleContent,
+            subtitle: subtitleContent,
+            trailing: trailingContent,
+            hasExplicitTrailing: hasExplicitTrailing,
+            onTap: onTap,
+          )
+        : ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: compact ? (compactVerticalPadding ?? 4) : 7,
+            ),
+            leading: leading,
+            title: titleContent,
+            subtitle: subtitleContent,
+            trailing: trailingContent,
+            onTap: onTap,
+          );
     if (!usesInkRecipe) return tile;
     return DefaultTextStyle.merge(
       style: TextStyle(color: controlForeground),
@@ -1428,12 +1439,25 @@ class SettingsSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileDestination = _profileDestinationTokens(context);
+    final switchControl = Switch(value: value, onChanged: onChanged);
+
     return SettingsActionTile(
       icon: icon,
       iconColor: iconColor,
       title: title,
       subtitle: subtitle,
-      trailing: Switch(value: value, onChanged: onChanged),
+      trailing: profileDestination == null
+          ? switchControl
+          : Theme(
+              data: Theme.of(context).copyWith(
+                switchTheme: _profileExpressiveSwitchTheme(
+                  Theme.of(context).switchTheme,
+                  profileDestination,
+                ),
+              ),
+              child: switchControl,
+            ),
       onTap: onChanged == null ? null : () => onChanged!(!value),
     );
   }
@@ -1462,17 +1486,12 @@ class SettingsInfoCard extends StatelessWidget {
     final presentation = context.settingsPresentationTokens;
     final resolvedIconColor = iconColor ?? scheme.primary;
     final usesInkRecipe = context.usesNeoPresentation;
-    final foreground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.settingsSection)
-            : scheme.onSurface;
-    final secondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.settingsSection,
-            )
-            : scheme.onSurfaceVariant;
+    final foreground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.settingsSection)
+        : scheme.onSurface;
+    final secondaryForeground = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, surfaces.settingsSection)
+        : scheme.onSurfaceVariant;
     final iconForeground = usesInkRecipe ? foreground : resolvedIconColor;
 
     return Container(
@@ -1481,12 +1500,11 @@ class SettingsInfoCard extends StatelessWidget {
         color: surfaces.settingsSection,
         borderRadius: shapes.sheet,
         border: Border.all(
-          color:
-              usesInkRecipe
-                  ? tonosOutlineForSurface(context, surfaces.settingsSection)
-                  : scheme.outlineVariant.withValues(
-                    alpha: presentation.infoBorderOpacity,
-                  ),
+          color: usesInkRecipe
+              ? tonosOutlineForSurface(context, surfaces.settingsSection)
+              : scheme.outlineVariant.withValues(
+                  alpha: presentation.infoBorderOpacity,
+                ),
           width: shapes.outlineWidth,
         ),
       ),
@@ -1568,28 +1586,27 @@ class SettingsSaveBar extends StatelessWidget {
     final presentation = context.settingsPresentationTokens;
     final saveBarBorderColor =
         presentation.saveActionUsesHardShadow &&
-                context.surfaceDecorationTokens.panel.outlined
-            ? tonosOutlineForSurface(context, surfaces.settingsSaveBar)
-            : presentation.saveActionUsesHardShadow
-            ? surfaces.subtleOutline
-            : scheme.outlineVariant.withValues(
-              alpha: presentation.saveBarBorderOpacity,
-            );
+            context.surfaceDecorationTokens.panel.outlined
+        ? tonosOutlineForSurface(context, surfaces.settingsSaveBar)
+        : presentation.saveActionUsesHardShadow
+        ? surfaces.subtleOutline
+        : scheme.outlineVariant.withValues(
+            alpha: presentation.saveBarBorderOpacity,
+          );
     final saveButton = FilledButton.icon(
       key: buttonKey,
       onPressed: isVisible ? onPressed : null,
       icon: saveIcon ?? const Icon(Icons.save_outlined),
       label: Text(label),
     );
-    final decoratedSaveButton =
-        presentation.saveActionUsesHardShadow
-            ? tonosWithPrimaryActionDepth(
-              context,
-              saveButton,
-              borderRadius: shapes.settingsAction,
-              enabled: isVisible && onPressed != null,
-            )
-            : saveButton;
+    final decoratedSaveButton = presentation.saveActionUsesHardShadow
+        ? tonosWithPrimaryActionDepth(
+            context,
+            saveButton,
+            borderRadius: shapes.settingsAction,
+            enabled: isVisible && onPressed != null,
+          )
+        : saveButton;
     final action = switch (cancelLabel) {
       null => decoratedSaveButton,
       final label => Row(
@@ -1608,27 +1625,25 @@ class SettingsSaveBar extends StatelessWidget {
     final button = Padding(padding: padding, child: action);
     final bar = SafeArea(
       top: false,
-      child:
-          decorated
-              ? Container(
-                decoration: BoxDecoration(
-                  color: surfaces.settingsSaveBar,
-                  border: Border(
-                    top: BorderSide(
-                      color: saveBarBorderColor,
-                      width: shapes.outlineWidth,
-                    ),
+      child: decorated
+          ? Container(
+              decoration: BoxDecoration(
+                color: surfaces.settingsSaveBar,
+                border: Border(
+                  top: BorderSide(
+                    color: saveBarBorderColor,
+                    width: shapes.outlineWidth,
                   ),
                 ),
-                child: button,
-              )
-              : button,
+              ),
+              child: button,
+            )
+          : button,
     );
     if (!animate) return bar;
-    final duration =
-        MediaQuery.disableAnimationsOf(context)
-            ? motion.reduced
-            : motion.standard;
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? motion.reduced
+        : motion.standard;
 
     return AnimatedSlide(
       offset: isVisible ? Offset.zero : const Offset(0, 1),
@@ -1640,6 +1655,75 @@ class SettingsSaveBar extends StatelessWidget {
       ),
     );
   }
+}
+
+AppExpressiveDestinationTokens? _profileDestinationTokens(
+  BuildContext context,
+) {
+  final tokens = Theme.of(context).extension<AppExpressiveDestinationTokens>();
+  return tokens?.family == AppExpressiveDestinationFamily.profile
+      ? tokens
+      : null;
+}
+
+SwitchThemeData _profileExpressiveSwitchTheme(
+  SwitchThemeData base,
+  AppExpressiveDestinationTokens tokens,
+) => base.copyWith(
+  thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+    final selected = states.contains(WidgetState.selected);
+    final disabled = states.contains(WidgetState.disabled);
+    final color = selected ? tokens.onActionPrimary : tokens.onSurfaceTertiary;
+    return disabled ? color.withValues(alpha: 0.38) : color;
+  }),
+  trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
+    final selected = states.contains(WidgetState.selected);
+    final disabled = states.contains(WidgetState.disabled);
+    final color = selected ? tokens.actionPrimary : tokens.surfaceTertiary;
+    return disabled ? color.withValues(alpha: 0.24) : color;
+  }),
+  trackOutlineColor: WidgetStateProperty.resolveWith<Color?>((states) {
+    final color = tokens.outlineAccent;
+    return states.contains(WidgetState.disabled)
+        ? color.withValues(alpha: 0.38)
+        : color;
+  }),
+  trackOutlineWidth: WidgetStateProperty.resolveWith<double?>(
+    (states) => states.contains(WidgetState.focused) ? 2 : 1,
+  ),
+  overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+    if (states.contains(WidgetState.disabled)) return null;
+    if (states.contains(WidgetState.focused)) {
+      return tokens.actionPrimary.withValues(alpha: 0.12);
+    }
+    if (states.contains(WidgetState.pressed)) {
+      return tokens.actionPrimary.withValues(alpha: 0.12);
+    }
+    if (states.contains(WidgetState.hovered)) {
+      return tokens.actionPrimary.withValues(alpha: 0.08);
+    }
+    return null;
+  }),
+);
+
+(Color, Color)? _profileSectionRole(
+  AppExpressiveDestinationTokens? tokens,
+  Color? accent,
+) {
+  if (tokens == null || accent == null) return null;
+  if (accent == SettingsAccent.account || accent == SettingsAccent.appearance) {
+    return (tokens.surfacePrimary, tokens.onSurfacePrimary);
+  }
+  if (accent == SettingsAccent.training) {
+    return (tokens.surfaceSecondary, tokens.onSurfaceSecondary);
+  }
+  if (accent == SettingsAccent.progress) {
+    return (tokens.surfaceTertiary, tokens.onSurfaceTertiary);
+  }
+  if (accent == SettingsAccent.data || accent == SettingsAccent.advanced) {
+    return (tokens.surfaceAccent, tokens.onSurfaceAccent);
+  }
+  return null;
 }
 
 List<Widget> settingsTilesWithDividers(

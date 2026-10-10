@@ -1,12 +1,17 @@
 // File: lib/screens/nutrition/log_entry_page.dart
 import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
+
 import '../../theme/theme_extensions.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/nutrition_profile.dart';
 import '../../models/nutrition_models.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../widgets/speed_dial_fab.dart';
 
 class LogEntryPage extends StatefulWidget {
@@ -59,9 +64,8 @@ class _LogEntryPageState extends State<LogEntryPage> {
   }
 
   String _hourLabel(BuildContext context, int hour) {
-    return MaterialLocalizations.of(
-      context,
-    ).formatTimeOfDay(TimeOfDay(hour: hour, minute: 0));
+    return MaterialLocalizations.of(context)
+        .formatTimeOfDay(TimeOfDay(hour: hour, minute: 0));
   }
 
   Color _mealFill(MealType m, ColorScheme cs) {
@@ -93,9 +97,26 @@ class _LogEntryPageState extends State<LogEntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (context.usesExpressivePresentation) {
+      return AppExpressiveDestinationTheme(
+        family: AppExpressiveDestinationFamily.nutrition,
+        child: Builder(
+          builder: (scopedContext) =>
+              _buildPage(scopedContext, expressive: true),
+        ),
+      );
+    }
+    return _buildPage(context, expressive: false);
+  }
+
+  Widget _buildPage(BuildContext context, {required bool expressive}) {
     final p = context.watch<NutritionProfile>();
     final cs = Theme.of(context).colorScheme;
     final strings = AppLocalizations.of(context);
+    final destination = expressive
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
 
     // Header stats (from provider)
     final kcal = (p.totals?.kcal ?? 0).round();
@@ -111,45 +132,102 @@ class _LogEntryPageState extends State<LogEntryPage> {
     final title = MaterialLocalizations.of(context).formatMediumDate(date);
 
     return Scaffold(
+      backgroundColor: destination?.pageCanvas,
       appBar: AppBar(
-        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: destination?.onSurfacePrimary,
+          ),
+        ),
+        backgroundColor: destination?.surfacePrimary,
+        foregroundColor: destination?.onSurfacePrimary,
       ),
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: expressive ? 960 : double.infinity,
+          ),
+          child: Column(
+            children: [
           // ── Header stats ─────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _MiniStat(
-                    label: strings.nutritionCaloriesLabel,
-                    value: '$kcal / $kcalTgt kcal',
+            child: expressive
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cardWidth = (constraints.maxWidth - 8) / 2;
+                      final cards = <_MiniStat>[
+                        _MiniStat(
+                          label: strings.nutritionCaloriesLabel,
+                          value: '$kcal / $kcalTgt kcal',
+                          expressive: true,
+                          surface: destination!.surfaceTertiary,
+                          foreground: destination.onSurfaceTertiary,
+                        ),
+                        _MiniStat(
+                          label: strings.nutritionFatLabel,
+                          value: '$fat / $fatTgt g',
+                          expressive: true,
+                          surface: destination.surfaceSecondary,
+                          foreground: destination.onSurfaceSecondary,
+                        ),
+                        _MiniStat(
+                          label: strings.nutritionProteinLabel,
+                          value: '$pro / $proTgt g',
+                          expressive: true,
+                          surface: destination.surfaceAccent,
+                          foreground: destination.onSurfaceAccent,
+                        ),
+                        _MiniStat(
+                          label: strings.nutritionCarbsLabel,
+                          value: '$carb / $carbTgt g',
+                          expressive: true,
+                          surface: destination.surfaceSelected,
+                          foreground: destination.onSurfaceSelected,
+                        ),
+                      ];
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final card in cards)
+                            SizedBox(width: cardWidth, child: card),
+                        ],
+                      );
+                    },
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: _MiniStat(
+                          label: strings.nutritionCaloriesLabel,
+                          value: '$kcal / $kcalTgt kcal',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MiniStat(
+                          label: strings.nutritionFatLabel,
+                          value: '$fat / $fatTgt g',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MiniStat(
+                          label: strings.nutritionProteinLabel,
+                          value: '$pro / $proTgt g',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _MiniStat(
+                          label: strings.nutritionCarbsLabel,
+                          value: '$carb / $carbTgt g',
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _MiniStat(
-                    label: strings.nutritionFatLabel,
-                    value: '$fat / $fatTgt g',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _MiniStat(
-                    label: strings.nutritionProteinLabel,
-                    value: '$pro / $proTgt g',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _MiniStat(
-                    label: strings.nutritionCarbsLabel,
-                    value: '$carb / $carbTgt g',
-                  ),
-                ),
-              ],
-            ),
           ),
           const Divider(height: 1),
 
@@ -158,6 +236,12 @@ class _LogEntryPageState extends State<LogEntryPage> {
             child: LayoutBuilder(
               builder: (context, bx) {
                 final totalHeight = 24 * _rowHeight;
+                final chipHeight = expressive && textScale > 1.15
+                    ? math.max(_chipH, 64 * textScale)
+                    : _chipH;
+                final chipWidth = expressive
+                    ? math.max(_chipW, bx.maxWidth - _gutterW - 17)
+                    : _chipW;
 
                 // Hour lines + labels
                 final hourLines = List<Widget>.generate(24, (h) {
@@ -252,6 +336,39 @@ class _LogEntryPageState extends State<LogEntryPage> {
                       .add(row);
                 }
 
+                final bucketKeys = buckets.keys.toList()..sort();
+                final useChronologicalDetails =
+                    expressive &&
+                    textScale >= 1.5 &&
+                    bucketKeys.asMap().entries.any((entry) {
+                      if (entry.key == 0) return false;
+                      final previous = bucketKeys[entry.key - 1];
+                      final minutesApart =
+                          (entry.value - previous) * bucketSizeMin;
+                      final verticalGap = (minutesApart / 60) * _rowHeight;
+                      return verticalGap < chipHeight;
+                    });
+
+                String macroSummary(DiaryEntryWithItem row) {
+                  final macros = row.snapshotMacros;
+                  if (macros == null) return '';
+                  return strings.nutritionMacroSummary(
+                    macros.kcal.round(),
+                    macros.proteinG.round(),
+                    macros.carbsG.round(),
+                    macros.fatG.round(),
+                  );
+                }
+
+                final chronologicalRows = p.mealsWithItems.toList()
+                  ..sort((a, b) {
+                    final ta = (a.entry.loggedAt ?? date).toLocal();
+                    final tb = (b.entry.loggedAt ?? date).toLocal();
+                    final comparison = ta.compareTo(tb);
+                    if (comparison != 0) return comparison;
+                    return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
+                  });
+
                 // 2) For each bucket, place a horizontally scrollable row that starts at the LEFT edge
                 buckets.forEach((key, entries) {
                   // Stable order within the bucket
@@ -265,14 +382,46 @@ class _LogEntryPageState extends State<LogEntryPage> {
 
                   final bucketMinutes = key * bucketSizeMin;
                   final y =
-                      (bucketMinutes / (24 * 60)) * totalHeight - (_chipH / 2);
+                      (bucketMinutes / (24 * 60)) * totalHeight -
+                      (chipHeight / 2);
+
+                  if (useChronologicalDetails) {
+                    for (final row in entries) {
+                      final stamp = (row.entry.loggedAt ?? date).toLocal();
+                      final minutes = stamp.hour * 60 + stamp.minute;
+                      final markerY = (minutes / (24 * 60)) * totalHeight - 1;
+                      final time = MaterialLocalizations.of(context)
+                          .formatTimeOfDay(TimeOfDay.fromDateTime(stamp));
+                      chips.add(
+                        Positioned(
+                          top: markerY.clamp(0, totalHeight - 2).toDouble(),
+                          left: _gutterW + 1,
+                          right: 0,
+                          height: 2,
+                          child: Semantics(
+                            label:
+                                '$time, ${row.chipTitle}, ${macroSummary(row)}',
+                            child: IgnorePointer(
+                              child: ColoredBox(
+                                color: _mealFill(row.entry.mealType, cs),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
 
                   chips.add(
                     Positioned(
-                      top: (y.clamp(4, totalHeight - _chipH - 4)).toDouble(),
+                      top: (y.clamp(
+                        4,
+                        totalHeight - chipHeight - 4,
+                      )).toDouble(),
                       left: _gutterW + 1,
                       right: 0,
-                      height: _chipH,
+                      height: chipHeight,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         physics: const ClampingScrollPhysics(),
@@ -280,33 +429,19 @@ class _LogEntryPageState extends State<LogEntryPage> {
                           children: [
                             for (final row in entries) ...[
                               SizedBox(
-                                width: _chipW,
+                                width: chipWidth,
                                 child: _EntryChip(
                                   // 👇 First line: FOOD / RECIPE NAME
                                   title: row.chipTitle,
 
                                   // Second line: macros (reuse your existing formatter)
-                                  subtitle:
-                                      (() {
-                                        final macros = row.snapshotMacros;
-                                        if (macros == null) return '';
-                                        final kcal = macros.kcal.round();
-                                        final proG = macros.proteinG.round();
-                                        final carbG = macros.carbsG.round();
-                                        final fatG = macros.fatG.round();
-                                        return strings.nutritionMacroSummary(
-                                          kcal,
-                                          proG,
-                                          carbG,
-                                          fatG,
-                                        );
-                                      })(),
+                                  subtitle: macroSummary(row),
 
                                   bg: _mealFill(row.entry.mealType, cs),
                                   fg: _mealOnFill(row.entry.mealType, cs),
-                                  onTap:
-                                      () =>
-                                          _showEntryActions(context, row.entry),
+                                  expressive: expressive,
+                                  onTap: () =>
+                                      _showEntryActions(context, row.entry),
                                 ),
                               ),
                               const SizedBox(width: innerGap),
@@ -318,25 +453,50 @@ class _LogEntryPageState extends State<LogEntryPage> {
                   );
                 });
 
+                final timeline = SizedBox(
+                  height: totalHeight,
+                  child: Stack(children: [...hourLines, ...nowLine, ...chips]),
+                );
+                final content = useChronologicalDetails
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          timeline,
+                          const Divider(height: 1),
+                          for (final row in chronologicalRows)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                              child: _EntryChip(
+                                title:
+                                    '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime((row.entry.loggedAt ?? date).toLocal()))} · ${row.chipTitle}',
+                                subtitle: macroSummary(row),
+                                bg: _mealFill(row.entry.mealType, cs),
+                                fg: _mealOnFill(row.entry.mealType, cs),
+                                expressive: true,
+                                onTap: () =>
+                                    _showEntryActions(context, row.entry),
+                              ),
+                            ),
+                        ],
+                      )
+                    : timeline;
+
                 return Scrollbar(
                   controller: _scroll,
                   child: SingleChildScrollView(
                     controller: _scroll,
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: totalHeight,
-                        maxHeight: totalHeight,
-                      ),
-                      child: Stack(
-                        children: [...hourLines, ...nowLine, ...chips],
-                      ),
+                      constraints: BoxConstraints(minHeight: totalHeight),
+                      child: content,
                     ),
                   ),
                 );
               },
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
 
       // Keep your existing SpeedDial without unsupported params
@@ -350,41 +510,38 @@ class _LogEntryPageState extends State<LogEntryPage> {
     final strings = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      builder:
-          (_) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: Text(strings.nutritionEditEntry),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(strings.nutritionEditNotAvailable),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline),
-                  title: Text(strings.commonDelete),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    if (e.id != null) {
-                      await prof.deleteEntry(e.id!);
-                      await prof.reloadIfToday();
-                      if (!mounted) return;
-                      messenger.showSnackBar(
-                        SnackBar(content: Text(strings.nutritionEntryDeleted)),
-                      );
-                    }
-                  },
-                ),
-              ],
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: Text(strings.nutritionEditEntry),
+              onTap: () async {
+                Navigator.pop(context);
+                messenger.showSnackBar(
+                  SnackBar(content: Text(strings.nutritionEditNotAvailable)),
+                );
+              },
             ),
-          ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text(strings.commonDelete),
+              onTap: () async {
+                Navigator.pop(context);
+                if (e.id != null) {
+                  await prof.deleteEntry(e.id!);
+                  await prof.reloadIfToday();
+                  if (!mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text(strings.nutritionEntryDeleted)),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -393,14 +550,58 @@ class _LogEntryPageState extends State<LogEntryPage> {
 class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
-  const _MiniStat({required this.label, required this.value});
+  final bool expressive;
+  final Color? surface;
+  final Color? foreground;
+
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    this.expressive = false,
+    this.surface,
+    this.foreground,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (expressive) {
+      return Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: surface,
+          border: Border.all(color: context.nutritionTokens.foodBorder),
+          borderRadius: context.nutritionTokens.compactShape,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              softWrap: true,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              value,
+              softWrap: true,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SizedBox(
-      height: 36, // hard cap – matches the constraint in your stack trace
+      height: 36,
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: 6,
@@ -411,9 +612,8 @@ class _MiniStat extends StatelessWidget {
         ),
         // Prevent system text scaling from pushing us over 36px
         child: MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.0)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(1.0)),
           child: Center(
             child: Text.rich(
               TextSpan(
@@ -449,6 +649,7 @@ class _EntryChip extends StatelessWidget {
   final Color bg;
   final Color fg;
   final VoidCallback onTap;
+  final bool expressive;
 
   const _EntryChip({
     required this.title,
@@ -456,6 +657,7 @@ class _EntryChip extends StatelessWidget {
     required this.bg,
     required this.fg,
     required this.onTap,
+    this.expressive = false,
   });
 
   @override
@@ -465,50 +667,90 @@ class _EntryChip extends StatelessWidget {
     return Material(
       color: bg,
       shape: RoundedRectangleBorder(
-        borderRadius: context.nutritionTokens.sectionShape,
+        borderRadius: expressive
+            ? context.nutritionTokens.portionShape
+            : context.nutritionTokens.sectionShape,
       ),
       clipBehavior: Clip.hardEdge, // <- clip any accidental overflow
-      child: MediaQuery(
-        // <- prevent system text scaling from breaking fixed height
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: const TextScaler.linear(1.0)),
-        child: InkWell(
-          borderRadius: context.nutritionTokens.sectionShape,
-          onTap: onTap,
-          child: Padding(
-            // keep this modest so content fits in _chipH
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text.rich(
-                TextSpan(
-                  children: [
+      child: expressive
+          ? InkWell(
+              borderRadius: context.nutritionTokens.portionShape,
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text.rich(
                     TextSpan(
-                      text: '$title\n',
-                      style: theme.textTheme.labelLarge?.copyWith(color: fg),
+                      children: [
+                        TextSpan(
+                          text: '$title\n',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: fg,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        TextSpan(
+                          text: subtitle,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: fg.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text: subtitle,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: fg.withValues(alpha: 0.85),
+                    softWrap: true,
+                  ),
+                ),
+              ),
+            )
+          : MediaQuery(
+              // <- prevent system text scaling from breaking fixed height
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.0)),
+              child: InkWell(
+                borderRadius: context.nutritionTokens.sectionShape,
+                onTap: onTap,
+                child: Padding(
+                  // keep this modest so content fits in _chipH
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$title\n',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: fg,
+                            ),
+                          ),
+                          TextSpan(
+                            text: subtitle,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: fg.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      // tight line height so 2 lines always fit in _chipH
+                      textHeightBehavior: const TextHeightBehavior(
+                        applyHeightToFirstAscent: false,
+                        applyHeightToLastDescent: false,
+                      ),
+                      strutStyle: const StrutStyle(height: 1.0, leading: 0),
                     ),
-                  ],
+                  ),
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                // tight line height so 2 lines always fit in _chipH
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
-                ),
-                strutStyle: const StrutStyle(height: 1.0, leading: 0),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

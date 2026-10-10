@@ -16,6 +16,8 @@ import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../theme/widgets/tonos_field.dart';
 import '../../../utils/localized_formatters.dart';
@@ -180,29 +182,28 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     if (!mounted) return;
     await showDialog<void>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(title),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Text(message)],
-                  ),
-                ),
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(title),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [Text(message)],
               ),
-              actions: [
-                TextButton(
-                  key: AppTestKeys.databaseResultClose,
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(_strings.commonClose),
-                ),
-              ],
             ),
           ),
+          actions: [
+            TextButton(
+              key: AppTestKeys.databaseResultClose,
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(_strings.commonClose),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -299,13 +300,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       );
     } on FormatException catch (error) {
       if (!mounted) return;
-      final message =
-          error.message == 'database_import_file_too_large'
-              ? _strings.databaseImportFileTooLarge
-              : _strings.databaseImportBlockedSafe;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      final message = error.message == 'database_import_file_too_large'
+          ? _strings.databaseImportFileTooLarge
+          : _strings.databaseImportBlockedSafe;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -317,24 +316,23 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   Future<bool?> _confirmPlaintextExport() {
     return showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.databaseConfirmExportTitle),
-              content: Text(_strings.databaseConfirmExportBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: Text(_strings.commonCancel),
-                ),
-                ElevatedButton(
-                  key: AppTestKeys.databaseConfirmExport,
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text(_strings.databaseContinueExport),
-                ),
-              ],
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.databaseConfirmExportTitle),
+          content: Text(_strings.databaseConfirmExportBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(_strings.commonCancel),
             ),
-          ),
+            ElevatedButton(
+              key: AppTestKeys.databaseConfirmExport,
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(_strings.databaseContinueExport),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -344,58 +342,54 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }) {
     return showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.databaseConfirmImportTitle),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_strings.databaseConfirmImportBody),
-                      if (sourceName != null) ...[
-                        const SizedBox(height: 12),
-                        Text(_strings.databaseImportFile(sourceName)),
-                      ],
-                      const SizedBox(height: 12),
-                      Text(
-                        _strings.databaseImportTables(
-                          preview.importableTables.length,
-                        ),
-                      ),
-                      Text(_strings.databaseImportRows(preview.totalRows)),
-                      if (preview.schemaVersion != null)
-                        Text(
-                          _strings.databaseImportSchema(preview.schemaVersion!),
-                        ),
-                      if (preview.isLegacyFormat)
-                        Text(_strings.databaseImportLegacyFormat),
-                      if (preview.warnings.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Text(_strings.databaseImportWarnings),
-                        for (final warning in preview.warnings)
-                          Text('- $warning'),
-                      ],
-                    ],
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.databaseConfirmImportTitle),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_strings.databaseConfirmImportBody),
+                  if (sourceName != null) ...[
+                    const SizedBox(height: 12),
+                    Text(_strings.databaseImportFile(sourceName)),
+                  ],
+                  const SizedBox(height: 12),
+                  Text(
+                    _strings.databaseImportTables(
+                      preview.importableTables.length,
+                    ),
                   ),
-                ),
+                  Text(_strings.databaseImportRows(preview.totalRows)),
+                  if (preview.schemaVersion != null)
+                    Text(_strings.databaseImportSchema(preview.schemaVersion!)),
+                  if (preview.isLegacyFormat)
+                    Text(_strings.databaseImportLegacyFormat),
+                  if (preview.warnings.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(_strings.databaseImportWarnings),
+                    for (final warning in preview.warnings) Text('- $warning'),
+                  ],
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: Text(_strings.commonCancel),
-                ),
-                ElevatedButton(
-                  key: AppTestKeys.databaseConfirmImport,
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text(_strings.databaseBackupAndImport),
-                ),
-              ],
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(_strings.commonCancel),
+            ),
+            ElevatedButton(
+              key: AppTestKeys.databaseConfirmImport,
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(_strings.databaseBackupAndImport),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -488,13 +482,12 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
     final result = await showDialog<String>(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            child: _ContentEnvironmentDialog(
-              config: config,
-              selectedEnvironmentId: selected.environment.id,
-            ),
-          ),
+      builder: (_) => TonosDialogFrame(
+        child: _ContentEnvironmentDialog(
+          config: config,
+          selectedEnvironmentId: selected.environment.id,
+        ),
+      ),
     );
 
     if (result == null || result == selected.environment.id) return;
@@ -522,10 +515,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
     final result = await showDialog<String>(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            child: _ManifestUrlDialog(initialUrl: currentUrl),
-          ),
+      builder: (_) =>
+          TonosDialogFrame(child: _ManifestUrlDialog(initialUrl: currentUrl)),
     );
 
     if (result == null) return;
@@ -679,23 +670,22 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final strings = _strings;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.databaseClearMediaTitle),
-              content: Text(strings.databaseClearMediaBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: Text(strings.commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: Text(strings.databaseClearCache),
-                ),
-              ],
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.databaseClearMediaTitle),
+          content: Text(strings.databaseClearMediaBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(strings.commonCancel),
             ),
-          ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(strings.databaseClearCache),
+            ),
+          ],
+        ),
+      ),
     );
     if (confirmed != true) return;
 
@@ -705,9 +695,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       await _repo.clearContentCache();
       if (!mounted) return;
       _refreshContentStatus();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(strings.databaseCacheCleared)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.databaseCacheCleared)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -741,39 +730,33 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final canOverride =
                 selection?.allowRuntimeOverrides ??
                 _contentEnvironmentPreferences.allowsRuntimeOverrides;
-            final environmentLabel =
-                environment == null
-                    ? strings.databaseLoadingEnvironment
-                    : environment.isProduction
-                    ? strings.databaseProductionEnvironment(environment.label)
-                    : environment.label;
+            final environmentLabel = environment == null
+                ? strings.databaseLoadingEnvironment
+                : environment.isProduction
+                ? strings.databaseProductionEnvironment(environment.label)
+                : environment.label;
             return SettingsActionTile(
               icon: Icons.public_outlined,
               title: strings.databaseContentEnvironment,
-              subtitle:
-                  environment == null
-                      ? environmentLabel
-                      : '$environmentLabel'
-                          '${!canOverride || environment.description.isEmpty ? '' : '\n${environment.description}'}',
-              trailing:
-                  canOverride
-                      ? IconButton(
-                        tooltip: strings.databaseChangeEnvironment,
-                        icon: const Icon(Icons.swap_horiz),
-                        color:
-                            context.usesNeoPresentation
-                                ? Theme.of(context).colorScheme.onSurface
-                                : theme.colorScheme.primary,
-                        onPressed:
-                            _contentActionRunning
-                                ? null
-                                : _editContentEnvironment,
-                      )
-                      : const Icon(Icons.lock_outline),
-              onTap:
-                  canOverride && !_contentActionRunning
-                      ? _editContentEnvironment
-                      : null,
+              subtitle: environment == null
+                  ? environmentLabel
+                  : '$environmentLabel'
+                        '${!canOverride || environment.description.isEmpty ? '' : '\n${environment.description}'}',
+              trailing: canOverride
+                  ? IconButton(
+                      tooltip: strings.databaseChangeEnvironment,
+                      icon: const Icon(Icons.swap_horiz),
+                      color: context.usesNeoPresentation
+                          ? Theme.of(context).colorScheme.onSurface
+                          : theme.colorScheme.primary,
+                      onPressed: _contentActionRunning
+                          ? null
+                          : _editContentEnvironment,
+                    )
+                  : const Icon(Icons.lock_outline),
+              onTap: canOverride && !_contentActionRunning
+                  ? _editContentEnvironment
+                  : null,
             );
           },
         ),
@@ -785,15 +768,15 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               return SettingsActionTile(
                 icon: Icons.cloud_outlined,
                 title: strings.databaseExerciseManifestUrl,
-                subtitle:
-                    url.isEmpty ? strings.databaseNoExerciseManifestUrl : url,
+                subtitle: url.isEmpty
+                    ? strings.databaseNoExerciseManifestUrl
+                    : url,
                 trailing: IconButton(
                   tooltip: strings.databaseOverrideUrl,
                   icon: const Icon(Icons.edit),
-                  color:
-                      context.usesNeoPresentation
-                          ? Theme.of(context).colorScheme.onSurface
-                          : theme.colorScheme.primary,
+                  color: context.usesNeoPresentation
+                      ? Theme.of(context).colorScheme.onSurface
+                      : theme.colorScheme.primary,
                   onPressed: _contentActionRunning ? null : _editManifestUrl,
                 ),
                 onTap: _contentActionRunning ? null : _editManifestUrl,
@@ -806,10 +789,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             final status = snapshot.data;
             return SettingsActionTile(
               icon: Icons.description_outlined,
-              title:
-                  status == null
-                      ? strings.databaseNoManifestSynced
-                      : strings.databaseManifestVersion(status.version),
+              title: status == null
+                  ? strings.databaseNoManifestSynced
+                  : strings.databaseManifestVersion(status.version),
               subtitle: strings.databaseLastChecked(
                 _formatDateTime(status?.lastCheckedAt),
               ),
@@ -824,13 +806,12 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
             return SettingsActionTile(
               icon: Icons.category_outlined,
               title: strings.databaseSharedCatalogMedia,
-              subtitle:
-                  status == null
-                      ? strings.databaseSharedMediaNotSynced
-                      : strings.databaseManifestLastChecked(
-                        status.version,
-                        _formatDateTime(status.lastCheckedAt),
-                      ),
+              subtitle: status == null
+                  ? strings.databaseSharedMediaNotSynced
+                  : strings.databaseManifestLastChecked(
+                      status.version,
+                      _formatDateTime(status.lastCheckedAt),
+                    ),
               trailing: const SizedBox.shrink(),
             );
           },
@@ -843,8 +824,9 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               return SettingsActionTile(
                 icon: Icons.collections_outlined,
                 title: strings.databaseSharedManifestUrl,
-                subtitle:
-                    url.isEmpty ? strings.databaseNoSharedManifestUrl : url,
+                subtitle: url.isEmpty
+                    ? strings.databaseNoSharedManifestUrl
+                    : url,
                 trailing: const SizedBox.shrink(),
               );
             },
@@ -875,51 +857,48 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               title: strings.databaseWifiOnly,
               subtitle: strings.databaseWifiOnlySubtitle,
               value: wifiOnly,
-              onChanged:
-                  _contentActionRunning
-                      ? null
-                      : (value) {
-                        unawaited(_setWifiOnlyMediaDownloads(value));
-                      },
+              onChanged: _contentActionRunning
+                  ? null
+                  : (value) {
+                      unawaited(_setWifiOnlyMediaDownloads(value));
+                    },
             );
           },
         ),
         SettingsActionTile(
           icon: Icons.sync,
           title: strings.databaseSyncExerciseMedia,
-          trailing:
-              _contentActionRunning
-                  ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : null,
-          onTap:
-              _contentActionRunning ? null : _syncRemoteExerciseMediaManifest,
+          trailing: _contentActionRunning
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
+          onTap: _contentActionRunning
+              ? null
+              : _syncRemoteExerciseMediaManifest,
         ),
         SettingsActionTile(
           icon: Icons.collections_outlined,
           title: strings.databaseSyncSharedMedia,
           subtitle: strings.databaseSyncSharedMediaSubtitle,
-          trailing:
-              _contentActionRunning
-                  ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : null,
+          trailing: _contentActionRunning
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
           onTap: _contentActionRunning ? null : _syncRemoteSharedMediaManifest,
         ),
         if (_contentEnvironmentPreferences.allowsRuntimeOverrides)
           SettingsActionTile(
             icon: Icons.inventory_2_outlined,
             title: strings.databaseLoadBundledManifest,
-            onTap:
-                _contentActionRunning
-                    ? null
-                    : _syncBundledExerciseMediaManifest,
+            onTap: _contentActionRunning
+                ? null
+                : _syncBundledExerciseMediaManifest,
           ),
         SettingsActionTile(
           icon: Icons.cleaning_services_outlined,
@@ -967,47 +946,51 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final strings = _strings;
-    return SettingsPageScaffold(
-      title: strings.databaseSettingsTitle,
-      subtitle: strings.databaseSettingsSubtitle,
-      icon: Icons.storage_outlined,
-      heroAccentColor: SettingsAccent.data,
-      children: [
-        KeyedSubtree(
-          key: _fileActionsTutorialKey,
-          child: SettingsSection(
-            title: strings.databaseBackupRestore,
-            subtitle: strings.databaseBackupRestoreSubtitle,
-            accentColor: SettingsAccent.data,
-            children: settingsTilesWithDividers(context, [
-              SettingsActionTile(
-                key: AppTestKeys.databaseExport,
-                icon: Icons.upload_file,
-                title: strings.databaseExportBackup,
-                onTap: _exportDatabase,
-              ),
-              SettingsActionTile(
-                key: AppTestKeys.databaseImport,
-                icon: Icons.download,
-                title: strings.databaseImportBackup,
-                subtitle: strings.databaseImportBackupSubtitle,
-                iconColor: Theme.of(context).colorScheme.error,
-                onTap: _importDatabase,
-              ),
-            ]),
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.profile,
+      child: SettingsPageScaffold(
+        title: strings.databaseSettingsTitle,
+        subtitle: strings.databaseSettingsSubtitle,
+        icon: Icons.storage_outlined,
+        heroAccentColor: SettingsAccent.data,
+        useExpressiveProfileHeroShape: true,
+        children: [
+          KeyedSubtree(
+            key: _fileActionsTutorialKey,
+            child: SettingsSection(
+              title: strings.databaseBackupRestore,
+              subtitle: strings.databaseBackupRestoreSubtitle,
+              accentColor: SettingsAccent.data,
+              children: settingsTilesWithDividers(context, [
+                SettingsActionTile(
+                  key: AppTestKeys.databaseExport,
+                  icon: Icons.upload_file,
+                  title: strings.databaseExportBackup,
+                  onTap: _exportDatabase,
+                ),
+                SettingsActionTile(
+                  key: AppTestKeys.databaseImport,
+                  icon: Icons.download,
+                  title: strings.databaseImportBackup,
+                  subtitle: strings.databaseImportBackupSubtitle,
+                  iconColor: Theme.of(context).colorScheme.error,
+                  onTap: _importDatabase,
+                ),
+              ]),
+            ),
           ),
-        ),
 
-        KeyedSubtree(key: _healthTutorialKey, child: _buildHealthSection()),
-        KeyedSubtree(
-          key: _maintenanceTutorialKey,
-          child: _buildMaintenanceSection(),
-        ),
+          KeyedSubtree(key: _healthTutorialKey, child: _buildHealthSection()),
+          KeyedSubtree(
+            key: _maintenanceTutorialKey,
+            child: _buildMaintenanceSection(),
+          ),
 
-        _buildCloudContentSection(),
+          _buildCloudContentSection(),
 
-        _buildDeveloperExportSection(),
-      ],
+          _buildDeveloperExportSection(),
+        ],
+      ),
     );
   }
 
@@ -1051,9 +1034,8 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
             return _DatabaseHealthCard(
               health: snapshot.data!,
-              formatBytes:
-                  (bytes) =>
-                      _formatBytes(bytes, Localizations.localeOf(context)),
+              formatBytes: (bytes) =>
+                  _formatBytes(bytes, Localizations.localeOf(context)),
             );
           },
         ),
@@ -1071,50 +1053,45 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         SettingsActionTile(
           icon: Icons.refresh,
           title: strings.databaseRefreshHealth,
-          trailing:
-              _maintenanceRunning
-                  ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : null,
+          trailing: _maintenanceRunning
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
           onTap: _maintenanceRunning ? null : _refreshHealth,
         ),
         SettingsActionTile(
           icon: Icons.fact_check,
           title: strings.databaseIntegrityCheck,
           subtitle: strings.databaseIntegrityCheckSubtitle,
-          onTap:
-              _maintenanceRunning
-                  ? null
-                  : () => _runMaintenance(_repo.runDatabaseIntegrityCheck),
+          onTap: _maintenanceRunning
+              ? null
+              : () => _runMaintenance(_repo.runDatabaseIntegrityCheck),
         ),
         SettingsActionTile(
           icon: Icons.auto_fix_high,
           title: strings.databaseOptimize,
-          onTap:
-              _maintenanceRunning
-                  ? null
-                  : () => _runMaintenance(_repo.optimizeDatabase),
+          onTap: _maintenanceRunning
+              ? null
+              : () => _runMaintenance(_repo.optimizeDatabase),
         ),
         SettingsActionTile(
           icon: Icons.save_alt,
           title: strings.databaseCheckpointWal,
           subtitle: strings.databaseCheckpointWalSubtitle,
-          onTap:
-              _maintenanceRunning
-                  ? null
-                  : () => _runMaintenance(_repo.checkpointWal),
+          onTap: _maintenanceRunning
+              ? null
+              : () => _runMaintenance(_repo.checkpointWal),
         ),
         SettingsActionTile(
           icon: Icons.compress,
           title: strings.databaseVacuum,
           subtitle: strings.databaseVacuumSubtitle,
-          onTap:
-              _maintenanceRunning
-                  ? null
-                  : () => _runMaintenance(_repo.vacuumDatabase),
+          onTap: _maintenanceRunning
+              ? null
+              : () => _runMaintenance(_repo.vacuumDatabase),
         ),
       ]),
     );
@@ -1130,14 +1107,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('equipment.json'),
-          onTap:
-              () => _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
+          onTap: () =>
+              _exportAsset(_repo.exportEquipmentJson, 'equipment.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('bodyparts.json'),
-          onTap:
-              () => _exportAsset(_repo.exportBodypartsJson, 'bodyparts.json'),
+          onTap: () =>
+              _exportAsset(_repo.exportBodypartsJson, 'bodyparts.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
@@ -1147,61 +1124,56 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('exercises.json'),
-          onTap:
-              () => _exportAsset(_repo.exportExercisesJson, 'exercises.json'),
+          onTap: () =>
+              _exportAsset(_repo.exportExercisesJson, 'exercises.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('stretches.json'),
-          onTap:
-              () => _exportAsset(_repo.exportStretchesJson, 'stretches.json'),
+          onTap: () =>
+              _exportAsset(_repo.exportStretchesJson, 'stretches.json'),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('muscle_bodypart.json'),
-          onTap:
-              () => _exportAsset(
-                _repo.exportMuscleBodypartJson,
-                'muscle_bodypart.json',
-              ),
+          onTap: () => _exportAsset(
+            _repo.exportMuscleBodypartJson,
+            'muscle_bodypart.json',
+          ),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('bodypart_ranking.json'),
-          onTap:
-              () => _exportAsset(
-                _repo.exportBodypartRankingJson,
-                'bodypart_ranking.json',
-              ),
+          onTap: () => _exportAsset(
+            _repo.exportBodypartRankingJson,
+            'bodypart_ranking.json',
+          ),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('muscle_ranking.json'),
-          onTap:
-              () => _exportAsset(
-                _repo.exportMuscleRankingJson,
-                'muscle_ranking.json',
-              ),
+          onTap: () => _exportAsset(
+            _repo.exportMuscleRankingJson,
+            'muscle_ranking.json',
+          ),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition(
             'bodypart_muscle_rankings.json',
           ),
-          onTap:
-              () => _exportAsset(
-                _repo.exportBodypartMuscleRankingsJson,
-                'bodypart_muscle_rankings.json',
-              ),
+          onTap: () => _exportAsset(
+            _repo.exportBodypartMuscleRankingsJson,
+            'bodypart_muscle_rankings.json',
+          ),
         ),
         SettingsActionTile(
           icon: Icons.data_object,
           title: strings.databaseExportDefinition('volume_boundaries.json'),
-          onTap:
-              () => _exportAsset(
-                _repo.exportVolumeBoundariesJson,
-                'volume_boundaries.json',
-              ),
+          onTap: () => _exportAsset(
+            _repo.exportVolumeBoundariesJson,
+            'volume_boundaries.json',
+          ),
         ),
       ]),
     );
@@ -1289,12 +1261,11 @@ class _HealthInfoRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final semantic = context.semanticColors;
-    final statusColor =
-        healthy == null
-            ? scheme.primary
-            : healthy!
-            ? semantic.databaseHealthy
-            : semantic.databaseWarning;
+    final statusColor = healthy == null
+        ? scheme.primary
+        : healthy!
+        ? semantic.databaseHealthy
+        : semantic.databaseWarning;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1427,34 +1398,30 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children:
-              widget.config.environments.map((environment) {
-                return RadioListTile<String>(
-                  value: environment.id,
-                  groupValue: _selectedEnvironmentId,
-                  onChanged: (value) {
-                    if (value == null) return;
-                    setState(() => _selectedEnvironmentId = value);
-                  },
-                  title: Text(
-                    environment.isProduction
-                        ? AppLocalizations.of(
-                          context,
-                        ).databaseProductionEnvironment(environment.label)
-                        : environment.label,
-                  ),
-                  subtitle: Text(
-                    [
-                      if (environment.description.isNotEmpty)
-                        environment.description,
-                      if (environment.exerciseMediaManifestUrl.isEmpty)
-                        AppLocalizations.of(
-                          context,
-                        ).databaseNoManifestConfigured,
-                    ].join('\n'),
-                  ),
-                );
-              }).toList(),
+          children: widget.config.environments.map((environment) {
+            return RadioListTile<String>(
+              value: environment.id,
+              groupValue: _selectedEnvironmentId,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _selectedEnvironmentId = value);
+              },
+              title: Text(
+                environment.isProduction
+                    ? AppLocalizations.of(context)
+                          .databaseProductionEnvironment(environment.label)
+                    : environment.label,
+              ),
+              subtitle: Text(
+                [
+                  if (environment.description.isNotEmpty)
+                    environment.description,
+                  if (environment.exerciseMediaManifestUrl.isEmpty)
+                    AppLocalizations.of(context).databaseNoManifestConfigured,
+                ].join('\n'),
+              ),
+            );
+          }).toList(),
         ),
       ),
       actions: [

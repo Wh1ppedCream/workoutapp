@@ -11,6 +11,8 @@ import '../../repositories/app_repository.dart';
 import '../../services/catalog_entity_localizer.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../utils/localized_body_part_name.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -72,11 +74,13 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
     );
     final boundsFuture = _repo.fetchBodyPartVolumeBounds(widget.bodyPart.id);
 
-    final definitions = (await definitionsFuture)
-        .where(
-          (def) => def.bodyParts.any((part) => part.id == widget.bodyPart.id),
-        )
-        .toList();
+    final definitions =
+        (await definitionsFuture)
+            .where(
+              (def) =>
+                  def.bodyParts.any((part) => part.id == widget.bodyPart.id),
+            )
+            .toList();
     final muscles = await musclesFuture;
     final links = await linksFuture;
     final recentSets = await recentSetsFuture;
@@ -144,7 +148,15 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
     final expressive =
         widget.expressiveCatalogPresentation &&
         context.usesExpressivePresentation;
-    return Scaffold(
+    final destinationTokens =
+        expressive
+            ? AppExpressiveDestinationTokens.forFamily(
+              AppExpressiveDestinationFamily.catalog,
+              Theme.of(context).brightness,
+            )
+            : null;
+    final page = Scaffold(
+      backgroundColor: expressive ? destinationTokens?.pageCanvas : null,
       appBar: AppBar(
         title: Text(
           strings.anatomyTargetExercises(
@@ -183,11 +195,20 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                     onMuscleTap: (muscle) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => DefinitionsByMusclePage(
-                            muscle: muscle,
-                            sourceBodyPart: widget.bodyPart,
-                            expressiveCatalogPresentation: expressive,
-                          ),
+                          builder: (_) {
+                            final page = DefinitionsByMusclePage(
+                              muscle: muscle,
+                              sourceBodyPart: widget.bodyPart,
+                              expressiveCatalogPresentation: expressive,
+                            );
+                            return expressive
+                                ? AppExpressiveDestinationTheme(
+                                  family:
+                                      AppExpressiveDestinationFamily.catalog,
+                                  child: page,
+                                )
+                                : page;
+                          },
                         ),
                       );
                     },
@@ -208,6 +229,12 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
         },
       ),
     );
+    return expressive
+        ? AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.catalog,
+          child: page,
+        )
+        : page;
   }
 
   Future<void> _editRecommendedSets(_BodyPartPageData data) async {
@@ -262,14 +289,30 @@ class _BodyPartHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TonosThemeReadyCard(
-            color: expressive ? theme.colorScheme.surfaceContainerLow : null,
+            color:
+                expressive
+                    ? destinationTokens?.surfaceTertiary ??
+                        theme.colorScheme.surfaceContainerLow
+                    : null,
             elevation: expressive ? 0 : null,
+            shape:
+                expressive
+                    ? const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(28),
+                        topRight: Radius.circular(12),
+                        bottomRight: Radius.circular(28),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                    )
+                    : null,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -277,71 +320,110 @@ class _BodyPartHeader extends StatelessWidget {
                 children: [
                   Text(
                     localizedBodyPartName(context, bodyPart.name),
-                    maxLines: 1,
+                    maxLines: expressive ? 2 : 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleLarge?.copyWith(
+                      color:
+                          expressive
+                              ? destinationTokens?.onSurfaceTertiary
+                              : null,
                       fontWeight: expressive ? FontWeight.w700 : null,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppLocalizations.of(context)
-                        .anatomyLinkedExerciseCount(data.definitions.length),
+                    AppLocalizations.of(
+                      context,
+                    ).anatomyLinkedExerciseCount(data.definitions.length),
+                    style:
+                        expressive
+                            ? theme.textTheme.bodyMedium?.copyWith(
+                              color: destinationTokens?.onSurfaceTertiary,
+                            )
+                            : null,
                   ),
                   const SizedBox(height: 14),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final maxWidth = constraints.maxWidth;
                       final gap = maxWidth < 330 ? 10.0 : 16.0;
-                      final heatmapBox = (maxWidth * 0.56)
-                          .clamp(134.0, 178.0)
-                          .toDouble();
-                      final heatmapSize = heatmapBox
-                          .clamp(128.0, 178.0)
-                          .toDouble();
+                      final heatmapBox =
+                          (maxWidth * 0.56).clamp(134.0, 178.0).toDouble();
+                      final heatmapSize =
+                          heatmapBox.clamp(128.0, 178.0).toDouble();
 
+                      final heatmap = SizedBox(
+                        width: heatmapBox,
+                        height: heatmapBox,
+                        child: Center(
+                          child: SingleBodyPartHeatmap(
+                            bodyPartName: bodyPart.name,
+                            size: heatmapSize,
+                            padding: 2,
+                            backgroundColor: Colors.transparent,
+                          ),
+                        ),
+                      );
+                      final strings = AppLocalizations.of(context);
+                      final recentValue = strings.anatomySetUnits(
+                        LocalizedFormatters.number(
+                          data.recentSetUnits,
+                          Localizations.localeOf(context),
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        ),
+                      );
+                      final recommendedValue = _rangeLabel(
+                        strings,
+                        data.volumeBounds,
+                        Localizations.localeOf(context),
+                      );
+                      if (expressive) {
+                        final metrics = _BodyPartExpressiveMetricBays(
+                          recentLabel: strings.anatomyDoneLastSevenDays,
+                          recentValue: recentValue,
+                          recommendedLabel: strings.anatomyRecommended,
+                          recommendedValue: recommendedValue,
+                          onEdit: onEditRecommended,
+                        );
+                        final stack =
+                            maxWidth < 380 ||
+                            MediaQuery.textScalerOf(context).scale(16) > 19;
+                        if (stack) {
+                          return Column(
+                            children: [
+                              heatmap,
+                              const SizedBox(height: 12),
+                              metrics,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            heatmap,
+                            SizedBox(width: gap),
+                            Expanded(child: metrics),
+                          ],
+                        );
+                      }
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: heatmapBox,
-                            height: heatmapBox,
-                            child: Center(
-                              child: SingleBodyPartHeatmap(
-                                bodyPartName: bodyPart.name,
-                                size: heatmapSize,
-                                padding: 2,
-                                backgroundColor: Colors.transparent,
-                              ),
-                            ),
-                          ),
+                          heatmap,
                           SizedBox(width: gap),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 SetStatChip(
-                                  label: AppLocalizations.of(context)
-                                      .anatomyDoneLastSevenDays,
-                                  value: AppLocalizations.of(context)
-                                      .anatomySetUnits(
-                                        LocalizedFormatters.number(
-                                          data.recentSetUnits,
-                                          Localizations.localeOf(context),
-                                          minimumFractionDigits: 1,
-                                          maximumFractionDigits: 1,
-                                        ),
-                                      ),
+                                  label: strings.anatomyDoneLastSevenDays,
+                                  value: recentValue,
                                 ),
                                 const SizedBox(height: 10),
                                 SetStatChip(
-                                  label: AppLocalizations.of(context)
-                                      .anatomyRecommended,
-                                  value: _rangeLabel(
-                                    AppLocalizations.of(context),
-                                    data.volumeBounds,
-                                    Localizations.localeOf(context),
-                                  ),
+                                  label: strings.anatomyRecommended,
+                                  value: recommendedValue,
                                   onEdit: onEditRecommended,
                                 ),
                               ],
@@ -360,7 +442,11 @@ class _BodyPartHeader extends StatelessWidget {
             AppLocalizations.of(context).anatomyAssociatedMuscles,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: expressive ? FontWeight.w700 : null,
-              color: expressive ? theme.colorScheme.primary : null,
+              color:
+                  expressive
+                      ? destinationTokens?.actionPrimary ??
+                          theme.colorScheme.primary
+                      : null,
             ),
           ),
           const SizedBox(height: 8),
@@ -373,29 +459,34 @@ class _BodyPartHeader extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: data.muscles
-                  .map(
-                    (muscle) => ActionChip(
-                      label: LocalizedCatalogEntityName(
-                        entity: CatalogEntityDisplayName(
-                          catalogId: muscle.catalogId,
-                          canonicalName: muscle.name,
+              children:
+                  data.muscles
+                      .map(
+                        (muscle) => ActionChip(
+                          label: LocalizedCatalogEntityName(
+                            entity: CatalogEntityDisplayName(
+                              catalogId: muscle.catalogId,
+                              canonicalName: muscle.name,
+                            ),
+                            maxLines: expressive ? null : 1,
+                            overflow: expressive ? null : TextOverflow.ellipsis,
+                          ),
+                          avatar: const Icon(Icons.fitness_center, size: 18),
+                          onPressed: () => onMuscleTap(muscle),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      avatar: const Icon(Icons.fitness_center, size: 18),
-                      onPressed: () => onMuscleTap(muscle),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
             ),
           const Divider(height: 32),
           Text(
             AppLocalizations.of(context).anatomyExercises,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: expressive ? FontWeight.w700 : null,
-              color: expressive ? theme.colorScheme.primary : null,
+              color:
+                  expressive
+                      ? destinationTokens?.actionPrimary ??
+                          theme.colorScheme.primary
+                      : null,
             ),
           ),
           if (data.definitions.isEmpty) ...[
@@ -431,6 +522,138 @@ class _BodyPartHeader extends StatelessWidget {
   }
 }
 
+class _BodyPartExpressiveMetricBays extends StatelessWidget {
+  const _BodyPartExpressiveMetricBays({
+    required this.recentLabel,
+    required this.recentValue,
+    required this.recommendedLabel,
+    required this.recommendedValue,
+    required this.onEdit,
+  });
+
+  final String recentLabel;
+  final String recentValue;
+  final String recommendedLabel;
+  final String recommendedValue;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens =
+        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
+    final stacked = MediaQuery.textScalerOf(context).scale(16) > 19;
+    final first = _BodyPartExpressiveMetricBay(
+      label: recentLabel,
+      value: recentValue,
+    );
+    final second = _BodyPartExpressiveMetricBay(
+      label: recommendedLabel,
+      value: recommendedValue,
+      onEdit: onEdit,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useStacked = stacked || constraints.maxWidth < 310;
+        return Container(
+          decoration: BoxDecoration(
+            color: tokens.surfaceSelected,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(8),
+              bottomRight: Radius.circular(18),
+              bottomLeft: Radius.circular(8),
+            ),
+            border: Border.all(
+              color: tokens.outlineAccent.withValues(alpha: 0.35),
+            ),
+          ),
+          child:
+              useStacked
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      first,
+                      Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: tokens.outlineAccent.withValues(alpha: 0.25),
+                      ),
+                      second,
+                    ],
+                  )
+                  : Row(
+                    children: [
+                      Expanded(child: first),
+                      Container(
+                        width: 1,
+                        height: 48,
+                        color: tokens.outlineAccent.withValues(alpha: 0.25),
+                      ),
+                      Expanded(child: second),
+                    ],
+                  ),
+        );
+      },
+    );
+  }
+}
+
+class _BodyPartExpressiveMetricBay extends StatelessWidget {
+  const _BodyPartExpressiveMetricBay({
+    required this.label,
+    required this.value,
+    this.onEdit,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens =
+        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            maxLines: 2,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: tokens.onSurfaceSelected),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  maxLines: 2,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: tokens.onSurfaceSelected,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (onEdit != null) ...[
+                const SizedBox(width: 4),
+                IconTheme.merge(
+                  data: IconThemeData(color: tokens.onSurfaceSelected),
+                  child: RecommendedSetsEditButton(onPressed: onEdit!),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ExerciseDefinitionTile extends StatelessWidget {
   final ExerciseDefinition definition;
   final bool expressive;
@@ -444,7 +667,10 @@ class _ExerciseDefinitionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExerciseDefinitionInfoTile(
       definition: definition,
-      subtitle: _ExerciseMetadata(definition: definition),
+      subtitle: _ExerciseMetadata(
+        definition: definition,
+        expressive: expressive,
+      ),
       expressiveCatalogPresentation: expressive,
     );
   }
@@ -452,12 +678,15 @@ class _ExerciseDefinitionTile extends StatelessWidget {
 
 class _ExerciseMetadata extends StatelessWidget {
   final ExerciseDefinition definition;
+  final bool expressive;
 
-  const _ExerciseMetadata({required this.definition});
+  const _ExerciseMetadata({required this.definition, required this.expressive});
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final destinationTokens =
+        Theme.of(context).extension<AppExpressiveDestinationTokens>();
     final equipmentEntities = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -467,28 +696,36 @@ class _ExerciseMetadata extends StatelessWidget {
           ),
         )
         .toList(growable: false);
-    final equipmentLabel = equipmentEntities.isEmpty
-        ? Text(
-            AppLocalizations.of(context).anatomyNoEquipment,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          )
-        : LocalizedCatalogEntityNamesBuilder(
-            entities: equipmentEntities,
-            builder: (context, names) => Text(
-              names.join(', '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+    final equipmentLabel =
+        equipmentEntities.isEmpty
+            ? Text(
+              AppLocalizations.of(context).anatomyNoEquipment,
+              maxLines: expressive ? null : 1,
+              overflow: expressive ? null : TextOverflow.ellipsis,
               style: TextStyle(
-                color: colors.primary,
+                color:
+                    expressive
+                        ? destinationTokens?.actionPrimary
+                        : colors.primary,
                 fontWeight: FontWeight.w600,
               ),
-            ),
-          );
+            )
+            : LocalizedCatalogEntityNamesBuilder(
+              entities: equipmentEntities,
+              builder:
+                  (context, names) => Text(
+                    names.join(', '),
+                    maxLines: expressive ? null : 1,
+                    overflow: expressive ? null : TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color:
+                          expressive
+                              ? destinationTokens?.actionPrimary
+                              : colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+            );
     final muscleEntities = definition.muscles
         .take(3)
         .map(
@@ -498,32 +735,40 @@ class _ExerciseMetadata extends StatelessWidget {
           ),
         )
         .toList(growable: false);
-    final muscleLabel = muscleEntities.isEmpty
-        ? Text(
-            AppLocalizations.of(context).anatomyNoMusclesListed,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: context.usesNeoPresentation
-                  ? context.semanticColors.positive
-                  : Colors.green.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          )
-        : LocalizedCatalogEntityNamesBuilder(
-            entities: muscleEntities,
-            builder: (context, names) => Text(
-              names.join(', '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+    final muscleLabel =
+        muscleEntities.isEmpty
+            ? Text(
+              AppLocalizations.of(context).anatomyNoMusclesListed,
+              maxLines: expressive ? null : 1,
+              overflow: expressive ? null : TextOverflow.ellipsis,
               style: TextStyle(
-                color: context.usesNeoPresentation
-                    ? context.semanticColors.positive
-                    : Colors.green.shade600,
+                color:
+                    expressive
+                        ? destinationTokens?.supportingForeground
+                        : context.usesNeoPresentation
+                        ? context.semanticColors.positive
+                        : Colors.green.shade600,
                 fontWeight: FontWeight.w500,
               ),
-            ),
-          );
+            )
+            : LocalizedCatalogEntityNamesBuilder(
+              entities: muscleEntities,
+              builder:
+                  (context, names) => Text(
+                    names.join(', '),
+                    maxLines: expressive ? null : 1,
+                    overflow: expressive ? null : TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color:
+                          expressive
+                              ? destinationTokens?.supportingForeground
+                              : context.usesNeoPresentation
+                              ? context.semanticColors.positive
+                              : Colors.green.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+            );
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),

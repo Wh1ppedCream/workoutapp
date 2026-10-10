@@ -51,6 +51,10 @@ class LocalizedFormatters {
     return _format(DateFormat.E(_localeTag(locale)).format(value), locale);
   }
 
+  static String weekdayLong(DateTime value, Locale locale) {
+    return _format(DateFormat.EEEE(_localeTag(locale)).format(value), locale);
+  }
+
   /// Formats a weekday using the locale's narrow calendar label.
   ///
   /// Calendar headers need a compact label, but the label must still come
@@ -73,8 +77,9 @@ class LocalizedFormatters {
 
   static String dateRange(DateTime start, DateTime end, Locale locale) {
     final tag = _localeTag(locale);
-    final startFormatter =
-        start.year == end.year ? DateFormat.MMMd(tag) : DateFormat.yMMMd(tag);
+    final startFormatter = start.year == end.year
+        ? DateFormat.MMMd(tag)
+        : DateFormat.yMMMd(tag);
     final endFormatter = DateFormat.yMMMd(tag);
     return _format(
       '${startFormatter.format(start)} - ${endFormatter.format(end)}',
@@ -88,10 +93,9 @@ class LocalizedFormatters {
     Locale locale,
   ) {
     final tag = _localeTag(locale);
-    final startFormatter =
-        startMonth.year == endMonth.year
-            ? DateFormat.MMM(tag)
-            : DateFormat.yMMM(tag);
+    final startFormatter = startMonth.year == endMonth.year
+        ? DateFormat.MMM(tag)
+        : DateFormat.yMMM(tag);
     final endFormatter = DateFormat.yMMM(tag);
     final range =
         ('${startFormatter.format(startMonth)} - '

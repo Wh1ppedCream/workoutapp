@@ -956,36 +956,45 @@ class _OverviewTabState extends State<_OverviewTab> {
       onNotification: _handleScrollNotification,
       child: SizedBox.expand(
         key: _viewportKey,
-        child: ListView(
-          key: const ValueKey<String>('expressive-overview-scroll'),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
-          children: [
-            KeyedSubtree(
-              key: widget.weeklyOverviewKey,
-              child: SevenDayFocusCard(
-                key: _weeklyFocusCardKey,
-                refreshToken: widget.refreshToken,
-                ambientMotionEnabled:
-                    widget.isActive && _weeklyFocusCardVisible,
-                motionEnabled: widget.isActive,
-                onFocusedSetsTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AnalyticsDashboardScreen(),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: context.usesExpressivePresentation
+                  ? 880
+                  : double.infinity,
+            ),
+            child: ListView(
+              key: const ValueKey<String>('expressive-overview-scroll'),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+              children: [
+                KeyedSubtree(
+                  key: widget.weeklyOverviewKey,
+                  child: SevenDayFocusCard(
+                    key: _weeklyFocusCardKey,
+                    refreshToken: widget.refreshToken,
+                    ambientMotionEnabled:
+                        widget.isActive && _weeklyFocusCardVisible,
+                    motionEnabled: widget.isActive,
+                    onFocusedSetsTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const AnalyticsDashboardScreen(),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                KeyedSubtree(
+                  key: widget.activePlansKey,
+                  child: _ActivePresetsCard(
+                    isActive: widget.isActive,
+                    profileId: widget.profileId,
+                    refreshToken: widget.presetsRefreshToken,
+                    onRefresh: widget.onPresetsRefresh,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            KeyedSubtree(
-              key: widget.activePlansKey,
-              child: _ActivePresetsCard(
-                isActive: widget.isActive,
-                profileId: widget.profileId,
-                refreshToken: widget.presetsRefreshToken,
-                onRefresh: widget.onPresetsRefresh,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1301,76 +1310,85 @@ class _PlansTabState extends State<_PlansTab> {
         // completes instead of trapping the user behind a spinner.
         final activeIds =
             snapshot.data ?? _lastActivePresetIds ?? const <int>{};
-        return ListView(
-          key: AppTestKeys.trainPlansList,
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          children: [
-            _PresetSectionCard(
-              title: strings.trainActivePlans,
-              isActive: widget.isActive,
-              onEdit: _openPlanManagement,
-              isArchived: false,
-              child: PresetsLoaded(
-                scale: 0.96,
-                refreshToken: widget.refreshToken,
-                presetIds: activeIds,
-                planActiveState: true,
-                useExpressiveTrainPresentation: true,
-                expressiveMotionEnabled: widget.isActive,
-                progressiveReveal: true,
-                initialVisibleCount: 3,
-                revealBatchSize: 5,
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                emptyMessage: strings.trainNoActivePlans,
-                onRefresh: widget.onRefresh,
-              ),
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: context.usesExpressivePresentation
+                  ? 880
+                  : double.infinity,
             ),
-            const SizedBox(height: 16),
-            _PresetSectionCard(
-              title: strings.trainArchivedPlans,
-              isActive: widget.isActive,
-              onEdit: _openPlanManagement,
-              isArchived: true,
-              child: PresetsLoaded(
-                scale: 0.96,
-                refreshToken: widget.refreshToken,
-                excludedPresetIds: activeIds,
-                planActiveState: false,
-                useExpressiveTrainPresentation: true,
-                expressiveMotionEnabled: widget.isActive,
-                progressiveReveal: true,
-                initialVisibleCount: 3,
-                revealBatchSize: 5,
-                padding: EdgeInsets.zero,
-                physics: const NeverScrollableScrollPhysics(),
-                emptyMessage: strings.trainNoArchivedPlans,
-                onRefresh: widget.onRefresh,
-              ),
+            child: ListView(
+              key: AppTestKeys.trainPlansList,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              children: [
+                _PresetSectionCard(
+                  title: strings.trainActivePlans,
+                  isActive: widget.isActive,
+                  onEdit: _openPlanManagement,
+                  isArchived: false,
+                  child: PresetsLoaded(
+                    scale: 0.96,
+                    refreshToken: widget.refreshToken,
+                    presetIds: activeIds,
+                    planActiveState: true,
+                    useExpressiveTrainPresentation: true,
+                    expressiveMotionEnabled: widget.isActive,
+                    progressiveReveal: true,
+                    initialVisibleCount: 3,
+                    revealBatchSize: 5,
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    emptyMessage: strings.trainNoActivePlans,
+                    onRefresh: widget.onRefresh,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _PresetSectionCard(
+                  title: strings.trainArchivedPlans,
+                  isActive: widget.isActive,
+                  onEdit: _openPlanManagement,
+                  isArchived: true,
+                  child: PresetsLoaded(
+                    scale: 0.96,
+                    refreshToken: widget.refreshToken,
+                    excludedPresetIds: activeIds,
+                    planActiveState: false,
+                    useExpressiveTrainPresentation: true,
+                    expressiveMotionEnabled: widget.isActive,
+                    progressiveReveal: true,
+                    initialVisibleCount: 3,
+                    revealBatchSize: 5,
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    emptyMessage: strings.trainNoArchivedPlans,
+                    onRefresh: widget.onRefresh,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _PremadePlansCard(onOpen: _openPremadePlans),
+                const SizedBox(height: 16),
+                if (context.usesExpressivePresentation)
+                  _ExpressivePlanActions(
+                    onGenerate: widget.onGeneratePreset,
+                    onCreateManual: widget.onCreatePreset,
+                  )
+                else ...[
+                  GenericBar(
+                    label: strings.trainGenerateCustomPlans,
+                    color: dataVisualization.tertiarySeries,
+                    onTap: widget.onGeneratePreset,
+                  ),
+                  const SizedBox(height: 8),
+                  GenericBar(
+                    key: AppTestKeys.trainCreateManualPlan,
+                    label: strings.trainManuallyAddPlan,
+                    color: dataVisualization.tertiarySeries,
+                    onTap: widget.onCreatePreset,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-            _PremadePlansCard(onOpen: _openPremadePlans),
-            const SizedBox(height: 16),
-            if (context.usesExpressivePresentation)
-              _ExpressivePlanActions(
-                onGenerate: widget.onGeneratePreset,
-                onCreateManual: widget.onCreatePreset,
-              )
-            else ...[
-              GenericBar(
-                label: strings.trainGenerateCustomPlans,
-                color: dataVisualization.tertiarySeries,
-                onTap: widget.onGeneratePreset,
-              ),
-              const SizedBox(height: 8),
-              GenericBar(
-                key: AppTestKeys.trainCreateManualPlan,
-                label: strings.trainManuallyAddPlan,
-                color: dataVisualization.tertiarySeries,
-                onTap: widget.onCreatePreset,
-              ),
-            ],
-          ],
+          ),
         );
       },
     );
@@ -1842,6 +1860,10 @@ class _SplitWorkoutBar extends StatelessWidget {
     // ordinary text sizes, then reflows only when accessibility text needs it.
     final useVerticalLayout = usesClassicPresentation
         ? textScale > 1.15 && (languageCode != 'en' || screenWidth < 380)
+        : usesExpressiveRecipe
+        ? screenWidth <= 320 ||
+              textScale >= 1.8 ||
+              (screenWidth < 390 && textScale >= 1.5)
         : textScale > 1.15 || screenWidth < 380;
     final startStyle =
         textTheme.titleMedium?.copyWith(

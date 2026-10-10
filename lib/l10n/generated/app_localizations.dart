@@ -1799,6 +1799,12 @@ abstract class AppLocalizations {
   /// **'Always shown'**
   String get navEditorAlwaysShown;
 
+  /// No description provided for @navEditorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get navEditorRequired;
+
   /// No description provided for @navEditorVisible.
   ///
   /// In en, this message translates to:
@@ -3398,19 +3404,19 @@ abstract class AppLocalizations {
   /// No description provided for @flowPlanSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Set how this plan progresses after each workout.'**
+  /// **'Progression flow for this plan.'**
   String get flowPlanSubtitle;
 
   /// No description provided for @flowAppDefaultSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Set the starting progression flow for new gym profiles.'**
+  /// **'Default flow for new gym profiles.'**
   String get flowAppDefaultSubtitle;
 
   /// No description provided for @flowProfileDefaultSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Set the starting progression flow for new plans in {profileName}.'**
+  /// **'Default flow for new plans in {profileName}.'**
   String flowProfileDefaultSubtitle(String profileName);
 
   /// No description provided for @flowThisGymProfile.
@@ -3506,7 +3512,7 @@ abstract class AppLocalizations {
   /// No description provided for @flowAddBranchSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose where the next success or miss should lead.'**
+  /// **'Create success or miss paths from a node.'**
   String get flowAddBranchSubtitle;
 
   /// No description provided for @flowBranchFrom.
@@ -3536,8 +3542,62 @@ abstract class AppLocalizations {
   /// No description provided for @flowAttachActionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Apply one adjustment of each type to a flow node.'**
+  /// **'Assign progression adjustments to nodes.'**
   String get flowAttachActionSubtitle;
+
+  /// No description provided for @flowFitToViewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit flow to view.'**
+  String get flowFitToViewTooltip;
+
+  /// No description provided for @flowBranchSelectGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a source node to add a success or miss path.'**
+  String get flowBranchSelectGuidance;
+
+  /// No description provided for @flowBranchCompleteGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'All nodes already have success and miss paths.'**
+  String get flowBranchCompleteGuidance;
+
+  /// No description provided for @flowActionSelectNodeGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a node to configure its actions.'**
+  String get flowActionSelectNodeGuidance;
+
+  /// No description provided for @flowActionSelectMethodGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a progression action for this node.'**
+  String get flowActionSelectMethodGuidance;
+
+  /// No description provided for @flowActionCreateMethodGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an action before assigning one to a node.'**
+  String get flowActionCreateMethodGuidance;
+
+  /// No description provided for @flowActionTypesUsedGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'This node already uses every available action type.'**
+  String get flowActionTypesUsedGuidance;
+
+  /// No description provided for @flowActionRemoveDependenciesGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove branches and attached actions before deleting this node.'**
+  String get flowActionRemoveDependenciesGuidance;
+
+  /// No description provided for @flowActionRootGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'The first-attempt node cannot hold actions or be removed.'**
+  String get flowActionRootGuidance;
 
   /// No description provided for @flowApplyActionTo.
   ///
@@ -3929,6 +3989,12 @@ abstract class AppLocalizations {
   /// **'Set the paths that decide how progression actions are applied after workout results.'**
   String get flowPageSubtitle;
 
+  /// No description provided for @flowPageSubtitleExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure how workout results trigger progression actions.'**
+  String get flowPageSubtitleExpressive;
+
   /// No description provided for @flowHowCopiedTitle.
   ///
   /// In en, this message translates to:
@@ -3940,6 +4006,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App flows become the starting point for new gym profiles. Gym flows become the starting point for new plans. Later edits stay scoped to the flow you open here.'**
   String get flowHowCopiedBody;
+
+  /// No description provided for @flowHowCopiedBodyExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'New gym profiles start with app defaults, and new plans start with gym defaults. Changes to one flow don\'t affect the others.'**
+  String get flowHowCopiedBodyExpressive;
 
   /// No description provided for @flowLoadError.
   ///
@@ -3977,6 +4049,12 @@ abstract class AppLocalizations {
   /// **'No saved flow yet'**
   String get flowNoSavedYet;
 
+  /// No description provided for @flowTapToConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to configure'**
+  String get flowTapToConfigure;
+
   /// No description provided for @flowSummary.
   ///
   /// In en, this message translates to:
@@ -3988,6 +4066,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} plan flows available'**
   String flowPlansAvailable(int count);
+
+  /// No description provided for @flowPlansAvailableExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} plan available} other{{count} plans available}}'**
+  String flowPlansAvailableExpressive(int count);
 
   /// No description provided for @flowGymDefaultEntry.
   ///
@@ -4084,6 +4168,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask before ending completed work.'**
   String get gymExitAskBody;
+
+  /// No description provided for @gymExitAskExpressiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what happens when leaving an active workout.'**
+  String get gymExitAskExpressiveSubtitle;
 
   /// No description provided for @gymExitDiscardBody.
   ///
@@ -5697,6 +5787,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tutorials appear once, then stay out of the way. Expand a group to reset a specific walkthrough.'**
   String get tutorialsHowItWorksBody;
+
+  /// No description provided for @tutorialsExpressiveControlsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh with your guided walkthroughs.'**
+  String get tutorialsExpressiveControlsSubtitle;
+
+  /// No description provided for @tutorialsExpressiveHowItWorksBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorials appear automatically once. Expand a category to make an individual walkthrough available again.'**
+  String get tutorialsExpressiveHowItWorksBody;
+
+  /// No description provided for @tutorialsExpressiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{topic} tutorial'**
+  String tutorialsExpressiveTitle(String topic);
+
+  /// No description provided for @tutorialsExpressiveShownNextTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to replay when you next open {topic}.'**
+  String tutorialsExpressiveShownNextTime(String topic);
 
   /// No description provided for @tutorialsMainTabsTitle.
   ///
@@ -11766,6 +11880,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{duration} version of {planName} using the main movements from the full template.'**
   String premadeOneHourDescription(String duration, String planName);
+
+  /// No description provided for @rulesPageSubtitleExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Create reusable rules for weight, rep, and set progression.'**
+  String get rulesPageSubtitleExpressive;
+
+  /// No description provided for @rulesHowDefaultsBodyExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'New gym profiles start with app defaults, and new plans start with profile defaults. Later changes do not update existing profiles or plans automatically.'**
+  String get rulesHowDefaultsBodyExpressive;
+
+  /// No description provided for @rulesRuleTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule type'**
+  String get rulesRuleTypeLabel;
+
+  /// No description provided for @rulesOperationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation'**
+  String get rulesOperationLabel;
+
+  /// Accessible count label for a rule scope.
+  ///
+  /// In en, this message translates to:
+  /// **'{scope}, rule count: {count}'**
+  String rulesScopedRuleCountSemantics(String scope, int count);
+
+  /// Accessible label for a visible rule-count badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule count: {count}'**
+  String rulesCountSemantics(int count);
+
+  /// Accessible label for the total rules in a gym profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Total rules: {count}'**
+  String rulesTotalCountSemantics(int count);
+
+  /// Accessible count label for a plan heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan count: {count}'**
+  String rulesPlanCountSemantics(int count);
+
+  /// No description provided for @rulesProfileDefaultsSubtitleExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Default rules for new plans.'**
+  String get rulesProfileDefaultsSubtitleExpressive;
+
+  /// No description provided for @rulesPlanOnlySubtitleExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan-specific rules.'**
+  String get rulesPlanOnlySubtitleExpressive;
 }
 
 class _AppLocalizationsDelegate

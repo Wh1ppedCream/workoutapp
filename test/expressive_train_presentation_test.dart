@@ -195,10 +195,26 @@ void main() {
       expect(theme.usesExpressivePresentation, isTrue);
       expect(find.byKey(AppTestKeys.trainStartWorkout), findsOneWidget);
       expect(find.text(strings.sevenDayFocusTitle), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('seven-day-focus-side-by-side')),
+        findsOneWidget,
+        reason: 'the established overview composition fits a 360dp phone',
+      );
       expect(find.text('Chest'), findsOneWidget);
       expect(find.text('8'), findsOneWidget);
 
       final start = find.byKey(AppTestKeys.trainStartWorkout);
+      final actionBar = find.ancestor(
+        of: start,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration! as BoxDecoration).borderRadius ==
+                  ExpressiveTrainShapes.primaryAction,
+        ),
+      );
+      expect(tester.getSize(actionBar).height, 64);
       final startText = find.text(strings.trainStartWorkout);
       expect(tester.widget<Text>(startText).style?.fontWeight, FontWeight.w600);
       final startSize = tester.getSize(start);
@@ -216,7 +232,9 @@ void main() {
       final pressedRadius =
           tester.widget<ClipRRect>(responseClip).borderRadius as BorderRadius;
       expect(pressedRadius.topLeft.x, 14);
-      expect(pressedRadius.topRight.x, 14);
+      expect(pressedRadius.topRight.x, 0);
+      expect(pressedRadius.bottomLeft.x, 14);
+      expect(pressedRadius.bottomRight.x, 0);
       expect(tester.getSize(start), startSize);
       await press.cancel();
       await tester.pump();
@@ -224,7 +242,9 @@ void main() {
       final restRadius =
           tester.widget<ClipRRect>(responseClip).borderRadius as BorderRadius;
       expect(restRadius.topLeft.x, 22);
-      expect(restRadius.topRight.x, 22);
+      expect(restRadius.topRight.x, 0);
+      expect(restRadius.bottomLeft.x, 22);
+      expect(restRadius.bottomRight.x, 0);
 
       final plansTab = find.byKey(AppTestKeys.trainPlansTab);
       await tester.tap(plansTab);
@@ -372,6 +392,16 @@ void main() {
       reason: 'the Weekly Overview should not overflow at Pixel 7 font scaling',
     );
 
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(
+      find.byKey(const ValueKey('seven-day-focus-stacked')),
+      findsOneWidget,
+      reason: 'Focused Sets reflows before large text crowds the detail column',
+    );
+    expect(tester.takeException(), isNull);
+
     tester.platformDispatcher.textScaleFactorTestValue = 2;
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 700));
@@ -427,7 +457,11 @@ void main() {
       final scrollable = find
           .descendant(of: overviewScroll, matching: find.byType(Scrollable))
           .first;
-      await tester.drag(scrollable, const Offset(0, -420));
+      final initialScrollRect = tester.getRect(overviewScroll);
+      final initialFocusRect = tester.getRect(focusCard);
+      final partialVisibilityDrag =
+          initialFocusRect.bottom - initialScrollRect.top - 12;
+      await tester.drag(scrollable, Offset(0, -partialVisibilityDrag));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump();
 
@@ -446,7 +480,7 @@ void main() {
             'ambient motion pauses when less than 24 dp of the card is visible',
       );
 
-      await tester.drag(scrollable, const Offset(0, 420));
+      await tester.drag(scrollable, Offset(0, partialVisibilityDrag));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -712,6 +746,148 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Expressive Train stacks actions at the 320dp width boundary', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await const TutorialStateStore().skipAll();
+    final repository = _ExpressiveTrainRepository();
+    final profile = _ExpressiveSelectedProfile(repository: repository);
+    final session = ActiveSession(
+      repository: repository,
+      retryDelay: (_) async {},
+    );
+    addTearDown(profile.dispose);
+    addTearDown(session.dispose);
+    await session.ready;
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: repository),
+          Provider<ActivePlanStore>.value(
+            value: ActivePlanStore(repository: repository),
+          ),
+          ChangeNotifierProvider<SelectedProfile>.value(value: profile),
+          ChangeNotifierProvider<ActiveSession>.value(value: session),
+        ],
+        child: MaterialApp(
+          theme: ExpressiveThemeDefinition.light(),
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const TrainPage(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump();
+
+    final start = find.byKey(AppTestKeys.trainStartWorkout);
+    final actionBar = find.ancestor(
+      of: start,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Container &&
+            widget.decoration is BoxDecoration &&
+            (widget.decoration! as BoxDecoration).borderRadius ==
+                ExpressiveTrainShapes.primaryAction,
+      ),
+    );
+    expect(tester.getSize(actionBar).height, greaterThan(64));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'Expressive Train keeps its layout intentional across viewports',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      await const TutorialStateStore().skipAll();
+      final repository = _ExpressiveTrainRepository();
+      final profile = _ExpressiveSelectedProfile(repository: repository);
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
+      );
+      addTearDown(profile.dispose);
+      addTearDown(session.dispose);
+      await session.ready;
+
+      await _pumpExpressiveTrain(
+        tester,
+        repository,
+        profile,
+        session,
+        disableAnimations: true,
+      );
+
+      const viewports = <(double, double, double)>[
+        (320, 720, 1),
+        (360, 800, 1),
+        (390, 844, 1),
+        (430, 932, 1),
+        (600, 960, 1),
+        (800, 1100, 1),
+        (1024, 1366, 1),
+        (640, 360, 1),
+        (1024, 768, 1),
+        (320, 720, 2),
+        (390, 844, 1.3),
+        (430, 932, 1.5),
+        (800, 600, 1.5),
+      ];
+
+      for (final (width, height, textScale) in viewports) {
+        tester.view.physicalSize = Size(width, height);
+        tester.platformDispatcher.textScaleFactorTestValue = textScale;
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 250));
+
+        final overviewCard = find.byType(SevenDayFocusCard);
+        expect(overviewCard, findsOneWidget);
+        expect(
+          tester.getSize(overviewCard).width,
+          lessThanOrEqualTo(width < 912 ? width - 32 : 848),
+          reason: 'Overview width $width, height $height, text $textScale',
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Overview width $width, height $height, text $textScale',
+        );
+
+        await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
+        await tester.pump(const Duration(milliseconds: 250));
+        final plansList = find.byKey(AppTestKeys.trainPlansList);
+        expect(plansList, findsOneWidget);
+        expect(
+          tester.getSize(plansList).width,
+          lessThanOrEqualTo(880),
+          reason: 'Plans width $width, height $height, text $textScale',
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Plans width $width, height $height, text $textScale',
+        );
+        await tester.tap(find.byKey(AppTestKeys.trainOverviewTab));
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+      await tester.pump(const Duration(milliseconds: 650));
+    },
+  );
+
   testWidgets(
     'Expressive Train tabs and action bar fit 320dp at 2x in French',
     (tester) async {
@@ -721,6 +897,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       SharedPreferences.setMockInitialValues(<String, Object>{});
+      await const TutorialStateStore().skipAll();
       final repository = _ExpressiveTrainRepository();
       final profile = _ExpressiveSelectedProfile(repository: repository);
       final session = ActiveSession(

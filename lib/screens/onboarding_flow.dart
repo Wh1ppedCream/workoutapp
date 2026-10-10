@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/expressive_planning_tokens.dart';
 import '../theme/tokens/app_tutorial_tokens.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../l10n/safe_failure_localizations.dart';
@@ -324,21 +325,20 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           (enteredWeight == null || enteredWeight <= 0
               ? null
               : WeightUnitFormatter.toPounds(
-                enteredWeight,
-                _selectedWeightUnit,
-              ));
+                  enteredWeight,
+                  _selectedWeightUnit,
+                ));
       final info = PersonalInfo(
         name: _clean(_nameController.text),
         gender: _gender,
         dob: _dob,
         height: _clean(_heightController.text),
-        weight:
-            bodyWeightLbs == null
-                ? _clean(_weightController.text)
-                : WeightUnitFormatter.formatInputWeight(
-                  bodyWeightLbs,
-                  WeightUnit.pounds,
-                ),
+        weight: bodyWeightLbs == null
+            ? _clean(_weightController.text)
+            : WeightUnitFormatter.formatInputWeight(
+                bodyWeightLbs,
+                WeightUnit.pounds,
+              ),
         bodyFatEstimate: _bodyFatEstimate,
         weightTrend: _weightTrend,
         activityLevel: null,
@@ -347,13 +347,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       if (_hasAnyInput()) {
         await repo.savePersonalInfoWithBodyWeight(
           info: info,
-          bodyWeightValue:
-              bodyWeightLbs == null
-                  ? null
-                  : WeightUnitFormatter.fromPounds(
-                    bodyWeightLbs,
-                    _selectedWeightUnit,
-                  ),
+          bodyWeightValue: bodyWeightLbs == null
+              ? null
+              : WeightUnitFormatter.fromPounds(
+                  bodyWeightLbs,
+                  _selectedWeightUnit,
+                ),
           bodyWeightUnit: _selectedWeightUnit,
           measurementNote: 'Onboarding',
         );
@@ -391,19 +390,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       return null;
     }
 
-    final selectedEquipment =
-        _availableGymEquipment
-            .where((item) => _selectedGymEquipmentNames.contains(item.name))
-            .toList();
+    final selectedEquipment = _availableGymEquipment
+        .where((item) => _selectedGymEquipmentNames.contains(item.name))
+        .toList();
     if (selectedEquipment.isEmpty) {
       throw StateError(_strings.onboardingSelectEquipmentError);
     }
 
     final existingProfiles = await repo.fetchAllProfiles();
-    final requestedName =
-        _gymProfileNameController.text.trim().isEmpty
-            ? _gymSpaceDefaultProfileName(template)
-            : _gymProfileNameController.text.trim();
+    final requestedName = _gymProfileNameController.text.trim().isEmpty
+        ? _gymSpaceDefaultProfileName(template)
+        : _gymProfileNameController.text.trim();
 
     final profileId = _onboardingProfileId;
     if (profileId != null &&
@@ -450,11 +447,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     List<GymProfile> existingProfiles, {
     int? ignoredProfileId,
   }) {
-    final existingNames =
-        existingProfiles
-            .where((profile) => profile.id != ignoredProfileId)
-            .map((profile) => profile.name.toLowerCase())
-            .toSet();
+    final existingNames = existingProfiles
+        .where((profile) => profile.id != ignoredProfileId)
+        .map((profile) => profile.name.toLowerCase())
+        .toSet();
     if (!existingNames.contains(requestedName.toLowerCase())) {
       return requestedName;
     }
@@ -472,12 +468,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _selectGymSpace(_GymSpaceTemplate template) {
-    final availableNames =
-        _availableGymEquipment.map((equipment) => equipment.name).toSet();
-    final equipmentNames =
-        template.includeAllEquipment
-            ? availableNames
-            : template.equipmentNames.intersection(availableNames);
+    final availableNames = _availableGymEquipment
+        .map((equipment) => equipment.name)
+        .toSet();
+    final equipmentNames = template.includeAllEquipment
+        ? availableNames
+        : template.equipmentNames.intersection(availableNames);
 
     setState(() {
       _selectedGymSpace = template;
@@ -617,8 +613,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Future<void> _nextAction() async {
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
-    final currentIndex =
-        _currentPage >= pages.length ? lastPageIndex : _currentPage;
+    final currentIndex = _currentPage >= pages.length
+        ? lastPageIndex
+        : _currentPage;
     final currentPage = pages[currentIndex];
 
     if (currentPage.id == 'focus' && !_hasSelectedOnboardingFocus) {
@@ -682,12 +679,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     final addedPlanIds = await Navigator.of(context).push<List<int>>(
       MaterialPageRoute(
-        builder:
-            (_) => PremadePlansPage(
-              profileId: profileId,
-              onboardingMode: true,
-              onPlanAdded: () {},
-            ),
+        builder: (_) => PremadePlansPage(
+          profileId: profileId,
+          onboardingMode: true,
+          onPlanAdded: () {},
+        ),
       ),
     );
     if (!mounted) return;
@@ -707,11 +703,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     final generatedPlanIds = await Navigator.of(context).push<List<int>>(
       MaterialPageRoute(
-        builder:
-            (_) => PresetGenerationQaScreen(
-              profileId: profileId,
-              onboardingMode: true,
-            ),
+        builder: (_) => PresetGenerationQaScreen(
+          profileId: profileId,
+          onboardingMode: true,
+        ),
       ),
     );
     if (!mounted || generatedPlanIds == null || generatedPlanIds.isEmpty) {
@@ -749,22 +744,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final activeSession = context.read<ActiveSession>();
     final result = await Navigator.of(context).push<PresetDetailResult>(
       MaterialPageRoute(
-        builder:
-            (_) => MultiProvider(
-              providers: [
-                ChangeNotifierProvider<ActiveSession>.value(
-                  value: activeSession,
-                ),
-                ChangeNotifierProvider(
-                  create: (_) => PresetSession(presetId, repository: repo),
-                ),
-              ],
-              child: const PresetDetailScreen(
-                startInEditingMode: true,
-                showOnboardingManualPlanTutorial: true,
-                closeAfterSave: true,
-              ),
+        builder: (_) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ActiveSession>.value(value: activeSession),
+            ChangeNotifierProvider(
+              create: (_) => PresetSession(presetId, repository: repo),
             ),
+          ],
+          child: const PresetDetailScreen(
+            startInEditingMode: true,
+            showOnboardingManualPlanTutorial: true,
+            closeAfterSave: true,
+          ),
+        ),
       ),
     );
     if (!mounted) return;
@@ -839,16 +831,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
+    return _buildOnboardingScaffold(context);
+  }
+
+  Widget _buildOnboardingScaffold(BuildContext context) {
     final strings = _strings;
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
-    final scheme = Theme.of(context).colorScheme;
-    final safePage =
-        _currentPage > lastPageIndex ? lastPageIndex : _currentPage;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final expressiveTokens = AppExpressivePlanningTokens.maybeOf(context);
+    final safePage = _currentPage > lastPageIndex
+        ? lastPageIndex
+        : _currentPage;
     final canAdvance = _canAdvance(pages[safePage]);
 
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: expressiveTokens?.pageCanvas ?? scheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -862,10 +861,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 onSkip: () {
                   _skipOrFinish();
                 },
-                skipLabel:
-                    safePage == lastPageIndex
-                        ? strings.onboardingFinish
-                        : strings.onboardingSkip,
+                skipLabel: safePage == lastPageIndex
+                    ? strings.onboardingFinish
+                    : strings.onboardingSkip,
               ),
             ),
             Expanded(
@@ -891,12 +889,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed:
-                          canAdvance && !_isFinishing
-                              ? () {
-                                _nextAction();
-                              }
-                              : null,
+                      style: expressiveTokens == null
+                          ? null
+                          : FilledButton.styleFrom(
+                              backgroundColor: expressiveTokens.actionPrimary,
+                              foregroundColor:
+                                  expressiveTokens.actionPrimaryForeground,
+                            ),
+                      onPressed: canAdvance && !_isFinishing
+                          ? () {
+                              _nextAction();
+                            }
+                          : null,
                       child: Text(
                         _isFinishing
                             ? strings.onboardingFinishing
@@ -921,17 +925,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final theme = Theme.of(context);
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
-    final cardForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.settingsSection)
-            : theme.colorScheme.onSurface;
-    final cardSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.settingsSection,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+    final cardForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.settingsSection)
+        : theme.colorScheme.onSurface;
+    final cardSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, surfaces.settingsSection)
+        : theme.colorScheme.onSurfaceVariant;
     return _OnboardingCard(
       icon: Icons.favorite,
       title: strings.onboardingWelcomeTitle,
@@ -946,7 +945,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
         const SizedBox(height: 10),
         DropdownButtonFormField<AppLanguagePreference>(
-          value: language,
+          initialValue: language,
           isExpanded: true,
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.language_outlined),
@@ -955,19 +954,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               vertical: 12,
             ),
           ),
-          items:
-              AppLanguagePreference.values
-                  .map(
-                    (preference) => DropdownMenuItem(
-                      value: preference,
-                      child: Text(
-                        _languagePreferenceLabel(preference),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-                  .toList(),
+          items: AppLanguagePreference.values
+              .map(
+                (preference) => DropdownMenuItem(
+                  value: preference,
+                  child: Text(
+                    _languagePreferenceLabel(preference),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: (preference) {
             if (preference == null) return;
             context.read<LocalePreferenceProvider>().setPreference(preference);
@@ -1015,27 +1013,27 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         _FieldGap.small,
         DropdownButtonFormField<String>(
           isExpanded: true,
-          value: _gender,
+          initialValue: _gender,
           decoration: _onboardingInputDecoration(
             context,
             label: strings.onboardingGenderLabel,
             icon: Icons.wc_outlined,
           ),
-          items:
-              genderValues.map((gender) {
-                return DropdownMenuItem(
-                  value: gender,
-                  child: Text(_genderLabel(gender)),
-                );
-              }).toList(),
+          items: genderValues.map((gender) {
+            return DropdownMenuItem(
+              value: gender,
+              child: Text(_genderLabel(gender)),
+            );
+          }).toList(),
           onChanged: (value) => setState(() => _gender = value),
         ),
         _FieldGap.small,
         _ActionField(
           icon: Icons.calendar_today,
           label: strings.onboardingDateOfBirthLabel,
-          value:
-              _dob == null ? strings.onboardingSelectDate : _formatDate(_dob!),
+          value: _dob == null
+              ? strings.onboardingSelectDate
+              : _formatDate(_dob!),
           onTap: _pickDob,
         ),
         _FieldGap.small,
@@ -1061,10 +1059,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           key: const Key('onboarding-current-weight'),
           controller: _weightController,
           label: strings.onboardingCurrentWeightLabel,
-          hint:
-              _selectedWeightUnit == WeightUnit.pounds
-                  ? strings.onboardingWeightHintPounds
-                  : strings.onboardingWeightHintKilograms,
+          hint: _selectedWeightUnit == WeightUnit.pounds
+              ? strings.onboardingWeightHintPounds
+              : strings.onboardingWeightHintKilograms,
           icon: Icons.monitor_weight_outlined,
           keyboardType: TextInputType.number,
           suffixText: _selectedWeightUnit.shortLabel,
@@ -1144,14 +1141,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             'Not sure',
           ],
           value: _weightTrend,
-          labelBuilder:
-              (value) => switch (value) {
-                'Gaining weight' => strings.onboardingWeightTrendGaining,
-                'Losing weight' => strings.onboardingWeightTrendLosing,
-                'Maintaining weight' =>
-                  strings.onboardingWeightTrendMaintaining,
-                _ => strings.onboardingNotSure,
-              },
+          labelBuilder: (value) => switch (value) {
+            'Gaining weight' => strings.onboardingWeightTrendGaining,
+            'Losing weight' => strings.onboardingWeightTrendLosing,
+            'Maintaining weight' => strings.onboardingWeightTrendMaintaining,
+            _ => strings.onboardingNotSure,
+          },
           onChanged: (value) => setState(() => _weightTrend = value),
         ),
       ],
@@ -1161,50 +1156,48 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Widget _buildBodyFatPage() {
     final strings = _strings;
     final isFemale = _gender == 'Female';
-    final options =
-        isFemale
-            ? const [
-              '5-10%',
-              '10-15%',
-              '15-20%',
-              '20-25%',
-              '25-30%',
-              '30-35%',
-              '35-40%',
-              '40-45%',
-            ]
-            : const [
-              '0-5%',
-              '5-10%',
-              '10-15%',
-              '15-20%',
-              '20-25%',
-              '25-30%',
-              '30-35%',
-              '35-40%',
-            ];
-    final paths =
-        isFemale
-            ? const [
-              'assets/bodyfat_woman/5-10_woman.png',
-              'assets/bodyfat_woman/10-15_woman.png',
-              'assets/bodyfat_woman/15-20_woman.png',
-              'assets/bodyfat_woman/20-25_woman.png',
-              'assets/bodyfat_woman/25-30_woman.png',
-              'assets/bodyfat_woman/30-35_woman.png',
-              'assets/bodyfat_woman/35-40_woman.png',
-              'assets/bodyfat_woman/40-45_woman.png',
-            ]
-            : const [
-              'assets/bodyfat/0-5_bf.png',
-              'assets/bodyfat/5-10_bf.png',
-              'assets/bodyfat/10-15_bf.png',
-              'assets/bodyfat/15-20_bf.png',
-              'assets/bodyfat/20-25_bf.png',
-              'assets/bodyfat/25-30_bf.png',
-              'assets/bodyfat/30-35_bf.png',
-              'assets/bodyfat/35-40_bf.png',
-            ];
+    final options = isFemale
+        ? const [
+            '5-10%',
+            '10-15%',
+            '15-20%',
+            '20-25%',
+            '25-30%',
+            '30-35%',
+            '35-40%',
+            '40-45%',
+          ]
+        : const [
+            '0-5%',
+            '5-10%',
+            '10-15%',
+            '15-20%',
+            '20-25%',
+            '25-30%',
+            '30-35%',
+            '35-40%',
+          ];
+    final paths = isFemale
+        ? const [
+            'assets/bodyfat_woman/5-10_woman.png',
+            'assets/bodyfat_woman/10-15_woman.png',
+            'assets/bodyfat_woman/15-20_woman.png',
+            'assets/bodyfat_woman/20-25_woman.png',
+            'assets/bodyfat_woman/25-30_woman.png',
+            'assets/bodyfat_woman/30-35_woman.png',
+            'assets/bodyfat_woman/35-40_woman.png',
+            'assets/bodyfat_woman/40-45_woman.png',
+          ]
+        : const [
+            'assets/bodyfat/0-5_bf.png',
+            'assets/bodyfat/5-10_bf.png',
+            'assets/bodyfat/10-15_bf.png',
+            'assets/bodyfat/15-20_bf.png',
+            'assets/bodyfat/20-25_bf.png',
+            'assets/bodyfat/25-30_bf.png',
+            'assets/bodyfat/30-35_bf.png',
+            'assets/bodyfat/35-40_bf.png',
+          ];
 
     return _OnboardingCard(
       icon: Icons.image_search,
@@ -1245,22 +1238,21 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         DropdownButtonFormField<String>(
           isExpanded: true,
-          value: _preferredDiet,
+          initialValue: _preferredDiet,
           decoration: _onboardingInputDecoration(
             context,
             label: strings.onboardingPreferredDiet,
             icon: Icons.restaurant_menu,
           ),
-          items:
-              const ['Balanced', 'Low fat', 'Low carb', 'Keto'].map((diet) {
-                final label = switch (diet) {
-                  'Balanced' => strings.onboardingDietBalanced,
-                  'Low fat' => strings.onboardingDietLowFat,
-                  'Low carb' => strings.onboardingDietLowCarb,
-                  _ => strings.onboardingDietKeto,
-                };
-                return DropdownMenuItem(value: diet, child: Text(label));
-              }).toList(),
+          items: const ['Balanced', 'Low fat', 'Low carb', 'Keto'].map((diet) {
+            final label = switch (diet) {
+              'Balanced' => strings.onboardingDietBalanced,
+              'Low fat' => strings.onboardingDietLowFat,
+              'Low carb' => strings.onboardingDietLowCarb,
+              _ => strings.onboardingDietKeto,
+            };
+            return DropdownMenuItem(value: diet, child: Text(label));
+          }).toList(),
           onChanged: (value) => setState(() => _preferredDiet = value!),
         ),
         _FieldGap.small,
@@ -1276,13 +1268,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           title: strings.onboardingTrainingDuringProgram,
           options: const ['None', 'Lifting', 'Cardio', 'Lifting and cardio'],
           value: _trainingType,
-          labelBuilder:
-              (value) => switch (value) {
-                'None' => strings.onboardingTrainingNone,
-                'Lifting' => strings.onboardingTrainingLifting,
-                'Cardio' => strings.onboardingTrainingCardio,
-                _ => strings.onboardingTrainingLiftingAndCardio,
-              },
+          labelBuilder: (value) => switch (value) {
+            'None' => strings.onboardingTrainingNone,
+            'Lifting' => strings.onboardingTrainingLifting,
+            'Cardio' => strings.onboardingTrainingCardio,
+            _ => strings.onboardingTrainingLiftingAndCardio,
+          },
           onChanged: (value) => setState(() => _trainingType = value!),
         ),
         const SizedBox(height: 16),
@@ -1290,13 +1281,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           title: strings.onboardingProteinPreference,
           options: const ['Low', 'Moderate', 'High', 'Very high'],
           value: _proteinPreference,
-          labelBuilder:
-              (value) => switch (value) {
-                'Low' => strings.onboardingProteinLow,
-                'Moderate' => strings.onboardingProteinModerate,
-                'High' => strings.onboardingProteinHigh,
-                _ => strings.onboardingProteinVeryHigh,
-              },
+          labelBuilder: (value) => switch (value) {
+            'Low' => strings.onboardingProteinLow,
+            'Moderate' => strings.onboardingProteinModerate,
+            'High' => strings.onboardingProteinHigh,
+            _ => strings.onboardingProteinVeryHigh,
+          },
           onChanged: (value) => setState(() => _proteinPreference = value!),
         ),
       ],
@@ -1382,13 +1372,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             max: 1.0,
             divisions: 9,
             label: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
-            onChanged:
-                (value) => setState(() {
-                  _weeklyRatePct = value;
-                  _weeklyRateLbs = _goalWeightValue * value / 100;
-                  _monthlyRatePct = value * 4;
-                  _monthlyRateLbs = _weeklyRateLbs * 4;
-                }),
+            onChanged: (value) => setState(() {
+              _weeklyRatePct = value;
+              _weeklyRateLbs = _goalWeightValue * value / 100;
+              _monthlyRatePct = value * 4;
+              _monthlyRateLbs = _weeklyRateLbs * 4;
+            }),
           ),
         ),
         const SizedBox(height: 12),
@@ -1484,9 +1473,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surface.withValues(alpha: 0.46),
+            color: Theme.of(context).colorScheme.surface
+                .withValues(alpha: 0.46),
             borderRadius: context.tutorialTokens.sectionShape,
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
@@ -1500,9 +1488,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   Expanded(
                     child: Text(
                       strings.onboardingIncludedEquipmentTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w900),
                     ),
                   ),
                   Text(
@@ -1529,30 +1516,28 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               if (selectedEquipment.isEmpty)
                 Text(
                   strings.onboardingNoEquipmentSelected,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: Theme.of(context).colorScheme.error),
                 )
               else
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children:
-                      selectedEquipment.map((equipment) {
-                        return Chip(
-                          avatar: Icon(
-                            _onboardingEquipmentIcon(equipment.name),
-                            size: 17,
-                          ),
-                          label: LocalizedCatalogEntityName(
-                            entity: CatalogEntityDisplayName(
-                              catalogId: equipment.catalogId,
-                              canonicalName: equipment.name,
-                            ),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                        );
-                      }).toList(),
+                  children: selectedEquipment.map((equipment) {
+                    return Chip(
+                      avatar: Icon(
+                        _onboardingEquipmentIcon(equipment.name),
+                        size: 17,
+                      ),
+                      label: LocalizedCatalogEntityName(
+                        entity: CatalogEntityDisplayName(
+                          catalogId: equipment.catalogId,
+                          canonicalName: equipment.name,
+                        ),
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    );
+                  }).toList(),
                 ),
             ],
           ),
@@ -1584,13 +1569,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   Future<void> _openGymProfileEditor() async {
     final draft = await Navigator.of(context).push<GymProfileDraft>(
       MaterialPageRoute(
-        builder:
-            (_) => GymProfileScreen(
-              initialName: _gymProfileNameController.text.trim(),
-              initialEquipmentNames: _selectedGymEquipmentNames,
-              returnDraftOnly: true,
-              title: _strings.onboardingEditWorkoutSpaceTitle,
-            ),
+        builder: (_) => GymProfileScreen(
+          initialName: _gymProfileNameController.text.trim(),
+          initialEquipmentNames: _selectedGymEquipmentNames,
+          returnDraftOnly: true,
+          title: _strings.onboardingEditWorkoutSpaceTitle,
+        ),
       ),
     );
     if (draft == null || !mounted) return;
@@ -1750,10 +1734,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
               _SummaryRow(
                 label: strings.onboardingSummaryGymProfile,
-                value:
-                    _selectedGymSpace?.skipSetup ?? true
-                        ? strings.onboardingGymGeneralName
-                        : _gymProfileNameController.text.trim(),
+                value: _selectedGymSpace?.skipSetup ?? true
+                    ? strings.onboardingGymGeneralName
+                    : _gymProfileNameController.text.trim(),
               ),
               if (!(_selectedGymSpace?.skipSetup ?? true))
                 _SummaryRow(
@@ -1911,14 +1894,19 @@ class _OnboardingHeader extends StatelessWidget {
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
+    final expressiveTokens = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final progressSurface =
-        neo ? surfaces.settingsSection : scheme.surfaceContainerHighest;
-    final progressValue = neo ? surfaces.settingsHero : scheme.primary;
+        expressiveTokens?.equipmentSurface ??
+        (neo ? surfaces.settingsSection : scheme.surfaceContainerHighest);
+    final progressValue =
+        expressiveTokens?.actionPrimary ??
+        (neo ? surfaces.settingsHero : scheme.primary);
     final progressSecondary =
-        neo
+        expressiveTokens?.onPage ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, progressSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
     final progress = pageCount <= 1 ? 1.0 : (currentPage + 1) / pageCount;
     final usesLocalizedLayout =
         Localizations.localeOf(context).languageCode != 'en';
@@ -1928,14 +1916,13 @@ class _OnboardingHeader extends StatelessWidget {
       children: [
         usesLocalizedLayout
             ? Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 104,
-                  child:
-                      onBack == null
-                          ? null
-                          : Align(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 104,
+                    child: onBack == null
+                        ? null
+                        : Align(
                             alignment: Alignment.centerLeft,
                             child: IconButton(
                               onPressed: onBack,
@@ -1944,75 +1931,74 @@ class _OnboardingHeader extends StatelessWidget {
                               icon: const Icon(Icons.chevron_left, size: 26),
                             ),
                           ),
-                ),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 104,
-                  child: TextButton(
-                    onPressed: onSkip,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(skipLabel, maxLines: 1),
-                    ),
-                  ),
-                ),
-              ],
-            )
-            : SizedBox(
-              height: 48,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      width: 72,
-                      child:
-                          onBack == null
-                              ? null
-                              : IconButton(
-                                onPressed: onBack,
-                                tooltip: strings.onboardingPreviousStepTooltip,
-                                alignment: Alignment.centerLeft,
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.chevron_left, size: 26),
-                              ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 76),
+                  Expanded(
                     child: Text(
                       title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: SizedBox(
-                      width: 72,
-                      child: TextButton(
-                        onPressed: onSkip,
-                        child: Text(skipLabel),
+                  SizedBox(
+                    width: 104,
+                    child: TextButton(
+                      onPressed: onSkip,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(skipLabel, maxLines: 1),
                       ),
                     ),
                   ),
                 ],
+              )
+            : SizedBox(
+                height: 48,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 72,
+                        child: onBack == null
+                            ? null
+                            : IconButton(
+                                onPressed: onBack,
+                                tooltip: strings.onboardingPreviousStepTooltip,
+                                alignment: Alignment.centerLeft,
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.chevron_left, size: 26),
+                              ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 76),
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        width: 72,
+                        child: TextButton(
+                          onPressed: onSkip,
+                          child: Text(skipLabel),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: context.tutorialTokens.pillShape,
@@ -2020,8 +2006,9 @@ class _OnboardingHeader extends StatelessWidget {
             value: progress,
             minHeight: 8,
             backgroundColor: progressSurface,
-            valueColor:
-                neo ? AlwaysStoppedAnimation<Color>(progressValue) : null,
+            valueColor: neo || expressiveTokens != null
+                ? AlwaysStoppedAnimation<Color>(progressValue)
+                : null,
           ),
         ),
         const SizedBox(height: 6),
@@ -2052,34 +2039,46 @@ class _OnboardingCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressiveTokens = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface =
-        neo
+        expressiveTokens?.planSupportSurface ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final cardForeground =
-        neo
+        expressiveTokens?.planSupportForeground ??
+        (neo
             ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
+            : scheme.onSurface);
     final cardSecondary =
-        neo
+        expressiveTokens?.planSupportForeground ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, cardSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
 
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: cardSurface,
-          borderRadius:
-              neo ? shapes.settingsPanel : context.tutorialTokens.heroShape,
+          borderRadius: expressiveTokens != null
+              ? expressiveTokens.supportShape
+              : neo
+              ? shapes.settingsPanel
+              : context.tutorialTokens.heroShape,
           border: Border.all(
             color:
-                neo
+                expressiveTokens?.outline ??
+                (neo
                     ? tonosOutlineForSurface(context, cardSurface)
-                    : scheme.outlineVariant.withValues(alpha: 0.55),
-            width: neo ? shapes.outlineWidth : 1,
+                    : scheme.outlineVariant.withValues(alpha: 0.55)),
+            width: neo
+                ? shapes.outlineWidth
+                : expressiveTokens != null
+                ? 1.5
+                : 1,
           ),
         ),
         child: Column(
@@ -2090,14 +2089,20 @@ class _OnboardingCard extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 color:
-                    neo
+                    expressiveTokens?.planFocalSurface ??
+                    (neo
                         ? surfaces.dialogChoice
-                        : scheme.primary.withValues(alpha: 0.18),
-                shape: BoxShape.circle,
+                        : scheme.primary.withValues(alpha: 0.18)),
+                borderRadius: expressiveTokens?.rowShape,
+                shape: expressiveTokens == null
+                    ? BoxShape.circle
+                    : BoxShape.rectangle,
               ),
               child: Icon(
                 icon,
-                color: neo ? cardForeground : scheme.primary,
+                color:
+                    expressiveTokens?.planFocalForeground ??
+                    (neo ? cardForeground : scheme.primary),
                 size: 28,
               ),
             ),
@@ -2105,14 +2110,16 @@ class _OnboardingCard extends StatelessWidget {
             Text(
               title,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: neo ? cardForeground : null,
+                color: expressiveTokens != null || neo ? cardForeground : null,
                 fontWeight: FontWeight.w900,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(color: cardSecondary),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: expressiveTokens != null || neo ? cardSecondary : null,
+              ),
             ),
             const SizedBox(height: 20),
             ...children,
@@ -2151,21 +2158,20 @@ class _TextInput extends StatelessWidget {
       keyboardType: keyboardType,
       onChanged: onChanged,
       style: settingsInputTextStyle(context),
-      decoration:
-          neo
-              ? settingsFieldDecoration(
-                context,
-                label: label,
-                hint: hint,
-                suffixText: suffixText,
-              ).copyWith(prefixIcon: Icon(icon))
-              : _onboardingInputDecoration(
-                context,
-                label: label,
-                hint: hint,
-                icon: icon,
-                suffixText: suffixText,
-              ),
+      decoration: neo
+          ? settingsFieldDecoration(
+              context,
+              label: label,
+              hint: hint,
+              suffixText: suffixText,
+            ).copyWith(prefixIcon: Icon(icon))
+          : _onboardingInputDecoration(
+              context,
+              label: label,
+              hint: hint,
+              icon: icon,
+              suffixText: suffixText,
+            ),
     );
   }
 }
@@ -2186,13 +2192,12 @@ class _ActionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final neo = context.usesNeoPresentation;
-    final decoration =
-        neo
-            ? settingsFieldDecoration(
-              context,
-              label: label,
-            ).copyWith(prefixIcon: Icon(icon))
-            : _onboardingInputDecoration(context, label: label, icon: icon);
+    final decoration = neo
+        ? settingsFieldDecoration(
+            context,
+            label: label,
+          ).copyWith(prefixIcon: Icon(icon))
+        : _onboardingInputDecoration(context, label: label, icon: icon);
     return InkWell(
       borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
@@ -2231,40 +2236,37 @@ class _IntentTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final selected = enabled && value;
-    final tileSurface =
-        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
-    final iconColor =
-        neo
-            ? tonosForegroundForSurface(context, tileSurface!)
-            : enabled
-            ? scheme.primary
-            : scheme.onSurfaceVariant;
-    final foregroundColor =
-        neo
-            ? tonosForegroundForSurface(context, tileSurface!)
-            : enabled
-            ? scheme.onSurface
-            : scheme.onSurfaceVariant;
-    final secondaryColor =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
-            : scheme.onSurfaceVariant.withValues(alpha: enabled ? 1 : 0.78);
-    final borderColor =
-        neo
-            ? tonosOutlineForSurface(context, tileSurface!)
-            : selected
-            ? scheme.primary
-            : scheme.outlineVariant;
-    final backgroundColor =
-        neo
-            ? tileSurface
-            : selected
-            ? scheme.primary.withValues(alpha: 0.16)
-            : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
+    final tileSurface = neo
+        ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
+        : null;
+    final iconColor = neo
+        ? tonosForegroundForSurface(context, tileSurface!)
+        : enabled
+        ? scheme.primary
+        : scheme.onSurfaceVariant;
+    final foregroundColor = neo
+        ? tonosForegroundForSurface(context, tileSurface!)
+        : enabled
+        ? scheme.onSurface
+        : scheme.onSurfaceVariant;
+    final secondaryColor = neo
+        ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+        : scheme.onSurfaceVariant.withValues(alpha: enabled ? 1 : 0.78);
+    final borderColor = neo
+        ? tonosOutlineForSurface(context, tileSurface!)
+        : selected
+        ? scheme.primary
+        : scheme.outlineVariant;
+    final backgroundColor = neo
+        ? tileSurface
+        : selected
+        ? scheme.primary.withValues(alpha: 0.16)
+        : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
 
     return InkWell(
-      borderRadius:
-          neo ? shapes.settingsInput : context.tutorialTokens.tileShape,
+      borderRadius: neo
+          ? shapes.settingsInput
+          : context.tutorialTokens.tileShape,
       onTap: enabled ? () => onChanged(!value) : null,
       child: AnimatedContainer(
         duration: tutorialMotion(
@@ -2274,8 +2276,9 @@ class _IntentTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius:
-              neo ? shapes.settingsInput : context.tutorialTokens.tileShape,
+          borderRadius: neo
+              ? shapes.settingsInput
+              : context.tutorialTokens.tileShape,
           border: Border.all(
             color: borderColor,
             width: neo ? shapes.outlineWidth : 1,
@@ -2316,33 +2319,31 @@ class _IntentTile extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      neo
-                          ? surfaces.settingsInput
-                          : scheme.surfaceContainerHighest,
-                  borderRadius:
-                      neo ? shapes.pill : context.tutorialTokens.pillShape,
+                  color: neo
+                      ? surfaces.settingsInput
+                      : scheme.surfaceContainerHighest,
+                  borderRadius: neo
+                      ? shapes.pill
+                      : context.tutorialTokens.pillShape,
                   border: Border.all(
-                    color:
-                        neo
-                            ? tonosOutlineForSurface(
-                              context,
-                              surfaces.settingsInput,
-                            )
-                            : scheme.outlineVariant,
+                    color: neo
+                        ? tonosOutlineForSurface(
+                            context,
+                            surfaces.settingsInput,
+                          )
+                        : scheme.outlineVariant,
                     width: neo ? shapes.outlineWidth : 1,
                   ),
                 ),
                 child: Text(
                   statusLabel!,
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color:
-                        neo
-                            ? tonosForegroundForSurface(
-                              context,
-                              surfaces.settingsInput,
-                            )
-                            : scheme.onSurfaceVariant,
+                    color: neo
+                        ? tonosForegroundForSurface(
+                            context,
+                            surfaces.settingsInput,
+                          )
+                        : scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -2351,10 +2352,9 @@ class _IntentTile extends StatelessWidget {
               Checkbox(
                 value: value,
                 onChanged: enabled ? (next) => onChanged(next ?? false) : null,
-                fillColor:
-                    neo
-                        ? WidgetStatePropertyAll<Color?>(foregroundColor)
-                        : null,
+                fillColor: neo
+                    ? WidgetStatePropertyAll<Color?>(foregroundColor)
+                    : null,
                 checkColor: neo ? surfaces.dialogChoice : null,
               ),
           ],
@@ -2382,21 +2382,20 @@ class _SwitchCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final cardSurface = neo ? surfaces.settingsInput : scheme.surface;
-    final cardForeground =
-        neo
-            ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
+    final cardForeground = neo
+        ? tonosForegroundForSurface(context, cardSurface)
+        : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: neo ? cardSurface : scheme.surface.withValues(alpha: 0.5),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.sectionShape,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, cardSurface)
-                  : scheme.outlineVariant.withValues(alpha: 0.7),
+          color: neo
+              ? tonosOutlineForSurface(context, cardSurface)
+              : scheme.outlineVariant.withValues(alpha: 0.7),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -2446,13 +2445,9 @@ class _ChoiceGroup<T> extends StatelessWidget {
         Text(
           title,
           style: theme.textTheme.titleSmall?.copyWith(
-            color:
-                neo
-                    ? tonosForegroundForSurface(
-                      context,
-                      surfaces.settingsSection,
-                    )
-                    : null,
+            color: neo
+                ? tonosForegroundForSurface(context, surfaces.settingsSection)
+                : null,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -2460,45 +2455,33 @@ class _ChoiceGroup<T> extends StatelessWidget {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children:
-              options.map((option) {
-                final selected = option == value;
-                final chipSurface =
-                    neo
-                        ? (selected
-                            ? surfaces.settingsHero
-                            : surfaces.dialogChoice)
-                        : null;
-                return ChoiceChip(
-                  label: Text(
-                    labelBuilder?.call(option) ?? '$option',
-                    style:
-                        neo
-                            ? TextStyle(
-                              color: tonosForegroundForSurface(
-                                context,
-                                chipSurface!,
-                              ),
-                              fontWeight: FontWeight.w800,
-                            )
-                            : null,
-                  ),
-                  selected: selected,
-                  onSelected: (_) => onChanged(option),
-                  selectedColor: neo ? chipSurface : null,
-                  backgroundColor: neo ? chipSurface : null,
-                  side:
-                      neo
-                          ? BorderSide(
-                            color: tonosOutlineForSurface(
-                              context,
-                              chipSurface!,
-                            ),
-                            width: shapes.outlineWidth,
-                          )
-                          : null,
-                );
-              }).toList(),
+          children: options.map((option) {
+            final selected = option == value;
+            final chipSurface = neo
+                ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
+                : null;
+            return ChoiceChip(
+              label: Text(
+                labelBuilder?.call(option) ?? '$option',
+                style: neo
+                    ? TextStyle(
+                        color: tonosForegroundForSurface(context, chipSurface!),
+                        fontWeight: FontWeight.w800,
+                      )
+                    : null,
+              ),
+              selected: selected,
+              onSelected: (_) => onChanged(option),
+              selectedColor: neo ? chipSurface : null,
+              backgroundColor: neo ? chipSurface : null,
+              side: neo
+                  ? BorderSide(
+                      color: tonosOutlineForSurface(context, chipSurface!),
+                      width: shapes.outlineWidth,
+                    )
+                  : null,
+            );
+          }).toList(),
         ),
       ],
     );
@@ -2591,28 +2574,26 @@ class _MetricPreviewCard extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final cardSurface = neo ? surfaces.dialogChoice : scheme.surface;
-    final cardForeground =
-        neo
-            ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
-    final cardSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, cardSurface)
-            : scheme.onSurfaceVariant;
+    final cardForeground = neo
+        ? tonosForegroundForSurface(context, cardSurface)
+        : scheme.onSurface;
+    final cardSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, cardSurface)
+        : scheme.onSurfaceVariant;
     final shapes = context.shapeTokens;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: neo ? cardSurface : scheme.primary.withValues(alpha: 0.14),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
-        border:
-            neo
-                ? Border.all(
-                  color: tonosOutlineForSurface(context, cardSurface),
-                  width: shapes.outlineWidth,
-                )
-                : null,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.sectionShape,
+        border: neo
+            ? Border.all(
+                color: tonosOutlineForSurface(context, cardSurface),
+                width: shapes.outlineWidth,
+              )
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2628,9 +2609,8 @@ class _MetricPreviewCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cardSecondary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: cardSecondary),
           ),
         ],
       ),
@@ -2657,10 +2637,9 @@ class _SliderPanel extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final panelSurface = neo ? surfaces.settingsSection : scheme.surface;
-    final panelForeground =
-        neo
-            ? tonosForegroundForSurface(context, panelSurface)
-            : scheme.onSurface;
+    final panelForeground = neo
+        ? tonosForegroundForSurface(context, panelSurface)
+        : scheme.onSurface;
     final titleStyle = theme.textTheme.titleSmall?.copyWith(
       color: neo ? panelForeground : null,
       fontWeight: FontWeight.w900,
@@ -2675,13 +2654,13 @@ class _SliderPanel extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: neo ? panelSurface : scheme.surface.withValues(alpha: 0.52),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.sectionShape,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.sectionShape,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, panelSurface)
-                  : scheme.outlineVariant.withValues(alpha: 0.65),
+          color: neo
+              ? tonosOutlineForSurface(context, panelSurface)
+              : scheme.outlineVariant.withValues(alpha: 0.65),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -2721,7 +2700,12 @@ class _SliderPanel extends StatelessWidget {
                   ],
                 );
               }
-              return Row(children: [Expanded(child: titleWidget), valueWidget]);
+              return Row(
+                children: [
+                  Expanded(child: titleWidget),
+                  valueWidget,
+                ],
+              );
             },
           ),
           child,
@@ -2744,25 +2728,23 @@ class _MiniStat extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final statSurface = neo ? surfaces.dialogChoice : scheme.surface;
-    final statForeground =
-        neo
-            ? tonosForegroundForSurface(context, statSurface)
-            : scheme.onSurface;
-    final statSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, statSurface)
-            : scheme.onSurfaceVariant;
+    final statForeground = neo
+        ? tonosForegroundForSurface(context, statSurface)
+        : scheme.onSurface;
+    final statSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, statSurface)
+        : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: neo ? statSurface : scheme.surface.withValues(alpha: 0.52),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.inputShape,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.inputShape,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, statSurface)
-                  : scheme.outlineVariant.withValues(alpha: 0.65),
+          color: neo
+              ? tonosOutlineForSurface(context, statSurface)
+              : scheme.outlineVariant.withValues(alpha: 0.65),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -2779,9 +2761,8 @@ class _MiniStat extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: statSecondary),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: statSecondary),
           ),
         ],
       ),
@@ -2807,14 +2788,12 @@ class _FeatureRow extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final featureSurface = neo ? surfaces.settingsSection : scheme.surface;
-    final featureForeground =
-        neo
-            ? tonosForegroundForSurface(context, featureSurface)
-            : scheme.onSurface;
-    final featureSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, featureSurface)
-            : scheme.onSurfaceVariant;
+    final featureForeground = neo
+        ? tonosForegroundForSurface(context, featureSurface)
+        : scheme.onSurface;
+    final featureSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, featureSurface)
+        : scheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -2862,14 +2841,12 @@ class _SummaryRow extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final summarySurface = neo ? surfaces.settingsSection : scheme.surface;
-    final summarySecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, summarySurface)
-            : scheme.onSurfaceVariant;
-    final summaryForeground =
-        neo
-            ? tonosForegroundForSurface(context, summarySurface)
-            : scheme.onSurface;
+    final summarySecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, summarySurface)
+        : scheme.onSurfaceVariant;
+    final summaryForeground = neo
+        ? tonosForegroundForSurface(context, summarySurface)
+        : scheme.onSurface;
     final valueText = value.trim().isEmpty ? '-' : value;
     final usesStackedLayout =
         MediaQuery.textScalerOf(context).scale(1) > 1.15 ||
@@ -2924,27 +2901,25 @@ class _OnboardingSummaryCallout extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final calloutSurface = neo ? surfaces.dialogChoice : scheme.surface;
-    final calloutForeground =
-        neo
-            ? tonosForegroundForSurface(context, calloutSurface)
-            : scheme.onSurface;
-    final calloutSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, calloutSurface)
-            : scheme.onSurfaceVariant;
+    final calloutForeground = neo
+        ? tonosForegroundForSurface(context, calloutSurface)
+        : scheme.onSurface;
+    final calloutSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, calloutSurface)
+        : scheme.onSurfaceVariant;
     final shapes = context.shapeTokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: neo ? calloutSurface : scheme.primary.withValues(alpha: 0.12),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.compactShape,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.compactShape,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, calloutSurface)
-                  : scheme.primary.withValues(alpha: 0.3),
+          color: neo
+              ? tonosOutlineForSurface(context, calloutSurface)
+              : scheme.primary.withValues(alpha: 0.3),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -3002,23 +2977,22 @@ class _OnboardingSummarySection extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final sectionSurface = neo ? surfaces.settingsInput : scheme.surface;
-    final sectionForeground =
-        neo
-            ? tonosForegroundForSurface(context, sectionSurface)
-            : scheme.onSurface;
+    final sectionForeground = neo
+        ? tonosForegroundForSurface(context, sectionSurface)
+        : scheme.onSurface;
     final shapes = context.shapeTokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
       decoration: BoxDecoration(
         color: neo ? sectionSurface : scheme.surface.withValues(alpha: 0.46),
-        borderRadius:
-            neo ? shapes.settingsInput : context.tutorialTokens.inputShape,
+        borderRadius: neo
+            ? shapes.settingsInput
+            : context.tutorialTokens.inputShape,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, sectionSurface)
-                  : scheme.outlineVariant.withValues(alpha: 0.6),
+          color: neo
+              ? tonosOutlineForSurface(context, sectionSurface)
+              : scheme.outlineVariant.withValues(alpha: 0.6),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -3048,8 +3022,9 @@ class _OnboardingSummarySection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Divider(
               height: 1,
-              color:
-                  neo ? tonosOutlineForSurface(context, sectionSurface) : null,
+              color: neo
+                  ? tonosOutlineForSurface(context, sectionSurface)
+                  : null,
             ),
           ),
           ...children,
@@ -3071,10 +3046,9 @@ class _PageDots extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = context.surfaceTokens;
     final activeColor = neo ? surfaces.settingsHero : scheme.primary;
-    final inactiveColor =
-        neo
-            ? tonosOutlineForSurface(context, surfaces.settingsSection)
-            : scheme.outlineVariant;
+    final inactiveColor = neo
+        ? tonosOutlineForSurface(context, surfaces.settingsSection)
+        : scheme.outlineVariant;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(count, (index) {
@@ -3167,10 +3141,9 @@ class _OnboardingPlanOverviewListState
     _loadedProfileId = profileId;
     _loadedRefreshToken = widget.refreshToken;
     _loadedPlanIds = planIds;
-    _plansFuture =
-        profileId == null
-            ? Future.value(const <_OnboardingPlanItem>[])
-            : _loadPlans(profileId, planIds);
+    _plansFuture = profileId == null
+        ? Future.value(const <_OnboardingPlanItem>[])
+        : _loadPlans(profileId, planIds);
   }
 
   Future<List<_OnboardingPlanItem>> _loadPlans(
@@ -3292,10 +3265,9 @@ class _OnboardingPlanOverviewListState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final surface =
-        context.usesNeoPresentation
-            ? context.surfaceTokens.settingsSection
-            : scheme.surface;
+    final surface = context.usesNeoPresentation
+        ? context.surfaceTokens.settingsSection
+        : scheme.surface;
     final strings = AppLocalizations.of(context);
     return FutureBuilder<List<_OnboardingPlanItem>>(
       future: _plansFuture,
@@ -3452,30 +3424,28 @@ class _GymSpaceTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = template.highlighted ? scheme.tertiary : scheme.primary;
-    final tileSurface =
-        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
-    final tileForeground =
-        neo
-            ? tonosForegroundForSurface(context, tileSurface!)
-            : scheme.onSurface;
-    final tileSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
-            : scheme.onSurfaceVariant;
-    final tileBorder =
-        neo
-            ? tonosOutlineForSurface(context, tileSurface!)
-            : selected
-            ? accent
-            : scheme.outlineVariant;
-    final tileBackground =
-        neo
-            ? tileSurface
-            : selected
-            ? accent.withValues(alpha: 0.16)
-            : scheme.surface.withValues(alpha: 0.46);
-    final tileShape =
-        neo ? shapes.settingsInput : context.tutorialTokens.tileShape;
+    final tileSurface = neo
+        ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
+        : null;
+    final tileForeground = neo
+        ? tonosForegroundForSurface(context, tileSurface!)
+        : scheme.onSurface;
+    final tileSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+        : scheme.onSurfaceVariant;
+    final tileBorder = neo
+        ? tonosOutlineForSurface(context, tileSurface!)
+        : selected
+        ? accent
+        : scheme.outlineVariant;
+    final tileBackground = neo
+        ? tileSurface
+        : selected
+        ? accent.withValues(alpha: 0.16)
+        : scheme.surface.withValues(alpha: 0.46);
+    final tileShape = neo
+        ? shapes.settingsInput
+        : context.tutorialTokens.tileShape;
 
     return InkWell(
       onTap: onTap,
@@ -3491,12 +3461,11 @@ class _GymSpaceTile extends StatelessWidget {
           borderRadius: tileShape,
           border: Border.all(
             color: tileBorder,
-            width:
-                neo
-                    ? shapes.outlineWidth
-                    : selected
-                    ? 2
-                    : 1,
+            width: neo
+                ? shapes.outlineWidth
+                : selected
+                ? 2
+                : 1,
           ),
         ),
         child: Row(
@@ -3507,8 +3476,9 @@ class _GymSpaceTile extends StatelessWidget {
               height: 46,
               decoration: BoxDecoration(
                 color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
-                borderRadius:
-                    neo ? shapes.control : context.tutorialTokens.compactShape,
+                borderRadius: neo
+                    ? shapes.control
+                    : context.tutorialTokens.compactShape,
               ),
               child: Icon(template.icon, color: neo ? tileForeground : accent),
             ),
@@ -3520,12 +3490,11 @@ class _GymSpaceTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color:
-                          neo
-                              ? tileForeground
-                              : template.highlighted
-                              ? accent
-                              : null,
+                      color: neo
+                          ? tileForeground
+                          : template.highlighted
+                          ? accent
+                          : null,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -3544,12 +3513,11 @@ class _GymSpaceTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color:
-                  neo
-                      ? tileForeground
-                      : selected
-                      ? accent
-                      : tileSecondary,
+              color: neo
+                  ? tileForeground
+                  : selected
+                  ? accent
+                  : tileSecondary,
             ),
           ],
         ),
@@ -3620,30 +3588,28 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = scheme.primary;
-    final tileSurface =
-        neo ? (selected ? surfaces.settingsHero : surfaces.dialogChoice) : null;
-    final tileForeground =
-        neo
-            ? tonosForegroundForSurface(context, tileSurface!)
-            : scheme.onSurface;
-    final tileSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, tileSurface!)
-            : scheme.onSurfaceVariant;
-    final tileBorder =
-        neo
-            ? tonosOutlineForSurface(context, tileSurface!)
-            : selected
-            ? accent
-            : scheme.outlineVariant;
-    final tileBackground =
-        neo
-            ? tileSurface
-            : selected
-            ? accent.withValues(alpha: 0.16)
-            : scheme.surface.withValues(alpha: 0.46);
-    final tileShape =
-        neo ? shapes.settingsInput : context.tutorialTokens.tileShape;
+    final tileSurface = neo
+        ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
+        : null;
+    final tileForeground = neo
+        ? tonosForegroundForSurface(context, tileSurface!)
+        : scheme.onSurface;
+    final tileSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, tileSurface!)
+        : scheme.onSurfaceVariant;
+    final tileBorder = neo
+        ? tonosOutlineForSurface(context, tileSurface!)
+        : selected
+        ? accent
+        : scheme.outlineVariant;
+    final tileBackground = neo
+        ? tileSurface
+        : selected
+        ? accent.withValues(alpha: 0.16)
+        : scheme.surface.withValues(alpha: 0.46);
+    final tileShape = neo
+        ? shapes.settingsInput
+        : context.tutorialTokens.tileShape;
 
     return InkWell(
       onTap: onTap,
@@ -3659,12 +3625,11 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
           borderRadius: tileShape,
           border: Border.all(
             color: tileBorder,
-            width:
-                neo
-                    ? shapes.outlineWidth
-                    : selected
-                    ? 2
-                    : 1,
+            width: neo
+                ? shapes.outlineWidth
+                : selected
+                ? 2
+                : 1,
           ),
         ),
         child: Row(
@@ -3674,8 +3639,9 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               height: 46,
               decoration: BoxDecoration(
                 color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
-                borderRadius:
-                    neo ? shapes.control : context.tutorialTokens.compactShape,
+                borderRadius: neo
+                    ? shapes.control
+                    : context.tutorialTokens.compactShape,
               ),
               child: Icon(icon, color: neo ? tileForeground : accent),
             ),
@@ -3706,12 +3672,11 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color:
-                  neo
-                      ? tileForeground
-                      : selected
-                      ? accent
-                      : tileSecondary,
+              color: neo
+                  ? tileForeground
+                  : selected
+                  ? accent
+                  : tileSecondary,
             ),
           ],
         ),
@@ -3732,24 +3697,23 @@ class _OnboardingInfoCallout extends StatelessWidget {
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
     final calloutSurface = scheme.primary.withValues(alpha: 0.12);
-    final parentSurface =
-        neo ? context.surfaceTokens.settingsSection : scheme.surface;
-    final iconInk =
-        neo
-            ? tonosForegroundForSurface(
-              context,
-              calloutSurface,
-              parentSurface: parentSurface,
-            )
-            : scheme.primary;
-    final messageInk =
-        neo
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              calloutSurface,
-              parentSurface: parentSurface,
-            )
-            : scheme.onSurfaceVariant;
+    final parentSurface = neo
+        ? context.surfaceTokens.settingsSection
+        : scheme.surface;
+    final iconInk = neo
+        ? tonosForegroundForSurface(
+            context,
+            calloutSurface,
+            parentSurface: parentSurface,
+          )
+        : scheme.primary;
+    final messageInk = neo
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            calloutSurface,
+            parentSurface: parentSurface,
+          )
+        : scheme.onSurfaceVariant;
 
     return Container(
       padding: const EdgeInsets.all(14),

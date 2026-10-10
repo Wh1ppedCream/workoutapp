@@ -286,7 +286,7 @@
   "automaticChildSetLabel": "训练组 {parent}.{child}：{weight} × {reps}",
   "automaticSetLabel": "训练组 {number}：{weight} × {reps}",
   "flowAddAction": "+ 操作",
-  "flowAddBranchSubtitle": "选择下一次成功或未达成时应前往的位置。",
+  "flowAddBranchSubtitle": "从节点创建成功或未达成路径。",
   "flowAddBranchTitle": "添加分支",
   "flowAddEvent": "+ 事件",
   "flowAddFailure": "+ 失败",
@@ -298,10 +298,19 @@
   "flowAmount": "数值",
   "flowAppDefaultEntry": "应用默认流程",
   "flowAppDefaultsSubtitle": "新健身房档案的起始流程。",
-  "flowAppDefaultSubtitle": "设置新健身房档案的起始进阶流程。",
+  "flowAppDefaultSubtitle": "新健身房档案的默认流程。",
   "flowAppDefaultTitle": "应用默认进阶流程",
   "flowApplyActionTo": "将操作应用于",
-  "flowAttachActionSubtitle": "对流程节点应用每种类型的一项调整。",
+  "flowAttachActionSubtitle": "为节点分配进阶调整。",
+  "flowFitToViewTooltip": "适配流程视图。",
+  "flowBranchSelectGuidance": "选择源节点以添加成功或未达成路径。",
+  "flowBranchCompleteGuidance": "所有节点都已有成功和未达成路径。",
+  "flowActionSelectNodeGuidance": "选择节点以配置其操作。",
+  "flowActionSelectMethodGuidance": "为此节点选择一个进阶操作。",
+  "flowActionCreateMethodGuidance": "请先创建操作，再将其分配给节点。",
+  "flowActionTypesUsedGuidance": "此节点已使用所有可用的操作类型。",
+  "flowActionRemoveDependenciesGuidance": "删除此节点前，请先移除分支和关联操作。",
+  "flowActionRootGuidance": "首次尝试节点不能添加操作，也不能删除。",
   "flowAttachActionTitle": "附加进阶操作",
   "flowBranchFrom": "从此处分支",
   "flowCopyFromSet": "从训练组复制",
@@ -313,6 +322,7 @@
   "flowGymDefaultEntry": "健身房默认流程",
   "flowGymProfilesSubtitle": "每个档案都有默认值和自己的计划流程。",
   "flowHowCopiedBody": "应用流程会成为新健身房档案的起点。健身房流程会成为新计划的起点。之后的编辑仅影响您在此处打开的流程。",
+  "flowHowCopiedBodyExpressive": "新健身房档案从应用默认流程开始，新计划从健身房默认流程开始。更改一个流程不会影响其他流程。",
   "flowHowCopiedTitle": "流程如何复制",
   "flowLoadError": "无法加载训练进阶流程。",
   "flowManageActionsTooltip": "管理进阶操作",
@@ -327,11 +337,19 @@
   "flowNewMethod": "新操作",
   "flowNoProfiles": "请创建健身房档案以设置档案和计划流程。",
   "flowNoSavedYet": "尚无保存的流程",
+  "flowTapToConfigure": "点击进行配置",
   "flowPageSubtitle": "设置决定训练结果后如何应用进阶操作的路径。",
+  "flowPageSubtitleExpressive": "配置训练结果如何触发进阶操作。",
   "flowPageTitle": "训练进阶流程",
   "flowPlansAvailable": "有 {count} 个计划流程可用",
-  "flowPlanSubtitle": "设置此计划在每次训练后如何进阶。",
-  "flowProfileDefaultSubtitle": "设置 {profileName} 中新计划的起始进阶流程。",
+  "flowPlansAvailableExpressive": "{count} 个计划可用",
+  "@flowPlansAvailableExpressive": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "flowPlanSubtitle": "此计划的进阶流程。",
+  "flowProfileDefaultSubtitle": "{profileName} 中新计划的默认流程。",
   "flowProfileDefaultTitle": "健身房默认进阶流程",
   "flowProgressionAction": "进阶操作",
   "flowRemoveAction": "- 操作",
@@ -465,6 +483,7 @@
   "nutritionTrackMeasurement": "追踪测量",
   "gymExitAsk": "每次询问",
   "gymExitAskBody": "结束已完成的训练前先询问。",
+  "gymExitAskExpressiveSubtitle": "选择离开正在进行的训练时要执行的操作。",
   "gymExitDiscard": "取消训练",
   "gymExitDiscardBody": "取消且不保存已完成的训练内容。",
   "gymExitSave": "结束并保存",
@@ -671,6 +690,20 @@
   "tutorialsControlsSubtitle": "正在测试或想重新开始？",
   "tutorialsControlsTitle": "教程控制",
   "tutorialsHowItWorksBody": "教程会显示一次，之后不会打扰您。展开一个分组可重置特定引导。",
+  "tutorialsExpressiveControlsSubtitle": "重新开始使用引导教程。",
+  "tutorialsExpressiveHowItWorksBody": "教程会自动显示一次。展开一个类别，即可让单个引导再次可用。",
+  "tutorialsExpressiveTitle": "{topic}教程",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "点击“重置”，下次打开{topic}时即可再次查看引导。",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "tutorialsHowItWorksTitle": "教程的工作方式",
   "tutorialSkip": "跳过",
   "tutorialSkipAll": "全部跳过",
@@ -1277,6 +1310,7 @@
   "navEditorInactiveSubtitle": "想恢复时随时启用它们。",
   "navEditorNoInactiveTabs": "没有未启用的标签。",
   "navEditorAlwaysShown": "始终显示",
+  "navEditorRequired": "必需",
   "navEditorVisible": "在底部导航中显示",
   "navEditorHidden": "从底部导航中隐藏",
   "trainTutorialSpacesTitle": "训练有两个空间",
@@ -1785,5 +1819,36 @@
     }
   },
   "healthEntryActions": "记录操作",
-  "premadeOneHourDescription": "保留完整模板主要动作的{planName}{duration}版本。"
+  "premadeOneHourDescription": "保留完整模板主要动作的{planName}{duration}版本。",
+  "rulesPageSubtitleExpressive": "创建可重复使用的规则，用于重量、次数和组数的进阶。",
+  "rulesHowDefaultsBodyExpressive": "新健身房资料使用应用默认规则，新计划使用资料默认规则。之后的更改不会自动更新现有资料或计划。",
+  "rulesRuleTypeLabel": "规则类型",
+  "rulesOperationLabel": "运算方式",
+  "rulesScopedRuleCountSemantics": "{scope}，规则数量：{count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "规则数量：{count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "规则总数：{count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "计划数量：{count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "新计划的默认规则。",
+  "rulesPlanOnlySubtitleExpressive": "仅适用于此计划的规则。"
 }

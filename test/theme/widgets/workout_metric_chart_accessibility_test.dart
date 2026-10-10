@@ -477,7 +477,7 @@ class _ReportRepository extends AppRepository {
       ),
       WorkoutReportSession(
         id: 2,
-        date: today.subtract(const Duration(days: 2)),
+        date: today,
         durationSeconds: 2640,
         totalVolume: 300,
         exerciseCount: 5,
@@ -503,9 +503,7 @@ class _SingleBucketReportRepository extends _ReportRepository {
   }) async => [
     WorkoutReportSession(
       id: 1,
-      date: DateUtils.dateOnly(DateTime.now()).subtract(
-        const Duration(days: 2),
-      ),
+      date: DateUtils.dateOnly(DateTime.now()),
       durationSeconds: 3600,
       totalVolume: 200,
       exerciseCount: 4,

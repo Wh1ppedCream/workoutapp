@@ -15,6 +15,7 @@ import '../../services/catalog_entity_localizer.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_surface.dart';
@@ -157,8 +158,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final name = defInfo['name'] ?? 'Exercise';
     final equipmentName = defInfo['equipmentName'] ?? '';
     final allSetRows = await allSetRowsFuture;
-    final parentRows =
-        allSetRows.where((r) => r['parent_set_id'] == null).toList();
+    final parentRows = allSetRows
+        .where((r) => r['parent_set_id'] == null)
+        .toList();
     final childRowsByParentId = <int, List<Map<String, dynamic>>>{};
     for (final row in allSetRows) {
       final parentId = row['parent_set_id'] as int?;
@@ -183,15 +185,14 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       final childRows =
           childRowsByParentId[parentId] ?? const <Map<String, dynamic>>[];
       if (childRows.isNotEmpty) {
-        changeSets[parentIndex] =
-            childRows
-                .map(
-                  (child) => ExerciseSet(
-                    weight: (child['weight'] as num).toDouble(),
-                    reps: (child['reps'] as num).toInt(),
-                  ),
-                )
-                .toList();
+        changeSets[parentIndex] = childRows
+            .map(
+              (child) => ExerciseSet(
+                weight: (child['weight'] as num).toDouble(),
+                reps: (child['reps'] as num).toInt(),
+              ),
+            )
+            .toList();
       }
     }
 
@@ -403,33 +404,78 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     return mapWithConcurrency<int, MapEntry<int, Map<BodyPart, double>>>(
       definitionIds,
       maxConcurrency: _bodyPartSummaryConcurrency,
-      mapper:
-          (defId, _) async =>
-              MapEntry(defId, await _repo.computeBodyPartPercents(defId)),
+      mapper: (defId, _) async =>
+          MapEntry(defId, await _repo.computeBodyPartPercents(defId)),
     );
   }
 
   Future<void> _deleteSession() async {
     final strings = AppLocalizations.of(context);
+    final expressiveLogbook = _usesExpressiveLogbookPresentation(context);
     final confirm = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.workoutDetailDeleteTitle),
-              content: Text(strings.workoutDetailDeleteBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(strings.commonDelete),
-                ),
-              ],
+      builder: (context) {
+        if (expressiveLogbook) {
+          final theme = Theme.of(context);
+          final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+          return AlertDialog(
+            backgroundColor: tokens.surfaceSecondary,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: ExpressiveTrainShapes.focusInset,
+              side: BorderSide(color: tokens.outlineAccent),
             ),
+            titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+              color: tokens.onSurfaceSecondary,
+              fontWeight: FontWeight.w800,
+            ),
+            contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: tokens.onSurfaceSecondary,
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+            contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            title: Text(strings.workoutDetailDeleteTitle),
+            content: Text(strings.workoutDetailDeleteBody),
+            actions: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: tokens.onSurfaceSecondary,
+                  minimumSize: const Size(64, 48),
+                ),
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(strings.commonCancel),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: context.semanticColors.negative,
+                  foregroundColor: context.semanticColors.onNegative,
+                  minimumSize: const Size(80, 48),
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(strings.commonDelete),
+              ),
+            ],
+          );
+        }
+
+        return TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(strings.workoutDetailDeleteTitle),
+            content: Text(strings.workoutDetailDeleteBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(strings.commonCancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(strings.commonDelete),
+              ),
+            ],
           ),
+        );
+      },
     );
     if (confirm != true) return;
 
@@ -457,10 +503,9 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             exercise: detail.exercise,
             type: _typeName(detail.cardType),
             definitionId: detail.definitionId,
-            sourcePresetExerciseId:
-                detail.exercise is WeightExercise
-                    ? (detail.exercise as WeightExercise).sourcePresetExerciseId
-                    : null,
+            sourcePresetExerciseId: detail.exercise is WeightExercise
+                ? (detail.exercise as WeightExercise).sourcePresetExerciseId
+                : null,
           ),
       ];
       await _repo.replaceSessionExercisesAtomic(
@@ -528,21 +573,67 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     }
 
     if (!started || !mounted) return;
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
   }
 
   Future<void> _saveAsPreset() async {
     final strings = AppLocalizations.of(context);
     final defaultName = _defaultPresetName();
     var planName = defaultName;
+    final expressiveLogbook = _usesExpressiveLogbookPresentation(context);
     final name = await showDialog<String>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            styleFormControls: true,
+      builder: (context) {
+        if (expressiveLogbook) {
+          final theme = Theme.of(context);
+          final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+          final fieldShape = ExpressiveTrainShapes.compactControl;
+          final fieldBorder = OutlineInputBorder(
+            borderRadius: fieldShape,
+            borderSide: BorderSide(color: tokens.outlineAccent),
+          );
+          final fieldTheme = theme.inputDecorationTheme.copyWith(
+            filled: true,
+            fillColor: tokens.surfaceAccent,
+            labelStyle: TextStyle(
+              color: tokens.onSurfaceAccent.withValues(alpha: 0.78),
+            ),
+            floatingLabelStyle: TextStyle(color: tokens.outlineAccent),
+            enabledBorder: fieldBorder,
+            border: fieldBorder,
+            focusedBorder: OutlineInputBorder(
+              borderRadius: fieldShape,
+              borderSide: BorderSide(
+                color: context.semanticColors.focusRing,
+                width: 2,
+              ),
+            ),
+          );
+          return Theme(
+            data: theme.copyWith(inputDecorationTheme: fieldTheme),
             child: AlertDialog(
+              backgroundColor: tokens.surfaceSecondary,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: ExpressiveTrainShapes.focusInset,
+                side: BorderSide(color: tokens.outlineAccent),
+              ),
+              titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+                color: tokens.onSurfaceSecondary,
+                fontWeight: FontWeight.w800,
+              ),
+              contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: tokens.onSurfaceSecondary,
+              ),
+              titlePadding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+              contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              scrollable: true,
               title: Text(strings.workoutDetailSaveAsPlan),
               content: TextFormField(
                 key: AppTestKeys.workoutPlanName,
@@ -553,22 +644,62 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 ),
                 textInputAction: TextInputAction.done,
                 onChanged: (value) => planName = value,
-                onFieldSubmitted:
-                    (value) => Navigator.pop(context, value.trim()),
+                onFieldSubmitted: (value) =>
+                    Navigator.pop(context, value.trim()),
               ),
               actions: [
                 TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: tokens.onSurfaceSecondary,
+                    minimumSize: const Size(64, 48),
+                  ),
                   onPressed: () => Navigator.pop(context),
                   child: Text(strings.commonCancel),
                 ),
                 FilledButton(
                   key: AppTestKeys.workoutPlanSave,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tokens.actionPrimary,
+                    foregroundColor: tokens.onActionPrimary,
+                    minimumSize: const Size(80, 48),
+                  ),
                   onPressed: () => Navigator.pop(context, planName.trim()),
                   child: Text(strings.commonSave),
                 ),
               ],
             ),
+          );
+        }
+
+        return TonosDialogFrame(
+          styleFormControls: true,
+          child: AlertDialog(
+            title: Text(strings.workoutDetailSaveAsPlan),
+            content: TextFormField(
+              key: AppTestKeys.workoutPlanName,
+              initialValue: defaultName,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: strings.workoutDetailPlanName,
+              ),
+              textInputAction: TextInputAction.done,
+              onChanged: (value) => planName = value,
+              onFieldSubmitted: (value) => Navigator.pop(context, value.trim()),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(strings.commonCancel),
+              ),
+              FilledButton(
+                key: AppTestKeys.workoutPlanSave,
+                onPressed: () => Navigator.pop(context, planName.trim()),
+                child: Text(strings.commonSave),
+              ),
+            ],
           ),
+        );
+      },
     );
     if (name == null || name.trim().isEmpty) return;
     if (!mounted) return;
@@ -624,11 +755,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   }
 
   String _defaultPresetName() {
-    final focusNames =
-        (_summary?.bodyPartHits ?? const <FocusedSetHit>[])
-            .take(2)
-            .map((hit) => hit.bodyPart.name)
-            .toList();
+    final focusNames = (_summary?.bodyPartHits ?? const <FocusedSetHit>[])
+        .take(2)
+        .map((hit) => hit.bodyPart.name)
+        .toList();
     if (focusNames.isNotEmpty) return focusNames.join(', ');
     final locale = Localizations.localeOf(context);
     return AppLocalizations.of(context).workoutDetailDefaultPlanName(
@@ -663,23 +793,22 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final strings = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.workoutDetailUnsavedTitle),
-              content: Text(strings.workoutDetailUnsavedBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text(strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: Text(strings.workoutDetailDiscard),
-                ),
-              ],
+      builder: (context) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.workoutDetailUnsavedTitle),
+          content: Text(strings.workoutDetailUnsavedBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(strings.commonCancel),
             ),
-          ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(strings.workoutDetailDiscard),
+            ),
+          ],
+        ),
+      ),
     );
     return discard == true;
   }
@@ -688,8 +817,11 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
+    final theme = Theme.of(context);
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveLogbook = _usesExpressiveLogbookPresentation(context);
     final isSpanish = Localizations.localeOf(context).languageCode == 'es';
-    return PopScope<Object?>(
+    final screen = PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
@@ -698,21 +830,20 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         if (shouldPop) Navigator.of(context).pop();
       },
       child: Scaffold(
+        backgroundColor: destinationTokens?.pageCanvas,
         appBar: AppBar(
-          title:
-              isSpanish
-                  ? FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(strings.workoutDetailTitle),
-                  )
-                  : Text(strings.workoutDetailTitle),
+          title: isSpanish
+              ? FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(strings.workoutDetailTitle),
+                )
+              : Text(strings.workoutDetailTitle),
           actions: [
             IconButton(
-              tooltip:
-                  _isEditing
-                      ? strings.workoutDetailStopEditing
-                      : strings.workoutDetailEditSession,
+              tooltip: _isEditing
+                  ? strings.workoutDetailStopEditing
+                  : strings.workoutDetailEditSession,
               icon: KeyedSubtree(
                 key: _editTutorialKey,
                 child: Icon(
@@ -724,7 +855,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             ),
             IconButton(
               tooltip: strings.workoutDetailDeleteSession,
-              icon: const Icon(Icons.delete_forever),
+              icon: Icon(
+                Icons.delete_forever,
+                size: expressiveLogbook ? 21 : null,
+                color: expressiveLogbook
+                    ? context.semanticColors.negative
+                    : null,
+              ),
               onPressed: _deleteSession,
             ),
           ],
@@ -733,6 +870,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
         bottomNavigationBar: _buildBottomBar(context),
       ),
     );
+    return screen;
   }
 
   Widget _buildBody(BuildContext context) {
@@ -781,14 +919,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 badges:
                     _badgesByExercise[detail.exerciseId] ??
                     const WorkoutExerciseRecordBadges(isFirstRecord: false),
-                onDetails:
-                    detail.cardType == CardType.weight
-                        ? () => _showExerciseInfo(detail)
-                        : null,
+                onDetails: detail.cardType == CardType.weight
+                    ? () => _showExerciseInfo(detail)
+                    : null,
               ),
             );
           }),
-        const SizedBox(height: 88),
+        SizedBox(height: _usesExpressiveLogbookPresentation(context) ? 16 : 88),
       ],
     );
   }
@@ -804,18 +941,16 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
           cardType: detail.cardType,
           definitionId: detail.definitionId,
           readOnlyMode: false,
-          initialCompletedParents:
-              detail.exercise is WeightExercise
-                  ? (detail.exercise as WeightExercise).completedParents
-                  : null,
-          initialCompletedChildren:
-              detail.exercise is WeightExercise
-                  ? (detail.exercise as WeightExercise).completedChildren
-                  : null,
-          onDetails:
-              detail.cardType == CardType.weight
-                  ? () => _showExerciseInfo(detail)
-                  : null,
+          expressiveWorkoutPresentation: context.usesExpressivePresentation,
+          initialCompletedParents: detail.exercise is WeightExercise
+              ? (detail.exercise as WeightExercise).completedParents
+              : null,
+          initialCompletedChildren: detail.exercise is WeightExercise
+              ? (detail.exercise as WeightExercise).completedChildren
+              : null,
+          onDetails: detail.cardType == CardType.weight
+              ? () => _showExerciseInfo(detail)
+              : null,
           onDeleteExercise: () {
             setState(() {
               _exerciseDetails.removeAt(index);
@@ -843,15 +978,12 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
             key: _actionsTutorialKey,
             child: FilledButton(
               onPressed: _isSavingChanges ? null : _saveChanges,
-              child:
-                  _isSavingChanges
-                      ? const SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : Text(
-                        AppLocalizations.of(context).workoutDetailSaveChanges,
-                      ),
+              child: _isSavingChanges
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(AppLocalizations.of(context).workoutDetailSaveChanges),
             ),
           ),
         ),
@@ -860,6 +992,10 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
 
     if (_exerciseDetails.isEmpty) {
       return null;
+    }
+
+    if (_usesExpressiveLogbookPresentation(context)) {
+      return _buildExpressiveLogbookBottomBar(context);
     }
 
     return SafeArea(
@@ -874,14 +1010,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _isStartingWorkout ? null : _startWorkoutAgain,
-                  icon:
-                      _isStartingWorkout
-                          ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.replay),
+                  icon: _isStartingWorkout
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.replay),
                   label: Text(AppLocalizations.of(context).workoutDetailRepeat),
                 ),
               ),
@@ -891,14 +1026,13 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
                 child: OutlinedButton.icon(
                   key: AppTestKeys.workoutSaveAsPlan,
                   onPressed: _isSavingPreset ? null : _saveAsPreset,
-                  icon:
-                      _isSavingPreset
-                          ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.bookmark_add_outlined),
+                  icon: _isSavingPreset
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.bookmark_add_outlined),
                   label: Text(
                     AppLocalizations.of(context).workoutDetailSaveAsPlan,
                   ),
@@ -910,6 +1044,102 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       ),
     );
   }
+
+  Widget _buildExpressiveLogbookBottomBar(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final textStyle = Theme.of(context).textTheme.labelLarge
+                ?.copyWith(fontSize: 14);
+            double labelWidth(String text) {
+              final painter = TextPainter(
+                text: TextSpan(text: text, style: textStyle),
+                textDirection: Directionality.of(context),
+                textScaler: MediaQuery.textScalerOf(context),
+                maxLines: 1,
+              )..layout();
+              return painter.width;
+            }
+
+            final repeatLabelWidth = labelWidth(strings.workoutDetailRepeat);
+            final saveLabelWidth = labelWidth(strings.workoutDetailSaveAsPlan);
+            const repeatChromeWidth = 46.0;
+            const saveChromeWidth = 42.0;
+            const actionGap = 8.0;
+            final repeatFlex = (repeatLabelWidth + repeatChromeWidth).ceil();
+            final saveFlex = (saveLabelWidth + saveChromeWidth).ceil();
+            final rowWidth = constraints.maxWidth - actionGap;
+            final totalFlex = repeatFlex + saveFlex;
+            final repeatTextWidth =
+                rowWidth * repeatFlex / totalFlex - repeatChromeWidth;
+            final saveTextWidth =
+                rowWidth * saveFlex / totalFlex - saveChromeWidth;
+            final fitsWithinTwoLines =
+                constraints.maxWidth >= 330 &&
+                repeatLabelWidth <= repeatTextWidth * 2 &&
+                saveLabelWidth <= saveTextWidth * 2;
+            final stacked = scale > 1.25 || !fitsWithinTwoLines;
+            final repeat = FilledButton.icon(
+              onPressed: _isStartingWorkout ? null : _startWorkoutAgain,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                textStyle: textStyle,
+              ),
+              icon: _isStartingWorkout
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.replay),
+              label: Text(strings.workoutDetailRepeat),
+            );
+            final saveAsPlan = OutlinedButton.icon(
+              key: AppTestKeys.workoutSaveAsPlan,
+              onPressed: _isSavingPreset ? null : _saveAsPreset,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                textStyle: textStyle,
+              ),
+              icon: _isSavingPreset
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.bookmark_add_outlined),
+              label: Text(strings.workoutDetailSaveAsPlan),
+            );
+            final actions = stacked
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [repeat, const SizedBox(height: 6), saveAsPlan],
+                  )
+                : Row(
+                    children: [
+                      Expanded(flex: repeatFlex, child: repeat),
+                      const SizedBox(width: actionGap),
+                      Expanded(flex: saveFlex, child: saveAsPlan),
+                    ],
+                  );
+            return KeyedSubtree(key: _actionsTutorialKey, child: actions);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+bool _usesExpressiveLogbookPresentation(BuildContext context) {
+  final destinationTokens = Theme.of(context)
+      .extension<AppExpressiveDestinationTokens>();
+  return context.usesExpressivePresentation &&
+      destinationTokens?.family == AppExpressiveDestinationFamily.logbook;
 }
 
 class _SessionSummaryCard extends StatelessWidget {
@@ -933,6 +1163,10 @@ class _SessionSummaryCard extends StatelessWidget {
       session.duration,
     );
     if (context.usesExpressivePresentation) {
+      if (theme.extension<AppExpressiveDestinationTokens>()?.family ==
+          AppExpressiveDestinationFamily.logbook) {
+        return _buildExpressiveLogbook(context, durationText, weightUnit);
+      }
       return _buildExpressive(context, durationText, weightUnit);
     }
 
@@ -957,9 +1191,8 @@ class _SessionSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              AppLocalizations.of(
-                context,
-              ).workoutDetailCompletedSets(summary.totalSets),
+              AppLocalizations.of(context)
+                  .workoutDetailCompletedSets(summary.totalSets),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1003,10 +1236,12 @@ class _SessionSummaryCard extends StatelessWidget {
                 builder: (context, constraints) {
                   final maxWidth = constraints.maxWidth;
                   final gap = maxWidth < 330 ? 10.0 : 16.0;
-                  final heatmapWidth =
-                      (maxWidth * 0.46).clamp(124.0, 180.0).toDouble();
-                  final heatmapSize =
-                      heatmapWidth.clamp(118.0, 180.0).toDouble();
+                  final heatmapWidth = (maxWidth * 0.46)
+                      .clamp(124.0, 180.0)
+                      .toDouble();
+                  final heatmapSize = heatmapWidth
+                      .clamp(118.0, 180.0)
+                      .toDouble();
                   final heatmap = SizedBox(
                     width: heatmapWidth,
                     height: heatmapSize,
@@ -1056,6 +1291,7 @@ class _SessionSummaryCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
     final tokens = theme.extension<AppExpressiveTrainTokens>()!;
     final locale = Localizations.localeOf(context);
     final volume = WeightUnitFormatter.formatVolume(
@@ -1073,8 +1309,11 @@ class _SessionSummaryCard extends StatelessWidget {
       return LayoutBuilder(
         builder: (context, constraints) {
           final scale = MediaQuery.textScalerOf(context).scale(1);
-          final columnCount =
-              constraints.maxWidth < 430 || scale > 1.15 ? 2 : 3;
+          final columnCount = constraints.maxWidth < 340 || scale >= 1.8
+              ? 1
+              : constraints.maxWidth < 430 || scale > 1.15
+              ? 2
+              : 3;
           final gap = 8.0;
           final tileWidth =
               (constraints.maxWidth - gap * (columnCount - 1)) / columnCount;
@@ -1102,8 +1341,9 @@ class _SessionSummaryCard extends StatelessWidget {
         builder: (context, constraints) {
           final scale = MediaQuery.textScalerOf(context).scale(1);
           final stacked = constraints.maxWidth < 390 || scale > 1.15;
-          final heatmapSize =
-              (constraints.maxWidth * 0.42).clamp(132.0, 176.0).toDouble();
+          final heatmapSize = (constraints.maxWidth * 0.42)
+              .clamp(132.0, 176.0)
+              .toDouble();
           final heatmap = SizedBox.square(
             dimension: heatmapSize,
             child: Center(
@@ -1123,28 +1363,29 @@ class _SessionSummaryCard extends StatelessWidget {
 
           return TonosSurface(
             variant: TonosSurfaceVariant.panel,
-            color: surfaces.workoutMetricDetails,
+            color:
+                destinationTokens?.surfaceTertiary ??
+                surfaces.workoutMetricDetails,
             padding: const EdgeInsets.all(10),
             borderRadius: ExpressiveTrainShapes.focusInset,
             outlined: false,
-            child:
-                stacked
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(child: heatmap),
-                        const SizedBox(height: 8),
-                        focusList,
-                      ],
-                    )
-                    : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        heatmap,
-                        const SizedBox(width: 14),
-                        Expanded(child: focusList),
-                      ],
-                    ),
+            child: stacked
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(child: heatmap),
+                      const SizedBox(height: 8),
+                      focusList,
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      heatmap,
+                      const SizedBox(width: 14),
+                      Expanded(child: focusList),
+                    ],
+                  ),
           );
         },
       );
@@ -1152,7 +1393,7 @@ class _SessionSummaryCard extends StatelessWidget {
 
     return TonosSurface(
       variant: TonosSurfaceVariant.card,
-      color: surfaces.dashboardSection,
+      color: destinationTokens?.surfacePrimary ?? surfaces.dashboardSection,
       padding: const EdgeInsets.all(10),
       borderRadius: ExpressiveTrainShapes.focusHero,
       child: Column(
@@ -1160,7 +1401,7 @@ class _SessionSummaryCard extends StatelessWidget {
         children: [
           TonosSurface(
             variant: TonosSurfaceVariant.panel,
-            color: tokens.focusSurface,
+            color: destinationTokens?.surfaceSecondary ?? tokens.focusSurface,
             padding: const EdgeInsets.all(14),
             borderRadius: ExpressiveTrainShapes.focusInset,
             outlined: false,
@@ -1170,25 +1411,49 @@ class _SessionSummaryCard extends StatelessWidget {
                 Text(
                   strings.workoutDetailPastWorkout,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: tokens.focusForeground,
+                    color:
+                        destinationTokens?.onSurfaceSecondary ??
+                        tokens.focusForeground,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  dateText,
-                  softWrap: true,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: tokens.focusForeground,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Icon(
+                        Icons.event_outlined,
+                        size: 18,
+                        color:
+                            destinationTokens?.outlineAccent ??
+                            tokens.focusForeground,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        dateText,
+                        softWrap: true,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color:
+                              destinationTokens?.onSurfaceSecondary ??
+                              tokens.focusForeground,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   strings.workoutDetailCompletedSets(summary.totalSets),
                   softWrap: true,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: tokens.focusForeground,
+                    color:
+                        destinationTokens?.onSurfaceSecondary ??
+                        tokens.focusForeground,
                   ),
                 ),
               ],
@@ -1197,7 +1462,9 @@ class _SessionSummaryCard extends StatelessWidget {
           const SizedBox(height: 10),
           TonosSurface(
             variant: TonosSurfaceVariant.panel,
-            color: surfaces.workoutMetricDetails,
+            color:
+                destinationTokens?.surfaceAccent ??
+                surfaces.workoutMetricDetails,
             padding: const EdgeInsets.all(8),
             borderRadius: ExpressiveTrainShapes.focusInset,
             outlined: false,
@@ -1211,13 +1478,227 @@ class _SessionSummaryCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildExpressiveLogbook(
+    BuildContext context,
+    String durationText,
+    WeightUnit weightUnit,
+  ) {
+    final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+    final locale = Localizations.localeOf(context);
+    final volume = WeightUnitFormatter.formatVolume(
+      summary.totalVolume,
+      weightUnit,
+      locale: locale,
+    );
+    final exerciseCount = LocalizedFormatters.number(
+      summary.exerciseCount,
+      locale,
+      maximumFractionDigits: 0,
+    );
+
+    Widget metricRail() {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final scale = MediaQuery.textScalerOf(context).scale(1);
+          final columnCount = scale >= 1.8
+              ? 1
+              : constraints.maxWidth < 310 || scale > 1.15
+              ? 2
+              : 3;
+          const gap = 6.0;
+          final tileWidth =
+              (constraints.maxWidth - gap * (columnCount - 1)) / columnCount;
+
+          Widget metric(String label, String value) => SizedBox(
+            width: tileWidth,
+            child: _SummaryMetricTile(
+              label: label,
+              value: value,
+              compact: true,
+            ),
+          );
+
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              metric(strings.workoutDetailVolume, volume),
+              metric(strings.workoutDetailDuration, durationText),
+              metric(strings.workoutDetailExercises, exerciseCount),
+            ],
+          );
+        },
+      );
+    }
+
+    Widget bodyPartInset() {
+      final focusSurface = tokens.surfaceSecondary;
+      final focusTheme = theme.copyWith(
+        colorScheme: theme.colorScheme.copyWith(
+          surface: focusSurface,
+          onSurface: tokens.onSurfaceSecondary,
+          onSurfaceVariant: tokens.onSurfaceSecondary,
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: tokens.onSurfaceSecondary,
+          displayColor: tokens.onSurfaceSecondary,
+        ),
+      );
+
+      return TonosSurface(
+        variant: TonosSurfaceVariant.panel,
+        color: focusSurface,
+        padding: const EdgeInsets.all(8),
+        borderRadius: ExpressiveTrainShapes.focusInset,
+        outlined: false,
+        child: Theme(
+          data: focusTheme,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scale = MediaQuery.textScalerOf(context).scale(1);
+              final stacked = constraints.maxWidth < 300 || scale > 1.25;
+              final heatmapSize = (constraints.maxWidth * 0.38)
+                  .clamp(104.0, 128.0)
+                  .toDouble();
+              final heatmap = SizedBox.square(
+                dimension: heatmapSize,
+                child: BodyHeatmap(
+                  frequencyMap: summary.frequencyMap,
+                  lowColor: tonosHeatmapLowForSurface(context, focusSurface),
+                  highColor: tonosHeatmapHighForSurface(context, focusSurface),
+                  width: heatmapSize,
+                  height: heatmapSize,
+                ),
+              );
+              final focusList = FocusedSetsList(
+                hits: summary.bodyPartHits,
+                maxVisible: summary.bodyPartHits.length,
+                titleWeight: FontWeight.w800,
+                compact: true,
+              );
+
+              if (stacked) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(child: heatmap),
+                    const SizedBox(height: 8),
+                    focusList,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  heatmap,
+                  const SizedBox(width: 8),
+                  Expanded(child: focusList),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    return TonosSurface(
+      variant: TonosSurfaceVariant.card,
+      color: tokens.surfacePrimary,
+      padding: const EdgeInsets.all(12),
+      borderRadius: ExpressiveTrainShapes.focusHero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  strings.workoutDetailPastWorkout,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: tokens.onSurfacePrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 145),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: tokens.surfaceSecondary,
+                    borderRadius: ExpressiveTrainShapes.compactControl,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      strings.workoutDetailCompletedSets(summary.totalSets),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: tokens.onSurfaceSecondary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  Icons.event_outlined,
+                  size: 17,
+                  color: tokens.onSurfacePrimary.withValues(alpha: 0.82),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  dateText,
+                  softWrap: true,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.onSurfacePrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          metricRail(),
+          if (summary.bodyPartHits.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            bodyPartInset(),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _SummaryMetricTile extends StatelessWidget {
   final String label;
   final String value;
+  final bool compact;
 
-  const _SummaryMetricTile({required this.label, required this.value});
+  const _SummaryMetricTile({
+    required this.label,
+    required this.value,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1225,53 +1706,73 @@ class _SummaryMetricTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final usesExpressive = context.usesExpressivePresentation;
-    final expressiveTokens =
-        usesExpressive ? theme.extension<AppExpressiveTrainTokens>() : null;
+    final permitsNaturalTextHeight =
+        usesExpressive && MediaQuery.textScalerOf(context).scale(1) >= 1.5;
+    final expressiveTokens = usesExpressive
+        ? theme.extension<AppExpressiveTrainTokens>()
+        : null;
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
     final neo = context.usesNeoPresentation;
     final valueForeground =
-        usesExpressive
+        destinationTokens?.onSurfaceAccent ??
+        (usesExpressive
             ? expressiveTokens!.actionSecondaryForeground
             : neo
             ? tonosForegroundForSurface(context, surfaces.sessionSummary)
-            : null;
+            : null);
     final labelForeground =
-        usesExpressive
+        destinationTokens?.onSurfaceAccent ??
+        (usesExpressive
             ? expressiveTokens!.actionSecondaryForeground
             : neo
             ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.sessionSummary,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+                context,
+                surfaces.sessionSummary,
+              )
+            : theme.colorScheme.onSurfaceVariant);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: compact
+          ? const EdgeInsets.symmetric(horizontal: 8, vertical: 5)
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color:
-            usesExpressive
+            destinationTokens?.surfaceAccent ??
+            (usesExpressive
                 ? expressiveTokens!.actionSecondary
-                : surfaces.sessionSummary,
-        borderRadius:
-            usesExpressive
-                ? ExpressiveTrainShapes.compactControl
-                : shapes.metric,
+                : surfaces.sessionSummary),
+        borderRadius: usesExpressive
+            ? ExpressiveTrainShapes.compactControl
+            : shapes.metric,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             value,
-            maxLines: usesExpressive ? 2 : 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: permitsNaturalTextHeight
+                ? null
+                : usesExpressive
+                ? 2
+                : 1,
+            overflow: permitsNaturalTextHeight ? null : TextOverflow.ellipsis,
             softWrap: usesExpressive,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: valueForeground ?? theme.colorScheme.primary,
-              fontWeight: FontWeight.w900,
-            ),
+            style:
+                (compact
+                        ? theme.textTheme.titleSmall
+                        : theme.textTheme.titleMedium)
+                    ?.copyWith(
+                      color: valueForeground ?? theme.colorScheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
           ),
           Text(
             label,
-            maxLines: usesExpressive ? 2 : 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: permitsNaturalTextHeight
+                ? null
+                : usesExpressive
+                ? 2
+                : 1,
+            overflow: permitsNaturalTextHeight ? null : TextOverflow.ellipsis,
             softWrap: usesExpressive,
             style: theme.textTheme.bodySmall?.copyWith(color: labelForeground),
           ),
@@ -1296,11 +1797,15 @@ class _CompletedExerciseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final exercise = detail.exercise;
     if (exercise is WeightExercise) {
+      final permitsNaturalTextHeight =
+          context.usesExpressivePresentation &&
+          MediaQuery.textScalerOf(context).scale(1) >= 1.5;
       return _CompletedWeightCard(
         exercise: exercise,
         badges: badges,
         definition: detail.definition,
         onDetails: onDetails,
+        permitsNaturalTextHeight: permitsNaturalTextHeight,
       );
     }
     // TODO(cardio/stretch): restore completed cardio and stretch detail cards
@@ -1314,12 +1819,14 @@ class _CompletedWeightCard extends StatelessWidget {
   final WorkoutExerciseRecordBadges badges;
   final ExerciseDefinition? definition;
   final VoidCallback? onDetails;
+  final bool permitsNaturalTextHeight;
 
   const _CompletedWeightCard({
     required this.exercise,
     required this.badges,
     this.definition,
     this.onDetails,
+    this.permitsNaturalTextHeight = false,
   });
 
   @override
@@ -1352,45 +1859,47 @@ class _CompletedWeightCard extends StatelessWidget {
                   children: [
                     Text(
                       _exerciseTitle(exercise),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      maxLines: permitsNaturalTextHeight ? null : 2,
+                      overflow: permitsNaturalTextHeight
+                          ? null
+                          : TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900),
                     ),
                     if (exercise.equipment.trim().isNotEmpty) ...[
                       const SizedBox(height: 2),
                       if (equipment.isEmpty)
                         Text(
                           exercise.equipment,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
-                          ),
+                          maxLines: permitsNaturalTextHeight ? null : 1,
+                          overflow: permitsNaturalTextHeight
+                              ? null
+                              : TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontStyle: FontStyle.italic,
+                              ),
                         )
                       else
                         LocalizedCatalogEntityNamesBuilder(
                           entities: equipment,
-                          builder:
-                              (context, names) => Text(
-                                names.join(', '),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium?.copyWith(
-                                  color:
-                                      Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                          builder: (context, names) => Text(
+                            names.join(', '),
+                            maxLines: permitsNaturalTextHeight ? null : 1,
+                            overflow: permitsNaturalTextHeight
+                                ? null
+                                : TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                   fontStyle: FontStyle.italic,
                                 ),
-                              ),
+                          ),
                         ),
                     ],
                   ],
@@ -1411,8 +1920,8 @@ class _CompletedWeightCard extends StatelessWidget {
                 )
               else if (onDetails != null)
                 IconButton(
-                  tooltip:
-                      AppLocalizations.of(context).workoutDetailExerciseInfo,
+                  tooltip: AppLocalizations.of(context)
+                      .workoutDetailExerciseInfo,
                   onPressed: onDetails,
                   icon: const Icon(Icons.info_outline),
                 ),
@@ -1439,25 +1948,26 @@ class _CompletedWeightCard extends StatelessWidget {
           for (var i = 0; i < rows.length; i++)
             _CompletedSetRow(
               row: rows[i],
-              badges:
-                  rows[i].parentIndex == null
-                      ? const <WorkoutRecordBadge>[]
-                      : badges
-                          .forSet(rows[i].parentIndex!)
-                          .where(
-                            (badge) =>
-                                badge.type == WorkoutRecordBadgeType.repBest ||
-                                badge.type == WorkoutRecordBadgeType.volumeBest,
-                          )
-                          .toList(growable: false),
+              badges: rows[i].parentIndex == null
+                  ? const <WorkoutRecordBadge>[]
+                  : badges
+                        .forSet(rows[i].parentIndex!)
+                        .where(
+                          (badge) =>
+                              badge.type == WorkoutRecordBadgeType.repBest ||
+                              badge.type == WorkoutRecordBadgeType.volumeBest,
+                        )
+                        .toList(growable: false),
             ),
         ],
       ),
     );
     if (context.usesExpressivePresentation) {
+      final destinationTokens = Theme.of(context)
+          .extension<AppExpressiveDestinationTokens>();
       return TonosSurface(
         variant: TonosSurfaceVariant.card,
-        color: surfaces.dashboardSection,
+        color: destinationTokens?.surfaceSecondary ?? surfaces.dashboardSection,
         margin: const EdgeInsets.only(bottom: 14),
         borderRadius: ExpressiveTrainShapes.focusInset,
         child: content,
@@ -1632,10 +2142,9 @@ WorkoutExercise _cloneExercise(WorkoutExercise exercise) {
       equipment: exercise.equipment,
       cardioName: exercise.cardioName,
       cardioNote: exercise.cardioNote,
-      plannedMinutes:
-          exercise.plannedMinutes > 0
-              ? exercise.plannedMinutes
-              : (exercise.elapsedSeconds / 60).ceil(),
+      plannedMinutes: exercise.plannedMinutes > 0
+          ? exercise.plannedMinutes
+          : (exercise.elapsedSeconds / 60).ceil(),
       elapsedSeconds: 0,
     );
   }
@@ -1643,19 +2152,18 @@ WorkoutExercise _cloneExercise(WorkoutExercise exercise) {
     return StretchExercise(
       name: exercise.name,
       equipment: exercise.equipment,
-      stretchInstances:
-          exercise.stretchInstances
-              .map(
-                (instance) => StretchInstance(
-                  stretchId: instance.stretchId,
-                  isCustom: instance.isCustom,
-                  customName: instance.customName,
-                  customDesc: instance.customDesc,
-                  isChecked: false,
-                  orderIndex: instance.orderIndex,
-                ),
-              )
-              .toList(),
+      stretchInstances: exercise.stretchInstances
+          .map(
+            (instance) => StretchInstance(
+              stretchId: instance.stretchId,
+              isCustom: instance.isCustom,
+              customName: instance.customName,
+              customDesc: instance.customDesc,
+              isChecked: false,
+              orderIndex: instance.orderIndex,
+            ),
+          )
+          .toList(),
     );
   }
   return exercise;

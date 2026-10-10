@@ -8,7 +8,10 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/active_session.dart';
 import '../services/tutorial_state_store.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/tokens/app_progress_colors.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../widgets/exercise_progress_section.dart';
 import '../widgets/guided_tutorial_overlay.dart';
 import '../widgets/health_trends_section.dart';
@@ -125,33 +128,68 @@ class _MeasurementsTrendsPageState extends State<MeasurementsTrendsPage> {
       _refreshToken++;
     }
 
-    return Scaffold(
-      backgroundColor: context.usesExpressivePresentation
-          ? Theme.of(context).extension<AppExpressiveTrainTokens>()!.pageCanvas
-          : null,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
-            children: [
-              KeyedSubtree(
-                key: _workoutReportTutorialKey,
-                child: WorkoutMetricChartCard(refreshToken: _refreshToken),
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.progress,
+      child: Builder(
+        builder: (context) {
+          final destination = Theme.of(context)
+              .extension<AppExpressiveDestinationTokens>();
+          final progressColors = context.progressColors;
+          final page = Scaffold(
+            backgroundColor:
+                destination?.pageCanvas ??
+                (context.usesExpressivePresentation
+                    ? Theme.of(context)
+                          .extension<AppExpressiveTrainTokens>()!
+                          .pageCanvas
+                    : null),
+            body: SafeArea(
+              bottom: false,
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 24),
+                  children: [
+                    KeyedSubtree(
+                      key: _workoutReportTutorialKey,
+                      child: WorkoutMetricChartCard(
+                        refreshToken: _refreshToken,
+                      ),
+                    ),
+                    KeyedSubtree(
+                      key: _exerciseProgressTutorialKey,
+                      child: ExerciseProgressSection(
+                        refreshToken: _refreshToken,
+                      ),
+                    ),
+                    KeyedSubtree(
+                      key: _healthTrendsTutorialKey,
+                      child: Theme(
+                        data: destination == null
+                            ? Theme.of(context)
+                            : Theme.of(context).copyWith(
+                                extensions: [
+                                  for (final extension in Theme.of(
+                                    context,
+                                  ).extensions.values)
+                                    if (extension is! AppProgressColors)
+                                      extension,
+                                  progressColors.copyWith(
+                                    healthCard: destination.surfaceAccent,
+                                  ),
+                                ],
+                              ),
+                        child: HealthTrendsSection(refreshToken: _refreshToken),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              KeyedSubtree(
-                key: _exerciseProgressTutorialKey,
-                child: ExerciseProgressSection(refreshToken: _refreshToken),
-              ),
-              KeyedSubtree(
-                key: _healthTrendsTutorialKey,
-                child: HealthTrendsSection(refreshToken: _refreshToken),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+          return page;
+        },
       ),
     );
   }

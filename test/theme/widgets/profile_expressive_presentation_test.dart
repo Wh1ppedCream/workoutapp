@@ -13,6 +13,9 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
+import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,11 +53,117 @@ void main() {
       if (entry.$3) {
         expect(find.byType(SettingsPageScaffold), findsNothing);
         expect(find.byType(TonosSurface), findsAtLeastNWidgets(5));
+        final rootTheme = Theme.of(tester.element(find.byType(ListView).first));
+        final destination = rootTheme
+            .extension<AppExpressiveDestinationTokens>();
+        expect(destination?.family, AppExpressiveDestinationFamily.profile);
+        final profileTokens = destination!;
+        expect(profileTokens.surfacePrimary, const Color(0xFF51246B));
+        expect(profileTokens.surfaceSecondary, const Color(0xFFBDE9DD));
+        expect(profileTokens.surfaceAccent, const Color(0xFFC4DFFF));
+        final strings = AppLocalizations.of(profileContext);
+
+        final userInformationTile = tester.widget<SettingsActionTile>(
+          find.byKey(AppTestKeys.profileUserInformation),
+        );
+        expect(userInformationTile.icon, Icons.badge_outlined);
+        expect(userInformationTile.iconColor, SettingsAccent.account);
+        expect(
+          userInformationTile.subtitle,
+          strings.profileUserInformationSubtitle,
+        );
+        expect(userInformationTile.onTap, isNotNull);
+        expect(
+          find.ancestor(
+            of: find.text(strings.profileUserInformationTitle),
+            matching: find.byType(TonosSurface),
+          ),
+          findsOneWidget,
+          reason: 'User Information shares the Account surface at rest',
+        );
+
+        final sectionSurfaces = <String, Color>{
+          strings.profileAccountSectionTitle: profileTokens.surfacePrimary,
+          strings.profileTrainingSectionTitle: profileTokens.surfaceSecondary,
+          strings.profileDataSectionTitle: profileTokens.surfaceAccent,
+        };
+        for (final section in sectionSurfaces.entries) {
+          final sectionTitle = find.text(section.key);
+          final sectionSurfaceFinder = find.ancestor(
+            of: sectionTitle,
+            matching: find.byType(TonosSurface),
+          );
+          expect(sectionSurfaceFinder, findsWidgets, reason: section.key);
+          expect(
+            tester.widget<TonosSurface>(sectionSurfaceFinder.first).color,
+            section.value,
+            reason: section.key,
+          );
+        }
+        final diagnosticsTile = tester.widget<SettingsActionTile>(
+          find.ancestor(
+            of: find.text(strings.profileDiagnosticsTitle),
+            matching: find.byType(SettingsActionTile),
+          ),
+        );
+        expect(diagnosticsTile.iconColor, SettingsAccent.data);
       } else {
         expect(find.byType(SettingsPageScaffold), findsOneWidget);
         expect(find.byType(TonosSurface), findsNothing);
+        final strings = AppLocalizations.of(profileContext);
+        final diagnosticsTile = tester.widget<SettingsActionTile>(
+          find.ancestor(
+            of: find.text(strings.profileDiagnosticsTitle),
+            matching: find.byType(SettingsActionTile),
+          ),
+        );
+        expect(
+          diagnosticsTile.iconColor,
+          SettingsAccent.progress,
+          reason: '${entry.$1} diagnostics retains the Classic accent',
+        );
       }
     }
+
+    await tester.pumpWidget(
+      _profileApp(theme: ExpressiveThemeDefinition.dark()),
+    );
+    await _pumpProfileAndFinishTutorial(tester);
+    final darkContext = tester.element(find.byType(ProfilePage));
+    final darkStrings = AppLocalizations.of(darkContext);
+    final darkDestination = Theme.of(
+      tester.element(find.byType(ListView).first),
+    ).extension<AppExpressiveDestinationTokens>()!;
+    final darkUserInformationTile = tester.widget<SettingsActionTile>(
+      find.byKey(AppTestKeys.profileUserInformation),
+    );
+    expect(darkUserInformationTile.icon, Icons.badge_outlined);
+    expect(darkUserInformationTile.iconColor, SettingsAccent.account);
+    expect(darkUserInformationTile.onTap, isNotNull);
+    expect(
+      find.ancestor(
+        of: find.text(darkStrings.profileUserInformationTitle),
+        matching: find.byType(TonosSurface),
+      ),
+      findsOneWidget,
+    );
+    final darkSections = <String, Color>{
+      darkStrings.profileAccountSectionTitle: darkDestination.surfacePrimary,
+      darkStrings.profileTrainingSectionTitle: darkDestination.surfaceSecondary,
+      darkStrings.profileDataSectionTitle: darkDestination.surfaceAccent,
+    };
+    for (final section in darkSections.entries) {
+      final sectionSurfaceFinder = find.ancestor(
+        of: find.text(section.key),
+        matching: find.byType(TonosSurface),
+      );
+      expect(
+        tester.widget<TonosSurface>(sectionSurfaceFinder.first).color,
+        section.value,
+        reason: 'dark ${section.key}',
+      );
+    }
+    expect(darkDestination.surfaceAccent, const Color(0xFF1F3E59));
   });
 
   testWidgets(
@@ -101,7 +210,18 @@ void main() {
         final page = (route as MaterialPageRoute<dynamic>).builder(
           profileContext,
         );
-        expect(page.runtimeType, destination.value, reason: destination.key);
+        expect(
+          page,
+          isA<AppExpressiveDestinationTheme>(),
+          reason: destination.key,
+        );
+        final scopedPage = page as AppExpressiveDestinationTheme;
+        expect(scopedPage.family, AppExpressiveDestinationFamily.profile);
+        expect(
+          scopedPage.child.runtimeType,
+          destination.value,
+          reason: destination.key,
+        );
 
         tester.state<NavigatorState>(find.byType(Navigator).first).pop();
         await tester.pumpAndSettle();

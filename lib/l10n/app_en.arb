@@ -351,6 +351,7 @@
   "navEditorInactiveSubtitle": "Turn these on whenever you want them back.",
   "navEditorNoInactiveTabs": "No inactive tabs.",
   "navEditorAlwaysShown": "Always shown",
+  "navEditorRequired": "Required",
   "navEditorVisible": "Visible in bottom navigation",
   "navEditorHidden": "Hidden from bottom navigation",
   "trainTutorialSpacesTitle": "Train has two spaces",
@@ -805,9 +806,9 @@
   "flowMethodDeleteSet": "Delete set",
   "flowAppDefaultTitle": "App Default Progression",
   "flowProfileDefaultTitle": "Gym Default Progression",
-  "flowPlanSubtitle": "Set how this plan progresses after each workout.",
-  "flowAppDefaultSubtitle": "Set the starting progression flow for new gym profiles.",
-  "flowProfileDefaultSubtitle": "Set the starting progression flow for new plans in {profileName}.",
+  "flowPlanSubtitle": "Progression flow for this plan.",
+  "flowAppDefaultSubtitle": "Default flow for new gym profiles.",
+  "flowProfileDefaultSubtitle": "Default flow for new plans in {profileName}.",
   "@flowProfileDefaultSubtitle": {
     "placeholders": {
       "profileName": {"type": "String"}
@@ -828,12 +829,21 @@
   "flowMethodNameRequired": "Action name cannot be empty",
   "flowManageActionsTooltip": "Manage progression actions",
   "flowAddBranchTitle": "Add a branch",
-  "flowAddBranchSubtitle": "Choose where the next success or miss should lead.",
+  "flowAddBranchSubtitle": "Create success or miss paths from a node.",
   "flowBranchFrom": "Branch from",
   "flowSuccess": "Success",
   "flowMiss": "Miss",
   "flowAttachActionTitle": "Attach a progression action",
-  "flowAttachActionSubtitle": "Apply one adjustment of each type to a flow node.",
+  "flowAttachActionSubtitle": "Assign progression adjustments to nodes.",
+  "flowFitToViewTooltip": "Fit flow to view.",
+  "flowBranchSelectGuidance": "Select a source node to add a success or miss path.",
+  "flowBranchCompleteGuidance": "All nodes already have success and miss paths.",
+  "flowActionSelectNodeGuidance": "Select a node to configure its actions.",
+  "flowActionSelectMethodGuidance": "Choose a progression action for this node.",
+  "flowActionCreateMethodGuidance": "Add an action before assigning one to a node.",
+  "flowActionTypesUsedGuidance": "This node already uses every available action type.",
+  "flowActionRemoveDependenciesGuidance": "Remove branches and attached actions before deleting this node.",
+  "flowActionRootGuidance": "The first-attempt node cannot hold actions or be removed.",
   "flowApplyActionTo": "Apply action to",
   "flowProgressionAction": "Progression action",
   "flowAddAction": "+ Action",
@@ -935,14 +945,17 @@
   "@safeFailureWithGuidance": {"placeholders": {"summary": {"type": "String"}, "guidance": {"type": "String"}}},
   "flowPageTitle": "Workout Progress Flows",
   "flowPageSubtitle": "Set the paths that decide how progression actions are applied after workout results.",
+  "flowPageSubtitleExpressive": "Configure how workout results trigger progression actions.",
   "flowHowCopiedTitle": "How flows are copied",
   "flowHowCopiedBody": "App flows become the starting point for new gym profiles. Gym flows become the starting point for new plans. Later edits stay scoped to the flow you open here.",
+  "flowHowCopiedBodyExpressive": "New gym profiles start with app defaults, and new plans start with gym defaults. Changes to one flow don't affect the others.",
   "flowLoadError": "Workout progression flows could not be loaded.",
   "flowAppDefaultsSubtitle": "The starting flow for new gym profiles.",
   "flowAppDefaultEntry": "App default flow",
   "flowGymProfilesSubtitle": "Each profile has defaults and its own plan flows.",
   "flowNoProfiles": "Create a gym profile to set profile and plan flows.",
   "flowNoSavedYet": "No saved flow yet",
+  "flowTapToConfigure": "Tap to configure",
   "flowSummary": "{nodes} nodes | {branches} branches | {actions} actions",
   "@flowSummary": {
     "placeholders": {
@@ -953,6 +966,12 @@
   },
   "flowPlansAvailable": "{count} plan flows available",
   "@flowPlansAvailable": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "flowPlansAvailableExpressive": "{count, plural, one{{count} plan available} other{{count} plans available}}",
+  "@flowPlansAvailableExpressive": {
     "placeholders": {
       "count": {"type": "int"}
     }
@@ -973,6 +992,7 @@
   "gymExitDiscard": "Cancel workout",
   "gymExitSave": "End and save",
   "gymExitAskBody": "Ask before ending completed work.",
+  "gymExitAskExpressiveSubtitle": "Choose what happens when leaving an active workout.",
   "gymExitDiscardBody": "Cancel without saving completed work.",
   "gymExitSaveBody": "Save completed work to Logbook.",
   "commonAll": "All",
@@ -1368,6 +1388,20 @@
   "tutorialsResetAllMessage": "All tutorials have been reset.",
   "tutorialsHowItWorksTitle": "How tutorials work",
   "tutorialsHowItWorksBody": "Tutorials appear once, then stay out of the way. Expand a group to reset a specific walkthrough.",
+  "tutorialsExpressiveControlsSubtitle": "Start fresh with your guided walkthroughs.",
+  "tutorialsExpressiveHowItWorksBody": "Tutorials appear automatically once. Expand a category to make an individual walkthrough available again.",
+  "tutorialsExpressiveTitle": "{topic} tutorial",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "Reset to replay when you next open {topic}.",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "tutorialsMainTabsTitle": "Main tabs",
   "tutorialsMainTabsSubtitle": "Replay walkthroughs for each main area.",
   "tutorialsWorkoutTitle": "Workout",
@@ -2572,5 +2606,36 @@
       "duration": {"type": "String"},
       "planName": {"type": "String"}
     }
-  }
+  },
+  "rulesPageSubtitleExpressive": "Create reusable rules for weight, rep, and set progression.",
+  "rulesHowDefaultsBodyExpressive": "New gym profiles start with app defaults, and new plans start with profile defaults. Later changes do not update existing profiles or plans automatically.",
+  "rulesRuleTypeLabel": "Rule type",
+  "rulesOperationLabel": "Operation",
+  "rulesScopedRuleCountSemantics": "{scope}, rule count: {count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "Rule count: {count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "Total rules: {count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "Plan count: {count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "Default rules for new plans.",
+  "rulesPlanOnlySubtitleExpressive": "Plan-specific rules."
 }

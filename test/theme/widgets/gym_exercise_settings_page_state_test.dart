@@ -6,8 +6,10 @@ import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/profile/settings/gym_exercise_settings_page.dart';
 import 'package:env_test/services/workout_exit_preferences.dart';
 import 'package:env_test/theme/classic_theme.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/screens/profile/settings/profile_expressive_selection.dart';
 
 ToggleablePainter _toggleablePainter(WidgetTester tester, Finder control) {
   final paintFinder = find.descendant(
@@ -57,13 +59,13 @@ void main() {
       await tester.pumpAndSettle();
 
       final radioTileFinder = find.byType(RadioListTile<WorkoutExitBehavior>);
-      final radioTiles =
-          tester
-              .widgetList<RadioListTile<WorkoutExitBehavior>>(radioTileFinder)
-              .toList();
+      final radioTiles = tester
+          .widgetList<RadioListTile<WorkoutExitBehavior>>(radioTileFinder)
+          .toList();
       final radioFinder = find.byType(Radio<WorkoutExitBehavior>);
-      final radios =
-          tester.widgetList<Radio<WorkoutExitBehavior>>(radioFinder).toList();
+      final radios = tester
+          .widgetList<Radio<WorkoutExitBehavior>>(radioFinder)
+          .toList();
       expect(radioTiles, hasLength(3));
       expect(radios, hasLength(3));
 
@@ -78,8 +80,9 @@ void main() {
         dialogSurface,
       );
       final selectedColor = neo ? dialogForeground : theme.colorScheme.primary;
-      final unselectedColor =
-          neo ? dialogForeground : theme.colorScheme.onSurfaceVariant;
+      final unselectedColor = neo
+          ? dialogForeground
+          : theme.colorScheme.onSurfaceVariant;
       if (neo) {
         final fillColor = theme.radioTheme.fillColor!;
         expect(
@@ -115,5 +118,74 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+  }
+
+  for (final entry in <(String, ThemeData)>[
+    ('light', ExpressiveThemeDefinition.light()),
+    ('dark', ExpressiveThemeDefinition.dark()),
+  ]) {
+    testWidgets(
+      'Expressive exit choice stays contained and saves in ${entry.$1}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(360, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues({});
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            theme: entry.$2,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const GymExerciseSettingsPage(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final pageContext = tester.element(
+          find.byType(GymExerciseSettingsPage),
+        );
+        final strings = AppLocalizations.of(pageContext);
+        await tester.tap(find.text(strings.gymSettingsExitTitle).first);
+        await tester.pumpAndSettle();
+
+        final choiceFinder = find.byType(RadioListTile<WorkoutExitBehavior>);
+        expect(choiceFinder, findsNWidgets(WorkoutExitBehavior.values.length));
+        final selectedFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is RadioListTile<WorkoutExitBehavior> &&
+              widget.value == WorkoutExitBehavior.askEveryTime,
+        );
+        final unselectedFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is RadioListTile<WorkoutExitBehavior> &&
+              widget.value == WorkoutExitBehavior.saveCompleted,
+        );
+        expect(selectedFinder, findsOneWidget);
+        expect(unselectedFinder, findsOneWidget);
+
+        final style = profileExpressiveChoiceStyle(
+          tester.element(selectedFinder),
+        );
+        final selected = tester.widget<RadioListTile<WorkoutExitBehavior>>(
+          selectedFinder,
+        );
+        final unselected = tester.widget<RadioListTile<WorkoutExitBehavior>>(
+          unselectedFinder,
+        );
+        expect(selected.selected, isTrue);
+        expect(selected.selectedTileColor, style.selectedSurface);
+        expect(unselected.selected, isFalse);
+        expect(unselected.tileColor, style.surface);
+
+        await tester.tap(unselectedFinder);
+        await tester.pumpAndSettle();
+        expect(
+          await const WorkoutExitPreferences().load(),
+          WorkoutExitBehavior.saveCompleted,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }

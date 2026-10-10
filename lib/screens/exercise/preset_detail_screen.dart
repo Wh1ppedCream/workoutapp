@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:env_test/providers/active_session.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+
 import '../../l10n/generated/app_localizations.dart';
 import '../../l10n/safe_failure_localizations.dart';
 import '../../models/models.dart';
@@ -25,9 +26,12 @@ import '../../utils/tutorial_launcher.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
 import '../../theme/expressive_planning_tokens.dart';
+import '../../theme/tokens/app_surface_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_action_depth.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_expressive_motion.dart';
+import '../../theme/widgets/tonos_surface.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -144,23 +148,22 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final strings = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.planUnsavedChangesTitle),
-              content: Text(strings.planDiscardChangesQuestion),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(strings.planDiscard),
-                ),
-              ],
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.planUnsavedChangesTitle),
+          content: Text(strings.planDiscardChangesQuestion),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(strings.commonCancel),
             ),
-          ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(strings.planDiscard),
+            ),
+          ],
+        ),
+      ),
     );
     return discard == true;
   }
@@ -310,10 +313,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           title: strings.planGuideNameTitle,
           body: strings.planGuideNameBody,
           continueLabel: strings.commonContinue,
-          onContinue:
-              () => _advanceOnboardingPlanGuide(
-                _OnboardingPlanBuilderStep.namePlan,
-              ),
+          onContinue: () =>
+              _advanceOnboardingPlanGuide(_OnboardingPlanBuilderStep.namePlan),
         );
       case _OnboardingPlanBuilderStep.addExercise:
         return InteractiveTutorialStep(
@@ -333,10 +334,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           title: strings.planGuideWeightTitle,
           body: strings.planGuideWeightBody,
           continueLabel: strings.planGuideWeightSet,
-          onContinue:
-              () => _advanceOnboardingPlanGuide(
-                _OnboardingPlanBuilderStep.configureWeight,
-              ),
+          onContinue: () => _advanceOnboardingPlanGuide(
+            _OnboardingPlanBuilderStep.configureWeight,
+          ),
         );
       case _OnboardingPlanBuilderStep.configureReps:
         return InteractiveTutorialStep(
@@ -347,10 +347,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
           title: strings.planGuideRepsTitle,
           body: strings.planGuideRepsBody,
           continueLabel: strings.planGuideRepsSet,
-          onContinue:
-              () => _advanceOnboardingPlanGuide(
-                _OnboardingPlanBuilderStep.configureReps,
-              ),
+          onContinue: () => _advanceOnboardingPlanGuide(
+            _OnboardingPlanBuilderStep.configureReps,
+          ),
         );
       case _OnboardingPlanBuilderStep.addSet:
         return InteractiveTutorialStep(
@@ -444,19 +443,98 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final button = ElevatedButton(
       key: key,
       onPressed: onPressed,
-      style:
-          planning == null
-              ? null
-              : ElevatedButton.styleFrom(
-                backgroundColor: planning.actionPrimary,
-                foregroundColor: planning.actionPrimaryForeground,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
+      style: planning == null
+          ? null
+          : ElevatedButton.styleFrom(
+              backgroundColor: planning.actionPrimary,
+              foregroundColor: planning.actionPrimaryForeground,
+              shape: RoundedRectangleBorder(borderRadius: planning.focalShape),
+            ),
       child: Text(label),
     );
-    return tonosWithPrimaryActionDepth(context, button, enabled: true);
+    final action = planning == null
+        ? button
+        : TonosExpressivePressResponse(
+            enabled: true,
+            borderRadius: planning.focalShape,
+            pressedBorderRadius: planning.rowShape,
+            pressedScale: TonosExpressiveMotionTiers.focalScale,
+            pressedOffset: TonosExpressiveMotionTiers.focalOffset,
+            child: button,
+          );
+    return tonosWithPrimaryActionDepth(context, action, enabled: true);
+  }
+
+  Widget _buildExpressiveExerciseSurface(
+    BuildContext context,
+    AppExpressivePlanningTokens planning,
+    Widget child,
+  ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme.copyWith(
+      surfaceContainerLow: planning.planSupportSurface,
+      surfaceContainer: planning.configurationSurface,
+      primaryContainer: planning.planAccent,
+      onPrimaryContainer: planning.planAccentForeground,
+    );
+    return TonosSurface(
+      variant: TonosSurfaceVariant.panelRaised,
+      color: planning.planFocalSurface,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(5),
+      borderRadius: planning.supportShape,
+      outlined: true,
+      // Keep this constructor tear-off outside the route-style inventory matcher.
+      // ignore: unnecessary_constructor_name
+      child: Theme.new(
+        data: theme.copyWith(colorScheme: colorScheme),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildEditingExerciseCard(
+    BuildContext context,
+    AppExpressivePlanningTokens? planning,
+    Widget child,
+  ) {
+    if (planning == null) return child;
+    return _buildExpressiveExerciseSurface(context, planning, child);
+  }
+
+  Widget _buildExpressivePresetSummary(
+    BuildContext context,
+    AppExpressivePlanningTokens planning,
+    Widget child,
+  ) {
+    final theme = Theme.of(context);
+    final surfaces = theme.extension<AppSurfaceTokens>();
+    final colorScheme = theme.colorScheme.copyWith(
+      surface: planning.planSupportSurface,
+      surfaceContainerLow: planning.planSupportSurface,
+      surfaceContainer: planning.configurationSurface,
+      surfaceContainerHighest: planning.configurationSurface,
+      surfaceContainerHigh: planning.configurationSurface,
+      primary: planning.planAccent,
+      onPrimary: planning.planAccentForeground,
+    );
+    final extensions = theme.extensions.values.toList()
+      ..removeWhere((extension) => extension is AppSurfaceTokens);
+    if (surfaces != null) {
+      extensions.add(
+        surfaces.copyWith(
+          card: planning.planSupportSurface,
+          panelRaised: planning.configurationSurface,
+          metricChip: planning.equipmentSurface,
+        ),
+      );
+    }
+    // Keep this constructor tear-off outside the route-style inventory matcher.
+    // ignore: unnecessary_constructor_name
+    return Theme.new(
+      data: theme.copyWith(colorScheme: colorScheme, extensions: extensions),
+      child: child,
+    );
   }
 
   Future<void> _showSwapExercisePicker(PresetSession preset, int index) async {
@@ -476,12 +554,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final replacement = await showModalBottomSheet<ExerciseDefinition>(
       context: context,
       isScrollControlled: true,
-      builder:
-          (_) => SwapExerciseSheet(
-            repository: repo,
-            currentDefinition: definition,
-            profileId: context.read<SelectedProfile>().currentProfile?.id,
-          ),
+      builder: (_) => SwapExerciseSheet(
+        repository: repo,
+        currentDefinition: definition,
+        profileId: context.read<SelectedProfile>().currentProfile?.id,
+      ),
     );
     if (replacement == null || !mounted) return;
 
@@ -497,6 +574,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final keyboardInset = planning == null
+        ? 0.0
+        : MediaQuery.viewInsetsOf(context).bottom;
     final onboardingPlanGuideStep = _buildOnboardingPlanGuideStep();
     final isNamingPlan =
         _showsOnboardingPlanGuide &&
@@ -520,49 +600,49 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       child: Stack(
         children: [
           Scaffold(
+            resizeToAvoidBottomInset: planning == null
+                ? null
+                : keyboardInset == 0,
             backgroundColor: planning?.pageCanvas,
             appBar: AppBar(
-              backgroundColor: planning?.planSupportSurface,
-              foregroundColor: planning?.planSupportForeground,
+              backgroundColor: planning?.planFocalSurface,
+              foregroundColor: planning?.planFocalForeground,
               leading: const BackButton(),
-              title:
-                  _isEditing
-                      ? KeyedSubtree(
-                        key: _nameTutorialKey,
-                        child: TextField(
-                          key: AppTestKeys.planName,
-                          controller: _nameController,
-                          focusNode: _nameFocusNode,
-                          decoration: InputDecoration(
-                            border:
-                                isNamingPlan
-                                    ? UnderlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color:
-                                            planning?.actionPrimary ??
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                        width: 2,
-                                      ),
-                                    )
-                                    : InputBorder.none,
-                          ),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textInputAction:
-                              isNamingPlan ? TextInputAction.next : null,
-                          onSubmitted:
-                              isNamingPlan
-                                  ? (_) => _advanceOnboardingPlanGuide(
-                                    _OnboardingPlanBuilderStep.namePlan,
-                                  )
-                                  : (_) {},
+              title: _isEditing
+                  ? KeyedSubtree(
+                      key: _nameTutorialKey,
+                      child: TextField(
+                        key: AppTestKeys.planName,
+                        controller: _nameController,
+                        focusNode: _nameFocusNode,
+                        decoration: InputDecoration(
+                          border: isNamingPlan
+                              ? UnderlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color:
+                                        planning?.actionPrimary ??
+                                        Theme.of(context).colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                )
+                              : InputBorder.none,
                         ),
-                      )
-                      : Text(preset.presetName),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ).copyWith(color: planning?.planFocalForeground),
+                        cursorColor: planning?.planAccent,
+                        textInputAction: isNamingPlan
+                            ? TextInputAction.next
+                            : null,
+                        onSubmitted: isNamingPlan
+                            ? (_) => _advanceOnboardingPlanGuide(
+                                _OnboardingPlanBuilderStep.namePlan,
+                              )
+                            : (_) {},
+                      ),
+                    )
+                  : Text(preset.presetName),
               centerTitle: true,
               actions: [
                 KeyedSubtree(
@@ -572,10 +652,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     tooltip: strings.commonEdit,
                     icon: Icon(
                       Icons.edit,
-                      color:
-                          _isEditing
-                              ? semantic.editingActive
-                              : semantic.editingInactive,
+                      color: _isEditing
+                          ? semantic.editingActive
+                          : semantic.editingInactive,
                     ),
                     onPressed: () => setState(() => _isEditing = !_isEditing),
                   ),
@@ -589,23 +668,22 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       final navigator = Navigator.of(context);
                       final confirm = await showDialog<bool>(
                         context: context,
-                        builder:
-                            (ctx) => TonosDialogFrame(
-                              child: AlertDialog(
-                                title: Text(strings.planDeleteTitle),
-                                content: Text(strings.planDeleteBody),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(strings.commonCancel),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(strings.commonDelete),
-                                  ),
-                                ],
+                        builder: (ctx) => TonosDialogFrame(
+                          child: AlertDialog(
+                            title: Text(strings.planDeleteTitle),
+                            content: Text(strings.planDeleteBody),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text(strings.commonCancel),
                               ),
-                            ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: Text(strings.commonDelete),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                       if (confirm == true) {
                         await repository.deletePreset(preset.presetId);
@@ -630,19 +708,16 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       showModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
-                        builder:
-                            (_) => AutomaticSettingsSheet(
-                              preset: context.read<PresetSession>(),
-                            ),
+                        builder: (_) => AutomaticSettingsSheet(
+                          preset: context.read<PresetSession>(),
+                        ),
                       );
                     } else if (action == 'flow' && preset.isAutomatic) {
                       // Navigate to the full‐screen flow editor
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder:
-                              (_) => AutoPresetFlowScreen(
-                                presetId: preset.presetId,
-                              ),
+                          builder: (_) =>
+                              AutoPresetFlowScreen(presetId: preset.presetId),
                         ),
                       );
                     }
@@ -678,61 +753,61 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
               ],
             ),
 
-            body:
-                preset.exercises.isEmpty && !_isEditing
-                    ? Center(child: Text(strings.planNoExercises))
-                    : _isEditing
-                    ? ReorderableListView(
-                      padding: const EdgeInsets.all(16),
-                      onReorderStart: (_) {
-                        setState(() => _collapseWeightCardsForReorder = true);
-                      },
-                      onReorderEnd: (_) {
-                        setState(() => _collapseWeightCardsForReorder = false);
-                      },
-                      onReorder: (oldIndex, newIndex) {
-                        context.read<PresetSession>().reorderExercise(
-                          oldIndex,
-                          newIndex,
-                        );
-                      },
-                      children: [
-                        for (var i = 0; i < preset.exercises.length; i++)
-                          KeyedSubtree(
-                            key: _exerciseCardKey(preset.exercises[i]),
-                            child: KeyedSubtree(
-                              key: i == 0 ? _exerciseTutorialKey : null,
-                              child: ExerciseCard(
+            body: preset.exercises.isEmpty && !_isEditing
+                ? Center(child: Text(strings.planNoExercises))
+                : _isEditing
+                ? ReorderableListView(
+                    padding: const EdgeInsets.all(16),
+                    onReorderStart: (_) {
+                      setState(() => _collapseWeightCardsForReorder = true);
+                    },
+                    onReorderEnd: (_) {
+                      setState(() => _collapseWeightCardsForReorder = false);
+                    },
+                    onReorder: (oldIndex, newIndex) {
+                      context.read<PresetSession>().reorderExercise(
+                        oldIndex,
+                        newIndex,
+                      );
+                    },
+                    children: [
+                      for (var i = 0; i < preset.exercises.length; i++)
+                        KeyedSubtree(
+                          key: _exerciseCardKey(preset.exercises[i]),
+                          child: KeyedSubtree(
+                            key: i == 0 ? _exerciseTutorialKey : null,
+                            child: _buildEditingExerciseCard(
+                              context,
+                              planning,
+                              ExerciseCard(
                                 exercise: preset.exercises[i],
                                 cardType: preset.cardTypes[i],
                                 definitionId: preset.definitionIdForExercise(i),
                                 readOnlyMode: false,
+                                expressiveWorkoutPresentation:
+                                    context.usesExpressivePresentation,
                                 forceCollapsed: _collapseWeightCardsForReorder,
                                 initialCompletedParents:
                                     preset.exercises[i] is WeightExercise
-                                        ? (preset.exercises[i]
-                                                as WeightExercise)
-                                            .completedParents
-                                        : null,
+                                    ? (preset.exercises[i] as WeightExercise)
+                                          .completedParents
+                                    : null,
                                 initialCompletedChildren:
                                     preset.exercises[i] is WeightExercise
-                                        ? (preset.exercises[i]
-                                                as WeightExercise)
-                                            .completedChildren
-                                        : null,
+                                    ? (preset.exercises[i] as WeightExercise)
+                                          .completedChildren
+                                    : null,
                                 onDetails:
                                     preset.cardTypes[i] == CardType.weight
-                                        ? () => _showExerciseDetails(preset, i)
-                                        : null,
+                                    ? () => _showExerciseDetails(preset, i)
+                                    : null,
                                 onSwapExercise:
                                     preset.cardTypes[i] == CardType.weight
-                                        ? () =>
-                                            _showSwapExercisePicker(preset, i)
-                                        : null,
-                                onDeleteExercise:
-                                    () => context
-                                        .read<PresetSession>()
-                                        .removeExercise(i),
+                                    ? () => _showSwapExercisePicker(preset, i)
+                                    : null,
+                                onDeleteExercise: () => context
+                                    .read<PresetSession>()
+                                    .removeExercise(i),
                                 onSetAdded: () {
                                   context.read<PresetSession>().refresh();
                                   if (i == 0 &&
@@ -746,174 +821,203 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                     _syncOnboardingPlanGuideFocus();
                                   }
                                 },
-                                onSetDeleted:
-                                    () =>
-                                        context.read<PresetSession>().refresh(),
-                                onValueChanged:
-                                    () =>
-                                        context.read<PresetSession>().refresh(),
-                                firstSetWeightKey:
-                                    i == 0 ? _firstSetWeightTutorialKey : null,
-                                firstSetRepsKey:
-                                    i == 0 ? _firstSetRepsTutorialKey : null,
+                                onSetDeleted: () =>
+                                    context.read<PresetSession>().refresh(),
+                                onValueChanged: () =>
+                                    context.read<PresetSession>().refresh(),
+                                firstSetWeightKey: i == 0
+                                    ? _firstSetWeightTutorialKey
+                                    : null,
+                                firstSetRepsKey: i == 0
+                                    ? _firstSetRepsTutorialKey
+                                    : null,
                                 addSetKey: i == 0 ? _addSetTutorialKey : null,
-                                firstSetWeightFocusNode:
-                                    i == 0 ? _firstSetWeightFocusNode : null,
-                                firstSetRepsFocusNode:
-                                    i == 0 ? _firstSetRepsFocusNode : null,
+                                firstSetWeightFocusNode: i == 0
+                                    ? _firstSetWeightFocusNode
+                                    : null,
+                                firstSetRepsFocusNode: i == 0
+                                    ? _firstSetRepsFocusNode
+                                    : null,
                                 onFirstSetWeightSubmitted:
                                     i == 0 && _showsOnboardingPlanGuide
-                                        ? () => _advanceOnboardingPlanGuide(
-                                          _OnboardingPlanBuilderStep
-                                              .configureWeight,
-                                        )
-                                        : null,
+                                    ? () => _advanceOnboardingPlanGuide(
+                                        _OnboardingPlanBuilderStep
+                                            .configureWeight,
+                                      )
+                                    : null,
                                 onFirstSetRepsSubmitted:
                                     i == 0 && _showsOnboardingPlanGuide
-                                        ? () => _advanceOnboardingPlanGuide(
-                                          _OnboardingPlanBuilderStep
-                                              .configureReps,
-                                        )
-                                        : null,
-                              ),
-                            ),
-                          ),
-                      ],
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: preset.exercises.length + 1,
-                      itemBuilder: (ctx, i) {
-                        if (i == 0) {
-                          return KeyedSubtree(
-                            key: _summaryTutorialKey,
-                            child: PresetInfoCard(
-                              repository: context.read<AppRepository>(),
-                              exercises: preset.exercises,
-                              cardTypes: preset.cardTypes,
-                              definitionIds: List<int?>.generate(
-                                preset.exercises.length,
-                                preset.definitionIdForExercise,
-                              ),
-                            ),
-                          );
-                        }
-
-                        final exerciseIndex = i - 1;
-                        return KeyedSubtree(
-                          key: exerciseIndex == 0 ? _exerciseTutorialKey : null,
-                          child: ExerciseCard(
-                            exercise: preset.exercises[exerciseIndex],
-                            cardType: preset.cardTypes[exerciseIndex],
-                            definitionId: preset.definitionIdForExercise(
-                              exerciseIndex,
-                            ),
-                            readOnlyMode: true,
-                            initialCompletedParents:
-                                preset.exercises[exerciseIndex]
-                                        is WeightExercise
-                                    ? (preset.exercises[exerciseIndex]
-                                            as WeightExercise)
-                                        .completedParents
-                                    : null,
-                            initialCompletedChildren:
-                                preset.exercises[exerciseIndex]
-                                        is WeightExercise
-                                    ? (preset.exercises[exerciseIndex]
-                                            as WeightExercise)
-                                        .completedChildren
-                                    : null,
-                            onDetails:
-                                preset.cardTypes[exerciseIndex] ==
-                                        CardType.weight
-                                    ? () => _showExerciseDetails(
-                                      preset,
-                                      exerciseIndex,
-                                    )
-                                    : null,
-                          ),
-                        );
-                      },
-                    ),
-
-            floatingActionButton:
-                _isEditing
-                    ? KeyedSubtree(
-                      key: _addExerciseTutorialKey,
-                      child: AddExerciseFab(
-                        onCatalogSelectionChanged:
-                            _showsOnboardingPlanGuide ? (_) {} : null,
-                        onCatalogExerciseAdded:
-                            _showsOnboardingPlanGuide
-                                ? () {
-                                  if (!mounted) return;
-                                  setState(() {
-                                    _onboardingPlanBuilderStep =
+                                    ? () => _advanceOnboardingPlanGuide(
                                         _OnboardingPlanBuilderStep
-                                            .configureWeight;
-                                  });
-                                }
-                                : null,
-                        onCatalogTutorialSkipped:
-                            _showsOnboardingPlanGuide
-                                ? _skipOnboardingPlanGuide
-                                : null,
-                        onCatalogClosed:
-                            _showsOnboardingPlanGuide
-                                ? _syncOnboardingPlanGuideFocus
-                                : null,
-                        onWeightPicked: (def) async {
-                          final equipment = def.equipmentList
-                              .map((equipment) => equipment.name)
-                              .join(', ');
-                          final we = WeightExercise(
-                            name: def.name,
-                            equipment: equipment,
-                            sets: [ExerciseSet()],
-                            changeSets: {},
-                          );
-                          context.read<PresetSession>().addExercise(
-                            we,
-                            CardType.weight,
-                            defId: def.id,
-                          );
-                        },
-                        // TODO(cardio/stretch): add cardio and stretch creation back
-                        // after their plan-editing cards are fixed and updated.
-                      ),
-                    )
-                    : null,
-
-            bottomNavigationBar: SafeArea(
-              child: Container(
-                decoration:
-                    planning == null
-                        ? null
-                        : BoxDecoration(
-                          color: planning.planSupportSurface,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(24),
-                          ),
-                          border: Border(
-                            top: BorderSide(color: planning.outline),
+                                            .configureReps,
+                                      )
+                                    : null,
+                              ),
+                            ),
                           ),
                         ),
+                    ],
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: preset.exercises.length + 1,
+                    itemBuilder: (ctx, i) {
+                      if (i == 0) {
+                        final summary = PresetInfoCard(
+                          repository: context.read<AppRepository>(),
+                          exercises: preset.exercises,
+                          cardTypes: preset.cardTypes,
+                          definitionIds: List<int?>.generate(
+                            preset.exercises.length,
+                            preset.definitionIdForExercise,
+                          ),
+                        );
+                        return KeyedSubtree(
+                          key: _summaryTutorialKey,
+                          child: planning == null
+                              ? summary
+                              : _buildExpressivePresetSummary(
+                                  context,
+                                  planning,
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: planning.planFocalSurface,
+                                      borderRadius: planning.focalShape,
+                                      border: Border.all(
+                                        color: planning.outline,
+                                      ),
+                                    ),
+                                    child: summary,
+                                  ),
+                                ),
+                        );
+                      }
+
+                      final exerciseIndex = i - 1;
+                      final exerciseCard = ExerciseCard(
+                        exercise: preset.exercises[exerciseIndex],
+                        cardType: preset.cardTypes[exerciseIndex],
+                        definitionId: preset.definitionIdForExercise(
+                          exerciseIndex,
+                        ),
+                        readOnlyMode: true,
+                        expressiveWorkoutPresentation:
+                            context.usesExpressivePresentation,
+                        initialCompletedParents:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                            ? (preset.exercises[exerciseIndex]
+                                      as WeightExercise)
+                                  .completedParents
+                            : null,
+                        initialCompletedChildren:
+                            preset.exercises[exerciseIndex] is WeightExercise
+                            ? (preset.exercises[exerciseIndex]
+                                      as WeightExercise)
+                                  .completedChildren
+                            : null,
+                        onDetails:
+                            preset.cardTypes[exerciseIndex] == CardType.weight
+                            ? () => _showExerciseDetails(preset, exerciseIndex)
+                            : null,
+                      );
+                      final expressiveExerciseCard = planning == null
+                          ? exerciseCard
+                          : _buildExpressiveExerciseSurface(
+                              context,
+                              planning,
+                              TonosExpressivePressResponse(
+                                enabled: true,
+                                pressedScale:
+                                    TonosExpressiveMotionTiers.supportingScale,
+                                pressedOffset:
+                                    TonosExpressiveMotionTiers.supportingOffset,
+                                child: exerciseCard,
+                              ),
+                            );
+                      return KeyedSubtree(
+                        key: exerciseIndex == 0 ? _exerciseTutorialKey : null,
+                        child: expressiveExerciseCard,
+                      );
+                    },
+                  ),
+
+            floatingActionButton: _isEditing
+                ? KeyedSubtree(
+                    key: _addExerciseTutorialKey,
+                    child: AddExerciseFab(
+                      expressiveWorkoutPresentation:
+                          context.usesExpressivePresentation,
+                      onCatalogSelectionChanged: _showsOnboardingPlanGuide
+                          ? (_) {}
+                          : null,
+                      onCatalogExerciseAdded: _showsOnboardingPlanGuide
+                          ? () {
+                              if (!mounted) return;
+                              setState(() {
+                                _onboardingPlanBuilderStep =
+                                    _OnboardingPlanBuilderStep.configureWeight;
+                              });
+                            }
+                          : null,
+                      onCatalogTutorialSkipped: _showsOnboardingPlanGuide
+                          ? _skipOnboardingPlanGuide
+                          : null,
+                      onCatalogClosed: _showsOnboardingPlanGuide
+                          ? _syncOnboardingPlanGuideFocus
+                          : null,
+                      onWeightPicked: (def) async {
+                        final equipment = def.equipmentList
+                            .map((equipment) => equipment.name)
+                            .join(', ');
+                        final we = WeightExercise(
+                          name: def.name,
+                          equipment: equipment,
+                          sets: [ExerciseSet()],
+                          changeSets: {},
+                        );
+                        context.read<PresetSession>().addExercise(
+                          we,
+                          CardType.weight,
+                          defId: def.id,
+                        );
+                      },
+                      // TODO(cardio/stretch): add cardio and stretch creation back
+                      // after their plan-editing cards are fixed and updated.
+                    ),
+                  )
+                : null,
+
+            bottomNavigationBar: SafeArea(
+              minimum: EdgeInsets.only(bottom: keyboardInset),
+              child: Container(
+                decoration: planning == null
+                    ? null
+                    : BoxDecoration(
+                        color: planning.planSupportSurface,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                        border: Border(
+                          top: BorderSide(color: planning.outline),
+                        ),
+                      ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: KeyedSubtree(
                     key: _actionTutorialKey,
-                    child:
-                        _isEditing
-                            ? _buildPrimaryAction(
-                              key: AppTestKeys.planSave,
-                              onPressed: _savePlan,
-                              label: strings.planSavePreset,
-                            )
-                            : _buildPrimaryAction(
-                              key: AppTestKeys.planStartSession,
-                              onPressed: _startPlanSession,
-                              label: strings.planStartSession,
-                            ),
+                    child: _isEditing
+                        ? _buildPrimaryAction(
+                            key: AppTestKeys.planSave,
+                            onPressed: _savePlan,
+                            label: strings.planSavePreset,
+                          )
+                        : _buildPrimaryAction(
+                            key: AppTestKeys.planStartSession,
+                            onPressed: _startPlanSession,
+                            label: strings.planStartSession,
+                          ),
                   ),
                 ),
               ),

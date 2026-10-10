@@ -60,7 +60,7 @@ void main() {
 
       for (final role in [
         'surfaces.workoutMetricStat',
-        'surfaces.workoutMetricChart',
+        'context.surfaceTokens.workoutMetricChart',
         'surfaces.workoutMetricTooltip',
         'surfaces.workoutMetricRange',
         'surfaces.workoutMetricDetails',

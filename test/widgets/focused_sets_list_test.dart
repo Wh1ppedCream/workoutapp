@@ -55,6 +55,43 @@ void main() {
     expect(find.text('Upper Back'), findsNothing);
   });
 
+  testWidgets('zero-count rows use tighter spacing and keep their bars', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        FocusedSetsList(
+          hits: [
+            FocusedSetHit(bodyPart: BodyPart(1, 'Zero area'), units: 0),
+            FocusedSetHit(bodyPart: BodyPart(2, 'Shoulders'), units: 6),
+            FocusedSetHit(bodyPart: BodyPart(3, 'Core'), units: 3),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.text('Zero area'), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Shoulders'), findsOneWidget);
+    expect(find.text('6'), findsOneWidget);
+    expect(find.text('Core'), findsOneWidget);
+
+    final bars = tester.widgetList<LinearProgressIndicator>(
+      find.byType(LinearProgressIndicator),
+    );
+    expect(bars.map((bar) => bar.value), [0.0, 1.0, 0.5]);
+    expect(bars.map((bar) => bar.minHeight), [6.0, 6.0, 6.0]);
+
+    final zeroToShouldersGap =
+        tester.getTopLeft(find.text('Shoulders')).dy -
+        tester.getBottomLeft(find.byType(LinearProgressIndicator).at(0)).dy;
+    final shouldersToCoreGap =
+        tester.getTopLeft(find.text('Core')).dy -
+        tester.getBottomLeft(find.byType(LinearProgressIndicator).at(1)).dy;
+    expect(zeroToShouldersGap, 8);
+    expect(shouldersToCoreGap, 10);
+  });
+
   testWidgets(
     'localized body-part names translate built-ins and preserve custom names',
     (tester) async {

@@ -531,6 +531,7 @@
   "generatePageTitle": "Générer des plans",
   "rulesPageTitle": "Règles de progression d’entraînement",
   "flowPageTitle": "Flux de progression d’entraînement",
+  "flowPageSubtitleExpressive": "Configurez comment les résultats d’entraînement déclenchent les actions de progression.",
   "rulesProfileSummary": "{profileRules} règles de profil · {planRules} règles de plan",
   "flowSummary": "{nodes} nœuds | {branches} branches | {actions} actions",
   "planCoachSkipGuide": "Passer le guide",
@@ -543,15 +544,29 @@
   "tutorialsResetAllMessage": "Tous les tutoriels ont été réinitialisés.",
   "tutorialsHowItWorksTitle": "Fonctionnement des tutoriels",
   "tutorialsHowItWorksBody": "Les tutoriels s’affichent une fois, puis restent discrets. Développez un groupe pour réinitialiser un guide précis.",
+  "tutorialsExpressiveControlsSubtitle": "Repartez avec vos visites guidées.",
+  "tutorialsExpressiveHowItWorksBody": "Les tutoriels apparaissent automatiquement une fois. Développez une catégorie pour rendre une visite individuelle disponible à nouveau.",
+  "tutorialsExpressiveTitle": "Tutoriel {topic}",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "Réinitialisez pour revoir le tutoriel à la prochaine ouverture de {topic}.",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "flowMethodWeight": "Poids",
   "flowMethodReps": "Répétitions",
   "flowMethodAddSet": "Ajouter une série",
   "flowMethodDeleteSet": "Supprimer une série",
   "flowAppDefaultTitle": "Progression par défaut de l’application",
   "flowProfileDefaultTitle": "Progression par défaut de la salle",
-  "flowPlanSubtitle": "Définissez comment ce plan progresse après chaque entraînement.",
-  "flowAppDefaultSubtitle": "Définissez le flux de progression initial pour les nouveaux profils de salle.",
-  "flowProfileDefaultSubtitle": "Définissez le flux de progression initial pour les nouveaux plans dans {profileName}.",
+  "flowPlanSubtitle": "Flux de progression de ce plan.",
+  "flowAppDefaultSubtitle": "Flux par défaut des nouveaux profils de salle.",
+  "flowProfileDefaultSubtitle": "Flux par défaut des nouveaux plans de {profileName}.",
   "flowThisGymProfile": "ce profil de salle",
   "flowManageMethods": "Gérer les actions",
   "flowAddNewMethod": "Ajouter une action",
@@ -567,12 +582,21 @@
   "flowMethodNameRequired": "Le nom de l’action ne peut pas être vide",
   "flowManageActionsTooltip": "Gérer les actions de progression",
   "flowAddBranchTitle": "Ajouter une branche",
-  "flowAddBranchSubtitle": "Choisissez où la prochaine réussite ou le prochain échec mène.",
+  "flowAddBranchSubtitle": "Créer des chemins de réussite ou d’échec depuis un nœud.",
   "flowBranchFrom": "Créer une branche depuis",
   "flowSuccess": "Réussite",
   "flowMiss": "Échec",
   "flowAttachActionTitle": "Associer une action de progression",
-  "flowAttachActionSubtitle": "Appliquez un ajustement de chaque type à un nœud du flux.",
+  "flowAttachActionSubtitle": "Attribuer les ajustements de progression aux nœuds.",
+  "flowFitToViewTooltip": "Ajuster le flux à l’écran.",
+  "flowBranchSelectGuidance": "Choisissez un nœud source pour ajouter un chemin.",
+  "flowBranchCompleteGuidance": "Tous les nœuds ont déjà leurs chemins de réussite et d’échec.",
+  "flowActionSelectNodeGuidance": "Choisissez un nœud pour régler ses actions.",
+  "flowActionSelectMethodGuidance": "Choisissez une action de progression pour ce nœud.",
+  "flowActionCreateMethodGuidance": "Créez une action avant de l’attribuer à un nœud.",
+  "flowActionTypesUsedGuidance": "Ce nœud utilise déjà tous les types d’action disponibles.",
+  "flowActionRemoveDependenciesGuidance": "Retirez les branches et actions avant de supprimer ce nœud.",
+  "flowActionRootGuidance": "Le nœud de première tentative ne peut porter d’action ni être supprimé.",
   "flowApplyActionTo": "Appliquer l’action à",
   "flowProgressionAction": "Action de progression",
   "flowAddAction": "+ Action",
@@ -623,13 +647,21 @@
   "flowPageSubtitle": "Définissez les parcours qui déterminent comment les actions de progression s’appliquent après les résultats d’un entraînement.",
   "flowHowCopiedTitle": "Copie des flux",
   "flowHowCopiedBody": "Les flux de l’application deviennent le point de départ des nouveaux profils de salle. Les flux de salle deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.",
+  "flowHowCopiedBodyExpressive": "Les nouveaux profils de salle reprennent les valeurs par défaut de l’application, et les nouveaux plans celles de la salle. Les modifications d’un flux n’affectent pas les autres.",
   "flowLoadError": "Impossible de charger les flux de progression d’entraînement.",
   "flowAppDefaultsSubtitle": "Le flux de départ pour les nouveaux profils de salle.",
   "flowAppDefaultEntry": "Flux par défaut de l’application",
   "flowGymProfilesSubtitle": "Chaque profil possède des valeurs par défaut et ses propres flux de plan.",
   "flowNoProfiles": "Créez un profil de salle pour définir les flux de profil et de plan.",
   "flowNoSavedYet": "Aucun flux enregistré",
+  "flowTapToConfigure": "Touchez pour configurer",
   "flowPlansAvailable": "{count} flux de plan disponibles",
+  "flowPlansAvailableExpressive": "{count, plural, one{{count} plan disponible} other{{count} plans disponibles}}",
+  "@flowPlansAvailableExpressive": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "flowGymDefaultEntry": "Flux par défaut de la salle",
   "gymSettingsTitle": "Réglages de gym et d’entraînement",
   "gymSettingsSubtitle": "Ajustez la génération d’entraînements, les analyses et le comportement des flux.",
@@ -1425,6 +1457,7 @@
   "gymExitDiscard": "Annuler et supprimer",
   "gymExitSave": "Terminer et enregistrer",
   "gymExitAskBody": "Affiche un choix lorsque vous quittez un entraînement en cours.",
+  "gymExitAskExpressiveSubtitle": "Choisissez ce qui se passe lorsque vous quittez un entraînement en cours.",
   "gymExitDiscardBody": "Annule toujours l’entraînement en cours et ne l’enregistre pas dans l’historique.",
   "gymExitSaveBody": "Termine toujours l’entraînement et enregistre les séries terminées dans l’historique.",
   "logbookTutorialCalendarTitle": "Calendrier d’entraînement",
@@ -1513,6 +1546,7 @@
   "navEditorInactiveSubtitle": "Vous pouvez les afficher de nouveau en tout temps.",
   "navEditorNoInactiveTabs": "Aucun onglet masqué.",
   "navEditorAlwaysShown": "Toujours affiché",
+  "navEditorRequired": "Obligatoire",
   "navEditorVisible": "Visible",
   "navEditorHidden": "Masqué",
   "anatomyLibraryTitle": "Bibliothèque d’anatomie ciblée",
@@ -1952,5 +1986,36 @@
     }
   },
   "healthEntryActions": "Actions de l’entrée",
-  "premadeOneHourDescription": "Version de {duration} de {planName} avec les mouvements principaux du modèle complet."
+  "premadeOneHourDescription": "Version de {duration} de {planName} avec les mouvements principaux du modèle complet.",
+  "rulesPageSubtitleExpressive": "Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.",
+  "rulesHowDefaultsBodyExpressive": "Les nouveaux profils de salle reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du profil. Les modifications ultérieures ne mettent pas automatiquement à jour les profils ni les plans existants.",
+  "rulesRuleTypeLabel": "Type de règle",
+  "rulesOperationLabel": "Opération",
+  "rulesScopedRuleCountSemantics": "{scope} : nombre de règles : {count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "Nombre de règles : {count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "Total des règles : {count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "Nombre de plans : {count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "Règles par défaut des nouveaux plans.",
+  "rulesPlanOnlySubtitleExpressive": "Règles propres à ce plan."
 }

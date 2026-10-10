@@ -40,9 +40,10 @@ void main() {
       unorderedEquals(['color', 'color_transform', 'decoration', 'geometry']),
     );
 
-    final ownedFindings =
-        report.findings.where((finding) => finding.ruleId == rule.id).toList();
-    expect(ownedFindings, hasLength(25));
+    final ownedFindings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
+    expect(ownedFindings, hasLength(28));
     expect(ownedFindings.map((finding) => finding.kind).toSet(), {
       'color',
       'color_transform',
@@ -64,10 +65,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Exercise Analytics resolves its theme recipes', (
@@ -114,18 +114,15 @@ void main() {
         final shapes = theme.shapeTokens;
         final surfaces = theme.surfaceTokens;
         final neo = family == AppThemeFamily.neoBrutalism;
-        final panelSurface =
-            neo
-                ? surfaces.settingsSection
-                : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
-        final panelForeground =
-            neo
-                ? tonosForegroundForSurface(pageContext, panelSurface)
-                : scheme.onSurface;
-        final panelSecondary =
-            neo
-                ? tonosSecondaryForegroundForSurface(pageContext, panelSurface)
-                : scheme.onSurfaceVariant;
+        final panelSurface = neo
+            ? surfaces.settingsSection
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+        final panelForeground = neo
+            ? tonosForegroundForSurface(pageContext, panelSurface)
+            : scheme.onSurface;
+        final panelSecondary = neo
+            ? tonosSecondaryForegroundForSurface(pageContext, panelSurface)
+            : scheme.onSurfaceVariant;
 
         expect(find.text(definition.name), findsOneWidget);
         expect(find.text(muscle.name), findsOneWidget);
@@ -142,23 +139,18 @@ void main() {
         expect(
           pickerDecoration.border,
           Border.all(
-            color:
-                neo
-                    ? tonosOutlineForSurface(pageContext, panelSurface)
-                    : SettingsAccent.advanced.withValues(alpha: 0.42),
+            color: neo
+                ? tonosOutlineForSurface(pageContext, panelSurface)
+                : SettingsAccent.advanced.withValues(alpha: 0.42),
             width: shapes.outlineWidth,
           ),
           reason: mode,
         );
 
         final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-        final tabBarContainerFinder =
-            find
-                .ancestor(
-                  of: find.byType(TabBar),
-                  matching: find.byType(Container),
-                )
-                .first;
+        final tabBarContainerFinder = find
+            .ancestor(of: find.byType(TabBar), matching: find.byType(Container))
+            .first;
         final tabBarContainer = tester.widget<Container>(tabBarContainerFinder);
         final tabDecoration = tabBarContainer.decoration! as BoxDecoration;
         expect(tabDecoration.color, panelSurface, reason: mode);
@@ -190,10 +182,9 @@ void main() {
         expect(
           muscleDecoration.border,
           Border.all(
-            color:
-                neo
-                    ? tonosOutlineForSurface(pageContext, panelSurface)
-                    : scheme.outlineVariant.withValues(alpha: 0.56),
+            color: neo
+                ? tonosOutlineForSurface(pageContext, panelSurface)
+                : scheme.outlineVariant.withValues(alpha: 0.56),
             width: neo ? shapes.outlineWidth : 1,
           ),
           reason: mode,
@@ -269,10 +260,9 @@ void main() {
         expect(
           bodyPartDecoration.border,
           Border.all(
-            color:
-                neo
-                    ? tonosOutlineForSurface(pageContext, panelSurface)
-                    : SettingsAccent.training.withValues(alpha: 0.48),
+            color: neo
+                ? tonosOutlineForSurface(pageContext, panelSurface)
+                : SettingsAccent.training.withValues(alpha: 0.48),
             width: neo ? shapes.outlineWidth : 1,
           ),
           reason: mode,
@@ -305,10 +295,9 @@ void main() {
   ) async {
     for (final family in AppThemeFamily.values) {
       for (final brightness in Brightness.values) {
-        final theme =
-            brightness == Brightness.light
-                ? AppThemeFactory.light(family)
-                : AppThemeFactory.dark(family);
+        final theme = brightness == Brightness.light
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final bodyPart = BodyPart(4, 'Chest');
         final muscle = Muscle(id: 7, name: 'Pectoralis major');
         final definition = ExerciseDefinition(
@@ -368,10 +357,9 @@ void main() {
   ) async {
     for (final family in AppThemeFamily.values) {
       for (final brightness in Brightness.values) {
-        final theme =
-            brightness == Brightness.light
-                ? AppThemeFactory.light(family)
-                : AppThemeFactory.dark(family);
+        final theme = brightness == Brightness.light
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final bodyPart = BodyPart(4, 'Chest');
         final muscle = Muscle(id: 7, name: 'Pectoralis major');
         final definition = ExerciseDefinition(
@@ -427,10 +415,9 @@ void main() {
   ) async {
     for (final family in AppThemeFamily.values) {
       for (final brightness in Brightness.values) {
-        final theme =
-            brightness == Brightness.light
-                ? AppThemeFactory.light(family)
-                : AppThemeFactory.dark(family);
+        final theme = brightness == Brightness.light
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final bodyPart = BodyPart(4, 'Chest');
         final muscle = Muscle(id: 7, name: 'Pectoralis major');
         final definition = ExerciseDefinition(

@@ -26,18 +26,15 @@ class AppNutritionTokens extends ThemeExtension<AppNutritionTokens> {
   factory AppNutritionTokens.fromColorScheme(ColorScheme scheme) {
     final isDark = scheme.brightness == Brightness.dark;
     return AppNutritionTokens(
-      pantryLogSurface:
-          isDark
-              ? scheme.surfaceContainerHighest
-              : scheme.surfaceContainerHighest.withValues(alpha: 0.72),
-      addMealSurface:
-          isDark
-              ? scheme.secondaryContainer
-              : scheme.secondaryContainer.withValues(alpha: 0.8),
-      planMealSurface:
-          isDark
-              ? scheme.tertiaryContainer
-              : scheme.tertiaryContainer.withValues(alpha: 0.8),
+      pantryLogSurface: isDark
+          ? scheme.surfaceContainerHighest
+          : scheme.surfaceContainerHighest.withValues(alpha: 0.72),
+      addMealSurface: isDark
+          ? scheme.secondaryContainer
+          : scheme.secondaryContainer.withValues(alpha: 0.8),
+      planMealSurface: isDark
+          ? scheme.tertiaryContainer
+          : scheme.tertiaryContainer.withValues(alpha: 0.8),
       textDetailsBorder: scheme.outline,
     );
   }
@@ -46,16 +43,70 @@ class AppNutritionTokens extends ThemeExtension<AppNutritionTokens> {
   factory AppNutritionTokens.classic(Brightness brightness) {
     final isDark = brightness == Brightness.dark;
     return AppNutritionTokens(
-      pantryLogSurface:
-          isDark ? const Color(0xFF4E4E1A) : const Color(0xFFFFF9C4),
-      addMealSurface:
-          isDark ? const Color(0xFF2E4E2E) : const Color(0xFFC8E6C9),
-      planMealSurface:
-          isDark ? const Color(0xFF1A2E4E) : const Color(0xFFBBDEFB),
-      textDetailsBorder:
-          isDark
-              ? const Color.fromARGB(255, 100, 100, 100)
-              : const Color.fromARGB(255, 223, 223, 223),
+      pantryLogSurface: isDark
+          ? const Color(0xFF4E4E1A)
+          : const Color(0xFFFFF9C4),
+      addMealSurface: isDark
+          ? const Color(0xFF2E4E2E)
+          : const Color(0xFFC8E6C9),
+      planMealSurface: isDark
+          ? const Color(0xFF1A2E4E)
+          : const Color(0xFFBBDEFB),
+      textDetailsBorder: isDark
+          ? const Color.fromARGB(255, 100, 100, 100)
+          : const Color.fromARGB(255, 223, 223, 223),
+    );
+  }
+
+  /// Expressive nutrition roles: warm planning, fresh meal actions, and
+  /// readable cool supporting surfaces. Classic and Neo keep their own
+  /// recipes and semantic status colors.
+  factory AppNutritionTokens.expressive(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    return AppNutritionTokens(
+      pantryLogSurface: isDark
+          ? const Color(0xFF57371F)
+          : const Color(0xFFFFD5A6),
+      addMealSurface: isDark
+          ? const Color(0xFF16463D)
+          : const Color(0xFFB8E7D4),
+      planMealSurface: isDark
+          ? const Color(0xFF203D58)
+          : const Color(0xFFC6DFFF),
+      textDetailsBorder: isDark
+          ? const Color(0xFFD29BBB)
+          : const Color(0xFF78405F),
+      foodBorder: isDark ? const Color(0xFF76516B) : const Color(0xFF9A647D),
+      photoPlaceholder: isDark
+          ? const Color(0xFF382635)
+          : const Color(0xFFF2DDEA),
+      mutedAction: isDark ? const Color(0xFFD4C2CF) : const Color(0xFF62515E),
+      favoriteAction: isDark
+          ? const Color(0xFFFFC857)
+          : const Color(0xFF9A5B00),
+      addFoodAction: isDark ? const Color(0xFFE2C7FF) : const Color(0xFF532471),
+      densityHelp: isDark ? const Color(0xFFE1D3DD) : const Color(0xFF4B3944),
+      selectedLabel: isDark ? const Color(0xFF35164A) : Colors.white,
+      logGrid: isDark ? const Color(0xFF493642) : const Color(0xFFE8D5DE),
+      compactShape: const BorderRadius.only(
+        topLeft: Radius.circular(14),
+        topRight: Radius.circular(8),
+        bottomRight: Radius.circular(14),
+        bottomLeft: Radius.circular(8),
+      ),
+      sectionShape: const BorderRadius.only(
+        topLeft: Radius.circular(26),
+        topRight: Radius.circular(16),
+        bottomRight: Radius.circular(26),
+        bottomLeft: Radius.circular(16),
+      ),
+      portionShape: const BorderRadius.only(
+        topLeft: Radius.circular(18),
+        topRight: Radius.circular(10),
+        bottomRight: Radius.circular(18),
+        bottomLeft: Radius.circular(10),
+      ),
+      quantityShape: const BorderRadius.all(Radius.circular(12)),
     );
   }
 
@@ -124,15 +175,24 @@ class AppNutritionTokens extends ThemeExtension<AppNutritionTokens> {
   ) {
     if (other is! AppNutritionTokens) return this;
     return AppNutritionTokens(
-      pantryLogSurface:
-          Color.lerp(pantryLogSurface, other.pantryLogSurface, t)!,
+      pantryLogSurface: Color.lerp(
+        pantryLogSurface,
+        other.pantryLogSurface,
+        t,
+      )!,
       addMealSurface: Color.lerp(addMealSurface, other.addMealSurface, t)!,
       planMealSurface: Color.lerp(planMealSurface, other.planMealSurface, t)!,
-      textDetailsBorder:
-          Color.lerp(textDetailsBorder, other.textDetailsBorder, t)!,
+      textDetailsBorder: Color.lerp(
+        textDetailsBorder,
+        other.textDetailsBorder,
+        t,
+      )!,
       foodBorder: Color.lerp(foodBorder, other.foodBorder, t)!,
-      photoPlaceholder:
-          Color.lerp(photoPlaceholder, other.photoPlaceholder, t)!,
+      photoPlaceholder: Color.lerp(
+        photoPlaceholder,
+        other.photoPlaceholder,
+        t,
+      )!,
       mutedAction: Color.lerp(mutedAction, other.mutedAction, t)!,
       favoriteAction: Color.lerp(favoriteAction, other.favoriteAction, t)!,
       addFoodAction: Color.lerp(addFoodAction, other.addFoodAction, t)!,

@@ -10,6 +10,7 @@ import '../../services/active_plan_store.dart';
 import '../../services/safe_failure.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/expressive_planning_tokens.dart';
+import '../../theme/widgets/tonos_expressive_motion.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
@@ -216,6 +217,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                       title: strings.trainActivePlans,
                       subtitle: strings.planManagementActiveSubtitle,
                       emptyMessage: strings.planManagementNoActive,
+                      sectionIcon: Icons.push_pin_outlined,
                       plans: activePlans,
                       activePlanIds: _activePlanIds,
                       savingPlanIds: _savingPlanIds,
@@ -236,6 +238,7 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                       title: strings.trainArchivedPlans,
                       subtitle: strings.planManagementArchivedSubtitle,
                       emptyMessage: strings.planManagementNoArchived,
+                      sectionIcon: Icons.inventory_2_outlined,
                       plans: archivedPlans,
                       activePlanIds: _activePlanIds,
                       savingPlanIds: _savingPlanIds,
@@ -260,6 +263,7 @@ class _PlanManagementSection extends StatelessWidget {
   final String title;
   final String subtitle;
   final String emptyMessage;
+  final IconData sectionIcon;
   final List<_ManagedPlan> plans;
   final Set<int> activePlanIds;
   final Set<int> savingPlanIds;
@@ -276,6 +280,7 @@ class _PlanManagementSection extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.emptyMessage,
+    required this.sectionIcon,
     required this.plans,
     required this.activePlanIds,
     required this.savingPlanIds,
@@ -294,8 +299,18 @@ class _PlanManagementSection extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     return Card(
       color: surfaceColor,
+      elevation: expressive == null ? null : 0,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: expressive.focalShape,
+              side: BorderSide(
+                color: expressive.outline.withValues(alpha: 0.55),
+              ),
+            ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -303,6 +318,21 @@ class _PlanManagementSection extends StatelessWidget {
           children: [
             Row(
               children: [
+                if (expressive != null) ...[
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: expressive.planAccent,
+                      borderRadius: expressive.rowShape,
+                    ),
+                    child: Icon(
+                      sectionIcon,
+                      color: expressive.planAccentForeground,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
                 Expanded(
                   child: Text(
                     title,
@@ -394,7 +424,7 @@ class _PlanManagementTile extends StatelessWidget {
         ? tonosSecondaryForegroundForSurface(context, surfaces.planCard)
         : colorScheme.onSurfaceVariant;
     final statusColor = isActive
-        ? colorScheme.primary
+        ? expressive?.planAccent ?? colorScheme.primary
         : neo
         ? planForeground!
         : colorScheme.onSurfaceVariant;
@@ -402,8 +432,12 @@ class _PlanManagementTile extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: surfaceColor ?? surfaces.planCard,
-        borderRadius: shapes.planCard,
-        border: Border.all(color: outlineColor ?? colorScheme.outlineVariant),
+        borderRadius: expressive?.rowShape ?? shapes.planCard,
+        border: Border.all(
+          color: expressive == null
+              ? outlineColor ?? colorScheme.outlineVariant
+              : (outlineColor ?? expressive.outline).withValues(alpha: 0.62),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
@@ -411,7 +445,7 @@ class _PlanManagementTile extends StatelessWidget {
           builder: (context, constraints) {
             final compactExpressive =
                 expressive != null &&
-                (constraints.maxWidth < 280 ||
+                (constraints.maxWidth < 360 ||
                     MediaQuery.textScalerOf(context).scale(14) > 18);
             final status = CircleAvatar(
               radius: 18,
@@ -427,8 +461,6 @@ class _PlanManagementTile extends StatelessWidget {
               children: [
                 Text(
                   plan.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: foregroundColor ?? (neo ? planForeground : null),
                     fontWeight: FontWeight.w800,
@@ -449,13 +481,17 @@ class _PlanManagementTile extends StatelessWidget {
                 ),
               ],
             );
-            final action = OutlinedButton.icon(
+            final actionButton = OutlinedButton.icon(
               onPressed: isSaving ? null : onAction,
               style: expressive == null
                   ? null
                   : OutlinedButton.styleFrom(
                       foregroundColor: expressive.actionSecondaryForeground,
+                      backgroundColor: expressive.actionSecondary,
                       side: BorderSide(color: expressive.outline),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: expressive.rowShape,
+                      ),
                     ),
               icon: isSaving
                   ? const SizedBox(
@@ -466,6 +502,14 @@ class _PlanManagementTile extends StatelessWidget {
                   : Icon(actionIcon, size: 16),
               label: Text(actionLabel),
             );
+            final action = expressive == null
+                ? actionButton
+                : TonosExpressivePressResponse(
+                    enabled: !isSaving,
+                    pressedScale: TonosExpressiveMotionTiers.supportingScale,
+                    pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+                    child: actionButton,
+                  );
 
             if (compactExpressive) {
               return Column(
@@ -509,18 +553,21 @@ class _PlanCountPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final locale = Localizations.localeOf(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: shapes.pill,
+        color: expressive?.planAccent ?? colorScheme.primaryContainer,
+        borderRadius: expressive?.rowShape ?? shapes.pill,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Text(
           LocalizedFormatters.number(count, locale, maximumFractionDigits: 0),
           style: TextStyle(
-            color: colorScheme.onPrimaryContainer,
+            color:
+                expressive?.planAccentForeground ??
+                colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.w900,
           ),
         ),

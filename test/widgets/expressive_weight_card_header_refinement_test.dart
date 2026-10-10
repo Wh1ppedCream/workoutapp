@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -64,10 +65,7 @@ void main() {
       final headerBandBottom =
           tester.getRect(header).bottom -
           (headerWidget.margin?.resolve(TextDirection.ltr).bottom ?? 0);
-      expect(
-        headerWidget.margin?.resolve(TextDirection.ltr).bottom,
-        6,
-      );
+      expect(headerWidget.margin?.resolve(TextDirection.ltr).bottom, 6);
       expect(
         tester.getRect(firstDivider).top,
         closeTo(headerBandBottom + 6, 1),
@@ -86,21 +84,14 @@ void main() {
       final firstRow = find.byType(AnimatedContainer).first;
       final firstRowSize = tester.getSize(firstRow);
       final firstRowWidget = tester.widget<AnimatedContainer>(firstRow);
-      expect(
-        firstRowWidget.margin,
-        const EdgeInsets.symmetric(vertical: 6),
-      );
+      expect(firstRowWidget.margin, const EdgeInsets.symmetric(vertical: 6));
       final weightHitRect = tester.getRect(weightHitRegion);
       final repsHitRect = tester.getRect(repsHitRegion);
-      expect(
-        weightHitRect.height,
-        greaterThanOrEqualTo(firstRowSize.height - 13),
-      );
-      expect(
-        repsHitRect.height,
-        greaterThanOrEqualTo(firstRowSize.height - 13),
-      );
-      expect(firstRowSize.height, lessThanOrEqualTo(80));
+      expect(weightHitRect.height, greaterThanOrEqualTo(48));
+      expect(repsHitRect.height, greaterThanOrEqualTo(48));
+      // At compact width the weight label wraps to two lines. Keep that
+      // content-driven increase bounded while preserving its full label.
+      expect(firstRowSize.height, closeTo(87, 2));
       expect(
         weightHitRect.overlaps(tester.getRect(find.byType(Checkbox).first)),
         isFalse,
@@ -282,7 +273,22 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('stacked field hit regions split the gap without growing rows', (
+  testWidgets('large-text set fields keep their normal-width row geometry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(420, 850));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(_host(_exercise(), textScale: 2));
+    await tester.pumpAndSettle();
+
+    final firstRow = find.byType(AnimatedContainer).first;
+    expect(tester.getSize(firstRow).height, closeTo(224, 5));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('two-column field hit regions preserve labels at 2x text', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 850));
@@ -311,60 +317,82 @@ void main() {
     final weightRect = tester.getRect(weightHitRegion);
     final repsRect = tester.getRect(repsHitRegion);
 
-    expect(tester.getSize(firstRow).height, closeTo(200, 2));
-    expect(weightRect.top, lessThanOrEqualTo(firstRowRect.top + 7));
-    expect(repsRect.bottom, greaterThanOrEqualTo(firstRowRect.bottom - 7));
-    expect(weightRect.bottom, closeTo(repsRect.top, 1));
+    // Compact large text puts set actions above two equal field columns.
+    final rowHeight = tester.getSize(firstRow).height;
+    expect(rowHeight, closeTo(219, 2));
+    final checkboxRect = tester.getRect(find.byType(Checkbox).first);
+    final removeRect = tester.getRect(
+      find.byTooltip(localized.weightRemoveSetTitle).first,
+    );
+    expect(weightRect.height, greaterThanOrEqualTo(48));
+    expect(repsRect.height, greaterThanOrEqualTo(48));
+    expect(weightRect.top, greaterThanOrEqualTo(checkboxRect.bottom));
+    expect(repsRect.bottom, lessThanOrEqualTo(firstRowRect.bottom));
+    expect(weightRect.right, lessThanOrEqualTo(repsRect.left));
     expect(weightRect.overlaps(repsRect), isFalse);
+    expect(weightRect.overlaps(checkboxRect), isFalse);
+    expect(repsRect.overlaps(removeRect), isFalse);
+    for (final labelText in [
+      localized.weightLabel('lbs'),
+      localized.weightReps,
+    ]) {
+      final labelFinder = find.text(labelText).first;
+      final label = tester.widget<Text>(labelFinder);
+      expect(label.maxLines, isNull);
+      expect(label.overflow, isNull);
+      expect(
+        tester.renderObject<RenderParagraph>(labelFinder).didExceedMaxLines,
+        isFalse,
+        reason:
+            '$labelText should wrap only at word boundaries without clipping',
+      );
+    }
     expect(
-      weightRect.overlaps(tester.getRect(find.byType(Checkbox).first)),
+      weightRect.overlaps(removeRect),
       isFalse,
-    );
-    expect(
-      repsRect.overlaps(
-        tester.getRect(find.byTooltip(localized.weightRemoveSetTitle).first),
-      ),
-      isFalse,
+      reason: 'the remove action stays clear of both field columns',
     );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('Expressive Add Set keeps its target and trims only bottom space', (
-    tester,
-  ) async {
-    var added = false;
-    final exercise = _exercise();
-    await tester.pumpWidget(
-      _host(exercise, onSetAdded: () => added = true),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'Expressive Add Set keeps its target and trims only bottom space',
+    (tester) async {
+      var added = false;
+      final exercise = _exercise();
+      await tester.pumpWidget(_host(exercise, onSetAdded: () => added = true));
+      await tester.pumpAndSettle();
 
-    final localized = AppLocalizations.of(
-      tester.element(find.byType(WeightCard)),
-    );
-    final firstRow = find.byType(AnimatedContainer).first;
-    final originalRowSize = tester.getSize(firstRow);
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is Padding &&
-            widget.padding == const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      ),
-      findsOneWidget,
-    );
+      final localized = AppLocalizations.of(
+        tester.element(find.byType(WeightCard)),
+      );
+      final firstRow = find.byType(AnimatedContainer).first;
+      final originalRowSize = tester.getSize(firstRow);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Padding &&
+              widget.padding == const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        ),
+        findsOneWidget,
+      );
 
-    final addSet = find.widgetWithText(TextButton, localized.weightAddSet);
-    expect(tester.getSize(addSet).height, greaterThanOrEqualTo(48));
-    await tester.tap(addSet);
-    await tester.pumpAndSettle();
+      final addSet = find.widgetWithText(TextButton, localized.weightAddSet);
+      expect(tester.getSize(addSet).height, greaterThanOrEqualTo(48));
+      await tester.tap(addSet);
+      await tester.pumpAndSettle();
 
-    expect(added, isTrue);
-    expect(find.byType(AnimatedContainer), findsNWidgets(4));
-    expect(tester.getSize(find.byType(AnimatedContainer).first), originalRowSize);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+      expect(added, isTrue);
+      expect(find.byType(AnimatedContainer), findsNWidgets(4));
+      expect(
+        tester.getSize(find.byType(AnimatedContainer).first),
+        originalRowSize,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
 
 double _contrastRatio(Color foreground, Color background) {

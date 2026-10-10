@@ -29,13 +29,13 @@ void main() {
     const expected = <String, (String, int, List<String>)>{
       'navigation-settings-theme-recipes': (
         'lib/screens/profile/settings/nav_bar_settings_page.dart',
-        3,
-        ['color', 'color_transform', 'decoration'],
+        8,
+        ['color', 'color_transform', 'decoration', 'local_theme'],
       ),
       'gym-exercise-settings-dialog-ink': (
         'lib/screens/profile/settings/gym_exercise_settings_page.dart',
-        2,
-        ['text_style'],
+        3,
+        ['text_style', 'color_transform'],
       ),
     };
 
@@ -57,6 +57,34 @@ void main() {
         findings.map((finding) => finding.status),
         everyElement('migrated'),
       );
+      if (entry.key == 'navigation-settings-theme-recipes') {
+        expect(
+          findings.where((finding) => finding.kind == 'color'),
+          hasLength(1),
+        );
+        expect(
+          findings.where((finding) => finding.kind == 'color_transform'),
+          hasLength(4),
+        );
+        expect(
+          findings.where((finding) => finding.kind == 'decoration'),
+          hasLength(1),
+        );
+        expect(
+          findings.where((finding) => finding.kind == 'local_theme'),
+          hasLength(2),
+        );
+      }
+      if (entry.key == 'gym-exercise-settings-dialog-ink') {
+        expect(
+          findings.where((finding) => finding.kind == 'text_style'),
+          hasLength(2),
+        );
+        expect(
+          findings.where((finding) => finding.kind == 'color_transform'),
+          hasLength(1),
+        );
+      }
       expect(
         report.findings.where(
           (finding) =>

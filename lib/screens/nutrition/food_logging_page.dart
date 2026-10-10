@@ -1,10 +1,15 @@
 // File: lib/screens/nutrition/food_logging_page.dart
 
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -219,13 +224,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final portions = await prof.portionsFor(
       f.id!,
     ); // (was: context.read(...).portionsFor)
-    FoodPortion? portion =
-        portions.isEmpty
-            ? null
-            : portions.firstWhere(
-              (p) => p.isDefault == true,
-              orElse: () => portions.first,
-            );
+    FoodPortion? portion = portions.isEmpty
+        ? null
+        : portions.firstWhere(
+            (p) => p.isDefault == true,
+            orElse: () => portions.first,
+          );
 
     // fallback virtual "100 g"
     portion ??= FoodPortion(
@@ -338,17 +342,29 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.nutrition,
+      child: Builder(builder: _buildPage),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final p = context.watch<NutritionProfile>();
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveNutrition =
+        destination?.family == AppExpressiveDestinationFamily.nutrition;
     final usesInkRecipe = context.usesNeoPresentation;
     final selectedTabFill =
-        usesInkRecipe ? colorScheme.primary : theme.primaryColor;
+        destination?.actionPrimary ??
+        (usesInkRecipe ? colorScheme.primary : theme.primaryColor);
     final selectedTabInk =
-        usesInkRecipe
+        destination?.onActionPrimary ??
+        (usesInkRecipe
             ? colorScheme.onPrimary
-            : context.nutritionTokens.selectedLabel;
+            : context.nutritionTokens.selectedLabel);
 
     // One-time defaults
     if (!_didInitScanMeal) {
@@ -372,70 +388,66 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     final plateSummaryFuture = _plate.isEmpty ? null : _computePlateSummary();
 
     return Scaffold(
+      backgroundColor: destination?.pageCanvas ?? theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(strings.foodLoggingTitle),
+        backgroundColor: destination?.surfacePrimary,
+        foregroundColor: destination?.onSurfacePrimary,
         actions: [
           if (_plate.isNotEmpty)
             Builder(
-              builder:
-                  (ctx) => FutureBuilder<_PlateSummary>(
-                    future: plateSummaryFuture,
-                    builder: (context, snap) {
-                      final s = snap.data;
-                      final top = s == null ? '… kcal' : '${s.kcal} kcal';
-                      final bottom =
-                          s == null ? '…P …F …C' : '${s.p}P ${s.f}F ${s.c}C';
+              builder: (ctx) => FutureBuilder<_PlateSummary>(
+                future: plateSummaryFuture,
+                builder: (context, snap) {
+                  final s = snap.data;
+                  final top = s == null ? '… kcal' : '${s.kcal} kcal';
+                  final bottom = s == null
+                      ? '…P …F …C'
+                      : '${s.p}P ${s.f}F ${s.c}C';
 
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: InkWell(
-                          onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: InkWell(
+                      onTap: () => Scaffold.of(ctx).openEndDrawer(),
+                      borderRadius: context.nutritionTokens.compactShape,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: context.nutritionTokens.addFoodAction,
+                          ),
                           borderRadius: context.nutritionTokens.compactShape,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: context.nutritionTokens.addFoodAction,
-                              ),
-                              borderRadius:
-                                  context.nutritionTokens.compactShape,
-                            ),
-                            child: SizedBox(
-                              height: kToolbarHeight - 12,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerRight,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      top,
-                                      style:
-                                          Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      bottom,
-                                      style:
-                                          Theme.of(
-                                            context,
-                                          ).textTheme.labelSmall,
-                                    ),
-                                  ],
+                        ),
+                        child: SizedBox(
+                          height: kToolbarHeight - 12,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  top,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
-                              ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  bottom,
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
         ],
       ),
@@ -567,10 +579,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                         children: [
                                           Text(
                                             it.food.name,
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.bodyLarge,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -579,10 +590,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                             m == null
                                                 ? '… kcal • …P …F …C'
                                                 : '${m.kcalText()} • ${m.macroText()}',
-                                            style:
-                                                Theme.of(
-                                                  context,
-                                                ).textTheme.labelSmall,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall,
                                           ),
                                         ],
                                       );
@@ -591,8 +601,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                 ),
                                 IconButton(
                                   tooltip: strings.foodRemove,
-                                  onPressed:
-                                      () => setState(() => _plate.removeAt(i)),
+                                  onPressed: () =>
+                                      setState(() => _plate.removeAt(i)),
                                   icon: const Icon(Icons.delete_outline),
                                 ),
                               ],
@@ -614,8 +624,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   mlVolume: null,
                                   isDefault: portions.isEmpty,
                                 );
-                                final items =
-                                    portions.isEmpty ? [fallback] : portions;
+                                final items = portions.isEmpty
+                                    ? [fallback]
+                                    : portions;
 
                                 // Use identical instance from items (by id) or fallbacks
                                 FoodPortion? current =
@@ -633,17 +644,16 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                       child: DropdownButton<FoodPortion>(
                                         isExpanded: true,
                                         value: current,
-                                        items:
-                                            items.map((p) {
-                                              final label =
-                                                  '${p.measureName}'
-                                                  '${p.gramWeight != null ? ' • ${p.gramWeight!.round()} g' : ''}'
-                                                  '${p.mlVolume != null ? ' • ${p.mlVolume!.round()} ml' : ''}';
-                                              return DropdownMenuItem(
-                                                value: p,
-                                                child: Text(label),
-                                              );
-                                            }).toList(),
+                                        items: items.map((p) {
+                                          final label =
+                                              '${p.measureName}'
+                                              '${p.gramWeight != null ? ' • ${p.gramWeight!.round()} g' : ''}'
+                                              '${p.mlVolume != null ? ' • ${p.mlVolume!.round()} ml' : ''}';
+                                          return DropdownMenuItem(
+                                            value: p,
+                                            child: Text(label),
+                                          );
+                                        }).toList(),
                                         onChanged: (v) {
                                           if (v == null) return;
                                           setState(() {
@@ -663,23 +673,22 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                             // Row 2b: Meal chooser (inline) + duplicate merge
                             Wrap(
                               spacing: 6,
-                              children:
-                                  MealType.values.map((m) {
-                                    final label =
-                                        m.name[0].toUpperCase() +
-                                        m.name.substring(1);
-                                    final selected = it.meal == m;
-                                    return ChoiceChip(
-                                      label: Text(label),
-                                      selected: selected,
-                                      onSelected: (_) {
-                                        setState(() {
-                                          it.meal = m;
-                                          _mergeIfDuplicate(it);
-                                        });
-                                      },
-                                    );
-                                  }).toList(),
+                              children: MealType.values.map((m) {
+                                final label =
+                                    m.name[0].toUpperCase() +
+                                    m.name.substring(1);
+                                final selected = it.meal == m;
+                                return ChoiceChip(
+                                  label: Text(label),
+                                  selected: selected,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      it.meal = m;
+                                      _mergeIfDuplicate(it);
+                                    });
+                                  },
+                                );
+                              }).toList(),
                             ),
 
                             const SizedBox(height: 8),
@@ -694,11 +703,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   icon: Icons.remove,
                                   onTap: () {
                                     setState(
-                                      () =>
-                                          it.qty =
-                                              (it.qty - 1)
-                                                  .clamp(0, 9999)
-                                                  .toDouble(),
+                                      () => it.qty = (it.qty - 1)
+                                          .clamp(0, 9999)
+                                          .toDouble(),
                                     );
                                   },
                                 ),
@@ -706,10 +713,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   width: 60,
                                   child: _QtyEditor(
                                     qty: it.qty,
-                                    onChanged:
-                                        (v) => setState(
-                                          () => it.qty = v < 0 ? 0 : v,
-                                        ),
+                                    onChanged: (v) =>
+                                        setState(() => it.qty = v < 0 ? 0 : v),
                                   ),
                                 ),
                                 _qtyButton(
@@ -728,8 +733,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.right,
-                                    style:
-                                        Theme.of(context).textTheme.labelSmall,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall,
                                   ),
                                 ),
                               ],
@@ -741,19 +747,16 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                               Wrap(
                                 spacing: 6,
                                 runSpacing: -6,
-                                children:
-                                    it.tags
-                                        .map(
-                                          (t) => Chip(
-                                            label: Text('#$t'),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            materialTapTargetSize:
-                                                MaterialTapTargetSize
-                                                    .shrinkWrap,
-                                          ),
-                                        )
-                                        .toList(),
+                                children: it.tags
+                                    .map(
+                                      (t) => Chip(
+                                        label: Text('#$t'),
+                                        visualDensity: VisualDensity.compact,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                    )
+                                    .toList(),
                               ),
                             ],
                           ],
@@ -772,25 +775,21 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      icon:
-                          _logBusy
-                              ? const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Icon(Icons.check),
+                      icon: _logBusy
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check),
                       label: Text(
                         _logBusy
                             ? strings.foodLogging
                             : strings.foodAddAllToDiary,
                       ),
-                      onPressed:
-                          _plate.isEmpty || _logBusy
-                              ? null
-                              : () => _logPlateAndClose(context: context),
+                      onPressed: _plate.isEmpty || _logBusy
+                          ? null
+                          : () => _logPlateAndClose(context: context),
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all(
                           const EdgeInsets.symmetric(vertical: 14),
@@ -813,32 +812,66 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: expressiveNutrition ? 960 : double.infinity,
+          ),
+          child: Column(
+            children: [
           // ─── Top stats row (live from provider) ────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cards = <Widget>[
+                  _StatCard(
                     label: 'Calories',
                     value: '$kcal / $kcalTgt kcal',
+                    surface: destination?.surfaceTertiary,
+                    foreground: destination?.onSurfaceTertiary,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(label: 'Protein', value: '$pro / $proTgt g'),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(label: 'Carbs', value: '$carb / $carbTgt g'),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(label: 'Fat', value: '$fat / $fatTgt g'),
-                ),
-              ],
+                  _StatCard(
+                    label: 'Protein',
+                    value: '$pro / $proTgt g',
+                    surface: destination?.surfaceAccent,
+                    foreground: destination?.onSurfaceAccent,
+                  ),
+                  _StatCard(
+                    label: 'Carbs',
+                    value: '$carb / $carbTgt g',
+                    surface: destination?.surfaceSelected,
+                    foreground: destination?.onSurfaceSelected,
+                  ),
+                  _StatCard(
+                    label: 'Fat',
+                    value: '$fat / $fatTgt g',
+                    surface: destination?.surfaceSecondary,
+                    foreground: destination?.onSurfaceSecondary,
+                  ),
+                ];
+                if (destination?.family ==
+                    AppExpressiveDestinationFamily.nutrition) {
+                  final columns = constraints.maxWidth < 500 ? 2 : 4;
+                  final itemWidth =
+                      (constraints.maxWidth - 8 * (columns - 1)) / columns;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: cards
+                        .map((card) => SizedBox(width: itemWidth, child: card))
+                        .toList(),
+                  );
+                }
+                return Row(
+                  children: [
+                    for (var index = 0; index < cards.length; index++) ...[
+                      if (index > 0) const SizedBox(width: 8),
+                      Expanded(child: cards[index]),
+                    ],
+                  ],
+                );
+              },
             ),
           ),
 
@@ -849,12 +882,11 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               scrollDirection: Axis.horizontal,
               child: ToggleButtons(
                 isSelected: _tabs,
-                onPressed:
-                    (i) => setState(() {
-                      for (var idx = 0; idx < _tabs.length; idx++) {
-                        _tabs[idx] = idx == i;
-                      }
-                    }),
+                onPressed: (i) => setState(() {
+                  for (var idx = 0; idx < _tabs.length; idx++) {
+                    _tabs[idx] = idx == i;
+                  }
+                }),
                 borderRadius: context.nutritionTokens.compactShape,
                 selectedColor: selectedTabInk,
                 fillColor: selectedTabFill,
@@ -884,14 +916,13 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
           // ─── Content ───────────────────────────────────────────────────────
           Expanded(
-            child:
-                _tabs[0]
-                    ? _buildScanTab(context)
-                    : _tabs[1]
-                    ? _buildSearchList(context)
-                    : _tabs[2]
-                    ? _buildPrePlanned(context)
-                    : _buildCustomList(context),
+            child: _tabs[0]
+                ? _buildScanTab(context)
+                : _tabs[1]
+                ? _buildSearchList(context)
+                : _tabs[2]
+                ? _buildPrePlanned(context)
+                : _buildCustomList(context),
           ),
 
           // ─── Bottom search & add row (search filter + close) ──────────────
@@ -904,18 +935,17 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                     controller: _searchCtrl,
                     variant: TonosFieldVariant.search,
                     hintText: AppLocalizations.of(context).foodSearchHint,
-                    suffixIcon:
-                        (_searchCtrl.text.isEmpty)
-                            ? null
-                            : IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchCtrl.clear();
-                                _kickoffSearch('');
-                                FocusScope.of(context).unfocus();
-                                setState(() {}); // refresh suffixIcon state
-                              },
-                            ),
+                    suffixIcon: (_searchCtrl.text.isEmpty)
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              _kickoffSearch('');
+                              FocusScope.of(context).unfocus();
+                              setState(() {}); // refresh suffixIcon state
+                            },
+                          ),
                     border: OutlineInputBorder(
                       borderRadius: context.nutritionTokens.compactShape,
                     ),
@@ -928,12 +958,11 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed:
-                      _logBusy
-                          ? null
-                          : (_plate.isEmpty
-                              ? () => Navigator.of(context).maybePop()
-                              : () => _logPlateAndClose(
+                  onPressed: _logBusy
+                      ? null
+                      : (_plate.isEmpty
+                            ? () => Navigator.of(context).maybePop()
+                            : () => _logPlateAndClose(
                                 context: context,
                                 closeDrawerToo: false,
                                 popPageAfter: false,
@@ -947,7 +976,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               ],
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -977,16 +1008,14 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
               // Meal selector header
               return Wrap(
                 spacing: 8,
-                children:
-                    MealType.values.map((m) {
-                      final label =
-                          m.name[0].toUpperCase() + m.name.substring(1);
-                      return ChoiceChip(
-                        label: Text(label),
-                        selected: _plannedMeal == m,
-                        onSelected: (_) => setState(() => _plannedMeal = m),
-                      );
-                    }).toList(),
+                children: MealType.values.map((m) {
+                  final label = m.name[0].toUpperCase() + m.name.substring(1);
+                  return ChoiceChip(
+                    label: Text(label),
+                    selected: _plannedMeal == m,
+                    onSelected: (_) => setState(() => _plannedMeal = m),
+                  );
+                }).toList(),
               );
             }
             final r = recipes[i - 1];
@@ -1049,15 +1078,14 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           // Meal selector
           Wrap(
             spacing: 8,
-            children:
-                MealType.values.map((m) {
-                  final label = m.name[0].toUpperCase() + m.name.substring(1);
-                  return ChoiceChip(
-                    label: Text(label),
-                    selected: _scanMeal == m,
-                    onSelected: (_) => setState(() => _scanMeal = m),
-                  );
-                }).toList(),
+            children: MealType.values.map((m) {
+              final label = m.name[0].toUpperCase() + m.name.substring(1);
+              return ChoiceChip(
+                label: Text(label),
+                selected: _scanMeal == m,
+                onSelected: (_) => setState(() => _scanMeal = m),
+              );
+            }).toList(),
           ),
           const SizedBox(height: 12),
 
@@ -1086,13 +1114,12 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
             labelText: strings.foodEnterBarcode,
             hintText: strings.foodEnterBarcodeHint,
             prefixIcon: const Icon(Icons.qr_code),
-            suffixIcon:
-                (_barcodeCtrl.text.isEmpty)
-                    ? null
-                    : IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _barcodeCtrl.clear()),
-                    ),
+            suffixIcon: (_barcodeCtrl.text.isEmpty)
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () => setState(() => _barcodeCtrl.clear()),
+                  ),
             border: OutlineInputBorder(
               borderRadius: context.nutritionTokens.compactShape,
             ),
@@ -1101,19 +1128,17 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           ),
           const SizedBox(height: 12),
           ElevatedButton.icon(
-            icon:
-                _scanBusy
-                    ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                    : const Icon(Icons.check),
+            icon: _scanBusy
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check),
             label: Text(strings.foodLogByBarcode),
-            onPressed:
-                (_barcodeCtrl.text.trim().isEmpty || _scanBusy)
-                    ? null
-                    : _handleScanAdd,
+            onPressed: (_barcodeCtrl.text.trim().isEmpty || _scanBusy)
+                ? null
+                : _handleScanAdd,
           ),
           const SizedBox(height: 8),
           const Text(
@@ -1270,10 +1295,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       for (final p in portionsJson) {
         final m = Map<String, dynamic>.from(p as Map);
         final rawDefault = m['is_default'];
-        final isDefault =
-            rawDefault is bool
-                ? rawDefault
-                : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+        final isDefault = rawDefault is bool
+            ? rawDefault
+            : (rawDefault is num ? rawDefault.toInt() == 1 : false);
 
         portions.add(
           FoodPortion(
@@ -1356,17 +1380,37 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
   Widget _foodResultTile(BuildContext context, Food f) {
     final strings = AppLocalizations.of(context);
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     return TonosThemeReadyCard(
+      color: destination?.surfaceSelected,
+      shape: RoundedRectangleBorder(
+        borderRadius: context.nutritionTokens.sectionShape,
+        side: destination == null
+            ? BorderSide.none
+            : BorderSide(color: destination.outlineAccent),
+      ),
       child: ListTile(
-        title: Text(f.name),
+        title: Text(
+          f.name,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: destination?.onSurfaceSelected,
+            fontWeight: destination == null ? null : FontWeight.w700,
+          ),
+        ),
         subtitle: FutureBuilder<_MacroPreview>(
           future: _previewFuture[f.id!] ??= _loadPreview(f),
           builder: (context, snap) {
             final m =
                 (snap.connectionState == ConnectionState.done && snap.hasData)
-                    ? snap.data!
-                    : _MacroPreview.empty('—');
-            return Text(_macroLine(m));
+                ? snap.data!
+                : _MacroPreview.empty('—');
+            return Text(
+              _macroLine(m),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: destination?.onSurfaceSelected.withValues(alpha: 0.82),
+              ),
+            );
           },
         ),
         trailing: Row(
@@ -1374,20 +1418,16 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           children: [
             Selector<NutritionProfile, bool>(
               selector: (_, p) => p.isFavorite(f.id!),
-              builder:
-                  (ctx, isFav, _) => IconButton(
-                    tooltip:
-                        isFav ? strings.foodUnfavorite : strings.foodFavorite,
-                    icon: Icon(isFav ? Icons.star : Icons.star_border),
-                    color:
-                        isFav
-                            ? context.nutritionTokens.favoriteAction
-                            : context.nutritionTokens.mutedAction,
-                    visualDensity: VisualDensity.compact,
-                    onPressed:
-                        () =>
-                            ctx.read<NutritionProfile>().toggleFavorite(f.id!),
-                  ),
+              builder: (ctx, isFav, _) => IconButton(
+                tooltip: isFav ? strings.foodUnfavorite : strings.foodFavorite,
+                icon: Icon(isFav ? Icons.star : Icons.star_border),
+                color: isFav
+                    ? context.nutritionTokens.favoriteAction
+                    : context.nutritionTokens.mutedAction,
+                visualDensity: VisualDensity.compact,
+                onPressed: () =>
+                    ctx.read<NutritionProfile>().toggleFavorite(f.id!),
+              ),
             ),
             IconButton(
               tooltip: strings.foodCustomize,
@@ -1515,18 +1555,16 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     // Choose default portion if flagged; otherwise first; fallback to "100 g"
     FoodPortion? selected = portions.firstWhere(
       (p) => p.isDefault == true,
-      orElse:
-          () =>
-              portions.isNotEmpty
-                  ? portions.first
-                  : FoodPortion(
-                    id: null,
-                    foodId: food.id!,
-                    measureName: '100 g',
-                    gramWeight: 100,
-                    mlVolume: null,
-                    isDefault: true,
-                  ),
+      orElse: () => portions.isNotEmpty
+          ? portions.first
+          : FoodPortion(
+              id: null,
+              foodId: food.id!,
+              measureName: '100 g',
+              gramWeight: 100,
+              mlVolume: null,
+              isDefault: true,
+            ),
     );
 
     double qty = 1.0;
@@ -1556,17 +1594,16 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   // Meal chips
                   Wrap(
                     spacing: 8,
-                    children:
-                        MealType.values.map((m) {
-                          final selectedChip = m == meal;
-                          final label =
-                              m.name[0].toUpperCase() + m.name.substring(1);
-                          return ChoiceChip(
-                            label: Text(label),
-                            selected: selectedChip,
-                            onSelected: (_) => setB(() => meal = m),
-                          );
-                        }).toList(),
+                    children: MealType.values.map((m) {
+                      final selectedChip = m == meal;
+                      final label =
+                          m.name[0].toUpperCase() + m.name.substring(1);
+                      return ChoiceChip(
+                        label: Text(label),
+                        selected: selectedChip,
+                        onSelected: (_) => setB(() => meal = m),
+                      );
+                    }).toList(),
                   ),
 
                   const SizedBox(height: 12),
@@ -1580,26 +1617,25 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                         child: DropdownButton<FoodPortion>(
                           isExpanded: true,
                           value: selected,
-                          items:
-                              portions.isNotEmpty
-                                  ? portions
-                                      .map(
-                                        (p) => DropdownMenuItem(
-                                          value: p,
-                                          child: Text(
-                                            '${p.measureName}'
-                                            '${p.gramWeight != null ? ' • ${p.gramWeight!.toStringAsFixed(0)} g' : ''}'
-                                            '${p.mlVolume != null ? ' • ${p.mlVolume!.toStringAsFixed(0)} ml' : ''}',
-                                          ),
+                          items: portions.isNotEmpty
+                              ? portions
+                                    .map(
+                                      (p) => DropdownMenuItem(
+                                        value: p,
+                                        child: Text(
+                                          '${p.measureName}'
+                                          '${p.gramWeight != null ? ' • ${p.gramWeight!.toStringAsFixed(0)} g' : ''}'
+                                          '${p.mlVolume != null ? ' • ${p.mlVolume!.toStringAsFixed(0)} ml' : ''}',
                                         ),
-                                      )
-                                      .toList()
-                                  : [
-                                    DropdownMenuItem(
-                                      value: selected,
-                                      child: const Text('100 g'),
-                                    ),
-                                  ],
+                                      ),
+                                    )
+                                    .toList()
+                              : [
+                                  DropdownMenuItem(
+                                    value: selected,
+                                    child: const Text('100 g'),
+                                  ),
+                                ],
                           onChanged: (v) => setB(() => selected = v),
                         ),
                       ),
@@ -1620,9 +1656,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          onChanged:
-                              (s) =>
-                                  setB(() => qty = double.tryParse(s) ?? 1.0),
+                          onChanged: (s) =>
+                              setB(() => qty = double.tryParse(s) ?? 1.0),
                           isDense: true,
                           border: const OutlineInputBorder(),
                         ),
@@ -1650,8 +1685,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                   TonosFormField(
                     minLines: 1,
                     maxLines: 2,
-                    labelText:
-                        'Tags (comma-separated, e.g. "post-workout, high-protein")',
+                    labelText: 'Tags (comma-separated, e.g. "post-workout, high-protein")',
                     isDense: true,
                     border: const OutlineInputBorder(),
                     onChanged: (s) => tagsText = s,
@@ -1681,21 +1715,22 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                                   x.meal == meal,
                             );
 
-                            final newTags =
-                                tagsText
-                                    .split(',')
-                                    .map((t) => t.trim().toLowerCase())
-                                    .where((t) => t.isNotEmpty)
-                                    .toSet()
-                                    .toList();
+                            final newTags = tagsText
+                                .split(',')
+                                .map((t) => t.trim().toLowerCase())
+                                .where((t) => t.isNotEmpty)
+                                .toSet()
+                                .toList();
 
                             setState(() {
                               if (idx >= 0) {
                                 _plate[idx].qty += qty;
                                 _plate[idx].note ??= note;
                                 // merge tags (set union)
-                                final merged =
-                                    {..._plate[idx].tags, ...newTags}.toList();
+                                final merged = {
+                                  ..._plate[idx].tags,
+                                  ...newTags,
+                                }.toList();
                                 _plate[idx].tags
                                   ..clear()
                                   ..addAll(merged);
@@ -1739,19 +1774,18 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 
     final result = await navigator.push(
       MaterialPageRoute(
-        builder:
-            (_) => FoodCustomizationPage(
-              initialFoodId: f.id!,
-              initialName: f.name,
-              initialBrand: f.brand,
-              initialCalories:
-                  (byCode['ENERGY_KCAL'] ?? byCode['KCAL'] ?? 0).toDouble(),
-              initialProteinG: pick(['PROTEIN', 'PROTEIN_G']),
-              initialCarbsG: pick(['CARB', 'CARB_G']),
-              initialFatsG: pick(['FAT', 'FAT_G']),
-              initialPortions: portions,
-              initialDensityGPerMl: f.densityGPerMl, // ← add this
-            ),
+        builder: (_) => FoodCustomizationPage(
+          initialFoodId: f.id!,
+          initialName: f.name,
+          initialBrand: f.brand,
+          initialCalories: (byCode['ENERGY_KCAL'] ?? byCode['KCAL'] ?? 0)
+              .toDouble(),
+          initialProteinG: pick(['PROTEIN', 'PROTEIN_G']),
+          initialCarbsG: pick(['CARB', 'CARB_G']),
+          initialFatsG: pick(['FAT', 'FAT_G']),
+          initialPortions: portions,
+          initialDensityGPerMl: f.densityGPerMl, // ← add this
+        ),
       ),
     );
 
@@ -1800,10 +1834,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
       for (final p in portionsJson) {
         final m = Map<String, dynamic>.from(p as Map);
         final rawDefault = m['is_default'];
-        final isDefault =
-            rawDefault is bool
-                ? rawDefault
-                : (rawDefault is num ? rawDefault.toInt() == 1 : false);
+        final isDefault = rawDefault is bool
+            ? rawDefault
+            : (rawDefault is num ? rawDefault.toInt() == 1 : false);
 
         portions.add(
           FoodPortion(
@@ -1871,8 +1904,9 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           foodId: it.food.id!,
           portionId: it.portion?.id,
           quantity: it.qty,
-          gramsOverride:
-              isVirtual ? grams : null, // only needed when no portion exists
+          gramsOverride: isVirtual
+              ? grams
+              : null, // only needed when no portion exists
           loggedGrams: grams, // always record the grams consumed
           loggedAt: stamp,
           notes: it.note,
@@ -1970,22 +2004,49 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
-  const _StatCard({required this.label, required this.value});
+  final Color? surface;
+  final Color? foreground;
+
+  const _StatCard({
+    required this.label,
+    required this.value,
+    this.surface,
+    this.foreground,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: context.nutritionTokens.foodBorder),
+        color: surface,
+        border: Border.all(
+          color: surface == null
+              ? context.nutritionTokens.foodBorder
+              : Theme.of(context)
+                    .extension<AppExpressiveDestinationTokens>()!
+                    .outlineAccent,
+        ),
         borderRadius: context.nutritionTokens.compactShape,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: foreground,
+              fontWeight: surface == null ? null : FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 2),
-          Text(value, style: Theme.of(context).textTheme.labelMedium),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: foreground,
+              fontWeight: surface == null ? null : FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

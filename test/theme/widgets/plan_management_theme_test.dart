@@ -11,6 +11,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +48,7 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == rule.id)
         .toList();
-    expect(findings, hasLength(6));
+    expect(findings, hasLength(12));
     expect(findings.map((finding) => finding.kind).toSet(), {
       'color_transform',
       'decoration',
@@ -297,10 +298,18 @@ void main() {
       );
       expect(
         activeStatus.backgroundColor,
-        entry.$2.colorScheme.primary.withValues(alpha: 0.16),
+        entry.$3.planAccent.withValues(alpha: 0.16),
       );
-      expect((activeStatus.child! as Icon).color, entry.$2.colorScheme.primary);
+      expect((activeStatus.child! as Icon).color, entry.$3.planAccent);
       expect(find.text(strings.planManagementArchive), findsOneWidget);
+      final expressive = AppExpressivePlanningTokens.maybeOf(context);
+      expect(
+        find.ancestor(
+          of: find.text(strings.planManagementArchive),
+          matching: find.byType(TonosExpressivePressResponse),
+        ),
+        expressive == null ? findsNothing : findsOneWidget,
+      );
 
       final archiveAction = find.text(strings.planManagementArchive);
       await tester.drag(find.byType(ListView), const Offset(0, -300));

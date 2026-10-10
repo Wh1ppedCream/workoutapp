@@ -51,7 +51,8 @@ void main() {
         ],
         'lib/screens/profile/settings/user_information_settings_page.dart': [
           'DropdownButtonFormField',
-          'SettingsSaveBar',
+          'floatingActionButton: _dirty',
+          'FloatingActionButton.extended',
         ],
         'lib/screens/exercise/session_detail_screen.dart': [
           '_isEditing',

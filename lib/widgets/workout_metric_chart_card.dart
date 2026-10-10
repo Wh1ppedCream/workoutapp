@@ -10,6 +10,7 @@ import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/completed_workout_duration_formatter.dart';
@@ -23,6 +24,80 @@ enum WorkoutReportRange {
   sixMonths,
   oneYear,
   all,
+}
+
+bool _usesProgressExpressiveReport(BuildContext context) {
+  final destination = Theme.of(context)
+      .extension<AppExpressiveDestinationTokens>();
+  return context.usesExpressivePresentation &&
+      destination?.family == AppExpressiveDestinationFamily.progress;
+}
+
+Color _workoutReportChartSurface(BuildContext context) {
+  final chartSurface = context.surfaceTokens.workoutMetricChart;
+  final destination = Theme.of(context)
+      .extension<AppExpressiveDestinationTokens>();
+  if (_usesProgressExpressiveReport(context)) {
+    return Color.lerp(chartSurface, destination!.surfacePrimary, 0.06)!;
+  }
+  return chartSurface;
+}
+
+typedef WorkoutReportDateLabelPlacement = ({
+  int index,
+  double left,
+  double width,
+});
+
+@visibleForTesting
+List<WorkoutReportDateLabelPlacement> layoutWorkoutReportDateLabelPlacements({
+  required List<Offset> pointCenters,
+  required List<double> labelWidths,
+  required int labelEvery,
+  required Rect plotRect,
+  required double minimumGap,
+}) {
+  assert(pointCenters.length == labelWidths.length);
+  assert(labelEvery > 0);
+
+  final placements = <WorkoutReportDateLabelPlacement>[];
+  var previousRight = double.negativeInfinity;
+  for (var index = 0; index < pointCenters.length; index++) {
+    if (index % labelEvery != 0 && index != pointCenters.length - 1) continue;
+
+    final width = math.min(plotRect.width, labelWidths[index]).toDouble();
+    final left = (pointCenters[index].dx - width / 2)
+        .clamp(plotRect.left, plotRect.right - width)
+        .toDouble();
+    if (left < previousRight + minimumGap && index == pointCenters.length - 1) {
+      while (placements.isNotEmpty && left < previousRight + minimumGap) {
+        placements.removeLast();
+        previousRight = placements.isEmpty
+            ? double.negativeInfinity
+            : placements.last.left + placements.last.width;
+      }
+    }
+    if (left < previousRight + minimumGap) continue;
+
+    placements.add((index: index, left: left, width: width));
+    previousRight = left + width;
+  }
+  return placements;
+}
+
+@visibleForTesting
+List<double> workoutReportAxisTickValues({
+  required WorkoutReportMetric metric,
+  required double maximum,
+}) {
+  if (maximum <= 0) return const <double>[0];
+  if (metric == WorkoutReportMetric.workouts) {
+    final step = _WorkoutLineChartPainter._niceIntegerStep(maximum / 6);
+    final snappedMaximum = (maximum / step).ceil() * step;
+    final intervalCount = (snappedMaximum / step).round();
+    return List<double>.generate(intervalCount + 1, (index) => index * step);
+  }
+  return List<double>.generate(6, (index) => maximum * index / 5);
 }
 
 enum _ReportBucketInterval { day, week, month }
@@ -158,11 +233,16 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
     final expressiveTokens = usesExpressiveRecipe
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()
         : null;
+    final destinationTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final isProgressDestination = _usesProgressExpressiveReport(context);
     final surfaces = context.surfaceTokens;
-    final shellForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.settingsHero)
-            : expressiveTokens?.actionPrimary;
+    final shellForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.settingsHero)
+        : isProgressDestination
+        ? destinationTokens!.onSurfacePrimary
+        : expressiveTokens?.actionPrimary;
 
     Widget shell(Widget child) {
       if (usesInkRecipe) {
@@ -178,11 +258,11 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
       }
       if (usesExpressiveRecipe) {
         return Card(
-          color: surfaces.card,
+          color: isProgressDestination
+              ? destinationTokens!.surfacePrimary
+              : surfaces.card,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          shape: RoundedRectangleBorder(
-            borderRadius: context.shapeTokens.card,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: context.shapeTokens.card),
           clipBehavior: Clip.antiAlias,
           child: child,
         );
@@ -217,12 +297,10 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               padding: EdgeInsets.all(16),
               child: Text(
                 strings.workoutReportLoadFailed,
-                style:
-                    usesInkRecipe || usesExpressiveRecipe
-                        ? Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(color: shellForeground)
-                        : null,
+                style: usesInkRecipe || usesExpressiveRecipe
+                    ? Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: shellForeground)
+                    : null,
               ),
             ),
           );
@@ -282,10 +360,9 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
               totalWorkouts.toDouble(),
               Localizations.localeOf(context),
             ),
-            unit:
-                totalWorkouts == 1
-                    ? strings.workoutReportWorkout
-                    : strings.workoutReportTotal,
+            unit: totalWorkouts == 1
+                ? strings.workoutReportWorkout
+                : strings.workoutReportTotal,
             trend: _metricTrend(
               buckets,
               WorkoutReportMetric.workouts,
@@ -337,10 +414,9 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
         ];
 
         final chartViewport = SizedBox(
-          key:
-              usesExpressiveRecipe
-                  ? const ValueKey('workout-report-expressive-chart-viewport')
-                  : null,
+          key: usesExpressiveRecipe
+              ? const ValueKey('workout-report-expressive-chart-viewport')
+              : null,
           height: 220,
           child: PageView.builder(
             controller: _pageController,
@@ -407,16 +483,14 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                   builder: (context, constraints) {
                     final usesLocalizedLayout =
                         Localizations.localeOf(context).languageCode != 'en';
-                    final useTwoRows =
-                        context.usesNeoPresentation
-                            ? MediaQuery.textScalerOf(context).scale(1) >
-                                    1.15 ||
-                                (usesLocalizedLayout &&
-                                    constraints.maxWidth < 360)
-                            : usesLocalizedLayout &&
-                                (constraints.maxWidth < 360 ||
-                                    MediaQuery.textScalerOf(context).scale(1) >
-                                        1.15);
+                    final useTwoRows = context.usesNeoPresentation
+                        ? MediaQuery.textScalerOf(context).scale(1) > 1.15 ||
+                              (usesLocalizedLayout &&
+                                  constraints.maxWidth < 360)
+                        : usesLocalizedLayout &&
+                              (constraints.maxWidth < 360 ||
+                                  MediaQuery.textScalerOf(context).scale(1) >
+                                      1.15);
                     if (!useTwoRows) {
                       return Row(
                         children: [
@@ -459,12 +533,11 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
 
   _ReportBucketSet _buildReportBuckets(List<WorkoutReportSession> sessions) {
     final today = DateUtils.dateOnly(DateTime.now());
-    final earliestSessionDate =
-        sessions.isEmpty
-            ? null
-            : sessions
-                .map((session) => session.calendarDay.toLocalDateTime())
-                .reduce((a, b) => a.isBefore(b) ? a : b);
+    final earliestSessionDate = sessions.isEmpty
+        ? null
+        : sessions
+              .map((session) => session.calendarDay.toLocalDateTime())
+              .reduce((a, b) => a.isBefore(b) ? a : b);
     final rawStart =
         _rangeStart ??
         (earliestSessionDate ?? today.subtract(const Duration(days: 7 * 7)));
@@ -649,9 +722,8 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
   List<WorkoutReportBucket> _finalizeBuckets(
     Map<DateTime, _MutableReportBucket> mutableBuckets,
   ) {
-    final ordered =
-        mutableBuckets.values.toList()
-          ..sort((a, b) => a.start.compareTo(b.start));
+    final ordered = mutableBuckets.values.toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
     return ordered.map(_toReportBucket).toList();
   }
 
@@ -744,19 +816,15 @@ class _ReportInsightSummary {
             locale,
             maximumFractionDigits: 0,
           ),
-          detail:
-              longestStreak == 1
-                  ? strings.workoutReportDay
-                  : strings.workoutReportDays,
+          detail: longestStreak == 1
+              ? strings.workoutReportDay
+              : strings.workoutReportDays,
           icon: Icons.local_fire_department_outlined,
         ),
         _ReportInsight(
           label: strings.workoutReportMostActive,
           value: activeDay,
-          detail:
-              workoutCount == 0
-                  ? strings.workoutReportNoSessions
-                  : strings.workoutReportWeekday,
+          detail: workoutCount == 0 ? strings.workoutReportNoSessions : '',
           icon: Icons.calendar_today_outlined,
         ),
         _ReportInsight(
@@ -820,6 +888,9 @@ class _ExpressiveWorkoutReportComposition extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final expressive = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    final isProgressDestination = _usesProgressExpressiveReport(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
 
     return Padding(
@@ -834,40 +905,58 @@ class _ExpressiveWorkoutReportComposition extends StatelessWidget {
             textAlign: TextAlign.start,
             maxLines: 2,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: expressive.actionPrimary,
+              color: isProgressDestination
+                  ? destination!.onSurfacePrimary
+                  : expressive.actionPrimary,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 9),
-          Stack(
-            key: const ValueKey('workout-report-expressive-title-rule'),
-            children: [
-              Container(
+          const SizedBox(height: 4),
+          if (isProgressDestination)
+            Align(
+              key: const ValueKey('workout-report-expressive-title-rule'),
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                width: 36,
                 height: 3,
                 decoration: BoxDecoration(
-                  color: expressive.selectorTrack,
+                  color: destination!.outlineAccent,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Container(
-                  width: 48,
+            )
+          else
+            Stack(
+              key: const ValueKey('workout-report-expressive-title-rule'),
+              children: [
+                Container(
                   height: 3,
                   decoration: BoxDecoration(
-                    color: expressive.selectorActive,
+                    color: expressive.selectorTrack,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-              ),
-            ],
-          ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Container(
+                    width: 48,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: expressive.selectorActive,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(height: 14),
           Container(
             key: const ValueKey('workout-report-expressive-metric-cluster'),
-            padding: const EdgeInsets.all(5),
+            padding: EdgeInsets.all(isProgressDestination ? 0 : 5),
             decoration: BoxDecoration(
-              color: expressive.selectorTrack,
+              color: isProgressDestination
+                  ? Colors.transparent
+                  : expressive.selectorTrack,
               borderRadius: context.shapeTokens.workoutMetricRange,
             ),
             child: LayoutBuilder(
@@ -878,7 +967,12 @@ class _ExpressiveWorkoutReportComposition extends StatelessWidget {
                       for (var index = 0; index < stats.length; index++)
                         Expanded(
                           flex: index == selectedMetricIndex ? 6 : 5,
-                          child: stats[index],
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isProgressDestination ? 3 : 0,
+                            ),
+                            child: stats[index],
+                          ),
                         ),
                     ],
                   );
@@ -933,75 +1027,90 @@ class _ReportStat extends StatelessWidget {
     final progressColors = context.progressColors;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
-    final expressiveTokens =
-        usesExpressiveRecipe
-            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-            : null;
-    final unselectedFill =
-        usesInkRecipe
-            ? surfaces.workoutMetricRange
-            : usesExpressiveRecipe
-            ? Colors.transparent
-            : surfaces.workoutMetricStat;
-    final selectedFill =
-        usesInkRecipe
-            ? surfaces.exerciseProgressSelector
-            : usesExpressiveRecipe
-            ? Color.lerp(expressiveTokens!.focusSurface, Colors.black, 0.36)!
-            : progressColors.accent.withValues(alpha: 0.14);
-    final unselectedForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, unselectedFill)
-            : usesExpressiveRecipe
-            ? Theme.of(context).brightness == Brightness.light
-                ? expressiveTokens!.focusSurface
-                : expressiveTokens!.focusForeground
-            : cs.onSurface;
-    final selectedForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              selectedFill,
-              parentSurface: unselectedFill,
-            )
-            : expressiveTokens?.focusForeground ?? progressColors.accent;
-    final unitForeground =
-        usesInkRecipe
-            ? (selected ? selectedForeground : unselectedForeground).withValues(
-              alpha: 0.78,
-            )
-            : usesExpressiveRecipe
-            ? (selected ? selectedForeground : unselectedForeground).withValues(
-              alpha: 0.78,
-            )
-            : cs.onSurfaceVariant;
-    final unselectedBorder =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, unselectedFill)
-            : usesExpressiveRecipe
-            ? Colors.transparent
-            : cs.outlineVariant.withValues(alpha: 0.7);
-    final selectedBorder =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, selectedFill)
-            : usesExpressiveRecipe
-            ? Colors.transparent
-            : progressColors.accent.withValues(alpha: 0.75);
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final destinationTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final isProgressDestination = _usesProgressExpressiveReport(context);
+    final unselectedFill = usesInkRecipe
+        ? surfaces.workoutMetricRange
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? Color.lerp(
+                  surfaces.workoutMetricStat,
+                  destinationTokens!.surfaceSelected,
+                  0.12,
+                )!
+              : Colors.transparent
+        : surfaces.workoutMetricStat;
+    final selectedFill = usesInkRecipe
+        ? surfaces.exerciseProgressSelector
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? destinationTokens!.surfaceSelected
+              : Color.lerp(expressiveTokens!.focusSurface, Colors.black, 0.36)!
+        : progressColors.accent.withValues(alpha: 0.14);
+    final unselectedForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, unselectedFill)
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? destinationTokens!.supportingForeground
+              : Theme.of(context).brightness == Brightness.light
+              ? expressiveTokens!.focusSurface
+              : expressiveTokens!.focusForeground
+        : cs.onSurface;
+    final selectedForeground = usesInkRecipe
+        ? tonosForegroundForSurface(
+            context,
+            selectedFill,
+            parentSurface: unselectedFill,
+          )
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? destinationTokens!.onSurfaceSelected
+              : expressiveTokens!.focusForeground
+        : progressColors.accent;
+    final selectedExpressiveForeground = isProgressDestination
+        ? destinationTokens!.onSurfaceSelected
+        : selectedForeground;
+    final unitForeground = usesInkRecipe
+        ? (selected ? selectedForeground : unselectedForeground).withValues(
+            alpha: 0.78,
+          )
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? selectedExpressiveForeground
+              : (selected ? selectedForeground : unselectedForeground)
+                    .withValues(alpha: 0.78)
+        : cs.onSurfaceVariant;
+    final unselectedBorder = usesInkRecipe
+        ? tonosOutlineForSurface(context, unselectedFill)
+        : usesExpressiveRecipe
+        ? Colors.transparent
+        : cs.outlineVariant.withValues(alpha: 0.7);
+    final selectedBorder = usesInkRecipe
+        ? tonosOutlineForSurface(context, selectedFill)
+        : usesExpressiveRecipe
+        ? Colors.transparent
+        : progressColors.accent.withValues(alpha: 0.75);
     final strings = AppLocalizations.of(context);
-    final trendSurface =
-        usesExpressiveRecipe
-            ? selected
-                ? selectedFill
-                : expressiveTokens!.selectorTrack
-            : selected
-            ? selectedFill
-            : unselectedFill;
+    final trendSurface = usesExpressiveRecipe
+        ? selected
+              ? selectedFill
+              : unselectedFill
+        : selected
+        ? selectedFill
+        : unselectedFill;
     final trendColor =
         usesExpressiveRecipe &&
-                selected &&
-                trend.direction == _MetricTrendDirection.flat
-            ? expressiveTokens!.focusForeground
-            : _trendColor(context, trendSurface);
+            selected &&
+            trend.direction == _MetricTrendDirection.flat
+        ? isProgressDestination
+              ? destinationTokens!.onSurfaceSelected
+              : expressiveTokens!.focusForeground
+        : _trendColor(context, trendSurface);
     final compactLayout = MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Semantics(
       button: true,
@@ -1014,98 +1123,95 @@ class _ReportStat extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? selectedFill : unselectedFill,
             borderRadius: shapes.workoutMetricStat,
-            border:
-                usesExpressiveRecipe
-                    ? selected
-                        ? BorderDirectional(
+            border: usesExpressiveRecipe
+                ? selected
+                      ? BorderDirectional(
                           start: BorderSide(
-                            color: expressiveTokens!.selectorActive,
+                            color: isProgressDestination
+                                ? destinationTokens!.outlineAccent
+                                : expressiveTokens!.selectorActive,
                             width: 4,
                           ),
                         )
-                        : null
-                    : Border.all(
-                      color: selected ? selectedBorder : unselectedBorder,
-                      width: 1,
-                    ),
+                      : null
+                : Border.all(
+                    color: selected ? selectedBorder : unselectedBorder,
+                    width: 1,
+                  ),
           ),
           child: InkWell(
             borderRadius: shapes.workoutMetricStat,
             onTap: onTap,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child:
-                  compactLayout
-                      ? _classicContent(
-                        context,
-                        selected ? selectedForeground : unselectedForeground,
-                        unitForeground,
-                        trendColor,
-                      )
-                      : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            maxLines: 2,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyMedium?.copyWith(
-                              color:
-                                  selected
-                                      ? selectedForeground
-                                      : unselectedForeground,
-                              fontWeight: FontWeight.w700,
+              child: compactLayout
+                  ? _classicContent(
+                      context,
+                      selected
+                          ? selectedExpressiveForeground
+                          : unselectedForeground,
+                      unitForeground,
+                      trendColor,
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 2,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: selected
+                                    ? selectedExpressiveForeground
+                                    : unselectedForeground,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.end,
+                          spacing: 4,
+                          children: [
+                            Text(
+                              value,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: selected
+                                        ? selectedExpressiveForeground
+                                        : unselectedForeground,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.end,
-                            spacing: 4,
-                            children: [
-                              Text(
-                                value,
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall?.copyWith(
-                                  color:
-                                      selected
-                                          ? selectedForeground
-                                          : unselectedForeground,
-                                  fontWeight: FontWeight.w900,
+                            if (unit != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 3),
+                                child: Text(
+                                  unit!,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color:
+                                            usesInkRecipe ||
+                                                usesExpressiveRecipe
+                                            ? unitForeground
+                                            : cs.onSurfaceVariant,
+                                      ),
                                 ),
                               ),
-                              if (unit != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 3),
-                                  child: Text(
-                                    unit!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.labelSmall?.copyWith(
-                                      color:
-                                          usesInkRecipe || usesExpressiveRecipe
-                                              ? unitForeground
-                                              : cs.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            trend.label,
-                            maxLines: 2,
-                            style: Theme.of(
-                              context,
-                            ).textTheme.labelSmall?.copyWith(
-                              color: trendColor,
-                              height: 1.05,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          trend.label,
+                          maxLines: 2,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: trendColor,
+                                height: 1.05,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
@@ -1227,12 +1333,15 @@ class _MetricChartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    final surfaces = context.surfaceTokens;
+    final chartSurface = _workoutReportChartSurface(context);
     final shapes = context.shapeTokens;
     final hasValue = buckets.any((bucket) => bucket.valueFor(metric) > 0);
     return Container(
+      key: _usesProgressExpressiveReport(context)
+          ? const ValueKey('workout-report-expressive-chart-surface')
+          : null,
       decoration: BoxDecoration(
-        color: surfaces.workoutMetricChart,
+        color: chartSurface,
         borderRadius: shapes.workoutMetricChart,
       ),
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 6),
@@ -1245,39 +1354,37 @@ class _MetricChartPage extends StatelessWidget {
               _chartTitle(metric, range, strings),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 4),
           Expanded(
-            child:
-                hasValue
-                    ? _InteractiveWorkoutLineChart(
-                      buckets: buckets,
+            child: hasValue
+                ? _InteractiveWorkoutLineChart(
+                    buckets: buckets,
+                    metric: metric,
+                    interval: interval,
+                    range: range,
+                    showValueLabels: buckets.length <= 6,
+                    weightUnit: weightUnit,
+                  )
+                : Semantics(
+                    key: const ValueKey('workout-report-chart-semantics'),
+                    container: true,
+                    label: _chartSemanticsLabel(
                       metric: metric,
-                      interval: interval,
                       range: range,
-                      showValueLabels: buckets.length <= 6,
-                      weightUnit: weightUnit,
-                    )
-                    : Semantics(
-                      key: const ValueKey('workout-report-chart-semantics'),
-                      container: true,
-                      label: _chartSemanticsLabel(
-                        metric: metric,
-                        range: range,
-                        strings: strings,
-                      ),
-                      value: _emptyChartSemanticsValue(
-                        metric: metric,
-                        strings: strings,
-                      ),
-                      child: ExcludeSemantics(
-                        child: _EmptyMetricChartMessage(metric: metric),
-                      ),
+                      strings: strings,
                     ),
+                    value: _emptyChartSemanticsValue(
+                      metric: metric,
+                      strings: strings,
+                    ),
+                    child: ExcludeSemantics(
+                      child: _EmptyMetricChartMessage(metric: metric),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -1342,24 +1449,21 @@ class _InteractiveWorkoutLineChartState
         final textDirection = Directionality.of(context);
         final locale = Localizations.localeOf(context);
         final strings = AppLocalizations.of(context);
-        final latestIndex =
-            widget.buckets.isEmpty ? null : widget.buckets.length - 1;
+        final latestIndex = widget.buckets.isEmpty
+            ? null
+            : widget.buckets.length - 1;
         final semanticIndex = _selectedIndex ?? latestIndex;
-        final semanticsValue =
-            semanticIndex == null
-                ? _emptyChartSemanticsValue(
-                  metric: widget.metric,
-                  strings: strings,
-                )
-                : _chartPointSemanticsValue(
-                  bucket: widget.buckets[semanticIndex],
-                  metric: widget.metric,
-                  interval: widget.interval,
-                  weightUnit: widget.weightUnit,
-                  strings: strings,
-                  locale: locale,
-                  isLatest: _selectedIndex == null,
-                );
+        final semanticsValue = semanticIndex == null
+            ? _emptyChartSemanticsValue(metric: widget.metric, strings: strings)
+            : _chartPointSemanticsValue(
+                bucket: widget.buckets[semanticIndex],
+                metric: widget.metric,
+                interval: widget.interval,
+                weightUnit: widget.weightUnit,
+                strings: strings,
+                locale: locale,
+                isLatest: _selectedIndex == null,
+              );
         String? adjacentPointValue(int delta) {
           final current = semanticIndex;
           if (current == null) return null;
@@ -1386,7 +1490,7 @@ class _InteractiveWorkoutLineChartState
             strings: strings,
             accent: tonosPrimarySeriesForSurface(
               context,
-              surfaces.workoutMetricChart,
+              _workoutReportChartSurface(context),
             ),
             grid: progressColors.grid,
             labelColor: progressColors.label,
@@ -1566,17 +1670,15 @@ class _EmptyMetricChartMessage extends StatelessWidget {
             Text(
               _emptyMetricTitle(metric, strings),
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
               _emptyMetricSubtitle(metric, strings),
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
         ),
@@ -1605,51 +1707,79 @@ class _RangeSelector extends StatelessWidget {
     final expressiveTokens = usesExpressiveRecipe
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()
         : null;
-    final selectedFill =
-        expressiveTokens?.selectorActive ?? progressColors.accent;
-    final unselectedForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.workoutMetricRange)
-            : usesExpressiveRecipe
-            ? Theme.of(context).brightness == Brightness.light
-                ? expressiveTokens!.focusSurface
-                : expressiveTokens!.focusForeground
-            : context.cs.onSurface;
-    final selectedForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              selectedFill,
-              parentSurface: surfaces.workoutMetricRange,
-            )
-            : expressiveTokens?.selectorActiveForeground ??
-                context.cs.onPrimary;
+    final destinationTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final isProgressDestination = _usesProgressExpressiveReport(context);
+    final isDarkProgressDestination =
+        isProgressDestination &&
+        Theme.of(context).brightness == Brightness.dark;
+    final selectedFill = isProgressDestination
+        ? destinationTokens!.surfaceSelected
+        : destinationTokens?.actionPrimary ??
+              expressiveTokens?.selectorActive ??
+              progressColors.accent;
+    final unselectedForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.workoutMetricRange)
+        : usesExpressiveRecipe
+        ? isProgressDestination
+              ? destinationTokens!.onSurfacePrimary
+              : destinationTokens?.onSurfaceTertiary ??
+                    (Theme.of(context).brightness == Brightness.light
+                        ? expressiveTokens!.focusSurface
+                        : expressiveTokens!.focusForeground)
+        : context.cs.onSurface;
+    final selectedForeground = usesInkRecipe
+        ? tonosForegroundForSurface(
+            context,
+            selectedFill,
+            parentSurface: surfaces.workoutMetricRange,
+          )
+        : isProgressDestination
+        ? destinationTokens!.onSurfaceSelected
+        : destinationTokens?.onActionPrimary ??
+              expressiveTokens?.selectorActiveForeground ??
+              context.cs.onPrimary;
     return Container(
+      key: isProgressDestination
+          ? const ValueKey('workout-report-expressive-range-rail')
+          : null,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: expressiveTokens?.selectorTrack ?? surfaces.workoutMetricRange,
+        color: isProgressDestination
+            ? Color.lerp(
+                destinationTokens!.surfacePrimary,
+                destinationTokens.surfaceSelected,
+                0.12,
+              )
+            : destinationTokens?.surfaceTertiary ??
+                  expressiveTokens?.selectorTrack ??
+                  surfaces.workoutMetricRange,
         borderRadius: shapes.workoutMetricRange,
-        border:
-            usesInkRecipe
-                ? Border.all(
-                  color: tonosOutlineForSurface(
-                    context,
-                    surfaces.workoutMetricRange,
-                  ),
-                  width: shapes.outlineWidth,
-                )
-                : null,
+        border: usesInkRecipe
+            ? Border.all(
+                color: tonosOutlineForSurface(
+                  context,
+                  surfaces.workoutMetricRange,
+                ),
+                width: shapes.outlineWidth,
+              )
+            : isDarkProgressDestination
+            ? Border.all(
+                color: destinationTokens!.outlineAccent.withValues(alpha: 0.2),
+                width: 1,
+              )
+            : null,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final textScale = MediaQuery.textScalerOf(context).scale(1);
           final compactLayout = textScale <= 1.15;
-          final columns =
-              compactLayout
-                  ? WorkoutReportRange.values.length
-                  : constraints.maxWidth < 360 || textScale > 1.15
-                  ? 3
-                  : WorkoutReportRange.values.length;
+          final columns = compactLayout
+              ? WorkoutReportRange.values.length
+              : constraints.maxWidth < 360 || textScale > 1.15
+              ? 3
+              : WorkoutReportRange.values.length;
           const gap = 4.0;
           final itemWidth =
               (constraints.maxWidth - (columns - 1) * gap) / columns;
@@ -1726,10 +1856,8 @@ class _RangeSelectorOption extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: foreground,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: Theme.of(context).textTheme.labelMedium
+                    ?.copyWith(color: foreground, fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -1800,10 +1928,13 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
     final shapes = context.shapeTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressiveRecipe = context.usesExpressivePresentation;
-    final expressiveTokens =
-        usesExpressiveRecipe
-            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-            : null;
+    final expressiveTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final destinationTokens = usesExpressiveRecipe
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final isProgressDestination = _usesProgressExpressiveReport(context);
     // In Flutter 3.47.5, a muted Progress tab can build AnimatedSize through
     // AnimatedCrossFade with zero duration and mark layout dirty while sizing.
     // Keep this compatibility path preview-only and preserve the parent's
@@ -1812,30 +1943,30 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
         context.usesExpressivePresentation &&
         !TickerMode.valuesOf(context).enabled &&
         MediaQuery.disableAnimationsOf(context);
-    return Column(
+    final details = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
           color: Colors.transparent,
           child: Ink(
             decoration: BoxDecoration(
-              color:
-                  expressiveTokens?.selectorTrack ??
-                  surfaces.workoutMetricDetails,
+              color: isProgressDestination
+                  ? Colors.transparent
+                  : destinationTokens?.surfaceAccent ??
+                        expressiveTokens?.selectorTrack ??
+                        surfaces.workoutMetricDetails,
               borderRadius: shapes.workoutMetricDetails,
-              border:
-                  usesExpressiveRecipe
-                      ? null
-                      : Border.all(
-                        color:
-                            usesInkRecipe
-                                ? tonosOutlineForSurface(
-                                  context,
-                                  surfaces.workoutMetricDetails,
-                                  neutral: true,
-                                )
-                                : cs.outlineVariant.withValues(alpha: 0.55),
-                      ),
+              border: usesExpressiveRecipe
+                  ? null
+                  : Border.all(
+                      color: usesInkRecipe
+                          ? tonosOutlineForSurface(
+                              context,
+                              surfaces.workoutMetricDetails,
+                              neutral: true,
+                            )
+                          : cs.outlineVariant.withValues(alpha: 0.55),
+                    ),
             ),
             child: InkWell(
               borderRadius: shapes.workoutMetricDetails,
@@ -1852,7 +1983,9 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                         width: 3,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: expressiveTokens!.selectorActive,
+                          color:
+                              destinationTokens?.actionPrimary ??
+                              expressiveTokens!.selectorActive,
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -1860,13 +1993,14 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                     ],
                     Expanded(
                       child: Text(
-                        AppLocalizations.of(
-                          context,
-                        ).workoutReportAdditionalDetails,
+                        AppLocalizations.of(context)
+                            .workoutReportAdditionalDetails,
                         maxLines: 2,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color:
-                              expressiveTokens?.actionPrimary ?? cs.onSurface,
+                              destinationTokens?.onSurfaceAccent ??
+                              expressiveTokens?.actionPrimary ??
+                              cs.onSurface,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1876,7 +2010,9 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
                       expanded
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
-                      color: expressiveTokens?.focusCool ?? cs.onSurfaceVariant,
+                      color: isProgressDestination
+                          ? destinationTokens!.onSurfaceAccent
+                          : expressiveTokens?.focusCool ?? cs.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -1899,14 +2035,24 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: _ReportInsightGrid(insights: insights),
             ),
-            crossFadeState:
-                expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: appMotionDuration(context, context.motionTokens.quick),
             firstCurve: Curves.easeOutCubic,
             secondCurve: Curves.easeOutCubic,
             sizeCurve: Curves.easeOutCubic,
           ),
       ],
+    );
+    if (!isProgressDestination) return details;
+
+    return Material(
+      key: const ValueKey('workout-report-expressive-details-module'),
+      color: destinationTokens!.surfaceAccent,
+      borderRadius: shapes.workoutMetricDetails,
+      clipBehavior: Clip.antiAlias,
+      child: details,
     );
   }
 }
@@ -1930,16 +2076,14 @@ class _ReportInsightGrid extends StatelessWidget {
             (textScale <= 1.15 &&
                 !context.usesClassicPresentation &&
                 constraints.maxWidth >= neoMinimumTileWidth * 2 + gridSpacing);
-        final itemWidth =
-            useTwoColumns
-                ? (constraints.maxWidth - gridSpacing) / 2
-                : constraints.maxWidth;
-        final classicTileHeight =
-            preservesClassicLayout
-                ? (Localizations.localeOf(context).languageCode == 'en'
-                    ? 68.0
-                    : 88.0)
-                : null;
+        final itemWidth = useTwoColumns
+            ? (constraints.maxWidth - gridSpacing) / 2
+            : constraints.maxWidth;
+        final classicTileHeight = preservesClassicLayout
+            ? (Localizations.localeOf(context).languageCode == 'en'
+                  ? 68.0
+                  : 88.0)
+            : null;
         return Wrap(
           key: ValueKey(
             useTwoColumns
@@ -1974,16 +2118,26 @@ class _ReportInsightTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final progressColors = context.progressColors;
     final usesClassicPresentation = context.usesClassicPresentation;
-    final expressiveTokens =
-        context.usesExpressivePresentation
-            ? Theme.of(context).extension<AppExpressiveTrainTokens>()
-            : null;
+    final expressiveTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveTrainTokens>()
+        : null;
+    final destinationTokens = context.usesExpressivePresentation
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
+    final isProgressDestination =
+        context.usesExpressivePresentation &&
+        destinationTokens?.family == AppExpressiveDestinationFamily.progress;
+    final isDarkProgressDestination =
+        isProgressDestination &&
+        Theme.of(context).brightness == Brightness.dark;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final classicNormalScale = usesClassicPresentation && textScale <= 1.15;
     final compactClassicTile = classicNormalScale && textScale > 1.0;
     return Semantics(
       container: true,
-      label: '${insight.label}, ${insight.value}, ${insight.detail}',
+      label: insight.detail.isEmpty
+          ? '${insight.label}, ${insight.value}'
+          : '${insight.label}, ${insight.value}, ${insight.detail}',
       child: ExcludeSemantics(
         child: Container(
           padding: EdgeInsets.symmetric(
@@ -1991,20 +2145,24 @@ class _ReportInsightTile extends StatelessWidget {
             vertical: compactClassicTile ? 5 : 10,
           ),
           decoration: BoxDecoration(
-            color: surfaces.workoutMetricInsight,
+            color: isProgressDestination
+                ? Color.lerp(
+                    destinationTokens!.surfaceAccent,
+                    destinationTokens.surfaceSelected,
+                    isDarkProgressDestination ? 0.4 : 0.16,
+                  )
+                : surfaces.workoutMetricInsight,
             borderRadius: shapes.workoutMetricInsight,
-            border:
-                context.usesExpressivePresentation
-                    ? null
-                    : Border.all(
-                      color:
-                          context.surfaceDecorationTokens.panel.outlined
-                              ? tonosOutlineForSurface(
-                                context,
-                                surfaces.workoutMetricInsight,
-                              )
-                              : cs.outlineVariant.withValues(alpha: 0.55),
-                    ),
+            border: context.usesExpressivePresentation
+                ? null
+                : Border.all(
+                    color: context.surfaceDecorationTokens.panel.outlined
+                        ? tonosOutlineForSurface(
+                            context,
+                            surfaces.workoutMetricInsight,
+                          )
+                        : cs.outlineVariant.withValues(alpha: 0.55),
+                  ),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2012,7 +2170,9 @@ class _ReportInsightTile extends StatelessWidget {
               Icon(
                 insight.icon,
                 size: 18,
-                color: expressiveTokens?.focusCool ?? progressColors.accent,
+                color: isProgressDestination
+                    ? destinationTokens!.onSurfaceAccent
+                    : expressiveTokens?.focusCool ?? progressColors.accent,
               ),
               const SizedBox(width: 9),
               Expanded(
@@ -2027,70 +2187,148 @@ class _ReportInsightTile extends StatelessWidget {
                       ),
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          insight.label,
-                          maxLines: classicNormalScale ? 1 : null,
-                          overflow:
-                              classicNormalScale ? TextOverflow.ellipsis : null,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelSmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        useStackedValues
-                            ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  insight.value,
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(fontWeight: FontWeight.w900),
+                      children: isProgressDestination
+                          ? [
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: insight.value,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            color: destinationTokens!
+                                                .onSurfaceAccent,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                    ),
+                                    if (insight.detail.isNotEmpty)
+                                      TextSpan(
+                                        text: ' ${insight.detail}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: destinationTokens!
+                                                  .onSurfaceAccent,
+                                            ),
+                                      ),
+                                  ],
                                 ),
-                                Text(
-                                  insight.detail,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: cs.onSurfaceVariant),
-                                ),
-                              ],
-                            )
-                            : Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    insight.value,
-                                    maxLines: classicNormalScale ? 1 : null,
-                                    overflow:
-                                        classicNormalScale
-                                            ? TextOverflow.ellipsis
-                                            : null,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(fontWeight: FontWeight.w900),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Flexible(
-                                  child: Text(
-                                    insight.detail,
-                                    maxLines: classicNormalScale ? 1 : null,
-                                    overflow:
-                                        classicNormalScale
-                                            ? TextOverflow.ellipsis
-                                            : null,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(color: cs.onSurfaceVariant),
-                                  ),
-                                ),
-                              ],
-                            ),
-                      ],
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                insight.label,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: destinationTokens!.onSurfaceAccent,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                            ]
+                          : [
+                              Text(
+                                insight.label,
+                                maxLines: classicNormalScale ? 1 : null,
+                                overflow: classicNormalScale
+                                    ? TextOverflow.ellipsis
+                                    : null,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: isProgressDestination
+                                          ? destinationTokens!.onSurfaceAccent
+                                          : cs.onSurfaceVariant,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              const SizedBox(height: 2),
+                              useStackedValues
+                                  ? Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          insight.value,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                color: isProgressDestination
+                                                    ? destinationTokens!
+                                                          .onSurfaceAccent
+                                                    : null,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                        ),
+                                        if (insight.detail.isNotEmpty)
+                                          Text(
+                                            insight.detail,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: isProgressDestination
+                                                      ? destinationTokens!
+                                                            .onSurfaceAccent
+                                                      : cs.onSurfaceVariant,
+                                                ),
+                                          ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            insight.value,
+                                            maxLines: classicNormalScale
+                                                ? 1
+                                                : null,
+                                            overflow: classicNormalScale
+                                                ? TextOverflow.ellipsis
+                                                : null,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall
+                                                ?.copyWith(
+                                                  color: isProgressDestination
+                                                      ? destinationTokens!
+                                                            .onSurfaceAccent
+                                                      : null,
+                                                  fontWeight: FontWeight.w900,
+                                                ),
+                                          ),
+                                        ),
+                                        if (insight.detail.isNotEmpty) ...[
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              insight.detail,
+                                              maxLines: classicNormalScale
+                                                  ? 1
+                                                  : null,
+                                              overflow: classicNormalScale
+                                                  ? TextOverflow.ellipsis
+                                                  : null,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.copyWith(
+                                                    color: isProgressDestination
+                                                        ? destinationTokens!
+                                                              .onSurfaceAccent
+                                                        : cs.onSurfaceVariant,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                            ],
                     );
                   },
                 ),
@@ -2140,8 +2378,9 @@ class _WorkoutLineChartGeometry {
     math.max(1.0, size.height - topMargin - bottomMargin),
   );
 
-  late final List<double> values =
-      buckets.map((bucket) => bucket.valueFor(metric)).toList();
+  late final List<double> values = buckets
+      .map((bucket) => bucket.valueFor(metric))
+      .toList();
 
   late final double yMax = _WorkoutLineChartPainter._niceMax(
     metric,
@@ -2215,21 +2454,24 @@ class _WorkoutLineChartPainter extends CustomPainter {
     final yMax = geometry.yMax;
     final plotRect = geometry.plotRect;
 
-    final gridPaint =
-        Paint()
-          ..color = grid.withValues(alpha: 0.55)
-          ..strokeWidth = 1;
+    final gridPaint = Paint()
+      ..color = grid.withValues(alpha: 0.55)
+      ..strokeWidth = 1;
     final labelStyle = TextStyle(
       color: labelColor.withValues(alpha: 0.82),
       fontSize: 11,
       fontWeight: FontWeight.w600,
     );
 
-    const gridLineCount = 5;
+    final tickValues = workoutReportAxisTickValues(
+      metric: metric,
+      maximum: yMax,
+    );
+    final gridLineCount = tickValues.length - 1;
     final tickLabelEvery = textScaler.scale(1) >= 1.5 ? 2 : 1;
-    for (var i = 0; i <= gridLineCount; i++) {
-      final y = geometry.yFor(yMax * (i / gridLineCount));
-      final value = yMax * (i / gridLineCount);
+    for (var i = 0; i < tickValues.length; i++) {
+      final value = tickValues[i];
+      final y = geometry.yFor(value);
       _drawDashedLine(
         canvas,
         Offset(plotRect.left, y),
@@ -2248,10 +2490,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
           ),
           labelStyle,
           maxWidth: geometry.axisWidth - textScaler.scale(8),
-          align:
-              textDirection == TextDirection.ltr
-                  ? TextAlign.right
-                  : TextAlign.left,
+          align: textDirection == TextDirection.ltr
+              ? TextAlign.right
+              : TextAlign.left,
         );
       }
     }
@@ -2265,11 +2506,37 @@ class _WorkoutLineChartPainter extends CustomPainter {
     );
     final labelEvery = math.max(1, (pointCount / maxDateLabels).ceil());
     final points = geometry.points;
+    final dateStyle = labelStyle.copyWith(fontSize: 10);
+    final dateLabelWidths = List<double>.filled(buckets.length, 0);
+    for (var index = 0; index < buckets.length; index++) {
+      if (index % labelEvery != 0 && index != buckets.length - 1) continue;
+      final dateLabel = _chartDateLabel(buckets[index], interval, locale);
+      final measure = TextPainter(
+        text: TextSpan(text: dateLabel, style: dateStyle),
+        textDirection: textDirection,
+        textScaler: textScaler,
+        maxLines: 1,
+        ellipsis: '\u2026',
+      )..layout();
+      dateLabelWidths[index] = math.min(
+        geometry.plotRect.width,
+        math.max(textScaler.scale(56), measure.width),
+      );
+    }
+    final dateLabelPlacements = {
+      for (final placement in layoutWorkoutReportDateLabelPlacements(
+        pointCenters: points,
+        labelWidths: dateLabelWidths,
+        labelEvery: labelEvery,
+        plotRect: geometry.plotRect,
+        minimumGap: textScaler.scale(6),
+      ))
+        placement.index: placement,
+    };
 
-    final fillPath =
-        Path()
-          ..moveTo(points.first.dx, plotRect.bottom)
-          ..lineTo(points.first.dx, points.first.dy);
+    final fillPath = Path()
+      ..moveTo(points.first.dx, plotRect.bottom)
+      ..lineTo(points.first.dx, points.first.dy);
     final linePath = Path()..moveTo(points.first.dx, points.first.dy);
     for (var index = 1; index < points.length; index++) {
       final current = points[index];
@@ -2332,20 +2599,14 @@ class _WorkoutLineChartPainter extends CustomPainter {
         );
       }
 
-      if (i % labelEvery == 0 || i == buckets.length - 1) {
-        final dateLabelWidth = textScaler.scale(56);
+      final datePlacement = dateLabelPlacements[i];
+      if (datePlacement != null) {
         _drawText(
           canvas,
           _chartDateLabel(buckets[i], interval, locale),
-          Offset(
-            (point.dx - dateLabelWidth / 2).clamp(
-              geometry.plotRect.left,
-              geometry.plotRect.right - dateLabelWidth,
-            ),
-            plotRect.bottom + textScaler.scale(8),
-          ),
-          labelStyle.copyWith(fontSize: 10),
-          maxWidth: dateLabelWidth,
+          Offset(datePlacement.left, plotRect.bottom + textScaler.scale(8)),
+          dateStyle,
+          maxWidth: datePlacement.width,
           align: TextAlign.center,
         );
       }
@@ -2368,10 +2629,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
     final point = geometry.points[index];
     final bucket = buckets[index];
     final value = bucket.valueFor(metric);
-    final guidePaint =
-        Paint()
-          ..color = accent.withValues(alpha: 0.28)
-          ..strokeWidth = 1.2;
+    final guidePaint = Paint()
+      ..color = accent.withValues(alpha: 0.28)
+      ..strokeWidth = 1.2;
     canvas.drawLine(
       Offset(point.dx, geometry.plotRect.top),
       Offset(point.dx, geometry.plotRect.bottom),
@@ -2405,20 +2665,18 @@ class _WorkoutLineChartPainter extends CustomPainter {
       1.0,
       math.min(size.width - textScaler.scale(20), textScaler.scale(150)),
     );
-    final painters =
-        tooltipLines
-            .map(
-              (line) => TextPainter(
-                text: TextSpan(text: line.$1, style: line.$2),
-                textDirection: textDirection,
-                textScaler: textScaler,
-                textAlign:
-                    textDirection == TextDirection.ltr
-                        ? TextAlign.left
-                        : TextAlign.right,
-              )..layout(maxWidth: maxTooltipTextWidth),
-            )
-            .toList();
+    final painters = tooltipLines
+        .map(
+          (line) => TextPainter(
+            text: TextSpan(text: line.$1, style: line.$2),
+            textDirection: textDirection,
+            textScaler: textScaler,
+            textAlign: textDirection == TextDirection.ltr
+                ? TextAlign.left
+                : TextAlign.right,
+          )..layout(maxWidth: maxTooltipTextWidth),
+        )
+        .toList();
     final width =
         painters.fold<double>(
           0,
@@ -2481,7 +2739,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
 
   static double _niceMax(WorkoutReportMetric metric, double value) {
     if (metric == WorkoutReportMetric.workouts) {
-      return math.max(6, value.ceil()).toDouble();
+      final minimum = math.max(6, value.ceil()).toDouble();
+      final step = _niceIntegerStep(minimum / 6);
+      return (minimum / step).ceil() * step;
     }
     if (value <= 0) return 1;
     final magnitude = math.pow(
@@ -2489,13 +2749,28 @@ class _WorkoutLineChartPainter extends CustomPainter {
       math.max(0, value.floor().toString().length - 1),
     );
     final normalized = value / magnitude;
-    final nice =
-        normalized <= 2
-            ? 2
-            : normalized <= 5
-            ? 5
-            : 10;
+    final nice = normalized <= 2
+        ? 2
+        : normalized <= 5
+        ? 5
+        : 10;
     return nice * magnitude.toDouble();
+  }
+
+  static double _niceIntegerStep(double roughStep) {
+    final magnitude = math.pow(
+      10,
+      math.max(0, roughStep.floor().toString().length - 1),
+    );
+    final normalized = roughStep / magnitude;
+    final niceStep = normalized <= 1
+        ? 1
+        : normalized <= 2
+        ? 2
+        : normalized <= 5
+        ? 5
+        : 10;
+    return niceStep * magnitude.toDouble();
   }
 
   static String _chartDateLabel(
@@ -2650,8 +2925,9 @@ _MetricTrend _metricTrend(
   }
 
   final current = buckets.last.valueFor(metric);
-  final previous =
-      buckets.length > 1 ? buckets[buckets.length - 2].valueFor(metric) : 0.0;
+  final previous = buckets.length > 1
+      ? buckets[buckets.length - 2].valueFor(metric)
+      : 0.0;
   if (current <= 0 && previous <= 0) {
     return _flatMetricTrend(metric, weightUnit, strings, locale);
   }
@@ -2772,7 +3048,7 @@ String _mostActiveWeekday(List<WorkoutReportSession> sessions, Locale locale) {
     (best, entry) => entry.value > best.value ? entry : best,
   );
   final monday = DateTime(2026, 1, 5);
-  return LocalizedFormatters.weekdayShort(
+  return LocalizedFormatters.weekdayLong(
     monday.add(Duration(days: bestWeekday.key - DateTime.monday)),
     locale,
   );
@@ -2839,28 +3115,26 @@ String _formatAxis(
 String _formatCompact(double value, [Locale? locale]) {
   final abs = value.abs();
   if (abs >= 1000000) {
-    final text =
-        locale == null
-            ? (value / 1000000).toStringAsFixed(1)
-            : LocalizedFormatters.number(
-              value / 1000000,
-              locale,
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1,
-            );
+    final text = locale == null
+        ? (value / 1000000).toStringAsFixed(1)
+        : LocalizedFormatters.number(
+            value / 1000000,
+            locale,
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          );
     return '${text}M';
   }
   if (abs >= 1000) {
     final digits = abs >= 10000 ? 0 : 1;
-    final text =
-        locale == null
-            ? (value / 1000).toStringAsFixed(digits)
-            : LocalizedFormatters.number(
-              value / 1000,
-              locale,
-              minimumFractionDigits: digits,
-              maximumFractionDigits: digits,
-            );
+    final text = locale == null
+        ? (value / 1000).toStringAsFixed(digits)
+        : LocalizedFormatters.number(
+            value / 1000,
+            locale,
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits,
+          );
     return '${text}k';
   }
   final rounded = value.round();

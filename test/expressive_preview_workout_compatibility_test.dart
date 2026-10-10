@@ -45,9 +45,7 @@ void main() {
         addTearDown(session.dispose);
         addTearDown(unitPreferences.dispose);
         await Future.wait<void>([session.ready, unitPreferences.ready]);
-        session
-          ..exercises.add(_exercise())
-          ..cardTypes.add(CardType.weight);
+        session.addExercise(_exercise(), CardType.weight);
 
         await tester.pumpWidget(
           MultiProvider(
@@ -227,6 +225,13 @@ Widget _expressiveWeightCardHost(
 );
 
 class _EmptyRepository extends AppRepository {
+  @override
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) async {}
+
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
 

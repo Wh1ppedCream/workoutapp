@@ -11,6 +11,8 @@ import '../../widgets/health_trends_section.dart';
 import '../../widgets/data_records_section.dart';
 import '../../widgets/current_metrics_section.dart';
 import '../../widgets/drawers.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
 import '../profile/settings/diet_nutrition_settings_page.dart';
 import 'food_logging_page.dart';
 import 'log_entry_page.dart';
@@ -21,12 +23,26 @@ class NutritionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.nutrition,
+      child: Builder(builder: _buildPage),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveNutrition =
+        destination?.family == AppExpressiveDestinationFamily.nutrition;
     return Scaffold(
+      backgroundColor: destination?.pageCanvas ?? theme.scaffoldBackgroundColor,
       drawer: _buildNutritionDrawer(strings),
       appBar: AppBar(
         title: Text(strings.nutritionDashboardTitle),
         centerTitle: true,
+        backgroundColor: destination?.surfacePrimary,
+        foregroundColor: destination?.onSurfacePrimary,
       ),
       body: Consumer<NutritionProfile>(
         builder: (context, p, _) {
@@ -53,36 +69,43 @@ class NutritionPage extends StatelessWidget {
           final carb = (p.totals?.carbsG ?? 0).round();
           final fat = (p.totals?.fatG ?? 0).round();
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: NutritionDash(
-                    caloriesConsumed: kcal,
-                    calorieGoal: kcalGoal,
-                    proteinConsumed: pro,
-                    proteinTarget: proGoal,
-                    carbConsumed: carb,
-                    carbTarget: carbGoal,
-                    fatConsumed: fat,
-                    fatTarget: fatGoal,
-                  ),
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: expressiveNutrition ? 960 : double.infinity,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: NutritionDash(
+                        caloriesConsumed: kcal,
+                        calorieGoal: kcalGoal,
+                        proteinConsumed: pro,
+                        proteinTarget: proGoal,
+                        carbConsumed: carb,
+                        carbTarget: carbGoal,
+                        fatConsumed: fat,
+                        fatTarget: fatGoal,
+                      ),
+                    ),
+                    const Divider(height: 25),
+                    HealthTrendsSection(
+                      refreshToken: p.reloadSequence,
+                      onChanged: () {
+                        p.reloadDay();
+                      },
+                    ),
+                    const DataRecordsSection(),
+                    CurrentMetricsSection(refreshToken: p.reloadSequence),
+                  ],
                 ),
-                const Divider(height: 25),
-                HealthTrendsSection(
-                  refreshToken: p.reloadSequence,
-                  onChanged: () {
-                    p.reloadDay();
-                  },
-                ),
-                const DataRecordsSection(),
-                CurrentMetricsSection(refreshToken: p.reloadSequence),
-              ],
+              ),
             ),
           );
         },
@@ -91,8 +114,8 @@ class NutritionPage extends StatelessWidget {
         builder: (context, p, _) {
           return SpeedDialFab(
             onFoodLogged: () async => p.reloadDay(),
-            onMeasurementLogged:
-                () async => p.reloadDay(), // if you show weight, etc. in dash
+            onMeasurementLogged: () async =>
+                p.reloadDay(), // if you show weight, etc. in dash
           );
         },
       ),

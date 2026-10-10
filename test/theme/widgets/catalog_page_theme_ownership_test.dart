@@ -22,10 +22,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.dark
-              ? AppThemeFactory.dark(family)
-              : AppThemeFactory.light(family);
+      final theme = brightness == Brightness.dark
+          ? AppThemeFactory.dark(family)
+          : AppThemeFactory.light(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Catalog overview uses catalog shape owners', (
@@ -77,15 +76,19 @@ void main() {
         );
         expect(find.byType(Card), isNeo ? findsNothing : findsNWidgets(2));
 
-        final rowColor =
-            isNeo ? surfaces.catalogSelection : surfaces.catalogUsage;
-        final usageRows =
-            tester.widgetList<Container>(find.byType(Container)).where((row) {
+        final rowColor = isNeo
+            ? surfaces.catalogSelection
+            : surfaces.catalogUsage;
+        final usageRows = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((row) {
               final decoration = row.decoration;
               return decoration is BoxDecoration &&
                   decoration.color == rowColor;
-            }).toList();
+            })
+            .toList();
         expect(usageRows, hasLength(1));
+        expect(usageRows.single.padding, const EdgeInsets.all(12));
 
         final rowDecoration = usageRows.single.decoration! as BoxDecoration;
         expect(rowDecoration.borderRadius, shapes.catalogUsageRow);

@@ -132,7 +132,7 @@ class _NeoBrutalismPilotGalleryState extends State<NeoBrutalismPilotGallery> {
         const SizedBox(height: 8),
         DropdownButtonFormField<NeoPilotPreview>(
           key: const ValueKey('theme-lab-pilot-dropdown'),
-          value: _pilot,
+          initialValue: _pilot,
           isExpanded: true,
           decoration: const InputDecoration(labelText: 'Pilot preview'),
           items: [
@@ -561,7 +561,7 @@ class _NeoBrutalismPilotGalleryState extends State<NeoBrutalismPilotGallery> {
                   ),
                   const SizedBox(height: 10),
                   DropdownButtonFormField<String>(
-                    value: _gender,
+                    initialValue: _gender,
                     isExpanded: true,
                     itemHeight: null,
                     dropdownColor: surfaces.settingsInput,

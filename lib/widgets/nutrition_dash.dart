@@ -1,12 +1,14 @@
 // File: lib/widgets/nutrition_dash.dart
 
 import 'package:material_ui/material_ui.dart';
+
 import 'nutrition_text_details.dart';
 import 'meal_plan_add_bar.dart';
 import 'nutrition_circle_details.dart';
 import 'nutrition_bar_details.dart';
 
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 
 /// A dashboard section that lets users swipe between different
 /// nutrition detail views, then shows the meal plan/add bar below.
@@ -54,6 +56,8 @@ class _NutritionDashState extends State<NutritionDash>
     final s = widget.scale;
 
     final dataVisualization = context.dataVisualizationTokens;
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
 
     final detailWidgets = <Widget>[
       NutritionCircleDetails(
@@ -91,7 +95,7 @@ class _NutritionDashState extends State<NutritionDash>
       ),
     ];
 
-    return Column(
+    final content = Column(
       children: [
         // Swipeable detail section
         SizedBox(
@@ -117,10 +121,9 @@ class _NutritionDashState extends State<NutritionDash>
               height: selected ? 12 * s : 8 * s,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color:
-                    selected
-                        ? dataVisualization.paginationActive
-                        : dataVisualization.paginationInactive,
+                color: selected
+                    ? dataVisualization.paginationActive
+                    : dataVisualization.paginationInactive,
               ),
             );
           }),
@@ -129,6 +132,24 @@ class _NutritionDashState extends State<NutritionDash>
         // Meal plan / Add bar, scaled
         MealPlanAddBar(scale: s),
       ],
+    );
+
+    if (destination?.family != AppExpressiveDestinationFamily.nutrition) {
+      return content;
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: destination!.surfaceSecondary,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(18),
+          bottomRight: Radius.circular(30),
+          bottomLeft: Radius.circular(18),
+        ),
+        border: Border.all(color: destination.outlineAccent),
+      ),
+      child: Padding(padding: const EdgeInsets.all(12), child: content),
     );
   }
 }

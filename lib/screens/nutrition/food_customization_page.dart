@@ -1,10 +1,14 @@
 // File: lib/screens/nutrition/food_customization_page.dart
 
 import 'package:material_ui/material_ui.dart';
+
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_expansion_tile_scope.dart';
 import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
+import '../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../theme/widgets/app_expressive_destination_theme.dart';
+
 import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -424,70 +428,115 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.nutrition,
+      child: Builder(builder: _buildPage),
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveNutrition =
+        destination?.family == AppExpressiveDestinationFamily.nutrition;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final actionFooterMayWrap =
+        expressiveNutrition &&
+        ((screenWidth < 360 && textScale > 1.0) ||
+            (screenWidth < 480 && textScale >= 1.5));
+    final scrollBottomPadding = actionFooterMayWrap
+        ? (96 * textScale + 32).clamp(176.0, 240.0).toDouble()
+        : 120.0;
     return Scaffold(
+      backgroundColor: destination?.pageCanvas ?? theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           widget.initialFoodId == null
               ? strings.foodCustomizationTitle
               : strings.foodCustomizationEditTitle,
         ),
+        backgroundColor: destination?.surfacePrimary,
+        foregroundColor: destination?.onSurfacePrimary,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: SafeArea(
         minimum: const EdgeInsets.symmetric(horizontal: 16),
-        child: SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              FloatingActionButton.extended(
-                heroTag: 'fab-cancel',
-                onPressed: _onCancel,
-                icon: const Icon(Icons.close),
-                label: Text(strings.commonCancel),
-                backgroundColor: Theme.of(context).colorScheme.surface,
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: expressiveNutrition ? 760 : double.infinity,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  FloatingActionButton.extended(
+                    heroTag: 'fab-cancel',
+                    onPressed: _onCancel,
+                    icon: const Icon(Icons.close),
+                    label: Text(strings.commonCancel),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    foregroundColor: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  FloatingActionButton.extended(
+                    heroTag: 'fab-save',
+                    onPressed: _onSave,
+                    icon: const Icon(Icons.save),
+                    label: Text(strings.commonSave),
+                  ),
+                ],
               ),
-              FloatingActionButton.extended(
-                heroTag: 'fab-save',
-                onPressed: _onSave,
-                icon: const Icon(Icons.save),
-                label: Text(strings.commonSave),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        keyboardDismissBehavior:
-            ScrollViewKeyboardDismissBehavior.onDrag, // ← add
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-        child: Form(
-          key: _formKey,
-          child: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: expressiveNutrition ? 760 : double.infinity,
+          ),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(16, 16, 16, scrollBottomPadding),
+            child: _withExpressiveNutritionFields(
+              context,
+              destination: destination,
+              fill: destination?.surfaceSecondary,
+              foreground: destination?.onSurfaceSecondary,
+              child: Form(
+                key: _formKey,
+                child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Name & Brand
-              TonosFormField(
-                controller: _nameController,
-                labelText: strings.foodCustomizationName,
-                border: const OutlineInputBorder(),
-                validator:
-                    (v) =>
-                        (v == null || v.isEmpty)
-                            ? strings.foodCustomizationEnterName
-                            : null,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 12),
-              TonosFormField(
-                controller: _brandController,
-                labelText: strings.foodCustomizationBrand,
-                border: const OutlineInputBorder(),
-                textInputAction: TextInputAction.next,
+              _withExpressiveNutritionGroup(
+                context,
+                destination: destination,
+                child: Column(
+                  children: [
+                    TonosFormField(
+                      controller: _nameController,
+                      labelText: strings.foodCustomizationName,
+                      border: const OutlineInputBorder(),
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? strings.foodCustomizationEnterName
+                          : null,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 12),
+                    TonosFormField(
+                      controller: _brandController,
+                      labelText: strings.foodCustomizationBrand,
+                      border: const OutlineInputBorder(),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -500,20 +549,18 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                         Container(
                           height: 100,
                           color: context.nutritionTokens.photoPlaceholder,
-                          child:
-                              _foodImagePath == null
-                                  ? Center(
-                                    child: Icon(
-                                      Icons.photo,
-                                      size: 40,
-                                      color:
-                                          context.nutritionTokens.mutedAction,
-                                    ),
-                                  )
-                                  : Image.network(
-                                    _foodImagePath!,
-                                    fit: BoxFit.cover,
+                          child: _foodImagePath == null
+                              ? Center(
+                                  child: Icon(
+                                    Icons.photo,
+                                    size: 40,
+                                    color: context.nutritionTokens.mutedAction,
                                   ),
+                                )
+                              : Image.network(
+                                  _foodImagePath!,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                         const SizedBox(height: 4),
                         ElevatedButton(
@@ -532,20 +579,18 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
                         Container(
                           height: 100,
                           color: context.nutritionTokens.photoPlaceholder,
-                          child:
-                              _labelImagePath == null
-                                  ? Center(
-                                    child: Icon(
-                                      Icons.photo,
-                                      size: 40,
-                                      color:
-                                          context.nutritionTokens.mutedAction,
-                                    ),
-                                  )
-                                  : Image.network(
-                                    _labelImagePath!,
-                                    fit: BoxFit.cover,
+                          child: _labelImagePath == null
+                              ? Center(
+                                  child: Icon(
+                                    Icons.photo,
+                                    size: 40,
+                                    color: context.nutritionTokens.mutedAction,
                                   ),
+                                )
+                              : Image.network(
+                                  _labelImagePath!,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                         const SizedBox(height: 4),
                         ElevatedButton(
@@ -564,7 +609,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
               // 2. Portion Info
               // After the Images Row:
               const SizedBox(height: 20),
-              _buildPortionCard(), // <<< NEW
+              _buildPortionCard(context, expressive: destination != null),
               const SizedBox(height: 12),
 
               //TODO: make this density bit properly fit in
@@ -598,6 +643,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
 
               // 4. Macronutrients (Protein, Carbs, Fats) unified in one card
               _buildGroupCard(
+                context,
                 strings.foodCustomizationMacronutrients,
                 _macroNodes,
                 groupKey: 'Macronutrients',
@@ -612,6 +658,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
 
               // 5. Micronutrients & Additional Components
               _buildGroupCard(
+                context,
                 strings.foodCustomizationMicronutrients,
                 _micronutrientNodes,
                 groupKey: 'Micronutrients',
@@ -619,6 +666,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
               ),
               const SizedBox(height: 12),
               _buildGroupCard(
+                context,
                 strings.foodCustomizationAdditionalComponents,
                 _additionalNodes,
                 groupKey: 'Additional Components',
@@ -626,6 +674,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
               ),
               const SizedBox(height: 20),
             ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -635,18 +686,24 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   // ---------- UI Builders ----------
 
   Widget _buildGroupCard(
+    BuildContext context,
     String title,
     List<NutrientNode> nodes, {
     required String groupKey,
     Map<String, TextEditingController>? controllerOverrides,
     bool initiallyExpanded = true, // toggle default here
   }) {
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
+      color: destination?.surfaceSelected,
       shape: RoundedRectangleBorder(
         borderRadius: context.nutritionTokens.sectionShape,
-        side: BorderSide(color: context.nutritionTokens.foodBorder),
+        side: BorderSide(
+          color: destination?.outlineAccent ?? context.nutritionTokens.foodBorder,
+        ),
       ),
       child: TonosExpansionTileScope(
         child: ExpansionTile(
@@ -656,7 +713,12 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
           childrenPadding: const EdgeInsets.only(bottom: 8),
           title: Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: destination?.onSurfaceSelected,
+              fontWeight: destination == null
+                  ? FontWeight.w600
+                  : FontWeight.w700,
+            ),
           ),
           children: _buildNodeWidgets(
             nodes,
@@ -680,10 +742,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     return Padding(
       padding: EdgeInsets.only(left: 8, right: 8, top: 6, bottom: 6),
       child: TonosFormField(
-        key:
-            keyPath != null
-                ? PageStorageKey('field_$keyPath')
-                : null, // ✅ unique per field
+        key: keyPath != null
+            ? PageStorageKey('field_$keyPath')
+            : null, // ✅ unique per field
         controller: ctrl,
         labelText: label,
         border: const OutlineInputBorder(),
@@ -710,8 +771,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         _buildNumberField(
           label: node.label,
           keyPath: path,
-          controller:
-              controllerOverrides != null ? controllerOverrides[path] : null,
+          controller: controllerOverrides != null
+              ? controllerOverrides[path]
+              : null,
         ),
       );
 
@@ -941,11 +1003,14 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     return out;
   }
 
-  Widget _buildPortionCard() {
+  Widget _buildPortionCard(BuildContext context, {required bool expressive}) {
     final strings = AppLocalizations.of(context);
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     return TonosThemeReadyCard(
       elevation: 0,
       margin: EdgeInsets.zero,
+      color: expressive ? destination?.surfaceTertiary : null,
       shape: RoundedRectangleBorder(
         borderRadius: context.nutritionTokens.sectionShape,
         side: BorderSide(color: context.nutritionTokens.foodBorder),
@@ -963,30 +1028,32 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
           children: [
             // A) Basis for given nutrient values
             _buildPortionList(
+              context: context,
               title: strings.foodCustomizationBasisPortion,
               list: _basisPortions,
               groupKey: 'basis',
               defaultIndex: _basisDefaultIndex,
-              onDefaultChanged:
-                  (i) => setState(() {
-                    _basisDefaultIndex = i;
-                    _lastDefaultGroup = 'basis';
-                  }),
+              expressive: expressive,
+              onDefaultChanged: (i) => setState(() {
+                _basisDefaultIndex = i;
+                _lastDefaultGroup = 'basis';
+              }),
               initiallyExpanded: true,
             ),
             const SizedBox(height: 12),
 
             // B) Usual portion to be consumed by user
             _buildPortionList(
+              context: context,
               title: strings.foodCustomizationUsualPortion,
               list: _usualPortions,
               groupKey: 'usual',
               defaultIndex: _usualDefaultIndex,
-              onDefaultChanged:
-                  (i) => setState(() {
-                    _usualDefaultIndex = i;
-                    _lastDefaultGroup = 'usual';
-                  }),
+              expressive: expressive,
+              onDefaultChanged: (i) => setState(() {
+                _usualDefaultIndex = i;
+                _lastDefaultGroup = 'usual';
+              }),
               initiallyExpanded: false,
             ),
           ],
@@ -996,10 +1063,12 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   }
 
   Widget _buildPortionList({
+    required BuildContext context,
     required String title,
     required List<PortionEntry> list,
     required String groupKey, // 'basis' | 'usual'
     required int defaultIndex,
+    required bool expressive,
     required ValueChanged<int> onDefaultChanged,
     bool initiallyExpanded = false, // ← new param
   }) {
@@ -1013,44 +1082,44 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         children: [
           ...List.generate(list.length, (i) {
             return _portionRow(
+              context: context,
               entry: list[i],
               index: i,
               groupKey: groupKey,
-              onDefault:
-                  () => onDefaultChanged(i), // (or switch to Radio<int> later)
-              onRemove:
-                  list.length > 1
-                      ? () => setState(() {
-                        final removedIndex = i;
-                        list.removeAt(i).dispose();
+              expressive: expressive,
+              onDefault: () =>
+                  onDefaultChanged(i), // (or switch to Radio<int> later)
+              onRemove: list.length > 1
+                  ? () => setState(() {
+                      final removedIndex = i;
+                      list.removeAt(i).dispose();
 
-                        final isUsual = groupKey == 'usual';
-                        final currentDefault =
-                            isUsual ? _usualDefaultIndex : _basisDefaultIndex;
+                      final isUsual = groupKey == 'usual';
+                      final currentDefault = isUsual
+                          ? _usualDefaultIndex
+                          : _basisDefaultIndex;
 
-                        int nextDefault = currentDefault;
-                        if (currentDefault == removedIndex) {
-                          nextDefault =
-                              ((removedIndex - 1).clamp(
-                                0,
-                                list.length - 1,
-                              )).toInt();
-                        } else if (removedIndex < currentDefault) {
-                          nextDefault =
-                              ((currentDefault - 1).clamp(
-                                0,
-                                list.length - 1,
-                              )).toInt();
-                        }
+                      int nextDefault = currentDefault;
+                      if (currentDefault == removedIndex) {
+                        nextDefault = ((removedIndex - 1).clamp(
+                          0,
+                          list.length - 1,
+                        )).toInt();
+                      } else if (removedIndex < currentDefault) {
+                        nextDefault = ((currentDefault - 1).clamp(
+                          0,
+                          list.length - 1,
+                        )).toInt();
+                      }
 
-                        if (isUsual) {
-                          _usualDefaultIndex = nextDefault;
-                        } else {
-                          _basisDefaultIndex = nextDefault;
-                        }
-                        _lastDefaultGroup = groupKey;
-                      })
-                      : null,
+                      if (isUsual) {
+                        _usualDefaultIndex = nextDefault;
+                      } else {
+                        _basisDefaultIndex = nextDefault;
+                      }
+                      _lastDefaultGroup = groupKey;
+                    })
+                  : null,
             );
           }),
           const SizedBox(height: 8),
@@ -1070,180 +1139,244 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   }
 
   Widget _portionRow({
+    required BuildContext context,
     required PortionEntry entry,
     required int index,
     required String groupKey,
+    required bool expressive,
     required VoidCallback onDefault,
     VoidCallback? onRemove,
   }) {
+    final destination = expressive
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
     final unitKey = PageStorageKey('portion_${groupKey}_${index}_unit');
     final amountKey = PageStorageKey('portion_${groupKey}_${index}_amount');
     final gramsKey = PageStorageKey('portion_${groupKey}_${index}_grams');
     final mlKey = PageStorageKey('portion_${groupKey}_${index}_ml');
 
     final groupIsUsual = groupKey == 'usual';
-    final groupDefaultIndex =
-        groupIsUsual ? _usualDefaultIndex : _basisDefaultIndex;
+    final groupDefaultIndex = groupIsUsual
+        ? _usualDefaultIndex
+        : _basisDefaultIndex;
+    final largeExpressiveText =
+        expressive && MediaQuery.textScalerOf(context).scale(1) >= 1.5;
+
+    final radio = Radio<int>(
+      value: index,
+      groupValue: groupDefaultIndex,
+      onChanged: (_) => onDefault(),
+      visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+    );
+    final unitControl = Expanded(
+      flex: 6,
+      child: Builder(
+        builder: (ctx) {
+          final units = [..._allUnits];
+          if (!units.contains(entry.unit)) units.insert(0, entry.unit);
+          return DropdownButtonFormField<String>(
+            key: unitKey,
+            initialValue: units.contains(entry.unit) ? entry.unit : units.first,
+            isExpanded: true,
+            icon: const Icon(Icons.arrow_drop_down, size: 18),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context).foodCustomizationUnit,
+              isDense: true,
+              border: OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 8,
+              ),
+            ),
+            selectedItemBuilder: (ctx) => units
+                .map(
+                  (unit) => Text(
+                    unit,
+                    softWrap: largeExpressiveText,
+                    overflow: largeExpressiveText
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                  ),
+                )
+                .toList(),
+            items: units
+                .map((unit) => DropdownMenuItem(value: unit, child: Text(unit)))
+                .toList(),
+            onChanged: (value) => entry.unit = value ?? entry.unit,
+          );
+        },
+      ),
+    );
+    final amountControl = Expanded(
+      flex: 3,
+      child: TonosFormField(
+        key: amountKey,
+        controller: entry.amountCtrl,
+        labelText: AppLocalizations.of(context).foodCustomizationAmount,
+        isDense: true,
+        border: const OutlineInputBorder(),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: _numericFormatters,
+        onTapOutside: (_) {},
+      ),
+    );
+    final removeControl = onRemove == null
+        ? null
+        : IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.delete_outline),
+            tooltip: AppLocalizations.of(context).commonRemove,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+          );
 
     return TonosThemeReadyCard(
       margin: const EdgeInsets.symmetric(vertical: 6),
+      color: destination?.surfaceAccent,
       shape: RoundedRectangleBorder(
         borderRadius: context.nutritionTokens.portionShape,
+        side: destination == null
+            ? BorderSide.none
+            : BorderSide(color: context.nutritionTokens.foodBorder),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-        child: Column(
-          children: [
-            // First line: radio + unit + amount
-            Row(
-              children: [
-                Radio<int>(
-                  value: index,
-                  groupValue: groupDefaultIndex,
-                  onChanged: (_) => onDefault(),
-                  visualDensity: const VisualDensity(
-                    horizontal: -4,
-                    vertical: -4,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  flex: 6,
-                  child: Builder(
-                    builder: (ctx) {
-                      // Build units ONCE and reuse for items + selectedItemBuilder
-                      final units =
-                          (() {
-                            final u = [..._allUnits];
-                            if (!u.contains(entry.unit)) {
-                              u.insert(
-                                0,
-                                entry.unit,
-                              ); // preserve unknown unit at top
-                            }
-                            return u;
-                          })();
-
-                      return DropdownButtonFormField<String>(
-                        key: unitKey,
-                        value:
-                            units.contains(entry.unit)
-                                ? entry.unit
-                                : units.first,
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down, size: 18),
-                        decoration: InputDecoration(
-                          labelText:
-                              AppLocalizations.of(
-                                context,
-                              ).foodCustomizationUnit,
+      child: _withExpressiveNutritionFields(
+        context,
+        destination: destination,
+        fill: destination?.surfaceTertiary,
+        foreground: destination?.onSurfaceTertiary,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final stackPortionControls =
+                  expressive && constraints.maxWidth <= 360;
+              return Column(
+                children: [
+                  if (stackPortionControls) ...[
+                    Row(children: [unitControl]),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        radio,
+                        const SizedBox(width: 4),
+                        amountControl,
+                        if (removeControl != null) ...[
+                          const SizedBox(width: 4),
+                          removeControl,
+                        ],
+                      ],
+                    ),
+                  ] else
+                    Row(
+                      children: [
+                        radio,
+                        const SizedBox(width: 4),
+                        unitControl,
+                        const SizedBox(width: 8),
+                        amountControl,
+                        if (removeControl != null) ...[
+                          const SizedBox(width: 4),
+                          removeControl,
+                        ],
+                      ],
+                    ),
+                  const SizedBox(height: 8),
+                  // Second line: grams + mL
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TonosFormField(
+                          key: gramsKey,
+                          controller: entry.gramsCtrl,
+                          labelText: AppLocalizations.of(context)
+                              .foodCustomizationWeight,
                           isDense: true,
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 8,
+                          border: const OutlineInputBorder(),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
                           ),
+                          inputFormatters: _numericFormatters,
                         ),
-                        selectedItemBuilder:
-                            (ctx) =>
-                                units
-                                    .map(
-                                      (u) => Text(
-                                        u,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    )
-                                    .toList(),
-                        items:
-                            units
-                                .map(
-                                  (u) => DropdownMenuItem(
-                                    value: u,
-                                    child: Text(u),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (v) => entry.unit = v ?? entry.unit,
-                      );
-                    },
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TonosFormField(
+                          key: mlKey,
+                          controller: entry.mlCtrl,
+                          labelText: AppLocalizations.of(context)
+                              .foodCustomizationVolume,
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          inputFormatters: _numericFormatters,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: TonosFormField(
-                    key: amountKey,
-                    controller: entry.amountCtrl,
-                    labelText:
-                        AppLocalizations.of(context).foodCustomizationAmount,
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: _numericFormatters,
-                    onTapOutside: (_) {}, // keeps focus sane on taps
-                  ),
-                ),
-                const SizedBox(width: 4),
-                if (onRemove != null)
-                  IconButton(
-                    onPressed: onRemove,
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: AppLocalizations.of(context).commonRemove,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 36,
-                      height: 36,
-                    ), // 👈 smaller hitbox
-                    visualDensity: const VisualDensity(
-                      horizontal: -4,
-                      vertical: -4,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            // Second line: grams + mL
-            Row(
-              children: [
-                Expanded(
-                  child: TonosFormField(
-                    key: gramsKey,
-                    controller: entry.gramsCtrl,
-                    labelText:
-                        AppLocalizations.of(context).foodCustomizationWeight,
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: _numericFormatters,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TonosFormField(
-                    key: mlKey,
-                    controller: entry.mlCtrl,
-                    labelText:
-                        AppLocalizations.of(context).foodCustomizationVolume,
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: _numericFormatters,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-          ],
+                  const SizedBox(height: 4),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
+}
+
+Widget _withExpressiveNutritionFields(
+  BuildContext context, {
+  required AppExpressiveDestinationTokens? destination,
+  required Color? fill,
+  required Color? foreground,
+  required Widget child,
+}) {
+  if (destination == null || fill == null || foreground == null) {
+    return child;
+  }
+
+  final theme = Theme.of(context);
+  final nutrition = context.nutritionTokens;
+  final fieldShape = nutrition.quantityShape;
+  return Theme(
+    data: theme.copyWith(
+      inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+        filled: true,
+        fillColor: fill,
+        labelStyle: TextStyle(color: foreground.withValues(alpha: 0.86)),
+        floatingLabelStyle: TextStyle(color: foreground),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: fieldShape,
+          borderSide: BorderSide(color: nutrition.foodBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: fieldShape,
+          borderSide: BorderSide(color: destination.actionPrimary, width: 2),
+        ),
+      ),
+    ),
+    child: child,
+  );
+}
+
+Widget _withExpressiveNutritionGroup(
+  BuildContext context, {
+  required AppExpressiveDestinationTokens? destination,
+  required Widget child,
+}) {
+  if (destination == null) return child;
+  return TonosThemeReadyCard(
+    elevation: 0,
+    margin: EdgeInsets.zero,
+    color: destination.surfaceSelected,
+    shape: RoundedRectangleBorder(
+      borderRadius: context.nutritionTokens.sectionShape,
+      side: BorderSide(color: destination.outlineAccent),
+    ),
+    child: Padding(padding: const EdgeInsets.all(12), child: child),
+  );
 }
 
 // ---------- Data Model for Nested Nutrients ----------

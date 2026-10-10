@@ -160,61 +160,75 @@ class _SessionScreenState extends State<SessionScreen> {
 
       body: session.exercises.isEmpty
           ? Center(child: Text(strings.sessionNoExercises))
-          : ListView.builder(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                expressiveTokens == null ? 16 : 72,
-              ),
-              itemCount: session.exercises.length,
-              itemBuilder: (ctx, i) {
-                final ex = session.exercises[i];
-                final type = session.cardTypes[i];
-                return KeyedSubtree(
-                  key: i == 0 ? _firstExerciseTutorialKey : null,
-                  child: ExerciseCard(
-                    exercise: ex,
-                    cardType: type,
-                    expressiveWorkoutPresentation:
-                        context.usesExpressivePresentation,
-                    animateExpansion:
-                        ctx.usesClassicPresentation ||
-                        ctx.usesExpressivePresentation,
-                    onDetails: type == CardType.weight
-                        ? () async {
-                            final repo = context.read<AppRepository>();
-                            final defId = await repo
-                                .findOrCreateExerciseDefinition(
-                                  ex.name,
-                                  ex.equipment,
-                                );
-                            final def = await repo.fetchDefinitionById(defId);
-                            if (def != null && context.mounted) {
-                              ExerciseDetailSheet.show(
-                                context: context,
-                                definition: def,
-                                defId: defId,
-                              );
-                            }
-                          }
-                        : null,
-                    initialCompletedParents: type == CardType.weight
-                        ? (ex as WeightExercise).completedParents
-                        : null,
-                    initialCompletedChildren: type == CardType.weight
-                        ? (ex as WeightExercise).completedChildren
-                        : null,
-                    onDeleteExercise: () =>
-                        context.read<ActiveSession>().removeExercise(i),
-                    onSetAdded: () => context.read<ActiveSession>().refresh(),
-                    onSetDeleted: () => context.read<ActiveSession>().refresh(),
-                    onValueChanged: () =>
-                        context.read<ActiveSession>().refresh(),
+          : Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: context.usesExpressivePresentation
+                      ? 760
+                      : double.infinity,
+                ),
+                child: ListView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    expressiveTokens == null ? 16 : 72,
                   ),
-                );
-              },
+                  itemCount: session.exercises.length,
+                  itemBuilder: (ctx, i) {
+                    final ex = session.exercises[i];
+                    final type = session.cardTypes[i];
+                    return KeyedSubtree(
+                      key: i == 0 ? _firstExerciseTutorialKey : null,
+                      child: ExerciseCard(
+                        exercise: ex,
+                        cardType: type,
+                        expressiveWorkoutPresentation:
+                            context.usesExpressivePresentation,
+                        animateExpansion:
+                            ctx.usesClassicPresentation ||
+                            ctx.usesExpressivePresentation,
+                        onDetails: type == CardType.weight
+                            ? () async {
+                                final repo = context.read<AppRepository>();
+                                final defId = await repo
+                                    .findOrCreateExerciseDefinition(
+                                      ex.name,
+                                      ex.equipment,
+                                    );
+                                final def = await repo.fetchDefinitionById(
+                                  defId,
+                                );
+                                if (def != null && context.mounted) {
+                                  ExerciseDetailSheet.show(
+                                    context: context,
+                                    definition: def,
+                                    defId: defId,
+                                  );
+                                }
+                              }
+                            : null,
+                        initialCompletedParents: type == CardType.weight
+                            ? (ex as WeightExercise).completedParents
+                            : null,
+                        initialCompletedChildren: type == CardType.weight
+                            ? (ex as WeightExercise).completedChildren
+                            : null,
+                        onDeleteExercise: () =>
+                            context.read<ActiveSession>().removeExercise(i),
+                        onSetAdded: () =>
+                            context.read<ActiveSession>().refresh(),
+                        onSetDeleted: () =>
+                            context.read<ActiveSession>().refresh(),
+                        onValueChanged: () =>
+                            context.read<ActiveSession>().refresh(),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
 
       floatingActionButton: KeyedSubtree(
@@ -237,58 +251,72 @@ class _SessionScreenState extends State<SessionScreen> {
         ),
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: KeyedSubtree(
-            key: _finishWorkoutTutorialKey,
-            child: WorkoutFinishAction(
-              buttonKey: AppTestKeys.sessionFinish,
-              label: strings.sessionFinishWorkout,
-              busy: session.isFinishing,
-              expressiveWorkoutPresentation: context.usesExpressivePresentation,
-              onPressed: session.isFinishing
-                  ? null
-                  : () async {
-                      try {
-                        final sid = await session.finish();
-                        if (!context.mounted) return;
-                        if (sid == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(strings.sessionNeedCompletedSet),
-                            ),
-                          );
-                          return;
-                        }
-                        await showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          enableDrag: false,
-                          backgroundColor:
-                              context.surfaceDecorationTokens.sheet.outlined
-                              ? Colors.transparent
-                              : null,
-                          elevation:
-                              context.surfaceDecorationTokens.sheet.outlined
-                              ? 0
-                              : null,
-                          builder: (_) => SessionCompleteSheet(sessionId: sid),
-                        );
-                        if (!context.mounted) return;
-                        Navigator.of(context).pop();
-                      } catch (error) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              strings.sessionSaveFailed(
-                                safeFailureMessage(strings, error),
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: context.usesExpressivePresentation
+                  ? 760
+                  : double.infinity,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: KeyedSubtree(
+                key: _finishWorkoutTutorialKey,
+                child: WorkoutFinishAction(
+                  buttonKey: AppTestKeys.sessionFinish,
+                  label: strings.sessionFinishWorkout,
+                  busy: session.isFinishing,
+                  expressiveWorkoutPresentation:
+                      context.usesExpressivePresentation,
+                  onPressed: session.isFinishing
+                      ? null
+                      : () async {
+                          try {
+                            final sid = await session.finish();
+                            if (!context.mounted) return;
+                            if (sid == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    strings.sessionNeedCompletedSet,
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                            await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              enableDrag: false,
+                              backgroundColor:
+                                  context.surfaceDecorationTokens.sheet.outlined
+                                  ? Colors.transparent
+                                  : null,
+                              elevation:
+                                  context.surfaceDecorationTokens.sheet.outlined
+                                  ? 0
+                                  : null,
+                              builder: (_) =>
+                                  SessionCompleteSheet(sessionId: sid),
+                            );
+                            if (!context.mounted) return;
+                            Navigator.of(context).pop();
+                          } catch (error) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  strings.sessionSaveFailed(
+                                    safeFailureMessage(strings, error),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                            );
+                          }
+                        },
+                ),
+              ),
             ),
           ),
         ),

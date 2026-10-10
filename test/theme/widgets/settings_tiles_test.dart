@@ -8,7 +8,10 @@ import 'package:env_test/theme/widgets/tonos_expansion_tile_scope.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/tokens/app_settings_presentation_tokens.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
 
 const _testShapes = AppShapeTokens(
   compact: BorderRadius.all(Radius.circular(4)),
@@ -196,15 +199,14 @@ void main() {
           ),
         ),
       );
-      final container =
-          tester
-              .widgetList<Container>(
-                find.descendant(
-                  of: find.byKey(const ValueKey('hero-recipe')),
-                  matching: find.byType(Container),
-                ),
-              )
-              .first;
+      final container = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byKey(const ValueKey('hero-recipe')),
+              matching: find.byType(Container),
+            ),
+          )
+          .first;
       final decoration = container.decoration! as BoxDecoration;
       expect(decoration.gradient, gradient ? isA<LinearGradient>() : isNull);
       expect(decoration.color, gradient ? isNull : _testSurfaces.settingsHero);
@@ -331,8 +333,9 @@ void main() {
         final fade = tester.widget<AnimatedOpacity>(
           find.byType(AnimatedOpacity),
         );
-        final expected =
-            reduced ? Duration.zero : const Duration(milliseconds: 200);
+        final expected = reduced
+            ? Duration.zero
+            : const Duration(milliseconds: 200);
         expect(slide.duration, expected);
         expect(fade.duration, expected);
         expect(slide.offset, visible ? Offset.zero : const Offset(0, 1));
@@ -380,6 +383,71 @@ void main() {
     expect((decoration.border! as Border).top.color, isNotNull);
   });
 
+  testWidgets('Expressive settings section clips ink to its sheet corners', (
+    tester,
+  ) async {
+    for (final theme in <ThemeData>[
+      ExpressiveThemeDefinition.light(),
+      ExpressiveThemeDefinition.dark(),
+    ]) {
+      await tester.pumpWidget(
+        _testApp(
+          const AppExpressiveDestinationTheme(
+            family: AppExpressiveDestinationFamily.profile,
+            child: SettingsSection(
+              title: 'Active tabs',
+              children: [ListTile(title: Text('Train'))],
+            ),
+          ),
+          theme: theme,
+        ),
+      );
+
+      final sectionMaterial = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(SettingsSection),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(sectionMaterial.borderRadius, theme.shapeTokens.sheet);
+      expect(sectionMaterial.clipBehavior, Clip.antiAlias);
+    }
+  });
+
+  testWidgets('Classic and Neo settings section ink clipping stays unchanged', (
+    tester,
+  ) async {
+    for (final theme in <ThemeData>[
+      AppThemeFactory.light(AppThemeFamily.classic),
+      AppThemeFactory.dark(AppThemeFamily.classic),
+      AppThemeFactory.light(AppThemeFamily.neoBrutalism),
+      AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+    ]) {
+      await tester.pumpWidget(
+        _testApp(
+          const SettingsSection(
+            title: 'Active tabs',
+            children: [ListTile(title: Text('Train'))],
+          ),
+          theme: theme,
+        ),
+      );
+
+      final sectionMaterial = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(SettingsSection),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      expect(sectionMaterial.borderRadius, isNull);
+      expect(sectionMaterial.clipBehavior, Clip.none);
+    }
+  });
+
   testWidgets('settings sections can keep category accents out of controls', (
     tester,
   ) async {
@@ -391,11 +459,10 @@ void main() {
           accentColor: accent,
           children: [
             Builder(
-              builder:
-                  (context) => Text(
-                    'primary-role',
-                    style: TextStyle(color: context.cs.primary),
-                  ),
+              builder: (context) => Text(
+                'primary-role',
+                style: TextStyle(color: context.cs.primary),
+              ),
             ),
           ],
         ),
@@ -510,8 +577,8 @@ void main() {
         );
         final progressBar = find.byType(LinearProgressIndicator);
         expect(progressBar, findsOneWidget, reason: entry.key);
-        final renderedProgressTheme =
-            Theme.of(tester.element(progressBar)).progressIndicatorTheme;
+        final renderedProgressTheme = Theme.of(tester.element(progressBar))
+            .progressIndicatorTheme;
         expect(
           renderedProgressTheme.color,
           usesInkRecipe ? foreground : baseTheme.progressIndicatorTheme.color,
@@ -671,8 +738,8 @@ void main() {
         );
         final progressBar = find.byType(LinearProgressIndicator);
         expect(progressBar, findsOneWidget, reason: entry.key);
-        final renderedProgressTheme =
-            Theme.of(tester.element(progressBar)).progressIndicatorTheme;
+        final renderedProgressTheme = Theme.of(tester.element(progressBar))
+            .progressIndicatorTheme;
         expect(
           renderedProgressTheme.color,
           baseTheme.progressIndicatorTheme.color,
@@ -1279,10 +1346,9 @@ void main() {
     ]) {
       late List<InputDecoration> decorations;
       final isNeo = theme.usesNeoPresentation;
-      final expectedError =
-          theme.brightness == Brightness.dark
-              ? const Color(0xFF5C102C)
-              : const Color(0xFF7A1738);
+      final expectedError = theme.brightness == Brightness.dark
+          ? const Color(0xFF5C102C)
+          : const Color(0xFF7A1738);
       await tester.pumpWidget(
         _testApp(
           Builder(
@@ -1562,12 +1628,11 @@ Widget _testApp(
         extensions: const <ThemeExtension<dynamic>>[_testShapes, _testSurfaces],
       );
   return MaterialApp(
-    theme:
-        presentation == null
-            ? baseTheme
-            : baseTheme.copyWith(
-              extensions: [...baseTheme.extensions.values, presentation],
-            ),
+    theme: presentation == null
+        ? baseTheme
+        : baseTheme.copyWith(
+            extensions: [...baseTheme.extensions.values, presentation],
+          ),
     themeAnimationDuration: Duration.zero,
     home: Scaffold(body: child),
   );
@@ -1578,13 +1643,11 @@ void _noop() {}
 double _contrastRatio(Color foreground, Color background) {
   final foregroundLuminance = foreground.computeLuminance();
   final backgroundLuminance = background.computeLuminance();
-  final lighter =
-      foregroundLuminance > backgroundLuminance
-          ? foregroundLuminance
-          : backgroundLuminance;
-  final darker =
-      foregroundLuminance > backgroundLuminance
-          ? backgroundLuminance
-          : foregroundLuminance;
+  final lighter = foregroundLuminance > backgroundLuminance
+      ? foregroundLuminance
+      : backgroundLuminance;
+  final darker = foregroundLuminance > backgroundLuminance
+      ? backgroundLuminance
+      : foregroundLuminance;
   return (lighter + 0.05) / (darker + 0.05);
 }

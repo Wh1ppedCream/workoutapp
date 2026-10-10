@@ -1,5 +1,7 @@
 // File: lib/screens/profile/settings/flow_methods_page.dart
 
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -7,8 +9,11 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/preset_models.dart';
 import '../../../models/gym_models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/active_plan_store.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../theme/widgets/tonos_field.dart';
 import '../../../theme/widgets/tonos_surface.dart';
@@ -16,6 +21,49 @@ import '../../../widgets/settings_tiles.dart';
 
 /// Same enum as in auto_preset_flow_screen.dart
 enum AddSetMode { explicit, copy }
+
+Widget _addSetModeOptions(
+  BuildContext context, {
+  required AddSetMode selected,
+  required ValueChanged<AddSetMode> onChanged,
+}) {
+  Radio<AddSetMode> option(AddSetMode value) => Radio<AddSetMode>(
+    value: value,
+    groupValue: selected,
+    onChanged: (next) {
+      if (next != null) onChanged(next);
+    },
+  );
+
+  final strings = AppLocalizations.of(context);
+  Widget choice(AddSetMode value, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      option(value),
+      Flexible(child: Text(label, softWrap: true)),
+    ],
+  );
+
+  final expressive = context.usesExpressivePresentation;
+  if (expressive) {
+    return Wrap(
+      spacing: 4,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        choice(AddSetMode.explicit, strings.flowExplicit),
+        choice(AddSetMode.copy, strings.rulesCopy),
+      ],
+    );
+  }
+
+  return OverflowBar(
+    children: [
+      choice(AddSetMode.explicit, strings.flowExplicit),
+      choice(AddSetMode.copy, strings.rulesCopy),
+    ],
+  );
+}
 
 /// A page to manage all FlowMethods:
 ///  • App-wide default methods
@@ -32,6 +80,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
   AppRepository get _repo => context.read<AppRepository>();
 
   bool _isLoading = true;
+  bool _initialLoadStarted = false;
   int _loadRequest = 0;
   List<FlowMethod> _appMethods = [];
   List<GymProfile> _profiles = [];
@@ -39,16 +88,22 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
   Map<int, List<FlowMethod>> _profileMethods = {};
   Map<int, List<Map<String, dynamic>>> _presetsByProfile = {};
   Map<int, List<FlowMethod>> _presetMethods = {};
+  Map<int, Set<int>?> _activePlanIdsByProfile = {};
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialLoadStarted) return;
+    _initialLoadStarted = true;
     _loadAll();
   }
 
   Future<void> _loadAll() async {
     if (!mounted) return;
     final request = ++_loadRequest;
+    final activePlanStore = context.usesExpressivePresentation
+        ? _activePlanStoreOrNull()
+        : null;
     setState(() => _isLoading = true);
 
     final initialResults = await Future.wait<Object>([
@@ -73,11 +128,24 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
             return MapEntry(presetId, await _repo.fetchFlowMethods(presetId));
           }),
         );
+        Set<int>? activePlanIds;
+        if (activePlanStore != null) {
+          try {
+            final storedActiveIds = await activePlanStore.load(profileId);
+            activePlanIds = storedActiveIds.intersection(
+              presets.map((preset) => preset['id'] as int).toSet(),
+            );
+          } catch (_) {
+            // Status is presentation metadata; keep rule editing available if
+            // an older preview or host cannot read active-plan membership.
+          }
+        }
         return _LoadedProfileMethods(
           profileId: profileId,
           methods: methods,
           presets: presets,
           presetMethods: Map.fromEntries(loadedPresets),
+          activePlanIds: activePlanIds,
         );
       }),
     );
@@ -85,11 +153,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final profileMethods = <int, List<FlowMethod>>{};
     final presetsByProfile = <int, List<Map<String, dynamic>>>{};
     final presetMethods = <int, List<FlowMethod>>{};
+    final activePlanIdsByProfile = <int, Set<int>?>{};
 
     for (final loaded in loadedProfiles) {
       profileMethods[loaded.profileId] = loaded.methods;
       presetsByProfile[loaded.profileId] = loaded.presets;
       presetMethods.addAll(loaded.presetMethods);
+      activePlanIdsByProfile[loaded.profileId] = loaded.activePlanIds;
     }
 
     if (!mounted || request != _loadRequest) return;
@@ -99,8 +169,17 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       _profileMethods = profileMethods;
       _presetsByProfile = presetsByProfile;
       _presetMethods = presetMethods;
+      _activePlanIdsByProfile = activePlanIdsByProfile;
       _isLoading = false;
     });
+  }
+
+  ActivePlanStore? _activePlanStoreOrNull() {
+    try {
+      return context.read<ActivePlanStore>();
+    } on ProviderNotFoundException {
+      return null;
+    }
   }
 
   Future<void> _showAddEditDefault({
@@ -148,121 +227,145 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSt) => TonosDialogFrame(
-          styleFormControls: true,
-          child: AlertDialog(
-            title: Text(dialogTitle),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TonosField(
-                    controller: nameCtl,
-                    labelText: strings.commonName,
-                  ),
-                  const SizedBox(height: 12),
-                  TonosDialogDropdownButton<MethodType>(
-                    value: type,
-                    onChanged: (v) => setSt(() => type = v!),
-                    items: MethodType.values
-                        .map(
-                          (t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(_methodTypeLabel(t, strings)),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  if (type == MethodType.weight) ...[
-                    TonosDialogDropdownButton<String>(
-                      value: sign,
-                      onChanged: (v) => setSt(() => sign = v!),
-                      items: const [
-                        DropdownMenuItem(value: '+', child: Text('+')),
-                        DropdownMenuItem(value: '-', child: Text('-')),
-                      ],
+        builder: (ctx, setSt) {
+          final expressive = ctx.usesExpressivePresentation;
+          final fieldGap = expressive ? 8.0 : 12.0;
+          final formContent = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TonosField(controller: nameCtl, labelText: strings.commonName),
+              SizedBox(height: fieldGap),
+              _FlowMethodsChoiceField<MethodType>(
+                title: strings.rulesRuleTypeLabel,
+                values: MethodType.values,
+                value: type,
+                label: (value) => _methodTypeLabel(value, strings),
+                onChanged: (value) {
+                  if (value != null) setSt(() => type = value);
+                },
+                nonExpressiveButton: () =>
+                    TonosDialogDropdownButton<MethodType>(
+                      value: type,
+                      onChanged: (value) => setSt(() => type = value!),
+                      items: MethodType.values
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(_methodTypeLabel(t, strings)),
+                            ),
+                          )
+                          .toList(),
                     ),
-                    const SizedBox(height: 8),
-                    TonosField(
-                      controller: factorCtl,
-                      keyboardType: TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      labelText: strings.flowFactor,
-                    ),
-                  ] else if (type == MethodType.rep) ...[
-                    TonosDialogDropdownButton<String>(
-                      value: sign,
-                      onChanged: (v) => setSt(() => sign = v!),
-                      items: const [
-                        DropdownMenuItem(value: '+', child: Text('+')),
-                        DropdownMenuItem(value: '-', child: Text('-')),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TonosField(
-                      controller: amountCtl,
-                      keyboardType: TextInputType.number,
-                      labelText: strings.flowAmount,
-                    ),
-                  ] else if (type == MethodType.addSet) ...[
-                    Row(
-                      children: [
-                        Radio<AddSetMode>(
-                          value: AddSetMode.explicit,
-                          groupValue: addMode,
-                          onChanged: (v) => setSt(() => addMode = v!),
-                        ),
-                        Text(strings.flowExplicit),
-                        Radio<AddSetMode>(
-                          value: AddSetMode.copy,
-                          groupValue: addMode,
-                          onChanged: (v) => setSt(() => addMode = v!),
-                        ),
-                        Text(strings.rulesCopy),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (addMode == AddSetMode.explicit) ...[
-                      TonosField(
-                        controller: weightCtl,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        labelText: strings.flowWeight,
-                      ),
-                      const SizedBox(height: 8),
-                      TonosField(
-                        controller: repsCtl,
-                        keyboardType: TextInputType.number,
-                        labelText: strings.flowReps,
-                      ),
-                    ] else ...[
-                      TonosField(
-                        controller: copyIndexCtl,
-                        keyboardType: TextInputType.number,
-                        labelText: strings.rulesCopyIndex,
-                      ),
+              ),
+              if (type == MethodType.weight) ...[
+                SizedBox(height: fieldGap),
+                _FlowMethodsChoiceField<String>(
+                  title: strings.rulesOperationLabel,
+                  values: const ['+', '-'],
+                  value: sign,
+                  label: (value) => value,
+                  onChanged: (value) {
+                    if (value != null) setSt(() => sign = value);
+                  },
+                  nonExpressiveButton: () => TonosDialogDropdownButton<String>(
+                    value: sign,
+                    onChanged: (value) => setSt(() => sign = value!),
+                    items: const [
+                      DropdownMenuItem(value: '+', child: Text('+')),
+                      DropdownMenuItem(value: '-', child: Text('-')),
                     ],
-                  ] else if (type == MethodType.delSet) ...[
-                    Text(strings.rulesDeleteLastSetBody),
-                  ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TonosField(
+                  controller: factorCtl,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  labelText: strings.flowFactor,
+                ),
+              ] else if (type == MethodType.rep) ...[
+                SizedBox(height: fieldGap),
+                _FlowMethodsChoiceField<String>(
+                  title: strings.rulesOperationLabel,
+                  values: const ['+', '-'],
+                  value: sign,
+                  label: (value) => value,
+                  onChanged: (value) {
+                    if (value != null) setSt(() => sign = value);
+                  },
+                  nonExpressiveButton: () => TonosDialogDropdownButton<String>(
+                    value: sign,
+                    onChanged: (value) => setSt(() => sign = value!),
+                    items: const [
+                      DropdownMenuItem(value: '+', child: Text('+')),
+                      DropdownMenuItem(value: '-', child: Text('-')),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TonosField(
+                  controller: amountCtl,
+                  keyboardType: TextInputType.number,
+                  labelText: strings.flowAmount,
+                ),
+              ] else if (type == MethodType.addSet) ...[
+                SizedBox(height: fieldGap),
+                _addSetModeOptions(
+                  ctx,
+                  selected: addMode,
+                  onChanged: (value) => setSt(() => addMode = value),
+                ),
+                const SizedBox(height: 8),
+                if (addMode == AddSetMode.explicit) ...[
+                  TonosField(
+                    controller: weightCtl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    labelText: strings.flowWeight,
+                  ),
+                  const SizedBox(height: 8),
+                  TonosField(
+                    controller: repsCtl,
+                    keyboardType: TextInputType.number,
+                    labelText: strings.flowReps,
+                  ),
+                ] else ...[
+                  TonosField(
+                    controller: copyIndexCtl,
+                    keyboardType: TextInputType.number,
+                    labelText: strings.rulesCopyIndex,
+                  ),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(strings.commonCancel),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(strings.commonSave),
-              ),
+              ] else if (type == MethodType.delSet) ...[
+                SizedBox(height: fieldGap),
+                Text(strings.rulesDeleteLastSetBody),
+              ],
             ],
-          ),
-        ),
+          );
+
+          return TonosDialogFrame(
+            styleFormControls: true,
+            child: AlertDialog(
+              scrollable: expressive,
+              title: Text(dialogTitle),
+              content: expressive
+                  ? formContent
+                  : SingleChildScrollView(child: formContent),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(strings.commonCancel),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(strings.commonSave),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
 
@@ -456,19 +559,27 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     FlowMethod m, {
     required VoidCallback onEdit,
     required VoidCallback onDelete,
+    Color? expressiveForeground,
   }) {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
     final color = _methodTypeColor(m.type, context);
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
+    final expressive = context.usesExpressivePresentation;
     final tileSurface = context.surfaceTokens.dialogChoice;
-    final tileForeground = neo
+    final tileForeground = expressive
+        ? expressiveForeground
+        : neo
         ? tonosForegroundForSurface(context, tileSurface)
         : null;
-    final tileSecondary = neo
+    final tileSecondary = expressive
+        ? expressiveForeground?.withValues(alpha: .82) ??
+              Theme.of(context).colorScheme.onSurfaceVariant
+        : neo
         ? tonosSecondaryForegroundForSurface(context, tileSurface)
         : color;
+    final leadingColor = expressiveForeground ?? color;
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
@@ -476,10 +587,10 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: .16),
+          color: leadingColor.withValues(alpha: .16),
           borderRadius: shapes.settingsIcon,
         ),
-        child: Icon(_methodTypeIcon(m.type), color: color, size: 21),
+        child: Icon(_methodTypeIcon(m.type), color: leadingColor, size: 21),
       ),
       title: Text(
         m.name,
@@ -529,6 +640,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     List<FlowMethod> methods, {
     required ValueChanged<FlowMethod> onEdit,
     required ValueChanged<FlowMethod> onDelete,
+    Color? expressiveForeground,
   }) {
     return [
       for (var index = 0; index < methods.length; index++) ...[
@@ -537,6 +649,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
           methods[index],
           onEdit: () => onEdit(methods[index]),
           onDelete: () => onDelete(methods[index]),
+          expressiveForeground: expressiveForeground,
         ),
       ],
     ];
@@ -545,217 +658,310 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return AppExpressiveDestinationTheme(
+        family: AppExpressiveDestinationFamily.profile,
+        child: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
     }
 
     final strings = AppLocalizations.of(context);
-    final expressiveTokens = context.usesExpressivePresentation
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+    final expressive = context.usesExpressivePresentation;
+    final expressiveTokens = expressive
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
-    return SettingsPageScaffold(
-      title: strings.rulesPageTitle,
-      subtitle: strings.rulesPageSubtitle,
-      icon: Icons.route_outlined,
-      children: [
-        SettingsInfoCard(
-          icon: Icons.copy_all_outlined,
-          title: strings.rulesHowDefaultsTitle,
-          body: strings.rulesHowDefaultsBody,
-        ),
-        const SizedBox(height: 14),
-        _RuleScopeLegend(strings: strings),
-        const SizedBox(height: 18),
-        _RuleScopeCard(
-          color: context.cs.primary,
-          expressiveSurface: expressiveTokens?.creationSurface,
-          icon: Icons.apps_outlined,
-          title: strings.rulesAppDefaultsTitle,
-          subtitle: strings.rulesAppDefaultsSubtitle,
-          count: _appMethods.length,
-          initiallyExpanded: true,
-          children: [
-            if (_appMethods.isEmpty)
-              _EmptyRuleState(message: strings.rulesNoAppDefaults)
-            else
-              ..._ruleTiles(
-                _appMethods,
-                onEdit: (method) =>
-                    _showAddEditDefault(scope: 'app', existing: method),
-                onDelete: (method) async {
-                  await _repo.deleteDefaultFlowMethodAndReferences(
-                    scope: 'app',
-                    name: method.name,
-                  );
-                  if (!mounted) return;
-                  await _loadAll();
-                },
-              ),
-            _AddRuleButton(
-              color: context.cs.primary,
-              label: strings.rulesAddApp,
-              onPressed: () => _showAddEditDefault(scope: 'app'),
-            ),
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.profile,
+      child: SettingsPageScaffold(
+        title: strings.rulesPageTitle,
+        subtitle: expressive
+            ? strings.rulesPageSubtitleExpressive
+            : strings.rulesPageSubtitle,
+        icon: Icons.route_outlined,
+        useExpressiveProfileHeroShape: true,
+        children: [
+          SettingsInfoCard(
+            icon: Icons.copy_all_outlined,
+            title: strings.rulesHowDefaultsTitle,
+            body: expressive
+                ? strings.rulesHowDefaultsBodyExpressive
+                : strings.rulesHowDefaultsBody,
+          ),
+          const SizedBox(height: 14),
+          if (!expressive) ...[
+            _RuleScopeLegend(strings: strings),
+            const SizedBox(height: 18),
           ],
-        ),
-        const SizedBox(height: 22),
-        _SectionHeading(
-          title: strings.rulesGymProfilesTitle,
-          subtitle: strings.rulesGymProfilesSubtitle,
-        ),
-        const SizedBox(height: 10),
-        if (_profiles.isEmpty)
-          _EmptyProfilesCard(message: strings.rulesNoProfiles)
-        else
-          for (
-            var profileIndex = 0;
-            profileIndex < _profiles.length;
-            profileIndex++
-          ) ...[
-            Builder(
-              builder: (context) {
-                final profile = _profiles[profileIndex];
-                final profileMethods = _profileMethods[profile.id] ?? const [];
-                final presets = _presetsByProfile[profile.id] ?? const [];
-                final planRuleCount = presets.fold<int>(
-                  0,
-                  (total, preset) =>
-                      total +
-                      (_presetMethods[preset['id'] as int]?.length ?? 0),
-                );
-                final profileColor = _profileScopeColor(context);
-                final planColor = _planScopeColor(context);
-                final expressive = context.usesExpressivePresentation;
-                final expressiveTokens = expressive
-                    ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
-                    : null;
+          _RuleScopeCard(
+            color: context.cs.primary,
+            expressiveSurface: expressiveTokens?.surfacePrimary,
+            expressiveForeground: expressiveTokens?.onSurfacePrimary,
+            icon: Icons.apps_outlined,
+            title: strings.rulesAppDefaultsTitle,
+            subtitle: strings.rulesAppDefaultsSubtitle,
+            count: _appMethods.length,
+            initiallyExpanded: true,
+            children: [
+              if (_appMethods.isEmpty)
+                _EmptyRuleState(
+                  message: strings.rulesNoAppDefaults,
+                  foregroundColor: expressiveTokens?.onSurfacePrimary,
+                )
+              else
+                ..._ruleTiles(
+                  _appMethods,
+                  expressiveForeground: expressiveTokens?.onSurfacePrimary,
+                  onEdit: (method) =>
+                      _showAddEditDefault(scope: 'app', existing: method),
+                  onDelete: (method) async {
+                    await _repo.deleteDefaultFlowMethodAndReferences(
+                      scope: 'app',
+                      name: method.name,
+                    );
+                    if (!mounted) return;
+                    await _loadAll();
+                  },
+                ),
+              _AddRuleButton(
+                color: context.cs.primary,
+                label: strings.rulesAddApp,
+                isAppDefault: true,
+                onPressed: () => _showAddEditDefault(scope: 'app'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          _SectionHeading(
+            title: strings.rulesGymProfilesTitle,
+            subtitle: strings.rulesGymProfilesSubtitle,
+          ),
+          const SizedBox(height: 10),
+          if (_profiles.isEmpty)
+            _EmptyProfilesCard(message: strings.rulesNoProfiles)
+          else
+            for (
+              var profileIndex = 0;
+              profileIndex < _profiles.length;
+              profileIndex++
+            ) ...[
+              Builder(
+                builder: (context) {
+                  final profile = _profiles[profileIndex];
+                  final profileMethods =
+                      _profileMethods[profile.id] ?? const [];
+                  final presets = _presetsByProfile[profile.id] ?? const [];
+                  final planRuleCount = presets.fold<int>(
+                    0,
+                    (total, preset) =>
+                        total +
+                        (_presetMethods[preset['id'] as int]?.length ?? 0),
+                  );
+                  final profileColor = _profileScopeColor(context);
+                  final planColor = _planScopeColor(context);
+                  final expressive = context.usesExpressivePresentation;
+                  final expressiveTokens = expressive
+                      ? AppExpressiveDestinationTokens.forFamily(
+                          AppExpressiveDestinationFamily.profile,
+                          Theme.of(context).brightness,
+                        )
+                      : null;
+                  final activePlanIds = _activePlanIdsByProfile[profile.id];
 
-                return _RuleScopeCard(
-                  color: profileColor,
-                  expressiveSurface: expressiveTokens?.activePlansSurface,
-                  icon: Icons.fitness_center,
-                  title: profile.name,
-                  subtitle: strings.rulesProfileSummary(
-                    profileMethods.length,
-                    planRuleCount,
-                  ),
-                  count: profileMethods.length + planRuleCount,
-                  initiallyExpanded: profileIndex == 0,
-                  children: [
-                    _RuleScopeCard(
-                      color: profileColor,
-                      expressiveSurface: expressiveTokens?.archivedPlansSurface,
-                      icon: Icons.tune,
-                      title: strings.rulesProfileDefaultsTitle,
-                      subtitle: strings.rulesProfileDefaultsSubtitle,
-                      count: profileMethods.length,
-                      initiallyExpanded: true,
+                  Widget presetCard(Map<String, dynamic> preset) {
+                    final presetId = preset['id'] as int;
+                    final methods = _presetMethods[presetId] ?? const [];
+                    return _RuleScopeCard(
+                      color: planColor,
+                      expressiveSurface: expressiveTokens?.surfaceAccent,
+                      expressiveForeground: expressiveTokens?.onSurfaceAccent,
+                      icon: Icons.event_note_outlined,
+                      title: preset['name'] as String,
+                      subtitle: expressive
+                          ? strings.rulesPlanOnlySubtitleExpressive
+                          : strings.rulesPlanOnlySubtitle,
+                      count: methods.length,
                       compact: true,
                       children: [
-                        if (profileMethods.isEmpty)
+                        if (methods.isEmpty)
                           _EmptyRuleState(
-                            message: strings.rulesNoProfileDefaults,
+                            message: strings.rulesNoPlanRules,
+                            foregroundColor: expressiveTokens?.onSurfaceAccent,
                           )
                         else
                           ..._ruleTiles(
-                            profileMethods,
-                            onEdit: (method) => _showAddEditDefault(
-                              scope: 'profile',
-                              profileId: profile.id,
+                            methods,
+                            expressiveForeground:
+                                expressiveTokens?.onSurfaceAccent,
+                            onEdit: (method) => _showAddEditPresetMethod(
+                              presetId: presetId,
                               existing: method,
                             ),
                             onDelete: (method) async {
-                              await _repo.deleteDefaultFlowMethodAndReferences(
-                                scope: 'profile',
-                                profileId: profile.id,
-                                name: method.name,
-                              );
+                              await _repo.deleteFlowMethodAndReferences(method);
                               if (!mounted) return;
                               await _loadAll();
                             },
                           ),
                         _AddRuleButton(
-                          color: profileColor,
-                          label: strings.rulesAddProfile,
-                          onPressed: () => _showAddEditDefault(
-                            scope: 'profile',
-                            profileId: profile.id,
-                          ),
+                          color: planColor,
+                          label: strings.rulesAddPlan,
+                          onPressed: () =>
+                              _showAddEditPresetMethod(presetId: presetId),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 14),
-                    _NestedHeading(
-                      color: planColor,
-                      icon: Icons.event_note_outlined,
-                      title: strings.rulesPlansTitle,
-                      count: presets.length,
-                    ),
-                    const SizedBox(height: 8),
+                    );
+                  }
+
+                  List<Widget> planCardsFor(
+                    List<Map<String, dynamic>> plans,
+                  ) => [
+                    for (var index = 0; index < plans.length; index++) ...[
+                      presetCard(plans[index]),
+                      if (index < plans.length - 1) const SizedBox(height: 8),
+                    ],
+                  ];
+
+                  final activePlans = activePlanIds == null
+                      ? const <Map<String, dynamic>>[]
+                      : presets
+                            .where(
+                              (preset) =>
+                                  activePlanIds.contains(preset['id'] as int),
+                            )
+                            .toList();
+                  final archivedPlans = activePlanIds == null
+                      ? const <Map<String, dynamic>>[]
+                      : presets
+                            .where(
+                              (preset) =>
+                                  !activePlanIds.contains(preset['id'] as int),
+                            )
+                            .toList();
+                  final planContent = <Widget>[
                     if (presets.isEmpty)
-                      _EmptyRuleState(message: strings.rulesNoPlans)
-                    else
-                      for (
-                        var presetIndex = 0;
-                        presetIndex < presets.length;
-                        presetIndex++
-                      ) ...[
-                        Builder(
-                          builder: (context) {
-                            final preset = presets[presetIndex];
-                            final presetId = preset['id'] as int;
-                            final methods =
-                                _presetMethods[presetId] ?? const [];
-                            return _RuleScopeCard(
-                              color: planColor,
-                              expressiveSurface:
-                                  expressiveTokens?.librarySurface,
-                              icon: Icons.event_note_outlined,
-                              title: preset['name'] as String,
-                              subtitle: strings.rulesPlanOnlySubtitle,
-                              count: methods.length,
-                              compact: true,
-                              children: [
-                                if (methods.isEmpty)
-                                  _EmptyRuleState(
-                                    message: strings.rulesNoPlanRules,
-                                  )
-                                else
-                                  ..._ruleTiles(
-                                    methods,
-                                    onEdit: (method) =>
-                                        _showAddEditPresetMethod(
-                                          presetId: presetId,
-                                          existing: method,
-                                        ),
-                                    onDelete: (method) async {
-                                      await _repo.deleteFlowMethodAndReferences(
-                                        method,
-                                      );
-                                      if (!mounted) return;
-                                      await _loadAll();
-                                    },
-                                  ),
-                                _AddRuleButton(
-                                  color: planColor,
-                                  label: strings.rulesAddPlan,
-                                  onPressed: () => _showAddEditPresetMethod(
-                                    presetId: presetId,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                      _EmptyRuleState(
+                        message: strings.rulesNoPlans,
+                        foregroundColor: expressiveTokens?.onSurfaceSecondary,
+                      )
+                    else if (expressive && activePlanIds != null) ...[
+                      if (activePlans.isNotEmpty) ...[
+                        _PlanStatusHeading(
+                          title: strings.trainActivePlans,
+                          count: activePlans.length,
+                          color: planColor,
+                          foregroundColor: expressiveTokens?.onSurfaceSecondary,
                         ),
-                        if (presetIndex < presets.length - 1)
-                          const SizedBox(height: 8),
+                        ...planCardsFor(activePlans),
                       ],
-                  ],
-                );
-              },
-            ),
-            if (profileIndex < _profiles.length - 1) const SizedBox(height: 12),
-          ],
-      ],
+                      if (activePlans.isNotEmpty && archivedPlans.isNotEmpty)
+                        const SizedBox(height: 12),
+                      if (archivedPlans.isNotEmpty) ...[
+                        _PlanStatusHeading(
+                          title: strings.trainArchivedPlans,
+                          count: archivedPlans.length,
+                          color: planColor,
+                          foregroundColor: expressiveTokens?.onSurfaceSecondary,
+                        ),
+                        ...planCardsFor(archivedPlans),
+                      ],
+                    ] else
+                      ...planCardsFor(presets),
+                  ];
+
+                  return _RuleScopeCard(
+                    color: profileColor,
+                    expressiveSurface: expressiveTokens?.surfaceSecondary,
+                    expressiveForeground: expressiveTokens?.onSurfaceSecondary,
+                    icon: Icons.fitness_center,
+                    title: profile.name,
+                    subtitle: strings.rulesProfileSummary(
+                      profileMethods.length,
+                      planRuleCount,
+                    ),
+                    count: profileMethods.length + planRuleCount,
+                    semanticCountLabel: expressive
+                        ? strings.rulesTotalCountSemantics(
+                            profileMethods.length + planRuleCount,
+                          )
+                        : null,
+                    initiallyExpanded: profileIndex == 0,
+                    children: [
+                      _RuleScopeCard(
+                        color: profileColor,
+                        expressiveSurface: expressiveTokens?.surfaceTertiary,
+                        expressiveForeground:
+                            expressiveTokens?.onSurfaceTertiary,
+                        icon: Icons.tune,
+                        title: strings.rulesProfileDefaultsTitle,
+                        subtitle: expressive
+                            ? strings.rulesProfileDefaultsSubtitleExpressive
+                            : strings.rulesProfileDefaultsSubtitle,
+                        count: profileMethods.length,
+                        initiallyExpanded: true,
+                        compact: true,
+                        children: [
+                          if (profileMethods.isEmpty)
+                            _EmptyRuleState(
+                              message: strings.rulesNoProfileDefaults,
+                              foregroundColor:
+                                  expressiveTokens?.onSurfaceTertiary,
+                            )
+                          else
+                            ..._ruleTiles(
+                              profileMethods,
+                              expressiveForeground:
+                                  expressiveTokens?.onSurfaceTertiary,
+                              onEdit: (method) => _showAddEditDefault(
+                                scope: 'profile',
+                                profileId: profile.id,
+                                existing: method,
+                              ),
+                              onDelete: (method) async {
+                                await _repo
+                                    .deleteDefaultFlowMethodAndReferences(
+                                      scope: 'profile',
+                                      profileId: profile.id,
+                                      name: method.name,
+                                    );
+                                if (!mounted) return;
+                                await _loadAll();
+                              },
+                            ),
+                          _AddRuleButton(
+                            color: profileColor,
+                            label: strings.rulesAddProfile,
+                            onPressed: () => _showAddEditDefault(
+                              scope: 'profile',
+                              profileId: profile.id,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: _NestedHeading(
+                          color: planColor,
+                          icon: Icons.event_note_outlined,
+                          title: strings.rulesPlansTitle,
+                          count: presets.length,
+                          expressiveForeground:
+                              expressiveTokens?.onSurfaceSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...planContent,
+                    ],
+                  );
+                },
+              ),
+              if (profileIndex < _profiles.length - 1)
+                const SizedBox(height: 12),
+            ],
+        ],
+      ),
     );
   }
 }
@@ -765,12 +971,14 @@ class _LoadedProfileMethods {
   final List<FlowMethod> methods;
   final List<Map<String, dynamic>> presets;
   final Map<int, List<FlowMethod>> presetMethods;
+  final Set<int>? activePlanIds;
 
   const _LoadedProfileMethods({
     required this.profileId,
     required this.methods,
     required this.presets,
     required this.presetMethods,
+    required this.activePlanIds,
   });
 }
 
@@ -842,6 +1050,8 @@ class _RuleScopeCard extends StatelessWidget {
   final bool compact;
   final List<Widget> children;
   final Color? expressiveSurface;
+  final Color? expressiveForeground;
+  final String? semanticCountLabel;
 
   const _RuleScopeCard({
     required this.color,
@@ -852,6 +1062,8 @@ class _RuleScopeCard extends StatelessWidget {
     this.initiallyExpanded = false,
     this.compact = false,
     this.expressiveSurface,
+    this.expressiveForeground,
+    this.semanticCountLabel,
     required this.children,
   });
 
@@ -869,11 +1081,13 @@ class _RuleScopeCard extends StatelessWidget {
         : neo
         ? surfaces.settingsSection
         : scheme.surfaceContainerHighest.withValues(alpha: compact ? .20 : .28);
-    final cardForeground = neo
+    final cardForeground = expressive
+        ? expressiveForeground ?? scheme.onSurface
+        : neo
         ? tonosForegroundForSurface(context, cardSurface)
         : scheme.onSurface;
     final cardSecondary = expressive
-        ? scheme.onSurfaceVariant
+        ? cardForeground.withValues(alpha: .82)
         : neo
         ? tonosSecondaryForegroundForSurface(context, cardSurface)
         : scheme.onSurfaceVariant;
@@ -884,6 +1098,27 @@ class _RuleScopeCard extends StatelessWidget {
         : compact
         ? shapes.profileTile
         : shapes.settingsPanel;
+    final leadingForeground = expressive || neo ? cardForeground : color;
+    final leadingSurface = expressive
+        ? leadingForeground.withValues(alpha: .14)
+        : color.withValues(alpha: .17);
+    final titleStyle =
+        (compact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+            ?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: neo || expressive ? cardForeground : null,
+            );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: cardSecondary,
+    );
+    final badge = expressive
+        ? _ExpressiveRuleCountBadge(
+            count: count,
+            label:
+                semanticCountLabel ??
+                AppLocalizations.of(context).rulesCountSemantics(count),
+          )
+        : SettingsCountBadge(count: count, color: color);
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -917,7 +1152,7 @@ class _RuleScopeCard extends StatelessWidget {
             width: compact ? 38 : 42,
             height: compact ? 38 : 42,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: .17),
+              color: leadingSurface,
               borderRadius: expressive
                   ? ExpressiveTrainShapes.focusInset
                   : compact
@@ -926,38 +1161,128 @@ class _RuleScopeCard extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              color: neo ? cardForeground : color,
+              color: leadingForeground,
               size: compact ? 20 : 22,
             ),
           ),
-          title: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style:
-                (compact
-                        ? theme.textTheme.titleSmall
-                        : theme.textTheme.titleMedium)
-                    ?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: neo || expressive ? cardForeground : null,
-                    ),
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: compact ? 1 : 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
-          ),
+          title: expressive
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(title, style: titleStyle),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: subtitleStyle),
+                  ],
+                )
+              : Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: titleStyle,
+                ),
+          subtitle: expressive
+              ? null
+              : Text(
+                  subtitle,
+                  maxLines: compact ? 1 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: subtitleStyle,
+                ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SettingsCountBadge(count: count, color: color),
+              badge,
               const SizedBox(width: 4),
               Icon(Icons.expand_more, color: cardSecondary),
             ],
           ),
           children: children,
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpressiveRuleCountBadge extends StatelessWidget {
+  const _ExpressiveRuleCountBadge({required this.count, required this.label});
+
+  final int count;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      Theme.of(context).brightness,
+    );
+    final light = Theme.of(context).brightness == Brightness.light;
+    final surface = light ? tokens.surfaceSelected : tokens.actionPrimary;
+    final foreground = light
+        ? tokens.onSurfaceSelected
+        : tokens.onActionPrimary;
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 28),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: context.shapeTokens.pill,
+            border: Border.all(
+              color: tokens.outlineAccent.withValues(alpha: .72),
+              width: .75,
+            ),
+          ),
+          child: Text(
+            '$count',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: foreground, fontWeight: FontWeight.w900),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpressivePlanCountBadge extends StatelessWidget {
+  const _ExpressivePlanCountBadge({
+    required this.count,
+    required this.label,
+    required this.color,
+  });
+
+  final int count;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      Theme.of(context).brightness,
+    );
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 28),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .22),
+            borderRadius: context.shapeTokens.pill,
+            border: Border.all(color: color.withValues(alpha: .72), width: .75),
+          ),
+          child: Text(
+            '$count',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: tokens.onSurfaceTertiary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
       ),
     );
@@ -1004,20 +1329,23 @@ class _NestedHeading extends StatelessWidget {
   final IconData icon;
   final String title;
   final int count;
+  final Color? expressiveForeground;
 
   const _NestedHeading({
     required this.color,
     required this.icon,
     required this.title,
     required this.count,
+    this.expressiveForeground,
   });
 
   @override
   Widget build(BuildContext context) {
     final expressive = context.usesExpressivePresentation;
     final neo = context.usesNeoPresentation;
+    final strings = AppLocalizations.of(context);
     final foreground = expressive
-        ? Theme.of(context).colorScheme.onSurface
+        ? expressiveForeground ?? Theme.of(context).colorScheme.onSurface
         : neo
         ? tonosForegroundForSurface(
             context,
@@ -1035,28 +1363,93 @@ class _NestedHeading extends StatelessWidget {
                 ?.copyWith(color: foreground, fontWeight: FontWeight.w900),
           ),
         ),
-        SettingsCountBadge(count: count, color: color),
+        expressive
+            ? _ExpressivePlanCountBadge(
+                count: count,
+                color: color,
+                label: strings.rulesPlanCountSemantics(count),
+              )
+            : SettingsCountBadge(count: count, color: color),
       ],
+    );
+  }
+}
+
+class _PlanStatusHeading extends StatelessWidget {
+  const _PlanStatusHeading({
+    required this.title,
+    required this.count,
+    required this.color,
+    this.foregroundColor,
+  });
+
+  final String title;
+  final int count;
+  final Color color;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: foregroundColor ?? color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          _ExpressivePlanCountBadge(
+            count: count,
+            color: color,
+            label: strings.rulesPlanCountSemantics(count),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _EmptyRuleState extends StatelessWidget {
   final String message;
+  final Color? foregroundColor;
 
-  const _EmptyRuleState({required this.message});
+  const _EmptyRuleState({required this.message, this.foregroundColor});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final expressive = context.usesExpressivePresentation;
     final neo = context.usesNeoPresentation;
     final surface = context.surfaceTokens.settingsSection;
-    final foreground = neo
-        ? tonosForegroundForSurface(context, surface)
-        : scheme.onSurfaceVariant;
-    final secondary = neo
-        ? tonosSecondaryForegroundForSurface(context, surface)
-        : scheme.onSurfaceVariant;
+    final foreground =
+        foregroundColor ??
+        (neo
+            ? tonosForegroundForSurface(context, surface)
+            : expressive
+            ? AppExpressiveDestinationTokens.forFamily(
+                AppExpressiveDestinationFamily.profile,
+                Theme.of(context).brightness,
+              ).supportingForeground
+            : scheme.onSurfaceVariant);
+    final secondary =
+        foregroundColor ??
+        (neo
+            ? tonosSecondaryForegroundForSurface(context, surface)
+            : expressive
+            ? AppExpressiveDestinationTokens.forFamily(
+                AppExpressiveDestinationFamily.profile,
+                Theme.of(context).brightness,
+              ).supportingForeground
+            : scheme.onSurfaceVariant);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
       child: Row(
@@ -1080,19 +1473,28 @@ class _AddRuleButton extends StatelessWidget {
   final Color color;
   final String label;
   final VoidCallback onPressed;
+  final bool isAppDefault;
 
   const _AddRuleButton({
     required this.color,
     required this.label,
     required this.onPressed,
+    this.isAppDefault = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final expressive = context.usesExpressivePresentation;
     final neo = context.usesNeoPresentation;
+    final lightExpressiveAppDefault =
+        expressive &&
+        isAppDefault &&
+        Theme.of(context).brightness == Brightness.light;
     final expressiveTokens = expressive
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
     final shapes = context.shapeTokens;
     final actionForeground = neo
@@ -1106,8 +1508,12 @@ class _AddRuleButton extends StatelessWidget {
         child: OutlinedButton.icon(
           style: expressive
               ? OutlinedButton.styleFrom(
-                  backgroundColor: expressiveTokens!.actionSecondary,
-                  foregroundColor: expressiveTokens.actionSecondaryForeground,
+                  backgroundColor: lightExpressiveAppDefault
+                      ? expressiveTokens!.surfaceSelected
+                      : expressiveTokens!.actionPrimary,
+                  foregroundColor: lightExpressiveAppDefault
+                      ? expressiveTokens.onSurfaceSelected
+                      : expressiveTokens.onActionPrimary,
                   minimumSize: const Size.fromHeight(44),
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   side: BorderSide.none,
@@ -1157,32 +1563,42 @@ class _EmptyProfilesCard extends StatelessWidget {
     final shapes = context.shapeTokens;
     final expressive = context.usesExpressivePresentation;
     final expressiveTokens = expressive
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
     final neo = context.usesNeoPresentation;
     final surface = neo ? context.surfaceTokens.settingsSection : null;
     final secondary = neo && surface != null
         ? tonosSecondaryForegroundForSurface(context, surface)
+        : expressive
+        ? expressiveTokens!.onSurfaceTertiary
         : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: expressive
-            ? expressiveTokens!.archivedPlansSurface
+            ? expressiveTokens!.surfaceTertiary
             : neo
             ? surface
             : scheme.surfaceContainerHighest.withValues(alpha: .28),
         borderRadius: shapes.settingsPanel,
-        border: Border.all(
-          color: neo
-              ? tonosOutlineForSurface(context, surface!)
-              : scheme.outlineVariant,
-          width: neo ? shapes.outlineWidth : 1,
-        ),
+        border: expressive
+            ? null
+            : Border.all(
+                color: neo
+                    ? tonosOutlineForSurface(context, surface!)
+                    : scheme.outlineVariant,
+                width: neo ? shapes.outlineWidth : 1,
+              ),
       ),
       child: DefaultTextStyle.merge(
         style: TextStyle(color: secondary),
-        child: _EmptyRuleState(message: message),
+        child: _EmptyRuleState(
+          message: message,
+          foregroundColor: expressiveTokens?.onSurfaceTertiary,
+        ),
       ),
     );
   }
@@ -1195,6 +1611,277 @@ String _methodTypeLabel(MethodType type, AppLocalizations strings) {
     MethodType.addSet => strings.flowMethodAddSet,
     MethodType.delSet => strings.flowMethodDeleteSet,
   };
+}
+
+/// Field-anchored single-choice menu scoped to the Expressive Flow Methods
+/// dialogs. Classic and Neo continue using their existing dropdown controls.
+class _FlowMethodsChoiceField<T> extends StatefulWidget {
+  const _FlowMethodsChoiceField({
+    required this.title,
+    required this.values,
+    required this.value,
+    required this.label,
+    required this.onChanged,
+    required this.nonExpressiveButton,
+  });
+
+  final String title;
+  final List<T> values;
+  final T value;
+  final String Function(T value) label;
+  final ValueChanged<T?>? onChanged;
+  final Widget Function() nonExpressiveButton;
+
+  @override
+  State<_FlowMethodsChoiceField<T>> createState() =>
+      _FlowMethodsChoiceFieldState<T>();
+}
+
+class _FlowMethodsChoiceFieldState<T>
+    extends State<_FlowMethodsChoiceField<T>> {
+  final GlobalKey _fieldKey = GlobalKey(debugLabel: 'Flow Methods choice');
+  late final FocusNode _focusNode;
+  bool _menuOpen = false;
+  bool _fieldWidthMeasurementScheduled = false;
+  double? _fieldWidth;
+
+  double? _renderedFieldWidth() {
+    final renderObject = _fieldKey.currentContext?.findRenderObject();
+    if (renderObject is RenderBox && renderObject.hasSize) {
+      return renderObject.size.width;
+    }
+    return null;
+  }
+
+  void _scheduleFieldWidthMeasurement() {
+    if (_fieldWidthMeasurementScheduled) return;
+    _fieldWidthMeasurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fieldWidthMeasurementScheduled = false;
+      if (!mounted) return;
+      final width = _renderedFieldWidth();
+      if (width == null ||
+          (_fieldWidth != null && (_fieldWidth! - width).abs() < 0.5)) {
+        return;
+      }
+      setState(() => _fieldWidth = width);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode(debugLabel: 'Workout progress rule choice');
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.usesExpressivePresentation) {
+      return widget.nonExpressiveButton();
+    }
+
+    final theme = Theme.of(context);
+    final tokens = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      theme.brightness,
+    );
+    final enabled = widget.onChanged != null && widget.values.isNotEmpty;
+    final valueLabel = widget.label(widget.value);
+    final decorationTheme = theme.inputDecorationTheme;
+    final fieldBorder =
+        decorationTheme.enabledBorder ??
+        decorationTheme.border ??
+        decorationTheme.focusedBorder;
+    final fieldRadius = fieldBorder is OutlineInputBorder
+        ? fieldBorder.borderRadius
+        : context.shapeTokens.settingsInput;
+    final screenSize = MediaQuery.sizeOf(context);
+    final mediaQuery = MediaQuery.of(context);
+    final dialogInsets =
+        theme.dialogTheme.insetPadding ??
+        const EdgeInsets.symmetric(horizontal: 40, vertical: 24);
+    final configuredDialogMaxWidth =
+        theme.dialogTheme.constraints?.maxWidth ?? 560.0;
+    final dialogMaxWidth = configuredDialogMaxWidth.isFinite
+        ? configuredDialogMaxWidth
+        : screenSize.width - dialogInsets.horizontal;
+    final fallbackWidth = math.max(
+      0.0,
+      math.min(
+        screenSize.width -
+            mediaQuery.padding.horizontal -
+            dialogInsets.horizontal -
+            48,
+        dialogMaxWidth - 48,
+      ),
+    );
+    final menuMaxHeight = math.max(
+      0.0,
+      screenSize.height -
+          mediaQuery.padding.vertical -
+          mediaQuery.viewInsets.vertical -
+          dialogInsets.vertical * 2,
+    );
+    _scheduleFieldWidthMeasurement();
+    final width = _fieldWidth ?? fallbackWidth;
+
+    return MenuAnchor(
+      key: ValueKey<String>('rules-choice-${widget.title}'),
+      useRootOverlay: true,
+      consumeOutsideTap: true,
+      crossAxisUnconstrained: false,
+      childFocusNode: _focusNode,
+      onOpen: () {
+        final fieldWidth = _renderedFieldWidth();
+        if (mounted) {
+          setState(() {
+            _menuOpen = true;
+            if (fieldWidth != null) _fieldWidth = fieldWidth;
+          });
+        }
+      },
+      onClose: () {
+        if (mounted) setState(() => _menuOpen = false);
+      },
+      style: MenuStyle(
+        alignment: AlignmentDirectional.bottomStart,
+        backgroundColor: WidgetStatePropertyAll(tokens.surfaceTertiary),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        elevation: const WidgetStatePropertyAll(2),
+        side: WidgetStatePropertyAll(
+          BorderSide(color: tokens.outlineAccent, width: 1),
+        ),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: ExpressiveTrainShapes.focusInset,
+          ),
+        ),
+        padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
+        minimumSize: WidgetStatePropertyAll(Size(width, 0)),
+        maximumSize: WidgetStatePropertyAll(Size(width, menuMaxHeight)),
+      ),
+      menuChildren: [
+        for (var index = 0; index < widget.values.length; index++)
+          _menuItem(context, tokens, index),
+      ],
+      builder: (context, controller, child) => PopScope(
+        canPop: !controller.isOpen,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop && controller.isOpen) controller.close();
+        },
+        child: Semantics(
+          button: true,
+          enabled: enabled,
+          expanded: _menuOpen,
+          label: widget.title,
+          value: valueLabel,
+          onTap: enabled
+              ? () => controller.isOpen ? controller.close() : controller.open()
+              : null,
+          child: ExcludeSemantics(
+            child: InkWell(
+              focusNode: _focusNode,
+              canRequestFocus: enabled,
+              borderRadius: fieldRadius,
+              onTap: enabled
+                  ? () => controller.isOpen
+                        ? controller.close()
+                        : controller.open()
+                  : null,
+              child: NotificationListener<SizeChangedLayoutNotification>(
+                onNotification: (_) {
+                  _scheduleFieldWidthMeasurement();
+                  return false;
+                },
+                child: SizeChangedLayoutNotifier(
+                  child: InputDecorator(
+                    key: _fieldKey,
+                    decoration: InputDecoration(
+                      labelText: widget.title,
+                      suffixIcon: Icon(
+                        Icons.arrow_drop_down,
+                        color: tokens.supportingForeground,
+                      ),
+                    ),
+                    isFocused: _focusNode.hasFocus || _menuOpen,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        valueLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuItem(
+    BuildContext context,
+    AppExpressiveDestinationTokens tokens,
+    int index,
+  ) {
+    final value = widget.values[index];
+    final selected = value == widget.value;
+    final foreground = selected
+        ? tokens.onSurfaceSelected
+        : tokens.onSurfaceTertiary;
+    final background = selected
+        ? tokens.surfaceSelected
+        : tokens.surfaceTertiary;
+    return MergeSemantics(
+      child: Semantics(
+        selected: selected,
+        inMutuallyExclusiveGroup: true,
+        child: MenuItemButton(
+          key: ValueKey<int>(index),
+          onPressed: () => widget.onChanged?.call(value),
+          style: ButtonStyle(
+            alignment: AlignmentDirectional.centerStart,
+            foregroundColor: WidgetStatePropertyAll(foreground),
+            backgroundColor: WidgetStatePropertyAll(background),
+            minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+            padding: const WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            ),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: ExpressiveTrainShapes.focusInset,
+              ),
+            ),
+            textStyle: WidgetStatePropertyAll(
+              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: foreground,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+          trailingIcon: selected ? Icon(Icons.check, color: foreground) : null,
+          child: SizedBox(
+            width: double.infinity,
+            child: Text(
+              widget.label(value),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Dialog for adding or editing a workout progress rule on a plan.
@@ -1258,100 +1945,118 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
     final strings = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(isEdit ? strings.rulesEditPlan : strings.rulesAddPlanTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TonosField(controller: _nameCtl, labelText: strings.commonName),
-            const SizedBox(height: 12),
-            TonosDialogDropdownButton<MethodType>(
-              value: _type,
-              onChanged: (v) => setState(() => _type = v!),
-              items: MethodType.values
-                  .map(
-                    (t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(_methodTypeLabel(t, strings)),
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 12),
-            if (_type == MethodType.weight) ...[
-              TonosDialogDropdownButton<String>(
-                value: _sign,
-                onChanged: (v) => setState(() => _sign = v!),
-                items: const [
-                  DropdownMenuItem(value: '+', child: Text('+')),
-                  DropdownMenuItem(value: '-', child: Text('-')),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TonosField(
-                controller: _factorCtl,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                labelText: strings.flowFactor,
-              ),
-            ] else if (_type == MethodType.rep) ...[
-              TonosDialogDropdownButton<String>(
-                value: _sign,
-                onChanged: (v) => setState(() => _sign = v!),
-                items: const [
-                  DropdownMenuItem(value: '+', child: Text('+')),
-                  DropdownMenuItem(value: '-', child: Text('-')),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TonosField(
-                controller: _amountCtl,
-                keyboardType: TextInputType.number,
-                labelText: strings.flowAmount,
-              ),
-            ] else if (_type == MethodType.addSet) ...[
-              Row(
-                children: [
-                  Radio<AddSetMode>(
-                    value: AddSetMode.explicit,
-                    groupValue: _addMode,
-                    onChanged: (v) => setState(() => _addMode = v!),
+    final expressive = context.usesExpressivePresentation;
+    final fieldGap = expressive ? 8.0 : 12.0;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TonosField(controller: _nameCtl, labelText: strings.commonName),
+        SizedBox(height: fieldGap),
+        _FlowMethodsChoiceField<MethodType>(
+          title: strings.rulesRuleTypeLabel,
+          values: MethodType.values,
+          value: _type,
+          label: (value) => _methodTypeLabel(value, strings),
+          onChanged: (value) {
+            if (value != null) setState(() => _type = value);
+          },
+          nonExpressiveButton: () => TonosDialogDropdownButton<MethodType>(
+            value: _type,
+            onChanged: (value) => setState(() => _type = value!),
+            items: MethodType.values
+                .map(
+                  (t) => DropdownMenuItem(
+                    value: t,
+                    child: Text(_methodTypeLabel(t, strings)),
                   ),
-                  Text(strings.flowExplicit),
-                  Radio<AddSetMode>(
-                    value: AddSetMode.copy,
-                    groupValue: _addMode,
-                    onChanged: (v) => setState(() => _addMode = v!),
-                  ),
-                  Text(strings.rulesCopy),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (_addMode == AddSetMode.explicit) ...[
-                TonosField(
-                  controller: _weightCtl,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  labelText: strings.flowWeight,
-                ),
-                const SizedBox(height: 8),
-                TonosField(
-                  controller: _repsCtl,
-                  keyboardType: TextInputType.number,
-                  labelText: strings.flowReps,
-                ),
-              ] else ...[
-                TonosField(
-                  controller: _copyIndexCtl,
-                  keyboardType: TextInputType.number,
-                  labelText: strings.rulesCopyIndex,
-                ),
-              ],
-            ] else if (_type == MethodType.delSet) ...[
-              Text(strings.rulesDeleteLastSetBody),
-            ],
-          ],
+                )
+                .toList(),
+          ),
         ),
-      ),
+        SizedBox(height: fieldGap),
+        if (_type == MethodType.weight) ...[
+          _FlowMethodsChoiceField<String>(
+            title: strings.rulesOperationLabel,
+            values: const ['+', '-'],
+            value: _sign,
+            label: (value) => value,
+            onChanged: (value) {
+              if (value != null) setState(() => _sign = value);
+            },
+            nonExpressiveButton: () => TonosDialogDropdownButton<String>(
+              value: _sign,
+              onChanged: (value) => setState(() => _sign = value!),
+              items: const [
+                DropdownMenuItem(value: '+', child: Text('+')),
+                DropdownMenuItem(value: '-', child: Text('-')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TonosField(
+            controller: _factorCtl,
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            labelText: strings.flowFactor,
+          ),
+        ] else if (_type == MethodType.rep) ...[
+          _FlowMethodsChoiceField<String>(
+            title: strings.rulesOperationLabel,
+            values: const ['+', '-'],
+            value: _sign,
+            label: (value) => value,
+            onChanged: (value) {
+              if (value != null) setState(() => _sign = value);
+            },
+            nonExpressiveButton: () => TonosDialogDropdownButton<String>(
+              value: _sign,
+              onChanged: (value) => setState(() => _sign = value!),
+              items: const [
+                DropdownMenuItem(value: '+', child: Text('+')),
+                DropdownMenuItem(value: '-', child: Text('-')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          TonosField(
+            controller: _amountCtl,
+            keyboardType: TextInputType.number,
+            labelText: strings.flowAmount,
+          ),
+        ] else if (_type == MethodType.addSet) ...[
+          _addSetModeOptions(
+            context,
+            selected: _addMode,
+            onChanged: (value) => setState(() => _addMode = value),
+          ),
+          const SizedBox(height: 8),
+          if (_addMode == AddSetMode.explicit) ...[
+            TonosField(
+              controller: _weightCtl,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              labelText: strings.flowWeight,
+            ),
+            const SizedBox(height: 8),
+            TonosField(
+              controller: _repsCtl,
+              keyboardType: TextInputType.number,
+              labelText: strings.flowReps,
+            ),
+          ] else ...[
+            TonosField(
+              controller: _copyIndexCtl,
+              keyboardType: TextInputType.number,
+              labelText: strings.rulesCopyIndex,
+            ),
+          ],
+        ] else if (_type == MethodType.delSet) ...[
+          Text(strings.rulesDeleteLastSetBody),
+        ],
+      ],
+    );
+    return AlertDialog(
+      scrollable: expressive,
+      title: Text(isEdit ? strings.rulesEditPlan : strings.rulesAddPlanTitle),
+      content: expressive ? content : SingleChildScrollView(child: content),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),

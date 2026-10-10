@@ -1,5 +1,8 @@
 import 'package:material_ui/material_ui.dart';
+
 import '../models/models.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../widgets/workout_history_calendar.dart';
@@ -32,20 +35,30 @@ class _HistoryContentState extends State<HistoryContent> {
   @override
   Widget build(BuildContext context) {
     final effectiveRefreshToken = widget.refreshToken + _localRefreshToken;
+    final destinationFamily = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>()
+        ?.family;
+
+    Widget scopeDestination(Widget child) {
+      final family = destinationFamily;
+      if (family == null) return child;
+      return AppExpressiveDestinationTheme(family: family, child: child);
+    }
 
     void openReportSession(WorkoutReportSession reportSession) {
       Navigator.of(context)
           .push(
             MaterialPageRoute(
-              builder:
-                  (_) => SessionDetailScreen(
-                    WorkoutSession(
-                      id: reportSession.id,
-                      date: reportSession.date,
-                      calendarDayKey: reportSession.calendarDayKey,
-                      duration: reportSession.durationSeconds,
-                    ),
+              builder: (_) => scopeDestination(
+                SessionDetailScreen(
+                  WorkoutSession(
+                    id: reportSession.id,
+                    date: reportSession.date,
+                    calendarDayKey: reportSession.calendarDayKey,
+                    duration: reportSession.durationSeconds,
                   ),
+                ),
+              ),
             ),
           )
           .then((_) => _handleReload());
@@ -53,7 +66,11 @@ class _HistoryContentState extends State<HistoryContent> {
 
     void openFullHistory() {
       Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const FullHistoryScreen()))
+          .push(
+            MaterialPageRoute(
+              builder: (_) => scopeDestination(const FullHistoryScreen()),
+            ),
+          )
           .then((_) => _handleReload());
     }
 

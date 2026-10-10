@@ -280,6 +280,7 @@
   "navEditorActiveSubtitle": "Arrastra para reordenar. El perfil sigue disponible.",
   "navEditorActiveTitle": "Pestañas activas",
   "navEditorAlwaysShown": "Siempre visible",
+  "navEditorRequired": "Obligatoria",
   "navEditorHidden": "Oculta de la navegación inferior",
   "navEditorInactiveSubtitle": "Actívalas de nuevo cuando quieras.",
   "navEditorInactiveTitle": "Pestañas inactivas",
@@ -362,7 +363,7 @@
   "recordRepBest": "Mejor de {reps} repeticiones",
   "recordVolumeBest": "Mejor volumen",
   "flowAddAction": "+ Acción",
-  "flowAddBranchSubtitle": "Elige a dónde debe llevar el próximo éxito o fallo.",
+  "flowAddBranchSubtitle": "Crea rutas de éxito o fallo desde un nodo.",
   "flowAddBranchTitle": "Añadir una rama",
   "flowAddEvent": "+ Evento",
   "flowAddFailure": "+ Fallo",
@@ -374,10 +375,19 @@
   "flowAmount": "Cantidad",
   "flowAppDefaultEntry": "Flujo predeterminado de la aplicación",
   "flowAppDefaultsSubtitle": "El flujo inicial para nuevos perfiles de gimnasio.",
-  "flowAppDefaultSubtitle": "Define el flujo de progresión inicial para nuevos perfiles de gimnasio.",
+  "flowAppDefaultSubtitle": "Flujo predeterminado para nuevos perfiles de gimnasio.",
   "flowAppDefaultTitle": "Progresión predeterminada de la aplicación",
   "flowApplyActionTo": "Aplicar acción a",
-  "flowAttachActionSubtitle": "Aplica un ajuste de cada tipo a un nodo de flujo.",
+  "flowAttachActionSubtitle": "Asigna ajustes de progresión a los nodos.",
+  "flowFitToViewTooltip": "Ajustar flujo a la vista.",
+  "flowBranchSelectGuidance": "Elige un nodo de origen para añadir una ruta.",
+  "flowBranchCompleteGuidance": "Todos los nodos ya tienen rutas de éxito y fallo.",
+  "flowActionSelectNodeGuidance": "Elige un nodo para configurar sus acciones.",
+  "flowActionSelectMethodGuidance": "Elige una acción de progresión para este nodo.",
+  "flowActionCreateMethodGuidance": "Crea una acción antes de asignarla a un nodo.",
+  "flowActionTypesUsedGuidance": "Este nodo ya usa todos los tipos de acción disponibles.",
+  "flowActionRemoveDependenciesGuidance": "Quita las ramas y acciones antes de eliminar este nodo.",
+  "flowActionRootGuidance": "El primer nodo no admite acciones ni se puede eliminar.",
   "flowAttachActionTitle": "Adjuntar una acción de progresión",
   "flowBranchFrom": "Ramificar desde",
   "flowCopyFromSet": "Copiar de la serie",
@@ -389,6 +399,7 @@
   "flowGymDefaultEntry": "Flujo predeterminado del gimnasio",
   "flowGymProfilesSubtitle": "Cada perfil tiene valores predeterminados y sus propios flujos de planes.",
   "flowHowCopiedBody": "Los flujos de la aplicación se convierten en punto de partida para nuevos perfiles de gimnasio. Los flujos del gimnasio se convierten en punto de partida para nuevos planes. Las ediciones posteriores se limitan al flujo que abras aquí.",
+  "flowHowCopiedBodyExpressive": "Los perfiles de gimnasio nuevos parten de los valores predeterminados de la aplicación, y los planes nuevos, de los del gimnasio. Los cambios en un flujo no afectan a los demás.",
   "flowHowCopiedTitle": "Cómo se copian los flujos",
   "flowLoadError": "No se pudieron cargar los flujos de progresión de entrenamiento.",
   "flowManageActionsTooltip": "Gestionar acciones de progresión",
@@ -403,11 +414,19 @@
   "flowNewMethod": "Nueva acción",
   "flowNoProfiles": "Crea un perfil de gimnasio para definir flujos de perfil y planes.",
   "flowNoSavedYet": "Aún no hay flujo guardado",
+  "flowTapToConfigure": "Toca para configurar",
   "flowPageSubtitle": "Define las rutas que deciden cómo se aplican las acciones de progresión después de los resultados del entrenamiento.",
+  "flowPageSubtitleExpressive": "Configura cómo los resultados del entrenamiento activan las acciones de progresión.",
   "flowPageTitle": "Flujos de progresión de entrenamiento",
   "flowPlansAvailable": "{count} flujos de planes disponibles",
-  "flowPlanSubtitle": "Define cómo progresa este plan después de cada entrenamiento.",
-  "flowProfileDefaultSubtitle": "Define el flujo de progresión inicial para nuevos planes en {profileName}.",
+  "flowPlansAvailableExpressive": "{count, plural, one{{count} plan disponible} other{{count} planes disponibles}}",
+  "@flowPlansAvailableExpressive": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "flowPlanSubtitle": "Flujo de progresión de este plan.",
+  "flowProfileDefaultSubtitle": "Flujo predeterminado para nuevos planes en {profileName}.",
   "flowProfileDefaultTitle": "Progresión predeterminada del gimnasio",
   "flowProgressionAction": "Acción de progresión",
   "flowRemoveAction": "- Acción",
@@ -425,6 +444,7 @@
   "flowWeight": "Peso",
   "gymExitAsk": "Preguntar siempre",
   "gymExitAskBody": "Preguntar antes de finalizar el trabajo completado.",
+  "gymExitAskExpressiveSubtitle": "Elige qué ocurre al salir de un entrenamiento activo.",
   "gymExitDiscard": "Cancelar entrenamiento",
   "gymExitDiscardBody": "Cancelar sin guardar el trabajo completado.",
   "gymExitSave": "Finalizar y guardar",
@@ -1328,6 +1348,20 @@
   "tutorialsControlsSubtitle": "¿Probando o empezando de nuevo?",
   "tutorialsControlsTitle": "Controles de tutoriales",
   "tutorialsHowItWorksBody": "Los tutoriales aparecen una vez y luego no estorban. Expande un grupo para restablecer un recorrido específico.",
+  "tutorialsExpressiveControlsSubtitle": "Empieza de cero con tus recorridos guiados.",
+  "tutorialsExpressiveHowItWorksBody": "Los tutoriales aparecen automáticamente una vez. Expande una categoría para volver a habilitar un recorrido individual.",
+  "tutorialsExpressiveTitle": "Tutorial de {topic}",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "Restablécelo para repetirlo la próxima vez que abras {topic}.",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "tutorialsHowItWorksTitle": "Cómo funcionan los tutoriales",
   "tutorialsMainTabsSubtitle": "Reproduce recorridos de cada área principal.",
   "tutorialsMainTabsTitle": "Pestañas principales",
@@ -1844,5 +1878,36 @@
     }
   },
   "healthEntryActions": "Acciones de la entrada",
-  "premadeOneHourDescription": "Versión de {duration} de {planName} con los movimientos principales de la plantilla completa."
+  "premadeOneHourDescription": "Versión de {duration} de {planName} con los movimientos principales de la plantilla completa.",
+  "rulesPageSubtitleExpressive": "Define reglas reutilizables para la progresión de peso, repeticiones y series.",
+  "rulesHowDefaultsBodyExpressive": "Los perfiles de gimnasio nuevos empiezan con los valores de la aplicación, y los planes nuevos con los del perfil. Los cambios posteriores no actualizan automáticamente los perfiles ni los planes existentes.",
+  "rulesRuleTypeLabel": "Tipo de regla",
+  "rulesOperationLabel": "Operación",
+  "rulesScopedRuleCountSemantics": "{scope}, cantidad de reglas: {count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "Cantidad de reglas: {count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "Total de reglas: {count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "Cantidad de planes: {count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "Reglas predeterminadas para nuevos planes.",
+  "rulesPlanOnlySubtitleExpressive": "Reglas específicas del plan."
 }

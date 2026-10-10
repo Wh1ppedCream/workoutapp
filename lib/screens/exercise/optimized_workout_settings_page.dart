@@ -232,7 +232,28 @@ class _OptimizedWorkoutSettingsPageState
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final keyboardInset = planning == null
+        ? 0.0
+        : MediaQuery.viewInsetsOf(context).bottom;
+    final budgetFieldForeground = planning?.planFocalForeground;
+    final budgetFieldTheme =
+        budgetFieldForeground == null || theme.brightness == Brightness.dark
+        ? theme
+        : theme.copyWith(
+            textTheme: theme.textTheme.copyWith(
+              bodyLarge: theme.textTheme.bodyLarge?.copyWith(
+                color: budgetFieldForeground,
+              ),
+            ),
+            inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+              labelStyle: TextStyle(color: budgetFieldForeground),
+              floatingLabelStyle: TextStyle(color: budgetFieldForeground),
+              hintStyle: TextStyle(color: budgetFieldForeground),
+              suffixStyle: TextStyle(color: budgetFieldForeground),
+            ),
+          );
     return Scaffold(
+      resizeToAvoidBottomInset: planning == null ? null : keyboardInset == 0,
       backgroundColor: planning?.pageCanvas,
       body: SafeArea(
         child: Stack(
@@ -243,64 +264,70 @@ class _OptimizedWorkoutSettingsPageState
                 KeyedSubtree(
                   key: _budgetTutorialKey,
                   child: Card(
-                    color: planning?.configurationSurface,
+                    color: planning?.planFocalSurface,
                     shape: planning == null
                         ? null
-                        : const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(16),
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(28),
-                            ),
+                        : RoundedRectangleBorder(
+                            borderRadius: planning.focalShape,
                           ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            strings.optimizedTutorialBudgetTitle,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: planning?.configurationForeground,
-                              fontWeight: FontWeight.w800,
+                          _PlanningSectionHeading(
+                            icon: Icons.timer_outlined,
+                            title: Text(
+                              strings.optimizedTutorialBudgetTitle,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: planning?.planFocalForeground,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
+                            planning: planning,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             strings.optimizedBudgetDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color:
-                                  planning?.configurationForeground ??
+                                  planning?.planFocalForeground ??
                                   theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 16),
-                          TonosFormField(
-                            controller: _minutesController,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.next,
-                            labelText: strings.optimizedWorkoutDuration,
-                            suffixText: strings.unitMinutesShort,
-                            border: const OutlineInputBorder(),
-                          ),
-                          const SizedBox(height: 12),
-                          TonosFormField(
-                            controller: _minSetsController,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.next,
-                            labelText: strings.optimizedMinimumSets,
-                            suffixText: strings.unitSets,
-                            border: const OutlineInputBorder(),
-                          ),
-                          const SizedBox(height: 12),
-                          TonosFormField(
-                            controller: _maxSetsController,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
-                            labelText: strings.optimizedMaximumSets,
-                            suffixText: strings.unitSets,
-                            border: const OutlineInputBorder(),
+                          Theme(
+                            data: budgetFieldTheme,
+                            child: Column(
+                              children: [
+                                TonosFormField(
+                                  controller: _minutesController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  labelText: strings.optimizedWorkoutDuration,
+                                  suffixText: strings.unitMinutesShort,
+                                  border: const OutlineInputBorder(),
+                                ),
+                                const SizedBox(height: 12),
+                                TonosFormField(
+                                  controller: _minSetsController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  labelText: strings.optimizedMinimumSets,
+                                  suffixText: strings.unitSets,
+                                  border: const OutlineInputBorder(),
+                                ),
+                                const SizedBox(height: 12),
+                                TonosFormField(
+                                  controller: _maxSetsController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.done,
+                                  labelText: strings.optimizedMaximumSets,
+                                  suffixText: strings.unitSets,
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -314,25 +341,24 @@ class _OptimizedWorkoutSettingsPageState
                     color: planning?.planSupportSurface,
                     shape: planning == null
                         ? null
-                        : const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(16),
-                              topRight: Radius.circular(28),
-                              bottomLeft: Radius.circular(28),
-                              bottomRight: Radius.circular(16),
-                            ),
+                        : RoundedRectangleBorder(
+                            borderRadius: planning.supportShape,
                           ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            strings.optimizedRepsWeightsTitle,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: planning?.planSupportForeground,
-                              fontWeight: FontWeight.w800,
+                          _PlanningSectionHeading(
+                            icon: Icons.tune,
+                            title: Text(
+                              strings.optimizedRepsWeightsTitle,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: planning?.planSupportForeground,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
+                            planning: planning,
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -403,35 +429,34 @@ class _OptimizedWorkoutSettingsPageState
                 KeyedSubtree(
                   key: _focusTutorialKey,
                   child: Card(
-                    color: planning?.equipmentSurface,
+                    color: planning?.configurationSurface,
                     shape: planning == null
                         ? null
-                        : const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(28),
-                              topRight: Radius.circular(16),
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(28),
-                            ),
+                        : RoundedRectangleBorder(
+                            borderRadius: planning.focalShape,
                           ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            strings.optimizedBodypartFocusTitle,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: planning?.equipmentForeground,
-                              fontWeight: FontWeight.w800,
+                          _PlanningSectionHeading(
+                            icon: Icons.accessibility_new,
+                            title: Text(
+                              strings.optimizedBodypartFocusTitle,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: planning?.configurationForeground,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
+                            planning: planning,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             strings.optimizedBodypartFocusDescription,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color:
-                                  planning?.equipmentForeground ??
+                                  planning?.configurationForeground ??
                                   theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -480,7 +505,7 @@ class _OptimizedWorkoutSettingsPageState
         ),
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        minimum: EdgeInsets.fromLTRB(16, 8, 16, 16 + keyboardInset),
         child: KeyedSubtree(
           key: _actionsTutorialKey,
           child: Row(
@@ -521,6 +546,40 @@ class _OptimizedWorkoutSettingsPageState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PlanningSectionHeading extends StatelessWidget {
+  final IconData icon;
+  final Widget title;
+  final AppExpressivePlanningTokens? planning;
+
+  const _PlanningSectionHeading({
+    required this.icon,
+    required this.title,
+    required this.planning,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final planning = this.planning;
+    if (planning == null) return title;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          margin: const EdgeInsets.only(top: 2, right: 12),
+          decoration: BoxDecoration(
+            color: planning.planAccent,
+            borderRadius: planning.rowShape,
+          ),
+          child: Icon(icon, color: planning.planAccentForeground),
+        ),
+        Expanded(child: title),
+      ],
     );
   }
 }

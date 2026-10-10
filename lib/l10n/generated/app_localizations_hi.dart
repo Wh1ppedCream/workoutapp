@@ -1001,6 +1001,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get navEditorAlwaysShown => 'हमेशा दिखाएँ';
 
   @override
+  String get navEditorRequired => 'आवश्यक';
+
+  @override
   String get navEditorVisible => 'नीचे के नेविगेशन में दिखाई देता है';
 
   @override
@@ -1971,16 +1974,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get flowProfileDefaultTitle => 'जिम डिफ़ॉल्ट प्रगति';
 
   @override
-  String get flowPlanSubtitle =>
-      'तय करें कि यह योजना हर वर्कआउट के बाद कैसे प्रगति करे।';
+  String get flowPlanSubtitle => 'इस योजना का प्रगति फ़्लो।';
 
   @override
   String get flowAppDefaultSubtitle =>
-      'नई जिम प्रोफ़ाइल के लिए शुरुआती प्रगति फ्लो सेट करें।';
+      'नई जिम प्रोफ़ाइल के लिए डिफ़ॉल्ट फ़्लो।';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return '$profileName में नई योजनाओं के लिए शुरुआती प्रगति फ्लो सेट करें।';
+    return '$profileName में नई योजनाओं के लिए डिफ़ॉल्ट फ़्लो।';
   }
 
   @override
@@ -2030,7 +2032,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get flowAddBranchSubtitle =>
-      'चुनें कि अगली सफलता या असफलता कहाँ ले जाए।';
+      'किसी नोड से सफलता या चूक के रास्ते बनाएँ।';
 
   @override
   String get flowBranchFrom => 'इससे ब्रांच करें';
@@ -2045,8 +2047,42 @@ class AppLocalizationsHi extends AppLocalizations {
   String get flowAttachActionTitle => 'प्रगति क्रिया संलग्न करें';
 
   @override
-  String get flowAttachActionSubtitle =>
-      'फ्लो नोड पर प्रत्येक प्रकार का एक समायोजन लागू करें।';
+  String get flowAttachActionSubtitle => 'नोड को प्रगति समायोजन दें।';
+
+  @override
+  String get flowFitToViewTooltip => 'फ्लो को दृश्य में फ़िट करें।';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'रास्ता जोड़ने के लिए स्रोत नोड चुनें।';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'सभी नोड में सफलता और चूक के रास्ते पहले से हैं।';
+
+  @override
+  String get flowActionSelectNodeGuidance =>
+      'ऐक्शन कॉन्फ़िगर करने के लिए नोड चुनें।';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'इस नोड के लिए प्रगति ऐक्शन चुनें।';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'नोड में जोड़ने से पहले एक ऐक्शन बनाएँ।';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'इस नोड में सभी उपलब्ध प्रकार के ऐक्शन पहले से इस्तेमाल हैं।';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'नोड हटाने से पहले शाखाएँ और जुड़े ऐक्शन हटाएँ।';
+
+  @override
+  String get flowActionRootGuidance =>
+      'पहले प्रयास वाले नोड पर ऐक्शन नहीं जोड़ सकते और उसे हटा नहीं सकते।';
 
   @override
   String get flowApplyActionTo => 'क्रिया लागू करें';
@@ -2274,11 +2310,19 @@ class AppLocalizationsHi extends AppLocalizations {
       'वे पथ सेट करें जो तय करते हैं कि वर्कआउट परिणाम के बाद प्रगति क्रियाएँ कैसे लागू हों।';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'कॉन्फ़िगर करें कि वर्कआउट के नतीजे प्रगति की कार्रवाइयाँ कैसे शुरू करते हैं।';
+
+  @override
   String get flowHowCopiedTitle => 'फ्लो कैसे कॉपी होती हैं';
 
   @override
   String get flowHowCopiedBody =>
       'ऐप फ्लो नई जिम प्रोफ़ाइल के लिए शुरुआती बिंदु बनती हैं। जिम फ्लो नई योजनाओं के लिए शुरुआती बिंदु बनती हैं। बाद के बदलाव केवल उस फ्लो तक सीमित रहते हैं जिसे आप यहाँ खोलते हैं।';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'नई जिम प्रोफ़ाइल ऐप के डिफ़ॉल्ट से शुरू होती हैं, और नई योजनाएँ जिम के डिफ़ॉल्ट से। एक फ्लो में बदलाव दूसरे फ्लो को प्रभावित नहीं करते।';
 
   @override
   String get flowLoadError => 'वर्कआउट प्रगति फ्लो लोड नहीं हो सकीं।';
@@ -2301,6 +2345,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get flowNoSavedYet => 'अभी कोई सहेजा गया फ्लो नहीं';
 
   @override
+  String get flowTapToConfigure => 'कॉन्फ़िगर करने के लिए टैप करें';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes नोड | $branches ब्रांच | $actions क्रियाएँ';
   }
@@ -2308,6 +2355,17 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '$count योजना फ्लो उपलब्ध हैं';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count योजनाएँ उपलब्ध',
+      one: '$count योजना उपलब्ध',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2363,6 +2421,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get gymExitAskBody => 'पूरा हुआ काम समाप्त करने से पहले पूछें।';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'सक्रिय वर्कआउट छोड़ते समय क्या होगा, यह चुनें।';
 
   @override
   String get gymExitDiscardBody => 'पूरा हुआ काम सहेजे बिना रद्द करें।';
@@ -3300,6 +3362,24 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get tutorialsHowItWorksBody =>
       'ट्यूटोरियल एक बार दिखाई देते हैं, फिर रास्ते से हट जाते हैं। किसी खास वॉकथ्रू को रीसेट करने के लिए समूह फैलाएँ।';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'अपने निर्देशित वॉकथ्रू के साथ नई शुरुआत करें।';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'ट्यूटोरियल अपने-आप एक बार दिखाई देते हैं। किसी श्रेणी को खोलकर किसी एक वॉकथ्रू को फिर से उपलब्ध करें।';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return '$topic ट्यूटोरियल';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'अगली बार $topic खोलने पर फिर से देखने के लिए रीसेट करें।';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'मुख्य टैब';
@@ -6806,4 +6886,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return 'पूरे टेम्पलेट की मुख्य एक्सरसाइज़ वाला $planName का $duration संस्करण।';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'वज़न, रेप और सेट की प्रगति के लिए पुन: उपयोग योग्य नियम बनाएँ।';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'नई जिम प्रोफ़ाइल ऐप के डिफ़ॉल्ट से शुरू होती हैं और नए प्लान प्रोफ़ाइल के डिफ़ॉल्ट से। बाद के बदलाव मौजूदा प्रोफ़ाइल या प्लान को अपने-आप अपडेट नहीं करते।';
+
+  @override
+  String get rulesRuleTypeLabel => 'नियम का प्रकार';
+
+  @override
+  String get rulesOperationLabel => 'क्रिया';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope, नियमों की संख्या: $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'नियमों की संख्या: $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'कुल नियम: $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'प्लान की संख्या: $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'नए प्लान के लिए डिफ़ॉल्ट नियम।';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'सिर्फ़ इसी प्लान के नियम।';
 }

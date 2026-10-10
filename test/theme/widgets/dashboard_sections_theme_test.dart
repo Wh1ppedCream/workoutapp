@@ -16,10 +16,9 @@ import 'package:provider/provider.dart';
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.dark
-              ? AppThemeFactory.dark(family)
-              : AppThemeFactory.light(family);
+      final theme = brightness == Brightness.dark
+          ? AppThemeFactory.dark(family)
+          : AppThemeFactory.light(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode dashboard section widgets resolve existing recipes', (

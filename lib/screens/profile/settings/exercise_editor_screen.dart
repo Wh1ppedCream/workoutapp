@@ -11,25 +11,36 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
 import '../../../theme/widgets/tonos_field.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../utils/localized_body_part_name.dart';
 import '../../../utils/localized_formatters.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
+import 'analytics_destination_surfaces.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import 'exercise_analytics_screen.dart';
 
 /// Exercise Editor Screen: allows viewing and editing an exercise definition.
-///
-/// TODO: Revisit this screen's information hierarchy and editing controls once
-/// the wider settings UI has settled, then refine the editor's visual design.
-class ExerciseEditorScreen extends StatefulWidget {
+class ExerciseEditorScreen extends StatelessWidget {
   const ExerciseEditorScreen({super.key});
 
   @override
-  State<ExerciseEditorScreen> createState() => _ExerciseEditorScreenState();
+  Widget build(BuildContext context) => AppExpressiveDestinationTheme(
+    family: AppExpressiveDestinationFamily.analytics,
+    child: const _ExerciseEditorBody(),
+  );
+}
+
+class _ExerciseEditorBody extends StatefulWidget {
+  const _ExerciseEditorBody();
+
+  @override
+  State<_ExerciseEditorBody> createState() => _ExerciseEditorScreenState();
 }
 
 class _CustomExerciseDraft {
@@ -42,7 +53,7 @@ class _CustomExerciseDraft {
   });
 }
 
-class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
+class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     with SingleTickerProviderStateMixin {
   AppRepository get _repo => context.read<AppRepository>();
   late final TabController _tabController;
@@ -60,8 +71,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   bool _hasPendingChanges = false;
 
   // Tab data
-  List<Map<String, Object?>> _muscleEntries =
-      []; // { 'id': int, 'name': String, 'catalogId': String?, 'percent': double }
+  List<Map<String, Object?>> _muscleEntries = []; // { 'id': int, 'name': String, 'catalogId': String?, 'percent': double }
 
   bool _useManualBody = false;
 
@@ -195,53 +205,46 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         _multiplyByRating = multiplyByRating;
 
         // — Muscles Tab
-        _muscleEntries =
-            def.muscles.map((rm) {
-              final override = musclePercents.firstWhere(
-                (e) => e.muscleId == rm.muscle.id,
-                orElse:
-                    () => ExerciseMusclePercent(
-                      exerciseDefId: defId,
-                      muscleId: rm.muscle.id,
-                      percent: 0.0,
-                    ),
-              );
-              return {
-                'id': rm.muscle.id,
-                'name': rm.muscle.name,
-                'catalogId': rm.muscle.catalogId,
-                'percent': override.percent,
-              };
-            }).toList();
+        _muscleEntries = def.muscles.map((rm) {
+          final override = musclePercents.firstWhere(
+            (e) => e.muscleId == rm.muscle.id,
+            orElse: () => ExerciseMusclePercent(
+              exerciseDefId: defId,
+              muscleId: rm.muscle.id,
+              percent: 0.0,
+            ),
+          );
+          return {
+            'id': rm.muscle.id,
+            'name': rm.muscle.name,
+            'catalogId': rm.muscle.catalogId,
+            'percent': override.percent,
+          };
+        }).toList();
         // --- Muscle-Calculated Bodyparts ---
-        _bodyAutoEntries =
-            autoBpMap.entries.map((e) {
-              return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
-            }).toList();
+        _bodyAutoEntries = autoBpMap.entries.map((e) {
+          return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
+        }).toList();
 
         // --- Manual-Assigned Bodyparts ---
-        _bodyManualEntries =
-            def.bodyParts.map((bp) {
-              // seed with override if present, else default 1 set per set
-              final autoMap = {
-                for (var e in autoBpMap.entries) e.key.id: e.value,
-              };
-              final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
-              return {'id': bp.id, 'name': bp.name, 'count': count};
-            }).toList();
+        _bodyManualEntries = def.bodyParts.map((bp) {
+          // seed with override if present, else default 1 set per set
+          final autoMap = {for (var e in autoBpMap.entries) e.key.id: e.value};
+          final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
+          return {'id': bp.id, 'name': bp.name, 'count': count};
+        }).toList();
 
         // Keep the canonical name for saves while retaining the stable ID for
         // localized display.
-        _equipmentEntries =
-            def.equipmentList
-                .map(
-                  (e) => <String, Object?>{
-                    'id': e.id,
-                    'name': e.name,
-                    'catalogId': e.catalogId,
-                  },
-                )
-                .toList();
+        _equipmentEntries = def.equipmentList
+            .map(
+              (e) => <String, Object?>{
+                'id': e.id,
+                'name': e.name,
+                'catalogId': e.catalogId,
+              },
+            )
+            .toList();
         _mediaItems = mediaItems;
         _primaryEquipmentId = def.equipmentId;
       });
@@ -306,8 +309,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       return;
     }
 
-    final equipmentIds =
-        _equipmentEntries.map((entry) => entry['id'] as int).toSet();
+    final equipmentIds = _equipmentEntries
+        .map((entry) => entry['id'] as int)
+        .toSet();
     if (_primaryEquipmentId != null) equipmentIds.add(_primaryEquipmentId!);
     final equipmentById = <int, Equipment>{
       for (final equipment in _allEquipment) equipment.id: equipment,
@@ -329,13 +333,12 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             equipmentId: _primaryEquipmentId,
             rating: rating,
             equipmentList: equipmentList,
-            bodyParts:
-                _bodyManualEntries
-                    .map(
-                      (entry) =>
-                          BodyPart(entry['id'] as int, entry['name'] as String),
-                    )
-                    .toList(),
+            bodyParts: _bodyManualEntries
+                .map(
+                  (entry) =>
+                      BodyPart(entry['id'] as int, entry['name'] as String),
+                )
+                .toList(),
             muscles: [
               for (var index = 0; index < _muscleEntries.length; index++)
                 RankedMuscle(
@@ -414,23 +417,22 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     if (!_isEditing || !_hasPendingChanges) return true;
     final result = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.exerciseEditorDiscardTitle),
-              content: Text(_strings.exerciseEditorDiscardBody),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(_strings.exerciseEditorKeepEditing),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(_strings.exerciseEditorDiscard),
-                ),
-              ],
+      builder: (context) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.exerciseEditorDiscardTitle),
+          content: Text(_strings.exerciseEditorDiscardBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(_strings.exerciseEditorKeepEditing),
             ),
-          ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(_strings.exerciseEditorDiscard),
+            ),
+          ],
+        ),
+      ),
     );
     return result ?? false;
   }
@@ -453,49 +455,47 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
     final result = await showDialog<Set<int>>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.exerciseEditorAddBodyparts),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: StatefulBuilder(
-                  builder: (ctx2, setState2) {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: available.length,
-                      itemBuilder: (_, i) {
-                        final bp = available[i];
-                        final checked = selectedIds.contains(bp.id);
-                        return CheckboxListTile(
-                          title: Text(localizedBodyPartName(context, bp.name)),
-                          value: checked,
-                          onChanged:
-                              (on) => setState2(() {
-                                if (on == true) {
-                                  selectedIds.add(bp.id);
-                                } else {
-                                  selectedIds.remove(bp.id);
-                                }
-                              }),
-                        );
-                      },
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.exerciseEditorAddBodyparts),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: StatefulBuilder(
+              builder: (ctx2, setState2) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: available.length,
+                  itemBuilder: (_, i) {
+                    final bp = available[i];
+                    final checked = selectedIds.contains(bp.id);
+                    return CheckboxListTile(
+                      title: Text(localizedBodyPartName(context, bp.name)),
+                      value: checked,
+                      onChanged: (on) => setState2(() {
+                        if (on == true) {
+                          selectedIds.add(bp.id);
+                        } else {
+                          selectedIds.remove(bp.id);
+                        }
+                      }),
                     );
                   },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(_strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                  child: Text(_strings.commonAdd),
-                ),
-              ],
+                );
+              },
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(_strings.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(selectedIds),
+              child: Text(_strings.commonAdd),
+            ),
+          ],
+        ),
+      ),
     );
 
     if (result != null && result.isNotEmpty) {
@@ -516,8 +516,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final allMuscles = await _repo.fetchAllMusclesFull();
     // 2) filter out the ones already staged
     final existingIds = _muscleEntries.map((e) => e['id'] as int).toSet();
-    final available =
-        allMuscles.where((m) => !existingIds.contains(m.id)).toList();
+    final available = allMuscles
+        .where((m) => !existingIds.contains(m.id))
+        .toList();
 
     // 3) track selections
     final selectedIds = <int>{};
@@ -526,56 +527,55 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     if (!mounted) return;
     final result = await showDialog<Set<int>>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.exerciseEditorAddMuscles),
-              content: SizedBox(
-                width: double.maxFinite,
-                // need StatefulBuilder to update the checkboxes
-                child: StatefulBuilder(
-                  builder: (ctx2, setDialogState) {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: available.length,
-                      itemBuilder: (ctx3, i) {
-                        final m = available[i];
-                        final checked = selectedIds.contains(m.id);
-                        return CheckboxListTile(
-                          title: LocalizedCatalogEntityName(
-                            entity: CatalogEntityDisplayName(
-                              catalogId: m.catalogId,
-                              canonicalName: m.name,
-                            ),
-                          ),
-                          value: checked,
-                          onChanged: (on) {
-                            setDialogState(() {
-                              if (on == true) {
-                                selectedIds.add(m.id);
-                              } else {
-                                selectedIds.remove(m.id);
-                              }
-                            });
-                          },
-                        );
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.exerciseEditorAddMuscles),
+          content: SizedBox(
+            width: double.maxFinite,
+            // need StatefulBuilder to update the checkboxes
+            child: StatefulBuilder(
+              builder: (ctx2, setDialogState) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: available.length,
+                  itemBuilder: (ctx3, i) {
+                    final m = available[i];
+                    final checked = selectedIds.contains(m.id);
+                    return CheckboxListTile(
+                      title: LocalizedCatalogEntityName(
+                        entity: CatalogEntityDisplayName(
+                          catalogId: m.catalogId,
+                          canonicalName: m.name,
+                        ),
+                      ),
+                      value: checked,
+                      onChanged: (on) {
+                        setDialogState(() {
+                          if (on == true) {
+                            selectedIds.add(m.id);
+                          } else {
+                            selectedIds.remove(m.id);
+                          }
+                        });
                       },
                     );
                   },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  child: Text(_strings.commonCancel),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-                TextButton(
-                  child: Text(_strings.commonAdd),
-                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                ),
-              ],
+                );
+              },
             ),
           ),
+          actions: [
+            TextButton(
+              child: Text(_strings.commonCancel),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+            TextButton(
+              child: Text(_strings.commonAdd),
+              onPressed: () => Navigator.of(ctx).pop(selectedIds),
+            ),
+          ],
+        ),
+      ),
     );
 
     // 5) merge them into the UI list
@@ -605,54 +605,52 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     if (!mounted) return;
     final result = await showDialog<Set<int>>(
       context: context,
-      builder:
-          (ctx) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.exerciseEditorAddEquipment),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: StatefulBuilder(
-                  builder: (ctx2, setState2) {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: available.length,
-                      itemBuilder: (_, i) {
-                        final eq = available[i];
-                        final checked = selectedIds.contains(eq.id);
-                        return CheckboxListTile(
-                          title: LocalizedCatalogEntityName(
-                            entity: CatalogEntityDisplayName(
-                              catalogId: eq.catalogId,
-                              canonicalName: eq.name,
-                            ),
-                          ),
-                          value: checked,
-                          onChanged:
-                              (on) => setState2(() {
-                                if (on == true) {
-                                  selectedIds.add(eq.id);
-                                } else {
-                                  selectedIds.remove(eq.id);
-                                }
-                              }),
-                        );
-                      },
+      builder: (ctx) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.exerciseEditorAddEquipment),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: StatefulBuilder(
+              builder: (ctx2, setState2) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: available.length,
+                  itemBuilder: (_, i) {
+                    final eq = available[i];
+                    final checked = selectedIds.contains(eq.id);
+                    return CheckboxListTile(
+                      title: LocalizedCatalogEntityName(
+                        entity: CatalogEntityDisplayName(
+                          catalogId: eq.catalogId,
+                          canonicalName: eq.name,
+                        ),
+                      ),
+                      value: checked,
+                      onChanged: (on) => setState2(() {
+                        if (on == true) {
+                          selectedIds.add(eq.id);
+                        } else {
+                          selectedIds.remove(eq.id);
+                        }
+                      }),
                     );
                   },
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(_strings.commonCancel),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(selectedIds),
-                  child: Text(_strings.commonAdd),
-                ),
-              ],
+                );
+              },
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(_strings.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(selectedIds),
+              child: Text(_strings.commonAdd),
+            ),
+          ],
+        ),
+      ),
     );
 
     if (result != null) {
@@ -685,6 +683,19 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
       );
     }
     final navigator = Navigator.of(context);
+    final destination = analyticsDestinationTokens(context);
+    final theme = Theme.of(context);
+    final saveBar = SettingsSaveBar(
+      label: _isSaving
+          ? _strings.exerciseEditorSaving
+          : _strings.exerciseEditorSaveChanges,
+      onPressed: _isSaving ? null : _saveDefinition,
+      cancelLabel: _strings.commonCancel,
+      onCancel: _isSaving ? null : _cancelEditing,
+      saveIcon: const Icon(Icons.save_outlined),
+      decorated: false,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+    );
     return PopScope<Object?>(
       canPop: !_isEditing || !_hasPendingChanges,
       onPopInvokedWithResult: (didPop, _) async {
@@ -693,53 +704,64 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         setState(() => _hasPendingChanges = false);
         navigator.pop();
       },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            tooltip: _strings.commonBack,
-            onPressed: _handleBack,
-            icon: const Icon(Icons.arrow_back),
+      child: AppExpressiveDestinationTheme(
+        family: AppExpressiveDestinationFamily.analytics,
+        child: Scaffold(
+          backgroundColor: destination?.pageCanvas,
+          appBar: AppBar(
+            leading: IconButton(
+              tooltip: _strings.commonBack,
+              onPressed: _handleBack,
+              icon: const Icon(Icons.arrow_back),
+            ),
+            title: const SizedBox.shrink(),
+            backgroundColor: destination?.surfacePrimary,
+            foregroundColor: destination?.onSurfacePrimary,
+            actions: [
+              IconButton(
+                tooltip: _strings.exerciseEditorChoose,
+                icon: const Icon(Icons.search),
+                onPressed: _isEditing || _isSaving ? null : _openCatalogPicker,
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: _isSaving
+                    ? null
+                    : (_selectedDef != null && !_isEditing)
+                    ? _startEditing
+                    : null,
+                tooltip: _strings.exerciseEditorEdit,
+              ),
+              IconButton(
+                tooltip: _strings.exerciseEditorCreate,
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: _isEditing || _isSaving
+                    ? null
+                    : _createCustomExercise,
+              ),
+            ],
           ),
-          title: const SizedBox.shrink(),
-          actions: [
-            IconButton(
-              tooltip: _strings.exerciseEditorChoose,
-              icon: const Icon(Icons.search),
-              onPressed: _isEditing || _isSaving ? null : _openCatalogPicker,
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed:
-                  _isSaving
-                      ? null
-                      : (_selectedDef != null && !_isEditing)
-                      ? _startEditing
-                      : null,
-              tooltip: _strings.exerciseEditorEdit,
-            ),
-            IconButton(
-              tooltip: _strings.exerciseEditorCreate,
-              icon: const Icon(Icons.add_circle_outline),
-              onPressed: _isEditing || _isSaving ? null : _createCustomExercise,
-            ),
-          ],
+          bottomNavigationBar: _isEditing && _selectedDef != null
+              ? destination == null
+                    ? saveBar
+                    : Theme(
+                        data: theme.copyWith(
+                          colorScheme: theme.colorScheme.copyWith(
+                            primary: destination.actionPrimary,
+                            onPrimary: destination.onActionPrimary,
+                          ),
+                        ),
+                        child: AnalyticsZone(
+                          role: AnalyticsSurfaceRole.accent,
+                          padding: EdgeInsets.zero,
+                          borderRadius: 0,
+                          outlined: true,
+                          child: saveBar,
+                        ),
+                      )
+              : null,
+          body: _selectedDef == null ? _buildPickerLanding() : _buildEditor(),
         ),
-        bottomNavigationBar:
-            _isEditing && _selectedDef != null
-                ? SettingsSaveBar(
-                  label:
-                      _isSaving
-                          ? _strings.exerciseEditorSaving
-                          : _strings.exerciseEditorSaveChanges,
-                  onPressed: _isSaving ? null : _saveDefinition,
-                  cancelLabel: _strings.commonCancel,
-                  onCancel: _isSaving ? null : _cancelEditing,
-                  saveIcon: const Icon(Icons.save_outlined),
-                  decorated: false,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                )
-                : null,
-        body: _selectedDef == null ? _buildPickerLanding() : _buildEditor(),
       ),
     );
   }
@@ -750,33 +772,47 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final tabSurface =
-        neo
+        destination?.surfacePrimary ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final tabForeground =
-        neo ? tonosForegroundForSurface(context, tabSurface) : scheme.onSurface;
+        destination?.onSurfacePrimary ??
+        (neo
+            ? tonosForegroundForSurface(context, tabSurface)
+            : scheme.onSurface);
     final tabSecondary =
-        neo
+        destination?.onSurfacePrimary.withValues(alpha: 0.82) ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, tabSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
     final tabLabelStyle = theme.textTheme.labelLarge?.copyWith(fontSize: 14);
     return ListView(
       padding: const EdgeInsets.only(bottom: 112),
       children: [
-        _buildEditorHeader(),
+        AnalyticsZone(
+          role: AnalyticsSurfaceRole.primary,
+          padding: const EdgeInsets.all(6),
+          child: _buildEditorHeader(),
+        ),
         Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
           decoration: BoxDecoration(
             color: tabSurface,
             borderRadius: shapes.profileTile,
-            border:
-                neo
-                    ? Border.all(
-                      color: tonosOutlineForSurface(context, tabSurface),
-                      width: shapes.outlineWidth,
-                    )
-                    : null,
+            border: destination != null
+                ? Border.all(
+                    color: destination.outlineAccent,
+                    width: shapes.outlineWidth,
+                  )
+                : neo
+                ? Border.all(
+                    color: tonosOutlineForSurface(context, tabSurface),
+                    width: shapes.outlineWidth,
+                  )
+                : null,
           ),
           child: TabBar(
             controller: _tabController,
@@ -788,12 +824,15 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
             unselectedLabelStyle: tabLabelStyle,
             indicator: BoxDecoration(
               color:
-                  neo
+                  destination?.surfaceSelected ??
+                  (neo
                       ? surfaces.dialogChoice
-                      : SettingsAccent.advanced.withValues(alpha: 0.20),
+                      : SettingsAccent.advanced.withValues(alpha: 0.20)),
               borderRadius: shapes.settingsTabIndicator,
             ),
-            labelColor: neo ? tabForeground : SettingsAccent.advanced,
+            labelColor:
+                destination?.onSurfaceSelected ??
+                (neo ? tabForeground : SettingsAccent.advanced),
             unselectedLabelColor: tabSecondary,
             tabs: [
               Tab(text: _strings.exerciseEditorMuscles),
@@ -805,13 +844,25 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-          child:
-              _isLoadingDetails
-                  ? const Padding(
-                    padding: EdgeInsets.only(top: 64),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                  : _buildCurrentTab(),
+          child: _isLoadingDetails
+              ? const Padding(
+                  padding: EdgeInsets.only(top: 64),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : destination == null
+              ? _buildCurrentTab()
+              : AnalyticsZone(
+                  role: switch (_activeTabIndex) {
+                    0 => AnalyticsSurfaceRole.secondary,
+                    1 => AnalyticsSurfaceRole.tertiary,
+                    2 => AnalyticsSurfaceRole.accent,
+                    _ => AnalyticsSurfaceRole.selected,
+                  },
+                  padding: const EdgeInsets.all(14),
+                  borderRadius: 26,
+                  outlined: true,
+                  child: _buildCurrentTab(),
+                ),
         ),
       ],
     );
@@ -853,94 +904,91 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     var selectedEquipmentId = 0;
     final draft = await showDialog<_CustomExerciseDraft>(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              final mediaQuery = MediaQuery.of(context);
-              final usableHeight =
-                  mediaQuery.size.height - mediaQuery.viewInsets.bottom;
-              return TonosDialogFrame(
-                styleFormControls: true,
-                styleDarkNeoPickerSurfaces: true,
-                child: AlertDialog(
-                  title: Text(_strings.exerciseEditorCreateCustomTitle),
-                  content: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(_strings.exerciseEditorCreateCustomBody),
-                          const SizedBox(height: 14),
-                          TextFormField(
-                            textCapitalization: TextCapitalization.words,
-                            autofocus: true,
-                            decoration: InputDecoration(
-                              labelText: _strings.exerciseEditorExerciseName,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final mediaQuery = MediaQuery.of(context);
+          final usableHeight =
+              mediaQuery.size.height - mediaQuery.viewInsets.bottom;
+          return TonosDialogFrame(
+            styleFormControls: true,
+            styleDarkNeoPickerSurfaces: true,
+            child: AlertDialog(
+              title: Text(_strings.exerciseEditorCreateCustomTitle),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: usableHeight * 0.48),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_strings.exerciseEditorCreateCustomBody),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        textCapitalization: TextCapitalization.words,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorExerciseName,
+                        ),
+                        onChanged: (value) => exerciseName = value,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        initialValue: selectedEquipmentId,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: _strings.exerciseEditorEquipment,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 0,
+                            child: Text(
+                              _strings.exerciseEditorNoEquipmentChoice,
                             ),
-                            onChanged: (value) => exerciseName = value,
                           ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<int>(
-                            value: selectedEquipmentId,
-                            isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText: _strings.exerciseEditorEquipment,
+                          ..._allEquipment.map(
+                            (equipment) => DropdownMenuItem(
+                              value: equipment.id,
+                              child: LocalizedCatalogEntityName(
+                                entity: CatalogEntityDisplayName(
+                                  catalogId: equipment.catalogId,
+                                  canonicalName: equipment.name,
+                                ),
+                              ),
                             ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 0,
-                                child: Text(
-                                  _strings.exerciseEditorNoEquipmentChoice,
-                                ),
-                              ),
-                              ..._allEquipment.map(
-                                (equipment) => DropdownMenuItem(
-                                  value: equipment.id,
-                                  child: LocalizedCatalogEntityName(
-                                    entity: CatalogEntityDisplayName(
-                                      catalogId: equipment.catalogId,
-                                      canonicalName: equipment.name,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                            onChanged:
-                                (value) => setDialogState(
-                                  () => selectedEquipmentId = value ?? 0,
-                                ),
                           ),
                         ],
+                        onChanged: (value) => setDialogState(
+                          () => selectedEquipmentId = value ?? 0,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(_strings.commonCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        final name = exerciseName.trim();
-                        if (name.isEmpty) return;
-                        Navigator.of(context).pop(
-                          _CustomExerciseDraft(
-                            name: name,
-                            primaryEquipmentId:
-                                selectedEquipmentId == 0
-                                    ? null
-                                    : selectedEquipmentId,
-                          ),
-                        );
-                      },
-                      child: Text(_strings.healthCreate),
-                    ),
-                  ],
                 ),
-              );
-            },
-          ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(_strings.commonCancel),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final name = exerciseName.trim();
+                    if (name.isEmpty) return;
+                    Navigator.of(context).pop(
+                      _CustomExerciseDraft(
+                        name: name,
+                        primaryEquipmentId: selectedEquipmentId == 0
+                            ? null
+                            : selectedEquipmentId,
+                      ),
+                    );
+                  },
+                  child: Text(_strings.healthCreate),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
     if (!mounted || draft == null) return;
 
@@ -979,9 +1027,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildPickerLanding() {
@@ -1019,7 +1066,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
       decoration: BoxDecoration(
-        borderRadius: shapes.settingsTitleCard,
+        borderRadius: context.usesExpressivePresentation
+            ? ExpressiveTrainShapes.focusHero
+            : shapes.settingsTitleCard,
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1047,14 +1096,17 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final headerSurface =
-        neo
+        destination?.surfaceSecondary ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final headerForeground =
-        neo
+        destination?.onSurfaceSecondary ??
+        (neo
             ? tonosForegroundForSurface(context, headerSurface)
-            : scheme.onSurface;
+            : scheme.onSurface);
     final selected = _selectedDef!;
 
     return Padding(
@@ -1070,89 +1122,91 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
               borderRadius: shapes.profileTile,
               border: Border.all(
                 color:
-                    neo
+                    destination?.outlineAccent ??
+                    (neo
                         ? tonosOutlineForSurface(context, headerSurface)
-                        : SettingsAccent.advanced.withValues(alpha: 0.42),
+                        : SettingsAccent.advanced.withValues(alpha: 0.42)),
                 width: shapes.outlineWidth,
               ),
             ),
-            child:
-                _isEditing
-                    ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _nameController,
-                            textCapitalization: TextCapitalization.words,
-                            style: settingsInputTextStyle(context),
-                            decoration: settingsFieldDecoration(
-                              context,
-                              label: _strings.exerciseEditorExerciseName,
-                              isDense: true,
-                            ),
-                            onChanged: (_) => _markChanged(),
+            child: _isEditing
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _nameController,
+                          textCapitalization: TextCapitalization.words,
+                          style: settingsInputTextStyle(context),
+                          decoration: settingsFieldDecoration(
+                            context,
+                            label: _strings.exerciseEditorExerciseName,
+                            isDense: true,
+                          ),
+                          onChanged: (_) => _markChanged(),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 88,
+                        child: TextField(
+                          controller: _ratingController,
+                          keyboardType: TextInputType.number,
+                          style: settingsInputTextStyle(context),
+                          decoration: settingsFieldDecoration(
+                            context,
+                            label: _strings.exerciseEditorRating,
+                            suffixText: '/100',
+                            isDense: true,
+                          ),
+                          onChanged: (_) => _markChanged(),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          selected.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: headerForeground,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          width: 88,
-                          child: TextField(
-                            controller: _ratingController,
-                            keyboardType: TextInputType.number,
-                            style: settingsInputTextStyle(context),
-                            decoration: settingsFieldDecoration(
-                              context,
-                              label: _strings.exerciseEditorRating,
-                              suffixText: '/100',
-                              isDense: true,
-                            ),
-                            onChanged: (_) => _markChanged(),
-                          ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 7,
                         ),
-                      ],
-                    )
-                    : Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            selected.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: headerForeground,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                neo
-                                    ? surfaces.dialogChoice
-                                    : SettingsAccent.advanced.withValues(
+                        decoration: BoxDecoration(
+                          color:
+                              destination?.surfaceSelected ??
+                              (neo
+                                  ? surfaces.dialogChoice
+                                  : SettingsAccent.advanced.withValues(
                                       alpha: 0.16,
-                                    ),
-                            borderRadius: shapes.control,
-                          ),
-                          child: Text(
-                            '${selected.rating}/100',
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color:
-                                  neo
-                                      ? headerForeground
-                                      : SettingsAccent.advanced,
-                              fontWeight: FontWeight.w900,
-                            ),
+                                    )),
+                          borderRadius: shapes.control,
+                        ),
+                        child: Text(
+                          '${selected.rating}/100',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color:
+                                destination?.onSurfaceSelected ??
+                                (neo
+                                    ? headerForeground
+                                    : SettingsAccent.advanced),
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -1166,16 +1220,20 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final surface =
-        neo
+        destination?.surfaceAccent ??
+        (neo
             ? context.surfaceTokens.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final foreground =
-        neo ? tonosForegroundForSurface(context, surface) : scheme.onSurface;
+        destination?.onSurfaceAccent ??
+        (neo ? tonosForegroundForSurface(context, surface) : scheme.onSurface);
     final secondary =
-        neo
+        destination?.onSurfaceAccent.withValues(alpha: 0.78) ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, surface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
     return Material(
       color: surface,
       borderRadius: shapes.settingsPanel,
@@ -1190,10 +1248,16 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: SettingsAccent.advanced.withValues(alpha: 0.16),
+                  color:
+                      destination?.surfaceSelected ??
+                      SettingsAccent.advanced.withValues(alpha: 0.16),
                   borderRadius: shapes.settingsAction,
                 ),
-                child: const Icon(Icons.tune, color: SettingsAccent.advanced),
+                child: Icon(
+                  Icons.tune,
+                  color:
+                      destination?.onSurfaceSelected ?? SettingsAccent.advanced,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1212,9 +1276,8 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                       _isEditing
                           ? 'Save or cancel definition changes first.'
                           : body,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: secondary),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: secondary),
                     ),
                   ],
                 ),
@@ -1246,23 +1309,22 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
   Future<bool> _confirmRemove(String itemName, String itemType) async {
     final shouldRemove = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(_strings.exerciseEditorRemoveItemTitle(itemType)),
-              content: Text(_strings.exerciseEditorRemoveItemBody(itemName)),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(_strings.exerciseEditorKeep),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(_strings.commonRemove),
-                ),
-              ],
+      builder: (context) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(_strings.exerciseEditorRemoveItemTitle(itemType)),
+          content: Text(_strings.exerciseEditorRemoveItemBody(itemName)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(_strings.exerciseEditorKeep),
             ),
-          ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(_strings.commonRemove),
+            ),
+          ],
+        ),
+      ),
     );
     return shouldRemove ?? false;
   }
@@ -1308,12 +1370,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         const SizedBox(height: 16),
         SettingsSection(
           title: _strings.exerciseEditorTargetMuscles,
-          subtitle:
-              _isEditing
-                  ? _strings.exerciseEditorOrderMusclesHint
-                  : _strings.exerciseEditorMusclesAssociated(
-                    _muscleEntries.length,
-                  ),
+          subtitle: _isEditing
+              ? _strings.exerciseEditorOrderMusclesHint
+              : _strings.exerciseEditorMusclesAssociated(_muscleEntries.length),
           accentColor: SettingsAccent.training,
           children: [
             if (_muscleEntries.isEmpty)
@@ -1363,70 +1422,67 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing:
-          !_isEditing
-              ? null
-              : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: _strings.exerciseEditorMoveUp,
-                    onPressed:
-                        index == 0
-                            ? null
-                            : () => setState(() {
-                              final previous = _muscleEntries[index - 1];
-                              _muscleEntries[index - 1] = entry;
-                              _muscleEntries[index] = previous;
-                              _hasPendingChanges = true;
-                            }),
-                    icon: const Icon(Icons.keyboard_arrow_up),
-                  ),
-                  IconButton(
-                    tooltip: _strings.exerciseEditorMoveDown,
-                    onPressed:
-                        index == _muscleEntries.length - 1
-                            ? null
-                            : () => setState(() {
-                              final next = _muscleEntries[index + 1];
-                              _muscleEntries[index + 1] = entry;
-                              _muscleEntries[index] = next;
-                              _hasPendingChanges = true;
-                            }),
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                  ),
-                  IconButton(
-                    tooltip: _strings.exerciseEditorRemoveMuscle,
-                    onPressed: () async {
-                      var displayName = name;
-                      try {
-                        displayName = await CatalogEntityLocalizer.instance
-                            .resolveName(
-                              CatalogEntityDisplayName(
-                                catalogId: catalogId,
-                                canonicalName: name,
-                              ),
-                              Localizations.localeOf(context),
-                            );
-                      } catch (_) {
-                        displayName = name;
-                      }
-                      if (!mounted) return;
-                      if (!await _confirmRemove(
-                        displayName,
-                        _strings.exerciseEditorMuscleItem,
-                      )) {
-                        return;
-                      }
-                      setState(() {
-                        _muscleEntries.removeAt(index);
-                        _hasPendingChanges = true;
-                      });
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-                ],
-              ),
+      trailing: !_isEditing
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: _strings.exerciseEditorMoveUp,
+                  onPressed: index == 0
+                      ? null
+                      : () => setState(() {
+                          final previous = _muscleEntries[index - 1];
+                          _muscleEntries[index - 1] = entry;
+                          _muscleEntries[index] = previous;
+                          _hasPendingChanges = true;
+                        }),
+                  icon: const Icon(Icons.keyboard_arrow_up),
+                ),
+                IconButton(
+                  tooltip: _strings.exerciseEditorMoveDown,
+                  onPressed: index == _muscleEntries.length - 1
+                      ? null
+                      : () => setState(() {
+                          final next = _muscleEntries[index + 1];
+                          _muscleEntries[index + 1] = entry;
+                          _muscleEntries[index] = next;
+                          _hasPendingChanges = true;
+                        }),
+                  icon: const Icon(Icons.keyboard_arrow_down),
+                ),
+                IconButton(
+                  tooltip: _strings.exerciseEditorRemoveMuscle,
+                  onPressed: () async {
+                    var displayName = name;
+                    try {
+                      displayName = await CatalogEntityLocalizer.instance
+                          .resolveName(
+                            CatalogEntityDisplayName(
+                              catalogId: catalogId,
+                              canonicalName: name,
+                            ),
+                            Localizations.localeOf(context),
+                          );
+                    } catch (_) {
+                      displayName = name;
+                    }
+                    if (!mounted) return;
+                    if (!await _confirmRemove(
+                      displayName,
+                      _strings.exerciseEditorMuscleItem,
+                    )) {
+                      return;
+                    }
+                    setState(() {
+                      _muscleEntries.removeAt(index);
+                      _hasPendingChanges = true;
+                    });
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
     );
   }
 
@@ -1450,12 +1506,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         const SizedBox(height: 16),
         SettingsSection(
           title: _strings.exerciseEditorAssociatedBodyparts,
-          subtitle:
-              _isEditing
-                  ? _strings.exerciseEditorBodypartsHint
-                  : _strings.exerciseEditorBodypartsAssociated(
-                    _bodyManualEntries.length,
-                  ),
+          subtitle: _isEditing
+              ? _strings.exerciseEditorBodypartsHint
+              : _strings.exerciseEditorBodypartsAssociated(
+                  _bodyManualEntries.length,
+                ),
           accentColor: SettingsAccent.training,
           children: [
             if (_bodyManualEntries.isEmpty)
@@ -1527,25 +1582,24 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         ),
       ),
       title: Text(displayName),
-      trailing:
-          !_isEditing
-              ? null
-              : IconButton(
-                tooltip: _strings.exerciseEditorRemoveBodypart,
-                onPressed: () async {
-                  if (!await _confirmRemove(
-                    displayName,
-                    _strings.exerciseEditorBodypartItem,
-                  )) {
-                    return;
-                  }
-                  setState(() {
-                    _bodyManualEntries.removeAt(index);
-                    _hasPendingChanges = true;
-                  });
-                },
-                icon: const Icon(Icons.delete_outline),
-              ),
+      trailing: !_isEditing
+          ? null
+          : IconButton(
+              tooltip: _strings.exerciseEditorRemoveBodypart,
+              onPressed: () async {
+                if (!await _confirmRemove(
+                  displayName,
+                  _strings.exerciseEditorBodypartItem,
+                )) {
+                  return;
+                }
+                setState(() {
+                  _bodyManualEntries.removeAt(index);
+                  _hasPendingChanges = true;
+                });
+              },
+              icon: const Icon(Icons.delete_outline),
+            ),
     );
   }
 
@@ -1562,12 +1616,11 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         const SizedBox(height: 16),
         SettingsSection(
           title: _strings.exerciseEditorEquipment,
-          subtitle:
-              _isEditing
-                  ? _strings.exerciseEditorEquipmentHint
-                  : _strings.exerciseEditorEquipmentAssociated(
-                    _equipmentEntries.length,
-                  ),
+          subtitle: _isEditing
+              ? _strings.exerciseEditorEquipmentHint
+              : _strings.exerciseEditorEquipmentAssociated(
+                  _equipmentEntries.length,
+                ),
           accentColor: SettingsAccent.training,
           children: [
             if (_equipmentEntries.isEmpty)
@@ -1616,43 +1669,42 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
           canonicalName: equipmentName,
         ),
       ),
-      trailing:
-          !_isEditing
-              ? null
-              : IconButton(
-                tooltip: _strings.exerciseEditorRemoveEquipment,
-                onPressed: () async {
-                  var displayName = equipmentName;
-                  try {
-                    displayName = await CatalogEntityLocalizer.instance
-                        .resolveName(
-                          CatalogEntityDisplayName(
-                            catalogId: catalogId,
-                            canonicalName: equipmentName,
-                          ),
-                          Localizations.localeOf(context),
-                        );
-                  } catch (_) {
-                    displayName = equipmentName;
+      trailing: !_isEditing
+          ? null
+          : IconButton(
+              tooltip: _strings.exerciseEditorRemoveEquipment,
+              onPressed: () async {
+                var displayName = equipmentName;
+                try {
+                  displayName = await CatalogEntityLocalizer.instance
+                      .resolveName(
+                        CatalogEntityDisplayName(
+                          catalogId: catalogId,
+                          canonicalName: equipmentName,
+                        ),
+                        Localizations.localeOf(context),
+                      );
+                } catch (_) {
+                  displayName = equipmentName;
+                }
+                if (!mounted) return;
+                if (!await _confirmRemove(
+                  displayName,
+                  _strings.exerciseEditorEquipmentItem,
+                )) {
+                  return;
+                }
+                if (!mounted) return;
+                setState(() {
+                  _equipmentEntries.removeAt(index);
+                  if (_primaryEquipmentId == equipmentId) {
+                    _primaryEquipmentId = null;
                   }
-                  if (!mounted) return;
-                  if (!await _confirmRemove(
-                    displayName,
-                    _strings.exerciseEditorEquipmentItem,
-                  )) {
-                    return;
-                  }
-                  if (!mounted) return;
-                  setState(() {
-                    _equipmentEntries.removeAt(index);
-                    if (_primaryEquipmentId == equipmentId) {
-                      _primaryEquipmentId = null;
-                    }
-                    _hasPendingChanges = true;
-                  });
-                },
-                icon: const Icon(Icons.delete_outline),
-              ),
+                  _hasPendingChanges = true;
+                });
+              },
+              icon: const Icon(Icons.delete_outline),
+            ),
     );
   }
 
@@ -1711,7 +1763,7 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DropdownButtonFormField<String>(
-                        value: mediaType,
+                        initialValue: mediaType,
                         items: [
                           DropdownMenuItem(
                             value: 'image',
@@ -1844,10 +1896,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         const SizedBox(height: 16),
         SettingsSection(
           title: _strings.exerciseEditorGuidance,
-          subtitle:
-              _isEditing
-                  ? _strings.exerciseEditorGuidanceEditing
-                  : _strings.exerciseEditorGuidanceReadOnly,
+          subtitle: _isEditing
+              ? _strings.exerciseEditorGuidanceEditing
+              : _strings.exerciseEditorGuidanceReadOnly,
           accentColor: SettingsAccent.advanced,
           children: [
             _buildGuideField(
@@ -1876,10 +1927,9 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         const SizedBox(height: 16),
         SettingsSection(
           title: _strings.exerciseEditorMediaLinks,
-          subtitle:
-              _isEditing
-                  ? _strings.exerciseEditorMediaLinksEditing
-                  : _strings.exerciseEditorMediaLinksCount(_mediaItems.length),
+          subtitle: _isEditing
+              ? _strings.exerciseEditorMediaLinksEditing
+              : _strings.exerciseEditorMediaLinksCount(_mediaItems.length),
           accentColor: SettingsAccent.data,
           children: [
             if (_mediaItems.isEmpty)
@@ -1931,28 +1981,27 @@ class _ExerciseEditorScreenState extends State<ExerciseEditorScreen>
         _localizedMediaType(item.mediaType),
       ),
       onTap: _isEditing ? () => _editMediaItem(index) : null,
-      trailing:
-          _isEditing
-              ? IconButton(
-                tooltip: _strings.exerciseEditorRemoveMedia,
-                onPressed: () async {
-                  if (!await _confirmRemove(
-                    _mediaLabel(item),
-                    _strings.exerciseEditorMediaLinkItem,
-                  )) {
-                    return;
-                  }
-                  setState(() {
-                    _mediaItems.removeAt(index);
-                    _hasPendingChanges = true;
-                  });
-                },
-                icon: const Icon(Icons.delete_outline),
-              )
-              : Text(
-                item.mediaType.toUpperCase(),
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
+      trailing: _isEditing
+          ? IconButton(
+              tooltip: _strings.exerciseEditorRemoveMedia,
+              onPressed: () async {
+                if (!await _confirmRemove(
+                  _mediaLabel(item),
+                  _strings.exerciseEditorMediaLinkItem,
+                )) {
+                  return;
+                }
+                setState(() {
+                  _mediaItems.removeAt(index);
+                  _hasPendingChanges = true;
+                });
+              },
+              icon: const Icon(Icons.delete_outline),
+            )
+          : Text(
+              item.mediaType.toUpperCase(),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
     );
   }
 

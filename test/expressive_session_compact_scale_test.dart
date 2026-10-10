@@ -24,8 +24,11 @@ void main() {
     testWidgets(
       'Expressive SessionScreen remains usable at 320dp and ${textScale}x text',
       (tester) async {
-        await tester.binding.setSurfaceSize(const Size(320, 960));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
+        tester.view
+          ..devicePixelRatio = 1
+          ..physicalSize = const Size(320, 960);
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
         SharedPreferences.setMockInitialValues(<String, Object>{
           'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
         });
@@ -37,12 +40,12 @@ void main() {
         await tester.pumpAndSettle();
         await tester.pump(const Duration(milliseconds: 421));
         await tester.pumpAndSettle();
-
         final exerciseCard = find.byType(ExerciseCard);
         final weightCard = find.byType(WeightCard);
         final checkboxes = find.byType(Checkbox);
         final finish = find.byKey(AppTestKeys.sessionFinish);
 
+        expect(tester.takeException(), isNull);
         expect(exerciseCard, findsOneWidget);
         expect(weightCard, findsOneWidget);
         expect(checkboxes, findsNWidgets(4));
@@ -95,32 +98,152 @@ void main() {
       },
     );
   }
+
+  testWidgets('Expressive SessionScreen adapts across viewport sizes', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
+    });
+    final fixture = await _makeFixture();
+    addTearDown(fixture.session.dispose);
+    addTearDown(fixture.units.dispose);
+
+    const viewports = <(double, double, double)>[
+      (320, 960, 1),
+      (360, 800, 1),
+      (390, 844, 1),
+      (430, 932, 1),
+      (600, 960, 1),
+      (800, 1100, 1),
+      (1024, 1366, 1),
+      (640, 360, 1),
+      (1024, 768, 1),
+      (320, 720, 2),
+      (390, 844, 1.3),
+      (430, 932, 1.5),
+      (800, 600, 1.5),
+    ];
+
+    for (final (width, height, textScale) in viewports) {
+      tester.view.physicalSize = Size(width, height);
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      await tester.pumpWidget(_host(fixture, textScale: textScale));
+      await tester.pumpAndSettle();
+
+      final cardRect = tester.getRect(find.byType(ExerciseCard));
+      expect(
+        cardRect.width,
+        lessThanOrEqualTo(width < 792 ? width - 32 : 760),
+        reason: 'card width $width, height $height, text $textScale',
+      );
+      final finishRect = tester.getRect(find.byKey(AppTestKeys.sessionFinish));
+      final bottomSafeArea = find
+          .ancestor(
+            of: find.byKey(AppTestKeys.sessionFinish),
+            matching: find.byType(SafeArea),
+          )
+          .first;
+      final bottomBarRect = tester.getRect(bottomSafeArea);
+      expect(
+        bottomBarRect.height,
+        lessThanOrEqualTo(finishRect.height + 16),
+        reason: 'Finish bar should wrap its action at $width×$height',
+      );
+      final sessionListRect = tester.getRect(find.byType(ListView));
+      expect(
+        sessionListRect.height,
+        greaterThan(0),
+        reason: 'Session list should retain a viewport at $width×$height',
+      );
+      expect(finishRect.top, greaterThanOrEqualTo(0));
+      expect(finishRect.bottom, lessThanOrEqualTo(height));
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'width $width, height $height, text $textScale',
+      );
+    }
+  });
+
+  testWidgets(
+    'Expressive session keeps focused inputs and finish action inset',
+    (tester) async {
+      tester.view
+        ..devicePixelRatio = 1
+        ..physicalSize = const Size(320, 640);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'guided_tutorial_completed.${TutorialIds.firstWorkoutSession}': true,
+      });
+      final fixture = await _makeFixture();
+      addTearDown(fixture.session.dispose);
+      addTearDown(fixture.units.dispose);
+
+      await tester.pumpWidget(_host(fixture, textScale: 1.5, bottomInset: 280));
+      await tester.pumpAndSettle();
+      final weightField = find.byType(TextFormField).first;
+      await tester.tap(weightField);
+      await tester.pump();
+      expect(
+        tester
+            .widget<EditableText>(find.byType(EditableText).first)
+            .focusNode
+            .hasFocus,
+        isTrue,
+      );
+      expect(
+        tester.getRect(weightField).bottom,
+        lessThanOrEqualTo(360),
+        reason: 'the focused field should remain above the represented keyboard inset',
+      );
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(_host(fixture, textScale: 1.5));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.byKey(AppTestKeys.sessionFinish)).bottom,
+        lessThanOrEqualTo(640),
+        reason: 'the Finish action should return within screen bounds after IME dismissal',
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
-Widget _host(_SessionFixture fixture, {required double textScale}) =>
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ActiveSession>.value(value: fixture.session),
-        ChangeNotifierProvider<UnitPreferenceProvider>.value(
-          value: fixture.units,
+Widget _host(
+  _SessionFixture fixture, {
+  required double textScale,
+  double bottomInset = 0,
+}) => MultiProvider(
+  providers: [
+    ChangeNotifierProvider<ActiveSession>.value(value: fixture.session),
+    ChangeNotifierProvider<UnitPreferenceProvider>.value(value: fixture.units),
+    Provider<AppRepository>.value(value: fixture.repository),
+  ],
+  child: MaterialApp(
+    theme: ExpressiveThemeDefinition.light(),
+    themeAnimationDuration: Duration.zero,
+    locale: const Locale('en'),
+    localizationsDelegates: tonosLocalizationDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Builder(
+      builder: (context) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(textScale),
+          viewInsets: EdgeInsets.only(bottom: bottomInset),
         ),
-        Provider<AppRepository>.value(value: fixture.repository),
-      ],
-      child: MaterialApp(
-        theme: ExpressiveThemeDefinition.light(),
-        themeAnimationDuration: Duration.zero,
-        locale: const Locale('en'),
-        localizationsDelegates: tonosLocalizationDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (context) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(textScale)),
-            child: const SessionScreen(),
-          ),
-        ),
+        child: const SessionScreen(),
       ),
-    );
+    ),
+  ),
+);
 
 Future<_SessionFixture> _makeFixture() async {
   final repository = _EmptyRepository();

@@ -5,9 +5,12 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/gym_models.dart';
 import '../../../models/preset_models.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/active_plan_store.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -41,6 +44,7 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
 
   Future<void> _loadFlows() async {
     final request = ++_loadRequest;
+    final activePlanStore = _activePlanStoreOrNull();
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -55,9 +59,9 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
       ]);
       final appDefinition = initialResults[0] as FlowDefinition;
       final profiles = initialResults[1] as List<GymProfile>;
-      final groups = (await Future.wait(profiles.map(_loadProfileGroup)))
-          .whereType<_ProfileFlowGroup>()
-          .toList();
+      final groups = (await Future.wait(
+        profiles.map((profile) => _loadProfileGroup(profile, activePlanStore)),
+      )).whereType<_ProfileFlowGroup>().toList();
 
       if (!mounted || request != _loadRequest) return;
       setState(() {
@@ -74,7 +78,18 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
     }
   }
 
-  Future<_ProfileFlowGroup?> _loadProfileGroup(GymProfile profile) async {
+  ActivePlanStore? _activePlanStoreOrNull() {
+    try {
+      return context.read<ActivePlanStore>();
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
+  Future<_ProfileFlowGroup?> _loadProfileGroup(
+    GymProfile profile,
+    ActivePlanStore? activePlanStore,
+  ) async {
     final profileId = profile.id;
     if (profileId == null) return null;
 
@@ -95,18 +110,48 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
         );
       }),
     );
+    final activePlanIds = await _loadActivePlanIds(
+      profileId,
+      plans,
+      activePlanStore,
+    );
 
     return _ProfileFlowGroup(
       profile: profile,
       summary: _FlowSummary.fromDefinition(defaultFlow),
       plans: plans,
+      activePlanIds: activePlanIds,
     );
   }
 
   Future<void> _openEditor(Widget editor) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => editor));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.profile,
+          child: editor,
+        ),
+      ),
+    );
     if (!mounted) return;
     await _loadFlows();
+  }
+
+  Future<Set<int>?> _loadActivePlanIds(
+    int profileId,
+    List<_PlanFlow> plans,
+    ActivePlanStore? store,
+  ) async {
+    if (store == null) return null;
+
+    try {
+      final activePlanIds = await store.load(profileId);
+      return activePlanIds.intersection(plans.map((plan) => plan.id).toSet());
+    } catch (_) {
+      // Grouping is optional presentation metadata; keep the flow list usable
+      // if status cannot be loaded in a preview or older host configuration.
+      return null;
+    }
   }
 
   @override
@@ -115,89 +160,104 @@ class _WorkoutProgressFlowsPageState extends State<WorkoutProgressFlowsPage> {
     final strings = AppLocalizations.of(context);
     final expressive = context.usesExpressivePresentation;
     final expressiveTokens = expressive
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
     final appColor = scheme.primary;
     final profileColor = _profileColor(context);
     final planColor = _planColor(context);
 
-    return SettingsPageScaffold(
-      title: strings.flowPageTitle,
-      subtitle: strings.flowPageSubtitle,
-      icon: Icons.account_tree_outlined,
-      heroAccentColor: SettingsAccent.advanced,
-      children: [
-        SettingsInfoCard(
-          icon: Icons.copy_all_outlined,
-          title: strings.flowHowCopiedTitle,
-          body: strings.flowHowCopiedBody,
-        ),
-        const SizedBox(height: 14),
-        _ScopeLegend(
-          appColor: appColor,
-          profileColor: profileColor,
-          planColor: planColor,
-        ),
-        const SizedBox(height: 18),
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 52),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else if (_loadFailure != null)
-          SafeErrorView(
-            title: strings.flowLoadError,
-            failure: _loadFailure!,
-            onRetry: _loadFlows,
-            compact: true,
-          )
-        else ...[
-          _FlowScopeCard(
-            color: appColor,
-            expressiveSurface: expressiveTokens?.focusSurface,
-            expressiveForeground: expressiveTokens?.focusForeground,
-            icon: Icons.apps_outlined,
-            title: strings.rulesAppDefaultsTitle,
-            subtitle: strings.flowAppDefaultsSubtitle,
-            initiallyExpanded: true,
-            child: _FlowEntryTile(
-              color: appColor,
-              icon: Icons.account_tree_outlined,
-              title: strings.flowAppDefaultEntry,
-              summary: _appSummary,
-              onTap: () =>
-                  _openEditor(const AutoPresetFlowScreen.appDefaults()),
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.profile,
+      child: SettingsPageScaffold(
+        title: strings.flowPageTitle,
+        subtitle: expressive
+            ? strings.flowPageSubtitleExpressive
+            : strings.flowPageSubtitle,
+        icon: Icons.account_tree_outlined,
+        heroAccentColor: SettingsAccent.advanced,
+        useExpressiveProfileHeroShape: true,
+        children: [
+          SettingsInfoCard(
+            icon: Icons.copy_all_outlined,
+            title: strings.flowHowCopiedTitle,
+            body: expressive
+                ? strings.flowHowCopiedBodyExpressive
+                : strings.flowHowCopiedBody,
+          ),
+          if (expressive)
+            const SizedBox(height: 14)
+          else ...[
+            const SizedBox(height: 14),
+            _ScopeLegend(
+              appColor: appColor,
+              profileColor: profileColor,
+              planColor: planColor,
             ),
-          ),
-          const SizedBox(height: 22),
-          _SectionHeading(
-            color: profileColor,
-            title: strings.rulesGymProfilesTitle,
-            subtitle: strings.flowGymProfilesSubtitle,
-          ),
-          const SizedBox(height: 10),
-          if (_profiles.isEmpty)
-            _EmptyFlowsCard(message: strings.flowNoProfiles)
-          else
-            for (var index = 0; index < _profiles.length; index++) ...[
-              _ProfileFlowCard(
-                group: _profiles[index],
-                profileColor: profileColor,
-                planColor: planColor,
-                initiallyExpanded: index == 0,
-                onOpenProfile: () => _openEditor(
-                  AutoPresetFlowScreen.profileDefaults(
-                    profileId: _profiles[index].profile.id!,
-                    profileName: _profiles[index].profile.name,
-                  ),
-                ),
-                onOpenPlan: (plan) =>
-                    _openEditor(AutoPresetFlowScreen(presetId: plan.id)),
+            const SizedBox(height: 18),
+          ],
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 52),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_loadFailure != null)
+            SafeErrorView(
+              title: strings.flowLoadError,
+              failure: _loadFailure!,
+              onRetry: _loadFlows,
+              compact: true,
+            )
+          else ...[
+            _FlowScopeCard(
+              color: appColor,
+              expressiveSurface: expressiveTokens?.surfacePrimary,
+              expressiveForeground: expressiveTokens?.onSurfacePrimary,
+              icon: Icons.apps_outlined,
+              title: strings.rulesAppDefaultsTitle,
+              subtitle: strings.flowAppDefaultsSubtitle,
+              initiallyExpanded: true,
+              child: _FlowEntryTile(
+                color: appColor,
+                icon: Icons.account_tree_outlined,
+                title: strings.flowAppDefaultEntry,
+                summary: _appSummary,
+                onTap: () =>
+                    _openEditor(const AutoPresetFlowScreen.appDefaults()),
               ),
-              if (index < _profiles.length - 1) const SizedBox(height: 12),
-            ],
+            ),
+            const SizedBox(height: 22),
+            _SectionHeading(
+              color: profileColor,
+              title: strings.rulesGymProfilesTitle,
+              subtitle: strings.flowGymProfilesSubtitle,
+            ),
+            const SizedBox(height: 10),
+            if (_profiles.isEmpty)
+              _EmptyFlowsCard(message: strings.flowNoProfiles)
+            else
+              for (var index = 0; index < _profiles.length; index++) ...[
+                _ProfileFlowCard(
+                  group: _profiles[index],
+                  profileColor: profileColor,
+                  planColor: planColor,
+                  initiallyExpanded: index == 0,
+                  onOpenProfile: () => _openEditor(
+                    AutoPresetFlowScreen.profileDefaults(
+                      profileId: _profiles[index].profile.id!,
+                      profileName: _profiles[index].profile.name,
+                    ),
+                  ),
+                  onOpenPlan: (plan) =>
+                      _openEditor(AutoPresetFlowScreen(presetId: plan.id)),
+                ),
+                if (index < _profiles.length - 1) const SizedBox(height: 12),
+              ],
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -206,11 +266,13 @@ class _ProfileFlowGroup {
   final GymProfile profile;
   final _FlowSummary summary;
   final List<_PlanFlow> plans;
+  final Set<int>? activePlanIds;
 
   const _ProfileFlowGroup({
     required this.profile,
     required this.summary,
     required this.plans,
+    required this.activePlanIds,
   });
 }
 
@@ -253,8 +315,12 @@ class _FlowSummary {
     );
   }
 
-  String label(AppLocalizations strings) {
-    if (nodes == 0) return strings.flowNoSavedYet;
+  bool get hasContent => nodes > 0 || branches > 0 || actions > 0;
+
+  String label(AppLocalizations strings, {required bool expressive}) {
+    if (!hasContent) {
+      return expressive ? strings.flowTapToConfigure : strings.flowNoSavedYet;
+    }
     return strings.flowSummary(nodes, branches, actions);
   }
 }
@@ -425,15 +491,22 @@ class _ProfileFlowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressive = context.usesExpressivePresentation;
     final expressiveTokens = context.usesExpressivePresentation
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
     return _FlowScopeCard(
       color: profileColor,
-      expressiveSurface: expressiveTokens?.activePlansSurface,
+      expressiveSurface: expressiveTokens?.surfaceSecondary,
+      expressiveForeground: expressiveTokens?.onSurfaceSecondary,
       icon: Icons.fitness_center_outlined,
       title: group.profile.name,
-      subtitle: strings.flowPlansAvailable(group.plans.length),
+      subtitle: expressive
+          ? strings.flowPlansAvailableExpressive(group.plans.length)
+          : strings.flowPlansAvailable(group.plans.length),
       initiallyExpanded: initiallyExpanded,
       child: Column(
         children: [
@@ -459,21 +532,68 @@ class _ProfileFlowCard extends StatelessWidget {
           const SizedBox(height: 8),
           if (group.plans.isEmpty)
             _EmptyFlowsCard(message: strings.rulesNoPlans, compact: true)
-          else
-            for (var index = 0; index < group.plans.length; index++) ...[
-              _FlowEntryTile(
-                color: planColor,
-                icon: Icons.account_tree_outlined,
-                title: group.plans[index].name,
-                summary: group.plans[index].summary,
-                onTap: () => onOpenPlan(group.plans[index]),
+          else ...[
+            if (!expressive || group.activePlanIds == null) ...[
+              ..._planRows(context, group.plans),
+            ] else ...[
+              ..._planStatusGroup(
+                context,
+                strings.trainActivePlans,
+                group.plans
+                    .where((plan) => group.activePlanIds!.contains(plan.id))
+                    .toList(),
               ),
-              if (index < group.plans.length - 1) const SizedBox(height: 8),
+              if (group.activePlanIds!.isNotEmpty &&
+                  group.activePlanIds!.length < group.plans.length)
+                const SizedBox(height: 12),
+              ..._planStatusGroup(
+                context,
+                strings.trainArchivedPlans,
+                group.plans
+                    .where((plan) => !group.activePlanIds!.contains(plan.id))
+                    .toList(),
+              ),
             ],
+          ],
         ],
       ),
     );
   }
+
+  List<Widget> _planStatusGroup(
+    BuildContext context,
+    String title,
+    List<_PlanFlow> plans,
+  ) {
+    if (plans.isEmpty) return const [];
+    return [
+      Padding(
+        padding: const EdgeInsets.only(left: 2, bottom: 6),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.labelLarge
+                ?.copyWith(color: planColor, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ),
+      ..._planRows(context, plans),
+    ];
+  }
+
+  List<Widget> _planRows(BuildContext context, List<_PlanFlow> plans) => [
+    for (var index = 0; index < plans.length; index++) ...[
+      _FlowEntryTile(
+        color: planColor,
+        icon: Icons.account_tree_outlined,
+        title: plans[index].name,
+        summary: plans[index].summary,
+        onTap: () => onOpenPlan(plans[index]),
+      ),
+      if (index < plans.length - 1) const SizedBox(height: 8),
+    ],
+  ];
 }
 
 class _FlowEntryTile extends StatelessWidget {
@@ -498,21 +618,24 @@ class _FlowEntryTile extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final expressive = context.usesExpressivePresentation;
     final expressiveTokens = expressive
-        ? Theme.of(context).extension<AppExpressiveTrainTokens>()!
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
         : null;
     final neo = context.usesNeoPresentation;
     final tileSurface = expressive
-        ? expressiveTokens!.focusInset
+        ? expressiveTokens!.surfaceAccent
         : neo
         ? surfaces.dialogChoice
         : null;
     final tileForeground = expressive
-        ? expressiveTokens!.focusInsetForeground
+        ? expressiveTokens!.onSurfaceAccent
         : neo && tileSurface != null
         ? tonosForegroundForSurface(context, tileSurface)
         : scheme.onSurface;
     final tileSecondary = expressive
-        ? expressiveTokens!.focusInsetForeground
+        ? expressiveTokens!.onSurfaceAccent
         : neo && tileSurface != null
         ? tonosSecondaryForegroundForSurface(context, tileSurface)
         : scheme.onSurfaceVariant;
@@ -574,7 +697,10 @@ class _FlowEntryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      summary.label(AppLocalizations.of(context)),
+                      summary.label(
+                        AppLocalizations.of(context),
+                        expressive: context.usesExpressivePresentation,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall
@@ -645,27 +771,38 @@ class _EmptyFlowsCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final expressive = context.usesExpressivePresentation;
+    final expressiveTokens = expressive
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
+        : null;
     final neo = context.usesNeoPresentation;
     final emptySurface = neo ? surfaces.panel : null;
-    final foreground = neo && emptySurface != null
+    final foreground = expressive
+        ? expressiveTokens!.onSurfaceTertiary
+        : neo && emptySurface != null
         ? tonosForegroundForSurface(context, emptySurface)
         : scheme.onSurfaceVariant;
-    final secondary = neo && emptySurface != null
-        ? tonosSecondaryForegroundForSurface(context, emptySurface)
-        : scheme.onSurfaceVariant;
+    final secondary = foreground;
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
-        color: neo
+        color: expressive
+            ? expressiveTokens!.surfaceTertiary
+            : neo
             ? emptySurface
             : scheme.surfaceContainerHighest.withValues(alpha: .24),
         borderRadius: shapes.card,
-        border: Border.all(
-          color: neo
-              ? tonosOutlineForSurface(context, emptySurface!)
-              : scheme.outlineVariant.withValues(alpha: .5),
-          width: neo ? shapes.outlineWidth : 1,
-        ),
+        border: expressive
+            ? null
+            : Border.all(
+                color: neo
+                    ? tonosOutlineForSurface(context, emptySurface!)
+                    : scheme.outlineVariant.withValues(alpha: .5),
+                width: neo ? shapes.outlineWidth : 1,
+              ),
       ),
       child: Row(
         children: [

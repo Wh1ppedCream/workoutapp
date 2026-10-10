@@ -10,6 +10,9 @@ import 'package:env_test/screens/exercise/analytics_dashboard_screen.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/widgets/body_heatmap.dart';
+import 'package:env_test/widgets/localized_catalog_entity_name.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -42,8 +45,9 @@ void main() {
     );
     expect(rule.rationale, contains('eight current inventory findings'));
 
-    final ownedFindings =
-        report.findings.where((finding) => finding.ruleId == rule.id).toList();
+    final ownedFindings = report.findings
+        .where((finding) => finding.ruleId == rule.id)
+        .toList();
     expect(ownedFindings, hasLength(8));
     expect(
       ownedFindings.where((finding) => finding.kind == 'color_transform'),
@@ -62,22 +66,20 @@ void main() {
       everyElement('migrated'),
     );
 
-    final remaining =
-        report.findings
-            .where(
-              (finding) =>
-                  finding.file == rule.pattern && finding.status == 'pending',
-            )
-            .toList();
+    final remaining = report.findings
+        .where(
+          (finding) =>
+              finding.file == rule.pattern && finding.status == 'pending',
+        )
+        .toList();
     expect(remaining, isEmpty);
   });
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Weekly Set Analytics resolves theme roles', (
@@ -113,9 +115,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final pageContext = tester.element(
-          find.byType(AnalyticsDashboardScreen),
-        );
+        final pageContext = tester.element(find.byType(Scaffold).first);
         final strings = AppLocalizations.of(pageContext);
         final scheme = Theme.of(pageContext).colorScheme;
         final shapes = theme.shapeTokens;
@@ -129,8 +129,9 @@ void main() {
         );
         expect(shapes.outlineWidth, family == AppThemeFamily.classic ? 1 : 2);
         final statFill = scheme.surfaceContainerHighest.withValues(alpha: 0.7);
-        final statBoxes =
-            tester.widgetList<Container>(find.byType(Container)).where((box) {
+        final statBoxes = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((box) {
               final decoration = box.decoration;
               return box.padding ==
                       const EdgeInsets.symmetric(
@@ -139,7 +140,8 @@ void main() {
                       ) &&
                   decoration is BoxDecoration &&
                   decoration.color == statFill;
-            }).toList();
+            })
+            .toList();
 
         expect(find.text(strings.weeklySetsTitle), findsOneWidget);
         expect(find.byType(Card), findsOneWidget);
@@ -178,20 +180,22 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text(strings.weeklySetsNoMuscles), findsNothing);
 
-        final iconContainers =
-            tester.widgetList<Container>(find.byType(Container)).where((box) {
+        final iconContainers = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((box) {
               final decoration = box.decoration;
               return box.child is Icon &&
                   (box.child! as Icon).icon == Icons.fitness_center &&
                   decoration is BoxDecoration &&
                   decoration.color == iconFill;
-            }).toList();
+            })
+            .toList();
         expect(iconContainers, hasLength(4));
         final expectedIconColor =
             family == AppThemeFamily.neoBrutalism &&
-                    brightness == Brightness.light
-                ? scheme.onPrimaryContainer
-                : scheme.primary;
+                brightness == Brightness.light
+            ? scheme.onPrimaryContainer
+            : scheme.primary;
         expect(
           iconContainers.map((box) => (box.child! as Icon).color),
           everyElement(expectedIconColor),
@@ -220,12 +224,13 @@ void main() {
           hasLength(4),
         );
 
-        final statusRows =
-            tester.widgetList<Ink>(find.byType(Ink)).where((ink) {
-              final decoration = ink.decoration;
-              return decoration is BoxDecoration &&
-                  rowFills.contains(decoration.color);
-            }).toList();
+        final statusRows = tester.widgetList<Ink>(find.byType(Ink)).where((
+          ink,
+        ) {
+          final decoration = ink.decoration;
+          return decoration is BoxDecoration &&
+              rowFills.contains(decoration.color);
+        }).toList();
         expect(statusRows, hasLength(4));
         for (final row in statusRows) {
           final decoration = row.decoration! as BoxDecoration;
@@ -240,6 +245,162 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
       });
     }
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive Weekly Set Analytics preserves overview, tabs, and heatmap at 320dp 2x ${brightness.name}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.weeklySetsOverview}': true,
+        });
+        final theme = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF345B50),
+            brightness: brightness,
+          ),
+          extensions: const [
+            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+          ],
+        );
+        final repository = _WeeklySetsRepository();
+        final units = UnitPreferenceProvider();
+        await units.ready;
+        addTearDown(units.dispose);
+
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                themeAnimationDuration: Duration.zero,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: const AnalyticsDashboardScreen(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final pageContext = tester.element(
+          find.byType(AnalyticsDashboardScreen),
+        );
+        final strings = AppLocalizations.of(pageContext);
+        final routeContext = tester.element(find.text(strings.weeklySetsTitle));
+        final tokens = Theme.of(routeContext)
+            .extension<AppExpressiveDestinationTokens>()!;
+        expect(tokens.family, AppExpressiveDestinationFamily.analytics);
+        expect(find.text(strings.weeklySetsTitle), findsOneWidget);
+        expect(find.text(strings.weeklySetsTotal), findsOneWidget);
+        expect(find.text(strings.weeklySetsTime), findsOneWidget);
+        expect(find.text(strings.weeklySetsVolume), findsOneWidget);
+        expect(find.byType(BodyHeatmap), findsOneWidget);
+        expect(find.byType(TabBar), findsOneWidget);
+        final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+        expect(tabBar.labelColor, tokens.actionPrimary);
+        expect(tabBar.indicatorColor, tokens.outlineAccent);
+
+        await tester.tap(find.text(strings.weeklySetsMuscles));
+        await tester.pumpAndSettle();
+        expect(
+          find.byType(LocalizedCatalogEntityName),
+          findsAtLeastNWidgets(1),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive Weekly Set Analytics adapts across viewport and text scales ${brightness.name}',
+      (tester) async {
+        const layouts = <({Size size, double scale})>[
+          (size: Size(320, 900), scale: 1),
+          (size: Size(320, 900), scale: 1.5),
+          (size: Size(320, 900), scale: 2),
+          (size: Size(390, 844), scale: 1),
+          (size: Size(600, 1000), scale: 1.5),
+          (size: Size(800, 390), scale: 1.5),
+          (size: Size(1024, 768), scale: 2),
+        ];
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.weeklySetsOverview}': true,
+        });
+        final theme = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF345B50),
+            brightness: brightness,
+          ),
+          extensions: const [
+            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+          ],
+        );
+        final repository = _WeeklySetsRepository();
+        final units = UnitPreferenceProvider();
+        await units.ready;
+        addTearDown(units.dispose);
+
+        for (final layout in layouts) {
+          await tester.binding.setSurfaceSize(layout.size);
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                themeAnimationDuration: Duration.zero,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(layout.scale)),
+                  child: child!,
+                ),
+                home: const AnalyticsDashboardScreen(),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final page = find.byType(AnalyticsDashboardScreen);
+          final strings = AppLocalizations.of(tester.element(page));
+          expect(find.text(strings.weeklySetsTitle), findsOneWidget);
+          expect(find.byType(BodyHeatmap), findsOneWidget);
+          expect(find.byType(TabBar).hitTestable(), findsOneWidget);
+          await tester.tap(find.text(strings.weeklySetsMuscles));
+          await tester.pumpAndSettle();
+          expect(
+            find.byType(LocalizedCatalogEntityName),
+            findsAtLeastNWidgets(1),
+            reason: '${layout.size} @${layout.scale}x',
+          );
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '${layout.size} @${layout.scale}x ${brightness.name}',
+          );
+          await tester.pumpWidget(const SizedBox.shrink());
+        }
+      },
+    );
   }
 }
 

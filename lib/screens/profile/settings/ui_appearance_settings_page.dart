@@ -19,7 +19,10 @@ import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/app_theme_family.dart';
 import '../../../theme/app_theme_factory.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
+import 'profile_expressive_selection.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../utils/app_test_keys.dart';
 import '../../../utils/tutorial_launcher.dart';
@@ -89,6 +92,12 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     final expressiveTokens = Theme.of(context)
         .extension<AppExpressiveTrainTokens>();
     final expressive = context.usesExpressivePresentation;
+    final profileDestination = expressive
+        ? AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            Theme.of(context).brightness,
+          )
+        : null;
     final onboarding = context.watch<OnboardingConfig>();
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final language = context.watch<LocalePreferenceProvider>().preference;
@@ -165,9 +174,14 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             : SettingsAccent.data,
         title: strings.editBottomTabsTitle,
         subtitle: strings.editBottomTabsSubtitle,
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const NavBarSettingsPage())),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.profile,
+              child: const NavBarSettingsPage(),
+            ),
+          ),
+        ),
       ),
     );
 
@@ -186,6 +200,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                   child: IconButton(
                     tooltip: strings.commonBack,
                     onPressed: () => Navigator.maybePop(context),
+                    color: profileDestination?.supportingForeground,
                     icon: const Icon(Icons.arrow_back),
                   ),
                 ),
@@ -211,7 +226,12 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                           color: expressiveTokens.selectorTrack,
                           borderRadius: ExpressiveTrainShapes.focusHero,
                           padding: const EdgeInsets.all(5),
-                          child: themeFamilyTile,
+                          child: _withExpressiveSurfaceForeground(
+                            context,
+                            surface: expressiveTokens.selectorTrack,
+                            foreground: profileDestination!.onSurfaceTertiary,
+                            child: themeFamilyTile,
+                          ),
                         ),
                       ],
                       const SizedBox(height: 12),
@@ -220,11 +240,16 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                         color: expressiveTokens.activePlansSurface,
                         borderRadius: ExpressiveTrainShapes.section,
                         padding: const EdgeInsets.all(5),
-                        child: Column(
-                          children: settingsTilesWithDividers(context, [
-                            darkModeTile,
-                            replayOnboardingTile,
-                          ]),
+                        child: _withExpressiveSurfaceForeground(
+                          context,
+                          surface: expressiveTokens.activePlansSurface,
+                          foreground: profileDestination!.onSurfaceTertiary,
+                          child: Column(
+                            children: settingsTilesWithDividers(context, [
+                              darkModeTile,
+                              replayOnboardingTile,
+                            ]),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -233,23 +258,49 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
                         color: expressiveTokens.archivedPlansSurface,
                         borderRadius: ExpressiveTrainShapes.section,
                         padding: const EdgeInsets.all(5),
-                        child: Column(
-                          children: settingsTilesWithDividers(context, [
-                            weightUnitsTile,
-                            languageTile,
-                          ]),
+                        child: _withExpressiveSurfaceForeground(
+                          context,
+                          surface: expressiveTokens.archivedPlansSurface,
+                          foreground: profileDestination.onSurfaceSecondary,
+                          child: Column(
+                            children: settingsTilesWithDividers(context, [
+                              weightUnitsTile,
+                              languageTile,
+                            ]),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
                 KeyedSubtree(
                   key: _navigationTutorialKey,
-                  child: SettingsSection(
-                    title: strings.navigationSettingsTitle,
-                    subtitle: strings.navigationSettingsSubtitle,
-                    accentColor: SettingsAccent.data,
-                    children: [navigationTile],
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: Theme.of(context).colorScheme.copyWith(
+                        onSurfaceVariant:
+                            profileDestination.supportingForeground,
+                      ),
+                      extensions: [
+                        ...Theme.of(context).extensions.values.where(
+                          (extension) =>
+                              extension is! AppSettingsPresentationTokens,
+                        ),
+                        Theme.of(context).settingsPresentationTokens.copyWith(
+                          sectionHeaderUsesLabel: true,
+                          sectionHeaderFill: expressiveTokens.selectorTrack,
+                          sectionHeaderForeground:
+                              expressiveTokens.navigationLabel,
+                        ),
+                      ],
+                    ),
+                    child: SettingsSection(
+                      title: strings.navigationSettingsTitle,
+                      subtitle: strings.navigationSettingsSubtitle,
+                      accentColor: SettingsAccent.data,
+                      children: [navigationTile],
+                    ),
                   ),
                 ),
               ],
@@ -315,6 +366,27 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     List<AppThemeFamily> availableFamilies,
   ) async {
     final strings = AppLocalizations.of(context);
+    final optionStyle = context.usesExpressivePresentation
+        ? () {
+            final tokens = AppExpressiveDestinationTokens.forFamily(
+              AppExpressiveDestinationFamily.profile,
+              Theme.of(context).brightness,
+            );
+            return TonosChoiceOptionStyle(
+              surface: Color.lerp(
+                tokens.surfacePrimary,
+                tokens.surfaceAccent,
+                0.14,
+              )!,
+              selectedSurface: tokens.surfaceSelected,
+              foreground: tokens.onSurfacePrimary,
+              selectedForeground: tokens.onSurfaceSelected,
+              outline: tokens.outlineAccent.withValues(alpha: 0.55),
+              selectedOutline: tokens.outlineAccent,
+              borderRadius: ExpressiveTrainShapes.focusInset,
+            );
+          }()
+        : null;
     final nextFamily = await showDialog<AppThemeFamily>(
       context: context,
       builder: (dialogContext) => _withExpressiveProfileTheme(
@@ -331,6 +403,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
           ),
           choiceKey: (family) =>
               AppTestKeys.uiAppearanceThemeFamilyOption(family.code),
+          optionStyle: optionStyle,
         ),
       ),
     );
@@ -363,19 +436,28 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     WeightUnit selectedUnit,
   ) async {
     final strings = AppLocalizations.of(context);
-    final nextUnit = await showDialog<WeightUnit>(
-      context: context,
-      builder: (dialogContext) => _withExpressiveProfileTheme(
-        dialogContext,
-        TonosChoiceDialog<WeightUnit>(
-          title: strings.weightUnitsTitle,
-          values: WeightUnit.values,
-          selected: selectedUnit,
-          label: (unit) => _weightUnitLabel(strings, unit),
-          subtitle: (unit) => unit.shortLabel,
-        ),
-      ),
-    );
+    final nextUnit = context.usesExpressivePresentation
+        ? await showProfileExpressiveChoiceDialog<WeightUnit>(
+            context: context,
+            title: strings.weightUnitsTitle,
+            values: WeightUnit.values,
+            selected: selectedUnit,
+            label: (unit) => _weightUnitLabel(strings, unit),
+            subtitle: (unit) => unit.shortLabel,
+          )
+        : await showDialog<WeightUnit>(
+            context: context,
+            builder: (dialogContext) => _withExpressiveProfileTheme(
+              dialogContext,
+              TonosChoiceDialog<WeightUnit>(
+                title: strings.weightUnitsTitle,
+                values: WeightUnit.values,
+                selected: selectedUnit,
+                label: (unit) => _weightUnitLabel(strings, unit),
+                subtitle: (unit) => unit.shortLabel,
+              ),
+            ),
+          );
     if (nextUnit == null || !context.mounted) return;
     await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
   }
@@ -418,34 +500,36 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
     AppLanguagePreference selectedLanguage,
   ) async {
     final strings = AppLocalizations.of(context);
-    final nextLanguage = await showDialog<AppLanguagePreference>(
-      context: context,
-      builder: (dialogContext) {
-        final languageChoices = Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final language in AppLanguagePreference.values)
-              RadioListTile<AppLanguagePreference>(
-                value: language,
-                groupValue: selectedLanguage,
-                title: Text(_languageLabel(strings, language)),
-                onChanged: (value) => Navigator.of(dialogContext).pop(value),
+    final usesExpressive = context.usesExpressivePresentation;
+    final nextLanguage = usesExpressive
+        ? await showProfileExpressiveChoiceDialog<AppLanguagePreference>(
+            context: context,
+            title: strings.languageTitle,
+            values: AppLanguagePreference.values,
+            selected: selectedLanguage,
+            label: (language) => _languageLabel(strings, language),
+          )
+        : await showDialog<AppLanguagePreference>(
+            context: context,
+            builder: (dialogContext) => TonosDialogFrame(
+              child: AlertDialog(
+                title: Text(strings.languageTitle),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final language in AppLanguagePreference.values)
+                      RadioListTile<AppLanguagePreference>(
+                        value: language,
+                        groupValue: selectedLanguage,
+                        title: Text(_languageLabel(strings, language)),
+                        onChanged: (value) =>
+                            Navigator.of(dialogContext).pop(value),
+                      ),
+                  ],
+                ),
               ),
-          ],
-        );
-        return _withExpressiveProfileTheme(
-          dialogContext,
-          TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.languageTitle),
-              content: context.usesExpressivePresentation
-                  ? SingleChildScrollView(child: languageChoices)
-                  : languageChoices,
             ),
-          ),
-        );
-      },
-    );
+          );
     if (nextLanguage == null || !context.mounted) return;
     await context.read<LocalePreferenceProvider>().setPreference(nextLanguage);
   }
@@ -464,11 +548,14 @@ class _ExpressiveAppearanceHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final expressive = theme.extension<AppExpressiveTrainTokens>()!;
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
     final textScale = MediaQuery.textScalerOf(context).scale(1);
 
     return TonosSurface(
       variant: TonosSurfaceVariant.panelRaised,
-      color: expressive.focusSurface,
+      color: destination?.family == AppExpressiveDestinationFamily.profile
+          ? destination!.surfacePrimary
+          : expressive.focusSurface,
       borderRadius: ExpressiveTrainShapes.focusHero,
       outlined: false,
       clipBehavior: Clip.antiAlias,
@@ -480,12 +567,18 @@ class _ExpressiveAppearanceHero extends StatelessWidget {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: expressive.focusInset,
+              color:
+                  destination?.family == AppExpressiveDestinationFamily.profile
+                  ? destination!.surfaceSelected
+                  : expressive.focusInset,
               borderRadius: ExpressiveTrainShapes.focusInset,
             ),
             child: Icon(
               Icons.palette_outlined,
-              color: expressive.focusWarm,
+              color:
+                  destination?.family == AppExpressiveDestinationFamily.profile
+                  ? destination!.onSurfaceSelected
+                  : expressive.focusWarm,
               size: 28,
             ),
           );
@@ -497,7 +590,11 @@ class _ExpressiveAppearanceHero extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: expressive.focusForeground,
+                    color:
+                        destination?.family ==
+                            AppExpressiveDestinationFamily.profile
+                        ? destination!.onSurfacePrimary
+                        : expressive.focusForeground,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -506,7 +603,12 @@ class _ExpressiveAppearanceHero extends StatelessWidget {
               Text(
                 subtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: expressive.focusForeground.withValues(alpha: 0.88),
+                  color:
+                      (destination?.family ==
+                                  AppExpressiveDestinationFamily.profile
+                              ? destination!.onSurfacePrimary
+                              : expressive.focusForeground)
+                          .withValues(alpha: 0.88),
                 ),
               ),
             ],
@@ -545,6 +647,11 @@ class _ExpressivePreferenceHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final foreground =
+        destination?.family == AppExpressiveDestinationFamily.profile
+        ? destination!.supportingForeground
+        : theme.colorScheme.onSurface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,7 +661,7 @@ class _ExpressivePreferenceHeading extends StatelessWidget {
           child: Text(
             title,
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface,
+              color: foreground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -562,13 +669,44 @@ class _ExpressivePreferenceHeading extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           subtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(color: foreground),
         ),
       ],
     );
   }
+}
+
+Widget _withExpressiveSurfaceForeground(
+  BuildContext context, {
+  required Color surface,
+  required Color foreground,
+  required Widget child,
+}) {
+  final theme = Theme.of(context);
+  final secondaryForeground = foreground.withValues(alpha: 0.82);
+  return Theme(
+    data: theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        surface: surface,
+        onSurface: foreground,
+        onSurfaceVariant: secondaryForeground,
+      ),
+      textTheme: theme.textTheme
+          .apply(bodyColor: foreground, displayColor: foreground)
+          .copyWith(
+            titleSmall: theme.textTheme.titleSmall?.copyWith(color: foreground),
+            bodySmall: theme.textTheme.bodySmall?.copyWith(
+              color: secondaryForeground,
+            ),
+          ),
+      iconTheme: theme.iconTheme.copyWith(color: foreground),
+      listTileTheme: theme.listTileTheme.copyWith(
+        textColor: foreground,
+        iconColor: foreground,
+      ),
+    ),
+    child: child,
+  );
 }
 
 Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
@@ -594,6 +732,10 @@ Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
       dialogChoice: ExpressiveTrainShapes.menu,
     ),
   );
+  final destination = AppExpressiveDestinationTokens.forFamily(
+    AppExpressiveDestinationFamily.profile,
+    theme.brightness,
+  );
   updatedExtensions.add(
     theme.settingsPresentationTokens.copyWith(
       sectionHeaderUsesLabel: true,
@@ -601,16 +743,52 @@ Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
       sectionHeaderForeground: expressive.navigationLabel,
     ),
   );
-
-  return Theme(
-    data: theme.copyWith(
-      scaffoldBackgroundColor: expressive.pageCanvas,
-      dialogTheme: theme.dialogTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+  if (!updatedExtensions.any(
+    (extension) => extension is AppExpressiveDestinationTokens,
+  )) {
+    updatedExtensions.add(
+      AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.profile,
+        theme.brightness,
       ),
-      extensions: updatedExtensions,
+    );
+  }
+
+  return AppExpressiveDestinationTheme(
+    family: AppExpressiveDestinationFamily.profile,
+    child: Theme(
+      data: theme.copyWith(
+        scaffoldBackgroundColor: expressive.pageCanvas,
+        colorScheme: theme.colorScheme.copyWith(
+          surface: destination.surfacePrimary,
+          onSurface: destination.onSurfacePrimary,
+          onSurfaceVariant: destination.onSurfacePrimary.withValues(
+            alpha: 0.78,
+          ),
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: destination.onSurfacePrimary,
+          displayColor: destination.onSurfacePrimary,
+        ),
+        dialogTheme: theme.dialogTheme.copyWith(
+          backgroundColor: destination.surfacePrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: ExpressiveTrainShapes.menu,
+          ),
+          titleTextStyle: theme.textTheme.headlineSmall?.copyWith(
+            color: destination.onSurfacePrimary,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        radioTheme: theme.radioTheme.copyWith(
+          fillColor: WidgetStatePropertyAll<Color?>(
+            destination.onSurfacePrimary,
+          ),
+        ),
+        extensions: updatedExtensions,
+      ),
+      child: child,
     ),
-    child: child,
   );
 }
 

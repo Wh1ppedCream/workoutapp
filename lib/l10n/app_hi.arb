@@ -414,6 +414,7 @@
   "navEditorActiveSubtitle": "क्रम बदलने के लिए खींचें। प्रोफ़ाइल उपलब्ध रहेगी।",
   "navEditorActiveTitle": "सक्रिय टैब",
   "navEditorAlwaysShown": "हमेशा दिखाएँ",
+  "navEditorRequired": "आवश्यक",
   "navEditorHidden": "नीचे के नेविगेशन में छिपा हुआ",
   "navEditorInactiveSubtitle": "जब चाहें इन्हें फिर से चालू करें।",
   "navEditorInactiveTitle": "निष्क्रिय टैब",
@@ -893,7 +894,7 @@
   "fullHistorySessionSummary": "{date} - {duration}",
   "fullHistoryTitle": "सभी सत्र",
   "flowAddAction": "+ क्रिया",
-  "flowAddBranchSubtitle": "चुनें कि अगली सफलता या असफलता कहाँ ले जाए।",
+  "flowAddBranchSubtitle": "किसी नोड से सफलता या चूक के रास्ते बनाएँ।",
   "flowAddBranchTitle": "ब्रांच जोड़ें",
   "flowAddEvent": "+ इवेंट",
   "flowAddFailure": "+ असफलता",
@@ -905,10 +906,19 @@
   "flowAmount": "मात्रा",
   "flowAppDefaultEntry": "ऐप डिफ़ॉल्ट फ्लो",
   "flowAppDefaultsSubtitle": "नई जिम प्रोफ़ाइल के लिए शुरुआती फ्लो।",
-  "flowAppDefaultSubtitle": "नई जिम प्रोफ़ाइल के लिए शुरुआती प्रगति फ्लो सेट करें।",
+  "flowAppDefaultSubtitle": "नई जिम प्रोफ़ाइल के लिए डिफ़ॉल्ट फ़्लो।",
   "flowAppDefaultTitle": "ऐप डिफ़ॉल्ट प्रगति",
   "flowApplyActionTo": "क्रिया लागू करें",
-  "flowAttachActionSubtitle": "फ्लो नोड पर प्रत्येक प्रकार का एक समायोजन लागू करें।",
+  "flowAttachActionSubtitle": "नोड को प्रगति समायोजन दें।",
+  "flowFitToViewTooltip": "फ्लो को दृश्य में फ़िट करें।",
+  "flowBranchSelectGuidance": "रास्ता जोड़ने के लिए स्रोत नोड चुनें।",
+  "flowBranchCompleteGuidance": "सभी नोड में सफलता और चूक के रास्ते पहले से हैं।",
+  "flowActionSelectNodeGuidance": "ऐक्शन कॉन्फ़िगर करने के लिए नोड चुनें।",
+  "flowActionSelectMethodGuidance": "इस नोड के लिए प्रगति ऐक्शन चुनें।",
+  "flowActionCreateMethodGuidance": "नोड में जोड़ने से पहले एक ऐक्शन बनाएँ।",
+  "flowActionTypesUsedGuidance": "इस नोड में सभी उपलब्ध प्रकार के ऐक्शन पहले से इस्तेमाल हैं।",
+  "flowActionRemoveDependenciesGuidance": "नोड हटाने से पहले शाखाएँ और जुड़े ऐक्शन हटाएँ।",
+  "flowActionRootGuidance": "पहले प्रयास वाले नोड पर ऐक्शन नहीं जोड़ सकते और उसे हटा नहीं सकते।",
   "flowAttachActionTitle": "प्रगति क्रिया संलग्न करें",
   "flowBranchFrom": "इससे ब्रांच करें",
   "flowCopyFromSet": "सेट से कॉपी करें",
@@ -920,6 +930,7 @@
   "flowGymDefaultEntry": "जिम डिफ़ॉल्ट फ्लो",
   "flowGymProfilesSubtitle": "हर प्रोफ़ाइल में डिफ़ॉल्ट और अपनी योजना फ्लो होती हैं।",
   "flowHowCopiedBody": "ऐप फ्लो नई जिम प्रोफ़ाइल के लिए शुरुआती बिंदु बनती हैं। जिम फ्लो नई योजनाओं के लिए शुरुआती बिंदु बनती हैं। बाद के बदलाव केवल उस फ्लो तक सीमित रहते हैं जिसे आप यहाँ खोलते हैं।",
+  "flowHowCopiedBodyExpressive": "नई जिम प्रोफ़ाइल ऐप के डिफ़ॉल्ट से शुरू होती हैं, और नई योजनाएँ जिम के डिफ़ॉल्ट से। एक फ्लो में बदलाव दूसरे फ्लो को प्रभावित नहीं करते।",
   "flowHowCopiedTitle": "फ्लो कैसे कॉपी होती हैं",
   "flowLoadError": "वर्कआउट प्रगति फ्लो लोड नहीं हो सकीं।",
   "flowManageActionsTooltip": "प्रगति क्रियाएँ प्रबंधित करें",
@@ -934,11 +945,19 @@
   "flowNewMethod": "नई क्रिया",
   "flowNoProfiles": "प्रोफ़ाइल और योजना फ्लो सेट करने के लिए जिम प्रोफ़ाइल बनाएँ।",
   "flowNoSavedYet": "अभी कोई सहेजा गया फ्लो नहीं",
+  "flowTapToConfigure": "कॉन्फ़िगर करने के लिए टैप करें",
   "flowPageSubtitle": "वे पथ सेट करें जो तय करते हैं कि वर्कआउट परिणाम के बाद प्रगति क्रियाएँ कैसे लागू हों।",
+  "flowPageSubtitleExpressive": "कॉन्फ़िगर करें कि वर्कआउट के नतीजे प्रगति की कार्रवाइयाँ कैसे शुरू करते हैं।",
   "flowPageTitle": "वर्कआउट प्रगति फ्लो",
   "flowPlansAvailable": "{count} योजना फ्लो उपलब्ध हैं",
-  "flowPlanSubtitle": "तय करें कि यह योजना हर वर्कआउट के बाद कैसे प्रगति करे।",
-  "flowProfileDefaultSubtitle": "{profileName} में नई योजनाओं के लिए शुरुआती प्रगति फ्लो सेट करें।",
+  "flowPlansAvailableExpressive": "{count, plural, one{{count} योजना उपलब्ध} other{{count} योजनाएँ उपलब्ध}}",
+  "@flowPlansAvailableExpressive": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "flowPlanSubtitle": "इस योजना का प्रगति फ़्लो।",
+  "flowProfileDefaultSubtitle": "{profileName} में नई योजनाओं के लिए डिफ़ॉल्ट फ़्लो।",
   "flowProfileDefaultTitle": "जिम डिफ़ॉल्ट प्रगति",
   "flowProgressionAction": "प्रगति क्रिया",
   "flowRemoveAction": "- क्रिया",
@@ -1068,6 +1087,7 @@
   "nutritionTrackMeasurement": "माप ट्रैक करें",
   "gymExitAsk": "हर बार पूछें",
   "gymExitAskBody": "पूरा हुआ काम समाप्त करने से पहले पूछें।",
+  "gymExitAskExpressiveSubtitle": "सक्रिय वर्कआउट छोड़ते समय क्या होगा, यह चुनें।",
   "gymExitDiscard": "वर्कआउट रद्द करें",
   "gymExitDiscardBody": "पूरा हुआ काम सहेजे बिना रद्द करें।",
   "gymExitSave": "समाप्त करें और सहेजें",
@@ -1256,6 +1276,20 @@
   "tutorialsControlsSubtitle": "परीक्षण कर रहे हैं या नई शुरुआत चाहते हैं?",
   "tutorialsControlsTitle": "ट्यूटोरियल नियंत्रण",
   "tutorialsHowItWorksBody": "ट्यूटोरियल एक बार दिखाई देते हैं, फिर रास्ते से हट जाते हैं। किसी खास वॉकथ्रू को रीसेट करने के लिए समूह फैलाएँ।",
+  "tutorialsExpressiveControlsSubtitle": "अपने निर्देशित वॉकथ्रू के साथ नई शुरुआत करें।",
+  "tutorialsExpressiveHowItWorksBody": "ट्यूटोरियल अपने-आप एक बार दिखाई देते हैं। किसी श्रेणी को खोलकर किसी एक वॉकथ्रू को फिर से उपलब्ध करें।",
+  "tutorialsExpressiveTitle": "{topic} ट्यूटोरियल",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "अगली बार {topic} खोलने पर फिर से देखने के लिए रीसेट करें।",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "tutorialsHowItWorksTitle": "ट्यूटोरियल कैसे काम करते हैं",
   "tutorialSkip": "छोड़ें",
   "tutorialSkipAll": "सभी छोड़ें",
@@ -1844,5 +1878,36 @@
     }
   },
   "healthEntryActions": "प्रविष्टि कार्रवाइयाँ",
-  "premadeOneHourDescription": "पूरे टेम्पलेट की मुख्य एक्सरसाइज़ वाला {planName} का {duration} संस्करण।"
+  "premadeOneHourDescription": "पूरे टेम्पलेट की मुख्य एक्सरसाइज़ वाला {planName} का {duration} संस्करण।",
+  "rulesPageSubtitleExpressive": "वज़न, रेप और सेट की प्रगति के लिए पुन: उपयोग योग्य नियम बनाएँ।",
+  "rulesHowDefaultsBodyExpressive": "नई जिम प्रोफ़ाइल ऐप के डिफ़ॉल्ट से शुरू होती हैं और नए प्लान प्रोफ़ाइल के डिफ़ॉल्ट से। बाद के बदलाव मौजूदा प्रोफ़ाइल या प्लान को अपने-आप अपडेट नहीं करते।",
+  "rulesRuleTypeLabel": "नियम का प्रकार",
+  "rulesOperationLabel": "क्रिया",
+  "rulesScopedRuleCountSemantics": "{scope}, नियमों की संख्या: {count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "नियमों की संख्या: {count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "कुल नियम: {count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "प्लान की संख्या: {count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "नए प्लान के लिए डिफ़ॉल्ट नियम।",
+  "rulesPlanOnlySubtitleExpressive": "सिर्फ़ इसी प्लान के नियम।"
 }

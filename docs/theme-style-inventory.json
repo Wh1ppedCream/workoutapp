@@ -89,6 +89,32 @@
       "rationale": "A four-mode production-route contract renders both empty and populated exercise metadata branches, pins equipment labels to ColorScheme.primary and positive labels to the existing Classic green / Neo semantic-positive recipe, and verifies the detail heatmap remains transparent. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
     },
     {
+      "id": "anatomy-bodypart-expressive-header-shape",
+      "pattern": "lib/screens/exercise/definitions_by_bodypart_page.dart",
+      "kinds": [
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive body-part header mixed-corner shape",
+      "rationale": "The body-part detail header opts into the Catalog destination surface and uses a role-specific mixed-corner shape only for the Expressive presentation. This source-scoped rule records those two shape expressions without classifying other route geometry. Device visual acceptance remains separate.",
+      "sourcePattern": "shape:\\s*expressive\\s*\\?\\s*const RoundedRectangleBorder\\([\\s\\S]*?\\)\\s*:\\s*null"
+    },
+    {
+      "id": "anatomy-bodypart-responsive-metric-bay",
+      "pattern": "lib/screens/exercise/definitions_by_bodypart_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "color_transform"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Responsive Expressive body-part metric-bay surface and divider",
+      "rationale": "The metric bay groups recent and recommended values in an Expressive selected surface, with a compact mixed-corner outline and subdued separators. Its narrow-width and large-text stacked layout preserves the same information and edit action. This source-scoped rule records only the metric-bay recipe. Device visual acceptance remains separate.",
+      "sourcePattern": "decoration:\\s*BoxDecoration\\([\\s\\S]*?(?=\\nclass _BodyPartExpressiveMetricBay)"
+    },
+    {
       "id": "anatomy-muscle-detail-recipes",
       "pattern": "lib/screens/exercise/definitions_by_muscle_page.dart",
       "kinds": [
@@ -101,6 +127,32 @@
       "rationale": "A four-mode production-route contract exercises both empty and populated equipment metadata plus the rendered rank label, confirming equipment uses ColorScheme.primary and rank ink retains the existing Classic green / Neo semantic-positive recipe. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
     },
     {
+      "id": "anatomy-muscle-expressive-header-shape",
+      "pattern": "lib/screens/exercise/definitions_by_muscle_page.dart",
+      "kinds": [
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive muscle header mixed-corner shape",
+      "rationale": "The muscle detail header opts into the Catalog destination surface and uses a role-specific mixed-corner shape only for the Expressive presentation. This source-scoped rule records those two shape expressions without classifying other route geometry. Device visual acceptance remains separate.",
+      "sourcePattern": "shape:\\s*expressive\\s*\\?\\s*const RoundedRectangleBorder\\([\\s\\S]*?\\)\\s*:\\s*null"
+    },
+    {
+      "id": "anatomy-muscle-responsive-metric-bay",
+      "pattern": "lib/screens/exercise/definitions_by_muscle_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry",
+        "color_transform"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Responsive Expressive muscle metric-bay surface and divider",
+      "rationale": "The metric bay groups recent and recommended values in an Expressive selected surface, with a compact mixed-corner outline and subdued separators. Its narrow-width and large-text stacked layout preserves the same information and edit action. This source-scoped rule records only the metric-bay recipe. Device visual acceptance remains separate.",
+      "sourcePattern": "decoration:\\s*BoxDecoration\\([\\s\\S]*?(?=\\nclass _MuscleExpressiveMetricBay)"
+    },
+    {
       "id": "anatomy-filter-material-search",
       "pattern": "lib/screens/exercise/muscle_filter_page.dart",
       "kinds": [
@@ -109,7 +161,46 @@
       "classification": "material_component",
       "status": "migrated",
       "target": "Material-owned anatomy search input decoration",
-      "rationale": "The four-mode production-route contract verifies the anatomy search remains a Material TextField with its outlined InputDecoration. Theme-family styling is inherited from Material rather than recreated as a one-off field recipe. Device visual acceptance remains separate."
+      "rationale": "The four-mode production-route contract verifies the anatomy search remains a Material TextField with its outlined InputDecoration. Theme-family styling is inherited from Material rather than recreated as a one-off field recipe. Device visual acceptance remains separate.",
+      "sourcePattern": "InputDecoration\\("
+    },
+    {
+      "id": "anatomy-filter-expressive-surfaces",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "decoration",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive anatomy tab and search-panel surfaces",
+      "rationale": "The Expressive anatomy selector uses role-specific geometry for the selected tab indicator and nested search-panel surfaces. This exact source-scoped rule records those three decorations and their three shapes; the Material search input remains owned separately. Device visual acceptance remains separate.",
+      "sourcePattern": "indicator:\\s*expressive[\\s\\S]*?labelColor:|if\\s*\\(expressive\\)\\s*Padding\\([\\s\\S]*?else\\s*Padding\\("
+    },
+    {
+      "id": "anatomy-filter-expressive-search-recipe",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "text_style",
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive anatomy search foreground and field geometry",
+      "rationale": "The search field uses Catalog destination foreground tokens for its resting and floating labels, plus a family-gated filled-field outline with a clear focus border. This exact source-scoped rule records the field recipe while the input decoration remains Material-owned. Device visual acceptance remains separate.",
+      "sourcePattern": "style:\\s*expressive[\\s\\S]*?onChanged:"
+    },
+    {
+      "id": "anatomy-filter-expressive-row-shape",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive anatomy result-row shape hierarchy",
+      "rationale": "Expressive anatomy result rows use a larger mixed-corner shape for directional rows and a compact rounded shape for other results; Classic and Neo retain their existing defaults. This source-scoped rule records only the result-row shape recipe. Device visual acceptance remains separate.",
+      "sourcePattern": "shape:\\s*expressive[\\s\\S]*?:\\s*null"
     },
     {
       "id": "anatomy-filter-fallback-artwork",
@@ -121,7 +212,8 @@
       "classification": "intentional_one_off",
       "status": "allowlisted",
       "target": "Anatomy silhouette and circular muscle fallback artwork",
-      "rationale": "The exact fallback artwork intentionally leaves the body-part silhouette transparent and square while presenting the 44px muscle icon in a circular, primary-colored thumbnail with onPrimary ink. A four-mode route contract pins those values. This artwork-only exception does not cover the search field or other route styling."
+      "rationale": "The exact fallback artwork intentionally leaves the body-part silhouette transparent and square while presenting the 44px muscle icon in a circular, primary-colored thumbnail with onPrimary ink. A four-mode route contract pins those values. This artwork-only exception does not cover the search field or other route styling.",
+      "sourcePattern": "leadingFor:\\s*\\(part\\)\\s*=>\\s*SharedEntityMediaThumbnail\\([\\s\\S]*?\\)\\s*,\\s*onTap:|leadingFor:\\s*\\(muscle\\)\\s*=>\\s*SharedEntityMediaThumbnail\\([\\s\\S]*?\\)\\s*,\\s*onTap:"
     },
     {
       "id": "navigation-settings-theme-recipes",
@@ -129,23 +221,25 @@
       "kinds": [
         "color",
         "color_transform",
-        "decoration"
+        "decoration",
+        "local_theme"
       ],
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Navigation settings icon badges and transparent reorder proxy",
-      "rationale": "A four-mode production-route contract checks the active navigation icon badge's ColorScheme primary fill, alpha, shape, and icon ink, then invokes the real ReorderableListView proxy decorator and verifies its Material remains transparent. This exact rule owns three findings; reorder/save behavior and device review are not implied."
+      "rationale": "The four-mode production-route contract checks destination-qualified active/inactive foregrounds, the active/inactive icon badge recipe, the legacy Material fallback, and the transparent ReorderableListView proxy. Its eight registered candidates are one transparent Material color, four intentional supporting-foreground/badge alpha transforms, the badge BoxDecoration, and two route-local Theme scopes for selected tile ink and the save action. Reorder/save behavior and device review are not implied."
     },
     {
       "id": "gym-exercise-settings-dialog-ink",
       "pattern": "lib/screens/profile/settings/gym_exercise_settings_page.dart",
       "kinds": [
+        "color_transform",
         "text_style"
       ],
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Workout-exit choice dialog title and subtitle foregrounds",
-      "rationale": "A four-mode contract opens the production workout-exit dialog through TonosDialogFrame and verifies RadioListTile title and subtitle ink inherits Classic Material behavior while Neo uses onPrimaryContainer. The exact one-file rule owns only the two dialog text-style findings; exit-preference persistence and device review remain separate."
+      "rationale": "A four-mode contract opens the production workout-exit dialog through TonosDialogFrame and verifies RadioListTile title and subtitle ink inherits Classic Material behavior while Neo uses onPrimaryContainer. The exact one-file rule owns the two dialog text styles and one Expressive-only supporting-foreground alpha transform used for subdued dialog copy; exit-preference persistence and device review remain separate."
     },
     {
       "id": "exercise-analytics-theme-recipes",
@@ -974,12 +1068,13 @@
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Session Detail summary/set surfaces and Material-owned save-plan field",
-      "rationale": "The label-only save-plan TextFormField inherits the opted-in TonosDialogFrame form recipe; summary metrics use AppSurfaceTokens.sessionSummary with AppShapeTokens.metric, and completed-set indices use panelRaised in a circular shape. A four-mode production-route contract renders and checks the token-backed surfaces and opens the real save-plan dialog to verify the inherited Material field owner. This exact three-finding rule is presentation ownership only and does not qualify editing, repeat, persistence, or device behavior."
+      "rationale": "This five-decoration rule covers the existing TonosDialogFrame save-plan field, the destination-scoped Expressive save-plan field, the Expressive Logbook completed-set count chip, the summary metric tile, and the completed-set index. Classic and Neo retain their existing field recipe. A four-mode production-route contract checks the existing token-backed surfaces and dialog behavior, while Expressive destination tests pin the new summary and dialog presentation. This is presentation ownership only and does not qualify editing, repeat, persistence, or device behavior."
     },
     {
       "id": "catalog-overview-shape-ownership",
       "pattern": "lib/screens/catalog_page.dart",
       "kinds": [
+        "color_transform",
         "decoration",
         "geometry",
         "shadow"
@@ -987,12 +1082,14 @@
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Catalog overview usage-row outline/depth and named geometry roles",
-      "rationale": "The exercise usage row resolves its fill, outline, width, and optional Neo depth through existing surface/effect roles; its row, thumbnail, and focus-pane radii use dedicated AppShapeTokens fields whose Classic values preserve 14/12/16px and Neo values preserve the established 4px recipe. A four-mode rendered CatalogPage test seeds usage data and checks the actual row decoration, outline, shadow, media-frame radius, focus-pane hit regions, and outer Card/TonosSurface ownership. This exact rule covers only the three remaining decoration/geometry/shadow findings; it does not claim device visual acceptance or qualify the linked catalog routes."
+      "rationale": "The four-mode Catalog overview route contract covers its Expressive primary and secondary surfaces, icon containment, usage rows, focus panes, and existing Classic/Neo usage-row styling. The 15 registered candidates are three color transforms, three BoxDecorations, eight role-specific geometry expressions, and one Neo depth shadow. The exercise usage row resolves fill, outline, width, and optional Neo depth through existing surface/effect roles; its row, thumbnail, and focus-pane radii use dedicated AppShapeTokens fields whose Classic values preserve 14/12/16px and Neo values preserve the established 4px recipe. Expressive-only radii, row outline geometry, and foreground/outline alpha roles are intentional destination structure pinned by this route contract. It checks actual row decoration, outline, shadow, media-frame radius, focus-pane hit regions, and outer Card/TonosSurface ownership. It does not claim device visual acceptance or qualify the linked catalog routes."
     },
     {
       "id": "exercise-catalog-theme-ownership",
       "pattern": "lib/screens/exercise/exercise_catalog_page.dart",
       "kinds": [
+        "color",
+        "color_transform",
         "decoration",
         "geometry",
         "shadow",
@@ -1001,7 +1098,7 @@
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Exercise catalog Material controls, family-specific row geometry, and media frame",
-      "rationale": "The search TextField and four filter InputDecorations retain Material ownership; the four DropdownButtonFormFields remain inside TonosDialogFrame's opted-in form theme, and their dark-Neo popup/selected ink keeps its surface-qualified contrast. Catalog rows use AppShapeTokens.exerciseCatalogRow and exerciseCatalogSelectedOutlineWidth with Classic 16px/1.5px and Neo 4px/3px recipes, the existing outlineWidth owns unselected borders, exerciseCatalogMedia preserves the caller's 12px thumbnail frame, and Neo depth remains AppEffectTokens-owned. The exact source/inventory and four-mode token contracts pin these roles and preserve search, filter, selection, tutorial, and detail callbacks. Device review of this route and available/missing media remains separate."
+      "rationale": "The search TextField and four filter DropdownButtonFormFields retain Material ownership inside the opted-in TonosDialogFrame; a shared filterFieldDecoration helper owns their Expressive fill/border recipe, and dark-Neo popup/selected ink keeps its surface-qualified contrast. The Expressive AppBar surface tint resolves from the Catalog destination primary role, while null preserves Classic/Neo theme behavior. Catalog rows use AppShapeTokens.exerciseCatalogRow and exerciseCatalogSelectedOutlineWidth with Classic 16px/1.5px and Neo 4px/3px recipes; their Expressive row outline/radius and search/filter field radii are intentionally route-scoped. The existing outlineWidth owns unselected borders, exerciseCatalogMedia preserves the caller's 12px thumbnail frame, and Neo depth remains AppEffectTokens-owned. The scan reports 34 literal style candidates: two color transforms, four decorations, 23 geometry expressions, one Neo shadow, and four text styles. The role-owned AppBar surface tint is covered by the color ownership rule without introducing a page-local color candidate. Source/inventory and four-mode token contracts pin these roles and preserve search, filter, selection, tutorial, and detail callbacks. Device review and available/missing media remain separate."
     },
     {
       "id": "release-screens",
@@ -1517,7 +1614,7 @@
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Exercise Detail surface, shape, chart, record, and inherited text ownership",
-      "rationale": "The existing C2 recipe resolves media, detail cards/tags, timeframe, records, metric summaries/lists, state panels, chart grid/area/tooltip, and the drag handle through focused surface/shape/motion tokens and ColorScheme roles. Chart series, tags, and metric accents remain semantic/data colors; transparent Material layers and chart paint are intentional component ownership. The source/role contract pins these consumers and preserved Classic values, and an exact inventory contract pins all current candidate kinds/counts. No runtime styling changes or device-visual acceptance are implied."
+      "rationale": "The existing C2 recipe resolves media, detail cards/tags, timeframe, records, metric summaries/lists, state panels, chart grid/area/tooltip, and the drag handle through focused surface/shape/motion tokens and ColorScheme roles. Catalog Expressive destination wrapping supplies destination surfaces/foregrounds while preserving the sheet's existing chart, semantic/data colors, and Classic/Neo fallbacks. Chart series, tags, and metric accents remain semantic/data colors; transparent Material layers and chart paint are intentional component ownership. The source/role contract pins these consumers and preserved Classic values; the current scan has eight Colors constants, 24 color transforms, 30 decorations, 47 geometry candidates, and one text-style candidate. No business behavior or device-visual acceptance is implied."
     },
     {
       "id": "expressive-active-workout-add-fab-outline",

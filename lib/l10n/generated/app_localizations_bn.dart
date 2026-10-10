@@ -1008,6 +1008,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get navEditorAlwaysShown => 'সবসময় দেখানো হয়';
 
   @override
+  String get navEditorRequired => 'আবশ্যক';
+
+  @override
   String get navEditorVisible => 'নিচের নেভিগেশনে দৃশ্যমান';
 
   @override
@@ -1987,16 +1990,14 @@ class AppLocalizationsBn extends AppLocalizations {
   String get flowProfileDefaultTitle => 'জিমের ডিফল্ট অগ্রগতি';
 
   @override
-  String get flowPlanSubtitle =>
-      'প্রতিটি ওয়ার্কআউটের পরে এই পরিকল্পনা কীভাবে এগোবে তা নির্ধারণ করুন।';
+  String get flowPlanSubtitle => 'এই পরিকল্পনার অগ্রগতি ফ্লো।';
 
   @override
-  String get flowAppDefaultSubtitle =>
-      'নতুন জিম প্রোফাইলের প্রারম্ভিক অগ্রগতি ফ্লো নির্ধারণ করুন।';
+  String get flowAppDefaultSubtitle => 'নতুন জিম প্রোফাইলের ডিফল্ট ফ্লো।';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return '$profileName-এ নতুন পরিকল্পনার প্রারম্ভিক অগ্রগতি ফ্লো নির্ধারণ করুন।';
+    return '$profileName-এর নতুন পরিকল্পনার ডিফল্ট ফ্লো।';
   }
 
   @override
@@ -2046,7 +2047,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get flowAddBranchSubtitle =>
-      'পরবর্তী সফলতা বা ব্যর্থতা কোথায় নিয়ে যাবে তা বেছে নিন।';
+      'নোড থেকে সফলতা বা ব্যর্থতার পথ তৈরি করুন।';
 
   @override
   String get flowBranchFrom => 'এখান থেকে শাখা';
@@ -2061,8 +2062,41 @@ class AppLocalizationsBn extends AppLocalizations {
   String get flowAttachActionTitle => 'একটি অগ্রগতির কাজ যুক্ত করুন';
 
   @override
-  String get flowAttachActionSubtitle =>
-      'ফ্লোর একটি নোডে প্রতিটি ধরনের একটি সমন্বয় প্রয়োগ করুন।';
+  String get flowAttachActionSubtitle => 'নোডে অগ্রগতি সমন্বয় দিন।';
+
+  @override
+  String get flowFitToViewTooltip => 'ফ্লোটি দৃশ্যে মানানসই করুন।';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'সফলতা বা ব্যর্থতার পথ যোগ করতে একটি উৎস নোড বাছুন।';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'সব নোডে সফলতা ও ব্যর্থতার পথ রয়েছে।';
+
+  @override
+  String get flowActionSelectNodeGuidance => 'অ্যাকশন সেট করতে একটি নোড বাছুন।';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'এই নোডের জন্য একটি অগ্রগতি অ্যাকশন বাছুন।';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'নোডে যুক্ত করার আগে একটি অ্যাকশন তৈরি করুন।';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'এই নোডে সব উপলভ্য ধরনের অ্যাকশন ইতিমধ্যে ব্যবহৃত হয়েছে।';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'মুছতে আগে শাখা ও যুক্ত অ্যাকশন সরান।';
+
+  @override
+  String get flowActionRootGuidance =>
+      'প্রথম প্রচেষ্টার নোডে অ্যাকশন যোগ বা নোডটি মুছতে পারবেন না।';
 
   @override
   String get flowApplyActionTo => 'কাজ প্রয়োগ করুন';
@@ -2288,11 +2322,19 @@ class AppLocalizationsBn extends AppLocalizations {
       'ওয়ার্কআউটের ফলাফলের পরে অগ্রগতির কাজ কীভাবে প্রয়োগ হবে তা নির্ধারণকারী পথ সেট করুন।';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'ওয়ার্কআউটের ফলাফল কীভাবে অগ্রগতির কাজ চালু করে তা কনফিগার করুন।';
+
+  @override
   String get flowHowCopiedTitle => 'ফ্লো কীভাবে কপি হয়';
 
   @override
   String get flowHowCopiedBody =>
       'অ্যাপের ফ্লো নতুন জিম প্রোফাইলের প্রারম্ভিক বিন্দু হয়। জিমের ফ্লো নতুন পরিকল্পনার প্রারম্ভিক বিন্দু হয়। পরের সম্পাদনা শুধু এখানে খোলা ফ্লোতেই সীমাবদ্ধ থাকে।';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'নতুন জিম প্রোফাইল অ্যাপের ডিফল্ট দিয়ে শুরু হয়, আর নতুন পরিকল্পনা জিমের ডিফল্ট দিয়ে শুরু হয়। একটি ফ্লোতে করা পরিবর্তন অন্য ফ্লোগুলোকে প্রভাবিত করে না।';
 
   @override
   String get flowLoadError => 'ওয়ার্কআউট অগ্রগতির ফ্লো লোড করা যায়নি।';
@@ -2315,6 +2357,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get flowNoSavedYet => 'এখনও কোনো ফ্লো সংরক্ষিত নেই';
 
   @override
+  String get flowTapToConfigure => 'কনফিগার করতে ট্যাপ করুন';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodesটি নোড | $branchesটি শাখা | $actionsটি কাজ';
   }
@@ -2322,6 +2367,11 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '$countটি পরিকল্পনার ফ্লো উপলভ্য';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    return '$countটি পরিকল্পনা উপলভ্য';
   }
 
   @override
@@ -2377,6 +2427,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get gymExitAskBody => 'সম্পন্ন কাজ শেষ করার আগে জিজ্ঞাসা করুন।';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'সক্রিয় ওয়ার্কআউট থেকে বের হলে কী হবে তা বেছে নিন।';
 
   @override
   String get gymExitDiscardBody => 'সম্পন্ন কাজ সংরক্ষণ না করে বাতিল করুন।';
@@ -3312,6 +3366,24 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get tutorialsHowItWorksBody =>
       'টিউটোরিয়াল একবার দেখানো হয়, তারপর পথে বাধা হয় না। নির্দিষ্ট নির্দেশনা রিসেট করতে একটি বিভাগ বিস্তৃত করুন।';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'নির্দেশিত ওয়াকথ্রু দিয়ে নতুন করে শুরু করুন।';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'টিউটোরিয়াল স্বয়ংক্রিয়ভাবে একবার দেখানো হয়। একটি বিভাগ প্রসারিত করলে আলাদা ওয়াকথ্রু আবার চালু করা যাবে।';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return '$topic টিউটোরিয়াল';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'পরের বার $topic খুলে আবার দেখতে রিসেট করুন।';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'প্রধান ট্যাব';
@@ -6823,4 +6895,45 @@ class AppLocalizationsBn extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return 'সম্পূর্ণ টেমপ্লেটের প্রধান ব্যায়ামগুলোসহ $planName-এর $duration সংস্করণ।';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'ওজন, রিপ এবং সেটের অগ্রগতির জন্য পুনর্ব্যবহারযোগ্য নিয়ম তৈরি করুন।';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'নতুন জিম প্রোফাইলে অ্যাপের ডিফল্ট কপি হয় এবং নতুন পরিকল্পনায় প্রোফাইলের ডিফল্ট কপি হয়। পরবর্তী পরিবর্তন বিদ্যমান প্রোফাইল বা পরিকল্পনায় স্বয়ংক্রিয়ভাবে প্রয়োগ হয় না।';
+
+  @override
+  String get rulesRuleTypeLabel => 'নিয়মের ধরন';
+
+  @override
+  String get rulesOperationLabel => 'অপারেশন';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope, নিয়মের সংখ্যা: $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'নিয়মের সংখ্যা: $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'মোট নিয়ম: $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'পরিকল্পনার সংখ্যা: $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'নতুন পরিকল্পনার ডিফল্ট নিয়ম।';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'শুধু এই পরিকল্পনার নিয়ম।';
 }

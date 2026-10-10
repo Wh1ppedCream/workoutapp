@@ -46,12 +46,12 @@ class AppFlowTokens extends ThemeExtension<AppFlowTokens> {
     final isDark = brightness == Brightness.dark;
     return AppFlowTokens(
       canvas: isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF),
-      nodeBackground:
-          isDark ? const Color(0xFF1E1E1E) : const Color(0xFFFFFFFF),
-      nodeBorder:
-          isDark
-              ? const Color.fromARGB(255, 34, 55, 245)
-              : const Color.fromARGB(255, 93, 188, 226),
+      nodeBackground: isDark
+          ? const Color(0xFF1E1E1E)
+          : const Color(0xFFFFFFFF),
+      nodeBorder: isDark
+          ? const Color.fromARGB(255, 34, 55, 245)
+          : const Color.fromARGB(255, 93, 188, 226),
       nodeText: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF333333),
       success: isDark ? const Color(0xFF66BB6A) : const Color(0xFF2E7D32),
       failure: isDark ? const Color(0xFFEF5350) : const Color(0xFFC62828),
@@ -63,6 +63,33 @@ class AppFlowTokens extends ThemeExtension<AppFlowTokens> {
       profileScope: isDark ? const Color(0xFF4DB6AC) : const Color(0xFF00796B),
       planScope: isDark ? const Color(0xFFFFB74D) : const Color(0xFFEF6C00),
       addSetAction: const Color(0xFF26A69A),
+    );
+  }
+
+  /// Values for Expressive progression canvases and their editing nodes.
+  factory AppFlowTokens.expressive(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    return AppFlowTokens(
+      canvas: isDark ? const Color(0xFF211927) : const Color(0xFFF4EDF8),
+      nodeBackground: isDark
+          ? const Color(0xFF382A40)
+          : const Color(0xFFFFF8F1),
+      nodeBorder: isDark ? const Color(0xFFD9B7EA) : const Color(0xFF6F3D83),
+      nodeText: isDark ? const Color(0xFFF7ECFA) : const Color(0xFF291A2F),
+      success: isDark ? const Color(0xFF75D69A) : const Color(0xFF237A4A),
+      failure: isDark ? const Color(0xFFFF8E9F) : const Color(0xFFB3263E),
+      action: isDark ? const Color(0xFFD0B3E8) : const Color(0xFF55306E),
+      onAction: isDark ? const Color(0xFF291533) : Colors.white,
+      loopback: isDark ? const Color(0xFFC2ADC9) : const Color(0xFF716476),
+      diagramSuccess: isDark
+          ? const Color(0xFF82DFA5)
+          : const Color(0xFF237A4A),
+      diagramLoopback: isDark
+          ? const Color(0xFFB7A1C2)
+          : const Color(0xFF9986A2),
+      profileScope: isDark ? const Color(0xFFF1A6C5) : const Color(0xFFA75074),
+      planScope: isDark ? const Color(0xFFE8C374) : const Color(0xFF98701D),
+      addSetAction: isDark ? const Color(0xFF8ADBC8) : const Color(0xFF32776F),
     );
   }
 

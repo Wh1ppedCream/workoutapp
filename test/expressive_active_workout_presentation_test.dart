@@ -54,9 +54,7 @@ void main() {
       addTearDown(session.dispose);
       addTearDown(units.dispose);
       await Future.wait<void>([session.ready, units.ready]);
-      session
-        ..exercises.add(_exercise())
-        ..cardTypes.add(CardType.weight);
+      session.addExercise(_exercise(), CardType.weight);
 
       await tester.pumpWidget(
         MultiProvider(
@@ -153,88 +151,93 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('focused field contrast and header geometry work in both themes', (
-    tester,
-  ) async {
-    final cases = <({String name, ThemeData theme})>[
-      (name: 'light', theme: ExpressiveThemeDefinition.light()),
-      (name: 'dark', theme: ExpressiveThemeDefinition.dark()),
-    ];
+  testWidgets(
+    'focused field contrast and header geometry work in both themes',
+    (tester) async {
+      final cases = <({String name, ThemeData theme})>[
+        (name: 'light', theme: ExpressiveThemeDefinition.light()),
+        (name: 'dark', theme: ExpressiveThemeDefinition.dark()),
+      ];
 
-    for (final testCase in cases) {
-      final focusNode = FocusNode(debugLabel: '${testCase.name} weight field');
-      addTearDown(focusNode.dispose);
-      await tester.pumpWidget(
-        _weightCardHost(
-          _exercise(),
-          theme: testCase.theme,
-          expressiveWorkoutPresentation: true,
-          firstSetWeightFocusNode: focusNode,
-        ),
-      );
-      await tester.pumpAndSettle();
+      for (final testCase in cases) {
+        final focusNode = FocusNode(
+          debugLabel: '${testCase.name} weight field',
+        );
+        addTearDown(focusNode.dispose);
+        await tester.pumpWidget(
+          _weightCardHost(
+            _exercise(),
+            theme: testCase.theme,
+            expressiveWorkoutPresentation: true,
+            firstSetWeightFocusNode: focusNode,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      final weightField = find.byKey(_weightKey);
-      await tester.ensureVisible(weightField);
-      focusNode.requestFocus();
-      await tester.pump();
+        final weightField = find.byKey(_weightKey);
+        await tester.ensureVisible(weightField);
+        focusNode.requestFocus();
+        await tester.pump();
 
-      final fieldTheme = Theme.of(tester.element(weightField));
-      final tokens = testCase.theme.extension<AppExpressiveTrainTokens>()!;
-      final focusedBorder =
-          fieldTheme.inputDecorationTheme.focusedBorder! as OutlineInputBorder;
-      expect(
-        focusedBorder.borderRadius,
-        TonosExpressiveWorkoutShapes.numericField,
-        reason: testCase.name,
-      );
-      expect(
-        focusedBorder.borderSide.color,
-        tokens.actionPrimary,
-        reason: testCase.name,
-      );
-      expect(
-        _contrastRatio(tokens.actionPrimary, tokens.activePlansSurface),
-        greaterThanOrEqualTo(3),
-        reason: '${testCase.name} focus outline contrast',
-      );
+        final fieldTheme = Theme.of(tester.element(weightField));
+        final tokens = testCase.theme.extension<AppExpressiveTrainTokens>()!;
+        final focusedBorder =
+            fieldTheme.inputDecorationTheme.focusedBorder!
+                as OutlineInputBorder;
+        expect(
+          focusedBorder.borderRadius,
+          TonosExpressiveWorkoutShapes.numericField,
+          reason: testCase.name,
+        );
+        expect(
+          focusedBorder.borderSide.color,
+          tokens.actionPrimary,
+          reason: testCase.name,
+        );
+        expect(
+          _contrastRatio(tokens.actionPrimary, tokens.activePlansSurface),
+          greaterThanOrEqualTo(3),
+          reason: '${testCase.name} focus outline contrast',
+        );
 
-      final header = find.byWidgetPredicate(
-        (widget) =>
-            widget is Container &&
-            widget.decoration is BoxDecoration &&
-            (widget.decoration! as BoxDecoration).borderRadius ==
-                TonosExpressiveWorkoutShapes.exerciseHeader,
-      );
-      expect(header, findsOneWidget);
-      final paintedHeader = find
-          .descendant(of: header, matching: find.byType(DecoratedBox))
-          .first;
-      final headerWidget = tester.widget<Container>(header);
-      expect(
-        headerWidget.padding,
-        const EdgeInsets.symmetric(horizontal: 8),
-        reason: '${testCase.name} header keeps compact horizontal padding',
-      );
-      expect(
-        tester.getSize(paintedHeader).height,
-        closeTo(48, 0.1),
-        reason: '${testCase.name} preserves the visible header surface height',
-      );
-      expect(
-        tester.getRect(paintedHeader).top - tester.getRect(header).top,
-        closeTo(8, 0.1),
-        reason: '${testCase.name} preserves the visible header top inset',
-      );
-      expect(
-        headerWidget.margin?.resolve(TextDirection.ltr).bottom,
-        6,
-        reason: '${testCase.name} reserves the 6dp expanded divider gap',
-      );
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    }
-  });
+        final header = find.byWidgetPredicate(
+          (widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration! as BoxDecoration).borderRadius ==
+                  TonosExpressiveWorkoutShapes.exerciseHeader,
+        );
+        expect(header, findsOneWidget);
+        final paintedHeader = find
+            .descendant(of: header, matching: find.byType(DecoratedBox))
+            .first;
+        final headerWidget = tester.widget<Container>(header);
+        expect(
+          headerWidget.padding,
+          const EdgeInsets.symmetric(horizontal: 8),
+          reason: '${testCase.name} header keeps compact horizontal padding',
+        );
+        expect(
+          tester.getSize(paintedHeader).height,
+          closeTo(48, 0.1),
+          reason:
+              '${testCase.name} preserves the visible header surface height',
+        );
+        expect(
+          tester.getRect(paintedHeader).top - tester.getRect(header).top,
+          closeTo(8, 0.1),
+          reason: '${testCase.name} preserves the visible header top inset',
+        );
+        expect(
+          headerWidget.margin?.resolve(TextDirection.ltr).bottom,
+          6,
+          reason: '${testCase.name} reserves the 6dp expanded divider gap',
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    },
+  );
 
   testWidgets(
     'Expressive workout roles retain completion semantics and fit compact 2x rows',
@@ -293,8 +296,10 @@ void main() {
       expect(weightField, findsOneWidget);
       expect(repsField, findsOneWidget);
       expect(
-        tester.getRect(repsField).top,
-        greaterThanOrEqualTo(tester.getRect(weightField).bottom),
+        tester.getRect(weightField).right,
+        lessThanOrEqualTo(tester.getRect(repsField).left),
+        reason:
+            'the large-text reflow keeps weight and reps in separate columns',
       );
       for (final checkbox in checkboxes.evaluate()) {
         final rect = tester.getRect(find.byWidget(checkbox.widget));
@@ -423,10 +428,8 @@ void main() {
       addTearDown(units.dispose);
       await Future.wait<void>([session.ready, units.ready]);
       session
-        ..exercises.add(_exercise(setCount: 3))
-        ..cardTypes.add(CardType.weight)
-        ..exercises.add(_exercise(setCount: 3))
-        ..cardTypes.add(CardType.weight);
+        ..addExercise(_exercise(setCount: 3), CardType.weight)
+        ..addExercise(_exercise(setCount: 3), CardType.weight);
 
       await tester.pumpWidget(
         MultiProvider(
@@ -539,6 +542,13 @@ double _contrastRatio(Color foreground, Color background) {
 }
 
 class _EmptyRepository extends AppRepository {
+  @override
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) async {}
+
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
 

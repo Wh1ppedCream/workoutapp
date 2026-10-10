@@ -10,7 +10,9 @@ import '../providers/dashboard_config.dart';
 import '../providers/nutrition_profile.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/dashboard_sections.dart';
@@ -43,15 +45,14 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder:
-                (_) => SessionDetailScreen(
-                  WorkoutSession(
-                    id: reportSession.id,
-                    date: reportSession.date,
-                    calendarDayKey: reportSession.calendarDayKey,
-                    duration: reportSession.durationSeconds,
-                  ),
-                ),
+            builder: (_) => SessionDetailScreen(
+              WorkoutSession(
+                id: reportSession.id,
+                date: reportSession.date,
+                calendarDayKey: reportSession.calendarDayKey,
+                duration: reportSession.durationSeconds,
+              ),
+            ),
           ),
         )
         .then((_) => _refreshHistoryWidgets());
@@ -65,6 +66,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.dashboard,
+      child: Builder(builder: _buildDashboard),
+    );
+  }
+
+  Widget _buildDashboard(BuildContext context) {
     final config = context.watch<DashboardConfig>();
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
@@ -78,12 +86,23 @@ class _DashboardPageState extends State<DashboardPage> {
       _historyRefreshToken++;
     }
 
+    final destinationTokens = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    final expressiveDashboard =
+        destinationTokens?.family == AppExpressiveDestinationFamily.dashboard;
     return Scaffold(
+      backgroundColor: destinationTokens?.pageCanvas,
       body: SafeArea(
-        child:
-            _isEditing
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: expressiveDashboard ? 960 : double.infinity,
+            ),
+            child: _isEditing
                 ? _buildEditableDashboardList(visibleIds)
                 : _buildDashboardScrollView(visibleIds),
+          ),
+        ),
       ),
     );
   }
@@ -158,6 +177,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final details = dashboardSectionDetails(strings, id);
+    final showFullDescription =
+        context.usesExpressivePresentation &&
+        MediaQuery.textScalerOf(context).scale(1) > 1.15;
     return Container(
       key: ValueKey(id),
       margin: const EdgeInsets.only(bottom: 10),
@@ -203,8 +225,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 2),
                   Text(
                     details.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: showFullDescription ? null : 2,
+                    overflow: showFullDescription ? null : TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -216,8 +238,8 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(
             tooltip: strings.dashboardHideSection,
             icon: Icon(Icons.visibility_off_outlined, color: scheme.error),
-            onPressed:
-                () => context.read<DashboardConfig>().toggleVisibility(id),
+            onPressed: () =>
+                context.read<DashboardConfig>().toggleVisibility(id),
           ),
           const SizedBox(width: 4),
         ],
@@ -231,8 +253,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final config = context.watch<DashboardConfig>();
-    final hiddenCount =
-        config.widgetOrder.where((id) => !config.isVisible(id)).length;
+    final hiddenCount = config.widgetOrder
+        .where((id) => !config.isVisible(id))
+        .length;
     final strings = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -311,41 +334,41 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _showAddWidgetDialog() async {
     final config = context.read<DashboardConfig>();
-    final hiddenIds =
-        config.widgetOrder.where((id) => !config.isVisible(id)).toList();
+    final hiddenIds = config.widgetOrder
+        .where((id) => !config.isVisible(id))
+        .toList();
     if (hiddenIds.isEmpty) return;
     final strings = AppLocalizations.of(context);
     await showDialog(
       context: context,
-      builder:
-          (_) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.dashboardShowHiddenSections),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    for (final id in hiddenIds)
-                      ListTile(
-                        leading: Icon(
-                          dashboardSectionDetails(strings, id).icon,
-                          color: dashboardSectionDetails(strings, id).color,
-                        ),
-                        title: Text(dashboardSectionDetails(strings, id).title),
-                        subtitle: Text(
-                          dashboardSectionDetails(strings, id).description,
-                        ),
-                        onTap: () {
-                          context.read<DashboardConfig>().toggleVisibility(id);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                  ],
-                ),
-              ),
+      builder: (_) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.dashboardShowHiddenSections),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final id in hiddenIds)
+                  ListTile(
+                    leading: Icon(
+                      dashboardSectionDetails(strings, id).icon,
+                      color: dashboardSectionDetails(strings, id).color,
+                    ),
+                    title: Text(dashboardSectionDetails(strings, id).title),
+                    subtitle: Text(
+                      dashboardSectionDetails(strings, id).description,
+                    ),
+                    onTap: () {
+                      context.read<DashboardConfig>().toggleVisibility(id);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+              ],
             ),
           ),
+        ),
+      ),
     );
   }
 
@@ -426,14 +449,14 @@ class _DashboardPageState extends State<DashboardPage> {
     final tile = _buildDashboardTile(id);
     final section =
         id == 'exerciseProgress' ||
-                id == 'workoutMetrics' ||
-                id == 'historySummary' ||
-                id == 'healthTrends'
-            ? tile
-            : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: tile,
-            );
+            id == 'workoutMetrics' ||
+            id == 'historySummary' ||
+            id == 'healthTrends'
+        ? tile
+        : Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: tile,
+          );
     return KeyedSubtree(
       key: ValueKey<String>('dashboard_section_$id'),
       child: section,

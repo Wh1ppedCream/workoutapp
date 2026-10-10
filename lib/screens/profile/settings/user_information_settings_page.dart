@@ -9,10 +9,13 @@ import '../../../providers/unit_preference_provider.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../utils/weight_unit_formatter.dart';
 import '../../../utils/app_test_keys.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/tokens/app_shape_tokens.dart';
 import '../../../theme/tokens/app_settings_presentation_tokens.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
+import 'profile_expressive_selection.dart';
 import '../../../widgets/settings_tiles.dart';
 
 class UserInformationSettingsPage extends StatefulWidget {
@@ -41,13 +44,6 @@ class _UserInformationSettingsPageState
   @override
   void initState() {
     super.initState();
-    for (final controller in [
-      _nameController,
-      _heightController,
-      _weightController,
-    ]) {
-      controller.addListener(_markDirty);
-    }
     _load();
   }
 
@@ -195,9 +191,17 @@ class _UserInformationSettingsPageState
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressive = context.usesExpressivePresentation;
-    final dropdownInk = usesInkRecipe ? context.cs.onPrimaryContainer : null;
-    final inputTextStyle = settingsInputTextStyle(context);
-    final dropdownStyle = usesInkRecipe
+    final profileTokens = _profileTokens(context);
+    final expressiveInk = usesExpressive
+        ? profileTokens?.onSurfaceSelected
+        : null;
+    final dropdownInk = usesInkRecipe
+        ? context.cs.onPrimaryContainer
+        : expressiveInk;
+    final inputTextStyle = usesExpressive
+        ? Theme.of(context).textTheme.bodyLarge?.copyWith(color: expressiveInk)
+        : settingsInputTextStyle(context);
+    final dropdownStyle = usesInkRecipe || usesExpressive
         ? Theme.of(context).textTheme.titleMedium?.copyWith(color: dropdownInk)
         : null;
     final bodyFatOptions = <String>[
@@ -231,20 +235,23 @@ class _UserInformationSettingsPageState
         subtitle: strings.userInfoSubtitle,
         icon: Icons.badge_outlined,
         heroAccentColor: SettingsAccent.account,
-        bottomNavigationBar: SettingsSaveBar(
-          buttonKey: AppTestKeys.userInformationSave,
-          label: strings.userInfoSaveChanges,
-          isVisible: _dirty,
-          onPressed: _save,
-          animate: true,
-        ),
+        floatingActionButton: _dirty
+            ? FloatingActionButton.extended(
+                key: AppTestKeys.userInformationSave,
+                onPressed: _save,
+                backgroundColor: profileTokens?.actionPrimary,
+                foregroundColor: profileTokens?.onActionPrimary,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(strings.userInfoSaveChanges),
+              )
+            : null,
         children: [
           SettingsSection(
             title: strings.userInfoIdentityTitle,
             subtitle: strings.userInfoIdentitySubtitle,
             accentColor: SettingsAccent.account,
             surfaceColor: usesExpressive
-                ? surfaces.settingsSection
+                ? _profileTokens(context)?.surfacePrimary
                 : usesInkRecipe
                 ? surfaces.settingsSection
                 : null,
@@ -253,6 +260,7 @@ class _UserInformationSettingsPageState
                 child: TextFormField(
                   key: AppTestKeys.userInformationName,
                   controller: _nameController,
+                  onChanged: (_) => _markDirty(),
                   style: inputTextStyle,
                   cursorColor: inputTextStyle?.color,
                   decoration: _profileInputDecoration(
@@ -264,31 +272,53 @@ class _UserInformationSettingsPageState
                 ),
               ),
               _FieldPadding(
-                child: DropdownButtonFormField<String?>(
+                child: ProfileExpressiveChoiceField<String?>(
+                  title: strings.userInfoGender,
+                  values: genderOptions,
                   value: _gender,
-                  dropdownColor: usesInkRecipe || usesExpressive
-                      ? surfaces.settingsInput
-                      : null,
-                  style: dropdownStyle,
-                  iconEnabledColor: dropdownInk,
-                  isExpanded: true,
-                  itemHeight: null,
-                  items: genderOptions
-                      .map(
-                        (gender) => DropdownMenuItem<String?>(
-                          value: gender,
-                          child: Text(_genderLabel(strings, gender)),
-                        ),
-                      )
-                      .toList(),
+                  label: (value) =>
+                      value == null ? '' : _genderLabel(strings, value),
+                  choiceKey: (value) =>
+                      ValueKey<String>('user-info-dropdown-option-$value'),
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoGender,
+                    icon: Icons.wc_outlined,
+                  ),
+                  textStyle: dropdownStyle,
                   onChanged: (value) {
                     _gender = value;
                     _markDirty();
                   },
-                  decoration: settingsInputDecoration(
-                    context,
-                    label: strings.userInfoGender,
-                    icon: Icons.wc_outlined,
+                  nonExpressiveField: () => DropdownButtonFormField<String?>(
+                    initialValue: _gender,
+                    dropdownColor: usesInkRecipe
+                        ? surfaces.settingsInput
+                        : null,
+                    elevation: 8,
+                    style: dropdownStyle,
+                    iconEnabledColor: dropdownInk,
+                    isExpanded: true,
+                    itemHeight: null,
+                    items: genderOptions.map((gender) {
+                      final label = _genderLabel(strings, gender);
+                      return _userInformationDropdownItem(
+                        context,
+                        value: gender,
+                        label: label,
+                        selectedValue: _gender,
+                        expressive: false,
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      _gender = value;
+                      _markDirty();
+                    },
+                    decoration: _profileInputDecoration(
+                      context,
+                      label: strings.userInfoGender,
+                      icon: Icons.wc_outlined,
+                    ),
                   ),
                 ),
               ),
@@ -317,7 +347,7 @@ class _UserInformationSettingsPageState
             subtitle: strings.userInfoBodyMetricsSubtitle,
             accentColor: SettingsAccent.progress,
             surfaceColor: usesExpressive
-                ? surfaces.settingsSection
+                ? _profileTokens(context)?.surfaceTertiary
                 : usesInkRecipe
                 ? surfaces.planDuration
                 : null,
@@ -325,6 +355,7 @@ class _UserInformationSettingsPageState
               _FieldPadding(
                 child: TextFormField(
                   controller: _heightController,
+                  onChanged: (_) => _markDirty(),
                   style: inputTextStyle,
                   cursorColor: inputTextStyle?.color,
                   decoration: _profileInputDecoration(
@@ -338,6 +369,7 @@ class _UserInformationSettingsPageState
               _FieldPadding(
                 child: TextFormField(
                   controller: _weightController,
+                  onChanged: (_) => _markDirty(),
                   style: inputTextStyle,
                   cursorColor: inputTextStyle?.color,
                   decoration: _profileInputDecoration(
@@ -348,36 +380,59 @@ class _UserInformationSettingsPageState
                         : strings.userInfoWeightKilogramsHint,
                     icon: Icons.monitor_weight_outlined,
                     suffixText: weightUnit.shortLabel,
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
                   keyboardType: TextInputType.number,
                 ),
               ),
               _FieldPadding(
-                child: DropdownButtonFormField<String?>(
+                child: ProfileExpressiveChoiceField<String?>(
+                  title: strings.userInfoBodyFat,
+                  values: bodyFatOptions,
                   value: _bodyFatEstimate,
-                  dropdownColor: usesInkRecipe || usesExpressive
-                      ? surfaces.settingsInput
-                      : null,
-                  style: dropdownStyle,
-                  iconEnabledColor: dropdownInk,
-                  isExpanded: true,
-                  itemHeight: null,
-                  items: bodyFatOptions
-                      .map(
-                        (option) => DropdownMenuItem<String?>(
-                          value: option,
-                          child: Text(option),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    _bodyFatEstimate = value;
-                    _markDirty();
-                  },
+                  label: (value) => value ?? '',
+                  choiceKey: (value) =>
+                      ValueKey<String>('user-info-dropdown-option-$value'),
                   decoration: _profileInputDecoration(
                     context,
                     label: strings.userInfoBodyFat,
                     icon: Icons.percent,
+                  ),
+                  textStyle: dropdownStyle,
+                  onChanged: (value) {
+                    _bodyFatEstimate = value;
+                    _markDirty();
+                  },
+                  nonExpressiveField: () => DropdownButtonFormField<String?>(
+                    initialValue: _bodyFatEstimate,
+                    dropdownColor: usesInkRecipe
+                        ? surfaces.settingsInput
+                        : null,
+                    elevation: 8,
+                    style: dropdownStyle,
+                    iconEnabledColor: dropdownInk,
+                    isExpanded: true,
+                    itemHeight: null,
+                    items: bodyFatOptions
+                        .map(
+                          (option) => _userInformationDropdownItem(
+                            context,
+                            value: option,
+                            label: option,
+                            selectedValue: _bodyFatEstimate,
+                            expressive: false,
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      _bodyFatEstimate = value;
+                      _markDirty();
+                    },
+                    decoration: _profileInputDecoration(
+                      context,
+                      label: strings.userInfoBodyFat,
+                      icon: Icons.percent,
+                    ),
                   ),
                 ),
               ),
@@ -388,66 +443,110 @@ class _UserInformationSettingsPageState
             subtitle: strings.userInfoActivitySubtitle,
             accentColor: SettingsAccent.training,
             surfaceColor: usesExpressive
-                ? surfaces.settingsSection
+                ? _profileTokens(context)?.surfaceSecondary
                 : usesInkRecipe
                 ? surfaces.flowControl
                 : null,
             children: [
               _FieldPadding(
-                child: DropdownButtonFormField<String?>(
+                child: ProfileExpressiveChoiceField<String?>(
+                  title: strings.userInfoWeightTrend,
+                  values: trendOptions,
                   value: _weightTrend,
-                  dropdownColor: usesInkRecipe || usesExpressive
-                      ? surfaces.settingsInput
-                      : null,
-                  style: dropdownStyle,
-                  iconEnabledColor: dropdownInk,
-                  isExpanded: true,
-                  itemHeight: null,
-                  items: trendOptions
-                      .map(
-                        (option) => DropdownMenuItem<String?>(
-                          value: option,
-                          child: Text(_weightTrendLabel(strings, option)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    _weightTrend = value;
-                    _markDirty();
-                  },
+                  label: (value) =>
+                      value == null ? '' : _weightTrendLabel(strings, value),
+                  choiceKey: (value) =>
+                      ValueKey<String>('user-info-dropdown-option-$value'),
                   decoration: _profileInputDecoration(
                     context,
                     label: strings.userInfoWeightTrend,
                     icon: Icons.trending_up,
                   ),
+                  textStyle: dropdownStyle,
+                  onChanged: (value) {
+                    _weightTrend = value;
+                    _markDirty();
+                  },
+                  nonExpressiveField: () => DropdownButtonFormField<String?>(
+                    initialValue: _weightTrend,
+                    dropdownColor: usesInkRecipe
+                        ? surfaces.settingsInput
+                        : null,
+                    elevation: 8,
+                    style: dropdownStyle,
+                    iconEnabledColor: dropdownInk,
+                    isExpanded: true,
+                    itemHeight: null,
+                    items: trendOptions.map((option) {
+                      final label = _weightTrendLabel(strings, option);
+                      return _userInformationDropdownItem(
+                        context,
+                        value: option,
+                        label: label,
+                        selectedValue: _weightTrend,
+                        expressive: false,
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      _weightTrend = value;
+                      _markDirty();
+                    },
+                    decoration: _profileInputDecoration(
+                      context,
+                      label: strings.userInfoWeightTrend,
+                      icon: Icons.trending_up,
+                    ),
+                  ),
                 ),
               ),
               _FieldPadding(
-                child: DropdownButtonFormField<String?>(
+                child: ProfileExpressiveChoiceField<String?>(
+                  title: strings.userInfoAverageSteps,
+                  values: activityOptions,
                   value: _activityLevel,
-                  dropdownColor: usesInkRecipe || usesExpressive
-                      ? surfaces.settingsInput
-                      : null,
-                  style: dropdownStyle,
-                  iconEnabledColor: dropdownInk,
-                  isExpanded: true,
-                  itemHeight: null,
-                  items: activityOptions
-                      .map(
-                        (option) => DropdownMenuItem<String?>(
-                          value: option,
-                          child: Text(_activityLevelLabel(strings, option)),
-                        ),
-                      )
-                      .toList(),
+                  label: (value) =>
+                      value == null ? '' : _activityLevelLabel(strings, value),
+                  choiceKey: (value) =>
+                      ValueKey<String>('user-info-dropdown-option-$value'),
+                  decoration: _profileInputDecoration(
+                    context,
+                    label: strings.userInfoAverageSteps,
+                    icon: Icons.directions_walk,
+                  ),
+                  textStyle: dropdownStyle,
                   onChanged: (value) {
                     _activityLevel = value;
                     _markDirty();
                   },
-                  decoration: settingsInputDecoration(
-                    context,
-                    label: strings.userInfoAverageSteps,
-                    icon: Icons.directions_walk,
+                  nonExpressiveField: () => DropdownButtonFormField<String?>(
+                    initialValue: _activityLevel,
+                    dropdownColor: usesInkRecipe
+                        ? surfaces.settingsInput
+                        : null,
+                    elevation: 8,
+                    style: dropdownStyle,
+                    iconEnabledColor: dropdownInk,
+                    isExpanded: true,
+                    itemHeight: null,
+                    items: activityOptions.map((option) {
+                      final label = _activityLevelLabel(strings, option);
+                      return _userInformationDropdownItem(
+                        context,
+                        value: option,
+                        label: label,
+                        selectedValue: _activityLevel,
+                        expressive: false,
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      _activityLevel = value;
+                      _markDirty();
+                    },
+                    decoration: _profileInputDecoration(
+                      context,
+                      label: strings.userInfoAverageSteps,
+                      icon: Icons.directions_walk,
+                    ),
                   ),
                 ),
               ),
@@ -503,12 +602,67 @@ class _FieldPadding extends StatelessWidget {
   }
 }
 
+DropdownMenuItem<String?> _userInformationDropdownItem(
+  BuildContext context, {
+  required String value,
+  required String label,
+  required String? selectedValue,
+  required bool expressive,
+}) {
+  if (!expressive) {
+    return DropdownMenuItem<String?>(value: value, child: Text(label));
+  }
+
+  final tokens = _profileTokens(context)!;
+  final selected = value == selectedValue;
+  final foreground = selected
+      ? tokens.onSurfaceSelected
+      : tokens.onSurfaceTertiary;
+  final surface = Color.lerp(
+    tokens.surfaceTertiary,
+    tokens.surfaceSelected,
+    selected ? 1 : 0.14,
+  )!;
+
+  return DropdownMenuItem<String?>(
+    value: value,
+    alignment: AlignmentDirectional.centerStart,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Ink(
+        key: ValueKey<String>('user-info-dropdown-option-$value'),
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: foreground,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 InputDecoration _profileInputDecoration(
   BuildContext context, {
   required String label,
   String? hint,
   required IconData icon,
   String? suffixText,
+  FloatingLabelBehavior? floatingLabelBehavior,
 }) {
   final decoration = settingsInputDecoration(
     context,
@@ -519,17 +673,74 @@ InputDecoration _profileInputDecoration(
   );
   if (!context.usesExpressivePresentation) return decoration;
 
+  final destination = _profileTokens(context);
+  final theme = Theme.of(context);
+  final fieldForeground =
+      destination?.onSurfaceSelected ?? theme.colorScheme.onSurface;
+  final fieldSurface = Color.lerp(
+    destination?.surfaceSelected ?? theme.colorScheme.surface,
+    fieldForeground,
+    0.12,
+  )!;
+  final errorForeground = tonosSettingsValidationErrorForSurface(
+    context,
+    fieldSurface,
+  );
+
   InputBorder? expressiveBorder(InputBorder? border) {
-    if (border is! OutlineInputBorder) return border;
-    return border.copyWith(borderRadius: ExpressiveTrainShapes.compactControl);
+    if (border is OutlineInputBorder) {
+      return border.copyWith(
+        borderRadius: ExpressiveTrainShapes.compactControl,
+        borderSide: BorderSide.none,
+      );
+    }
+    return border;
+  }
+
+  OutlineInputBorder expressiveErrorBorder(
+    InputBorder? border, {
+    required bool focused,
+  }) {
+    if (border is OutlineInputBorder) {
+      return border.copyWith(
+        borderRadius: ExpressiveTrainShapes.compactControl,
+      );
+    }
+    return OutlineInputBorder(
+      borderRadius: ExpressiveTrainShapes.compactControl,
+      borderSide: BorderSide(
+        color: errorForeground,
+        width: focused
+            ? context.shapeTokens.focusRingWidth
+            : context.shapeTokens.outlineWidth,
+      ),
+    );
   }
 
   return decoration.copyWith(
+    filled: true,
+    fillColor: fieldSurface,
+    labelStyle: TextStyle(color: fieldForeground.withValues(alpha: 0.84)),
+    floatingLabelStyle: TextStyle(color: fieldForeground),
+    hintStyle: TextStyle(color: fieldForeground.withValues(alpha: 0.72)),
+    prefixIconColor: fieldForeground,
+    suffixStyle: TextStyle(color: fieldForeground),
+    floatingLabelBehavior: floatingLabelBehavior,
+    errorStyle: TextStyle(color: errorForeground),
     border: expressiveBorder(decoration.border),
     enabledBorder: expressiveBorder(decoration.enabledBorder),
-    focusedBorder: expressiveBorder(decoration.focusedBorder),
-    errorBorder: expressiveBorder(decoration.errorBorder),
-    focusedErrorBorder: expressiveBorder(decoration.focusedErrorBorder),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: ExpressiveTrainShapes.compactControl,
+      borderSide: BorderSide(
+        color: destination?.outlineAccent ?? fieldForeground,
+        width: 2,
+      ),
+    ),
+    errorBorder: expressiveErrorBorder(decoration.errorBorder, focused: false),
+    focusedErrorBorder: expressiveErrorBorder(
+      decoration.focusedErrorBorder,
+      focused: true,
+    ),
     disabledBorder: expressiveBorder(decoration.disabledBorder),
   );
 }
@@ -538,6 +749,7 @@ Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
   final theme = Theme.of(context);
   final expressive = theme.extension<AppExpressiveTrainTokens>();
   if (!context.usesExpressivePresentation || expressive == null) return child;
+  final destination = _profileTokens(context)!;
 
   final updatedExtensions = theme.extensions.values
       .where(
@@ -565,14 +777,48 @@ Widget _withExpressiveProfileTheme(BuildContext context, Widget child) {
     ),
   );
 
-  return Theme(
-    data: theme.copyWith(
-      scaffoldBackgroundColor: expressive.pageCanvas,
-      dialogTheme: theme.dialogTheme.copyWith(
-        shape: RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+  return AppExpressiveDestinationTheme(
+    family: AppExpressiveDestinationFamily.profile,
+    child: Theme(
+      data: theme.copyWith(
+        scaffoldBackgroundColor: expressive.pageCanvas,
+        colorScheme: theme.colorScheme.copyWith(
+          surface: destination.surfacePrimary,
+          onSurface: destination.onSurfacePrimary,
+          onSurfaceVariant: destination.supportingForeground,
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: destination.onSurfacePrimary,
+          displayColor: destination.onSurfacePrimary,
+        ),
+        dialogTheme: theme.dialogTheme.copyWith(
+          backgroundColor: destination.surfacePrimary,
+          shape: RoundedRectangleBorder(
+            borderRadius: ExpressiveTrainShapes.menu,
+          ),
+          titleTextStyle: theme.textTheme.headlineSmall?.copyWith(
+            color: destination.onSurfacePrimary,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        radioTheme: theme.radioTheme.copyWith(
+          fillColor: WidgetStatePropertyAll<Color?>(
+            destination.onSurfacePrimary,
+          ),
+        ),
+        extensions: updatedExtensions,
       ),
-      extensions: updatedExtensions,
+      child: child,
     ),
-    child: child,
+  );
+}
+
+AppExpressiveDestinationTokens? _profileTokens(BuildContext context) {
+  final tokens = Theme.of(context).extension<AppExpressiveDestinationTokens>();
+  if (tokens?.family == AppExpressiveDestinationFamily.profile) return tokens;
+  if (!context.usesExpressivePresentation) return null;
+  return AppExpressiveDestinationTokens.forFamily(
+    AppExpressiveDestinationFamily.profile,
+    Theme.of(context).brightness,
   );
 }

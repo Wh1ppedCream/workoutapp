@@ -8,8 +8,11 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/nutrition/measured_items_page.dart';
 import 'package:env_test/widgets/health_trends_section.dart';
 import 'package:env_test/theme/classic_theme.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
@@ -45,8 +48,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       final card = find.byKey(const ValueKey('measurement-trend-1'));
-      final material =
-          find.ancestor(of: card, matching: find.byType(Material)).first;
+      final material = find
+          .ancestor(of: card, matching: find.byType(Material))
+          .first;
       expect(material, findsOneWidget);
       expect(tester.widget<Material>(material).color, color);
       expect(tester.getSize(card).width, 154);
@@ -68,10 +72,9 @@ void main() {
           final strings = await AppLocalizations.delegate.load(
             const Locale('en'),
           );
-          final theme =
-              brightness == Brightness.light
-                  ? NeoBrutalismThemeDefinition.light()
-                  : NeoBrutalismThemeDefinition.dark();
+          final theme = brightness == Brightness.light
+              ? NeoBrutalismThemeDefinition.light()
+              : NeoBrutalismThemeDefinition.dark();
           final captureKey = GlobalKey();
           await tester.pumpWidget(
             MultiProvider(
@@ -170,6 +173,98 @@ void main() {
     );
   });
 
+  testWidgets(
+    'Profile scope changes only the measured health card surface in both modes',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final semantics = tester.ensureSemantics();
+      try {
+        for (final brightness in Brightness.values) {
+          final theme = brightness == Brightness.light
+              ? ExpressiveThemeDefinition.light()
+              : ExpressiveThemeDefinition.dark();
+          final originalColors = theme.progressColors;
+          final profileTokens = AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            theme.brightness,
+          );
+
+          for (final profileScoped in [false, true]) {
+            final page = profileScoped
+                ? const AppExpressiveDestinationTheme(
+                    family: AppExpressiveDestinationFamily.profile,
+                    child: MeasuredItemsPage(),
+                  )
+                : const MeasuredItemsPage();
+            await tester.pumpWidget(
+              Provider<AppRepository>.value(
+                value: _MeasurementRepository(),
+                child: MaterialApp(
+                  theme: theme,
+                  localizationsDelegates: tonosLocalizationDelegates,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  builder: (context, child) => MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: const TextScaler.linear(1.5)),
+                    child: child!,
+                  ),
+                  home: page,
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+
+            final healthSection = find.byType(HealthTrendsSection);
+            final pageColors = Theme.of(tester.element(healthSection))
+                .progressColors;
+            final expectedHealthCard = profileScoped
+                ? profileTokens.surfaceAccent
+                : originalColors.healthCard;
+            expect(pageColors.healthCard, expectedHealthCard);
+            expect(pageColors.accent, originalColors.accent);
+            expect(pageColors.estimated, originalColors.estimated);
+            expect(pageColors.estimatedOneRm, originalColors.estimatedOneRm);
+            expect(pageColors.grid, originalColors.grid);
+            expect(pageColors.label, originalColors.label);
+            expect(
+              pageColors.exerciseIncrease,
+              originalColors.exerciseIncrease,
+            );
+            expect(
+              pageColors.exerciseDecrease,
+              originalColors.exerciseDecrease,
+            );
+            expect(pageColors.neutral, originalColors.neutral);
+            expect(pageColors.workoutIncrease, originalColors.workoutIncrease);
+            expect(pageColors.workoutDecrease, originalColors.workoutDecrease);
+            expect(pageColors.healthIncrease, originalColors.healthIncrease);
+            expect(pageColors.healthDecrease, originalColors.healthDecrease);
+            expect(pageColors.healthGrid, originalColors.healthGrid);
+
+            final card = find.byKey(AppTestKeys.measurementTrend(1));
+            expect(card, findsOneWidget);
+            expect(tester.getSize(card).width, greaterThan(0));
+            final logAction = find.byKey(
+              const ValueKey('measurement-trend-1-log-semantics'),
+            );
+            expect(logAction, findsOneWidget);
+            expect(
+              tester
+                  .getSemantics(logAction)
+                  .getSemanticsData()
+                  .hasAction(SemanticsAction.tap),
+              isTrue,
+            );
+            expect(tester.takeException(), isNull);
+          }
+        }
+      } finally {
+        semantics.dispose();
+      }
+    },
+  );
+
   testWidgets('keeps dashboard trends compact and horizontal', (tester) async {
     await tester.pumpWidget(
       Provider<AppRepository>.value(
@@ -223,8 +318,9 @@ Future<void> _expectHealthCardPaint(
   await tester.runAsync(() async {
     final image = await boundary.toImage(pixelRatio: 1);
     try {
-      final pixels =
-          (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      final pixels = (await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!;
       Color pixelAt(Offset position) {
         final index =
             (position.dy.floor() * image.width + position.dx.floor()) * 4;

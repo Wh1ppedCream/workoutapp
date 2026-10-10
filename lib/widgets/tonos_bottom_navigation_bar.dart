@@ -81,6 +81,8 @@ class _ExpressiveBottomNavigationBarState
   static const double _preferredVisibleDestinationWidth = 64;
 
   final ScrollController _scrollController = ScrollController();
+  ({double width, TextScaler scaler, TextDirection direction, Locale? locale})?
+  _layoutSignature;
   late List<GlobalKey> _destinationKeys;
 
   int get _selectedIndex =>
@@ -150,45 +152,78 @@ class _ExpressiveBottomNavigationBarState
           final viewportWidth = constraints.maxWidth.isFinite
               ? constraints.maxWidth
               : MediaQuery.sizeOf(context).width;
+          final layoutSignature = (
+            width: viewportWidth,
+            scaler: textScaler,
+            direction: textDirection,
+            locale: locale,
+          );
+          if (_layoutSignature != layoutSignature) {
+            _layoutSignature = layoutSignature;
+            _scheduleSelectedDestinationVisibility();
+          }
+          final compactFiveDestinations =
+              widget.items.length <= 5 && viewportWidth <= 360;
+          // At large text scales, a vertical destination list gives each full
+          // label the available width while keeping every item tappable.
+          final compactStacked =
+              compactFiveDestinations &&
+              widget.items.length > 3 &&
+              textScaler.scale(1) > 1.15;
+          final compactColumnCount = compactStacked ? 1 : widget.items.length;
           final minimumWidth = _minimumDestinationWidth;
+          final itemLabelWidths = widget.items
+              .map((item) {
+                final label = item.label ?? item.tooltip ?? '';
+                return math.max(
+                  _labelIntrinsicWidth(
+                    label,
+                    labelStyle.copyWith(fontWeight: FontWeight.w500),
+                    textScaler,
+                    textDirection,
+                    locale,
+                  ),
+                  _labelIntrinsicWidth(
+                    label,
+                    labelStyle.copyWith(fontWeight: FontWeight.w600),
+                    textScaler,
+                    textDirection,
+                    locale,
+                  ),
+                );
+              })
+              .toList(growable: false);
           final visibleItemCount = math.min(
             widget.items.length,
-            math.max(
-              1,
-              (viewportWidth / _preferredVisibleDestinationWidth).floor(),
-            ),
+            compactFiveDestinations
+                ? widget.items.length
+                : math.max(
+                    1,
+                    (viewportWidth / _preferredVisibleDestinationWidth).floor(),
+                  ),
           );
-          final availableWidthPerItem = viewportWidth / visibleItemCount;
-          final widestLabel = widget.items.fold<double>(0, (widest, item) {
-            final label = item.label ?? item.tooltip ?? '';
-            final labelWidth = math.max(
-              _labelIntrinsicWidth(
-                label,
-                labelStyle.copyWith(fontWeight: FontWeight.w500),
-                textScaler,
-                textDirection,
-                locale,
-              ),
-              _labelIntrinsicWidth(
-                label,
-                labelStyle.copyWith(fontWeight: FontWeight.w600),
-                textScaler,
-                textDirection,
-                locale,
-              ),
-            );
-            return math.max(widest, labelWidth);
-          });
+          final availableWidthPerItem =
+              viewportWidth /
+              (compactStacked ? compactColumnCount : visibleItemCount);
+          final widestLabel = itemLabelWidths.fold<double>(0, math.max);
           final preferredLabelWidth = (widestLabel + 16)
               .clamp(minimumWidth, 192.0)
               .toDouble();
-          final destinationWidth = math
-              .max(
-                math.max(minimumWidth, availableWidthPerItem),
-                preferredLabelWidth,
-              )
-              .toDouble();
-          final contentWidth = destinationWidth * widget.items.length;
+          final uniformDestinationWidth = compactFiveDestinations
+              ? availableWidthPerItem
+              : math
+                    .max(
+                      math.max(minimumWidth, availableWidthPerItem),
+                      preferredLabelWidth,
+                    )
+                    .toDouble();
+          final destinationWidths = List<double>.filled(
+            widget.items.length,
+            uniformDestinationWidth,
+          );
+          final contentWidth = compactStacked
+              ? viewportWidth
+              : uniformDestinationWidth * widget.items.length;
           final hasOverflow = contentWidth > viewportWidth;
           final labelHeight = widget.items.fold<double>(
             0,
@@ -197,26 +232,48 @@ class _ExpressiveBottomNavigationBarState
               _labelHeight(
                 item.label ?? item.tooltip ?? '',
                 labelStyle,
-                destinationWidth,
+                (destinationWidths[widget.items.indexOf(item)] -
+                        (compactStacked ? 68 : 0))
+                    .clamp(0.0, double.infinity)
+                    .toDouble(),
                 textScaler,
                 textDirection,
                 locale,
               ),
             ),
           );
+          final rowHeight = math
+              .max(
+                _minimumBarHeight,
+                compactStacked ? labelHeight + 8 : 4 + 32 + labelHeight + 4,
+              )
+              .toDouble();
+          final rowCount =
+              (widget.items.length + compactColumnCount - 1) ~/
+              compactColumnCount;
           final barHeight = math
-              .max(_minimumBarHeight, 4 + 32 + labelHeight + 4)
+              .max(
+                _minimumBarHeight,
+                compactStacked
+                    ? rowHeight * rowCount + 4 * (rowCount - 1)
+                    : rowHeight,
+              )
               .toDouble();
           final destinations = _buildDestinations(
             context,
-            destinationWidth: destinationWidth,
+            destinationWidths: destinationWidths,
             contentWidth: contentWidth,
             barHeight: barHeight,
+            compactStacked: compactStacked,
+            compactColumnCount: compactColumnCount,
+            rowHeight: rowHeight,
             selectedIconColor: tokens.navigationSelectedForeground,
-            // The selected fill sits behind the icon row only. Keep the label
-            // on the navigation surface, where the general foreground is the
-            // contrasting role in both light and dark palettes.
-            selectedLabelColor: tokens.navigationLabel,
+            // Horizontal selection sits behind the icon only, while the
+            // compact stacked selection fills the full icon-and-label row.
+            // Use the matching foreground role for each selected surface.
+            selectedLabelColor: compactStacked
+                ? tokens.navigationSelectedForeground
+                : tokens.navigationLabel,
             unselectedColor: tokens.navigationLabel,
             labelStyle: labelStyle,
           );
@@ -254,9 +311,12 @@ class _ExpressiveBottomNavigationBarState
 
   Widget _buildDestinations(
     BuildContext context, {
-    required double destinationWidth,
+    required List<double> destinationWidths,
     required double contentWidth,
     required double barHeight,
+    required bool compactStacked,
+    required int compactColumnCount,
+    required double rowHeight,
     required Color selectedIconColor,
     required Color selectedLabelColor,
     required Color unselectedColor,
@@ -266,10 +326,46 @@ class _ExpressiveBottomNavigationBarState
     final tokens = theme.extension<AppExpressiveTrainTokens>()!;
     final direction = Directionality.of(context);
     final topologyKey = _navigationTopology(widget.items);
+    if (compactStacked) {
+      final rows = <Widget>[];
+      for (var index = 0; index < widget.items.length; index++) {
+        rows.add(
+          SizedBox(
+            height: rowHeight,
+            child: _buildDestination(
+              context,
+              index,
+              destinationWidth: destinationWidths[index],
+              destinationHeight: rowHeight,
+              inlineSelection: true,
+              horizontalLayout: true,
+              selectedIconColor: selectedIconColor,
+              selectedLabelColor: selectedLabelColor,
+              unselectedColor: unselectedColor,
+              labelStyle: labelStyle,
+              cornerRadius: _mirrorBorderRadius(
+                ExpressiveTrainShapes.selectedSelector,
+                direction,
+              ),
+            ),
+          ),
+        );
+        if (index < widget.items.length - 1) {
+          rows.add(const SizedBox(height: 4));
+        }
+      }
+
+      return SizedBox(
+        width: contentWidth,
+        height: barHeight,
+        child: Column(mainAxisSize: MainAxisSize.min, children: rows),
+      );
+    }
+
     final placeholders = Row(
       children: [
         for (var index = 0; index < widget.items.length; index++)
-          SizedBox(width: destinationWidth, height: 32),
+          SizedBox(width: destinationWidths[index], height: 32),
       ],
     );
 
@@ -308,8 +404,10 @@ class _ExpressiveBottomNavigationBarState
                 _buildDestination(
                   context,
                   index,
-                  destinationWidth: destinationWidth,
-                  barHeight: barHeight,
+                  destinationWidth: destinationWidths[index],
+                  destinationHeight: barHeight,
+                  inlineSelection: false,
+                  horizontalLayout: false,
                   selectedIconColor: selectedIconColor,
                   selectedLabelColor: selectedLabelColor,
                   unselectedColor: unselectedColor,
@@ -330,7 +428,9 @@ class _ExpressiveBottomNavigationBarState
     BuildContext context,
     int index, {
     required double destinationWidth,
-    required double barHeight,
+    required double destinationHeight,
+    required bool inlineSelection,
+    required bool horizontalLayout,
     required Color selectedIconColor,
     required Color selectedLabelColor,
     required Color unselectedColor,
@@ -339,41 +439,46 @@ class _ExpressiveBottomNavigationBarState
   }) {
     final item = widget.items[index];
     final selected = index == _selectedIndex;
+    final tokens = Theme.of(context).extension<AppExpressiveTrainTokens>()!;
     final iconColor = selected ? selectedIconColor : unselectedColor;
     final labelColor = selected ? selectedLabelColor : unselectedColor;
     final label = item.label ?? item.tooltip ?? '';
     final icon = selected ? item.activeIcon : null;
+    final iconWidget = IconTheme.merge(
+      data: IconThemeData(color: iconColor, size: selected ? 26 : 24),
+      child: icon ?? item.icon,
+    );
+    final labelWidget = Text(
+      label,
+      textAlign: horizontalLayout ? TextAlign.start : TextAlign.center,
+      softWrap: true,
+      style: labelStyle.copyWith(
+        color: labelColor,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      ),
+    );
+    final content = horizontalLayout
+        ? Row(
+            children: [
+              SizedBox(width: 40, child: Center(child: iconWidget)),
+              const SizedBox(width: 12),
+              Expanded(child: labelWidget),
+            ],
+          )
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 32, child: Center(child: iconWidget)),
+              if (label.isNotEmpty) labelWidget,
+            ],
+          );
     Widget destinationContent = SizedBox.expand(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 32,
-              child: Center(
-                child: IconTheme.merge(
-                  data: IconThemeData(
-                    color: iconColor,
-                    size: selected ? 26 : 24,
-                  ),
-                  child: icon ?? item.icon,
-                ),
-              ),
-            ),
-            if (label.isNotEmpty)
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                softWrap: true,
-                style: labelStyle.copyWith(
-                  color: labelColor,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-          ],
-        ),
+        padding: horizontalLayout
+            ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
+            : const EdgeInsets.symmetric(vertical: 2),
+        child: content,
       ),
     );
     if (context.usesExpressivePresentation) {
@@ -386,10 +491,24 @@ class _ExpressiveBottomNavigationBarState
         child: destinationContent,
       );
     }
+    if (inlineSelection) {
+      destinationContent = AnimatedContainer(
+        key: ValueKey('tonos-expressive-navigation-inline-selection-$index'),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: selected ? tokens.navigationSelected : Colors.transparent,
+          borderRadius: cornerRadius,
+        ),
+        child: destinationContent,
+      );
+    }
 
     return SizedBox(
       width: destinationWidth,
-      height: barHeight,
+      height: destinationHeight,
       child: Semantics(
         container: true,
         excludeSemantics: true,

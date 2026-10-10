@@ -13,15 +13,19 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/full_history_screen.dart';
 import 'package:env_test/screens/exercise/session_detail_screen.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
+import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/expressive_theme.dart';
-import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/neo_brutalism_theme.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/utils/completed_workout_duration_formatter.dart';
 import 'package:env_test/utils/localized_formatters.dart';
+import 'package:env_test/utils/weight_unit_formatter.dart';
 
 void main() {
   testWidgets(
-    'Expressive Full History exposes session summaries and opens details',
+    'Expressive Full History groups dates and exposes session summaries',
     (tester) async {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
@@ -31,22 +35,28 @@ void main() {
       addTearDown(units.dispose);
 
       const locale = Locale('en');
-      final newerSession = WorkoutSession(
+      final newerSession = _reportSession(
         id: 5,
-        date: DateTime(2026, 9, 27, 12),
-        duration: 2700,
+        date: DateTime(2026, 9, 27, 18),
+        durationSeconds: 2700,
+        exerciseCount: 2,
+        setCount: 6,
+        totalVolume: 1300,
       );
-      final olderSession = WorkoutSession(
+      final olderSession = _reportSession(
         id: 4,
         date: DateTime(2026, 9, 26, 12),
-        duration: 1800,
+        durationSeconds: 1800,
+        exerciseCount: 1,
+        setCount: 4,
+        totalVolume: 0,
       );
+      final repository = _FullHistoryRepository([olderSession, newerSession]);
+
       await tester.pumpWidget(
         MultiProvider(
           providers: [
-            Provider<AppRepository>.value(
-              value: _FullHistoryRepository([newerSession, olderSession]),
-            ),
+            Provider<AppRepository>.value(value: repository),
             ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
           ],
           child: MaterialApp(
@@ -55,15 +65,17 @@ void main() {
             locale: locale,
             localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const FullHistoryScreen(),
+            home: const AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.logbook,
+              child: FullHistoryScreen(),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      final strings = AppLocalizations.of(
-        tester.element(find.byType(FullHistoryScreen)),
-      );
+      final screenContext = tester.element(find.byType(FullHistoryScreen));
+      final strings = AppLocalizations.of(screenContext);
       final newerDate = LocalizedFormatters.date(
         newerSession.calendarDay.toLocalDateTime(),
         locale,
@@ -72,50 +84,93 @@ void main() {
         olderSession.calendarDay.toLocalDateTime(),
         locale,
       );
+      final newerTime = LocalizedFormatters.time(
+        newerSession.displayDateTime,
+        locale,
+      );
       final newerDuration = formatCompletedWorkoutDuration(
         strings,
-        newerSession.duration,
+        newerSession.durationSeconds,
       );
-      final newerLabel = strings.fullHistorySessionSummary(
-        newerDate,
+      final newerMetadata = strings.logbookSessionSummary(
         newerDuration,
-      );
-      final newerDateText = find.text(newerDate);
-      expect(newerDateText, findsOneWidget);
-      final newerSemanticRow = find.ancestor(
-        of: newerDateText,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is Semantics &&
-              widget.properties.button == true &&
-              widget.properties.label == newerLabel,
+        newerSession.exerciseCount,
+        newerSession.setCount,
+        WeightUnitFormatter.formatVolume(
+          newerSession.totalVolume,
+          WeightUnit.pounds,
+          locale: locale,
         ),
       );
-      expect(newerSemanticRow, findsOneWidget);
-      expect(
-        tester
-            .getSemantics(newerSemanticRow)
-            .getSemanticsData()
-            .hasAction(SemanticsAction.tap),
-        isTrue,
+      final newerAccessibleLabel = strings.fullHistorySessionSummary(
+        newerDate,
+        '$newerTime. $newerMetadata',
       );
-      final rowSurface = find.ancestor(
-        of: newerDateText,
+
+      expect(find.text(newerDate), findsOneWidget);
+      expect(find.text(newerTime), findsOneWidget);
+      expect(find.text(newerMetadata), findsOneWidget);
+      final newerSemanticRow = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.button == true &&
+            widget.properties.label == newerAccessibleLabel,
+      );
+      expect(newerSemanticRow, findsOneWidget);
+      final newerSemantics = tester
+          .getSemantics(newerSemanticRow)
+          .getSemanticsData();
+      expect(newerSemantics.label, newerAccessibleLabel);
+      expect(newerSemantics.hasAction(SemanticsAction.tap), isTrue);
+      final rowSize = tester.getSize(newerSemanticRow);
+      expect(rowSize.height, greaterThanOrEqualTo(56));
+      expect(rowSize.height, lessThan(100));
+
+      final destinationTokens = AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.logbook,
+        Brightness.light,
+      );
+      final groupPanelFinder = find.ancestor(
+        of: newerSemanticRow,
         matching: find.byType(TonosSurface),
       );
-      expect(rowSurface, findsOneWidget);
-      final surfaces = ExpressiveThemeDefinition.light().surfaceTokens;
-      final renderedRow = tester.widget<TonosSurface>(rowSurface);
-      expect(renderedRow.color, surfaces.dashboardSection);
-      expect(renderedRow.onTap, isNotNull);
-      expect(find.text(newerDuration), findsOneWidget);
+      expect(groupPanelFinder, findsOneWidget);
+      final groupPanel = tester.widget<TonosSurface>(groupPanelFinder);
+      expect(groupPanel.color, destinationTokens.surfaceSecondary);
+      expect(groupPanel.onTap, isNull);
+      expect(
+        groupPanel.borderRadius,
+        const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      );
+
+      final dateBandFinder = find.ancestor(
+        of: find.text(newerDate),
+        matching: find.byType(TonosSurface),
+      );
+      final dateBand = tester.widget<TonosSurface>(dateBandFinder);
+      expect(dateBand.color, destinationTokens.surfacePrimary);
+      expect(
+        dateBand.borderRadius,
+        const BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(8),
+          bottomLeft: Radius.circular(8),
+          bottomRight: Radius.circular(8),
+        ),
+      );
       expect(
         tester.getTopLeft(find.text(newerDate)).dy,
         lessThan(tester.getTopLeft(find.text(olderDate)).dy),
-        reason: 'Full History should preserve newest-first session order.',
+        reason: 'Full History should preserve newest-first date order.',
       );
-      await tester.ensureVisible(find.text(newerDate));
-      await tester.tap(find.text(newerDate));
+
+      await tester.ensureVisible(find.text(newerTime));
+      await tester.tap(find.text(newerTime));
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 520));
       await tester.pumpAndSettle();
@@ -127,7 +182,7 @@ void main() {
   );
 
   testWidgets(
-    'Expressive Full History uses a date-aware shape rhythm for same-day sessions',
+    'Expressive Full History uses one content surface per date with row dividers',
     (tester) async {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
@@ -136,18 +191,34 @@ void main() {
       await units.ready;
       addTearDown(units.dispose);
 
-      final sameDay = DateTime(2026, 9, 27, 12);
-      final sessions = [
-        WorkoutSession(id: 7, date: sameDay, duration: 2700),
-        WorkoutSession(id: 6, date: DateTime(2026, 9, 27, 10), duration: 1800),
-        WorkoutSession(id: 5, date: DateTime(2026, 9, 27, 8), duration: 1200),
-        WorkoutSession(id: 4, date: DateTime(2026, 9, 26, 12), duration: 1500),
+      final sameDay = DateTime(2026, 9, 27);
+      final repositorySessions = [
+        _reportSession(
+          id: 4,
+          date: DateTime(2026, 9, 26, 6),
+          durationSeconds: 1500,
+        ),
+        _reportSession(
+          id: 5,
+          date: sameDay.add(const Duration(hours: 8)),
+          durationSeconds: 1200,
+        ),
+        _reportSession(
+          id: 6,
+          date: sameDay.add(const Duration(hours: 10)),
+          durationSeconds: 1800,
+        ),
+        _reportSession(
+          id: 7,
+          date: sameDay.add(const Duration(hours: 12)),
+          durationSeconds: 2700,
+        ),
       ];
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             Provider<AppRepository>.value(
-              value: _FullHistoryRepository(sessions),
+              value: _FullHistoryRepository(repositorySessions),
             ),
             ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
           ],
@@ -157,66 +228,70 @@ void main() {
             locale: const Locale('en'),
             localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const FullHistoryScreen(),
+            home: const AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.logbook,
+              child: FullHistoryScreen(),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      final rows = tester
+      final tokens = AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.logbook,
+        Brightness.light,
+      );
+      final surfaces = tester
           .widgetList<TonosSurface>(find.byType(TonosSurface))
           .toList();
-      expect(rows, hasLength(4));
-      expect(rows.map((row) => row.borderRadius).toList(), const [
-        BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(14),
-          bottomLeft: Radius.circular(14),
-          bottomRight: Radius.circular(14),
-        ),
-        BorderRadius.all(Radius.circular(14)),
-        BorderRadius.only(
-          topLeft: Radius.circular(14),
-          topRight: Radius.circular(14),
-          bottomLeft: Radius.circular(14),
-          bottomRight: Radius.circular(30),
-        ),
-        BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(12),
-          bottomLeft: Radius.circular(12),
-          bottomRight: Radius.circular(24),
-        ),
-      ]);
       expect(
-        rows.take(3).map((row) => row.margin).toList(),
-        List<EdgeInsets>.filled(
-          3,
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-        ),
+        surfaces.where((surface) => surface.color == tokens.surfaceSecondary),
+        hasLength(2),
+        reason: 'A shared supporting surface should contain each date group.',
       );
       expect(
-        rows.last.margin,
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        surfaces.where((surface) => surface.color == tokens.surfacePrimary),
+        hasLength(2),
+        reason: 'Each day should have one compact plum identity header.',
       );
-      expect(rows.every((row) => row.onTap != null), isTrue);
-      expect(
-        find.text(
-          LocalizedFormatters.date(
-            sessions.first.calendarDay.toLocalDateTime(),
-            const Locale('en'),
-          ),
-        ),
-        findsNWidgets(3),
-        reason: 'Each session keeps its own date and remains independently scannable.',
+      expect(find.byType(Divider), findsNWidgets(2));
+      expect(find.byType(InkWell), findsNWidgets(4));
+
+      final locale = Localizations.localeOf(
+        tester.element(find.byType(FullHistoryScreen)),
       );
+      final orderedSessions = repositorySessions.reversed.toList();
+      final displayedTimes = orderedSessions
+          .map(
+            (session) =>
+                LocalizedFormatters.time(session.displayDateTime, locale),
+          )
+          .toList();
+      expect(find.text(displayedTimes[0]), findsOneWidget);
+      expect(find.text(displayedTimes[1]), findsOneWidget);
+      expect(find.text(displayedTimes[2]), findsOneWidget);
+      expect(find.text(displayedTimes[3]), findsOneWidget);
+      for (var index = 0; index < displayedTimes.length - 1; index++) {
+        expect(
+          tester.getTopLeft(find.text(displayedTimes[index])).dy,
+          lessThan(tester.getTopLeft(find.text(displayedTimes[index + 1])).dy),
+          reason:
+              'Session order within and across date groups is newest first.',
+        );
+      }
+
+      final firstGroupDate = LocalizedFormatters.date(
+        orderedSessions.first.calendarDay.toLocalDateTime(),
+        locale,
+      );
+      expect(find.text(firstGroupDate), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
     semanticsEnabled: true,
   );
 
   testWidgets(
-    'Expressive Full History remains usable at 320dp across text scales',
+    'Expressive Full History wraps at 320dp and remains accessible through 2x text',
     (tester) async {
       SharedPreferences.setMockInitialValues(<String, Object>{
         'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
@@ -228,12 +303,33 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(320, 1800));
 
       const locale = Locale('en');
-      final sessions = [
-        WorkoutSession(id: 5, date: DateTime(2026, 9, 27, 12), duration: 2700),
-        WorkoutSession(id: 4, date: DateTime(2026, 9, 27, 10), duration: 1800),
-        WorkoutSession(id: 3, date: DateTime(2026, 9, 26, 12), duration: 1500),
+      final repositorySessions = [
+        _reportSession(
+          id: 3,
+          date: DateTime(2026, 9, 26, 6),
+          durationSeconds: 1500,
+          exerciseCount: 1,
+          setCount: 2,
+          totalVolume: 450,
+        ),
+        _reportSession(
+          id: 4,
+          date: DateTime(2026, 9, 27, 10),
+          durationSeconds: 1800,
+          exerciseCount: 2,
+          setCount: 5,
+          totalVolume: 1300,
+        ),
+        _reportSession(
+          id: 5,
+          date: DateTime(2026, 9, 27, 12),
+          durationSeconds: 2700,
+          exerciseCount: 3,
+          setCount: 8,
+          totalVolume: 2750,
+        ),
       ];
-      final repository = _FullHistoryRepository(sessions);
+      final repository = _FullHistoryRepository(repositorySessions);
 
       for (final brightness in Brightness.values) {
         final theme = brightness == Brightness.light
@@ -261,7 +357,10 @@ void main() {
                   ),
                   child: child!,
                 ),
-                home: const FullHistoryScreen(),
+                home: const AppExpressiveDestinationTheme(
+                  family: AppExpressiveDestinationFamily.logbook,
+                  child: FullHistoryScreen(),
+                ),
               ),
             ),
           );
@@ -270,35 +369,47 @@ void main() {
           final strings = AppLocalizations.of(
             tester.element(find.byType(FullHistoryScreen)),
           );
+          final newest = repositorySessions.last;
           final date = LocalizedFormatters.date(
-            sessions.first.calendarDay.toLocalDateTime(),
+            newest.calendarDay.toLocalDateTime(),
             locale,
           );
+          final time = LocalizedFormatters.time(newest.displayDateTime, locale);
           final duration = formatCompletedWorkoutDuration(
             strings,
-            sessions.first.duration,
+            newest.durationSeconds,
           );
-          final dateFinder = find.text(date).first;
-          expect(find.text(date), findsNWidgets(2));
-          expect(find.text(duration), findsOneWidget);
-          expect(tester.widget<Text>(dateFinder).softWrap, isTrue);
-          final semanticRow = find.ancestor(
-            of: dateFinder,
-            matching: find.byWidgetPredicate(
-              (widget) =>
-                  widget is Semantics &&
-                  widget.properties.button == true &&
-                  widget.properties.label ==
-                      strings.fullHistorySessionSummary(date, duration),
+          final metadata = strings.logbookSessionSummary(
+            duration,
+            newest.exerciseCount,
+            newest.setCount,
+            WeightUnitFormatter.formatVolume(
+              newest.totalVolume,
+              WeightUnit.pounds,
+              locale: locale,
             ),
           );
+          final semanticLabel = strings.fullHistorySessionSummary(
+            date,
+            '$time. $metadata',
+          );
+          expect(find.text(date), findsOneWidget);
+          expect(find.text(time), findsOneWidget);
+          expect(find.text(metadata), findsOneWidget);
+          final semanticRow = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.button == true &&
+                widget.properties.label == semanticLabel,
+          );
           expect(semanticRow, findsOneWidget);
+          final semantics = tester.getSemantics(semanticRow).getSemanticsData();
+          expect(semantics.label, semanticLabel);
+          expect(semantics.hasAction(SemanticsAction.tap), isTrue);
           expect(
-            tester
-                .getSemantics(semanticRow)
-                .getSemanticsData()
-                .hasAction(SemanticsAction.tap),
-            isTrue,
+            tester.getSize(semanticRow).height,
+            greaterThanOrEqualTo(56),
+            reason: '${brightness.name}, text scale $scale',
           );
           expect(
             tester.takeException(),
@@ -306,8 +417,8 @@ void main() {
             reason: '${brightness.name}, text scale $scale',
           );
 
-          await tester.ensureVisible(dateFinder);
-          await tester.tap(dateFinder);
+          await tester.ensureVisible(find.text(time));
+          await tester.tap(find.text(time));
           await tester.pumpAndSettle();
           expect(find.byType(SessionDetailScreen), findsOneWidget);
           expect(find.text(strings.workoutDetailPastWorkout), findsOneWidget);
@@ -316,7 +427,7 @@ void main() {
           expect(
             tester.takeException(),
             isNull,
-            reason: '${brightness.name}, route at text scale $scale',
+            reason: '${brightness.name}, detail route at text scale $scale',
           );
           await tester.pageBack();
           await tester.pumpAndSettle();
@@ -325,15 +436,107 @@ void main() {
     },
     semanticsEnabled: true,
   );
+
+  testWidgets('Full History metadata and grouping remain Expressive-only', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'guided_tutorial_completed.${TutorialIds.workoutDetail}': true,
+    });
+    final session = _reportSession(
+      id: 5,
+      date: DateTime(2026, 9, 27, 12),
+      durationSeconds: 2700,
+      exerciseCount: 2,
+      setCount: 6,
+      totalVolume: 1300,
+    );
+    final expectedDate = LocalizedFormatters.date(
+      session.calendarDay.toLocalDateTime(),
+      const Locale('en'),
+    );
+
+    final themes = <(String, ThemeData)>[
+      ('Classic', ClassicThemeDefinition.light()),
+      ('Neo', NeoBrutalismThemeDefinition.light()),
+    ];
+    for (final (name, theme) in themes) {
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(
+              value: _FullHistoryRepository([session]),
+            ),
+          ],
+          child: MaterialApp(
+            theme: theme,
+            locale: const Locale('en'),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const FullHistoryScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(FullHistoryScreen)),
+      );
+      final duration = formatCompletedWorkoutDuration(
+        strings,
+        session.durationSeconds,
+      );
+      final time = LocalizedFormatters.time(
+        session.displayDateTime,
+        const Locale('en'),
+      );
+      final metadata = strings.logbookSessionSummary(
+        duration,
+        session.exerciseCount,
+        session.setCount,
+        WeightUnitFormatter.formatVolume(
+          session.totalVolume,
+          WeightUnit.pounds,
+          locale: const Locale('en'),
+        ),
+      );
+      expect(
+        find.text(strings.fullHistorySessionSummary(expectedDate, duration)),
+        findsOneWidget,
+        reason: '$name retains its existing summary row.',
+      );
+      expect(find.text(time), findsNothing, reason: '$name is unchanged.');
+      expect(find.text(metadata), findsNothing, reason: '$name is unchanged.');
+    }
+  });
 }
+
+WorkoutReportSession _reportSession({
+  required int id,
+  required DateTime date,
+  required int durationSeconds,
+  double totalVolume = 0,
+  int exerciseCount = 1,
+  int setCount = 1,
+}) => WorkoutReportSession(
+  id: id,
+  date: date,
+  durationSeconds: durationSeconds,
+  totalVolume: totalVolume,
+  exerciseCount: exerciseCount,
+  setCount: setCount,
+);
 
 class _FullHistoryRepository extends AppRepository {
   _FullHistoryRepository(this.sessions);
 
-  final List<WorkoutSession> sessions;
+  final List<WorkoutReportSession> sessions;
 
   @override
-  Future<List<WorkoutSession>> fetchWorkoutSessions() async => sessions;
+  Future<List<WorkoutReportSession>> fetchWorkoutReportSessions({
+    DateTime? start,
+    DateTime? end,
+  }) async => sessions;
 
   @override
   Future<List<Map<String, dynamic>>> fetchExercises(int sessionId) async => [

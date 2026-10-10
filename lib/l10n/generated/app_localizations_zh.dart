@@ -946,6 +946,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navEditorAlwaysShown => '始终显示';
 
   @override
+  String get navEditorRequired => '必需';
+
+  @override
   String get navEditorVisible => '在底部导航中显示';
 
   @override
@@ -1873,14 +1876,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowProfileDefaultTitle => '健身房默认进阶流程';
 
   @override
-  String get flowPlanSubtitle => '设置此计划在每次训练后如何进阶。';
+  String get flowPlanSubtitle => '此计划的进阶流程。';
 
   @override
-  String get flowAppDefaultSubtitle => '设置新健身房档案的起始进阶流程。';
+  String get flowAppDefaultSubtitle => '新健身房档案的默认流程。';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return '设置 $profileName 中新计划的起始进阶流程。';
+    return '$profileName 中新计划的默认流程。';
   }
 
   @override
@@ -1929,7 +1932,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowAddBranchTitle => '添加分支';
 
   @override
-  String get flowAddBranchSubtitle => '选择下一次成功或未达成时应前往的位置。';
+  String get flowAddBranchSubtitle => '从节点创建成功或未达成路径。';
 
   @override
   String get flowBranchFrom => '从此处分支';
@@ -1944,7 +1947,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowAttachActionTitle => '附加进阶操作';
 
   @override
-  String get flowAttachActionSubtitle => '对流程节点应用每种类型的一项调整。';
+  String get flowAttachActionSubtitle => '为节点分配进阶调整。';
+
+  @override
+  String get flowFitToViewTooltip => '适配流程视图。';
+
+  @override
+  String get flowBranchSelectGuidance => '选择源节点以添加成功或未达成路径。';
+
+  @override
+  String get flowBranchCompleteGuidance => '所有节点都已有成功和未达成路径。';
+
+  @override
+  String get flowActionSelectNodeGuidance => '选择节点以配置其操作。';
+
+  @override
+  String get flowActionSelectMethodGuidance => '为此节点选择一个进阶操作。';
+
+  @override
+  String get flowActionCreateMethodGuidance => '请先创建操作，再将其分配给节点。';
+
+  @override
+  String get flowActionTypesUsedGuidance => '此节点已使用所有可用的操作类型。';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance => '删除此节点前，请先移除分支和关联操作。';
+
+  @override
+  String get flowActionRootGuidance => '首次尝试节点不能添加操作，也不能删除。';
 
   @override
   String get flowApplyActionTo => '将操作应用于';
@@ -2157,11 +2187,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowPageSubtitle => '设置决定训练结果后如何应用进阶操作的路径。';
 
   @override
+  String get flowPageSubtitleExpressive => '配置训练结果如何触发进阶操作。';
+
+  @override
   String get flowHowCopiedTitle => '流程如何复制';
 
   @override
   String get flowHowCopiedBody =>
       '应用流程会成为新健身房档案的起点。健身房流程会成为新计划的起点。之后的编辑仅影响您在此处打开的流程。';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      '新健身房档案从应用默认流程开始，新计划从健身房默认流程开始。更改一个流程不会影响其他流程。';
 
   @override
   String get flowLoadError => '无法加载训练进阶流程。';
@@ -2182,6 +2219,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flowNoSavedYet => '尚无保存的流程';
 
   @override
+  String get flowTapToConfigure => '点击进行配置';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes 个节点 ｜$branches 个分支 ｜$actions 个操作';
   }
@@ -2189,6 +2229,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '有 $count 个计划流程可用';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    return '$count 个计划可用';
   }
 
   @override
@@ -2238,6 +2283,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get gymExitAskBody => '结束已完成的训练前先询问。';
+
+  @override
+  String get gymExitAskExpressiveSubtitle => '选择离开正在进行的训练时要执行的操作。';
 
   @override
   String get gymExitDiscardBody => '取消且不保存已完成的训练内容。';
@@ -3112,6 +3160,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tutorialsHowItWorksBody => '教程会显示一次，之后不会打扰您。展开一个分组可重置特定引导。';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle => '重新开始使用引导教程。';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      '教程会自动显示一次。展开一个类别，即可让单个引导再次可用。';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return '$topic教程';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return '点击“重置”，下次打开$topic时即可再次查看引导。';
+  }
 
   @override
   String get tutorialsMainTabsTitle => '主标签页';
@@ -6450,4 +6515,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return '保留完整模板主要动作的$planName$duration版本。';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive => '创建可重复使用的规则，用于重量、次数和组数的进阶。';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      '新健身房资料使用应用默认规则，新计划使用资料默认规则。之后的更改不会自动更新现有资料或计划。';
+
+  @override
+  String get rulesRuleTypeLabel => '规则类型';
+
+  @override
+  String get rulesOperationLabel => '运算方式';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope，规则数量：$count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return '规则数量：$count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return '规则总数：$count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return '计划数量：$count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive => '新计划的默认规则。';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => '仅适用于此计划的规则。';
 }

@@ -452,7 +452,9 @@ class _ExpressiveSevenDayFocusLayout extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final textScale = MediaQuery.textScalerOf(context).scale(1);
-        final isStacked = textScale >= 1.35 || constraints.maxWidth < 340;
+        // Preserve the two-panel composition at ordinary scale on common
+        // phone widths, then stack before enlarged text crowds Focused Sets.
+        final isStacked = textScale >= 1.35 || constraints.maxWidth < 292;
         final heatmapTint = Theme.of(context).brightness == Brightness.dark
             ? 0.20
             : 0.15;

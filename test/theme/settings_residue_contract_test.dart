@@ -11,7 +11,8 @@ void main() {
         'MeasurementsTrendsSettingsPage',
       ],
       'lib/screens/profile/settings/user_information_settings_page.dart': [
-        'SettingsSaveBar',
+        'floatingActionButton: _dirty',
+        'FloatingActionButton.extended',
         'DropdownButtonFormField',
         'showSnackBar',
       ],
@@ -173,15 +174,20 @@ void main() {
       final source = _withoutCommentsAndImports(File(path).readAsStringSync());
       expect(source, contains('TonosField'), reason: path);
       expect(source, isNot(contains('TextField(')), reason: path);
-      expect(source, isNot(contains('InputDecoration(')), reason: path);
+      if (path != 'lib/screens/profile/settings/flow_methods_page.dart') {
+        expect(source, isNot(contains('InputDecoration(')), reason: path);
+      } else {
+        // Flow Methods uses InputDecorator only for its custom anchored
+        // choice field; its editable numeric inputs still use TonosField.
+        expect(source, contains('InputDecorator('), reason: path);
+      }
     }
   });
 
   test('Auto Preset add-method dialog uses shared form controls', () {
     final source = _withoutCommentsAndImports(
-      File(
-        'lib/screens/exercise/auto_preset_flow_screen.dart',
-      ).readAsStringSync(),
+      File('lib/screens/exercise/auto_preset_flow_screen.dart')
+          .readAsStringSync(),
     );
     final start = source.indexOf('Future<void> _showAddMethodDialog()');
     final end = source.indexOf('Future<void> _saveFlow()', start);

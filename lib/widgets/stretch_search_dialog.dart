@@ -48,7 +48,7 @@ class StretchSearchDialog {
                           decoration: const InputDecoration(
                             labelText: 'Body Part',
                           ),
-                          value: selectedBodyPartId,
+                          initialValue: selectedBodyPartId,
                           items:
                               parts.map((bp) {
                                 return DropdownMenuItem<int>(
@@ -87,7 +87,7 @@ class StretchSearchDialog {
                       DropdownButtonFormField<int>(
                         isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Stretch'),
-                        value: selectedStretchId,
+                        initialValue: selectedStretchId,
                         items:
                             currentStretches.map((st) {
                               return DropdownMenuItem<int>(

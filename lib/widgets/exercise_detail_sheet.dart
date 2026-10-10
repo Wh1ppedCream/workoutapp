@@ -19,6 +19,8 @@ import '../services/tutorial_state_store.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/localized_formatters.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/tokens/app_media_tokens.dart';
 import '../theme/widgets/media_viewer_image.dart';
 import '../utils/tutorial_launcher.dart';
@@ -87,18 +89,20 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color:
-            expressive
-                ? theme.colorScheme.surfaceContainerLowest
-                : theme.surfaceTokens.mediaPlaceholder,
-        borderRadius:
-            expressive
-                ? const BorderRadius.all(Radius.circular(24))
-                : theme.mediaTokens.previewShape,
-        border:
-            expressive
-                ? null
-                : Border.all(color: theme.surfaceTokens.mediaOutline),
+        color: expressive
+            ? theme.colorScheme.surfaceContainerLow
+            : theme.surfaceTokens.mediaPlaceholder,
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(26),
+                topRight: Radius.circular(14),
+                bottomRight: Radius.circular(26),
+                bottomLeft: Radius.circular(14),
+              )
+            : theme.mediaTokens.previewShape,
+        border: expressive
+            ? null
+            : Border.all(color: theme.surfaceTokens.mediaOutline),
       ),
       padding: expressive ? const EdgeInsets.all(6) : EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -115,10 +119,12 @@ class _ExerciseMediaPreviewCard extends StatelessWidget {
               child: GestureDetector(
                 onTap: onImageTap,
                 child: ColoredBox(
-                  color: theme.surfaceTokens.media,
+                  color: expressive
+                      ? theme.colorScheme.surfaceContainerLowest
+                      : theme.surfaceTokens.media,
                   child: Image.file(
                     previewFile,
-                    fit: BoxFit.cover,
+                    fit: expressive ? BoxFit.contain : BoxFit.cover,
                     errorBuilder: (_, _, _) {
                       onImageLoadFailed();
                       return heatmapOverlay ?? const SizedBox.shrink();
@@ -188,12 +194,18 @@ class ExerciseDetailSheet extends StatefulWidget {
       backgroundColor: neoSheet ? Colors.transparent : null,
       elevation: neoSheet ? 0 : null,
       showDragHandle: neoSheet ? false : null,
-      builder:
-          (_) => ExerciseDetailSheet(
-            definition: definition,
-            defId: defId,
-            expressiveCatalogPresentation: expressiveCatalogPresentation,
-          ),
+      builder: (_) {
+        final sheet = ExerciseDetailSheet(
+          definition: definition,
+          defId: defId,
+          expressiveCatalogPresentation: expressiveCatalogPresentation,
+        );
+        if (!expressiveCatalogPresentation) return sheet;
+        return AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.catalog,
+          child: sheet,
+        );
+      },
     );
   }
 
@@ -209,6 +221,13 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   AppRepository get _repo => context.read<AppRepository>();
   AppLocalizations get _strings => AppLocalizations.of(context);
+  AppExpressiveDestinationTokens? get _destinationTokens =>
+      Theme.of(context).extension<AppExpressiveDestinationTokens>();
+  bool get _usesExpressiveCatalogSheet =>
+      widget.expressiveCatalogPresentation &&
+      Theme.of(context).appThemeFamilyIdentity ==
+          AppThemeFamilyIdentity.expressivePreview &&
+      _destinationTokens?.family == AppExpressiveDestinationFamily.catalog;
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
   late Future<_ExerciseHistoryPage> _historyFuture;
@@ -446,8 +465,18 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       return;
     }
 
+    final destinationFamily = _destinationTokens?.family;
     await navigator.push(
-      MaterialPageRoute(builder: (_) => SessionDetailScreen(resolvedSession)),
+      MaterialPageRoute(
+        builder: (_) {
+          final detail = SessionDetailScreen(resolvedSession);
+          if (destinationFamily == null) return detail;
+          return AppExpressiveDestinationTheme(
+            family: destinationFamily,
+            child: detail,
+          );
+        },
+      ),
     );
     if (!mounted) return;
 
@@ -511,7 +540,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
     return SingleChildScrollView(
       controller: scrollCtrl,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 +
+            (_usesExpressiveCatalogSheet
+                ? MediaQuery.viewPaddingOf(context).bottom
+                : 0),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -536,25 +573,23 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
                 return _ExerciseMediaPreviewCard(
                   previewFile: loadedMedia.previewFile,
-                  heatmapOverlay:
-                      heatmapFrequencyMap.isEmpty
-                          ? null
-                          : _buildHeatmapButton(
-                            definition: def,
-                            frequencyMap: heatmapFrequencyMap,
-                            lowColor: heatmapLow,
-                            highColor: heatmapHigh,
-                            size: 98,
-                            padding: 6,
-                            borderRadius: context.mediaTokens.overlayShape,
-                            elevated: true,
-                          ),
-                  expressive: widget.expressiveCatalogPresentation,
-                  onImageTap:
-                      () => _showImageViewer(
-                        loadedMedia.previewFile,
-                        definition: def,
-                      ),
+                  heatmapOverlay: heatmapFrequencyMap.isEmpty
+                      ? null
+                      : _buildHeatmapButton(
+                          definition: def,
+                          frequencyMap: heatmapFrequencyMap,
+                          lowColor: heatmapLow,
+                          highColor: heatmapHigh,
+                          size: 98,
+                          padding: 6,
+                          borderRadius: context.mediaTokens.overlayShape,
+                          elevated: true,
+                        ),
+                  expressive: _usesExpressiveCatalogSheet,
+                  onImageTap: () => _showImageViewer(
+                    loadedMedia.previewFile,
+                    definition: def,
+                  ),
                   onImageLoadFailed: _recoverFromMissingPreview,
                 );
               },
@@ -572,12 +607,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }
 
   Widget _buildDetailsMediaFocal(Widget media) {
-    if (!widget.expressiveCatalogPresentation) return media;
+    if (!_usesExpressiveCatalogSheet) return media;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.all(Radius.circular(24)),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(28),
+          topRight: Radius.circular(16),
+          bottomRight: Radius.circular(28),
+          bottomLeft: Radius.circular(16),
+        ),
       ),
       child: media,
     );
@@ -610,44 +650,50 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return _buildDetailCard(
       icon: Icons.fitness_center_outlined,
       title: strings.catalogEquipment,
-      accent: theme.colorScheme.primary,
-      expressiveContainer: theme.colorScheme.primaryContainer,
-      expressiveOnContainer: theme.colorScheme.onPrimaryContainer,
-      expressive: widget.expressiveCatalogPresentation,
+      accent: _destinationTokens?.actionPrimary ?? theme.colorScheme.primary,
+      expressiveContainer: theme.colorScheme.surfaceContainerLow,
+      expressiveOnContainer: theme.colorScheme.onSurface,
+      expressive: _usesExpressiveCatalogSheet,
+      expressiveShape: const BorderRadius.only(
+        topLeft: Radius.circular(22),
+        topRight: Radius.circular(9),
+        bottomLeft: Radius.circular(9),
+        bottomRight: Radius.circular(22),
+      ),
       isExpanded: _equipmentExpanded,
-      onExpandedChanged:
-          (expanded) => setState(() => _equipmentExpanded = expanded),
-      child:
-          equipment.isEmpty
-              ? Text(
-                strings.exerciseDetailNoEquipment,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-              : LocalizedCatalogEntityNamesBuilder(
-                entities: equipment,
-                builder:
-                    (context, names) => Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children:
-                          names
-                              .map(
-                                (name) => _buildDetailTag(
-                                  name,
-                                  color: theme.colorScheme.primary,
-                                  expressiveContainer:
-                                      theme.colorScheme.primaryContainer,
-                                  expressiveForeground:
-                                      theme.colorScheme.onPrimaryContainer,
-                                  expressive:
-                                      widget.expressiveCatalogPresentation,
-                                ),
-                              )
-                              .toList(),
-                    ),
+      onExpandedChanged: (expanded) =>
+          setState(() => _equipmentExpanded = expanded),
+      child: equipment.isEmpty
+          ? Text(
+              strings.exerciseDetailNoEquipment,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
+            )
+          : LocalizedCatalogEntityNamesBuilder(
+              entities: equipment,
+              builder: (context, names) => Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: names
+                    .map(
+                      (name) => _buildDetailTag(
+                        name,
+                        color:
+                            _destinationTokens?.actionPrimary ??
+                            theme.colorScheme.primary,
+                        expressiveContainer:
+                            _destinationTokens?.surfaceSelected ??
+                            theme.colorScheme.primaryContainer,
+                        expressiveForeground:
+                            _destinationTokens?.onSurfaceSelected ??
+                            theme.colorScheme.onPrimaryContainer,
+                        expressive: _usesExpressiveCatalogSheet,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
     );
   }
 
@@ -658,10 +704,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   }) {
     final theme = Theme.of(context);
     final strings = _strings;
-    final bodyParts =
-        definition.bodyParts
-            .map((item) => localizedBodyPartName(context, item.name))
-            .toList();
+    final bodyParts = definition.bodyParts
+        .map((item) => localizedBodyPartName(context, item.name))
+        .toList();
     final muscles = definition.muscles
         .map(
           (item) => CatalogEntityDisplayName(
@@ -674,15 +719,21 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return _buildDetailCard(
       icon: Icons.accessibility_new,
       title: strings.exerciseDetailTargetAnatomy,
-      accent: theme.colorScheme.tertiary,
-      expressiveContainer: theme.colorScheme.tertiaryContainer,
-      expressiveOnContainer: theme.colorScheme.onTertiaryContainer,
-      expressive: expressive && widget.expressiveCatalogPresentation,
+      accent:
+          _destinationTokens?.onSurfaceSecondary ?? theme.colorScheme.tertiary,
+      expressiveContainer: theme.colorScheme.surfaceContainerLow,
+      expressiveOnContainer: theme.colorScheme.onSurface,
+      expressive: expressive && _usesExpressiveCatalogSheet,
+      expressiveShape: const BorderRadius.only(
+        topLeft: Radius.circular(10),
+        topRight: Radius.circular(22),
+        bottomLeft: Radius.circular(22),
+        bottomRight: Radius.circular(10),
+      ),
       isExpanded: expandable ? _targetAnatomyExpanded : true,
-      onExpandedChanged:
-          expandable
-              ? (expanded) => setState(() => _targetAnatomyExpanded = expanded)
-              : null,
+      onExpandedChanged: expandable
+          ? (expanded) => setState(() => _targetAnatomyExpanded = expanded)
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -699,22 +750,23 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children:
-                  bodyParts
-                      .map(
-                        (item) => _buildDetailTag(
-                          item,
-                          color: theme.colorScheme.tertiary,
-                          expressiveContainer:
-                              theme.colorScheme.tertiaryContainer,
-                          expressiveForeground:
-                              theme.colorScheme.onTertiaryContainer,
-                          expressive:
-                              expressive &&
-                              widget.expressiveCatalogPresentation,
-                        ),
-                      )
-                      .toList(),
+              children: bodyParts
+                  .map(
+                    (item) => _buildDetailTag(
+                      item,
+                      color:
+                          _destinationTokens?.actionPrimary ??
+                          theme.colorScheme.tertiary,
+                      expressiveContainer:
+                          _destinationTokens?.surfaceSecondary ??
+                          theme.colorScheme.tertiaryContainer,
+                      expressiveForeground:
+                          _destinationTokens?.onSurfaceSecondary ??
+                          theme.colorScheme.onTertiaryContainer,
+                      expressive: expressive && _usesExpressiveCatalogSheet,
+                    ),
+                  )
+                  .toList(),
             ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
@@ -732,27 +784,27 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           else
             LocalizedCatalogEntityNamesBuilder(
               entities: muscles,
-              builder:
-                  (context, names) => Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children:
-                        names
-                            .map(
-                              (name) => _buildDetailTag(
-                                name,
-                                color: theme.colorScheme.secondary,
-                                expressiveContainer:
-                                    theme.colorScheme.secondaryContainer,
-                                expressiveForeground:
-                                    theme.colorScheme.onSecondaryContainer,
-                                expressive:
-                                    expressive &&
-                                    widget.expressiveCatalogPresentation,
-                              ),
-                            )
-                            .toList(),
-                  ),
+              builder: (context, names) => Wrap(
+                spacing: 7,
+                runSpacing: 7,
+                children: names
+                    .map(
+                      (name) => _buildDetailTag(
+                        name,
+                        color: theme.colorScheme.secondary,
+                        expressiveContainer: _usesExpressiveCatalogSheet
+                            ? _destinationTokens?.surfaceSecondary ??
+                                  theme.colorScheme.secondaryContainer
+                            : theme.colorScheme.secondaryContainer,
+                        expressiveForeground: _usesExpressiveCatalogSheet
+                            ? _destinationTokens?.onSurfaceSecondary ??
+                                  theme.colorScheme.onSecondaryContainer
+                            : theme.colorScheme.onSecondaryContainer,
+                        expressive: expressive && _usesExpressiveCatalogSheet,
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
         ],
       ),
@@ -768,12 +820,11 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return FutureBuilder<ExerciseInstructionContent>(
       future: _localizedInstructionsFor(definition),
       initialData: fallback,
-      builder:
-          (context, snapshot) => _buildLocalizedFormGuideCard(
-            snapshot.data ?? fallback,
-            expandable: expandable,
-            expressive: expressive,
-          ),
+      builder: (context, snapshot) => _buildLocalizedFormGuideCard(
+        snapshot.data ?? fallback,
+        expandable: expandable,
+        expressive: expressive,
+      ),
     );
   }
 
@@ -788,41 +839,43 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       (
         icon: Icons.self_improvement_outlined,
         title: strings.exerciseDetailSetup,
-        body:
-            instructions.setupNotes.isNotEmpty
-                ? instructions.setupNotes
-                : strings.exerciseDetailNoSetup,
+        body: instructions.setupNotes.isNotEmpty
+            ? instructions.setupNotes
+            : strings.exerciseDetailNoSetup,
       ),
       (
         icon: Icons.directions_run_outlined,
         title: strings.exerciseDetailExecution,
-        body:
-            instructions.executionNotes.isNotEmpty
-                ? instructions.executionNotes
-                : strings.exerciseDetailNoExecution,
+        body: instructions.executionNotes.isNotEmpty
+            ? instructions.executionNotes
+            : strings.exerciseDetailNoExecution,
       ),
       (
         icon: Icons.lightbulb_outline,
         title: strings.exerciseDetailTips,
-        body:
-            instructions.tipsNotes.isNotEmpty
-                ? instructions.tipsNotes
-                : strings.exerciseDetailNoTips,
+        body: instructions.tipsNotes.isNotEmpty
+            ? instructions.tipsNotes
+            : strings.exerciseDetailNoTips,
       ),
     ];
 
     return _buildDetailCard(
       icon: Icons.menu_book_outlined,
       title: strings.exerciseDetailFormGuide,
-      accent: theme.colorScheme.secondary,
-      expressiveContainer: theme.colorScheme.secondaryContainer,
-      expressiveOnContainer: theme.colorScheme.onSecondaryContainer,
-      expressive: expressive && widget.expressiveCatalogPresentation,
+      accent: _destinationTokens?.actionPrimary ?? theme.colorScheme.secondary,
+      expressiveContainer: theme.colorScheme.surfaceContainerLow,
+      expressiveOnContainer: theme.colorScheme.onSurface,
+      expressive: expressive && _usesExpressiveCatalogSheet,
+      expressiveShape: const BorderRadius.only(
+        topLeft: Radius.circular(24),
+        topRight: Radius.circular(10),
+        bottomLeft: Radius.circular(10),
+        bottomRight: Radius.circular(24),
+      ),
       isExpanded: expandable ? _formGuideExpanded : true,
-      onExpandedChanged:
-          expandable
-              ? (expanded) => setState(() => _formGuideExpanded = expanded)
-              : null,
+      onExpandedChanged: expandable
+          ? (expanded) => setState(() => _formGuideExpanded = expanded)
+          : null,
       child: Column(
         children: [
           for (var index = 0; index < guideEntries.length; index++) ...[
@@ -831,6 +884,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               icon: guideEntries[index].icon,
               title: guideEntries[index].title,
               body: guideEntries[index].body,
+              expressive: expressive && _usesExpressiveCatalogSheet,
             ),
           ],
         ],
@@ -845,6 +899,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required Color expressiveContainer,
     required Color expressiveOnContainer,
     required bool expressive,
+    BorderRadius? expressiveShape,
     required bool isExpanded,
     required ValueChanged<bool>? onExpandedChanged,
     required Widget child,
@@ -862,18 +917,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: expressive ? expressiveContainer : surfaces.exerciseDetailCard,
-          borderRadius:
-              expressive
-                  ? const BorderRadius.all(Radius.circular(20))
-                  : shapes.exerciseDetailCard,
-          border:
-              expressive
-                  ? null
-                  : Border.all(
-                    color: accent.withValues(
-                      alpha: surfaces.exerciseDetailCardBorderOpacity,
-                    ),
+          borderRadius: expressive
+              ? expressiveShape ??
+                    const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(9),
+                      bottomLeft: Radius.circular(9),
+                      bottomRight: Radius.circular(20),
+                    )
+              : shapes.exerciseDetailCard,
+          border: expressive
+              ? null
+              : Border.all(
+                  color: accent.withValues(
+                    alpha: surfaces.exerciseDetailCardBorderOpacity,
                   ),
+                ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -884,56 +943,63 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               label: _strings.exerciseDetailSectionLabel(title),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap:
-                    isExpandable ? () => onExpandedChanged(!isExpanded) : null,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color:
-                            expressive
-                                ? expressiveContainer
-                                : accent.withValues(
+                onTap: isExpandable
+                    ? () => onExpandedChanged(!isExpanded)
+                    : null,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: expressive ? 48 : 34),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: expressive
+                              ? accent.withValues(alpha: 0.13)
+                              : accent.withValues(
                                   alpha: surfaces.exerciseDetailIconFillOpacity,
                                 ),
-                        borderRadius:
-                            expressive
-                                ? const BorderRadius.all(Radius.circular(11))
-                                : shapes.exerciseDetailIcon,
+                          borderRadius: expressive
+                              ? const BorderRadius.all(Radius.circular(11))
+                              : shapes.exerciseDetailIcon,
+                        ),
+                        child: Icon(icon, color: accent, size: 19),
                       ),
-                      child: Icon(
-                        icon,
-                        color: expressive ? expressiveOnContainer : accent,
-                        size: 19,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color:
-                              expressive
-                                  ? expressiveOnContainer
-                                  : theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: expressive
+                                ? expressiveOnContainer
+                                : theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                    ),
-                    if (isExpandable)
-                      Icon(
-                        isExpanded
-                            ? Icons.keyboard_arrow_up_rounded
-                            : Icons.keyboard_arrow_down_rounded,
-                        color: expressive ? expressiveOnContainer : accent,
-                      ),
-                  ],
+                      if (isExpandable)
+                        Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: expressive ? expressiveOnContainer : accent,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            if (isExpanded) ...[const SizedBox(height: 13), child],
+            if (isExpanded) ...[
+              const SizedBox(height: 13),
+              DefaultTextStyle.merge(
+                style: expressive
+                    ? theme.textTheme.bodyMedium?.copyWith(
+                        color: expressiveOnContainer,
+                      )
+                    : null,
+                child: child,
+              ),
+            ],
           ],
         ),
       ),
@@ -943,10 +1009,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget _buildDetailLabel(String label) {
     return Text(
       label,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.2,
-      ),
+      style: Theme.of(context).textTheme.labelMedium
+          ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: 0.2),
     );
   }
 
@@ -970,28 +1034,25 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final shapes = context.shapeTokens;
     final tagColor =
         context.usesNeoPresentation && theme.brightness == Brightness.light
-            ? _vividLightNeoTagColor(color)
-            : color;
-    final tagSurface =
-        expressive
-            ? expressiveContainer
-            : tagColor.withValues(alpha: surfaces.exerciseDetailTagFillOpacity);
+        ? _vividLightNeoTagColor(color)
+        : color;
+    final tagSurface = expressive
+        ? expressiveContainer
+        : tagColor.withValues(alpha: surfaces.exerciseDetailTagFillOpacity);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: tagSurface,
-        borderRadius:
-            expressive
-                ? const BorderRadius.all(Radius.circular(11))
-                : shapes.exerciseDetailTag,
-        border:
-            expressive
-                ? null
-                : Border.all(
-                  color: tagColor.withValues(
-                    alpha: surfaces.exerciseDetailTagBorderOpacity,
-                  ),
+        borderRadius: expressive
+            ? const BorderRadius.all(Radius.circular(11))
+            : shapes.exerciseDetailTag,
+        border: expressive
+            ? null
+            : Border.all(
+                color: tagColor.withValues(
+                  alpha: surfaces.exerciseDetailTagBorderOpacity,
                 ),
+              ),
       ),
       child: Text(
         label,
@@ -1007,12 +1068,31 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required IconData icon,
     required String title,
     required String body,
+    required bool expressive,
   }) {
     final theme = Theme.of(context);
+    final destination = expressive ? _destinationTokens : null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 19, color: theme.colorScheme.secondary),
+        if (expressive)
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: destination?.surfaceTertiary,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(5),
+                bottomLeft: Radius.circular(5),
+                bottomRight: Radius.circular(12),
+              ),
+            ),
+            child: Icon(icon, size: 18, color: destination?.onSurfaceTertiary),
+          )
+        else
+          Icon(icon, size: 19, color: theme.colorScheme.secondary),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -1028,7 +1108,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               Text(
                 body,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: expressive
+                      ? theme.colorScheme.onSurfaceVariant
+                      : theme.colorScheme.onSurfaceVariant,
                   height: 1.35,
                 ),
               ),
@@ -1054,21 +1136,19 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
     return Semantics(
       button: hasHeatmap,
-      label:
-          hasHeatmap
-              ? _strings.exerciseDetailOpenHeatmap
-              : _strings.exerciseDetailNoHeatmap,
+      label: hasHeatmap
+          ? _strings.exerciseDetailOpenHeatmap
+          : _strings.exerciseDetailNoHeatmap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap:
-            hasHeatmap
-                ? () => _showHeatmapViewer(
-                  definition: definition,
-                  frequencyMap: frequencyMap,
-                  lowColor: lowColor,
-                  highColor: highColor,
-                )
-                : null,
+        onTap: hasHeatmap
+            ? () => _showHeatmapViewer(
+                definition: definition,
+                frequencyMap: frequencyMap,
+                lowColor: lowColor,
+                highColor: highColor,
+              )
+            : null,
         child: Container(
           width: size,
           height: size,
@@ -1081,20 +1161,19 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             border: Border.all(color: theme.surfaceTokens.mediaOutline),
             boxShadow: elevated ? theme.mediaTokens.overlayShadow : null,
           ),
-          child:
-              hasHeatmap
-                  ? BodyHeatmap(
-                    frequencyMap: frequencyMap,
-                    lowColor: lowColor,
-                    highColor: highColor,
-                    width: size - (padding * 2),
-                    height: size - (padding * 2),
-                  )
-                  : Icon(
-                    Icons.accessibility_new,
-                    color: theme.colorScheme.primary,
-                    size: (size - (padding * 2)).clamp(32, 88).toDouble(),
-                  ),
+          child: hasHeatmap
+              ? BodyHeatmap(
+                  frequencyMap: frequencyMap,
+                  lowColor: lowColor,
+                  highColor: highColor,
+                  width: size - (padding * 2),
+                  height: size - (padding * 2),
+                )
+              : Icon(
+                  Icons.accessibility_new,
+                  color: theme.colorScheme.primary,
+                  size: (size - (padding * 2)).clamp(32, 88).toDouble(),
+                ),
         ),
       ),
     );
@@ -1127,84 +1206,82 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return showDialog<void>(
       context: context,
       barrierColor: MediaViewingColors.barrier,
-      builder:
-          (dialogContext) => Material(
-            color: dialogContext.surfaceTokens.media,
-            child: SafeArea(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 64, 16, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color:
-                                  dialogContext.surfaceTokens.mediaPlaceholder,
-                              borderRadius:
-                                  dialogContext.mediaTokens.viewerShape,
-                              border: Border.all(
-                                color: dialogContext.surfaceTokens.mediaOutline,
-                              ),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final size = constraints.maxWidth;
-                                  return InteractiveViewer(
-                                    minScale: 0.8,
-                                    maxScale: 3,
-                                    boundaryMargin: const EdgeInsets.all(48),
-                                    child: SizedBox.expand(
-                                      child: BodyHeatmap(
-                                        frequencyMap: frequencyMap,
-                                        lowColor: lowColor,
-                                        highColor: highColor,
-                                        width: size,
-                                        height: size,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+      builder: (dialogContext) => Material(
+        color: dialogContext.surfaceTokens.media,
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 64, 16, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: dialogContext.surfaceTokens.mediaPlaceholder,
+                          borderRadius: dialogContext.mediaTokens.viewerShape,
+                          border: Border.all(
+                            color: dialogContext.surfaceTokens.mediaOutline,
                           ),
-                          const SizedBox(height: 10),
-                          Center(child: Text(_strings.exerciseDetailZoomHint)),
-                          const SizedBox(height: 18),
-                          _buildTargetAnatomyCard(
-                            definition,
-                            expandable: false,
-                            expressive: false,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final size = constraints.maxWidth;
+                              return InteractiveViewer(
+                                minScale: 0.8,
+                                maxScale: 3,
+                                boundaryMargin: const EdgeInsets.all(48),
+                                child: SizedBox.expand(
+                                  child: BodyHeatmap(
+                                    frequencyMap: frequencyMap,
+                                    lowColor: lowColor,
+                                    highColor: highColor,
+                                    width: size,
+                                    height: size,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Center(child: Text(_strings.exerciseDetailZoomHint)),
+                      const SizedBox(height: 18),
+                      _buildTargetAnatomyCard(
+                        definition,
+                        expandable: false,
+                        expressive: false,
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton.filledTonal(
-                      tooltip: _strings.commonClose,
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton.filledTonal(
+                  tooltip: _strings.commonClose,
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 
   Widget _buildMetricsTab(ScrollController scrollCtrl) {
     final selectedIndex = _tfSelected.indexWhere((selected) => selected);
-    final safeSelectedIndex =
-        selectedIndex < 0 ? _timeframes.length - 1 : selectedIndex;
+    final safeSelectedIndex = selectedIndex < 0
+        ? _timeframes.length - 1
+        : selectedIndex;
     final timeframe = _timeframes[safeSelectedIndex];
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
 
@@ -1213,7 +1290,15 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       builder: (context, snapshot) {
         return ListView(
           controller: scrollCtrl,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            14,
+            16,
+            28 +
+                (_usesExpressiveCatalogSheet
+                    ? MediaQuery.viewPaddingOf(context).bottom
+                    : 0),
+          ),
           children: [
             _buildMetricsTimeframePicker(safeSelectedIndex),
             const SizedBox(height: 18),
@@ -1254,19 +1339,26 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
     final neo = context.usesNeoPresentation;
-    final selectedSurface =
-        neo ? surfaces.settingsHero : theme.colorScheme.primary;
-    final selectedForeground =
-        neo
-            ? tonosForegroundForSurface(context, selectedSurface)
-            : theme.colorScheme.onPrimary;
-    final unselectedForeground =
-        neo
-            ? tonosForegroundForSurface(
-              context,
-              surfaces.exerciseDetailTimeframe,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+    final expressive = _usesExpressiveCatalogSheet;
+    final destination = expressive ? _destinationTokens : null;
+    final selectedSurface = expressive
+        ? destination!.surfacePrimary
+        : neo
+        ? surfaces.settingsHero
+        : theme.colorScheme.primary;
+    final selectedForeground = expressive
+        ? destination!.onSurfacePrimary
+        : neo
+        ? tonosForegroundForSurface(context, selectedSurface)
+        : theme.colorScheme.onPrimary;
+    final unselectedForeground = neo
+        ? tonosForegroundForSurface(
+            context,
+            expressive
+                ? theme.colorScheme.surfaceContainerLow
+                : surfaces.exerciseDetailTimeframe,
+          )
+        : theme.colorScheme.onSurfaceVariant;
     final labels = <String>[
       _strings.exerciseDetailWeek,
       _strings.exerciseDetailMonth,
@@ -1276,13 +1368,24 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: surfaces.exerciseDetailTimeframe,
-        borderRadius: shapes.exerciseDetailTimeframe,
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(
-            alpha: surfaces.exerciseDetailTimeframeBorderOpacity,
-          ),
-        ),
+        color: expressive
+            ? theme.colorScheme.surfaceContainerHigh
+            : surfaces.exerciseDetailTimeframe,
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(17),
+                topRight: Radius.circular(9),
+                bottomLeft: Radius.circular(9),
+                bottomRight: Radius.circular(17),
+              )
+            : shapes.exerciseDetailTimeframe,
+        border: expressive
+            ? null
+            : Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(
+                  alpha: surfaces.exerciseDetailTimeframeBorderOpacity,
+                ),
+              ),
       ),
       child: Row(
         children: List<Widget>.generate(labels.length, (index) {
@@ -1295,16 +1398,22 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: shapes.exerciseDetailTimeframeOption,
-                  onTap:
-                      selected
-                          ? null
-                          : () => setState(() {
-                            _tfSelected = List<bool>.generate(
-                              labels.length,
-                              (itemIndex) => itemIndex == index,
-                            );
-                          }),
+                  borderRadius: expressive
+                      ? const BorderRadius.only(
+                          topLeft: Radius.circular(13),
+                          topRight: Radius.circular(7),
+                          bottomLeft: Radius.circular(7),
+                          bottomRight: Radius.circular(13),
+                        )
+                      : shapes.exerciseDetailTimeframeOption,
+                  onTap: selected
+                      ? null
+                      : () => setState(() {
+                          _tfSelected = List<bool>.generate(
+                            labels.length,
+                            (itemIndex) => itemIndex == index,
+                          );
+                        }),
                   child: AnimatedContainer(
                     duration: appMotionDuration(
                       context,
@@ -1314,7 +1423,14 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: selected ? selectedSurface : Colors.transparent,
-                      borderRadius: shapes.exerciseDetailTimeframeOption,
+                      borderRadius: expressive
+                          ? const BorderRadius.only(
+                              topLeft: Radius.circular(13),
+                              topRight: Radius.circular(7),
+                              bottomLeft: Radius.circular(7),
+                              bottomRight: Radius.circular(13),
+                            )
+                          : shapes.exerciseDetailTimeframeOption,
                     ),
                     child: Text(
                       labels[index],
@@ -1322,10 +1438,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
-                        color:
-                            selected
-                                ? selectedForeground
-                                : unselectedForeground,
+                        color: selected
+                            ? selectedForeground
+                            : unselectedForeground,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -1358,14 +1473,14 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         final volumeValue = volumeSnapshot.data;
         final volumeLabel =
             volumeSnapshot.connectionState != ConnectionState.done ||
-                    volumeSnapshot.hasError ||
-                    volumeValue == null
-                ? '--'
-                : WeightUnitFormatter.formatVolume(
-                  volumeValue,
-                  weightUnit,
-                  locale: Localizations.localeOf(context),
-                );
+                volumeSnapshot.hasError ||
+                volumeValue == null
+            ? '--'
+            : WeightUnitFormatter.formatVolume(
+                volumeValue,
+                weightUnit,
+                locale: Localizations.localeOf(context),
+              );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1382,6 +1497,9 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                       locale: Localizations.localeOf(context),
                     ),
                     color: theme.colorScheme.primary,
+                    expressiveSurface: _destinationTokens?.surfacePrimary,
+                    expressiveForeground: _destinationTokens?.onSurfacePrimary,
+                    expressive: _usesExpressiveCatalogSheet,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1391,56 +1509,97 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                     label: _strings.exerciseDetailVolumeBest,
                     value: volumeLabel,
                     color: theme.colorScheme.tertiary,
+                    expressiveSurface: _destinationTokens?.surfaceTertiary,
+                    expressiveForeground: _destinationTokens?.onSurfaceTertiary,
+                    expressive: _usesExpressiveCatalogSheet,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _strings.exerciseDetailRepBests,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _strings.exerciseDetailRepBestsBody,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compactHeader =
+                    _usesExpressiveCatalogSheet &&
+                    (constraints.maxWidth < 360 ||
+                        MediaQuery.textScalerOf(context).scale(1) >= 1.5);
+                final rangeCount = Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(
-                      alpha: surfaces.exerciseDetailRangeFillOpacity,
-                    ),
-                    borderRadius: shapes.exerciseDetailTag,
+                    color: _usesExpressiveCatalogSheet
+                        ? _destinationTokens!.surfaceSelected
+                        : theme.colorScheme.primary.withValues(
+                            alpha: surfaces.exerciseDetailRangeFillOpacity,
+                          ),
+                    borderRadius: _usesExpressiveCatalogSheet
+                        ? const BorderRadius.only(
+                            topLeft: Radius.circular(11),
+                            topRight: Radius.circular(5),
+                            bottomLeft: Radius.circular(5),
+                            bottomRight: Radius.circular(11),
+                          )
+                        : shapes.exerciseDetailTag,
                   ),
                   child: Text(
                     _strings.exerciseDetailRanges(rows.length),
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
+                      color: _usesExpressiveCatalogSheet
+                          ? _destinationTokens!.onSurfaceSelected
+                          : theme.colorScheme.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                ),
-              ],
+                );
+                final heading = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _strings.exerciseDetailRepBests,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _strings.exerciseDetailRepBestsBody,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: _usesExpressiveCatalogSheet
+                            ? _destinationTokens?.supportingForeground
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                );
+                if (compactHeader) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      heading,
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: rangeCount,
+                      ),
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: heading),
+                    rangeCount,
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 10),
-            _RepBestMetricsList(rows: rows, weightUnit: weightUnit),
+            _RepBestMetricsList(
+              rows: rows,
+              weightUnit: weightUnit,
+              expressive: _usesExpressiveCatalogSheet,
+            ),
           ],
         );
       },
@@ -1469,58 +1628,96 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         if (history.isEmpty) {
           return Center(child: Text(_strings.exerciseDetailNoHistory));
         }
-        final hasMoreHistory =
-            _olderHistory.isEmpty
-                ? firstPage?.hasMore ?? false
-                : _hasMoreHistory;
+        final hasMoreHistory = _olderHistory.isEmpty
+            ? firstPage?.hasMore ?? false
+            : _hasMoreHistory;
 
         final records = _buildRecordTrendPoints(history);
         final hasSetRecordBadges = history.any(
           (record) =>
               record.badges.setBadges.values.any((badges) => badges.isNotEmpty),
         );
+        final expressive = _usesExpressiveCatalogSheet;
 
         return ListView(
           controller: scrollCtrl,
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            14,
+            16,
+            28 +
+                (_usesExpressiveCatalogSheet
+                    ? MediaQuery.viewPaddingOf(context).bottom
+                    : 0),
+          ),
           children: [
-            Text(
-              _strings.exerciseDetailPerformanceTrend,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 10),
-            _ExerciseRecordTrendChart(points: records, weightUnit: weightUnit),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _RecordLegendDot(
-                  color: _exerciseRecordActualSeriesColor(context),
-                  label: _strings.exerciseDetailBestWeight,
+            if (expressive)
+              _buildExpressiveRecordTrendModule(records, weightUnit)
+            else ...[
+              Text(
+                _strings.exerciseDetailPerformanceTrend,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 10),
+              _ExerciseRecordTrendChart(
+                points: records,
+                weightUnit: weightUnit,
+              ),
+              const SizedBox(height: 10),
+              _buildRecordLegend(),
+            ],
+            if (expressive) ...[
+              const SizedBox(height: 22),
+              Text(
+                _strings.fullHistoryTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(width: 16),
-                _RecordLegendDot(
-                  color: _exerciseRecordEstimatedSeriesColor(context),
-                  label: _strings.exerciseDetailEstimatedOneRm,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+            ],
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(height: 1),
             ),
             if (hasSetRecordBadges)
-              const WorkoutRecordBadgeLegend(
-                padding: EdgeInsets.only(bottom: 6),
-              ),
+              if (expressive)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    key: const ValueKey(
+                      'exercise-detail-expressive-record-badge-legend',
+                    ),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        topRight: Radius.circular(7),
+                        bottomLeft: Radius.circular(7),
+                        bottomRight: Radius.circular(14),
+                      ),
+                    ),
+                    child: const WorkoutRecordBadgeLegend(
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                )
+              else
+                const WorkoutRecordBadgeLegend(
+                  padding: EdgeInsets.only(bottom: 6),
+                ),
             for (var index = 0; index < history.length; index++) ...[
               _ExerciseHistorySessionCard(
                 record: history[index],
                 weightUnit: weightUnit,
-                onOpenSession:
-                    () =>
-                        _openHistorySession(context, history[index].sessionId),
+                onOpenSession: () =>
+                    _openHistorySession(context, history[index].sessionId),
               ),
               if (index < history.length - 1) const SizedBox(height: 10),
             ],
@@ -1529,21 +1726,19 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed:
-                      _isLoadingMoreHistory
-                          ? null
-                          : () => _loadMoreHistory(history),
-                  icon:
-                      _isLoadingMoreHistory
-                          ? SizedBox(
-                            width: 17,
-                            height: 17,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: theme.colorScheme.primary,
-                            ),
-                          )
-                          : const Icon(Icons.expand_more_rounded),
+                  onPressed: _isLoadingMoreHistory
+                      ? null
+                      : () => _loadMoreHistory(history),
+                  icon: _isLoadingMoreHistory
+                      ? SizedBox(
+                          width: 17,
+                          height: 17,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: theme.colorScheme.primary,
+                          ),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
                   label: Text(
                     _isLoadingMoreHistory
                         ? _strings.exerciseDetailLoadingSessions
@@ -1570,7 +1765,77 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
+  Widget _buildExpressiveRecordTrendModule(
+    List<_ExerciseRecordPoint> records,
+    WeightUnit weightUnit,
+  ) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(10),
+          bottomLeft: Radius.circular(10),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _strings.exerciseDetailPerformanceTrend,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _ExerciseRecordTrendChart(points: records, weightUnit: weightUnit),
+          const SizedBox(height: 10),
+          _buildRecordLegend(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecordLegend() {
+    final bestWeight = _RecordLegendDot(
+      color: _exerciseRecordActualSeriesColor(context),
+      label: _strings.exerciseDetailBestWeight,
+    );
+    final estimatedOneRm = _RecordLegendDot(
+      color: _exerciseRecordEstimatedSeriesColor(context),
+      label: _strings.exerciseDetailEstimatedOneRm,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        if (constraints.maxWidth < 360 || textScale >= 1.5) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(width: constraints.maxWidth, child: bestWeight),
+              const SizedBox(height: 8),
+              SizedBox(width: constraints.maxWidth, child: estimatedOneRm),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: bestWeight),
+            const SizedBox(width: 16),
+            Expanded(child: estimatedOneRm),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildSheetDragHandle(BuildContext context) {
+    final destination = _usesExpressiveCatalogSheet ? _destinationTokens : null;
     return Semantics(
       label: _strings.exerciseDetailResizeLabel,
       hint: _strings.exerciseDetailResizeHint,
@@ -1587,18 +1852,20 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           _sheetController.jumpTo(nextSize);
         },
         child: SizedBox(
-          height: 28,
+          height: destination == null ? 28 : 48,
           width: double.infinity,
           child: Center(
             child: Container(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(
-                  alpha: context.surfaceTokens.exerciseDetailHandleOpacity,
-                ),
+                color:
+                    (destination?.onSurfacePrimary ??
+                            Theme.of(context).colorScheme.onSurfaceVariant)
+                        .withValues(
+                          alpha:
+                              context.surfaceTokens.exerciseDetailHandleOpacity,
+                        ),
                 borderRadius: context.shapeTokens.pill,
               ),
             ),
@@ -1612,88 +1879,357 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   Widget build(BuildContext context) {
     final effects = context.effectTokens;
     final shapes = context.shapeTokens;
+    final expressive = _usesExpressiveCatalogSheet;
+    final destination = expressive ? _destinationTokens : null;
     return DraggableScrollableSheet(
       controller: _sheetController,
       expand: false,
       minChildSize: _sheetMinSize,
       initialChildSize: _sheetInitialSize,
       maxChildSize: _sheetMaxSize,
-      builder:
-          (_, scrollCtrl) => DefaultTabController(
-            length: 3,
-            child: Material(
-              elevation: effects.exerciseDetailSheetElevation,
-              borderRadius: shapes.exerciseDetailSheet,
-              clipBehavior: Clip.hardEdge,
-              child: Column(
+      builder: (_, scrollCtrl) => DefaultTabController(
+        length: 3,
+        child: Material(
+          key: expressive
+              ? const ValueKey('exercise-detail-expressive-shell')
+              : null,
+          color: destination?.pageCanvas,
+          elevation: effects.exerciseDetailSheetElevation,
+          borderRadius: expressive
+              ? const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(14),
+                )
+              : shapes.exerciseDetailSheet,
+          clipBehavior: Clip.hardEdge,
+          child: Column(
+            children: [
+              if (expressive)
+                _buildExpressiveSheetHeader(destination!)
+              else ...[
+                _buildSheetDragHandle(context),
+                _buildStandardSheetHeader(),
+              ],
+              if (expressive)
+                _buildExpressiveTabRail(destination!)
+              else ...[
+                _buildSheetTabBar(),
+                const Divider(height: 1),
+              ],
+
+              // Tab Views
+              Expanded(
+                child: expressive
+                    ? ColoredBox(
+                        key: const ValueKey(
+                          'exercise-detail-expressive-content-zone',
+                        ),
+                        color: destination!.pageCanvas,
+                        child: _buildSheetTabViews(scrollCtrl),
+                      )
+                    : _buildSheetTabViews(scrollCtrl),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStandardSheetHeader() {
+    return KeyedSubtree(
+      key: _headerTutorialKey,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8, left: 16, right: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SizedBox(width: 48),
+            Expanded(
+              child: LocalizedExerciseName(
+                definition: widget.definition,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            IconButton(
+              tooltip: _strings.commonClose,
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpressiveSheetHeader(AppExpressiveDestinationTokens tokens) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      key: const ValueKey('exercise-detail-expressive-header'),
+      decoration: BoxDecoration(
+        color: tokens.surfacePrimary,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(10),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildSheetDragHandle(context),
+          KeyedSubtree(
+            key: _headerTutorialKey,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, right: 12, bottom: 14),
+              child: Row(
                 children: [
-                  _buildSheetDragHandle(context),
-                  // Header with Close Icon
-                  KeyedSubtree(
-                    key: _headerTutorialKey,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        top: 8,
-                        left: 16,
-                        right: 16,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const SizedBox(width: 48),
-                          Expanded(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: LocalizedExerciseName(
-                                definition: widget.definition,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: _strings.commonClose,
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Tab Bar
-                  KeyedSubtree(
-                    key: _tabsTutorialKey,
-                    child: TabBar(
-                      tabs: [
-                        Tab(text: _strings.exerciseDetailTabDetails),
-                        Tab(text: _strings.exerciseDetailTabMetrics),
-                        Tab(text: _strings.exerciseDetailTabRecords),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-
-                  // Tab Views
                   Expanded(
-                    child: KeyedSubtree(
-                      key: _contentTutorialKey,
-                      child: TabBarView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          _buildDetailsTab(scrollCtrl),
-                          _buildMetricsTab(scrollCtrl),
-                          _buildRecordsTab(scrollCtrl),
-                        ],
+                    child: LocalizedExerciseName(
+                      definition: widget.definition,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.start,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: tokens.onSurfacePrimary,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: _strings.commonClose,
+                    icon: const Icon(Icons.close),
+                    style: IconButton.styleFrom(
+                      foregroundColor: tokens.onSurfaceSelected,
+                      backgroundColor: tokens.surfaceSelected,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(8),
+                          bottomLeft: Radius.circular(8),
+                          bottomRight: Radius.circular(16),
+                        ),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSheetTabBar() {
+    return KeyedSubtree(
+      key: _tabsTutorialKey,
+      child: TabBar(
+        tabs: [
+          Tab(text: _strings.exerciseDetailTabDetails),
+          Tab(text: _strings.exerciseDetailTabMetrics),
+          Tab(text: _strings.exerciseDetailTabRecords),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpressiveTabRail(AppExpressiveDestinationTokens tokens) {
+    final theme = Theme.of(context);
+    final labels = [
+      _strings.exerciseDetailTabDetails,
+      _strings.exerciseDetailTabMetrics,
+      _strings.exerciseDetailTabRecords,
+    ];
+    final labelStyle = theme.textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w800,
+    );
+    return LayoutBuilder(
+      builder: (context, viewportConstraints) {
+        final compactViewport = viewportConstraints.maxWidth < 360;
+        return Container(
+          key: const ValueKey('exercise-detail-expressive-tab-rail'),
+          margin: compactViewport
+              ? const EdgeInsets.fromLTRB(4, 10, 4, 8)
+              : const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          padding: compactViewport ? EdgeInsets.zero : const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(10),
+              bottomLeft: Radius.circular(10),
+              bottomRight: Radius.circular(18),
+            ),
+          ),
+          child: Builder(
+            builder: (railContext) {
+              final controller = DefaultTabController.of(railContext);
+              final motion = theme.motionTokens;
+              var widestLabel = 0.0;
+              for (final label in labels) {
+                final painter = TextPainter(
+                  text: TextSpan(text: label, style: labelStyle),
+                  textDirection: Directionality.of(railContext),
+                  textScaler: MediaQuery.textScalerOf(railContext),
+                  maxLines: 1,
+                )..layout();
+                widestLabel = math.max(widestLabel, painter.width);
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final compactRail = compactViewport;
+                  final labelPadding = compactRail
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.symmetric(horizontal: 16);
+                  final horizontalLabelWidth =
+                      constraints.maxWidth / labels.length -
+                      (compactRail ? 0 : 32);
+                  final needsStackedLayout = widestLabel > horizontalLabelWidth;
+                  final selectionDuration = appMotionDuration(
+                    railContext,
+                    motion.exerciseDetailSelection,
+                  );
+
+                  if (needsStackedLayout) {
+                    return KeyedSubtree(
+                      key: _tabsTutorialKey,
+                      child: AnimatedBuilder(
+                        animation: controller,
+                        builder: (context, _) => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (
+                              var index = 0;
+                              index < labels.length;
+                              index++
+                            ) ...[
+                              if (index > 0)
+                                Divider(
+                                  height: 1,
+                                  indent: 10,
+                                  endIndent: 10,
+                                  color: theme.colorScheme.outlineVariant
+                                      .withValues(alpha: 0.55),
+                                ),
+                              Semantics(
+                                button: true,
+                                selected: controller.index == index,
+                                label: labels[index],
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: controller.index == index
+                                        ? null
+                                        : () => controller.animateTo(
+                                            index,
+                                            duration: selectionDuration,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(13),
+                                      topRight: Radius.circular(7),
+                                      bottomLeft: Radius.circular(7),
+                                      bottomRight: Radius.circular(13),
+                                    ),
+                                    child: AnimatedContainer(
+                                      duration: selectionDuration,
+                                      curve: Curves.easeOutCubic,
+                                      constraints: const BoxConstraints(
+                                        minHeight: 48,
+                                      ),
+                                      width: double.infinity,
+                                      alignment: Alignment.center,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 9,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: controller.index == index
+                                            ? tokens.surfacePrimary
+                                            : Colors.transparent,
+                                        borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(13),
+                                          topRight: Radius.circular(7),
+                                          bottomLeft: Radius.circular(7),
+                                          bottomRight: Radius.circular(13),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        labels[index],
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        textAlign: TextAlign.center,
+                                        style: labelStyle?.copyWith(
+                                          color: controller.index == index
+                                              ? tokens.onSurfacePrimary
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                          fontWeight: controller.index == index
+                                              ? FontWeight.w800
+                                              : FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return KeyedSubtree(
+                    key: _tabsTutorialKey,
+                    child: TabBar(
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorPadding: const EdgeInsets.all(2),
+                      labelPadding: labelPadding,
+                      indicator: BoxDecoration(
+                        color: tokens.surfacePrimary,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(14),
+                          topRight: Radius.circular(7),
+                          bottomLeft: Radius.circular(7),
+                          bottomRight: Radius.circular(14),
+                        ),
+                      ),
+                      dividerColor: Colors.transparent,
+                      labelColor: tokens.onSurfacePrimary,
+                      unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                      labelStyle: labelStyle,
+                      unselectedLabelStyle: theme.textTheme.labelLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      tabs: [for (final label in labels) Tab(text: label)],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetTabViews(ScrollController scrollCtrl) {
+    return KeyedSubtree(
+      key: _contentTutorialKey,
+      child: TabBarView(
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          _buildDetailsTab(scrollCtrl),
+          _buildMetricsTab(scrollCtrl),
+          _buildRecordsTab(scrollCtrl),
+        ],
+      ),
     );
   }
 }
@@ -1716,21 +2252,31 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
     final neo = context.usesNeoPresentation;
-    final recordForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
-            : scheme.onSurface;
-    final recordActionFill = scheme.secondary.withValues(
-      alpha: surfaces.exerciseDetailRecordActionFillOpacity,
-    );
-    final recordActionForeground =
-        neo
-            ? tonosForegroundForSurface(
-              context,
-              recordActionFill,
-              parentSurface: surfaces.exerciseDetailRecord,
-            )
-            : scheme.secondary;
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressive =
+        destination?.family == AppExpressiveDestinationFamily.catalog &&
+        theme.appThemeFamilyIdentity ==
+            AppThemeFamilyIdentity.expressivePreview;
+    final recordSurface = expressive
+        ? scheme.surfaceContainerLow
+        : surfaces.exerciseDetailRecord;
+    final recordForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
+        : scheme.onSurface;
+    final recordActionFill = expressive
+        ? destination!.surfaceSelected
+        : scheme.secondary.withValues(
+            alpha: surfaces.exerciseDetailRecordActionFillOpacity,
+          );
+    final recordActionForeground = expressive
+        ? destination!.onSurfaceSelected
+        : neo
+        ? tonosForegroundForSurface(
+            context,
+            recordActionFill,
+            parentSurface: surfaces.exerciseDetailRecord,
+          )
+        : scheme.secondary;
     final strings = AppLocalizations.of(context);
     final dateLabel = LocalizedFormatters.dateTime(
       record.displayDateTime,
@@ -1741,13 +2287,22 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: surfaces.exerciseDetailRecord,
-        borderRadius: shapes.exerciseDetailRecord,
-        border: Border.all(
-          color: scheme.primary.withValues(
-            alpha: surfaces.exerciseDetailRecordBorderOpacity,
-          ),
-        ),
+        color: recordSurface,
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(19),
+                topRight: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(19),
+              )
+            : shapes.exerciseDetailRecord,
+        border: expressive
+            ? null
+            : Border.all(
+                color: scheme.primary.withValues(
+                  alpha: surfaces.exerciseDetailRecordBorderOpacity,
+                ),
+              ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1758,14 +2313,27 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withValues(
-                    alpha: surfaces.exerciseDetailRecordIconFillOpacity,
-                  ),
-                  borderRadius: shapes.exerciseDetailIcon,
+                  color: expressive
+                      ? destination!.surfaceSelected
+                      : scheme.primary.withValues(
+                          alpha: surfaces.exerciseDetailRecordIconFillOpacity,
+                        ),
+                  borderRadius: expressive
+                      ? const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          topRight: Radius.circular(5),
+                          bottomLeft: Radius.circular(5),
+                          bottomRight: Radius.circular(12),
+                        )
+                      : shapes.exerciseDetailIcon,
                 ),
                 child: Icon(
                   Icons.calendar_today_outlined,
-                  color: neo ? recordForeground : scheme.primary,
+                  color: expressive
+                      ? destination!.onSurfaceSelected
+                      : neo
+                      ? recordForeground
+                      : scheme.primary,
                   size: 17,
                 ),
               ),
@@ -1776,16 +2344,18 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: neo ? recordForeground : scheme.primary,
+                    color: expressive
+                        ? scheme.onSurface
+                        : neo
+                        ? recordForeground
+                        : scheme.primary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               if (record.badges.isFirstRecord) ...[
                 const SizedBox(width: 8),
-                FirstRecordBadge(
-                  foregroundSurface: surfaces.exerciseDetailRecord,
-                ),
+                FirstRecordBadge(foregroundSurface: recordSurface),
               ],
               const SizedBox(width: 10),
               Semantics(
@@ -1797,29 +2367,40 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
                   child: InkWell(
                     onTap: onOpenSession,
                     borderRadius: shapes.exerciseDetailRecordAction,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 5, 5),
-                      decoration: BoxDecoration(
-                        color: recordActionFill,
-                        borderRadius: shapes.exerciseDetailRecordAction,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: expressive ? 48 : 0,
+                        minHeight: expressive ? 48 : 0,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            strings.exerciseDetailSetCount(setCount),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: recordActionForeground,
-                              fontWeight: FontWeight.w800,
+                      child: Container(
+                        padding: expressive
+                            ? const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              )
+                            : const EdgeInsets.fromLTRB(8, 5, 5, 5),
+                        decoration: BoxDecoration(
+                          color: recordActionFill,
+                          borderRadius: shapes.exerciseDetailRecordAction,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              strings.exerciseDetailSetCount(setCount),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: recordActionForeground,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18,
-                            color: recordActionForeground,
-                          ),
-                        ],
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: recordActionForeground,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1837,6 +2418,9 @@ class _ExerciseHistorySessionCard extends StatelessWidget {
               set: entry.value,
               badges: record.badges.forSet(entry.key),
               weightUnit: weightUnit,
+              expressive: expressive,
+              recordSurface: recordSurface,
+              destination: destination,
             ),
         ],
       ),
@@ -1849,12 +2433,18 @@ class _ExerciseHistorySetRow extends StatelessWidget {
   final ExerciseSet set;
   final List<WorkoutRecordBadge> badges;
   final WeightUnit weightUnit;
+  final bool expressive;
+  final Color recordSurface;
+  final AppExpressiveDestinationTokens? destination;
 
   const _ExerciseHistorySetRow({
     required this.index,
     required this.set,
     required this.badges,
     required this.weightUnit,
+    this.expressive = false,
+    this.recordSurface = Colors.transparent,
+    this.destination,
   });
 
   @override
@@ -1863,17 +2453,15 @@ class _ExerciseHistorySetRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     final surfaces = theme.surfaceTokens;
     final neo = context.usesNeoPresentation;
-    final recordForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
-            : scheme.onSurface;
-    final recordSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.exerciseDetailRecord,
-            )
-            : scheme.onSurfaceVariant;
+    final recordForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailRecord)
+        : scheme.onSurface;
+    final recordSecondary = neo
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            surfaces.exerciseDetailRecord,
+          )
+        : scheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1884,9 +2472,11 @@ class _ExerciseHistorySetRow extends StatelessWidget {
             height: 25,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(
-                alpha: surfaces.exerciseDetailRecordSetFillOpacity,
-              ),
+              color: expressive
+                  ? destination?.surfaceSelected
+                  : scheme.primary.withValues(
+                      alpha: surfaces.exerciseDetailRecordSetFillOpacity,
+                    ),
               shape: BoxShape.circle,
             ),
             child: Text(
@@ -1896,7 +2486,11 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                 maximumFractionDigits: 0,
               ),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: neo ? recordForeground : scheme.primary,
+                color: expressive
+                    ? destination?.onSurfaceSelected
+                    : neo
+                    ? recordForeground
+                    : scheme.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1954,7 +2548,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
                         if (badgeIndex > 0) const SizedBox(width: 4),
                         WorkoutRecordBadgeChip(
                           badge: badges[badgeIndex],
-                          foregroundSurface: surfaces.exerciseDetailRecord,
+                          foregroundSurface: recordSurface,
                         ),
                       ],
                     ],
@@ -1978,7 +2572,7 @@ class _ExerciseHistorySetRow extends StatelessWidget {
               maxLines: 1,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: recordSecondary,
-                fontStyle: FontStyle.italic,
+                fontStyle: expressive ? null : FontStyle.italic,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1994,12 +2588,18 @@ class _MetricSummaryCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final Color? expressiveSurface;
+  final Color? expressiveForeground;
+  final bool expressive;
 
   const _MetricSummaryCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    this.expressiveSurface,
+    this.expressiveForeground,
+    this.expressive = false,
   });
 
   @override
@@ -2008,49 +2608,64 @@ class _MetricSummaryCard extends StatelessWidget {
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
     return Container(
-      height: 92,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
-        color: color.withValues(
-          alpha: surfaces.exerciseDetailMetricFillOpacity,
-        ),
-        borderRadius: shapes.exerciseDetailMetric,
-        border: Border.all(
-          color: color.withValues(
-            alpha: surfaces.exerciseDetailMetricBorderOpacity,
-          ),
-        ),
+        color: expressive
+            ? expressiveSurface
+            : color.withValues(alpha: surfaces.exerciseDetailMetricFillOpacity),
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(22),
+                topRight: Radius.circular(10),
+                bottomLeft: Radius.circular(10),
+                bottomRight: Radius.circular(22),
+              )
+            : shapes.exerciseDetailMetric,
+        border: expressive
+            ? null
+            : Border.all(
+                color: color.withValues(
+                  alpha: surfaces.exerciseDetailMetricBorderOpacity,
+                ),
+              ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, size: 17, color: color),
+              Icon(
+                icon,
+                size: 17,
+                color: expressive ? expressiveForeground : color,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   label,
-                  maxLines: 1,
+                  maxLines: expressive ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: color,
+                    color: expressive ? expressiveForeground : color,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               value,
               maxLines: 1,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: (theme.textTheme.titleLarge ?? theme.textTheme.titleMedium)
+                  ?.copyWith(
+                    color: expressive ? expressiveForeground : null,
+                    fontWeight: FontWeight.w800,
+                  ),
             ),
           ),
         ],
@@ -2062,8 +2677,13 @@ class _MetricSummaryCard extends StatelessWidget {
 class _RepBestMetricsList extends StatelessWidget {
   final List<RepMaxRow> rows;
   final WeightUnit weightUnit;
+  final bool expressive;
 
-  const _RepBestMetricsList({required this.rows, required this.weightUnit});
+  const _RepBestMetricsList({
+    required this.rows,
+    required this.weightUnit,
+    this.expressive = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2072,105 +2692,175 @@ class _RepBestMetricsList extends StatelessWidget {
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: surfaces.exerciseDetailMetricList,
-        borderRadius: shapes.exerciseDetailMetric,
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(
-            alpha: surfaces.exerciseDetailMetricListBorderOpacity,
-          ),
-        ),
-      ),
-      child: Column(
-        children: List<Widget>.generate(rows.length, (index) {
-          final row = rows[index];
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 54,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(
-                          alpha: surfaces.exerciseDetailMetricRepFillOpacity,
-                        ),
-                        borderRadius: shapes.exerciseDetailMetricRep,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            LocalizedFormatters.number(
-                              row.repCount,
-                              Localizations.localeOf(context),
-                              maximumFractionDigits: 0,
-                            ),
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            AppLocalizations.of(context).exerciseDetailReps,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactLayout =
+            expressive &&
+            (constraints.maxWidth < 360 ||
+                MediaQuery.textScalerOf(context).scale(1) >= 1.5);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: expressive
+                ? theme.colorScheme.surfaceContainerLow
+                : surfaces.exerciseDetailMetricList,
+            borderRadius: expressive
+                ? const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(8),
+                    bottomLeft: Radius.circular(8),
+                    bottomRight: Radius.circular(18),
+                  )
+                : shapes.exerciseDetailMetric,
+            border: expressive
+                ? null
+                : Border.all(
+                    color: scheme.outlineVariant.withValues(
+                      alpha: surfaces.exerciseDetailMetricListBorderOpacity,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _CompactRepMetricValue(
-                        label:
-                            AppLocalizations.of(
-                              context,
-                            ).exerciseDetailBestWeight,
-                        value: WeightUnitFormatter.formatWeight(
-                          row.rmValue,
-                          weightUnit,
-                          locale: Localizations.localeOf(context),
-                        ),
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _CompactRepMetricValue(
-                        label:
-                            AppLocalizations.of(
-                              context,
-                            ).exerciseDetailSetVolume,
-                        value: WeightUnitFormatter.formatVolume(
-                          row.rmValue * row.repCount,
-                          weightUnit,
-                          locale: Localizations.localeOf(context),
-                        ),
-                        color: scheme.tertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (index < rows.length - 1)
-                Divider(
-                  height: 1,
-                  color: scheme.outlineVariant.withValues(
-                    alpha: surfaces.exerciseDetailMetricListDividerOpacity,
                   ),
-                ),
-            ],
-          );
-        }),
-      ),
+          ),
+          child: Column(
+            children: List<Widget>.generate(rows.length, (index) {
+              final row = rows[index];
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Builder(
+                      builder: (context) {
+                        final repBadge = Container(
+                          key: const ValueKey('exercise-detail-rep-best-badge'),
+                          width: compactLayout ? null : 54,
+                          height: 40,
+                          padding: compactLayout
+                              ? const EdgeInsets.symmetric(horizontal: 10)
+                              : EdgeInsets.zero,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: expressive
+                                ? theme
+                                      .extension<
+                                        AppExpressiveDestinationTokens
+                                      >()
+                                      ?.surfaceSelected
+                                : scheme.primary.withValues(
+                                    alpha: surfaces
+                                        .exerciseDetailMetricRepFillOpacity,
+                                  ),
+                            borderRadius: expressive
+                                ? const BorderRadius.only(
+                                    topLeft: Radius.circular(13),
+                                    topRight: Radius.circular(5),
+                                    bottomLeft: Radius.circular(5),
+                                    bottomRight: Radius.circular(13),
+                                  )
+                                : shapes.exerciseDetailMetricRep,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                LocalizedFormatters.number(
+                                  row.repCount,
+                                  Localizations.localeOf(context),
+                                  maximumFractionDigits: 0,
+                                ),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: expressive
+                                      ? theme
+                                            .extension<
+                                              AppExpressiveDestinationTokens
+                                            >()
+                                            ?.onSurfaceSelected
+                                      : scheme.primary,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                AppLocalizations.of(context).exerciseDetailReps,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: expressive
+                                      ? theme
+                                            .extension<
+                                              AppExpressiveDestinationTokens
+                                            >()
+                                            ?.onSurfaceSelected
+                                      : scheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        final bestWeight = _CompactRepMetricValue(
+                          label: AppLocalizations.of(context)
+                              .exerciseDetailBestWeight,
+                          value: WeightUnitFormatter.formatWeight(
+                            row.rmValue,
+                            weightUnit,
+                            locale: Localizations.localeOf(context),
+                          ),
+                          color: scheme.onSurface,
+                        );
+                        final setVolume = _CompactRepMetricValue(
+                          label: AppLocalizations.of(context)
+                              .exerciseDetailSetVolume,
+                          value: WeightUnitFormatter.formatVolume(
+                            row.rmValue * row.repCount,
+                            weightUnit,
+                            locale: Localizations.localeOf(context),
+                          ),
+                          color: expressive
+                              ? theme
+                                        .extension<
+                                          AppExpressiveDestinationTokens
+                                        >()
+                                        ?.actionPrimary ??
+                                    scheme.tertiary
+                              : scheme.tertiary,
+                        );
+                        if (compactLayout) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: repBadge,
+                              ),
+                              const SizedBox(height: 12),
+                              bestWeight,
+                              const SizedBox(height: 10),
+                              setVolume,
+                            ],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            repBadge,
+                            const SizedBox(width: 12),
+                            Expanded(child: bestWeight),
+                            const SizedBox(width: 12),
+                            Expanded(child: setVolume),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  if (index < rows.length - 1)
+                    Divider(
+                      height: 1,
+                      color: scheme.outlineVariant.withValues(
+                        alpha: surfaces.exerciseDetailMetricListDividerOpacity,
+                      ),
+                    ),
+                ],
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }
@@ -2238,27 +2928,41 @@ class _MetricsStateCard extends StatelessWidget {
     final neo = context.usesNeoPresentation;
     final surfaces = theme.surfaceTokens;
     final shapes = theme.shapeTokens;
-    final cardForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.exerciseDetailState)
-            : theme.colorScheme.onSurface;
-    final cardSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.exerciseDetailState,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+    final expressive =
+        theme.extension<AppExpressiveDestinationTokens>()?.family ==
+            AppExpressiveDestinationFamily.catalog &&
+        theme.appThemeFamilyIdentity ==
+            AppThemeFamilyIdentity.expressivePreview;
+    final cardForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailState)
+        : theme.colorScheme.onSurface;
+    final cardSecondary = neo
+        ? tonosSecondaryForegroundForSurface(
+            context,
+            surfaces.exerciseDetailState,
+          )
+        : theme.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: surfaces.exerciseDetailState,
-        borderRadius: shapes.exerciseDetailState,
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(
-            alpha: surfaces.exerciseDetailStateBorderOpacity,
-          ),
-        ),
+        color: expressive
+            ? theme.colorScheme.surfaceContainerLow
+            : surfaces.exerciseDetailState,
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(9),
+                bottomLeft: Radius.circular(9),
+                bottomRight: Radius.circular(20),
+              )
+            : shapes.exerciseDetailState,
+        border: expressive
+            ? null
+            : Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(
+                  alpha: surfaces.exerciseDetailStateBorderOpacity,
+                ),
+              ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2275,7 +2979,9 @@ class _MetricsStateCard extends StatelessWidget {
           else
             Icon(
               icon,
-              color: neo ? cardForeground : theme.colorScheme.primary,
+              color: neo || expressive
+                  ? cardForeground
+                  : theme.colorScheme.primary,
               size: 24,
             ),
           const SizedBox(width: 13),
@@ -2286,7 +2992,7 @@ class _MetricsStateCard extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: neo ? cardForeground : null,
+                    color: neo || expressive ? cardForeground : null,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -2401,29 +3107,43 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
     final motion = theme.motionTokens;
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
-    final chartForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.exerciseDetailChart)
-            : scheme.onSurfaceVariant;
-    final chartEmptyForeground =
-        neo
-            ? tonosForegroundForSurface(
-              context,
-              surfaces.exerciseDetailChartEmpty,
-            )
-            : scheme.onSurfaceVariant;
-    final tooltipForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.exerciseDetailTooltip)
-            : scheme.onSurface;
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressive =
+        destination?.family == AppExpressiveDestinationFamily.catalog &&
+        theme.appThemeFamilyIdentity ==
+            AppThemeFamilyIdentity.expressivePreview;
+    final chartForeground = expressive
+        ? scheme.onSurfaceVariant
+        : neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailChart)
+        : scheme.onSurfaceVariant;
+    final chartEmptyForeground = expressive
+        ? scheme.onSurfaceVariant
+        : neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailChartEmpty)
+        : scheme.onSurfaceVariant;
+    final tooltipForeground = expressive
+        ? scheme.onSurface
+        : neo
+        ? tonosForegroundForSurface(context, surfaces.exerciseDetailTooltip)
+        : scheme.onSurface;
 
     if (points.isEmpty) {
       return Container(
         height: 188,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: surfaces.exerciseDetailChartEmpty,
-          borderRadius: shapes.exerciseDetailChart,
+          color: expressive
+              ? scheme.surfaceContainerLowest
+              : surfaces.exerciseDetailChartEmpty,
+          borderRadius: expressive
+              ? const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(18),
+                )
+              : shapes.exerciseDetailChart,
         ),
         child: Text(
           AppLocalizations.of(context).exerciseDetailNoChartData,
@@ -2448,13 +3168,24 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
       height: 214,
       padding: const EdgeInsets.fromLTRB(8, 14, 10, 8),
       decoration: BoxDecoration(
-        color: surfaces.exerciseDetailChart,
-        borderRadius: shapes.exerciseDetailChart,
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(
-            alpha: surfaces.exerciseDetailChartBorderOpacity,
-          ),
-        ),
+        color: expressive
+            ? scheme.surfaceContainerLowest
+            : surfaces.exerciseDetailChart,
+        borderRadius: expressive
+            ? const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(18),
+              )
+            : shapes.exerciseDetailChart,
+        border: expressive
+            ? null
+            : Border.all(
+                color: scheme.outlineVariant.withValues(
+                  alpha: surfaces.exerciseDetailChartBorderOpacity,
+                ),
+              ),
       ),
       child: LineChart(
         LineChartData(
@@ -2477,8 +3208,10 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
               getTooltipItems: (touchedSpots) {
                 if (touchedSpots.isEmpty) return const <LineTooltipItem?>[];
                 final spot = touchedSpots.first;
-                final index =
-                    spot.x.round().clamp(0, points.length - 1).toInt();
+                final index = spot.x
+                    .round()
+                    .clamp(0, points.length - 1)
+                    .toInt();
                 final point = points[index];
                 final textStyle =
                     theme.textTheme.labelSmall?.copyWith(
@@ -2509,13 +3242,12 @@ class _ExerciseRecordTrendChart extends StatelessWidget {
           gridData: FlGridData(
             drawVerticalLine: false,
             horizontalInterval: bounds.interval,
-            getDrawingHorizontalLine:
-                (_) => FlLine(
-                  color: scheme.outlineVariant.withValues(
-                    alpha: surfaces.exerciseDetailChartGridOpacity,
-                  ),
-                  strokeWidth: 1,
-                ),
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: scheme.outlineVariant.withValues(
+                alpha: surfaces.exerciseDetailChartGridOpacity,
+              ),
+              strokeWidth: 1,
+            ),
           ),
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
@@ -2643,39 +3375,26 @@ class _RecordLegendDot extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = theme.surfaceTokens;
     final outlined = context.surfaceDecorationTokens.panel.outlined;
-    return Flexible(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 9,
-            height: 9,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border:
-                  outlined
-                      ? Border.all(
-                        color: tonosForegroundForSurface(
-                          context,
-                          surfaces.sheet,
-                        ),
-                        width: theme.shapeTokens.outlineWidth,
-                      )
-                      : null,
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: outlined
+                ? Border.all(
+                    color: tonosForegroundForSurface(context, surfaces.sheet),
+                    width: theme.shapeTokens.outlineWidth,
+                  )
+                : null,
           ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelSmall,
-            ),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(child: Text(label, style: theme.textTheme.labelSmall)),
+      ],
     );
   }
 }
@@ -2693,11 +3412,10 @@ class _RecordChartBounds {
 }
 
 _RecordChartBounds _recordChartBounds(List<_ExerciseRecordPoint> points) {
-  final values =
-      [
-        for (final point in points) point.bestWeight,
-        for (final point in points) point.bestEstimatedOneRm,
-      ].where((value) => value > 0).toList();
+  final values = [
+    for (final point in points) point.bestWeight,
+    for (final point in points) point.bestEstimatedOneRm,
+  ].where((value) => value > 0).toList();
 
   if (values.isEmpty) {
     return const _RecordChartBounds(minY: 0, maxY: 10, interval: 5);
@@ -2755,9 +3473,9 @@ String _recordAxisLabel(
   return showTime
       ? LocalizedFormatters.time(point.completedAt, locale)
       : LocalizedFormatters.shortDate(
-        point.calendarDay.toLocalDateTime(),
-        locale,
-      );
+          point.calendarDay.toLocalDateTime(),
+          locale,
+        );
 }
 
 double _estimatedOneRm(ExerciseSet set) {
@@ -2766,14 +3484,9 @@ double _estimatedOneRm(ExerciseSet set) {
 }
 
 String _formatSet(ExerciseSet set, WeightUnit weightUnit, {Locale? locale}) {
-  final reps =
-      locale == null
-          ? set.reps.toString()
-          : LocalizedFormatters.number(
-            set.reps,
-            locale,
-            maximumFractionDigits: 0,
-          );
+  final reps = locale == null
+      ? set.reps.toString()
+      : LocalizedFormatters.number(set.reps, locale, maximumFractionDigits: 0);
   return '${WeightUnitFormatter.formatWeight(set.weight, weightUnit, locale: locale)} x $reps';
 }
 
@@ -2781,15 +3494,14 @@ String _compactWeight(double value, WeightUnit weightUnit, [Locale? locale]) {
   final displayValue = WeightUnitFormatter.fromPounds(value, weightUnit);
   if (displayValue.abs() >= 1000) {
     final digits = displayValue.abs() >= 10000 ? 0 : 1;
-    final text =
-        locale == null
-            ? (displayValue / 1000).toStringAsFixed(digits)
-            : LocalizedFormatters.number(
-              displayValue / 1000,
-              locale,
-              minimumFractionDigits: digits,
-              maximumFractionDigits: digits,
-            );
+    final text = locale == null
+        ? (displayValue / 1000).toStringAsFixed(digits)
+        : LocalizedFormatters.number(
+            displayValue / 1000,
+            locale,
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits,
+          );
     return '${text}k';
   }
   return _cleanNumber(displayValue, locale);

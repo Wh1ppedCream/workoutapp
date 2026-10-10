@@ -22,6 +22,7 @@ import '../screens/nutrition/measured_items_page.dart';
 import '../services/active_plan_store.dart';
 import '../services/catalog_entity_localizer.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
@@ -47,10 +48,52 @@ class DashboardHero extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final heroSurface =
+        destinationTokens?.surfacePrimary ?? surfaces.dashboardHero;
+    final heroGradientColors = destinationTokens == null
+        ? [dashboardHeroAccent.withValues(alpha: 0.25), surfaces.dashboardHero]
+        : [heroSurface, heroSurface];
     final heroForeground =
-        context.usesNeoPresentation
+        destinationTokens?.onSurfacePrimary ??
+        (context.usesNeoPresentation
             ? tonosForegroundForSurface(context, surfaces.dashboardHero)
-            : null;
+            : null);
+    final title = isEditing
+        ? AppLocalizations.of(context).dashboardCustomize
+        : AppLocalizations.of(context).dashboardTitle;
+    final actionTooltip = isEditing
+        ? AppLocalizations.of(context).dashboardDoneCustomizing
+        : AppLocalizations.of(context).dashboardCustomize;
+    final icon = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color:
+            destinationTokens?.surfaceSecondary ??
+            dashboardHeroAccent.withValues(alpha: 0.18),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        Icons.dashboard_customize_outlined,
+        color: destinationTokens?.onSurfaceSecondary ?? dashboardHeroAccent,
+        size: 22,
+      ),
+    );
+    final editButton = IconButton.filledTonal(
+      tooltip: actionTooltip,
+      onPressed: onEdit,
+      icon: Icon(isEditing ? Icons.check : Icons.edit_outlined),
+    );
+    final titleText = Text(
+      title,
+      softWrap: true,
+      style: theme.textTheme.headlineSmall?.copyWith(
+        color: heroForeground,
+        fontWeight: FontWeight.w900,
+      ),
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       decoration: BoxDecoration(
@@ -58,59 +101,41 @@ class DashboardHero extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            dashboardHeroAccent.withValues(alpha: 0.25),
-            surfaces.dashboardHero,
-          ],
+          colors: heroGradientColors,
         ),
-        border: Border.all(color: dashboardHeroAccent.withValues(alpha: 0.44)),
+        border: Border.all(
+          color:
+              destinationTokens?.outlineAccent ??
+              dashboardHeroAccent.withValues(alpha: 0.44),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: dashboardHeroAccent.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.dashboard_customize_outlined,
-              color: dashboardHeroAccent,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final expressiveLargeText =
+              context.usesExpressivePresentation &&
+              MediaQuery.textScalerOf(context).scale(1) > 1.3;
+          final compact =
+              context.usesExpressivePresentation &&
+              (constraints.maxWidth < 340 || expressiveLargeText);
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    isEditing
-                        ? AppLocalizations.of(context).dashboardCustomize
-                        : AppLocalizations.of(context).dashboardTitle,
-                    maxLines: 1,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: heroForeground,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
+                Row(children: [icon, const Spacer(), editButton]),
+                const SizedBox(height: 8),
+                titleText,
               ],
-            ),
-          ),
-          IconButton.filledTonal(
-            tooltip:
-                isEditing
-                    ? AppLocalizations.of(context).dashboardDoneCustomizing
-                    : AppLocalizations.of(context).dashboardCustomize,
-            onPressed: onEdit,
-            icon: Icon(isEditing ? Icons.check : Icons.edit_outlined),
-          ),
-        ],
+            );
+          }
+          return Row(
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Expanded(child: titleText),
+              editButton,
+            ],
+          );
+        },
       ),
     );
   }
@@ -125,14 +150,43 @@ class DashboardQuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final activeSession = context.watch<ActiveSession>();
     final workoutActive = activeSession.isActive && !activeSession.isRestoring;
+    final measurementAction = _DashboardActionButton(
+      icon: Icons.add_chart_outlined,
+      title: AppLocalizations.of(context).dashboardMeasurement,
+      color: dashboardMeasurementActionAccent,
+      onPressed: () async {
+        final changed = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
+        );
+        if (changed == true) onChanged();
+      },
+    );
+    final workoutAction = _DashboardActionButton(
+      icon: workoutActive ? Icons.play_arrow_rounded : Icons.fitness_center,
+      title: workoutActive
+          ? AppLocalizations.of(context).dashboardResumeWorkout
+          : AppLocalizations.of(context).dashboardStartWorkout,
+      color: dashboardTrainingActionAccent,
+      onPressed: () async {
+        if (!workoutActive) {
+          final started = await activeSession.start();
+          if (!started) return;
+        }
+        if (!context.mounted) return;
+        await Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+        onChanged();
+      },
+    );
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: surfaces.dashboardSection,
+        color: destinationTokens?.surfaceSecondary ?? surfaces.dashboardSection,
         borderRadius: shapes.dashboardSection,
         border: Border.all(color: scheme.outlineVariant),
       ),
@@ -142,53 +196,38 @@ class DashboardQuickActions extends StatelessWidget {
           Text(
             AppLocalizations.of(context).dashboardQuickActions,
             style: theme.textTheme.titleMedium?.copyWith(
+              color: destinationTokens?.onSurfaceSecondary,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _DashboardActionButton(
-                  icon: Icons.add_chart_outlined,
-                  title: AppLocalizations.of(context).dashboardMeasurement,
-                  color: dashboardMeasurementActionAccent,
-                  onPressed: () async {
-                    final changed = await Navigator.of(context).push<bool>(
-                      MaterialPageRoute(
-                        builder: (_) => const MeasuredItemsPage(),
-                      ),
-                    );
-                    if (changed == true) onChanged();
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DashboardActionButton(
-                  icon:
-                      workoutActive
-                          ? Icons.play_arrow_rounded
-                          : Icons.fitness_center,
-                  title:
-                      workoutActive
-                          ? AppLocalizations.of(context).dashboardResumeWorkout
-                          : AppLocalizations.of(context).dashboardStartWorkout,
-                  color: dashboardTrainingActionAccent,
-                  onPressed: () async {
-                    if (!workoutActive) {
-                      final started = await activeSession.start();
-                      if (!started) return;
-                    }
-                    if (!context.mounted) return;
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SessionScreen()),
-                    );
-                    onChanged();
-                  },
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final expressiveDashboard =
+                  destinationTokens?.family ==
+                  AppExpressiveDestinationFamily.dashboard;
+              final textScale = MediaQuery.textScalerOf(context).scale(1);
+              final stackActions =
+                  expressiveDashboard &&
+                  (constraints.maxWidth < 300 || textScale >= 1.5);
+              if (stackActions) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    measurementAction,
+                    const SizedBox(height: 10),
+                    workoutAction,
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: measurementAction),
+                  const SizedBox(width: 10),
+                  Expanded(child: workoutAction),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -213,31 +252,42 @@ class _DashboardActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final shapes = context.shapeTokens;
-    return Material(
-      color: color.withValues(alpha: 0.13),
-      borderRadius: shapes.dashboardAction,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: shapes.dashboardAction,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+    final expressiveLargeText =
+        context.usesExpressivePresentation &&
+        MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final allowFullLabel =
+            expressiveLargeText ||
+            (context.usesExpressivePresentation && constraints.maxWidth < 180);
+        return Material(
+          color: color.withValues(alpha: 0.13),
+          borderRadius: shapes.dashboardAction,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: shapes.dashboardAction,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icon, color: color, size: 22),
+                  const SizedBox(height: 10),
+                  Text(
+                    title,
+                    maxLines: allowFullLabel ? null : 2,
+                    overflow: allowFullLabel ? null : TextOverflow.ellipsis,
+                    softWrap: true,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -306,9 +356,8 @@ class _DashboardRecentWorkoutsCardState
     final isToday =
         session.calendarDay == LocalCalendarDay.fromDateTime(DateTime.now());
     return isToday
-        ? AppLocalizations.of(
-          context,
-        ).dashboardTodayAt(LocalizedFormatters.time(date, locale))
+        ? AppLocalizations.of(context)
+              .dashboardTodayAt(LocalizedFormatters.time(date, locale))
         : LocalizedFormatters.weekdayShortDate(date, locale);
   }
 
@@ -325,10 +374,11 @@ class _DashboardRecentWorkoutsCardState
     final scheme = theme.colorScheme;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       decoration: BoxDecoration(
-        color: surfaces.dashboardSection,
+        color: destinationTokens?.surfaceTertiary ?? surfaces.dashboardSection,
         borderRadius: shapes.dashboardSection,
         border: Border.all(color: scheme.outlineVariant),
       ),
@@ -340,6 +390,7 @@ class _DashboardRecentWorkoutsCardState
                 child: Text(
                   AppLocalizations.of(context).dashboardRecentWorkouts,
                   style: theme.textTheme.titleMedium?.copyWith(
+                    color: destinationTokens?.onSurfaceTertiary,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -401,8 +452,8 @@ class _DashboardRecentWorkoutsCardState
                       onOpen: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder:
-                                (_) => SessionDetailScreen(sessions[index]),
+                            builder: (_) =>
+                                SessionDetailScreen(sessions[index]),
                           ),
                         );
                         widget.onChanged();
@@ -548,10 +599,9 @@ class _DashboardPlanCollectionCardState
     );
     if (!mounted) return;
     setState(
-      () =>
-          _activePlanIdsFuture = context.read<ActivePlanStore>().load(
-            profileId,
-          ),
+      () => _activePlanIdsFuture = context.read<ActivePlanStore>().load(
+        profileId,
+      ),
     );
     widget.onChanged();
   }
@@ -560,10 +610,9 @@ class _DashboardPlanCollectionCardState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
-    final title =
-        widget.archived
-            ? strings.dashboardArchivedPlans
-            : strings.dashboardActivePlans;
+    final title = widget.archived
+        ? strings.dashboardArchivedPlans
+        : strings.dashboardActivePlans;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -619,10 +668,9 @@ class _DashboardPlanCollectionCardState
                     revealBatchSize: 5,
                     padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
-                    emptyMessage:
-                        widget.archived
-                            ? strings.dashboardNoArchivedPlans
-                            : strings.dashboardNoActivePlans,
+                    emptyMessage: widget.archived
+                        ? strings.dashboardNoArchivedPlans
+                        : strings.dashboardNoActivePlans,
                     onRefresh: widget.onChanged,
                   ),
               ],
@@ -679,22 +727,20 @@ class DashboardPremadePlansCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
-                onPressed:
-                    profileId == null
-                        ? null
-                        : () async {
-                          final navigator = Navigator.of(context);
-                          await navigator.push(
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => PremadePlansPage(
-                                    profileId: profileId,
-                                    onPlanAdded: onChanged,
-                                  ),
+                onPressed: profileId == null
+                    ? null
+                    : () async {
+                        final navigator = Navigator.of(context);
+                        await navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => PremadePlansPage(
+                              profileId: profileId,
+                              onPlanAdded: onChanged,
                             ),
-                          );
-                          onChanged();
-                        },
+                          ),
+                        );
+                        onChanged();
+                      },
                 icon: const Icon(Icons.arrow_forward),
                 label: Text(strings.dashboardBrowsePremadePlans),
               ),
@@ -716,22 +762,18 @@ class DashboardPlanToolsCard extends StatelessWidget {
     final navigator = Navigator.of(context);
     await navigator.push(
       MaterialPageRoute(
-        builder:
-            (_) => MultiProvider(
-              providers: [
-                ChangeNotifierProvider<ActiveSession>.value(
-                  value: activeSession,
-                ),
-                ChangeNotifierProvider(
-                  create:
-                      (context) => PresetSession(
-                        presetId,
-                        repository: context.read<AppRepository>(),
-                      ),
-                ),
-              ],
-              child: const PresetDetailScreen(),
+        builder: (_) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider<ActiveSession>.value(value: activeSession),
+            ChangeNotifierProvider(
+              create: (context) => PresetSession(
+                presetId,
+                repository: context.read<AppRepository>(),
+              ),
             ),
+          ],
+          child: const PresetDetailScreen(),
+        ),
       ),
     );
     if (!context.mounted) return;
@@ -769,9 +811,8 @@ class DashboardPlanToolsCard extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          AppLocalizations.of(
-            context,
-          ).trainPlansGenerated(generatedPresetIds.length),
+          AppLocalizations.of(context)
+              .trainPlansGenerated(generatedPresetIds.length),
         ),
       ),
     );
@@ -792,10 +833,9 @@ class DashboardPlanToolsCard extends StatelessWidget {
     final repo = context.read<AppRepository>();
     final existing = await repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNumber = existing.length + 1;
-    final name =
-        nextNumber == 1
-            ? strings.dashboardNewPlanFirst
-            : strings.dashboardNewPlan(nextNumber);
+    final name = nextNumber == 1
+        ? strings.dashboardNewPlanFirst
+        : strings.dashboardNewPlan(nextNumber);
     await ActivePlanStore(repository: repo).load(profileId);
     final presetId = await repo.createPresetAtomic(
       name: name,
@@ -888,11 +928,10 @@ class _DashboardExerciseCatalogCardState
 
   Future<List<_DashboardExerciseUsage>> _loadUsage() async {
     final rows = await _repo.fetchMostUsedExerciseDefinitionsRaw(limit: 4);
-    final definitionIds =
-        rows
-            .map((row) => (row['definition_id'] as num?)?.toInt())
-            .whereType<int>()
-            .toList();
+    final definitionIds = rows
+        .map((row) => (row['definition_id'] as num?)?.toInt())
+        .whereType<int>()
+        .toList();
     final definitions = await _repo.lookupDefsDetailedByIds(definitionIds);
     final definitionsById = {
       for (final definition in definitions) definition.id: definition,
@@ -918,12 +957,9 @@ class _DashboardExerciseCatalogCardState
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const ExerciseCatalogPage(),
-                  ),
-                ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ExerciseCatalogPage()),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1069,39 +1105,33 @@ class _DashboardTargetAnatomyCardState
                       children: [
                         Expanded(
                           child: _DashboardFocusPane(
-                            title:
-                                AppLocalizations.of(context).dashboardBodyparts,
+                            title: AppLocalizations.of(context)
+                                .dashboardBodyparts,
                             items: usage?.bodyParts ?? const [],
                             emptyText: 'No bodypart history yet.',
                             localizeBuiltInBodyPartNames: true,
-                            onTap:
-                                () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => const MuscleFilterPage(
-                                          initialTabIndex: 0,
-                                        ),
-                                  ),
-                                ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MuscleFilterPage(initialTabIndex: 0),
+                              ),
+                            ),
                           ),
                         ),
                         const VerticalDivider(width: 25),
                         Expanded(
                           child: _DashboardFocusPane(
-                            title:
-                                AppLocalizations.of(context).dashboardMuscles,
+                            title: AppLocalizations.of(context)
+                                .dashboardMuscles,
                             items: usage?.muscles ?? const [],
                             emptyText: 'No muscle history yet.',
                             localizeBuiltInBodyPartNames: false,
-                            onTap:
-                                () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => const MuscleFilterPage(
-                                          initialTabIndex: 1,
-                                        ),
-                                  ),
-                                ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MuscleFilterPage(initialTabIndex: 1),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -1158,17 +1188,12 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
-    final usageForeground =
-        neo
-            ? tonosForegroundForSurface(context, surfaces.dashboardUsage)
-            : theme.colorScheme.onSurface;
-    final usageSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(
-              context,
-              surfaces.dashboardUsage,
-            )
-            : theme.colorScheme.onSurfaceVariant;
+    final usageForeground = neo
+        ? tonosForegroundForSurface(context, surfaces.dashboardUsage)
+        : theme.colorScheme.onSurface;
+    final usageSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, surfaces.dashboardUsage)
+        : theme.colorScheme.onSurfaceVariant;
     final equipment = usage.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -1203,20 +1228,19 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 LocalizedCatalogEntityNamesBuilder(
                   entities: equipment,
-                  builder:
-                      (context, names) => Text(
-                        strings.dashboardExerciseUsage(
-                          names.isEmpty
-                              ? strings.dashboardExerciseFallback
-                              : names.join(', '),
-                          usage.useCount,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: usageSecondary,
-                        ),
-                      ),
+                  builder: (context, names) => Text(
+                    strings.dashboardExerciseUsage(
+                      names.isEmpty
+                          ? strings.dashboardExerciseFallback
+                          : names.join(', '),
+                      usage.useCount,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: usageSecondary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1283,25 +1307,21 @@ class _DashboardFocusPane extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child:
-                            item.entity == null
-                                ? Text(
-                                  localizeBuiltInBodyPartNames
-                                      ? localizedBodyPartName(
-                                        context,
-                                        item.name,
-                                      )
-                                      : item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall,
-                                )
-                                : LocalizedCatalogEntityName(
-                                  entity: item.entity!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall,
-                                ),
+                        child: item.entity == null
+                            ? Text(
+                                localizeBuiltInBodyPartNames
+                                    ? localizedBodyPartName(context, item.name)
+                                    : item.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall,
+                              )
+                            : LocalizedCatalogEntityName(
+                                entity: item.entity!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall,
+                              ),
                       ),
                       const SizedBox(width: 5),
                       Text(

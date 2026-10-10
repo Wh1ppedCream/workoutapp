@@ -19,7 +19,12 @@ void main() {
     expect(rule?.status, 'migrated');
     expect(
       rule?.kinds,
-      unorderedEquals(<String>['decoration', 'geometry', 'shadow']),
+      unorderedEquals(<String>[
+        'color_transform',
+        'decoration',
+        'geometry',
+        'shadow',
+      ]),
     );
     expect(rule?.rationale, contains('dedicated AppShapeTokens fields'));
     expect(
@@ -33,11 +38,40 @@ void main() {
     );
     final findings =
         report.findings.where((finding) => finding.ruleId == rule!.id).toList();
-    expect(findings, hasLength(3));
+    expect(findings, hasLength(15));
     expect(
       findings.map((finding) => finding.kind),
-      unorderedEquals(<String>['decoration', 'geometry', 'shadow']),
+      unorderedEquals(<String>[
+        'color_transform',
+        'color_transform',
+        'color_transform',
+        'decoration',
+        'decoration',
+        'decoration',
+        'geometry',
+        'geometry',
+        'geometry',
+        'geometry',
+        'geometry',
+        'geometry',
+        'geometry',
+        'geometry',
+        'shadow',
+      ]),
     );
+    expect(
+      findings.where((finding) => finding.kind == 'color_transform'),
+      hasLength(3),
+    );
+    expect(
+      findings.where((finding) => finding.kind == 'decoration'),
+      hasLength(3),
+    );
+    expect(
+      findings.where((finding) => finding.kind == 'geometry'),
+      hasLength(8),
+    );
+    expect(findings.where((finding) => finding.kind == 'shadow'), hasLength(1));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
     expect(
       report.findings.where(

@@ -1028,6 +1028,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navEditorAlwaysShown => 'Always shown';
 
   @override
+  String get navEditorRequired => 'Required';
+
+  @override
   String get navEditorVisible => 'Visible in bottom navigation';
 
   @override
@@ -1998,16 +2001,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flowProfileDefaultTitle => 'Gym Default Progression';
 
   @override
-  String get flowPlanSubtitle =>
-      'Set how this plan progresses after each workout.';
+  String get flowPlanSubtitle => 'Progression flow for this plan.';
 
   @override
-  String get flowAppDefaultSubtitle =>
-      'Set the starting progression flow for new gym profiles.';
+  String get flowAppDefaultSubtitle => 'Default flow for new gym profiles.';
 
   @override
   String flowProfileDefaultSubtitle(String profileName) {
-    return 'Set the starting progression flow for new plans in $profileName.';
+    return 'Default flow for new plans in $profileName.';
   }
 
   @override
@@ -2057,7 +2058,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flowAddBranchSubtitle =>
-      'Choose where the next success or miss should lead.';
+      'Create success or miss paths from a node.';
 
   @override
   String get flowBranchFrom => 'Branch From';
@@ -2073,7 +2074,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get flowAttachActionSubtitle =>
-      'Apply one adjustment of each type to a flow node.';
+      'Assign progression adjustments to nodes.';
+
+  @override
+  String get flowFitToViewTooltip => 'Fit flow to view.';
+
+  @override
+  String get flowBranchSelectGuidance =>
+      'Select a source node to add a success or miss path.';
+
+  @override
+  String get flowBranchCompleteGuidance =>
+      'All nodes already have success and miss paths.';
+
+  @override
+  String get flowActionSelectNodeGuidance =>
+      'Select a node to configure its actions.';
+
+  @override
+  String get flowActionSelectMethodGuidance =>
+      'Choose a progression action for this node.';
+
+  @override
+  String get flowActionCreateMethodGuidance =>
+      'Add an action before assigning one to a node.';
+
+  @override
+  String get flowActionTypesUsedGuidance =>
+      'This node already uses every available action type.';
+
+  @override
+  String get flowActionRemoveDependenciesGuidance =>
+      'Remove branches and attached actions before deleting this node.';
+
+  @override
+  String get flowActionRootGuidance =>
+      'The first-attempt node cannot hold actions or be removed.';
 
   @override
   String get flowApplyActionTo => 'Apply action to';
@@ -2298,11 +2334,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set the paths that decide how progression actions are applied after workout results.';
 
   @override
+  String get flowPageSubtitleExpressive =>
+      'Configure how workout results trigger progression actions.';
+
+  @override
   String get flowHowCopiedTitle => 'How flows are copied';
 
   @override
   String get flowHowCopiedBody =>
       'App flows become the starting point for new gym profiles. Gym flows become the starting point for new plans. Later edits stay scoped to the flow you open here.';
+
+  @override
+  String get flowHowCopiedBodyExpressive =>
+      'New gym profiles start with app defaults, and new plans start with gym defaults. Changes to one flow don\'t affect the others.';
 
   @override
   String get flowLoadError => 'Workout progression flows could not be loaded.';
@@ -2326,6 +2370,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flowNoSavedYet => 'No saved flow yet';
 
   @override
+  String get flowTapToConfigure => 'Tap to configure';
+
+  @override
   String flowSummary(int nodes, int branches, int actions) {
     return '$nodes nodes | $branches branches | $actions actions';
   }
@@ -2333,6 +2380,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String flowPlansAvailable(int count) {
     return '$count plan flows available';
+  }
+
+  @override
+  String flowPlansAvailableExpressive(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans available',
+      one: '$count plan available',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2388,6 +2446,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gymExitAskBody => 'Ask before ending completed work.';
+
+  @override
+  String get gymExitAskExpressiveSubtitle =>
+      'Choose what happens when leaving an active workout.';
 
   @override
   String get gymExitDiscardBody => 'Cancel without saving completed work.';
@@ -3323,6 +3385,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialsHowItWorksBody =>
       'Tutorials appear once, then stay out of the way. Expand a group to reset a specific walkthrough.';
+
+  @override
+  String get tutorialsExpressiveControlsSubtitle =>
+      'Start fresh with your guided walkthroughs.';
+
+  @override
+  String get tutorialsExpressiveHowItWorksBody =>
+      'Tutorials appear automatically once. Expand a category to make an individual walkthrough available again.';
+
+  @override
+  String tutorialsExpressiveTitle(String topic) {
+    return '$topic tutorial';
+  }
+
+  @override
+  String tutorialsExpressiveShownNextTime(String topic) {
+    return 'Reset to replay when you next open $topic.';
+  }
 
   @override
   String get tutorialsMainTabsTitle => 'Main tabs';
@@ -6824,4 +6904,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String premadeOneHourDescription(String duration, String planName) {
     return '$duration version of $planName using the main movements from the full template.';
   }
+
+  @override
+  String get rulesPageSubtitleExpressive =>
+      'Create reusable rules for weight, rep, and set progression.';
+
+  @override
+  String get rulesHowDefaultsBodyExpressive =>
+      'New gym profiles start with app defaults, and new plans start with profile defaults. Later changes do not update existing profiles or plans automatically.';
+
+  @override
+  String get rulesRuleTypeLabel => 'Rule type';
+
+  @override
+  String get rulesOperationLabel => 'Operation';
+
+  @override
+  String rulesScopedRuleCountSemantics(String scope, int count) {
+    return '$scope, rule count: $count';
+  }
+
+  @override
+  String rulesCountSemantics(int count) {
+    return 'Rule count: $count';
+  }
+
+  @override
+  String rulesTotalCountSemantics(int count) {
+    return 'Total rules: $count';
+  }
+
+  @override
+  String rulesPlanCountSemantics(int count) {
+    return 'Plan count: $count';
+  }
+
+  @override
+  String get rulesProfileDefaultsSubtitleExpressive =>
+      'Default rules for new plans.';
+
+  @override
+  String get rulesPlanOnlySubtitleExpressive => 'Plan-specific rules.';
 }

@@ -22,6 +22,7 @@ class FocusedSetsList extends StatelessWidget {
   final String? emptyMessage;
   final FontWeight titleWeight;
   final ValueListenable<double>? expressiveProgressPhase;
+  final bool compact;
 
   const FocusedSetsList({
     super.key,
@@ -31,6 +32,7 @@ class FocusedSetsList extends StatelessWidget {
     this.emptyMessage,
     this.titleWeight = FontWeight.w700,
     this.expressiveProgressPhase,
+    this.compact = false,
   });
 
   @override
@@ -50,19 +52,33 @@ class FocusedSetsList extends StatelessWidget {
           title ?? strings.focusedSetsTitle,
           style: theme.textTheme.titleSmall?.copyWith(fontWeight: titleWeight),
         ),
-        SizedBox(height: expressiveProgressPhase == null ? 8 : 6),
+        SizedBox(
+          height: compact
+              ? 4
+              : expressiveProgressPhase == null
+              ? 8
+              : 6,
+        ),
         if (visibleHits.isEmpty && emptyMessage != null)
           Text(emptyMessage!, style: theme.textTheme.bodySmall)
         else
           for (final hit in visibleHits)
             Padding(
               padding: EdgeInsets.only(
-                bottom: expressiveProgressPhase == null ? 10 : 8,
+                bottom:
+                    (compact
+                        ? 4
+                        : expressiveProgressPhase == null
+                        ? 10
+                        : 8) -
+                    (hit.units == 0.0 ? 2 : 0),
               ),
               child: _FocusedSetRow(
                 hit: hit,
                 maxUnits: maxUnits,
                 expressiveProgressPhase: expressiveProgressPhase,
+                compact: compact,
+                zeroCount: hit.units == 0.0,
               ),
             ),
       ],
@@ -74,11 +90,15 @@ class _FocusedSetRow extends StatelessWidget {
   final FocusedSetHit hit;
   final double maxUnits;
   final ValueListenable<double>? expressiveProgressPhase;
+  final bool compact;
+  final bool zeroCount;
 
   const _FocusedSetRow({
     required this.hit,
     required this.maxUnits,
     required this.expressiveProgressPhase,
+    required this.compact,
+    required this.zeroCount,
   });
 
   @override
@@ -111,7 +131,7 @@ class _FocusedSetRow extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: (compact ? 2 : 4) - (zeroCount ? 1 : 0)),
         if (expressiveProgressPhase case final phase?)
           ExpressiveTrainFocusProgress(
             value: value,
@@ -122,7 +142,7 @@ class _FocusedSetRow extends StatelessWidget {
           ClipRRect(
             borderRadius: shapes.pill,
             child: LinearProgressIndicator(
-              minHeight: 6,
+              minHeight: compact ? 4 : 6,
               value: value.clamp(0.0, 1.0).toDouble(),
             ),
           ),

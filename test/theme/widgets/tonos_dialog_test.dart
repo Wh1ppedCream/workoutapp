@@ -3,42 +3,115 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 
 void main() {
+  testWidgets('choice dialog scrolls above compact keyboard insets at 2x', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 720));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const keyboardInset = 280.0;
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: keyboardInset * tester.view.devicePixelRatio,
+    );
+    addTearDown(tester.view.resetViewInsets);
+
+    String? result;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ExpressiveThemeDefinition.light(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                result = await showDialog<String>(
+                  context: context,
+                  builder: (_) => TonosChoiceDialog<String>(
+                    title: 'Choose an option',
+                    values: List<String>.generate(
+                      8,
+                      (index) => 'Option ${index + 1}',
+                    ),
+                    selected: 'Option 1',
+                    label: (value) => value,
+                    subtitle: (value) => 'Details for $value',
+                  ),
+                );
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    final dialog = find.byType(AlertDialog);
+    expect(dialog, findsOneWidget);
+    final dialogSurface = find.descendant(
+      of: dialog,
+      matching: find.byWidgetPredicate(
+        (widget) => widget is Material && widget.type == MaterialType.card,
+      ),
+    );
+    expect(dialogSurface, findsOneWidget);
+    final availableHeight = 720 - keyboardInset;
+    expect(
+      tester.getRect(dialogSurface).bottom,
+      lessThanOrEqualTo(availableHeight),
+    );
+
+    final finalOption = find.text('Option 8');
+    await tester.ensureVisible(finalOption);
+    await tester.pumpAndSettle();
+    expect(finalOption, findsOneWidget);
+    expect(
+      tester.getRect(finalOption).bottom,
+      lessThanOrEqualTo(availableHeight),
+    );
+    await tester.tap(finalOption);
+    await tester.pumpAndSettle();
+    expect(result, 'Option 8');
+    expect(tester.takeException(), isNull);
+  });
+
   for (final brightness in Brightness.values) {
     testWidgets('dialog shadow follows visible modal in $brightness', (
       tester,
     ) async {
-      final theme =
-          brightness == Brightness.dark
-              ? AppThemeFactory.dark(AppThemeFamily.neoBrutalism)
-              : AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+      final theme = brightness == Brightness.dark
+          ? AppThemeFactory.dark(AppThemeFamily.neoBrutalism)
+          : AppThemeFactory.light(AppThemeFamily.neoBrutalism);
       String? result;
       await tester.pumpWidget(
         MaterialApp(
           theme: theme,
           home: Scaffold(
             body: Builder(
-              builder:
-                  (context) => TextButton(
-                    onPressed: () async {
-                      result = await showDialog<String>(
-                        context: context,
-                        builder:
-                            (_) => TonosChoiceDialog<String>(
-                              title: 'Weight Units',
-                              values: const ['Pounds', 'Kilograms'],
-                              selected: 'Pounds',
-                              label: (value) => value,
-                              subtitle:
-                                  (value) => value == 'Pounds' ? 'lbs' : 'kg',
-                            ),
-                      );
-                    },
-                    child: const Text('Open'),
-                  ),
+              builder: (context) => TextButton(
+                onPressed: () async {
+                  result = await showDialog<String>(
+                    context: context,
+                    builder: (_) => TonosChoiceDialog<String>(
+                      title: 'Weight Units',
+                      values: const ['Pounds', 'Kilograms'],
+                      selected: 'Pounds',
+                      label: (value) => value,
+                      subtitle: (value) => value == 'Pounds' ? 'lbs' : 'kg',
+                    ),
+                  );
+                },
+                child: const Text('Open'),
+              ),
             ),
           ),
         ),
@@ -62,12 +135,9 @@ void main() {
         isTrue,
       );
       expect(shape.getOuterPath(rect).contains(rect.center), isTrue);
-      final choices =
-          tester
-              .widgetList<RadioListTile<String>>(
-                find.byType(RadioListTile<String>),
-              )
-              .toList();
+      final choices = tester
+          .widgetList<RadioListTile<String>>(find.byType(RadioListTile<String>))
+          .toList();
       expect(choices.first.tileColor, theme.colorScheme.primary);
       expect((choices.first.shape! as RoundedRectangleBorder).side.width, 3);
       expect((choices.last.shape! as RoundedRectangleBorder).side.width, 2);
@@ -141,8 +211,8 @@ void main() {
     expect(dialogTheme.canvasColor, dialogSurface);
     expect(dialogTheme.popupMenuTheme.color, dialogSurface);
     final dialogLuminance = dialogSurface.computeLuminance();
-    final foregroundLuminance =
-        dialogTheme.colorScheme.onSurface.computeLuminance();
+    final foregroundLuminance = dialogTheme.colorScheme.onSurface
+        .computeLuminance();
     expect(
       (dialogLuminance + 0.05) / (foregroundLuminance + 0.05),
       greaterThanOrEqualTo(4.5),
@@ -432,45 +502,40 @@ void main() {
       testWidgets(
         'dialog dropdown uses readable popup colors for $family $brightness',
         (tester) async {
-          final theme =
-              brightness == Brightness.dark
-                  ? AppThemeFactory.dark(family)
-                  : AppThemeFactory.light(family);
+          final theme = brightness == Brightness.dark
+              ? AppThemeFactory.dark(family)
+              : AppThemeFactory.light(family);
 
           await tester.pumpWidget(
             MaterialApp(
               theme: theme,
               home: Scaffold(
                 body: Builder(
-                  builder:
-                      (context) => TextButton(
-                        onPressed:
-                            () => showDialog<void>(
-                              context: context,
-                              builder:
-                                  (_) => TonosDialogFrame(
-                                    styleFormControls: true,
-                                    child: AlertDialog(
-                                      content:
-                                          TonosDialogDropdownButton<String>(
-                                            value: 'weight',
-                                            items: const [
-                                              DropdownMenuItem(
-                                                value: 'weight',
-                                                child: Text('Weight'),
-                                              ),
-                                              DropdownMenuItem(
-                                                value: 'reps',
-                                                child: Text('Reps'),
-                                              ),
-                                            ],
-                                            onChanged: (_) {},
-                                          ),
-                                    ),
-                                  ),
-                            ),
-                        child: const Text('Open'),
+                  builder: (context) => TextButton(
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => TonosDialogFrame(
+                        styleFormControls: true,
+                        child: AlertDialog(
+                          content: TonosDialogDropdownButton<String>(
+                            value: 'weight',
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'weight',
+                                child: Text('Weight'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'reps',
+                                child: Text('Reps'),
+                              ),
+                            ],
+                            onChanged: (_) {},
+                          ),
+                        ),
                       ),
+                    ),
+                    child: const Text('Open'),
+                  ),
                 ),
               ),
             ),
@@ -489,10 +554,9 @@ void main() {
           final dialogSurface =
               theme.dialogTheme.backgroundColor ??
               dialogContext.surfaceTokens.dialog;
-          final foreground =
-              usesOutlinedDialog
-                  ? tonosForegroundForSurface(dialogContext, dialogSurface)
-                  : null;
+          final foreground = usesOutlinedDialog
+              ? tonosForegroundForSurface(dialogContext, dialogSurface)
+              : null;
           final popupForeground =
               foreground ??
               Theme.of(dialogContext).textTheme.titleMedium?.color;

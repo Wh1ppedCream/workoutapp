@@ -55,8 +55,13 @@ void main() {
         entry.$2.actionSecondaryForeground,
       );
       expect(actual!.selectedSurface, entry.$2.selectedSurface);
+      expect(actual!.planAccent, entry.$2.planAccent);
+      expect(actual!.planAccentForeground, entry.$2.planAccentForeground);
       expect(actual!.outline, entry.$2.outline);
       expect(actual!.onPage, entry.$2.onPage);
+      expect(actual!.focalShape, entry.$2.focalShape);
+      expect(actual!.supportShape, entry.$2.supportShape);
+      expect(actual!.rowShape, entry.$2.rowShape);
     }
   });
 

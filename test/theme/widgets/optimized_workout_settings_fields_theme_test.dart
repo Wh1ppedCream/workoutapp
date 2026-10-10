@@ -9,6 +9,8 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
+import 'package:env_test/services/tutorial_state_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
@@ -182,7 +184,7 @@ void main() {
         }
         final cards = tester.widgetList<Card>(find.byType(Card)).toList();
         expect(cards, hasLength(2));
-        expect(cards[0].color, planning.configurationSurface);
+        expect(cards[0].color, planning.planFocalSurface);
         expect(cards[1].color, planning.planSupportSurface);
         expect(
           cards.every((card) => card.shape is RoundedRectangleBorder),
@@ -194,6 +196,30 @@ void main() {
         expect(firstChoice.selected, isTrue);
         expect(firstChoice.selectedColor, planning.selectedSurface);
         expect(find.byType(TonosFormField), findsNWidgets(4));
+        if (brightness == Brightness.light) {
+          final budgetCard = find.byType(Card).first;
+          final budgetFields = find.descendant(
+            of: budgetCard,
+            matching: find.byType(EditableText),
+          );
+          expect(budgetFields, findsNWidgets(3));
+          final fieldTheme = Theme.of(tester.element(budgetFields.first));
+          expect(
+            fieldTheme.inputDecorationTheme.labelStyle?.color,
+            planning.planFocalForeground,
+          );
+          expect(
+            fieldTheme.inputDecorationTheme.floatingLabelStyle?.color,
+            planning.planFocalForeground,
+          );
+          expect(
+            fieldTheme.inputDecorationTheme.suffixStyle?.color,
+            planning.planFocalForeground,
+          );
+          for (final field in tester.widgetList<EditableText>(budgetFields)) {
+            expect(field.style.color, planning.planFocalForeground);
+          }
+        }
 
         final focusHeading = find.text(strings.optimizedBodypartFocusTitle);
         await tester.drag(find.byType(ListView), const Offset(0, -2000));
@@ -201,7 +227,7 @@ void main() {
         final focusCard = tester.widget<Card>(
           find.ancestor(of: focusHeading, matching: find.byType(Card)).first,
         );
-        expect(focusCard.color, planning.equipmentSurface);
+        expect(focusCard.color, planning.configurationSurface);
         expect(focusCard.shape, isA<RoundedRectangleBorder>());
 
         await tester.tap(find.widgetWithText(FilledButton, strings.commonSave));
@@ -214,4 +240,100 @@ void main() {
       },
     );
   }
+
+  testWidgets('Optimized settings stay reachable responsively', (tester) async {
+    const layouts = <({Size size, double scale, double keyboardInset})>[
+      (size: Size(320, 900), scale: 2, keyboardInset: 300),
+      (size: Size(390, 844), scale: 1, keyboardInset: 0),
+      (size: Size(600, 1000), scale: 1.5, keyboardInset: 0),
+      (size: Size(800, 390), scale: 1.5, keyboardInset: 0),
+      (size: Size(1024, 768), scale: 2, keyboardInset: 0),
+    ];
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    addTearDown(tester.view.resetViewInsets);
+
+    for (final brightness in Brightness.values) {
+      final theme = brightness == Brightness.light
+          ? ExpressiveThemeDefinition.light()
+          : ExpressiveThemeDefinition.dark();
+      for (final layout in layouts) {
+        await tester.binding.setSurfaceSize(layout.size);
+        tester.view.viewInsets = FakeViewPadding();
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.optimizedWorkoutSettings}':
+              true,
+        });
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(layout.scale)),
+              child: child!,
+            ),
+            home: TickerMode(
+              enabled: false,
+              child: OptimizedWorkoutSettingsPage(
+                initialMinutes: 45,
+                initialMinSets: 2,
+                initialMaxSets: 4,
+                initialRepWeightMode: RepWeightGenerationMode.mixed,
+                initialTargetRepCount: 8,
+                initialStarterWeightIntensity: StarterWeightIntensity.medium,
+                initialPreferredBodypartIds: const <int>{},
+                initialBlacklistedBodypartIds: const <int>{},
+                bodyParts: const <BodyPart>[],
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 600));
+
+        final pageContext = tester.element(
+          find.byType(OptimizedWorkoutSettingsPage),
+        );
+        final strings = AppLocalizations.of(pageContext);
+        final durationField = find.byType(EditableText).first;
+        await tester.ensureVisible(durationField);
+        if (layout.keyboardInset > 0) {
+          await tester.showKeyboard(durationField);
+          tester.view.viewInsets = FakeViewPadding(
+            bottom: layout.keyboardInset * tester.view.devicePixelRatio,
+          );
+          await tester.pumpAndSettle();
+          await tester.ensureVisible(durationField);
+          await tester.enterText(durationField, '50');
+          await tester.pumpAndSettle();
+        }
+
+        final start = find.widgetWithText(FilledButton, strings.commonStartNow);
+        final save = find.widgetWithText(FilledButton, strings.commonSave);
+        expect(
+          start.hitTestable(),
+          findsOneWidget,
+          reason: '$brightness $layout',
+        );
+        expect(
+          save.hitTestable(),
+          findsOneWidget,
+          reason: '$brightness $layout',
+        );
+        expect(
+          tester.getRect(start).overlaps(tester.getRect(save)),
+          isFalse,
+          reason: '$brightness $layout',
+        );
+        expect(
+          tester.getRect(save).bottom,
+          lessThanOrEqualTo(layout.size.height - layout.keyboardInset),
+          reason: '$brightness $layout',
+        );
+        expect(tester.takeException(), isNull, reason: '$brightness $layout');
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    }
+  });
 }

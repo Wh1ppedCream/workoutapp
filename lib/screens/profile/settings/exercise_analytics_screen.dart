@@ -8,10 +8,13 @@ import '../../../repositories/app_repository.dart';
 import '../../../services/catalog_entity_localizer.dart';
 import '../../../services/safe_failure.dart';
 import '../../../theme/theme_extensions.dart';
+import '../../../theme/tokens/app_expressive_destination_tokens.dart';
+import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import '../../../widgets/localized_catalog_entity_name.dart';
 import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
+import 'analytics_destination_surfaces.dart';
 import '../../../utils/localized_body_part_name.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
@@ -159,16 +162,15 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       final allocation = await _repo.resolveExerciseAllocation(def.id);
       if (!mounted || _sel?.id != def.id) return;
       setState(() {
-        _muscleEntries =
-            def.muscles
-                .map(
-                  (ranked) => ExerciseMusclePercent(
-                    exerciseDefId: def.id,
-                    muscleId: ranked.muscle.id,
-                    percent: allocation.muscleCredits[ranked.muscle.id] ?? 0,
-                  ),
-                )
-                .toList();
+        _muscleEntries = def.muscles
+            .map(
+              (ranked) => ExerciseMusclePercent(
+                exerciseDefId: def.id,
+                muscleId: ranked.muscle.id,
+                percent: allocation.muscleCredits[ranked.muscle.id] ?? 0,
+              ),
+            )
+            .toList();
         _muscleSource = allocation.muscleSource;
         _replaceControllers(_muscleCreditControllers, allocation.muscleCredits);
       });
@@ -209,10 +211,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   }
 
   void _markCreditsDirty(ExerciseAllocationDimension dimension) {
-    final isDirty =
-        dimension == ExerciseAllocationDimension.muscle
-            ? _muscleCreditsDirty
-            : _bodyPartCreditsDirty;
+    final isDirty = dimension == ExerciseAllocationDimension.muscle
+        ? _muscleCreditsDirty
+        : _bodyPartCreditsDirty;
     if (isDirty) return;
 
     setState(() {
@@ -242,14 +243,12 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final def = _sel;
     if (def == null || !_hasPendingCreditChanges || _isSavingCredits) return;
 
-    final muscleCredits =
-        _muscleCreditsDirty
-            ? _creditsFromControllers(_muscleCreditControllers)
-            : null;
-    final bodyPartCredits =
-        _bodyPartCreditsDirty
-            ? _creditsFromControllers(_bodyPartCreditControllers)
-            : null;
+    final muscleCredits = _muscleCreditsDirty
+        ? _creditsFromControllers(_muscleCreditControllers)
+        : null;
+    final bodyPartCredits = _bodyPartCreditsDirty
+        ? _creditsFromControllers(_bodyPartCreditControllers)
+        : null;
     if ((_muscleCreditsDirty && muscleCredits == null) ||
         (_bodyPartCreditsDirty && bodyPartCredits == null)) {
       ScaffoldMessenger.of(
@@ -280,9 +279,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         _muscleCreditsDirty = false;
         _bodyPartCreditsDirty = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_strings.allocationSaved)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_strings.allocationSaved)));
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -316,21 +314,25 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final destination = analyticsDestinationTokens(context);
 
-    return Scaffold(
-      backgroundColor: scheme.surface,
-      floatingActionButton:
-          _hasPendingCreditChanges
-              ? FloatingActionButton.extended(
+    return AppExpressiveDestinationTheme(
+      family: AppExpressiveDestinationFamily.analytics,
+      child: Scaffold(
+        backgroundColor: destination?.pageCanvas ?? scheme.surface,
+        floatingActionButton: _hasPendingCreditChanges
+            ? FloatingActionButton.extended(
                 onPressed: _isSavingCredits ? null : _savePendingCredits,
-                backgroundColor: SettingsAccent.advanced,
+                backgroundColor:
+                    destination?.actionPrimary ?? SettingsAccent.advanced,
                 foregroundColor:
-                    context.usesNeoPresentation
+                    destination?.onActionPrimary ??
+                    (context.usesNeoPresentation
                         ? tonosForegroundForSurface(
-                          context,
-                          SettingsAccent.advanced,
-                        )
-                        : Colors.white,
+                            context,
+                            SettingsAccent.advanced,
+                          )
+                        : Colors.white),
                 icon: Icon(
                   _isSavingCredits ? Icons.hourglass_top : Icons.save_outlined,
                 ),
@@ -340,68 +342,68 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                       : strings.allocationSaveChanges,
                 ),
               )
-              : null,
-      body: SafeArea(
-        child: NestedScrollView(
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        tooltip: strings.commonBack,
-                        onPressed: () => Navigator.maybePop(context),
-                        icon: const Icon(Icons.arrow_back),
-                      ),
+            : null,
+        body: SafeArea(
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: strings.commonBack,
+                      onPressed: () => Navigator.maybePop(context),
+                      icon: const Icon(Icons.arrow_back),
                     ),
                   ),
                 ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AnalyticsRouteHeader(
+                    title: strings.allocationTitle,
+                    subtitle: strings.allocationSubtitle,
+                    icon: Icons.account_tree_outlined,
+                    accentColor: SettingsAccent.advanced,
+                  ),
+                ),
+              ),
+              if (!_isLoadingDefs &&
+                  _definitionsFailure == null &&
+                  _sel != null) ...[
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SettingsHeroCard(
-                      title: strings.allocationTitle,
-                      subtitle: strings.allocationSubtitle,
-                      icon: Icons.account_tree_outlined,
-                      accentColor: SettingsAccent.advanced,
+                    child: SettingsInfoCard(
+                      icon: Icons.info_outline,
+                      title: strings.allocationHowTitle,
+                      body: strings.allocationHowBody,
+                      iconColor: SettingsAccent.advanced,
                     ),
                   ),
                 ),
-                if (!_isLoadingDefs &&
-                    _definitionsFailure == null &&
-                    _sel != null) ...[
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: SettingsInfoCard(
-                        icon: Icons.info_outline,
-                        title: strings.allocationHowTitle,
-                        body: strings.allocationHowBody,
-                        iconColor: SettingsAccent.advanced,
-                      ),
-                    ),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildExercisePicker(context),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildExercisePicker(context),
-                    ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _AllocationTabBarDelegate(
+                    backgroundColor: destination?.pageCanvas ?? scheme.surface,
+                    child: _buildTabBar(context),
                   ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _AllocationTabBarDelegate(
-                      backgroundColor: scheme.surface,
-                      child: _buildTabBar(context),
-                    ),
-                  ),
-                ],
+                ),
               ],
-          body: _buildTabBody(context),
+            ],
+            body: _buildTabBody(context),
+          ),
         ),
       ),
     );
@@ -436,18 +438,22 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final pickerSurface =
-        neo
+        destination?.surfaceAccent ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final pickerForeground =
-        neo
+        destination?.onSurfaceAccent ??
+        (neo
             ? tonosForegroundForSurface(context, pickerSurface)
-            : scheme.onSurface;
+            : scheme.onSurface);
     final pickerSecondary =
-        neo
+        destination?.onSurfaceAccent.withValues(alpha: 0.78) ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, pickerSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
 
     return Material(
       color: pickerSurface,
@@ -460,10 +466,9 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
             color: pickerSurface,
             borderRadius: shapes.settingsPicker,
             border: Border.all(
-              color:
-                  neo
-                      ? tonosOutlineForSurface(context, pickerSurface)
-                      : SettingsAccent.advanced.withValues(alpha: 0.42),
+              color: neo
+                  ? tonosOutlineForSurface(context, pickerSurface)
+                  : SettingsAccent.advanced.withValues(alpha: 0.42),
               width: shapes.outlineWidth,
             ),
           ),
@@ -473,12 +478,16 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: SettingsAccent.advanced.withValues(alpha: 0.16),
+                  color:
+                      destination?.surfacePrimary ??
+                      SettingsAccent.advanced.withValues(alpha: 0.16),
                   borderRadius: shapes.settingsIcon,
                 ),
                 child: Icon(
                   Icons.fitness_center,
-                  color: neo ? pickerForeground : SettingsAccent.advanced,
+                  color:
+                      destination?.onSurfacePrimary ??
+                      (neo ? pickerForeground : SettingsAccent.advanced),
                   size: 21,
                 ),
               ),
@@ -520,28 +529,38 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final tabSurface =
-        neo
+        destination?.surfacePrimary ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final tabForeground =
-        neo ? tonosForegroundForSurface(context, tabSurface) : scheme.onSurface;
+        destination?.onSurfacePrimary ??
+        (neo
+            ? tonosForegroundForSurface(context, tabSurface)
+            : scheme.onSurface);
     final tabSecondary =
-        neo
+        destination?.onSurfacePrimary.withValues(alpha: 0.74) ??
+        (neo
             ? tonosSecondaryForegroundForSurface(context, tabSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurfaceVariant);
 
     return Container(
       decoration: BoxDecoration(
         color: tabSurface,
         borderRadius: shapes.profileTile,
-        border:
-            neo
-                ? Border.all(
-                  color: tonosOutlineForSurface(context, tabSurface),
-                  width: shapes.outlineWidth,
-                )
-                : null,
+        border: destination != null
+            ? Border.all(
+                color: destination.outlineAccent,
+                width: shapes.outlineWidth,
+              )
+            : neo
+            ? Border.all(
+                color: tonosOutlineForSurface(context, tabSurface),
+                width: shapes.outlineWidth,
+              )
+            : null,
       ),
       child: TabBar(
         controller: _tabController,
@@ -549,12 +568,15 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
         indicatorSize: TabBarIndicatorSize.tab,
         indicator: BoxDecoration(
           color:
-              neo
+              destination?.surfaceSecondary ??
+              (neo
                   ? surfaces.dialogChoice
-                  : SettingsAccent.advanced.withValues(alpha: 0.24),
+                  : SettingsAccent.advanced.withValues(alpha: 0.24)),
           borderRadius: shapes.settingsTabIndicator,
         ),
-        labelColor: neo ? tabForeground : SettingsAccent.advanced,
+        labelColor:
+            destination?.onSurfacePrimary ??
+            (neo ? tabForeground : SettingsAccent.advanced),
         unselectedLabelColor: tabSecondary,
         labelStyle: theme.textTheme.labelLarge?.copyWith(
           fontWeight: FontWeight.w900,
@@ -589,24 +611,22 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
             title: _strings.allocationMuscleCredit,
             body: _strings.allocationMuscleCreditBody,
             source: _muscleSource,
-            onReset:
-                _muscleSource == ExerciseAllocationSource.personalOverride
-                    ? () => _resetDimension(ExerciseAllocationDimension.muscle)
-                    : null,
+            onReset: _muscleSource == ExerciseAllocationSource.personalOverride
+                ? () => _resetDimension(ExerciseAllocationDimension.muscle)
+                : null,
           );
         }
 
         final entry = _muscleEntries[index - 1];
-        final muscle =
-            _sel!.muscles
-                .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
-                .muscle;
+        final muscle = _sel!.muscles
+            .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
+            .muscle;
         return _MuscleCreditCard(
           muscle: muscle,
           source: _muscleSource,
           controller: _muscleCreditControllers[entry.muscleId]!,
-          onChanged:
-              () => _markCreditsDirty(ExerciseAllocationDimension.muscle),
+          onChanged: () =>
+              _markCreditsDirty(ExerciseAllocationDimension.muscle),
           onSubmitted: _savePendingCredits,
         );
       },
@@ -626,9 +646,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       );
     }
 
-    final entries =
-        _bodyEntries.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
+    final entries = _bodyEntries.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
       itemCount: entries.length + 1,
@@ -640,9 +659,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
             source: _bodyPartSource,
             onReset:
                 _bodyPartSource == ExerciseAllocationSource.personalOverride
-                    ? () =>
-                        _resetDimension(ExerciseAllocationDimension.bodyPart)
-                    : null,
+                ? () => _resetDimension(ExerciseAllocationDimension.bodyPart)
+                : null,
           );
         }
 
@@ -651,8 +669,8 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
           bodyPart: entry.key,
           source: _bodyPartSource,
           controller: _bodyPartCreditControllers[entry.key.id]!,
-          onChanged:
-              () => _markCreditsDirty(ExerciseAllocationDimension.bodyPart),
+          onChanged: () =>
+              _markCreditsDirty(ExerciseAllocationDimension.bodyPart),
           onSubmitted: _savePendingCredits,
         );
       },
@@ -787,18 +805,20 @@ class _MuscleCreditCard extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final cardSurface =
-        neo
+        destination?.surfaceSecondary ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final cardForeground =
-        neo
+        destination?.onSurfaceSecondary ??
+        (neo
             ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
-    final cardSecondary =
-        neo
-            ? tonosSecondaryForegroundForSurface(context, cardSurface)
-            : scheme.onSurfaceVariant;
+            : scheme.onSurface);
+    final cardSecondary = neo
+        ? tonosSecondaryForegroundForSurface(context, cardSurface)
+        : scheme.onSurfaceVariant;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
@@ -806,18 +826,16 @@ class _MuscleCreditCard extends StatelessWidget {
         color: cardSurface,
         borderRadius: shapes.profileTile,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, cardSurface)
-                  : (source == ExerciseAllocationSource.personalOverride
-                          ? SettingsAccent.advanced
-                          : scheme.outlineVariant)
-                      .withValues(
-                        alpha:
-                            source == ExerciseAllocationSource.personalOverride
-                                ? 0.58
-                                : 0.56,
-                      ),
+          color: neo
+              ? tonosOutlineForSurface(context, cardSurface)
+              : (source == ExerciseAllocationSource.personalOverride
+                        ? SettingsAccent.advanced
+                        : scheme.outlineVariant)
+                    .withValues(
+                      alpha: source == ExerciseAllocationSource.personalOverride
+                          ? 0.58
+                          : 0.56,
+                    ),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -827,13 +845,15 @@ class _MuscleCreditCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: SettingsAccent.advanced.withValues(alpha: 0.14),
+              color:
+                  destination?.surfacePrimary ??
+                  SettingsAccent.advanced.withValues(alpha: 0.14),
               borderRadius: shapes.control,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.fitness_center,
               size: 19,
-              color: SettingsAccent.advanced,
+              color: destination?.onSurfacePrimary ?? SettingsAccent.advanced,
             ),
           ),
           const SizedBox(width: 12),
@@ -857,13 +877,11 @@ class _MuscleCreditCard extends StatelessWidget {
                 Text(
                   source.localizedLabel(AppLocalizations.of(context)),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color:
-                        neo
-                            ? cardSecondary
-                            : source ==
-                                ExerciseAllocationSource.personalOverride
-                            ? SettingsAccent.advanced
-                            : scheme.onSurfaceVariant,
+                    color: neo
+                        ? cardSecondary
+                        : source == ExerciseAllocationSource.personalOverride
+                        ? SettingsAccent.advanced
+                        : scheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -916,14 +934,17 @@ class _BodyPartCreditCard extends StatelessWidget {
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
+    final destination = analyticsDestinationTokens(context);
     final cardSurface =
-        neo
+        destination?.surfaceTertiary ??
+        (neo
             ? surfaces.settingsSection
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.34);
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.34));
     final cardForeground =
-        neo
+        destination?.onSurfaceTertiary ??
+        (neo
             ? tonosForegroundForSurface(context, cardSurface)
-            : scheme.onSurface;
+            : scheme.onSurface);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
@@ -931,10 +952,9 @@ class _BodyPartCreditCard extends StatelessWidget {
         color: cardSurface,
         borderRadius: shapes.profileTile,
         border: Border.all(
-          color:
-              neo
-                  ? tonosOutlineForSurface(context, cardSurface)
-                  : _sourceColor(source).withValues(alpha: 0.48),
+          color: neo
+              ? tonosOutlineForSurface(context, cardSurface)
+              : _sourceColor(source).withValues(alpha: 0.48),
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
@@ -944,13 +964,15 @@ class _BodyPartCreditCard extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: SettingsAccent.training.withValues(alpha: 0.14),
+              color:
+                  destination?.surfacePrimary ??
+                  SettingsAccent.training.withValues(alpha: 0.14),
               borderRadius: shapes.control,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.accessibility_new,
               size: 20,
-              color: SettingsAccent.training,
+              color: destination?.onSurfacePrimary ?? SettingsAccent.training,
             ),
           ),
           const SizedBox(width: 12),

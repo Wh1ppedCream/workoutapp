@@ -342,6 +342,7 @@
   "navEditorInactiveSubtitle": "Réactivez ces onglets lorsque vous souhaitez les retrouver.",
   "navEditorNoInactiveTabs": "Aucun onglet inactif.",
   "navEditorAlwaysShown": "Toujours affiché",
+  "navEditorRequired": "Obligatoire",
   "navEditorVisible": "Visible dans la navigation inférieure",
   "navEditorHidden": "Masqué de la navigation inférieure",
   "trainTutorialSpacesTitle": "Deux espaces d’entraînement",
@@ -796,9 +797,9 @@
   "flowMethodDeleteSet": "Supprimer une série",
   "flowAppDefaultTitle": "Progression par défaut de l’application",
   "flowProfileDefaultTitle": "Progression par défaut du profil de gym",
-  "flowPlanSubtitle": "Définissez comment ce plan progresse après chaque entraînement.",
-  "flowAppDefaultSubtitle": "Définissez le flux de progression initial pour les nouveaux profils de gym.",
-  "flowProfileDefaultSubtitle": "Définissez le flux de progression initial des nouveaux plans dans {profileName}.",
+  "flowPlanSubtitle": "Flux de progression de ce plan.",
+  "flowAppDefaultSubtitle": "Flux par défaut des nouveaux profils de gym.",
+  "flowProfileDefaultSubtitle": "Flux par défaut des nouveaux plans de {profileName}.",
   "@flowProfileDefaultSubtitle": {
     "placeholders": {
       "profileName": {"type": "String"}
@@ -819,12 +820,21 @@
   "flowMethodNameRequired": "Le nom de l’action ne peut pas être vide",
   "flowManageActionsTooltip": "Gérer les actions de progression",
   "flowAddBranchTitle": "Ajouter une branche",
-  "flowAddBranchSubtitle": "Choisissez où le prochain succès ou échec doit mener.",
+  "flowAddBranchSubtitle": "Créer des chemins de réussite ou d’échec depuis un nœud.",
   "flowBranchFrom": "Créer une branche depuis",
   "flowSuccess": "Succès",
   "flowMiss": "Échec",
   "flowAttachActionTitle": "Associer une action de progression",
-  "flowAttachActionSubtitle": "Appliquez un ajustement de chaque type à un nœud du flux.",
+  "flowAttachActionSubtitle": "Attribuer les ajustements de progression aux nœuds.",
+  "flowFitToViewTooltip": "Ajuster le flux à l’écran.",
+  "flowBranchSelectGuidance": "Choisissez un nœud source pour ajouter un chemin.",
+  "flowBranchCompleteGuidance": "Tous les nœuds ont déjà leurs chemins de réussite et d’échec.",
+  "flowActionSelectNodeGuidance": "Choisissez un nœud pour régler ses actions.",
+  "flowActionSelectMethodGuidance": "Choisissez une action de progression pour ce nœud.",
+  "flowActionCreateMethodGuidance": "Créez une action avant de l’attribuer à un nœud.",
+  "flowActionTypesUsedGuidance": "Ce nœud utilise déjà tous les types d’action disponibles.",
+  "flowActionRemoveDependenciesGuidance": "Retirez les branches et actions avant de supprimer ce nœud.",
+  "flowActionRootGuidance": "Le nœud de première tentative ne peut porter d’action ni être supprimé.",
   "flowApplyActionTo": "Appliquer l’action à",
   "flowProgressionAction": "Action de progression",
   "flowAddAction": "+ Action",
@@ -925,14 +935,17 @@
   "safeFailureWithGuidance": "{summary} {guidance}",
   "flowPageTitle": "Flux de progression des entraînements",
   "flowPageSubtitle": "Définissez les chemins qui déterminent comment les actions de progression sont appliquées après les résultats d’entraînement.",
+  "flowPageSubtitleExpressive": "Configurez comment les résultats d’entraînement déclenchent les actions de progression.",
   "flowHowCopiedTitle": "Copie des flux",
   "flowHowCopiedBody": "Les flux de l’application deviennent le point de départ des nouveaux profils de gym. Les flux du gym deviennent le point de départ des nouveaux plans. Les modifications ultérieures restent limitées au flux ouvert ici.",
+  "flowHowCopiedBodyExpressive": "Les nouveaux profils de gym reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du gym. Les modifications d’un flux n’affectent pas les autres.",
   "flowLoadError": "Impossible de charger les flux de progression des entraînements.",
   "flowAppDefaultsSubtitle": "Le flux initial des nouveaux profils de gym.",
   "flowAppDefaultEntry": "Flux par défaut de l’application",
   "flowGymProfilesSubtitle": "Chaque profil possède ses valeurs par défaut et ses propres flux de plan.",
   "flowNoProfiles": "Créez un profil de gym pour définir des flux de profil et de plan.",
   "flowNoSavedYet": "Aucun flux enregistré",
+  "flowTapToConfigure": "Touchez pour configurer",
   "flowSummary": "{nodes} nœuds | {branches} branches | {actions} actions",
   "@flowSummary": {
     "placeholders": {
@@ -942,6 +955,12 @@
     }
   },
   "flowPlansAvailable": "{count} flux de plan disponibles",
+  "flowPlansAvailableExpressive": "{count, plural, one{{count} plan disponible} other{{count} plans disponibles}}",
+  "@flowPlansAvailableExpressive": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "@flowPlansAvailable": {
     "placeholders": {
       "count": {"type": "int"}
@@ -963,6 +982,7 @@
   "gymExitDiscard": "Annuler l’entraînement",
   "gymExitSave": "Terminer et enregistrer",
   "gymExitAskBody": "Demander avant de terminer le travail effectué.",
+  "gymExitAskExpressiveSubtitle": "Choisissez ce qui se passe lorsque vous quittez un entraînement en cours.",
   "gymExitDiscardBody": "Annuler sans enregistrer le travail effectué.",
   "gymExitSaveBody": "Enregistrer le travail effectué dans le journal.",
   "commonAll": "Tous",
@@ -1358,6 +1378,20 @@
   "tutorialsResetAllMessage": "Tous les tutoriels ont \u00e9t\u00e9 r\u00e9initialis\u00e9s.",
   "tutorialsHowItWorksTitle": "Fonctionnement des tutoriels",
   "tutorialsHowItWorksBody": "Les tutoriels apparaissent une fois, puis ne vous encombrent plus. D\u00e9veloppez un groupe pour r\u00e9initialiser une visite pr\u00e9cise.",
+  "tutorialsExpressiveControlsSubtitle": "Repartez avec vos visites guidées.",
+  "tutorialsExpressiveHowItWorksBody": "Les tutoriels apparaissent automatiquement une fois. Développez une catégorie pour rendre une visite individuelle disponible à nouveau.",
+  "tutorialsExpressiveTitle": "Tutoriel {topic}",
+  "@tutorialsExpressiveTitle": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
+  "tutorialsExpressiveShownNextTime": "Réinitialisez pour revoir le tutoriel à la prochaine ouverture de {topic}.",
+  "@tutorialsExpressiveShownNextTime": {
+    "placeholders": {
+      "topic": {"type": "String"}
+    }
+  },
   "tutorialsMainTabsTitle": "Onglets principaux",
   "tutorialsMainTabsSubtitle": "Rejouez les visites guid\u00e9es de chaque zone principale.",
   "tutorialsWorkoutTitle": "Entra\u00eenement",
@@ -2492,5 +2526,36 @@
     }
   },
   "healthEntryActions": "Actions de l’entrée",
-  "premadeOneHourDescription": "Version de {duration} de {planName} avec les mouvements principaux du modèle complet."
+  "premadeOneHourDescription": "Version de {duration} de {planName} avec les mouvements principaux du modèle complet.",
+  "rulesPageSubtitleExpressive": "Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.",
+  "rulesHowDefaultsBodyExpressive": "Les nouveaux profils de gym reprennent les valeurs par défaut de l’application, et les nouveaux plans celles du profil. Les modifications ultérieures ne mettent pas automatiquement à jour les profils ni les plans existants.",
+  "rulesRuleTypeLabel": "Type de règle",
+  "rulesOperationLabel": "Opération",
+  "rulesScopedRuleCountSemantics": "{scope} : nombre de règles : {count}",
+  "@rulesScopedRuleCountSemantics": {
+    "description": "Accessible count label for a rule scope.",
+    "placeholders": {
+      "scope": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "rulesCountSemantics": "Nombre de règles : {count}",
+  "@rulesCountSemantics": {
+    "description": "Accessible label for a visible rule-count badge.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesTotalCountSemantics": "Total des règles : {count}",
+  "@rulesTotalCountSemantics": {
+    "description": "Accessible label for the total rules in a gym profile.",
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "rulesPlanCountSemantics": "Nombre de plans : {count}",
+  "@rulesPlanCountSemantics": {
+    "description": "Accessible count label for a plan heading.",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rulesProfileDefaultsSubtitleExpressive": "Règles par défaut des nouveaux plans.",
+  "rulesPlanOnlySubtitleExpressive": "Règles propres à ce plan."
 }
