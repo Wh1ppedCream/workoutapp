@@ -32,11 +32,13 @@ import 'definitions_by_muscle_page.dart';
 class DefinitionsByBodyPartPage extends StatefulWidget {
   final BodyPart bodyPart;
   final bool expressiveCatalogPresentation;
+  final bool expressiveAnalyticsPresentation;
 
   const DefinitionsByBodyPartPage({
     super.key,
     required this.bodyPart,
     this.expressiveCatalogPresentation = false,
+    this.expressiveAnalyticsPresentation = false,
   });
 
   @override
@@ -74,13 +76,11 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
     );
     final boundsFuture = _repo.fetchBodyPartVolumeBounds(widget.bodyPart.id);
 
-    final definitions =
-        (await definitionsFuture)
-            .where(
-              (def) =>
-                  def.bodyParts.any((part) => part.id == widget.bodyPart.id),
-            )
-            .toList();
+    final definitions = (await definitionsFuture)
+        .where(
+          (def) => def.bodyParts.any((part) => part.id == widget.bodyPart.id),
+        )
+        .toList();
     final muscles = await musclesFuture;
     final links = await linksFuture;
     final recentSets = await recentSetsFuture;
@@ -145,25 +145,41 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressiveFamily = widget.expressiveAnalyticsPresentation
+        ? AppExpressiveDestinationFamily.analytics
+        : widget.expressiveCatalogPresentation
+        ? AppExpressiveDestinationFamily.catalog
+        : null;
     final expressive =
-        widget.expressiveCatalogPresentation &&
-        context.usesExpressivePresentation;
-    final destinationTokens =
-        expressive
-            ? AppExpressiveDestinationTokens.forFamily(
-              AppExpressiveDestinationFamily.catalog,
-              Theme.of(context).brightness,
-            )
-            : null;
+        expressiveFamily != null && context.usesExpressivePresentation;
+    final expressiveCatalogDetail =
+        expressive &&
+        expressiveFamily == AppExpressiveDestinationFamily.catalog;
+    final destinationTokens = expressive
+        ? AppExpressiveDestinationTokens.forFamily(
+            expressiveFamily,
+            Theme.of(context).brightness,
+          )
+        : null;
     final page = Scaffold(
       backgroundColor: expressive ? destinationTokens?.pageCanvas : null,
       appBar: AppBar(
+        backgroundColor: expressiveCatalogDetail
+            ? destinationTokens?.pageCanvas
+            : null,
+        surfaceTintColor: expressiveCatalogDetail ? Colors.transparent : null,
+        scrolledUnderElevation: expressiveCatalogDetail ? 0 : null,
         title: Text(
-          strings.anatomyTargetExercises(
-            localizedBodyPartName(context, widget.bodyPart.name),
-          ),
+          expressiveCatalogDetail
+              ? localizedBodyPartName(context, widget.bodyPart.name)
+              : strings.anatomyTargetExercises(
+                  localizedBodyPartName(context, widget.bodyPart.name),
+                ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: expressiveCatalogDetail
+              ? Theme.of(context).textTheme.titleMedium
+              : null,
         ),
       ),
       body: FutureBuilder<_BodyPartPageData>(
@@ -191,6 +207,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                     bodyPart: widget.bodyPart,
                     data: data,
                     expressive: expressive,
+                    compactCatalogDetail: expressiveCatalogDetail,
                     onEditRecommended: () => _editRecommendedSets(data),
                     onMuscleTap: (muscle) {
                       Navigator.of(context).push(
@@ -199,14 +216,20 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                             final page = DefinitionsByMusclePage(
                               muscle: muscle,
                               sourceBodyPart: widget.bodyPart,
-                              expressiveCatalogPresentation: expressive,
+                              expressiveCatalogPresentation:
+                                  expressive &&
+                                  expressiveFamily ==
+                                      AppExpressiveDestinationFamily.catalog,
+                              expressiveAnalyticsPresentation:
+                                  expressive &&
+                                  expressiveFamily ==
+                                      AppExpressiveDestinationFamily.analytics,
                             );
                             return expressive
                                 ? AppExpressiveDestinationTheme(
-                                  family:
-                                      AppExpressiveDestinationFamily.catalog,
-                                  child: page,
-                                )
+                                    family: expressiveFamily,
+                                    child: page,
+                                  )
                                 : page;
                           },
                         ),
@@ -222,6 +245,8 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                 child: _ExerciseDefinitionTile(
                   definition: definition,
                   expressive: expressive,
+                  expressiveFamily: expressiveFamily,
+                  compactCatalogDetail: expressiveCatalogDetail,
                 ),
               );
             },
@@ -230,10 +255,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
       ),
     );
     return expressive
-        ? AppExpressiveDestinationTheme(
-          family: AppExpressiveDestinationFamily.catalog,
-          child: page,
-        )
+        ? AppExpressiveDestinationTheme(family: expressiveFamily, child: page)
         : page;
   }
 
@@ -275,6 +297,7 @@ class _BodyPartHeader extends StatelessWidget {
   final BodyPart bodyPart;
   final _BodyPartPageData data;
   final bool expressive;
+  final bool compactCatalogDetail;
   final VoidCallback onEditRecommended;
   final ValueChanged<Muscle> onMuscleTap;
 
@@ -282,6 +305,7 @@ class _BodyPartHeader extends StatelessWidget {
     required this.bodyPart,
     required this.data,
     required this.expressive,
+    required this.compactCatalogDetail,
     required this.onEditRecommended,
     required this.onMuscleTap,
   });
@@ -290,67 +314,101 @@ class _BodyPartHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final heroSurface = expressive && destinationTokens != null
+        ? compactCatalogDetail
+              ? theme.brightness == Brightness.dark
+                    ? const Color(0xFF30243E)
+                    : const Color(0xFFE9DDF1)
+              : destinationTokens.surfaceTertiary
+        : null;
+    final associatedChipSurface = compactCatalogDetail
+        ? Color.alphaBlend(
+            destinationTokens!.surfaceAccent.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.18 : 0.07,
+            ),
+            destinationTokens.pageCanvas,
+          )
+        : null;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: compactCatalogDetail
+          ? const EdgeInsets.fromLTRB(16, 8, 16, 8)
+          : const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TonosThemeReadyCard(
-            color:
-                expressive
-                    ? destinationTokens?.surfaceTertiary ??
-                        theme.colorScheme.surfaceContainerLow
-                    : null,
+            color: expressive
+                ? heroSurface ?? theme.colorScheme.surfaceContainerLow
+                : null,
             elevation: expressive ? 0 : null,
-            shape:
-                expressive
-                    ? const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(28),
-                        topRight: Radius.circular(12),
-                        bottomRight: Radius.circular(28),
-                        bottomLeft: Radius.circular(12),
-                      ),
-                    )
-                    : null,
+            shape: expressive
+                ? compactCatalogDetail
+                      ? const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(18)),
+                        )
+                      : const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(28),
+                            topRight: Radius.circular(12),
+                            bottomRight: Radius.circular(28),
+                            bottomLeft: Radius.circular(12),
+                          ),
+                        )
+                : null,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(compactCatalogDetail ? 14 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     localizedBodyPartName(context, bodyPart.name),
-                    maxLines: expressive ? 2 : 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color:
-                          expressive
-                              ? destinationTokens?.onSurfaceTertiary
-                              : null,
-                      fontWeight: expressive ? FontWeight.w700 : null,
-                    ),
+                    maxLines: expressive
+                        ? (compactCatalogDetail ? null : 2)
+                        : 1,
+                    overflow: expressive && compactCatalogDetail
+                        ? null
+                        : TextOverflow.ellipsis,
+                    style:
+                        (expressive
+                                ? compactCatalogDetail
+                                      ? theme.textTheme.titleMedium
+                                      : theme.textTheme.titleLarge
+                                : theme.textTheme.titleLarge)
+                            ?.copyWith(
+                              color: expressive
+                                  ? compactCatalogDetail
+                                        ? destinationTokens
+                                              ?.supportingForeground
+                                        : destinationTokens?.onSurfaceTertiary
+                                  : null,
+                              fontWeight: expressive ? FontWeight.w700 : null,
+                            ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppLocalizations.of(
-                      context,
-                    ).anatomyLinkedExerciseCount(data.definitions.length),
-                    style:
-                        expressive
-                            ? theme.textTheme.bodyMedium?.copyWith(
-                              color: destinationTokens?.onSurfaceTertiary,
-                            )
-                            : null,
+                    AppLocalizations.of(context)
+                        .anatomyLinkedExerciseCount(data.definitions.length),
+                    style: expressive
+                        ? theme.textTheme.bodyMedium?.copyWith(
+                            color: compactCatalogDetail
+                                ? destinationTokens?.supportingForeground
+                                : destinationTokens?.onSurfaceTertiary,
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: compactCatalogDetail ? 10 : 14),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final maxWidth = constraints.maxWidth;
-                      final gap = maxWidth < 330 ? 10.0 : 16.0;
-                      final heatmapBox =
-                          (maxWidth * 0.56).clamp(134.0, 178.0).toDouble();
-                      final heatmapSize =
-                          heatmapBox.clamp(128.0, 178.0).toDouble();
+                      final gap = compactCatalogDetail || maxWidth < 330
+                          ? 10.0
+                          : 16.0;
+                      final heatmapBox = compactCatalogDetail
+                          ? (maxWidth * 0.42).clamp(112.0, 144.0).toDouble()
+                          : (maxWidth * 0.56).clamp(134.0, 178.0).toDouble();
+                      final heatmapSize = compactCatalogDetail
+                          ? heatmapBox
+                          : heatmapBox.clamp(128.0, 178.0).toDouble();
 
                       final heatmap = SizedBox(
                         width: heatmapBox,
@@ -360,6 +418,10 @@ class _BodyPartHeader extends StatelessWidget {
                             bodyPartName: bodyPart.name,
                             size: heatmapSize,
                             padding: 2,
+                            lowColor: compactCatalogDetail &&
+                                    theme.brightness == Brightness.light
+                                ? const Color(0xFF888A93)
+                                : null,
                             backgroundColor: Colors.transparent,
                           ),
                         ),
@@ -378,6 +440,38 @@ class _BodyPartHeader extends StatelessWidget {
                         data.volumeBounds,
                         Localizations.localeOf(context),
                       );
+                      if (compactCatalogDetail) {
+                        final metrics = _BodyPartExpressiveMetricBays(
+                          recentLabel: strings.anatomyDoneSevenDaysCompact,
+                          recentValue: recentValue,
+                          recommendedLabel:
+                              strings.anatomyRecommendedWeeklyCompact,
+                          recommendedValue: recommendedValue,
+                          onEdit: onEditRecommended,
+                        );
+                        final availableMetricWidth =
+                            maxWidth - heatmapBox - gap;
+                        final stack =
+                            availableMetricWidth < 156 ||
+                            MediaQuery.textScalerOf(context).scale(16) > 22;
+                        if (stack) {
+                          return Column(
+                            children: [
+                              heatmap,
+                              const SizedBox(height: 12),
+                              metrics,
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            heatmap,
+                            SizedBox(width: gap),
+                            Expanded(child: metrics),
+                          ],
+                        );
+                      }
                       if (expressive) {
                         final metrics = _BodyPartExpressiveMetricBays(
                           recentLabel: strings.anatomyDoneLastSevenDays,
@@ -385,6 +479,7 @@ class _BodyPartHeader extends StatelessWidget {
                           recommendedLabel: strings.anatomyRecommended,
                           recommendedValue: recommendedValue,
                           onEdit: onEditRecommended,
+                          compactCatalogDetail: false,
                         );
                         final stack =
                             maxWidth < 380 ||
@@ -437,19 +532,18 @@ class _BodyPartHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: compactCatalogDetail ? 10 : 16),
           Text(
             AppLocalizations.of(context).anatomyAssociatedMuscles,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: expressive ? FontWeight.w700 : null,
-              color:
-                  expressive
-                      ? destinationTokens?.actionPrimary ??
-                          theme.colorScheme.primary
-                      : null,
+              color: expressive
+                  ? destinationTokens?.actionPrimary ??
+                        theme.colorScheme.primary
+                  : null,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: compactCatalogDetail ? 4 : 8),
           if (data.muscles.isEmpty)
             Text(
               AppLocalizations.of(context).anatomyNoMuscleLinks,
@@ -457,36 +551,54 @@ class _BodyPartHeader extends StatelessWidget {
             )
           else
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  data.muscles
-                      .map(
-                        (muscle) => ActionChip(
-                          label: LocalizedCatalogEntityName(
-                            entity: CatalogEntityDisplayName(
-                              catalogId: muscle.catalogId,
-                              canonicalName: muscle.name,
-                            ),
-                            maxLines: expressive ? null : 1,
-                            overflow: expressive ? null : TextOverflow.ellipsis,
-                          ),
-                          avatar: const Icon(Icons.fitness_center, size: 18),
-                          onPressed: () => onMuscleTap(muscle),
+              spacing: compactCatalogDetail ? 6 : 8,
+              runSpacing: compactCatalogDetail ? 2 : 8,
+              children: data.muscles
+                  .map(
+                    (muscle) => ActionChip(
+                      backgroundColor: compactCatalogDetail
+                          ? associatedChipSurface
+                          : null,
+                      side: compactCatalogDetail
+                          ? BorderSide(
+                              color: theme.colorScheme.outlineVariant
+                                  .withValues(alpha: 0.55),
+                            )
+                          : null,
+                      labelPadding: compactCatalogDetail
+                          ? const EdgeInsets.symmetric(horizontal: 6)
+                          : null,
+                      labelStyle: compactCatalogDetail
+                          ? theme.textTheme.labelMedium?.copyWith(
+                              color: destinationTokens?.supportingForeground,
+                            )
+                          : null,
+                      label: LocalizedCatalogEntityName(
+                        entity: CatalogEntityDisplayName(
+                          catalogId: muscle.catalogId,
+                          canonicalName: muscle.name,
                         ),
-                      )
-                      .toList(),
+                        maxLines: expressive ? null : 1,
+                        overflow: expressive ? null : TextOverflow.ellipsis,
+                      ),
+                      avatar: Icon(
+                        Icons.fitness_center,
+                        size: compactCatalogDetail ? 16 : 18,
+                      ),
+                      onPressed: () => onMuscleTap(muscle),
+                    ),
+                  )
+                  .toList(),
             ),
-          const Divider(height: 32),
+          Divider(height: compactCatalogDetail ? 16 : 32),
           Text(
             AppLocalizations.of(context).anatomyExercises,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: expressive ? FontWeight.w700 : null,
-              color:
-                  expressive
-                      ? destinationTokens?.actionPrimary ??
-                          theme.colorScheme.primary
-                      : null,
+              color: expressive
+                  ? destinationTokens?.actionPrimary ??
+                        theme.colorScheme.primary
+                  : null,
             ),
           ),
           if (data.definitions.isEmpty) ...[
@@ -529,6 +641,7 @@ class _BodyPartExpressiveMetricBays extends StatelessWidget {
     required this.recommendedLabel,
     required this.recommendedValue,
     required this.onEdit,
+    this.compactCatalogDetail = true,
   });
 
   final String recentLabel;
@@ -536,40 +649,44 @@ class _BodyPartExpressiveMetricBays extends StatelessWidget {
   final String recommendedLabel;
   final String recommendedValue;
   final VoidCallback onEdit;
+  final bool compactCatalogDetail;
 
   @override
   Widget build(BuildContext context) {
-    final tokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
-    final stacked = MediaQuery.textScalerOf(context).scale(16) > 19;
-    final first = _BodyPartExpressiveMetricBay(
-      label: recentLabel,
-      value: recentValue,
-    );
-    final second = _BodyPartExpressiveMetricBay(
-      label: recommendedLabel,
-      value: recommendedValue,
-      onEdit: onEdit,
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useStacked = stacked || constraints.maxWidth < 310;
-        return Container(
-          decoration: BoxDecoration(
-            color: tokens.surfaceSelected,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(18),
-              topRight: Radius.circular(8),
-              bottomRight: Radius.circular(18),
-              bottomLeft: Radius.circular(8),
+    if (!compactCatalogDetail) {
+      final tokens = Theme.of(context)
+          .extension<AppExpressiveDestinationTokens>()!;
+      final first = _BodyPartExpressiveMetricBay(
+        label: recentLabel,
+        value: recentValue,
+        compactCatalogDetail: false,
+      );
+      final second = _BodyPartExpressiveMetricBay(
+        label: recommendedLabel,
+        value: recommendedValue,
+        onEdit: onEdit,
+        compactCatalogDetail: false,
+      );
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked =
+              MediaQuery.textScalerOf(context).scale(16) > 19 ||
+              constraints.maxWidth < 310;
+          return Container(
+            decoration: BoxDecoration(
+              color: tokens.surfaceSelected,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(18),
+                bottomLeft: Radius.circular(8),
+              ),
+              border: Border.all(
+                color: tokens.outlineAccent.withValues(alpha: 0.35),
+              ),
             ),
-            border: Border.all(
-              color: tokens.outlineAccent.withValues(alpha: 0.35),
-            ),
-          ),
-          child:
-              useStacked
-                  ? Column(
+            child: stacked
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       first,
@@ -581,7 +698,7 @@ class _BodyPartExpressiveMetricBays extends StatelessWidget {
                       second,
                     ],
                   )
-                  : Row(
+                : Row(
                     children: [
                       Expanded(child: first),
                       Container(
@@ -592,8 +709,21 @@ class _BodyPartExpressiveMetricBays extends StatelessWidget {
                       Expanded(child: second),
                     ],
                   ),
-        );
-      },
+          );
+        },
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BodyPartExpressiveMetricBay(label: recentLabel, value: recentValue),
+        const SizedBox(height: 6),
+        _BodyPartExpressiveMetricBay(
+          label: recommendedLabel,
+          value: recommendedValue,
+          onEdit: onEdit,
+        ),
+      ],
     );
   }
 }
@@ -603,53 +733,120 @@ class _BodyPartExpressiveMetricBay extends StatelessWidget {
     required this.label,
     required this.value,
     this.onEdit,
+    this.compactCatalogDetail = true,
   });
 
   final String label;
   final String value;
   final VoidCallback? onEdit;
+  final bool compactCatalogDetail;
 
   @override
   Widget build(BuildContext context) {
-    final tokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+    if (!compactCatalogDetail) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              maxLines: 2,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: tokens.onSurfaceSelected,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    maxLines: 2,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: tokens.onSurfaceSelected,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (onEdit != null)
+                  IconTheme.merge(
+                    data: IconThemeData(color: tokens.onSurfaceSelected),
+                    child: RecommendedSetsEditButton(onPressed: onEdit!),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+    final heroSurface = theme.brightness == Brightness.dark
+        ? const Color(0xFF30243E)
+        : const Color(0xFFE9DDF1);
+    final surface = Color.alphaBlend(
+      tokens.surfaceSelected.withValues(
+        alpha: theme.brightness == Brightness.dark ? 0.22 : 0.30,
+      ),
+      heroSurface,
+    );
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            maxLines: 2,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: tokens.onSurfaceSelected),
-          ),
-          const SizedBox(height: 4),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
-                  value,
-                  maxLines: 2,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: tokens.onSurfaceSelected,
-                    fontWeight: FontWeight.w700,
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: tokens.supportingForeground,
                   ),
                 ),
               ),
               if (onEdit != null) ...[
                 const SizedBox(width: 4),
-                IconTheme.merge(
-                  data: IconThemeData(color: tokens.onSurfaceSelected),
-                  child: RecommendedSetsEditButton(onPressed: onEdit!),
+                Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: tokens.actionPrimary,
                 ),
               ],
             ],
           ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: tokens.supportingForeground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
+    );
+    return Material(
+      color: surface,
+      borderRadius: BorderRadius.circular(14),
+      child: onEdit == null
+          ? content
+          : Semantics(
+              button: true,
+              label: AppLocalizations.of(context).recommendedSetsEdit,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: onEdit,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: content,
+                ),
+              ),
+            ),
     );
   }
 }
@@ -657,10 +854,14 @@ class _BodyPartExpressiveMetricBay extends StatelessWidget {
 class _ExerciseDefinitionTile extends StatelessWidget {
   final ExerciseDefinition definition;
   final bool expressive;
+  final AppExpressiveDestinationFamily? expressiveFamily;
+  final bool compactCatalogDetail;
 
   const _ExerciseDefinitionTile({
     required this.definition,
     required this.expressive,
+    required this.expressiveFamily,
+    required this.compactCatalogDetail,
   });
 
   @override
@@ -670,8 +871,10 @@ class _ExerciseDefinitionTile extends StatelessWidget {
       subtitle: _ExerciseMetadata(
         definition: definition,
         expressive: expressive,
+        compactCatalogDetail: compactCatalogDetail,
       ),
-      expressiveCatalogPresentation: expressive,
+      expressiveDestinationFamily: expressive ? expressiveFamily : null,
+      compactExpressivePresentation: compactCatalogDetail,
     );
   }
 }
@@ -679,14 +882,45 @@ class _ExerciseDefinitionTile extends StatelessWidget {
 class _ExerciseMetadata extends StatelessWidget {
   final ExerciseDefinition definition;
   final bool expressive;
+  final bool compactCatalogDetail;
 
-  const _ExerciseMetadata({required this.definition, required this.expressive});
+  const _ExerciseMetadata({
+    required this.definition,
+    required this.expressive,
+    required this.compactCatalogDetail,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final destinationTokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>();
+    final destinationTokens = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    final theme = Theme.of(context);
+    final equipmentStyle = compactCatalogDetail
+        ? theme.textTheme.bodySmall?.copyWith(
+            color: destinationTokens?.supportingForeground,
+          )
+        : TextStyle(
+            color: expressive
+                ? destinationTokens?.actionPrimary
+                : colors.primary,
+            fontWeight: FontWeight.w600,
+          );
+    final muscleStyle = compactCatalogDetail
+        ? theme.textTheme.labelSmall?.copyWith(
+            color: destinationTokens?.supportingForeground,
+          )
+        : expressive
+        ? TextStyle(
+            color: destinationTokens?.supportingForeground,
+            fontWeight: FontWeight.w500,
+          )
+        : TextStyle(
+            color: context.usesNeoPresentation
+                ? context.semanticColors.positive
+                : Colors.green.shade600,
+            fontWeight: FontWeight.w500,
+          );
     final equipmentEntities = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -696,82 +930,66 @@ class _ExerciseMetadata extends StatelessWidget {
           ),
         )
         .toList(growable: false);
-    final equipmentLabel =
-        equipmentEntities.isEmpty
-            ? Text(
-              AppLocalizations.of(context).anatomyNoEquipment,
-              maxLines: expressive ? null : 1,
-              overflow: expressive ? null : TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    expressive
-                        ? destinationTokens?.actionPrimary
-                        : colors.primary,
-                fontWeight: FontWeight.w600,
+    final equipmentLabel = equipmentEntities.isEmpty
+        ? Text(
+            AppLocalizations.of(context).anatomyNoEquipment,
+            maxLines: compactCatalogDetail ? 1 : null,
+            overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
+            style: equipmentStyle,
+          )
+        : LocalizedCatalogEntityNamesBuilder(
+            entities: equipmentEntities,
+            builder: (context, names) {
+              final text = Text(
+                names.join(', '),
+                maxLines: compactCatalogDetail ? 1 : null,
+                overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
+                style: equipmentStyle,
+              );
+              return compactCatalogDetail
+                  ? Tooltip(message: names.join(', '), child: text)
+                  : text;
+            },
+          );
+    final muscleEntities =
+        (compactCatalogDetail ? definition.muscles : definition.muscles.take(3))
+            .map(
+              (ranked) => CatalogEntityDisplayName(
+                catalogId: ranked.muscle.catalogId,
+                canonicalName: ranked.muscle.name,
               ),
             )
-            : LocalizedCatalogEntityNamesBuilder(
-              entities: equipmentEntities,
-              builder:
-                  (context, names) => Text(
-                    names.join(', '),
-                    maxLines: expressive ? null : 1,
-                    overflow: expressive ? null : TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color:
-                          expressive
-                              ? destinationTokens?.actionPrimary
-                              : colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-            );
-    final muscleEntities = definition.muscles
-        .take(3)
-        .map(
-          (ranked) => CatalogEntityDisplayName(
-            catalogId: ranked.muscle.catalogId,
-            canonicalName: ranked.muscle.name,
-          ),
-        )
-        .toList(growable: false);
-    final muscleLabel =
-        muscleEntities.isEmpty
-            ? Text(
-              AppLocalizations.of(context).anatomyNoMusclesListed,
-              maxLines: expressive ? null : 1,
-              overflow: expressive ? null : TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    expressive
-                        ? destinationTokens?.supportingForeground
-                        : context.usesNeoPresentation
-                        ? context.semanticColors.positive
-                        : Colors.green.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            )
-            : LocalizedCatalogEntityNamesBuilder(
-              entities: muscleEntities,
-              builder:
-                  (context, names) => Text(
-                    names.join(', '),
-                    maxLines: expressive ? null : 1,
-                    overflow: expressive ? null : TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color:
-                          expressive
-                              ? destinationTokens?.supportingForeground
-                              : context.usesNeoPresentation
-                              ? context.semanticColors.positive
-                              : Colors.green.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-            );
+            .toList(growable: false);
+    final muscleLabel = muscleEntities.isEmpty
+        ? Text(
+            AppLocalizations.of(context).anatomyNoMusclesListed,
+            maxLines: compactCatalogDetail
+                ? 1
+                : expressive
+                ? null
+                : 1,
+            overflow: compactCatalogDetail || !expressive
+                ? TextOverflow.ellipsis
+                : null,
+            style: muscleStyle,
+          )
+        : LocalizedCatalogEntityNamesBuilder(
+            entities: muscleEntities,
+            builder: (context, names) {
+              final text = Text(
+                names.join(', '),
+                maxLines: compactCatalogDetail ? 2 : null,
+                overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
+                style: muscleStyle,
+              );
+              return compactCatalogDetail
+                  ? Tooltip(message: names.join(', '), child: text)
+                  : text;
+            },
+          );
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: EdgeInsets.only(top: compactCatalogDetail ? 2 : 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [equipmentLabel, const SizedBox(height: 3), muscleLabel],

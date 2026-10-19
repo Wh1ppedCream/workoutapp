@@ -228,13 +228,22 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
   }
 
   void _openExercisePicker() {
+    final expressive = context.usesExpressivePresentation;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ExerciseCatalogPage(
-          onExercisePicked: (definition) {
-            unawaited(_addExerciseTile(definition));
-          },
-        ),
+        builder: (_) {
+          final page = ExerciseCatalogPage(
+            expressiveCatalogPresentation: expressive,
+            onExercisePicked: (definition) {
+              unawaited(_addExerciseTile(definition));
+            },
+          );
+          if (!expressive) return page;
+          return AppExpressiveDestinationTheme(
+            family: AppExpressiveDestinationFamily.catalog,
+            child: page,
+          );
+        },
       ),
     );
   }

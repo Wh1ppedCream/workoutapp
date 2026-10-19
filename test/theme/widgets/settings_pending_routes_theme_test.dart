@@ -11,14 +11,18 @@ import 'package:env_test/screens/profile/settings/exercise_editor_screen.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_support.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,10 +31,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Exercise Editor retains route and field ownership', (
@@ -189,19 +192,14 @@ void main() {
         final usesOutlinedPanels =
             editorContext.surfaceDecorationTokens.panel.outlined;
         final themeData = Theme.of(editorContext);
-        final tabSurface =
-            usesOutlinedPanels
-                ? surfaces.settingsSection
-                : themeData.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.34,
-                );
-        final headerForeground =
-            usesOutlinedPanels
-                ? tonosForegroundForSurface(
-                  editorContext,
-                  surfaces.settingsSection,
-                )
-                : themeData.colorScheme.onSurface;
+        final tabSurface = usesOutlinedPanels
+            ? surfaces.settingsSection
+            : themeData.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.34,
+              );
+        final headerForeground = usesOutlinedPanels
+            ? tonosForegroundForSurface(editorContext, surfaces.settingsSection)
+            : themeData.colorScheme.onSurface;
         final tabBar = tester.widget<TabBar>(find.byType(TabBar));
         expect(tabBar.controller?.index, 0);
         expect(tabBar.indicatorSize, TabBarIndicatorSize.tab);
@@ -221,9 +219,9 @@ void main() {
           tabBar.labelColor,
           usesOutlinedPanels
               ? tonosForegroundForSurface(
-                editorContext,
-                surfaces.settingsSection,
-              )
+                  editorContext,
+                  surfaces.settingsSection,
+                )
               : SettingsAccent.advanced,
         );
         expect(
@@ -236,9 +234,9 @@ void main() {
           tabBar.unselectedLabelColor,
           usesOutlinedPanels
               ? tonosSecondaryForegroundForSurface(
-                editorContext,
-                surfaces.settingsSection,
-              )
+                  editorContext,
+                  surfaces.settingsSection,
+                )
               : editorContext.cs.onSurfaceVariant,
         );
         expect(
@@ -275,10 +273,15 @@ void main() {
         );
 
         final tabSurfaceContainer = tester.widget<Container>(
-          find.byWidgetPredicate((widget) {
-            if (widget is! Container || widget.child is! TabBar) return false;
-            return widget.decoration is BoxDecoration;
-          }),
+          find
+              .ancestor(
+                of: find.byType(TabBar),
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Container && widget.decoration is BoxDecoration,
+                ),
+              )
+              .first,
         );
         final tabSurfaceDecoration =
             tabSurfaceContainer.decoration! as BoxDecoration;
@@ -371,12 +374,7 @@ void main() {
         );
         expect((muscleBadge.child! as Text).style?.fontWeight, FontWeight.w900);
 
-        await tester.tap(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Tab && widget.text == strings.exerciseEditorBodyparts,
-          ),
-        );
+        await tester.tap(find.text(strings.exerciseEditorBodyparts));
         await tester.pumpAndSettle();
         final bodyPartBadge = tester.widget<Container>(
           find.byWidgetPredicate((widget) {
@@ -394,12 +392,7 @@ void main() {
           SettingsAccent.training.withValues(alpha: 0.14),
         );
 
-        await tester.tap(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is Tab && widget.text == strings.exerciseEditorEquipment,
-          ),
-        );
+        await tester.tap(find.text(strings.exerciseEditorEquipment));
         await tester.pumpAndSettle();
         final equipmentBadge = tester.widget<Container>(
           find.byWidgetPredicate((widget) {
@@ -624,15 +617,11 @@ void main() {
           return children.whereType<Divider>().length == 5;
         });
         expect(healthCard, findsOneWidget);
-        final healthDividers =
-            tester
-                .widgetList<Divider>(
-                  find.descendant(
-                    of: healthCard,
-                    matching: find.byType(Divider),
-                  ),
-                )
-                .toList();
+        final healthDividers = tester
+            .widgetList<Divider>(
+              find.descendant(of: healthCard, matching: find.byType(Divider)),
+            )
+            .toList();
         expect(healthDividers, hasLength(5));
         expect(
           healthDividers.every(
@@ -644,6 +633,358 @@ void main() {
         expect(tester.takeException(), isNull, reason: mode);
       });
     }
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive ${brightness.name} Exercise Editor uses identity surfaces and labeled actions',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(390, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.exerciseCatalog}': true,
+        });
+        final repository = _SettingsRoutesRepository();
+        final selectedProfile = SelectedProfile(repository: repository);
+        addTearDown(selectedProfile.dispose);
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<SelectedProfile>.value(
+                value: selectedProfile,
+              ),
+            ],
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const ExerciseEditorScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(ExerciseEditorScreen)),
+        );
+        final teal = brightness == Brightness.dark
+            ? const Color(0xFF183F3C)
+            : const Color(0xFF164F49);
+        final heroShape = const BorderRadius.only(
+          topLeft: Radius.circular(26),
+          topRight: Radius.circular(12),
+          bottomLeft: Radius.circular(12),
+          bottomRight: Radius.circular(26),
+        );
+        final hero = find.byWidgetPredicate(
+          (widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration! as BoxDecoration).color == teal &&
+              (widget.decoration! as BoxDecoration).borderRadius == heroShape,
+        );
+        expect(hero, findsOneWidget);
+        final chooseCatalog = find.widgetWithText(
+          FilledButton,
+          strings.exerciseEditorChooseCatalog,
+        );
+        expect(chooseCatalog, findsOneWidget);
+        expect(
+          find.widgetWithText(
+            OutlinedButton,
+            strings.exerciseEditorCreateCustomTitle,
+          ),
+          findsOneWidget,
+        );
+        expect(tester.widget<AppBar>(find.byType(AppBar)).actions, isEmpty);
+
+        await tester.tap(chooseCatalog);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump();
+        expect(find.byType(ExerciseCatalogPage), findsOneWidget);
+        await tester.tap(find.text(repository.definition.name));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump();
+        final add = findTonosTooltip(strings.commonAdd);
+        expect(add, findsOneWidget);
+        await tester.tap(add);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump();
+
+        final selectedExerciseName = find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data == repository.definition.name &&
+              widget.maxLines == null &&
+              widget.style?.fontWeight == FontWeight.w900,
+        );
+        expect(selectedExerciseName, findsOneWidget);
+        expect(find.text('80/100'), findsOneWidget);
+        expect(find.text(strings.exerciseEditorChoose), findsOneWidget);
+        expect(find.text(strings.exerciseEditorEdit), findsOneWidget);
+        expect(
+          find.text(strings.exerciseEditorCreateCustomTitle),
+          findsNothing,
+        );
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is TextField &&
+                widget.decoration?.labelText == strings.exerciseEditorRating,
+          ),
+          findsNothing,
+          reason: 'Read-only selection shows the rating badge, not an editor.',
+        );
+        expect(find.byTooltip(strings.exerciseEditorChoose), findsNothing);
+        expect(find.byTooltip(strings.exerciseEditorEdit), findsNothing);
+        expect(find.byTooltip(strings.exerciseEditorCreate), findsNothing);
+
+        expect(find.byType(TabBar), findsNothing);
+        final compactTabLabels = [
+          strings.exerciseEditorMuscles,
+          strings.exerciseEditorBodyparts,
+          strings.exerciseEditorEquipment,
+          strings.exerciseEditorGuide,
+        ];
+        final musclesControl = find.widgetWithText(
+          OutlinedButton,
+          strings.exerciseEditorMuscles,
+        );
+        final tabSurfaceContainer = tester.widget<Container>(
+          find
+              .ancestor(
+                of: musclesControl,
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Container && widget.decoration is BoxDecoration,
+                ),
+              )
+              .first,
+        );
+        final tabSurface = tabSurfaceContainer.decoration! as BoxDecoration;
+        final tabColor = brightness == Brightness.dark
+            ? const Color(0xFF293432)
+            : const Color(0xFFF5E9DC);
+        final selectedTab = brightness == Brightness.dark
+            ? const Color(0xFF573A2B)
+            : const Color(0xFFFFD5B8);
+        final selectedForeground = brightness == Brightness.dark
+            ? const Color(0xFFFFE9D8)
+            : const Color(0xFF45291D);
+        expect(tabSurface.color, tabColor);
+        expect(
+          (tabSurface.border! as Border).top.color,
+          teal.withValues(alpha: 0.24),
+        );
+        for (final label in compactTabLabels) {
+          expect(
+            find.widgetWithText(OutlinedButton, label),
+            findsOneWidget,
+            reason: '$label remains available in the responsive tab surface',
+          );
+        }
+        final selectedControl = tester.widget<OutlinedButton>(musclesControl);
+        expect(
+          selectedControl.style?.foregroundColor?.resolve({}),
+          selectedForeground,
+        );
+        expect(
+          selectedControl.style?.backgroundColor?.resolve({}),
+          selectedTab,
+        );
+
+        final ratingBadge = tester.widget<Container>(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.child is Text &&
+                (widget.child! as Text).data == '80/100',
+          ),
+        );
+        final ratingSurface = ratingBadge.decoration! as BoxDecoration;
+        expect(
+          ratingSurface.color,
+          brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.white.withValues(alpha: 0.62),
+        );
+        expect(ratingSurface.borderRadius, theme.shapeTokens.control);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive ${brightness.name} Database health shows compact path and copy action',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(430, 932));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.databaseSettings}': true,
+        });
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final repository = _SettingsRoutesRepository();
+
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repository,
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const DatabaseSettingsPage(),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(DatabaseSettingsPage)),
+        );
+        const fullPath =
+            '/data/user/0/com.tonos.expressivepreview/databases/'
+            'tonos_expressive_preview.db';
+        final tables = tester.widget<Text>(
+          find.text(strings.databaseHealthTablesValue(85, 94, 27)),
+        );
+        final path = tester.widget<Text>(
+          find.text('tonos_expressive_preview.db'),
+        );
+        expect(find.text(fullPath), findsNothing);
+        expect(path.maxLines, 1);
+        expect(path.overflow, TextOverflow.ellipsis);
+        final copyButton = find.byTooltip(strings.commonCopy);
+        expect(copyButton, findsOneWidget);
+
+        String? copiedPath;
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (call) async {
+            if (call.method == 'Clipboard.setData') {
+              copiedPath =
+                  (call.arguments as Map<Object?, Object?>)['text'] as String?;
+            }
+            return null;
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            SystemChannels.platform,
+            null,
+          ),
+        );
+        await tester.ensureVisible(copyButton);
+        await tester.tap(copyButton);
+        await tester.pumpAndSettle();
+        expect(copiedPath, fullPath);
+        expect(find.text(strings.databaseCopied), findsOneWidget);
+
+        expect(tables.maxLines, isNull);
+        expect(tables.overflow, isNull);
+
+        await tester.scrollUntilVisible(
+          find.text(strings.databaseContentEnvironment),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        final environmentSummary = find.text(
+          'Development · Cloudflare R2 test bucket',
+        );
+        expect(environmentSummary, findsOneWidget);
+        expect(tester.widget<Text>(environmentSummary).maxLines, 1);
+        const sharedManifestUrl =
+            'https://dev.example.test/shared-manifest.json';
+        final sharedManifestPreview = find.text(sharedManifestUrl);
+        expect(sharedManifestPreview, findsOneWidget);
+        expect(tester.widget<Text>(sharedManifestPreview).maxLines, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive ${brightness.name} Database manifest editor uses saved URL and filled field',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(430, 932));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.databaseSettings}': true,
+        });
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final repository = _SettingsRoutesRepository();
+
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repository,
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const DatabaseSettingsPage(),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(DatabaseSettingsPage)),
+        );
+        await tester.scrollUntilVisible(
+          find.byTooltip(strings.databaseOverrideUrl),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pumpAndSettle();
+        final exerciseManifestPreview = find.text(
+          'https://dev.example.test/exercise-manifest.json',
+        );
+        expect(exerciseManifestPreview, findsOneWidget);
+        expect(tester.widget<Text>(exerciseManifestPreview).maxLines, 1);
+        final editButton = find.byTooltip(strings.databaseOverrideUrl);
+        await tester.ensureVisible(editButton);
+        await tester.tap(editButton);
+        await tester.pumpAndSettle();
+
+        const expectedUrl = 'https://dev.example.test/exercise-manifest.json';
+        final field = tester.widget<TextField>(find.byType(TextField));
+        expect(field.controller?.text, expectedUrl);
+        final localTheme = tester.widget<Theme>(
+          find
+              .ancestor(
+                of: find.byType(TextField),
+                matching: find.byType(Theme),
+              )
+              .first,
+        );
+        final inputTheme = localTheme.data.inputDecorationTheme;
+        expect(inputTheme.filled, isTrue);
+        expect(inputTheme.fillColor, theme.surfaceTokens.dialogChoice);
+        expect(
+          (inputTheme.border as OutlineInputBorder).borderRadius,
+          theme.shapeTokens.dialogChoice,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 }
 
@@ -750,7 +1091,9 @@ class _SettingsRoutesRepository extends AppRepository {
   @override
   Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() async =>
       DatabaseHealthSnapshot(
-        path: 'test.db',
+        path:
+            '/data/user/0/com.tonos.expressivepreview/databases/'
+            'tonos_expressive_preview.db',
         schemaVersion: 1,
         targetSchemaVersion: 1,
         journalMode: 'delete',
@@ -759,9 +1102,9 @@ class _SettingsRoutesRepository extends AppRepository {
         shmBytes: 0,
         pageCount: 1,
         pageSize: 4096,
-        tableCount: 1,
-        indexCount: 1,
-        triggerCount: 1,
+        tableCount: 85,
+        indexCount: 94,
+        triggerCount: 27,
         foodCount: 0,
         foodFtsCount: 0,
         checkedAt: DateTime.utc(2026),
@@ -775,6 +1118,7 @@ class _SettingsRoutesRepository extends AppRepository {
           ContentEnvironment(
             id: 'development',
             label: 'Development',
+            description: 'Cloudflare R2 development bucket used for testing exercise media before release.',
             exerciseMediaManifestUrl:
                 'https://dev.example.test/exercise-manifest.json',
             sharedMediaManifestUrl:
@@ -784,6 +1128,7 @@ class _SettingsRoutesRepository extends AppRepository {
           ContentEnvironment(
             id: 'production',
             label: 'Production',
+            description: 'Production R2/CDN slot.',
             exerciseMediaManifestUrl:
                 'https://prod.example.test/exercise-manifest.json',
             sharedMediaManifestUrl:

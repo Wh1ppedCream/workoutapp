@@ -151,6 +151,7 @@ void main() {
     expect(find.text(strings.nutritionSettingsTitle), findsOneWidget);
     expect(find.text(strings.nutritionGoals), findsOneWidget);
     expect(find.text(strings.nutritionManualGoalsSubtitle), findsOneWidget);
+    expect(find.text(strings.nutritionGoalsSubtitle), findsOneWidget);
     expect(
       tester.widget<Scaffold>(find.byType(Scaffold).last).backgroundColor,
       destination.pageCanvas,
@@ -189,10 +190,68 @@ void main() {
       expect(find.text(strings.nutritionProteinLabel), findsOneWidget);
       expect(find.text(strings.nutritionCarbsLabel), findsOneWidget);
       expect(
+        find.text(
+          '${strings.nutritionNoFoodLogged} · ${strings.nutritionTapToAddFirstEntry}',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining(strings.nutritionNoGoalSet), findsNWidgets(4));
+      expect(
+        find.byTooltip(strings.nutritionAddEntryActionLabel),
+        findsOneWidget,
+      );
+      final calories = tester.getTopLeft(
+        find.text(strings.nutritionCaloriesLabel),
+      );
+      final protein = tester.getTopLeft(
+        find.text(strings.nutritionProteinLabel),
+      );
+      final carbs = tester.getTopLeft(find.text(strings.nutritionCarbsLabel));
+      final fat = tester.getTopLeft(find.text(strings.nutritionFatLabel));
+      expect(protein.dx, greaterThan(calories.dx));
+      expect(protein.dy, closeTo(calories.dy, 1));
+      expect(carbs.dy, greaterThan(protein.dy));
+      expect(fat.dx, greaterThan(carbs.dx));
+      expect(
         find.byWidgetPredicate(
           (widget) => widget is Positioned && widget.height == 64,
         ),
         findsAtLeastNWidgets(24),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Expressive records preserve an explicitly configured zero goal',
+    (tester) async {
+      final repository = _GoalRepository()
+        ..savedGoal = NutritionGoal(
+          profileId: 1,
+          startDate: DateTime.now(),
+          kcalTarget: 0,
+        );
+      final profile = NutritionProfile(repository: repository);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<NutritionProfile>(
+          create: (_) => profile,
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: LogEntryPage(date: DateTime.now()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 / 0 kcal'), findsOneWidget);
+      final pageContext = tester.element(find.byType(LogEntryPage));
+      expect(
+        find.textContaining(
+          AppLocalizations.of(pageContext).nutritionNoGoalSet,
+        ),
+        findsNWidgets(3),
       );
       expect(tester.takeException(), isNull);
     },
@@ -203,6 +262,7 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(320, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    addTearDown(tester.view.resetViewInsets);
 
     for (final theme in [
       ExpressiveThemeDefinition.light(),
@@ -214,6 +274,8 @@ void main() {
       expect(tester.takeException(), isNull);
 
       final pageContext = tester.element(find.byType(GoalManualEntryPage));
+      final strings = AppLocalizations.of(pageContext);
+      expect(find.text(strings.nutritionOptionalTargetsHint), findsOneWidget);
       final destination = Theme.of(
         tester.element(find.byType(TextFormField).first),
       ).extension<AppExpressiveDestinationTokens>()!;
@@ -225,9 +287,38 @@ void main() {
       final editorScroll = find.byType(ListView).first;
       await tester.drag(editorScroll, const Offset(0, -900));
       await tester.pumpAndSettle();
-      final strings = AppLocalizations.of(pageContext);
       expect(find.text(strings.nutritionCaloriesAndMacros), findsOneWidget);
       expect(find.text(strings.nutritionAdditionalNutrients), findsOneWidget);
+      for (var index = 0; index < 8; index++) {
+        final field = find.byType(TextFormField).at(index);
+        final heightConstraint = find.ancestor(
+          of: field,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is ConstrainedBox && widget.constraints.minHeight == 52,
+          ),
+        );
+        expect(heightConstraint, findsOneWidget);
+      }
+      final macroHeadingFinder = find.text(strings.nutritionCaloriesAndMacros);
+      await tester.ensureVisible(macroHeadingFinder);
+      await tester.pumpAndSettle();
+      final appBar = tester.getRect(find.byType(AppBar).last);
+      expect(
+        tester.getRect(macroHeadingFinder).top,
+        greaterThanOrEqualTo(appBar.bottom),
+      );
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      await tester.pumpAndSettle();
+      final lastField = find.byType(TextFormField).last;
+      await tester.ensureVisible(lastField);
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(lastField).bottom,
+        lessThan(tester.getRect(find.text(strings.nutritionSaveGoals)).top),
+      );
+      tester.view.resetViewInsets();
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });

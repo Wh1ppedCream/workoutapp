@@ -1124,6 +1124,145 @@ void main() {
       }
     }
   });
+
+  testWidgets(
+    'Expressive add-set options and inline name validation fit large text',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        Provider<AppRepository>.value(
+          value: _FlowThemeRepository(),
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2)),
+              child: child!,
+            ),
+            home: const AutoPresetFlowScreen.appDefaults(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(AutoPresetFlowScreen)),
+      );
+      await tester.tap(findTonosTooltip(strings.flowManageActionsTooltip));
+      await tester.pumpAndSettle();
+      final addAction = find.text(strings.flowAddNewMethod);
+      await tester.ensureVisible(addAction);
+      await tester.tap(addAction);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(DropdownButton<MethodType>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.flowMethodAddSet).last);
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.flowExplicit).hitTestable(), findsOneWidget);
+      expect(find.text(strings.flowCopyFromSet).hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      final save = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(ElevatedButton, strings.commonSave),
+      );
+      await tester.ensureVisible(save);
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text(strings.flowMethodNameRequired), findsOneWidget);
+
+      final nameField = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.labelText == strings.commonName,
+      );
+      await tester.ensureVisible(nameField);
+      await tester.tap(nameField);
+      await tester.enterText(nameField, 'Scale Load');
+      await tester.pumpAndSettle();
+      expect(find.text(strings.flowMethodNameRequired), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Auto Preset Flow dialog cancels cleanly after keyboard dismissal',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final keyboardInset = ValueNotifier<double>(0);
+      addTearDown(keyboardInset.dispose);
+      await tester.pumpWidget(
+        Provider<AppRepository>.value(
+          value: _FlowThemeRepository(),
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => ValueListenableBuilder<double>(
+              valueListenable: keyboardInset,
+              child: child,
+              builder: (context, inset, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(viewInsets: EdgeInsets.only(bottom: inset)),
+                child: child!,
+              ),
+            ),
+            home: const AutoPresetFlowScreen.appDefaults(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(AutoPresetFlowScreen)),
+      );
+      await tester.tap(findTonosTooltip(strings.flowManageActionsTooltip));
+      await tester.pumpAndSettle();
+      final addAction = find.text(strings.flowAddNewMethod);
+      await tester.ensureVisible(addAction);
+      await tester.tap(addAction);
+      await tester.pumpAndSettle();
+
+      final save = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(ElevatedButton, strings.commonSave),
+      );
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+      expect(find.text(strings.flowMethodNameRequired), findsOneWidget);
+
+      final nameField = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.labelText == strings.commonName,
+      );
+      await tester.tap(nameField);
+      await tester.enterText(nameField, 'Scale Load');
+      await tester.pumpAndSettle();
+      keyboardInset.value = 280;
+      await tester.pumpAndSettle();
+      keyboardInset.value = 0;
+      await tester.pumpAndSettle();
+
+      final cancel = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, strings.commonCancel),
+      );
+      await tester.ensureVisible(cancel);
+      await tester.tap(cancel);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 void _expectFlowOutlineAboveTile(

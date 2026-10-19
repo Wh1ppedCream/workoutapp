@@ -215,7 +215,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   void _openBodyPart(BodyPart bodyPart) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => DefinitionsByBodyPartPage(bodyPart: bodyPart),
+        builder: (_) => DefinitionsByBodyPartPage(
+          bodyPart: bodyPart,
+          expressiveAnalyticsPresentation: true,
+        ),
       ),
     );
   }
@@ -223,7 +226,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   void _openMuscle(Muscle muscle) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => DefinitionsByMusclePage(muscle: muscle),
+        builder: (_) => DefinitionsByMusclePage(
+          muscle: muscle,
+          expressiveAnalyticsPresentation: true,
+        ),
       ),
     );
   }
@@ -239,14 +245,27 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
   Widget _buildScreen(BuildContext context) {
     final data = _data;
     final strings = AppLocalizations.of(context);
+    final expressive = Theme.of(context).usesExpressivePresentation;
     final destinationTokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
     return Scaffold(
       backgroundColor: destinationTokens?.pageCanvas,
       appBar: AppBar(
         title: Text(strings.weeklySetsTitle),
-        backgroundColor: destinationTokens?.surfacePrimary,
-        foregroundColor: destinationTokens?.onSurfacePrimary,
+        backgroundColor: expressive
+            ? destinationTokens?.pageCanvas
+            : destinationTokens?.surfacePrimary,
+        foregroundColor: expressive
+            ? destinationTokens?.supportingForeground
+            : destinationTokens?.onSurfacePrimary,
+        titleTextStyle: expressive
+            ? Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: destinationTokens?.supportingForeground,
+                fontWeight: FontWeight.w800,
+              )
+            : null,
+        toolbarHeight: expressive ? 56 : null,
+        elevation: 0,
         scrolledUnderElevation: 0,
       ),
       body: _isLoading && data == null
@@ -275,17 +294,134 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: KeyedSubtree(
                         key: _tabsTutorialKey,
-                        child: TabBar(
-                          controller: _tabController,
-                          labelColor: destinationTokens?.actionPrimary,
-                          unselectedLabelColor:
-                              destinationTokens?.supportingForeground,
-                          indicatorColor: destinationTokens?.outlineAccent,
-                          tabs: [
-                            Tab(text: strings.weeklySetsBodyParts),
-                            Tab(text: strings.weeklySetsMuscles),
-                          ],
-                        ),
+                        child: expressive
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: AnimatedBuilder(
+                                      animation: _tabController,
+                                      builder: (context, _) => SegmentedButton<int>(
+                                        segments: [
+                                          ButtonSegment<int>(
+                                            value: 0,
+                                            label: Text(
+                                              strings.weeklySetsBodyParts,
+                                              maxLines: 2,
+                                              textAlign: TextAlign.center,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          ButtonSegment<int>(
+                                            value: 1,
+                                            label: Text(
+                                              strings.weeklySetsMuscles,
+                                              maxLines: 2,
+                                              textAlign: TextAlign.center,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                        selected: {_tabController.index},
+                                        showSelectedIcon: false,
+                                        style: ButtonStyle(
+                                          shape: WidgetStateProperty.all(
+                                            const StadiumBorder(),
+                                          ),
+                                          foregroundColor:
+                                              WidgetStateProperty.resolveWith((
+                                                states,
+                                              ) {
+                                                if (states.contains(
+                                                  WidgetState.selected,
+                                                )) {
+                                                  return destinationTokens
+                                                      ?.onActionPrimary;
+                                                }
+                                                return destinationTokens
+                                                    ?.supportingForeground;
+                                              }),
+                                          backgroundColor:
+                                              WidgetStateProperty.resolveWith((
+                                                states,
+                                              ) {
+                                                if (states.contains(
+                                                  WidgetState.selected,
+                                                )) {
+                                                  return destinationTokens
+                                                      ?.actionPrimary;
+                                                }
+                                                return Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? Color.alphaBlend(
+                                                        destinationTokens!
+                                                            .surfaceSelected
+                                                            .withValues(
+                                                              alpha: 0.45,
+                                                            ),
+                                                        destinationTokens
+                                                            .pageCanvas,
+                                                      )
+                                                    : Colors.transparent;
+                                              }),
+                                          side: WidgetStateProperty.all(
+                                            BorderSide(
+                                              color: destinationTokens!
+                                                  .outlineAccent
+                                                  .withValues(alpha: 0.45),
+                                            ),
+                                          ),
+                                        ),
+                                        onSelectionChanged: (selection) =>
+                                            _tabController.animateTo(
+                                              selection.single,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: strings.allocationHowTitle,
+                                    color:
+                                        destinationTokens?.supportingForeground,
+                                    constraints: const BoxConstraints.tightFor(
+                                      width: 48,
+                                      height: 48,
+                                    ),
+                                    icon: const Icon(Icons.info_outline),
+                                    onPressed: () => showDialog<void>(
+                                      context: context,
+                                      builder: (dialogContext) => AlertDialog(
+                                        title: Text(strings.allocationHowTitle),
+                                        content: SingleChildScrollView(
+                                          child: Text(
+                                            strings.weeklySetsExplanationBody,
+                                          ),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(dialogContext)
+                                                    .pop(),
+                                            child: Text(strings.commonClose),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : TabBar(
+                                controller: _tabController,
+                                labelColor: destinationTokens?.actionPrimary,
+                                unselectedLabelColor:
+                                    destinationTokens?.supportingForeground,
+                                indicatorColor:
+                                    destinationTokens?.outlineAccent,
+                                tabs: [
+                                  Tab(text: strings.weeklySetsBodyParts),
+                                  Tab(text: strings.weeklySetsMuscles),
+                                ],
+                              ),
                       ),
                     ),
                     Expanded(
@@ -326,48 +462,106 @@ class _WeeklyOverviewHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surfaces = context.surfaceTokens;
+    final theme = Theme.of(context);
     final destinationTokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
+    final expressive = theme.usesExpressivePresentation;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+      padding: EdgeInsets.fromLTRB(16, expressive ? 8 : 12, 16, 10),
       child: Card(
-        color: surfaces.card,
+        color: expressive ? destinationTokens?.surfacePrimary : surfaces.card,
+        shape: expressive
+            ? RoundedRectangleBorder(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                  bottomLeft: Radius.circular(12),
+                ),
+                side: BorderSide(
+                  color: destinationTokens!.outlineAccent.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.32 : 0.46,
+                  ),
+                  width: 1,
+                ),
+              )
+            : null,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: expressive
+              ? const EdgeInsets.symmetric(horizontal: 14, vertical: 11)
+              : const EdgeInsets.all(16),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final textScale = MediaQuery.textScalerOf(context).scale(1);
-              final stacked =
-                  constraints.maxWidth < 420 ||
-                  (textScale > 1.3 && constraints.maxWidth < 640);
-              final heatmapBox = compactLandscape
+              final viewportWidth = MediaQuery.sizeOf(context).width;
+              final stacked = expressive
+                  ? textScale > 1.3 &&
+                        constraints.maxWidth < 600 &&
+                        !compactLandscape
+                  : viewportWidth < 360 ||
+                        (textScale > 1.3 && viewportWidth < 640);
+              final heatmapSurface = expressive
+                  ? destinationTokens?.surfaceSelected ?? surfaces.card
+                  : surfaces.card;
+              final heatmapBox = expressive
+                  ? compactLandscape
+                        ? 96.0
+                        : stacked
+                        ? (constraints.maxWidth * 0.58)
+                              .clamp(128.0, 192.0)
+                              .toDouble()
+                        : (constraints.maxWidth - 12) * 0.55
+                  : compactLandscape
                   ? 140.0
                   : stacked
                   ? (constraints.maxWidth * 0.54).clamp(128.0, 184.0).toDouble()
                   : (constraints.maxWidth * 0.48)
                         .clamp(128.0, 184.0)
                         .toDouble();
-              final heatmapSize = (heatmapBox - 6)
-                  .clamp(120.0, 176.0)
-                  .toDouble();
+              final heatmapSize = expressive
+                  ? heatmapBox - 12
+                  : (heatmapBox - 6).clamp(120.0, 176.0).toDouble();
 
-              final heatmap = SizedBox(
-                width: heatmapBox,
-                height: heatmapBox,
-                child: Center(
-                  child: BodyHeatmap(
-                    frequencyMap: data.heatmapFrequencyMap,
-                    lowColor: tonosHeatmapLowForSurface(context, surfaces.card),
-                    highColor: tonosHeatmapHighForSurface(
-                      context,
-                      surfaces.card,
-                    ),
-                    width: heatmapSize,
-                    height: heatmapSize,
+              final heatmapLowColor = expressive
+                  ? theme.colorScheme.onSurfaceVariant
+                  : tonosHeatmapLowForSurface(context, heatmapSurface);
+
+              final heatmapContent = Center(
+                child: BodyHeatmap(
+                  frequencyMap: data.heatmapFrequencyMap,
+                  lowColor: heatmapLowColor,
+                  highColor: tonosHeatmapHighForSurface(
+                    context,
+                    heatmapSurface,
                   ),
+                  width: heatmapSize,
+                  height: heatmapSize,
                 ),
               );
+              final heatmapFrame = expressive
+                  ? Container(
+                      width: heatmapBox,
+                      height: stacked || compactLandscape ? heatmapBox : null,
+                      decoration: BoxDecoration(
+                        color: heatmapSurface,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: destinationTokens!.outlineAccent.withValues(
+                            alpha: theme.brightness == Brightness.dark
+                                ? 0.24
+                                : 0.34,
+                          ),
+                        ),
+                      ),
+                      child: heatmapContent,
+                    )
+                  : SizedBox(
+                      width: heatmapBox,
+                      height: heatmapBox,
+                      child: heatmapContent,
+                    );
+              final heatmap = heatmapFrame;
               final statBoxes = [
                 _SummaryStatBox(
                   label: AppLocalizations.of(context).weeklySetsTotal,
@@ -378,6 +572,8 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                   ),
                   fill: destinationTokens?.surfaceSecondary,
                   foreground: destinationTokens?.onSurfaceSecondary,
+                  compact: expressive,
+                  inline: expressive && (compactLandscape || stacked),
                 ),
                 _SummaryStatBox(
                   label: AppLocalizations.of(context).weeklySetsTime,
@@ -387,6 +583,8 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                   ),
                   fill: destinationTokens?.surfaceTertiary,
                   foreground: destinationTokens?.onSurfaceTertiary,
+                  compact: expressive,
+                  inline: expressive && (compactLandscape || stacked),
                 ),
                 _SummaryStatBox(
                   label: AppLocalizations.of(context).weeklySetsVolume,
@@ -397,9 +595,24 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                   ),
                   fill: destinationTokens?.surfaceAccent,
                   foreground: destinationTokens?.onSurfaceAccent,
+                  compact: expressive,
+                  inline: expressive && (compactLandscape || stacked),
                 ),
               ];
-              final stats = compactLandscape
+              final stats = expressive && !compactLandscape
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var index = 0; index < statBoxes.length; index++)
+                          if (index == 0)
+                            statBoxes[index]
+                          else ...[
+                            const SizedBox(height: 6),
+                            statBoxes[index],
+                          ],
+                      ],
+                    )
+                  : compactLandscape
                   ? Row(
                       children: [
                         for (var index = 0; index < statBoxes.length; index++)
@@ -425,6 +638,33 @@ class _WeeklyOverviewHeader extends StatelessWidget {
                           ],
                       ],
                     );
+
+              if (expressive) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (stacked)
+                      Column(
+                        children: [
+                          Center(child: heatmap),
+                          const SizedBox(height: 8),
+                          stats,
+                        ],
+                      )
+                    else
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            heatmap,
+                            const SizedBox(width: 12),
+                            Expanded(child: stats),
+                          ],
+                        ),
+                      ),
+                  ],
+                );
+              }
 
               return stacked
                   ? Column(
@@ -456,46 +696,106 @@ class _SummaryStatBox extends StatelessWidget {
   final String value;
   final Color? fill;
   final Color? foreground;
+  final bool compact;
+  final bool inline;
 
   const _SummaryStatBox({
     required this.label,
     required this.value,
     this.fill,
     this.foreground,
+    this.compact = false,
+    this.inline = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      constraints: compact ? BoxConstraints(minHeight: inline ? 48 : 68) : null,
+      alignment: compact ? AlignmentDirectional.centerStart : null,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 12,
+        vertical: compact ? (inline ? 6 : 8) : 10,
+      ),
       decoration: BoxDecoration(
         color:
             fill ??
             theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
         borderRadius: theme.shapeTokens.dashboardRow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: foreground ?? theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
+      child: inline
+          ? Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: foreground ?? theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      value,
+                      maxLines: 1,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+              mainAxisAlignment: compact
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  textAlign: compact ? TextAlign.start : null,
+                  style:
+                      (compact
+                              ? theme.textTheme.labelMedium
+                              : theme.textTheme.labelSmall)
+                          ?.copyWith(
+                            color:
+                                foreground ??
+                                theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  textAlign: compact ? TextAlign.start : null,
+                  maxLines: compact ? null : 2,
+                  style:
+                      (compact
+                              ? theme.textTheme.titleLarge
+                              : theme.textTheme.titleMedium)
+                          ?.copyWith(
+                            color: foreground,
+                            fontSize: compact
+                                ? (theme.textTheme.titleLarge?.fontSize ?? 22) *
+                                      0.9
+                                : null,
+                            fontWeight: FontWeight.w900,
+                          ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 2,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: foreground,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -514,10 +814,15 @@ class _BodyPartSetList extends StatelessWidget {
       );
     }
 
+    final theme = Theme.of(context);
+    final expressive = theme.usesExpressivePresentation;
+    final lightTokens = expressive && theme.brightness == Brightness.light
+        ? theme.extension<AppExpressiveDestinationTokens>()
+        : null;
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, expressive ? 8 : 12, 16, 24),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => SizedBox(height: expressive ? 6 : 10),
       itemBuilder: (context, index) {
         final item = items[index];
         return _SetOverviewRow(
@@ -526,7 +831,9 @@ class _BodyPartSetList extends StatelessWidget {
           bounds: item.bounds,
           leading: SingleBodyPartHeatmap(
             bodyPartName: item.bodyPart.name,
-            size: 52,
+            size: expressive ? 53 : 52,
+            backgroundColor: lightTokens?.surfaceSelected,
+            lowColor: lightTokens?.onSurfaceSelected.withValues(alpha: 0.6),
           ),
           onTap: () => onTap(item.bodyPart),
         );
@@ -549,10 +856,11 @@ class _MuscleSetList extends StatelessWidget {
       );
     }
 
+    final expressive = Theme.of(context).usesExpressivePresentation;
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, expressive ? 8 : 12, 16, 24),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => SizedBox(height: expressive ? 6 : 10),
       itemBuilder: (context, index) {
         final item = items[index];
         return _SetOverviewRow(
@@ -563,7 +871,7 @@ class _MuscleSetList extends StatelessWidget {
           ),
           count: item.count,
           bounds: item.bounds,
-          leading: const _MuscleLeadingIcon(),
+          leading: _MuscleLeadingIcon(size: expressive ? 48 : 52),
           onTap: () => onTap(item.muscle),
         );
       },
@@ -591,7 +899,36 @@ class _SetOverviewRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tint = _tintForBoundaryStatus(theme, _boundaryStatus(count, bounds));
+    final expressive = theme.usesExpressivePresentation;
+    final status = _boundaryStatus(count, bounds);
+    final originalTint = _tintForBoundaryStatus(theme, status);
+    final lightNeutral =
+        expressive &&
+        theme.brightness == Brightness.light &&
+        (status == _BoundaryStatus.under || status == _BoundaryStatus.unset);
+    final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final tint = !expressive
+        ? originalTint
+        : _StatusTint(
+            background: lightNeutral
+                ? Color.alphaBlend(
+                    destinationTokens!.surfaceTertiary.withValues(alpha: 0.45),
+                    destinationTokens.pageCanvas,
+                  )
+                : originalTint.background.withValues(
+                    alpha: status == _BoundaryStatus.within
+                        ? (theme.brightness == Brightness.dark ? 0.34 : 0.18)
+                        : status == _BoundaryStatus.under ||
+                              status == _BoundaryStatus.unset
+                        ? (theme.brightness == Brightness.dark ? 0.1 : 0.2)
+                        : 0.07,
+                  ),
+            border: originalTint.border.withValues(
+              alpha: status == _BoundaryStatus.within
+                  ? (theme.brightness == Brightness.dark ? 0.82 : 0.64)
+                  : (theme.brightness == Brightness.dark ? 0.2 : 0.3),
+            ),
+          );
 
     return Material(
       type: MaterialType.transparency,
@@ -599,13 +936,16 @@ class _SetOverviewRow extends StatelessWidget {
         borderRadius: theme.shapeTokens.weeklySetRow,
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          padding: EdgeInsets.symmetric(
+            horizontal: expressive ? 10 : 12,
+            vertical: expressive ? 7 : 11,
+          ),
           decoration: BoxDecoration(
             color: tint.background,
             borderRadius: theme.shapeTokens.weeklySetRow,
             border: Border.all(
               color: tint.border,
-              width: theme.shapeTokens.outlineWidth,
+              width: expressive ? 1 : theme.shapeTokens.outlineWidth,
             ),
           ),
           child: LayoutBuilder(
@@ -615,22 +955,27 @@ class _SetOverviewRow extends StatelessWidget {
                   MediaQuery.textScalerOf(context).scale(1) > 1.3;
               final titleMaxLines = compact ? null : 2;
               final titleOverflow = compact ? null : TextOverflow.ellipsis;
+              final titleStyle =
+                  (expressive
+                          ? theme.textTheme.titleSmall
+                          : theme.textTheme.titleMedium)
+                      ?.copyWith(
+                        fontWeight: expressive
+                            ? FontWeight.w700
+                            : FontWeight.w800,
+                      );
               final titleWidget = entity == null
                   ? Text(
                       title,
                       maxLines: titleMaxLines,
                       overflow: titleOverflow,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: titleStyle,
                     )
                   : LocalizedCatalogEntityName(
                       entity: entity!,
                       maxLines: titleMaxLines,
                       overflow: titleOverflow,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: titleStyle,
                     );
               final countLabel = Text(
                 _setUnitsLabel(
@@ -638,9 +983,15 @@ class _SetOverviewRow extends StatelessWidget {
                   count,
                   Localizations.localeOf(context),
                 ),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+                style:
+                    (expressive
+                            ? theme.textTheme.titleSmall
+                            : theme.textTheme.titleMedium)
+                        ?.copyWith(
+                          fontWeight: expressive
+                              ? FontWeight.w700
+                              : FontWeight.w900,
+                        ),
               );
               if (compact) {
                 return Column(
@@ -676,27 +1027,40 @@ class _SetOverviewRow extends StatelessWidget {
 }
 
 class _MuscleLeadingIcon extends StatelessWidget {
-  const _MuscleLeadingIcon();
+  final double size;
+
+  const _MuscleLeadingIcon({this.size = 52});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final lightTokens =
+        theme.usesExpressivePresentation && theme.brightness == Brightness.light
+        ? theme.extension<AppExpressiveDestinationTokens>()
+        : null;
     // Keep primary-colored icons except when a light palette makes the
     // primary foreground identical to its container fill.
     final iconColor =
-        theme.brightness == Brightness.light &&
-            scheme.primary == scheme.primaryContainer
-        ? scheme.onPrimaryContainer
-        : scheme.primary;
+        lightTokens?.onSurfaceSelected ??
+        (theme.brightness == Brightness.light &&
+                scheme.primary == scheme.primaryContainer
+            ? scheme.onPrimaryContainer
+            : scheme.primary);
     return Container(
-      width: 52,
-      height: 52,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.55),
+        color:
+            lightTokens?.surfaceSelected ??
+            scheme.primaryContainer.withValues(alpha: 0.55),
         borderRadius: theme.shapeTokens.dashboardRow,
       ),
-      child: Icon(Icons.fitness_center, color: iconColor),
+      child: Icon(
+        Icons.fitness_center,
+        color: iconColor,
+        size: theme.usesExpressivePresentation ? 28 : null,
+      ),
     );
   }
 }
@@ -745,7 +1109,9 @@ String _setUnitsLabel(AppLocalizations strings, double count, Locale locale) {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   );
-  return strings.weeklySetsCount(value);
+  return rounded == 1
+      ? strings.weeklySetsSingleCount(value)
+      : strings.weeklySetsCount(value);
 }
 
 String _durationLabel(AppLocalizations strings, int seconds) {

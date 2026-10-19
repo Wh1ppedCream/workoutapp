@@ -1,0 +1,193 @@
+{
+  "deviceId": "28021FDH200228",
+  "package": "com.tonos.expressivepreview",
+  "database": "tonos_expressive_preview.db",
+  "restoreSource": "C:\\Users\\talh7\\AppData\\Local\\Temp\\tonos-expressive-review-campaign-baseline-20261013T012550",
+  "appLaunched": false,
+  "processState": "force-stopped",
+  "files": [
+    {
+      "path": "databases/tonos_expressive_preview.db",
+      "recordedBaselineSha256": "f8dc2b73eb03d8640bd93ce50af476b5f5ea6e94009816a2b93b14351591b83c",
+      "savedAndRestoredSha256": "f8dc2b73eb03d8640bd93ce50af476b5f5ea6e94009816a2b93b14351591b83c",
+      "matchesRecordedBaseline": true,
+      "bytes": 1527808
+    },
+    {
+      "path": "databases/tonos_expressive_preview.db-wal",
+      "recordedBaselineSha256": "b736b4bad3e8ff17eb29a96b0d042d0593d0f5c3e279aed31ae98cc82b785826",
+      "savedAndRestoredSha256": "b736b4bad3e8ff17eb29a96b0d042d0593d0f5c3e279aed31ae98cc82b785826",
+      "matchesRecordedBaseline": true,
+      "bytes": 234872
+    },
+    {
+      "path": "databases/tonos_expressive_preview.db-shm",
+      "recordedBaselineSha256": "5f5a654a43ae5a2a5c4b262efec5e743bfc4b2c449a28a0b0d5d2ead757699b2",
+      "savedAndRestoredSha256": "75670913b90f1fe1bb17a7c06d402c56c042849650d6745b01878f20f6af5537",
+      "matchesRecordedBaseline": false,
+      "bytes": 32768
+    },
+    {
+      "path": "shared_prefs/FlutterSharedPreferences.xml",
+      "recordedBaselineSha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+      "savedAndRestoredSha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+      "matchesRecordedBaseline": true,
+      "bytes": 10728
+    },
+    {
+      "path": "shared_prefs/com.google.mlkit.internal.xml",
+      "recordedBaselineSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+      "savedAndRestoredSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+      "matchesRecordedBaseline": true,
+      "bytes": 154
+    }
+  ],
+  "previousVisualRefreshRestore": {
+    "restoreSource": "C:\\Users\\talh7\\AppData\\Local\\Temp\\tonos-gallery-refresh-20261013",
+    "restoredAtLocal": "2026-10-13 approximately 20:49 America/Toronto",
+    "appLaunchedAfterRestore": false,
+    "processState": "force-stopped",
+    "matchesPreRefreshSnapshot": true,
+    "files": [
+      {
+        "path": "databases/tonos_expressive_preview.db",
+        "preRefreshSha256": "5cf85295a98ae2572d3c4c0c829f16295aed2074a13aec6a9a271c7562571d07",
+        "restoredSha256": "5cf85295a98ae2572d3c4c0c829f16295aed2074a13aec6a9a271c7562571d07",
+        "bytes": 1527808,
+        "matchesPreRefreshSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-wal",
+        "preRefreshSha256": "b0ab57186652498b761f8c53c031930883b49f1dced3f09627863861e495dc78",
+        "restoredSha256": "b0ab57186652498b761f8c53c031930883b49f1dced3f09627863861e495dc78",
+        "bytes": 135992,
+        "matchesPreRefreshSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-shm",
+        "preRefreshSha256": "f0d3f9d8a28600c27622544f3fa35bdab4f16899554d5c14eee1ab1b355502ea",
+        "restoredSha256": "f0d3f9d8a28600c27622544f3fa35bdab4f16899554d5c14eee1ab1b355502ea",
+        "bytes": 32768,
+        "matchesPreRefreshSnapshot": true
+      },
+      {
+        "path": "shared_prefs/FlutterSharedPreferences.xml",
+        "preRefreshSha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+        "restoredSha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+        "bytes": 10728,
+        "matchesPreRefreshSnapshot": true
+      }
+    ],
+    "additionalUnchangedPreference": {
+      "path": "shared_prefs/com.google.mlkit.internal.xml",
+      "sha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+      "bytes": 154
+    }
+  },
+  "latestVisualRefreshRestore": {
+    "restoreSource": "E:/tonos-gallery-refresh-20261014",
+    "restoredAtLocal": "2026-10-14T03:07:31-04:00",
+    "appLaunchedAfterRestore": false,
+    "processState": "force-stopped",
+    "matchesPreRefreshSnapshot": true,
+    "files": [
+      {
+        "path": "databases/tonos_expressive_preview.db",
+        "preRefreshSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+        "restoredSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+        "preRefreshBytes": 1544192,
+        "restoredBytes": 1544192,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-wal",
+        "preRefreshSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+        "restoredSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+        "preRefreshBytes": 387312,
+        "restoredBytes": 387312,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-shm",
+        "preRefreshSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+        "restoredSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+        "preRefreshBytes": 32768,
+        "restoredBytes": 32768,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "shared_prefs/FlutterSharedPreferences.xml",
+        "preRefreshSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+        "restoredSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+        "preRefreshBytes": 12126,
+        "restoredBytes": 12126,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "shared_prefs/com.google.mlkit.internal.xml",
+        "preRefreshSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+        "restoredSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+        "preRefreshBytes": 154,
+        "restoredBytes": 154,
+        "matchesSnapshot": true
+      }
+    ],
+    "package": "com.tonos.expressivepreview",
+    "database": "tonos_expressive_preview.db",
+    "deviceId": "28021FDH200228"
+  },
+  "followupVisualRefreshRestore": {
+    "restoreSource": "E:/tonos-gallery-refresh-20261014-followup-1002",
+    "restoredAfterLastCapture": "2026-10-14T20:05:17-04:00; exact restore command timestamp not separately recorded",
+    "verificationRecordedAtLocal": "2026-10-14T20:11:28-04:00",
+    "appLaunchedAfterRestore": false,
+    "processState": "force-stopped",
+    "matchesPreRefreshSnapshot": true,
+    "verificationMethod": "Restored files through run-as exec-in, then checked on-device sha256sum and original byte counts.",
+    "files": [
+      {
+        "path": "databases/tonos_expressive_preview.db",
+        "preRefreshSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+        "restoredSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+        "preRefreshBytes": 1544192,
+        "restoredBytes": 1544192,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-wal",
+        "preRefreshSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+        "restoredSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+        "preRefreshBytes": 387312,
+        "restoredBytes": 387312,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "databases/tonos_expressive_preview.db-shm",
+        "preRefreshSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+        "restoredSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+        "preRefreshBytes": 32768,
+        "restoredBytes": 32768,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "shared_prefs/FlutterSharedPreferences.xml",
+        "preRefreshSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+        "restoredSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+        "preRefreshBytes": 12126,
+        "restoredBytes": 12126,
+        "matchesSnapshot": true
+      },
+      {
+        "path": "shared_prefs/com.google.mlkit.internal.xml",
+        "preRefreshSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+        "restoredSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+        "preRefreshBytes": 154,
+        "restoredBytes": 154,
+        "matchesSnapshot": true
+      }
+    ],
+    "package": "com.tonos.expressivepreview",
+    "database": "tonos_expressive_preview.db",
+    "deviceId": "28021FDH200228"
+  }
+}

@@ -781,6 +781,7 @@ class SettingsSection extends StatelessWidget {
   final String? subtitle;
   final List<Widget> children;
   final Color? accentColor;
+  final Color? titleColor;
   final Color? surfaceColor;
   final bool? neutralSurface;
 
@@ -790,6 +791,7 @@ class SettingsSection extends StatelessWidget {
     this.subtitle,
     required this.children,
     this.accentColor,
+    this.titleColor,
     this.surfaceColor,
     this.neutralSurface,
   });
@@ -873,6 +875,7 @@ class SettingsSection extends StatelessWidget {
                     title: title,
                     subtitle: subtitle,
                     presentation: presentation,
+                    titleColor: titleColor,
                   )
                 : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -896,7 +899,7 @@ class SettingsSection extends StatelessWidget {
                               title,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w900,
-                                color: accent ?? scheme.onSurface,
+                                color: titleColor ?? accent ?? scheme.onSurface,
                               ),
                             ),
                             if (subtitle != null) ...[
@@ -952,11 +955,13 @@ class _SettingsCategoryLabelHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final AppSettingsPresentationTokens presentation;
+  final Color? titleColor;
 
   const _SettingsCategoryLabelHeader({
     required this.title,
     required this.subtitle,
     required this.presentation,
+    this.titleColor,
   });
 
   @override
@@ -983,7 +988,7 @@ class _SettingsCategoryLabelHeader extends StatelessWidget {
           child: Text(
             title,
             style: theme.textTheme.labelLarge?.copyWith(
-              color: presentation.sectionHeaderForeground,
+              color: titleColor ?? presentation.sectionHeaderForeground,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1272,6 +1277,7 @@ class SettingsActionTile extends StatelessWidget {
   final Color? iconColor;
   final bool compact;
   final double? compactVerticalPadding;
+  final int subtitleMaxLines;
 
   const SettingsActionTile({
     super.key,
@@ -1284,6 +1290,7 @@ class SettingsActionTile extends StatelessWidget {
     this.iconColor,
     this.compact = false,
     this.compactVerticalPadding,
+    this.subtitleMaxLines = 3,
   });
 
   @override
@@ -1332,7 +1339,7 @@ class SettingsActionTile extends StatelessWidget {
         ? null
         : Text(
             subtitle!,
-            maxLines: 3,
+            maxLines: subtitleMaxLines,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
               color: usesInkRecipe

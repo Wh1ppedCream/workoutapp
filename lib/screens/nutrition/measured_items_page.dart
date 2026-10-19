@@ -64,7 +64,11 @@ class _MeasuredItemsPageState extends State<MeasuredItemsPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(strings.nutritionMeasuredItems),
+          title: Text(
+            profileTokens != null
+                ? strings.progressMeasurements
+                : strings.nutritionMeasuredItems,
+          ),
           leading: BackButton(onPressed: _pop),
           backgroundColor: expressiveCanvas,
           foregroundColor: expressive

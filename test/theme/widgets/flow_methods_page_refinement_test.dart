@@ -10,6 +10,7 @@ import 'package:env_test/screens/profile/settings/profile_expressive_selection.d
 import 'package:env_test/services/active_plan_store.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
@@ -240,6 +241,50 @@ void main() {
     expect(find.text(strings.rulesNoAppDefaults), findsOneWidget);
     expect(appRuleCount(0), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Expressive rule action menus use the Tonos menu shape', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.binding.setSurfaceSize(const Size(390, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final brightness in Brightness.values) {
+      final theme = brightness == Brightness.light
+          ? ExpressiveThemeDefinition.light()
+          : ExpressiveThemeDefinition.dark();
+      await _pumpRules(
+        tester,
+        _RulesRepository(appMethods: [_oneAppRule], profiles: const []),
+        theme,
+      );
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(FlowMethodsPage)),
+      );
+      final menuFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is PopupMenuButton &&
+            widget.tooltip == strings.rulesOptionsTooltip,
+      );
+      expect(menuFinder, findsOneWidget);
+      final menu = tester.widget<PopupMenuButton>(menuFinder);
+      expect(
+        menu.shape,
+        RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu),
+        reason: '$brightness menu keeps its Expressive shape',
+      );
+
+      await tester.tap(menuFinder);
+      await tester.pumpAndSettle();
+      expect(find.text(strings.commonEdit), findsOneWidget);
+      expect(find.text(strings.commonDelete), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tapAt(const Offset(2, 2));
+      await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
   });
 
   testWidgets(

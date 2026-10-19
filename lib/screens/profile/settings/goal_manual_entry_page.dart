@@ -180,6 +180,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                     child: Column(
                       children: [
                         _numField(
+                          context,
                           _kcalCtrl,
                           label: strings.nutritionCalories,
                           integerOnly: true,
@@ -189,6 +190,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                           children: [
                             Expanded(
                               child: _numField(
+                                context,
                                 _proteinCtrl,
                                 label: strings.nutritionProtein,
                               ),
@@ -196,6 +198,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _numField(
+                                context,
                                 _carbCtrl,
                                 label: strings.nutritionCarbs,
                               ),
@@ -207,6 +210,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                           children: [
                             Expanded(
                               child: _numField(
+                                context,
                                 _fatCtrl,
                                 label: strings.nutritionFat,
                               ),
@@ -214,6 +218,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _numField(
+                                context,
                                 _fiberCtrl,
                                 label: strings.nutritionFiber,
                               ),
@@ -236,6 +241,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                           children: [
                             Expanded(
                               child: _numField(
+                                context,
                                 _sugarCtrl,
                                 label: strings.nutritionSugar,
                               ),
@@ -243,6 +249,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: _numField(
+                                context,
                                 _satFatCtrl,
                                 label: strings.nutritionSatFat,
                               ),
@@ -251,6 +258,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                         ),
                         const SizedBox(height: 12),
                         _numField(
+                          context,
                           _sodiumCtrl,
                           label: strings.nutritionSodium,
                           integerOnly: true,
@@ -289,6 +297,8 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
 
     return Scaffold(
       backgroundColor: tokens.pageCanvas,
+      extendBodyBehindAppBar: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(strings.nutritionManualGoalsTitle),
         backgroundColor: tokens.surfacePrimary,
@@ -307,15 +317,16 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
               )
             : const Icon(Icons.save),
         decorated: true,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       ),
       body: SafeArea(
         top: false,
         child: Form(
           key: _formKey,
           child: ListView(
+            primary: false,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
               _ExpressiveGoalSection(
                 title: strings.nutritionStartDate,
@@ -328,7 +339,10 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                     borderRadius: BorderRadius.circular(14),
                     onTap: _pickStartDate,
                     child: Padding(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       child: Row(
                         children: [
                           Icon(
@@ -348,7 +362,8 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                                       ),
                                 ),
                                 Text(
-                                  '${_startDate.year}-${_two(_startDate.month)}-${_two(_startDate.day)}',
+                                  MaterialLocalizations.of(context)
+                                      .formatMediumDate(_startDate),
                                   style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
                                         color: tokens.onSurfacePrimary,
@@ -359,7 +374,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                             ),
                           ),
                           Icon(
-                            Icons.calendar_month,
+                            Icons.chevron_right,
                             color: tokens.onSurfacePrimary,
                           ),
                         ],
@@ -372,22 +387,36 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                 title: strings.nutritionCaloriesAndMacros,
                 color: tokens.surfaceSecondary,
                 foreground: tokens.onSurfaceSecondary,
+                helperText: strings.nutritionOptionalTargetsHint,
                 child: Column(
                   children: [
                     _numField(
+                      context,
                       _kcalCtrl,
                       label: strings.nutritionCalories,
                       integerOnly: true,
                     ),
                     const SizedBox(height: 12),
                     fieldPair(
-                      _numField(_proteinCtrl, label: strings.nutritionProtein),
-                      _numField(_carbCtrl, label: strings.nutritionCarbs),
+                      _numField(
+                        context,
+                        _proteinCtrl,
+                        label: strings.nutritionProtein,
+                      ),
+                      _numField(
+                        context,
+                        _carbCtrl,
+                        label: strings.nutritionCarbs,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     fieldPair(
-                      _numField(_fatCtrl, label: strings.nutritionFat),
-                      _numField(_fiberCtrl, label: strings.nutritionFiber),
+                      _numField(context, _fatCtrl, label: strings.nutritionFat),
+                      _numField(
+                        context,
+                        _fiberCtrl,
+                        label: strings.nutritionFiber,
+                      ),
                     ),
                   ],
                 ),
@@ -399,11 +428,20 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                 child: Column(
                   children: [
                     fieldPair(
-                      _numField(_sugarCtrl, label: strings.nutritionSugar),
-                      _numField(_satFatCtrl, label: strings.nutritionSatFat),
+                      _numField(
+                        context,
+                        _sugarCtrl,
+                        label: strings.nutritionSugar,
+                      ),
+                      _numField(
+                        context,
+                        _satFatCtrl,
+                        label: strings.nutritionSatFat,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _numField(
+                      context,
                       _sodiumCtrl,
                       label: strings.nutritionSodium,
                       integerOnly: true,
@@ -419,6 +457,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
   }
 
   Widget _numField(
+    BuildContext context,
     TextEditingController controller, {
     required String label,
     bool integerOnly = false,
@@ -432,6 +471,10 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
         : InputDecoration(
             labelText: label,
             isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             filled: true,
             fillColor: Theme.of(context).brightness == Brightness.dark
                 ? Theme.of(context).colorScheme.surfaceContainerHighest
@@ -462,8 +505,11 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
               ),
             ),
           );
-    return TextFormField(
+    final field = TextFormField(
       controller: controller,
+      scrollPadding: tokens == null
+          ? const EdgeInsets.all(20)
+          : const EdgeInsets.fromLTRB(8, 32, 8, 88),
       keyboardType: integerOnly
           ? const TextInputType.numberWithOptions(signed: false, decimal: false)
           : const TextInputType.numberWithOptions(signed: false, decimal: true),
@@ -485,6 +531,12 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
         return null;
       },
     );
+    return tokens == null
+        ? field
+        : ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: field,
+          );
   }
 
   static String _two(int n) => n.toString().padLeft(2, '0');
@@ -502,12 +554,14 @@ class _ExpressiveGoalSection extends StatelessWidget {
     required this.color,
     required this.foreground,
     required this.child,
+    this.helperText,
   });
 
   final String title;
   final Color color;
   final Color foreground;
   final Widget child;
+  final String? helperText;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -531,7 +585,15 @@ class _ExpressiveGoalSection extends StatelessWidget {
           style: Theme.of(context).textTheme.titleSmall
               ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
         ),
-        const SizedBox(height: 14),
+        if (helperText != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            helperText!,
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: foreground.withValues(alpha: 0.82)),
+          ),
+        ],
+        const SizedBox(height: 12),
         child,
       ],
     ),

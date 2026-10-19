@@ -66,6 +66,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   int? _adaptationProfileId;
   int? _adaptationDurationMinutes;
   bool? _adaptationFilterValue;
+  bool? _adaptationExpressive;
   bool _isDiscardingOnboardingPlans = false;
   bool _filterForProfileEquipment = true;
   var _selectedDurationMinutes = 60;
@@ -102,7 +103,10 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         (plan) => PremadePlanLocalizer.instance.resolve(
           plan,
           locale,
-          oneHourDurationLabel: strings.premadeOneHour,
+          oneHourDurationLabel:
+              AppExpressivePlanningTokens.maybeOf(context) == null
+              ? strings.premadeOneHour
+              : strings.premadeExpressiveOneHour,
           oneHourDescriptionBuilder: (duration, planName) =>
               strings.premadeOneHourDescription(duration, planName),
         ),
@@ -235,20 +239,26 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     }
   }
 
-  Future<_PremadePlanAdaptationData> _ensureAdaptationData() {
+  Future<_PremadePlanAdaptationData> _ensureAdaptationData({
+    required bool expressive,
+  }) {
     if (_adaptationFuture == null ||
         _adaptationProfileId != widget.profileId ||
         _adaptationDurationMinutes != _selectedDurationMinutes ||
-        _adaptationFilterValue != _filterForProfileEquipment) {
+        _adaptationFilterValue != _filterForProfileEquipment ||
+        _adaptationExpressive != expressive) {
       _adaptationProfileId = widget.profileId;
       _adaptationDurationMinutes = _selectedDurationMinutes;
       _adaptationFilterValue = _filterForProfileEquipment;
-      _adaptationFuture = _loadAdaptationData();
+      _adaptationExpressive = expressive;
+      _adaptationFuture = _loadAdaptationData(expressive: expressive);
     }
     return _adaptationFuture!;
   }
 
-  Future<_PremadePlanAdaptationData> _loadAdaptationData() async {
+  Future<_PremadePlanAdaptationData> _loadAdaptationData({
+    required bool expressive,
+  }) async {
     final profileEquipmentNames = await _loadProfileEquipmentNames();
     final normalizedProfileEquipmentNames = _normalizeEquipmentNames(
       profileEquipmentNames,
@@ -257,12 +267,30 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       return _PremadePlanAdaptationData(
         profileEquipmentNames: profileEquipmentNames,
         adaptations: const <String, _PremadePlanAdaptation>{},
+        compatiblePlanIds: const <String>{},
       );
     }
 
     final plans = premadeTrainingPlans
         .where((plan) => plan.durationMinutes == _selectedDurationMinutes)
         .toList();
+    if (expressive) {
+      final compatible = await mapWithConcurrency<PremadeTrainingPlan, bool>(
+        plans,
+        maxConcurrency: _replacementBuildConcurrency,
+        mapper: (plan, _) =>
+            _planFitsProfile(plan, normalizedProfileEquipmentNames),
+      );
+      return _PremadePlanAdaptationData(
+        profileEquipmentNames: profileEquipmentNames,
+        adaptations: const <String, _PremadePlanAdaptation>{},
+        compatiblePlanIds: {
+          for (var index = 0; index < plans.length; index++)
+            if (compatible[index]) plans[index].id,
+        },
+      );
+    }
+
     final candidates = await _loadProfileCandidateEntries(
       normalizedProfileEquipmentNames,
     );
@@ -270,6 +298,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
       return _PremadePlanAdaptationData(
         profileEquipmentNames: profileEquipmentNames,
         adaptations: const <String, _PremadePlanAdaptation>{},
+        compatiblePlanIds: const <String>{},
       );
     }
 
@@ -321,7 +350,25 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     return _PremadePlanAdaptationData(
       profileEquipmentNames: profileEquipmentNames,
       adaptations: adaptations,
+      compatiblePlanIds: const <String>{},
     );
+  }
+
+  Future<bool> _planFitsProfile(
+    PremadeTrainingPlan plan,
+    Set<String> normalizedProfileEquipmentNames,
+  ) async {
+    for (final exercise in plan.exercises) {
+      final definition = await _findPremadeExerciseDefinition(exercise);
+      if (!_premadeExerciseFitsProfile(
+        exercise,
+        normalizedProfileEquipmentNames,
+        definition: definition,
+      )) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<Set<String>> _loadProfileEquipmentNames() async {
@@ -624,16 +671,63 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final homemadePlans =
         groupedPlans.remove(_homemadeSourceName) ??
         const <PremadeTrainingPlan>[];
-    final adaptationFuture = _ensureAdaptationData();
+    final adaptationFuture = _ensureAdaptationData(
+      expressive: expressive != null,
+    );
     final localizedPlansFuture = _localizedPlansFuture ??= _loadLocalizedPlans(
       Localizations.localeOf(context),
     );
     final content = Scaffold(
       backgroundColor: expressive?.pageCanvas,
       appBar: AppBar(
-        title: Text(strings.premadePlansTitle),
+        toolbarHeight: expressive == null ? null : 76,
+        titleSpacing: expressive == null ? NavigationToolbar.kMiddleSpacing : 0,
+        title: Text(
+          strings.premadePlansTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         backgroundColor: expressive?.pageCanvas,
         foregroundColor: expressive?.onPage,
+        actions: expressive == null
+            ? null
+            : [
+                KeyedSubtree(
+                  key: _durationTutorialKey,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          strings.optimizedWorkoutDuration,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: expressive.configurationForeground,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        Transform.translate(
+                          offset: const Offset(0, -4),
+                          child: _PremadeDurationSwitch(
+                            durationMinutes: _selectedDurationMinutes,
+                            onChanged: (durationMinutes) {
+                              setState(() {
+                                _selectedDurationMinutes = durationMinutes;
+                                _adaptationFuture = null;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
       ),
       bottomNavigationBar: widget.onboardingMode
           ? OnboardingPlanActionBar(
@@ -662,10 +756,31 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                       profileEquipmentNames:
                           loadedAdaptationData.profileEquipmentNames,
                       adaptations: const <String, _PremadePlanAdaptation>{},
+                      compatiblePlanIds: const <String>{},
                     );
               final isPreparingFilter =
                   _filterForProfileEquipment &&
+                  widget.profileId != null &&
                   snapshot.connectionState != ConnectionState.done;
+              final allDurationPlans = premadeTrainingPlans
+                  .where(
+                    (plan) => plan.durationMinutes == _selectedDurationMinutes,
+                  )
+                  .toList();
+              final visiblePlanIds =
+                  expressive != null &&
+                      _filterForProfileEquipment &&
+                      widget.profileId != null &&
+                      !isPreparingFilter
+                  ? adaptationData.compatiblePlanIds
+                  : null;
+              final visiblePlanCount = visiblePlanIds == null
+                  ? allDurationPlans.length
+                  : allDurationPlans
+                        .where((plan) => visiblePlanIds.contains(plan.id))
+                        .length;
+              final showNoMatchingPlans =
+                  visiblePlanIds != null && visiblePlanCount == 0;
               return ListView(
                 padding: EdgeInsets.fromLTRB(
                   16,
@@ -675,7 +790,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                 ),
                 children: [
                   KeyedSubtree(
-                    key: _durationTutorialKey,
+                    key: expressive == null ? _durationTutorialKey : null,
                     child: _PremadeDurationHeader(
                       durationMinutes: _selectedDurationMinutes,
                       onChanged: (durationMinutes) {
@@ -685,7 +800,9 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                         });
                       },
                       child: Text(
-                        strings.premadeDescription,
+                        expressive == null
+                            ? strings.premadeDescription
+                            : strings.premadeExpressiveDescription,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -711,35 +828,48 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  KeyedSubtree(
-                    key: _planListTutorialKey,
-                    child: _PremadeSourceSection(
-                      sourceName: _homemadeSourceName,
-                      isFeatured: true,
-                      plans: homemadePlans,
-                      planGroupNames: _homemadePlanGroups,
-                      initiallyExpanded: true,
-                      addingPlanIds: _addingPlanIds,
-                      adaptationData: adaptationData,
-                      localizedPlans: localizedPlans,
-                      isPreparingFilter: isPreparingFilter,
-                      onAddPlan: _addPlan,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  for (final entry in groupedPlans.entries) ...[
-                    _PremadeSourceSection(
-                      sourceName: entry.key,
-                      isFeatured: false,
-                      plans: entry.value,
-                      initiallyExpanded: false,
-                      addingPlanIds: _addingPlanIds,
-                      adaptationData: adaptationData,
-                      localizedPlans: localizedPlans,
-                      isPreparingFilter: isPreparingFilter,
-                      onAddPlan: _addPlan,
+                  if (showNoMatchingPlans)
+                    _PremadeEquipmentEmptyState(
+                      message: adaptationData.profileEquipmentNames.isEmpty
+                          ? strings.premadeExpressiveEquipmentMissing
+                          : strings.premadeExpressiveEquipmentNoMatches,
+                      expressive: expressive,
+                    )
+                  else ...[
+                    KeyedSubtree(
+                      key: _planListTutorialKey,
+                      child: _PremadeSourceSection(
+                        sourceName: _homemadeSourceName,
+                        isFeatured: true,
+                        plans: homemadePlans,
+                        visiblePlanIds: visiblePlanIds,
+                        isFiltering: visiblePlanIds != null,
+                        planGroupNames: _homemadePlanGroups,
+                        initiallyExpanded: true,
+                        addingPlanIds: _addingPlanIds,
+                        adaptationData: adaptationData,
+                        localizedPlans: localizedPlans,
+                        isPreparingFilter: isPreparingFilter,
+                        onAddPlan: _addPlan,
+                      ),
                     ),
                     const SizedBox(height: 16),
+                    for (final entry in groupedPlans.entries) ...[
+                      _PremadeSourceSection(
+                        sourceName: entry.key,
+                        isFeatured: false,
+                        plans: entry.value,
+                        visiblePlanIds: visiblePlanIds,
+                        isFiltering: visiblePlanIds != null,
+                        initiallyExpanded: false,
+                        addingPlanIds: _addingPlanIds,
+                        adaptationData: adaptationData,
+                        localizedPlans: localizedPlans,
+                        isPreparingFilter: isPreparingFilter,
+                        onAddPlan: _addPlan,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ],
               );
@@ -887,15 +1017,18 @@ class _PlanCountBadge extends StatelessWidget {
 class _PremadePlanAdaptationData {
   final Set<String> profileEquipmentNames;
   final Map<String, _PremadePlanAdaptation> adaptations;
+  final Set<String> compatiblePlanIds;
 
   const _PremadePlanAdaptationData({
     required this.profileEquipmentNames,
     required this.adaptations,
+    required this.compatiblePlanIds,
   });
 
   static const empty = _PremadePlanAdaptationData(
     profileEquipmentNames: <String>{},
     adaptations: <String, _PremadePlanAdaptation>{},
+    compatiblePlanIds: <String>{},
   );
 
   int get totalReplacementCount => adaptations.values.fold<int>(
@@ -959,28 +1092,47 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
     final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final filterSurface = expressive == null
+        ? surfaces.planFilter
+        : theme.brightness == Brightness.dark
+        ? expressive.configurationSurface
+        : Color.lerp(expressive.equipmentSurface, expressive.pageCanvas, 0.14)!;
     final filterForeground =
-        expressive?.equipmentForeground ??
+        (expressive == null
+            ? null
+            : theme.brightness == Brightness.dark
+            ? expressive.configurationForeground
+            : expressive.equipmentForeground) ??
         (neo ? tonosForegroundForSurface(context, surfaces.planFilter) : null);
     final filterSecondary =
-        expressive?.equipmentForeground ??
+        filterForeground ??
         (neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planFilter)
             : scheme.onSurfaceVariant);
     final subtitle = !enabled
-        ? strings.premadeEquipmentSelectProfile
+        ? expressive == null
+              ? strings.premadeEquipmentSelectProfile
+              : strings.premadeExpressiveEquipmentSelectProfile
         : !value
-        ? strings.premadeEquipmentExact
+        ? expressive == null
+              ? strings.premadeEquipmentExact
+              : strings.premadeExpressiveEquipmentAll
         : isLoading
-        ? strings.premadeEquipmentChecking
+        ? expressive == null
+              ? strings.premadeEquipmentChecking
+              : strings.premadeExpressiveEquipmentChecking
         : !hasProfileEquipment
-        ? strings.premadeEquipmentMissing
+        ? expressive == null
+              ? strings.premadeEquipmentMissing
+              : strings.premadeExpressiveEquipmentMissing
+        : expressive != null
+        ? strings.premadeExpressiveEquipmentCompatible
         : replacementCount > 0
         ? strings.premadeEquipmentReplacements(replacementCount)
         : strings.premadeEquipmentFits;
 
     return Card(
-      color: expressive?.equipmentSurface ?? surfaces.planFilter,
+      color: filterSurface,
       elevation: expressive == null ? null : 0,
       shape: expressive == null
           ? null
@@ -999,14 +1151,26 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
                 (constraints.maxWidth < 340 ||
                     MediaQuery.textScalerOf(context).scale(14) > 18);
             final control = isLoading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
+                ? expressive == null
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : const SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
                 : Switch(
                     value: value,
                     onChanged: enabled ? onChanged : null,
@@ -1016,7 +1180,9 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  strings.swapFilterProfileEquipment,
+                  expressive == null
+                      ? strings.swapFilterProfileEquipment
+                      : strings.premadeEquipmentFilterLabel,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: filterForeground,
                     fontWeight: FontWeight.w800,
@@ -1066,6 +1232,60 @@ class _PremadeProfileEquipmentFilterCard extends StatelessWidget {
   }
 }
 
+class _PremadeEquipmentEmptyState extends StatelessWidget {
+  final String message;
+  final AppExpressivePlanningTokens? expressive;
+
+  const _PremadeEquipmentEmptyState({
+    required this.message,
+    required this.expressive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final expressiveTokens = expressive;
+    return Card(
+      color: expressiveTokens?.configurationSurface,
+      elevation: expressiveTokens == null ? null : 0,
+      shape: expressiveTokens == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: expressiveTokens.supportShape,
+              side: BorderSide(
+                color: expressiveTokens.outline.withValues(alpha: 0.24),
+              ),
+            ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.fitness_center_outlined,
+              color:
+                  expressiveTokens?.configurationForeground ??
+                  theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color:
+                      expressiveTokens?.configurationForeground ??
+                      theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _PremadeDurationHeader extends StatelessWidget {
   final int durationMinutes;
   final ValueChanged<int> onChanged;
@@ -1083,6 +1303,10 @@ class _PremadeDurationHeader extends StatelessWidget {
       durationMinutes: durationMinutes,
       onChanged: onChanged,
     );
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    if (expressive != null) {
+      return child;
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1132,6 +1356,54 @@ class _PremadeDurationSwitch extends StatelessWidget {
             ? tonosForegroundForSurface(context, surfaces.planDuration)
             : null);
     final isTwoHour = durationMinutes == 120;
+    if (expressive != null) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: SegmentedButton<int>(
+          segments: [
+            ButtonSegment<int>(
+              value: 60,
+              label: Text(strings.premadeExpressiveOneHour),
+            ),
+            ButtonSegment<int>(
+              value: 120,
+              label: Text(strings.premadeExpressiveTwoHours),
+            ),
+          ],
+          selected: {durationMinutes},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) => onChanged(selection.first),
+          style: ButtonStyle(
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.padded,
+            minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+            padding: const WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+            foregroundColor: WidgetStateProperty.resolveWith((states) {
+              return states.contains(WidgetState.selected)
+                  ? expressive.actionPrimaryForeground
+                  : expressive.configurationForeground;
+            }),
+            backgroundColor: WidgetStateProperty.resolveWith((states) {
+              return states.contains(WidgetState.selected)
+                  ? expressive.actionPrimary
+                  : expressive.configurationSurface;
+            }),
+            side: WidgetStateProperty.resolveWith((states) {
+              return BorderSide(
+                color: states.contains(WidgetState.selected)
+                    ? expressive.actionPrimary
+                    : expressive.outline.withValues(alpha: 0.45),
+              );
+            }),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: expressive.rowShape),
+            ),
+          ),
+        ),
+      );
+    }
     final activeStyle = theme.textTheme.labelLarge?.copyWith(
       color:
           expressive?.selectedSurface ??
@@ -1200,6 +1472,8 @@ class _PremadeSourceSection extends StatelessWidget {
   final String sourceName;
   final bool isFeatured;
   final List<PremadeTrainingPlan> plans;
+  final Set<String>? visiblePlanIds;
+  final bool isFiltering;
   final List<String> planGroupNames;
   final bool initiallyExpanded;
   final Set<String> addingPlanIds;
@@ -1216,6 +1490,8 @@ class _PremadeSourceSection extends StatelessWidget {
     required this.sourceName,
     required this.isFeatured,
     required this.plans,
+    required this.visiblePlanIds,
+    required this.isFiltering,
     this.planGroupNames = const <String>[],
     required this.initiallyExpanded,
     required this.addingPlanIds,
@@ -1230,9 +1506,13 @@ class _PremadeSourceSection extends StatelessWidget {
     for (final plan in plans) {
       final localizedPlan =
           localizedPlans[plan.id] ?? LocalizedPremadePlan.fromPlan(plan);
-      grouped
-          .putIfAbsent(localizedPlan.groupName, () => <PremadeTrainingPlan>[])
-          .add(plan);
+      final groupPlans = grouped.putIfAbsent(
+        localizedPlan.groupName,
+        () => <PremadeTrainingPlan>[],
+      );
+      if (visiblePlanIds == null || visiblePlanIds!.contains(plan.id)) {
+        groupPlans.add(plan);
+      }
     }
     return grouped;
   }
@@ -1262,7 +1542,10 @@ class _PremadeSourceSection extends StatelessWidget {
     return canonicalGroupName;
   }
 
-  String _localizedSourceName() {
+  String _localizedSourceName(BuildContext context) {
+    if (isFeatured && AppExpressivePlanningTokens.maybeOf(context) != null) {
+      return AppLocalizations.of(context).premadeBuiltinPlansTitle;
+    }
     if (plans.isEmpty) return sourceName;
     final firstPlan = plans.first;
     return (localizedPlans[firstPlan.id] ??
@@ -1277,7 +1560,10 @@ class _PremadeSourceSection extends StatelessWidget {
     final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final grouped = _plansByGroup();
     final orderedGroupNames = _orderedGroupNames(grouped);
-    final planCount = plans.length;
+    final planCount = grouped.values.fold<int>(
+      0,
+      (total, plansInGroup) => total + plansInGroup.length,
+    );
     final sourceSurface = isFeatured
         ? expressive?.planFocalSurface
         : expressive?.planSupportSurface;
@@ -1301,19 +1587,29 @@ class _PremadeSourceSection extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: initiallyExpanded,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: expressive == null ? 4 : 0,
+        ),
+        childrenPadding: EdgeInsets.fromLTRB(
+          expressive == null ? 12 : 10,
+          0,
+          expressive == null ? 12 : 10,
+          expressive == null ? 12 : 8,
+        ),
         iconColor: sourceForeground,
         collapsedIconColor: sourceForeground,
         title: Text(
-          _localizedSourceName(),
+          _localizedSourceName(context),
           style: theme.textTheme.titleLarge?.copyWith(
             color: sourceForeground,
             fontWeight: FontWeight.w900,
           ),
         ),
         subtitle: Text(
-          strings.premadePlansAvailable(planCount),
+          expressive == null
+              ? strings.premadePlansAvailable(planCount)
+              : strings.premadeExpressivePlansAvailable(planCount),
           style: theme.textTheme.labelMedium?.copyWith(
             color: sourceForeground ?? theme.colorScheme.onSurfaceVariant,
           ),
@@ -1323,6 +1619,7 @@ class _PremadeSourceSection extends StatelessWidget {
             _PremadePlanGroupTile(
               groupName: groupName,
               plans: grouped[groupName] ?? const <PremadeTrainingPlan>[],
+              isFiltering: isFiltering,
               addingPlanIds: addingPlanIds,
               adaptationData: adaptationData,
               localizedPlans: localizedPlans,
@@ -1333,7 +1630,7 @@ class _PremadeSourceSection extends StatelessWidget {
         ],
       ),
     );
-    return expressive == null
+    return expressive == null || isFeatured
         ? groupCard
         : TonosExpressivePressResponse(
             enabled: true,
@@ -1347,6 +1644,7 @@ class _PremadeSourceSection extends StatelessWidget {
 class _PremadePlanGroupTile extends StatelessWidget {
   final String groupName;
   final List<PremadeTrainingPlan> plans;
+  final bool isFiltering;
   final Set<String> addingPlanIds;
   final _PremadePlanAdaptationData adaptationData;
   final Map<String, LocalizedPremadePlan> localizedPlans;
@@ -1361,6 +1659,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
   const _PremadePlanGroupTile({
     required this.groupName,
     required this.plans,
+    required this.isFiltering,
     required this.addingPlanIds,
     required this.adaptationData,
     required this.localizedPlans,
@@ -1392,8 +1691,47 @@ class _PremadePlanGroupTile extends StatelessWidget {
         (neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planGroup)
             : theme.colorScheme.onSurfaceVariant);
+    final countLabel = plans.isEmpty && !isFiltering
+        ? strings.premadeNoTemplates
+        : expressive == null
+        ? strings.premadePlansCount(planCount)
+        : strings.premadeExpressivePlansCount(planCount);
+    final categoryHeaderTarget = isFeatured
+        ? expressive?.planSupportSurface
+        : expressive?.configurationSurface;
+    final categoryTitle = LayoutBuilder(
+      builder: (context, constraints) {
+        final stackCount =
+            constraints.maxWidth < 230 ||
+            MediaQuery.textScalerOf(context).scale(14) > 18;
+        final name = Text(
+          groupName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: groupForeground,
+            fontWeight: FontWeight.w900,
+          ),
+        );
+        final count = _PremadeCountBadge(label: countLabel);
+        if (stackCount) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [name, const SizedBox(height: 4), count],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: name),
+            const SizedBox(width: 8),
+            count,
+          ],
+        );
+      },
+    );
     final planCard = Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: expressive == null ? 10 : 6),
       color: groupSurface ?? surfaces.planGroup,
       elevation: expressive == null ? null : 0,
       shape: expressive == null
@@ -1401,33 +1739,57 @@ class _PremadePlanGroupTile extends StatelessWidget {
           : RoundedRectangleBorder(
               borderRadius: expressive.supportShape,
               side: BorderSide(
-                color: expressive.outline.withValues(alpha: 0.35),
+                color: expressive.outline.withValues(alpha: 0.42),
               ),
             ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
         initiallyExpanded: false,
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: expressive == null ? 14 : 8,
+          vertical: expressive == null ? 2 : 0,
+        ),
+        childrenPadding: EdgeInsets.fromLTRB(
+          expressive == null ? 10 : 8,
+          0,
+          expressive == null ? 10 : 8,
+          expressive == null ? 10 : 8,
+        ),
         iconColor: groupForeground,
         collapsedIconColor: groupForeground,
-        title: Text(
-          groupName,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: expressive != null
-                ? groupForeground
-                : neo
-                ? groupForeground
-                : null,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        subtitle: Text(
-          planCount == 0
-              ? strings.premadeNoTemplates
-              : strings.premadePlansCount(planCount),
-          style: theme.textTheme.labelMedium?.copyWith(color: groupSecondary),
-        ),
+        title: expressive == null
+            ? Text(
+                groupName,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: neo ? groupForeground : null,
+                  fontWeight: FontWeight.w800,
+                ),
+              )
+            : DecoratedBox(
+                key: ValueKey('premade-category-header-$groupName'),
+                decoration: BoxDecoration(
+                  color: Color.lerp(groupSurface, categoryHeaderTarget, 0.18),
+                  borderRadius: expressive.rowShape,
+                  border: Border.all(
+                    color: expressive.outline.withValues(alpha: 0.34),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  child: categoryTitle,
+                ),
+              ),
+        subtitle: expressive == null
+            ? Text(
+                countLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: groupSecondary,
+                ),
+              )
+            : null,
         children: [
           if (plans.isEmpty)
             Padding(
@@ -1435,7 +1797,9 @@ class _PremadePlanGroupTile extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  strings.premadeTemplatesLater,
+                  isFiltering
+                      ? strings.premadeExpressiveEquipmentNoMatches
+                      : strings.premadeTemplatesLater,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: groupSecondary,
                   ),
@@ -1445,6 +1809,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
           else
             for (final plan in plans) ...[
               _PremadePlanCard(
+                key: ValueKey(plan.id),
                 plan: plan,
                 localizedPlan:
                     localizedPlans[plan.id] ??
@@ -1453,6 +1818,8 @@ class _PremadePlanGroupTile extends StatelessWidget {
                 replacementCount: adaptationData.replacementCountFor(plan),
                 isAdding: addingPlanIds.contains(plan.id),
                 isPreparing: isPreparingFilter,
+                isFeatured: isFeatured,
+                parentSurface: groupSurface,
                 onAdd: () {
                   onAddPlan(plan, adaptationData.exercisesFor(plan));
                 },
@@ -1473,6 +1840,37 @@ class _PremadePlanGroupTile extends StatelessWidget {
   }
 }
 
+class _PremadeCountBadge extends StatelessWidget {
+  final String label;
+
+  const _PremadeCountBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    if (expressive == null) return Text(label);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: expressive.planAccent,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: expressive.planAccentForeground,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PremadePlanCard extends StatefulWidget {
   final PremadeTrainingPlan plan;
   final LocalizedPremadePlan localizedPlan;
@@ -1480,15 +1878,20 @@ class _PremadePlanCard extends StatefulWidget {
   final int replacementCount;
   final bool isAdding;
   final bool isPreparing;
+  final bool isFeatured;
+  final Color? parentSurface;
   final VoidCallback onAdd;
 
   const _PremadePlanCard({
+    super.key,
     required this.plan,
     required this.localizedPlan,
     required this.exercises,
     required this.replacementCount,
     required this.isAdding,
     required this.isPreparing,
+    required this.isFeatured,
+    required this.parentSurface,
     required this.onAdd,
   });
 
@@ -1518,24 +1921,50 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
     final motion = context.motionTokens;
     final strings = AppLocalizations.of(context);
     final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final planSurface = expressive == null
+        ? null
+        : Color.lerp(
+            widget.parentSurface ?? expressive.configurationSurface,
+            widget.isFeatured
+                ? expressive.planSupportSurface
+                : expressive.configurationSurface,
+            theme.brightness == Brightness.dark ? 0.18 : 0.22,
+          );
     final exercises = widget.exercises;
     final totalSets = exercises.fold<int>(
       0,
       (sum, exercise) => sum + exercise.sets,
     );
+    final durationLabel = widget.plan.durationMinutes == 60
+        ? strings.premadeExpressiveOneHour
+        : strings.premadeExpressiveTwoHours;
+    final description = expressive == null
+        ? widget.localizedPlan.description.trim()
+        : strings.premadePlanQuickDescription(
+            durationLabel,
+            widget.localizedPlan.name,
+          );
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8),
-        Text(
-          widget.localizedPlan.description,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color:
-                expressive?.configurationForeground ??
-                theme.colorScheme.onSurfaceVariant,
+        SizedBox(height: expressive == null ? 8 : 6),
+        if (description.isNotEmpty) ...[
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color:
+                  expressive?.configurationForeground ??
+                  theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
+          SizedBox(height: expressive == null ? 12 : 8),
+          if (expressive != null)
+            Divider(
+              height: 16,
+              thickness: 1,
+              color: expressive.outline.withValues(alpha: 0.24),
+            ),
+        ],
         for (var i = 0; i < exercises.length; i++)
           _PremadeExerciseRow(
             exercise: exercises[i],
@@ -1574,6 +2003,10 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
           : FilledButton.styleFrom(
               backgroundColor: expressive.actionPrimary,
               foregroundColor: expressive.actionPrimaryForeground,
+              minimumSize: const Size(0, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.padded,
             ),
       onPressed: widget.isAdding || widget.isPreparing ? null : widget.onAdd,
       icon: widget.isAdding || widget.isPreparing
@@ -1593,14 +2026,14 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
     );
 
     final planCard = Card(
-      color: expressive?.configurationSurface,
+      color: planSurface,
       elevation: expressive == null ? null : 0,
       shape: expressive == null
           ? null
           : RoundedRectangleBorder(
               borderRadius: expressive.rowShape,
               side: BorderSide(
-                color: expressive.outline.withValues(alpha: 0.46),
+                color: expressive.outline.withValues(alpha: 0.32),
               ),
             ),
       clipBehavior: Clip.antiAlias,
@@ -1610,7 +2043,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(expressive == null ? 16 : 12),
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final titleWithIcon = Row(
@@ -1629,13 +2062,18 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                     ],
                   );
 
-                  if (constraints.maxWidth < 330) {
+                  if (constraints.maxWidth < (expressive == null ? 330 : 280) ||
+                      (expressive != null &&
+                          MediaQuery.textScalerOf(context).scale(14) > 20)) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         titleWithIcon,
-                        const SizedBox(height: 10),
-                        SizedBox(width: double.infinity, child: addButton),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: addButton,
+                        ),
                       ],
                     );
                   }
@@ -1653,7 +2091,12 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
             AnimatedCrossFade(
               firstChild: const SizedBox(width: double.infinity),
               secondChild: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  expressive == null ? 16 : 12,
+                  0,
+                  expressive == null ? 16 : 12,
+                  expressive == null ? 16 : 12,
+                ),
                 child: details,
               ),
               crossFadeState: _isExpanded
@@ -1748,6 +2191,11 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
     final locale = Localizations.localeOf(context);
     final shapes = context.shapeTokens;
     final surfaces = context.surfaceTokens;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final setAndRepDetails =
+        '${strings.catalogSetUnits(widget.exercise.sets)} × '
+        '${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)} '
+        '${strings.unitReps}';
     final equipment = <CatalogEntityDisplayName>[
       if (widget.exercise.equipment.trim().isNotEmpty)
         CatalogEntityDisplayName(
@@ -1758,74 +2206,146 @@ class _PremadeExerciseRowState extends State<_PremadeExerciseRow> {
 
     return LocalizedCatalogEntityNamesBuilder(
       entities: equipment,
-      builder: (context, equipmentNames) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.fitness_center,
-              size: 16,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: displayName,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        if (equipmentNames.isNotEmpty)
-                          TextSpan(
-                            text: ' - ${equipmentNames.join(', ')}',
-                            style: TextStyle(color: theme.colorScheme.primary),
-                          ),
-                        TextSpan(
-                          text:
-                              ' - ${LocalizedFormatters.number(widget.exercise.sets, locale, maximumFractionDigits: 0)}'
-                              ' x ${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)}',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.wasSwapped)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(
-                          alpha: surfaces.planSwapBadgeOpacity,
-                        ),
-                        borderRadius: shapes.pill,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        child: Text(
-                          strings.premadeProfileSwap,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+      builder: (context, equipmentNames) {
+        final swapBadge = DecoratedBox(
+          decoration: BoxDecoration(
+            color:
+                expressive?.planAccent ??
+                theme.colorScheme.primaryContainer.withValues(
+                  alpha: surfaces.planSwapBadgeOpacity,
+                ),
+            borderRadius: shapes.pill,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            child: Text(
+              strings.premadeProfileSwap,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color:
+                    expressive?.planAccentForeground ??
+                    theme.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+
+        if (expressive != null) {
+          final normalizedName = displayName.trim().toLowerCase();
+          final distinctEquipmentNames = equipmentNames.where((name) {
+            final normalizedEquipment = name.trim().toLowerCase();
+            return normalizedEquipment.isNotEmpty &&
+                !normalizedName.contains(normalizedEquipment);
+          });
+          final supportingDetails = [
+            if (distinctEquipmentNames.isNotEmpty)
+              distinctEquipmentNames.join(', '),
+            setAndRepDetails,
+          ].join(' · ');
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.fitness_center,
+                    size: 18,
+                    color: expressive.configurationForeground,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: expressive.configurationForeground,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          if (widget.wasSwapped) ...[
+                            const SizedBox(width: 8),
+                            swapBadge,
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        supportingDetails,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: expressive.configurationForeground.withValues(
+                            alpha: 0.82,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.fitness_center,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: displayName,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          if (equipmentNames.isNotEmpty)
+                            TextSpan(
+                              text: ' - ${equipmentNames.join(', ')}',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          TextSpan(
+                            text:
+                                ' - ${LocalizedFormatters.number(widget.exercise.sets, locale, maximumFractionDigits: 0)}'
+                                ' x ${LocalizedFormatters.number(widget.exercise.reps, locale, maximumFractionDigits: 0)}',
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (widget.wasSwapped) swapBadge,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

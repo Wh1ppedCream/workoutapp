@@ -31,6 +31,7 @@ void main() {
               textScale: textScale,
               family: AppThemeFamilyIdentity.expressivePreview,
               muscleRanking: muscleRanking,
+              locale: muscleRanking ? const Locale('es') : null,
             );
 
             final screen = find.byType(
@@ -39,58 +40,80 @@ void main() {
             final strings = AppLocalizations.of(tester.element(screen));
             final field = find.byType(TextFormField);
             expect(field, findsOneWidget, reason: mode);
-            if (muscleRanking) {
-              final label = find.descendant(
+            final title = muscleRanking
+                ? strings.settingsMuscleRankings
+                : strings.settingsBodyPartRankings;
+            expect(find.text(title), findsOneWidget, reason: mode);
+            expect(find.byType(AppBar), findsNothing, reason: mode);
+            expect(
+              find.text(strings.rankingsRank),
+              findsOneWidget,
+              reason: '$mode should show one contextual Rank cue',
+            );
+            expect(
+              find.descendant(
                 of: field,
                 matching: find.text(strings.rankingsRank),
-              );
-              expect(label, findsOneWidget, reason: mode);
+              ),
+              findsNothing,
+              reason: '$mode should not put Rank inside the field',
+            );
+            final editableField = tester.widget<TextField>(
+              find.descendant(of: field, matching: find.byType(TextField)),
+            );
+            expect(
+              editableField.decoration?.labelText,
+              isNull,
+              reason: '$mode field should have no visible floating label',
+            );
+            expect(
+              editableField.decoration?.label,
+              isNull,
+              reason: '$mode field should not reserve space for a hidden label',
+            );
+            final editableText = find.byType(EditableText);
+            if (muscleRanking) {
+              await tester.ensureVisible(field);
+              await tester.pumpAndSettle();
+              await tester.tap(field);
+              await tester.pump();
+            }
+            final semantics = tester
+                .getSemantics(muscleRanking ? editableText : field)
+                .getSemanticsData();
+            expect(
+              semantics.hasFlag(SemanticsFlag.isTextField),
+              isTrue,
+              reason: '$mode rank field remains editable to accessibility',
+            );
+            expect(
+              semantics.hasAction(SemanticsAction.setText),
+              isTrue,
+              reason: '$mode rank field retains its text-edit action',
+            );
+            if (muscleRanking) {
               expect(
-                tester.renderObject<RenderParagraph>(label).didExceedMaxLines,
-                isFalse,
-                reason: '$mode should render the full Rank label',
+                semantics.hasAction(SemanticsAction.setSelection),
+                isTrue,
+                reason: '$mode muscle rank field retains native selection',
+              );
+              expect(semantics.value, '1', reason: '$mode rank value');
+
+              final visibleMuscleName = tester
+                  .widget<Text>(find.text('Pectoral mayor'))
+                  .data!;
+              expect(visibleMuscleName, 'Pectoral mayor', reason: mode);
+              expect(
+                semantics.label,
+                contains(visibleMuscleName),
+                reason: '$mode field uses the localized displayed muscle name',
+              );
+              expect(
+                semantics.label,
+                contains(strings.rankingsRank),
+                reason: '$mode field has clear Rank context',
               );
             } else {
-              // Expressive Body Part Rankings uses the Rank cue beside the
-              // field, keeping its visible outline label-free.
-              expect(
-                find.text(strings.settingsBodyPartRankings),
-                findsOneWidget,
-                reason: '$mode should show one page title',
-              );
-              expect(find.byType(AppBar), findsNothing, reason: mode);
-              expect(
-                find.text(strings.rankingsRank),
-                findsOneWidget,
-                reason: '$mode should show one contextual Rank cue',
-              );
-              expect(
-                find.descendant(
-                  of: field,
-                  matching: find.text(strings.rankingsRank),
-                ),
-                findsNothing,
-                reason: '$mode should not put Rank inside the field',
-              );
-              final editableField = tester.widget<TextField>(
-                find.descendant(of: field, matching: find.byType(TextField)),
-              );
-              expect(
-                editableField.decoration?.labelText,
-                isNull,
-                reason: '$mode field should have no visible floating label',
-              );
-              final semantics = tester.getSemantics(field).getSemanticsData();
-              expect(
-                semantics.hasFlag(SemanticsFlag.isTextField),
-                isTrue,
-                reason: '$mode rank field remains editable to accessibility',
-              );
-              expect(
-                semantics.hasAction(SemanticsAction.setText),
-                isTrue,
-                reason: '$mode rank field retains its text-edit action',
-              );
               expect(semantics.label, contains('Chest'));
               expect(semantics.label, contains(strings.rankingsRank));
               expect(semantics.label, contains('1'));
@@ -338,6 +361,7 @@ Future<void> _pumpRankingScreen(
   required double textScale,
   required AppThemeFamilyIdentity family,
   required bool muscleRanking,
+  Locale? locale,
   _RankingLabelRepository? repository,
   Brightness brightness = Brightness.light,
 }) async {
@@ -354,6 +378,7 @@ Future<void> _pumpRankingScreen(
       child: MultiProvider(
         providers: [Provider<AppRepository>.value(value: repository)],
         child: MaterialApp(
+          locale: locale,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF345B50),
@@ -378,7 +403,11 @@ class _RankingLabelRepository extends AppRepository {
   final bool includeSecondBodyPart;
   final BodyPart _bodyPart = BodyPart(1, 'Chest');
   final BodyPart _secondBodyPart = BodyPart(3, 'Back');
-  final Muscle _muscle = Muscle(id: 2, name: 'Pectorals');
+  final Muscle _muscle = Muscle(
+    id: 24,
+    name: 'Pectoralis Major',
+    catalogId: 'tonos.muscle.0024',
+  );
   final Map<int, int> savedBodyPartRanks = {};
 
   @override

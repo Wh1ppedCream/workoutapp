@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 
@@ -496,6 +497,76 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   });
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive dialog dropdown is tonal and rounded in $brightness',
+      (tester) async {
+        final theme = brightness == Brightness.dark
+            ? ExpressiveThemeDefinition.dark()
+            : ExpressiveThemeDefinition.light();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => TonosDialogFrame(
+                      child: AlertDialog(
+                        content: TonosDialogDropdownButton<String>(
+                          value: 'weight',
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'weight',
+                              child: Text('Weight'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'reps',
+                              child: Text('Reps'),
+                            ),
+                          ],
+                          onChanged: (_) {},
+                        ),
+                      ),
+                    ),
+                  ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        final dialogContext = tester.element(
+          find.byType(TonosDialogDropdownButton<String>),
+        );
+        final dialogSurface =
+            theme.dialogTheme.backgroundColor ??
+            dialogContext.surfaceTokens.dialog;
+        final foreground = tonosForegroundForSurface(
+          dialogContext,
+          dialogSurface,
+        );
+        final dropdown = tester.widget<DropdownButton<String>>(
+          find.byType(DropdownButton<String>),
+        );
+        expect(dropdown.style?.color, foreground);
+        expect(dropdown.iconEnabledColor, foreground);
+        expect(dropdown.dropdownColor, dialogSurface);
+        expect(dropdown.borderRadius, ExpressiveTrainShapes.menu);
+
+        await tester.tap(find.byType(DropdownButton<String>));
+        await tester.pumpAndSettle();
+        expect(find.text('Reps'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {

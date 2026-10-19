@@ -625,4 +625,56 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });
+
+  testWidgets(
+    'Expressive WeightCard menu uses the expressive menu silhouette',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final units = UnitPreferenceProvider();
+      await units.ready;
+      addTearDown(units.dispose);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<UnitPreferenceProvider>.value(
+          value: units,
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            themeAnimationDuration: Duration.zero,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: WeightCard(
+                exercise: WeightExercise(
+                  name: 'Squat',
+                  equipment: 'Barbell',
+                  sets: [ExerciseSet(weight: 100, reps: 5)],
+                ),
+                onSwapExercise: () {},
+                expressiveWorkoutPresentation: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final anchor = find.byType(MenuAnchor);
+      await tester.tap(
+        find.descendant(of: anchor, matching: find.byIcon(Icons.more_vert)),
+      );
+      await tester.pumpAndSettle();
+
+      final shape = tester
+          .widget<MenuAnchor>(anchor)
+          .style!
+          .shape!
+          .resolve(const <WidgetState>{});
+      expect(shape, isA<RoundedRectangleBorder>());
+      expect(
+        (shape! as RoundedRectangleBorder).borderRadius,
+        ExpressiveTrainShapes.menu,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

@@ -763,7 +763,7 @@ class _TrainPageState extends State<TrainPage> {
           bottomNavigationBar: _selectedTab == 0
               ? KeyedSubtree(
                   key: _workoutBarTutorialKey,
-                  child: _SplitWorkoutBar(
+                  child: TrainWorkoutActionBar(
                     onStartWorkout: _startWorkout,
                     onOptimizeWorkout: () => _startOptimizedWorkout(sel),
                     onOptimizeSettings: _openOptimizedWorkoutSettings,
@@ -1802,8 +1802,9 @@ class _ExpressivePlanAction extends StatelessWidget {
   }
 }
 
-class _SplitWorkoutBar extends StatelessWidget {
-  const _SplitWorkoutBar({
+class TrainWorkoutActionBar extends StatelessWidget {
+  const TrainWorkoutActionBar({
+    super.key,
     required this.onStartWorkout,
     required this.onOptimizeWorkout,
     required this.onOptimizeSettings,

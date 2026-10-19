@@ -67,6 +67,12 @@ Color _healthTrendCardSurface(BuildContext context) {
 
 enum _MeasurementDetailRole { focal, analytical, history, dialog }
 
+AppExpressiveDestinationTokens? _measurementDetailTokens(BuildContext context) {
+  return context.usesExpressivePresentation
+      ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+      : null;
+}
+
 AppExpressiveDestinationTokens? _progressDetailTokens(BuildContext context) {
   if (context.usesExpressivePresentation) {
     final tokens = Theme.of(context)
@@ -78,11 +84,169 @@ AppExpressiveDestinationTokens? _progressDetailTokens(BuildContext context) {
   return null;
 }
 
+AppExpressiveDestinationTokens? _profileMeasurementTokens(
+  BuildContext context,
+) {
+  if (!context.usesExpressivePresentation) return null;
+  final tokens = Theme.of(context).extension<AppExpressiveDestinationTokens>();
+  return tokens?.family == AppExpressiveDestinationFamily.profile
+      ? tokens
+      : null;
+}
+
+bool _usesExpressiveHealthTrendChart(BuildContext context) =>
+    context.usesExpressivePresentation;
+
+Color _measurementTrendChartSurface(BuildContext context) {
+  if (_usesExpressiveHealthTrendChart(context)) {
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    if (destination != null) {
+      return Theme.of(context).brightness == Brightness.light
+          ? Color.lerp(
+              destination.surfaceSecondary,
+              destination.pageCanvas,
+              0.28,
+            )!
+          : destination.surfaceSecondary;
+    }
+  }
+  if (context.usesNeoPresentation) return context.surfaceTokens.card;
+  return context.progressColors.healthCard;
+}
+
+Widget _withMeasurementTrendChartTheme(
+  BuildContext context, {
+  required Widget child,
+}) {
+  if (!_usesExpressiveHealthTrendChart(context)) return child;
+  final destination = Theme.of(context)
+      .extension<AppExpressiveDestinationTokens>();
+  if (destination == null) return child;
+
+  final theme = Theme.of(context);
+  final foreground = destination.onSurfaceSecondary;
+  final supportingForeground = foreground.withValues(alpha: 0.82);
+  return Theme(
+    data: theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        surface: _measurementTrendChartSurface(context),
+        onSurface: foreground,
+        onSurfaceVariant: supportingForeground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: foreground,
+        displayColor: foreground,
+      ),
+      iconTheme: theme.iconTheme.copyWith(color: foreground),
+    ),
+    child: child,
+  );
+}
+
+Color _profileMeasurementDialogSurface(
+  BuildContext context,
+  AppExpressiveDestinationTokens tokens,
+) {
+  return Theme.of(context).brightness == Brightness.light
+      ? Color.lerp(tokens.pageCanvas, tokens.surfaceTertiary, 0.30)!
+      : tokens.surfaceTertiary;
+}
+
+ThemeData _profileMeasurementDialogTheme(
+  BuildContext context,
+  AppExpressiveDestinationTokens tokens,
+) {
+  final theme = Theme.of(context);
+  final surface = _profileMeasurementDialogSurface(context, tokens);
+  final outline = tokens.outlineAccent;
+  final fieldShape = context.shapeTokens.healthTrendEntry;
+  final fieldBorder = OutlineInputBorder(
+    borderRadius: fieldShape,
+    borderSide: BorderSide(color: outline.withValues(alpha: 0.45)),
+  );
+  final selectedFill = Color.alphaBlend(
+    tokens.surfaceSelected.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.48 : 0.30,
+    ),
+    surface,
+  );
+  final selectedSegmentFill = theme.brightness == Brightness.dark
+      ? Color.alphaBlend(
+          tokens.actionPrimary.withValues(alpha: 0.16),
+          tokens.surfaceSelected,
+        )
+      : tokens.surfaceSelected;
+
+  return theme.copyWith(
+    colorScheme: theme.colorScheme.copyWith(
+      surface: surface,
+      onSurface: tokens.supportingForeground,
+      onSurfaceVariant: tokens.supportingForeground,
+      primary: tokens.actionPrimary,
+      onPrimary: tokens.onActionPrimary,
+      secondaryContainer: tokens.surfaceSelected,
+      onSecondaryContainer: tokens.onSurfaceSelected,
+      outline: outline,
+    ),
+    textTheme: theme.textTheme.apply(
+      bodyColor: tokens.supportingForeground,
+      displayColor: tokens.supportingForeground,
+    ),
+    iconTheme: theme.iconTheme.copyWith(color: tokens.supportingForeground),
+    inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: selectedFill,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      border: fieldBorder,
+      enabledBorder: fieldBorder,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: fieldShape,
+        borderSide: BorderSide(color: tokens.actionPrimary, width: 2),
+      ),
+      labelStyle: TextStyle(color: tokens.supportingForeground),
+      floatingLabelStyle: TextStyle(color: tokens.actionPrimary),
+      hintStyle: TextStyle(
+        color: tokens.supportingForeground.withValues(alpha: 0.78),
+      ),
+    ),
+    segmentedButtonTheme: theme.segmentedButtonTheme.copyWith(
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? tokens.onSurfaceSelected
+              : tokens.supportingForeground;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          return states.contains(WidgetState.selected)
+              ? selectedSegmentFill
+              : tokens.surfaceAccent.withValues(alpha: 0.36);
+        }),
+        side: WidgetStateProperty.resolveWith((states) {
+          return BorderSide(
+            color: outline.withValues(
+              alpha: states.contains(WidgetState.selected) ? 0.72 : 0.40,
+            ),
+          );
+        }),
+        shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(
+            borderRadius: context.shapeTokens.dialogChoice,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 Color _measurementDetailSurface(
   BuildContext context, {
   _MeasurementDetailRole role = _MeasurementDetailRole.history,
 }) {
-  final destination = _progressDetailTokens(context);
+  final destination = role == _MeasurementDetailRole.dialog
+      ? _progressDetailTokens(context)
+      : _measurementDetailTokens(context);
   if (destination != null) {
     final isLight = Theme.of(context).brightness == Brightness.light;
     return switch (role) {
@@ -99,14 +263,11 @@ Color _measurementDetailSurface(
         destination.surfaceAccent.withValues(alpha: 0.42),
         destination.pageCanvas,
       ),
-      _MeasurementDetailRole.dialog =>
-        isLight
-            ? Color.lerp(
-                destination.pageCanvas,
-                destination.surfaceTertiary,
-                0.30,
-              )!
-            : destination.surfaceTertiary,
+      _MeasurementDetailRole.dialog => Color.lerp(
+        destination.pageCanvas,
+        destination.surfaceSelected,
+        isLight ? 0.54 : 0.56,
+      )!,
     };
   }
   return _healthTrendCardSurface(context);
@@ -116,7 +277,9 @@ Color _measurementDetailForeground(
   BuildContext context, {
   _MeasurementDetailRole role = _MeasurementDetailRole.history,
 }) {
-  final destination = _progressDetailTokens(context);
+  final destination = role == _MeasurementDetailRole.dialog
+      ? _progressDetailTokens(context)
+      : _measurementDetailTokens(context);
   if (destination != null) {
     return switch (role) {
       _MeasurementDetailRole.focal => destination.onSurfacePrimary,
@@ -132,7 +295,9 @@ Color _measurementDetailSupportingForeground(
   BuildContext context, {
   _MeasurementDetailRole role = _MeasurementDetailRole.history,
 }) {
-  final destination = _progressDetailTokens(context);
+  final destination = role == _MeasurementDetailRole.dialog
+      ? _progressDetailTokens(context)
+      : _measurementDetailTokens(context);
   if (destination != null) {
     return _measurementDetailForeground(
       context,
@@ -146,8 +311,11 @@ Widget _withMeasurementDetailSurfaceTheme(
   BuildContext context, {
   required _MeasurementDetailRole role,
   required Widget child,
+  bool expressiveFormFields = false,
 }) {
-  final destination = _progressDetailTokens(context);
+  final destination = role == _MeasurementDetailRole.dialog
+      ? _progressDetailTokens(context)
+      : _measurementDetailTokens(context);
   if (destination == null) return child;
 
   final theme = Theme.of(context);
@@ -158,6 +326,16 @@ Widget _withMeasurementDetailSurfaceTheme(
     role: role,
   );
   final dialogRole = role == _MeasurementDetailRole.dialog;
+  final dialogFieldBorder = OutlineInputBorder(
+    borderRadius: context.shapeTokens.healthTrendEntry,
+    borderSide: BorderSide(
+      color: destination.outlineAccent.withValues(alpha: 0.52),
+    ),
+  );
+  final dialogFieldFill = Color.alphaBlend(
+    destination.surfaceSelected.withValues(alpha: 0.30),
+    surface,
+  );
   return Theme(
     data: theme.copyWith(
       colorScheme: theme.colorScheme.copyWith(
@@ -175,18 +353,43 @@ Widget _withMeasurementDetailSurfaceTheme(
       ),
       inputDecorationTheme: dialogRole
           ? theme.inputDecorationTheme.copyWith(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: destination.outlineAccent.withValues(alpha: 0.52),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: destination.actionPrimary,
-                  width: 2,
-                ),
-              ),
+              filled: expressiveFormFields,
+              fillColor: expressiveFormFields ? dialogFieldFill : null,
+              border: expressiveFormFields ? dialogFieldBorder : null,
+              enabledBorder: expressiveFormFields
+                  ? dialogFieldBorder
+                  : OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: destination.outlineAccent.withValues(
+                          alpha: 0.52,
+                        ),
+                      ),
+                    ),
+              focusedBorder: expressiveFormFields
+                  ? dialogFieldBorder.copyWith(
+                      borderSide: BorderSide(
+                        color: destination.actionPrimary,
+                        width: 2,
+                      ),
+                    )
+                  : OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: destination.actionPrimary,
+                        width: 2,
+                      ),
+                    ),
               floatingLabelStyle: TextStyle(color: destination.actionPrimary),
+              labelStyle: expressiveFormFields
+                  ? theme.textTheme.labelSmall?.copyWith(
+                      color: supportingForeground,
+                    )
+                  : TextStyle(color: supportingForeground),
+              floatingLabelBehavior: expressiveFormFields
+                  ? FloatingLabelBehavior.always
+                  : null,
+              contentPadding: expressiveFormFields
+                  ? const EdgeInsets.symmetric(horizontal: 14, vertical: 13)
+                  : null,
             )
           : theme.inputDecorationTheme,
       textTheme: theme.textTheme.apply(
@@ -200,7 +403,7 @@ Widget _withMeasurementDetailSurfaceTheme(
 }
 
 Color? _measurementDetailAppBarSurface(BuildContext context) {
-  return _progressDetailTokens(context)?.pageCanvas;
+  return _measurementDetailTokens(context)?.pageCanvas;
 }
 
 class HealthTrendsSection extends StatefulWidget {
@@ -318,6 +521,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
           defaultUnit:
               trend.latest?.unit ??
               _defaultUnitFor(trend.definition, weightUnit),
+          measurementLibrary:
+              widget.fullPage && _profileMeasurementTokens(context) != null,
         ),
       ),
     );
@@ -340,9 +545,12 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   Future<void> _createCustomMetric() async {
     final input = await showDialog<_MeasurementDefinitionInput>(
       context: context,
-      builder: (_) => const TonosDialogFrame(
+      builder: (_) => TonosDialogFrame(
         styleFormControls: true,
-        child: _MeasurementDefinitionDialog(),
+        child: _MeasurementDefinitionDialog(
+          measurementLibrary:
+              widget.fullPage && _profileMeasurementTokens(context) != null,
+        ),
       ),
     );
     if (input == null) return;
@@ -437,7 +645,9 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
         children: [
           Expanded(
             child: Text(
-              strings.healthTrendsTitle,
+              widget.fullPage && _profileMeasurementTokens(context) != null
+                  ? strings.healthTrackedMetrics
+                  : strings.healthTrendsTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -524,6 +734,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
                 alternateSurface: index.isOdd,
                 arrivalIndex: index,
                 fillCell: true,
+                measurementLibrary: _profileMeasurementTokens(context) != null,
               );
             },
             itemCount: trends.length + 1,
@@ -722,10 +933,12 @@ class _MeasurementTrendDetailPageState
   }
 
   Future<void> _deleteEntry(Measurement entry) async {
+    final expressive = _progressDetailTokens(context) != null;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(
+          key: const ValueKey('measurement-trend-delete-entry-dialog'),
           title: Text(_strings.healthDeleteEntryTitle),
           content: Text(
             _strings.healthDeleteEntryBody(
@@ -736,15 +949,76 @@ class _MeasurementTrendDetailPageState
               ),
             ),
           ),
+          backgroundColor: expressive
+              ? _measurementDetailSurface(
+                  context,
+                  role: _MeasurementDetailRole.dialog,
+                )
+              : null,
+          insetPadding: expressive
+              ? const EdgeInsets.symmetric(horizontal: 20, vertical: 16)
+              : null,
+          titlePadding: expressive
+              ? const EdgeInsets.fromLTRB(24, 20, 24, 4)
+              : null,
+          contentPadding: expressive
+              ? const EdgeInsets.fromLTRB(24, 8, 24, 6)
+              : null,
+          surfaceTintColor: expressive ? Colors.transparent : null,
+          shape: expressive
+              ? RoundedRectangleBorder(
+                  borderRadius: context.shapeTokens.healthTrendCard,
+                  side: BorderSide(
+                    color: _progressDetailTokens(context)!.outlineAccent
+                        .withValues(alpha: 0.48),
+                  ),
+                )
+              : null,
+          scrollable: expressive,
+          titleTextStyle: expressive
+              ? Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: _measurementDetailForeground(
+                    context,
+                    role: _MeasurementDetailRole.dialog,
+                  ),
+                  fontWeight: FontWeight.w800,
+                )
+              : null,
+          contentTextStyle: expressive
+              ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: _measurementDetailSupportingForeground(
+                    context,
+                    role: _MeasurementDetailRole.dialog,
+                  ),
+                )
+              : null,
+          actionsPadding: expressive
+              ? const EdgeInsets.fromLTRB(20, 4, 20, 16)
+              : null,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(_strings.commonCancel),
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(_strings.commonDelete),
-            ),
+            expressive
+                ? FilledButton(
+                    key: const ValueKey('measurement-trend-delete-confirm'),
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                      minimumSize: const Size(84, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: context.shapeTokens.dialogChoice,
+                      ),
+                    ),
+                    child: Text(_strings.commonDelete),
+                  )
+                : TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text(_strings.commonDelete),
+                  ),
           ],
         ),
       ),
@@ -759,7 +1033,8 @@ class _MeasurementTrendDetailPageState
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final title = _measurementTitle(widget.definition, strings);
-    final progressExpressiveDetail = _progressDetailTokens(context) != null;
+    final detailTokens = _measurementDetailTokens(context);
+    final expressiveDetail = detailTokens != null;
 
     return PopScope<bool>(
       canPop: false,
@@ -768,21 +1043,26 @@ class _MeasurementTrendDetailPageState
         Navigator.of(context).pop(_changed);
       },
       child: Scaffold(
+        backgroundColor: detailTokens?.pageCanvas,
         appBar: AppBar(
           key: const ValueKey('measurement-trend-detail-app-bar'),
           leading: BackButton(
             onPressed: () => Navigator.of(context).pop(_changed),
           ),
           title: Text(title),
+          titleTextStyle: expressiveDetail
+              ? Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                )
+              : null,
           backgroundColor: _measurementDetailAppBarSurface(context),
-          foregroundColor: progressExpressiveDetail
+          foregroundColor: expressiveDetail
               ? Theme.of(context).colorScheme.onSurface
               : null,
-          surfaceTintColor: progressExpressiveDetail
-              ? Colors.transparent
-              : null,
-          elevation: progressExpressiveDetail ? 0 : null,
-          scrolledUnderElevation: progressExpressiveDetail ? 0 : null,
+          surfaceTintColor: expressiveDetail ? Colors.transparent : null,
+          elevation: expressiveDetail ? 0 : null,
+          scrolledUnderElevation: expressiveDetail ? 0 : null,
           actions: [
             IconButton(
               key: const ValueKey('measurement-trend-detail-add'),
@@ -815,7 +1095,12 @@ class _MeasurementTrendDetailPageState
               _queueTutorial();
             });
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                expressiveDetail ? 24 : 100,
+              ),
               children: [
                 KeyedSubtree(
                   key: _summaryTutorialKey,
@@ -830,10 +1115,10 @@ class _MeasurementTrendDetailPageState
                   child: _MeasurementChartCard(
                     definition: widget.definition,
                     entries: entries,
-                    height: progressExpressiveDetail ? 225 : 250,
+                    height: context.usesExpressivePresentation ? 225 : 250,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: expressiveDetail ? 16 : 20),
                 KeyedSubtree(
                   key: _entriesTutorialKey,
                   child: Column(
@@ -842,10 +1127,8 @@ class _MeasurementTrendDetailPageState
                       Text(
                         strings.healthEntries,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: progressExpressiveDetail ? 20 : null,
-                          fontWeight: progressExpressiveDetail
-                              ? FontWeight.w700
-                              : null,
+                          fontSize: expressiveDetail ? 20 : null,
+                          fontWeight: expressiveDetail ? FontWeight.w700 : null,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -885,6 +1168,18 @@ class _MeasurementTrendDetailPageState
                 },
                 icon: const Icon(Icons.add),
                 label: Text(strings.healthLogEntry),
+                style: expressiveDetail
+                    ? FilledButton.styleFrom(
+                        backgroundColor: detailTokens.actionPrimary,
+                        foregroundColor: detailTokens.onActionPrimary,
+                        minimumSize: const Size.fromHeight(48),
+                        textStyle: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: ExpressiveTrainShapes.compactControl,
+                        ),
+                      )
+                    : null,
               ),
             ),
           ),
@@ -902,6 +1197,7 @@ class _TrendTile extends StatelessWidget {
   final bool alternateSurface;
   final int arrivalIndex;
   final double? height;
+  final bool measurementLibrary;
 
   const _TrendTile({
     required this.trend,
@@ -911,6 +1207,7 @@ class _TrendTile extends StatelessWidget {
     this.alternateSurface = false,
     this.arrivalIndex = 0,
     this.height,
+    this.measurementLibrary = false,
   });
 
   @override
@@ -924,9 +1221,14 @@ class _TrendTile extends StatelessWidget {
     final title = _measurementTitle(trend.definition, strings);
     final latest = trend.latest;
     final delta = trend.delta;
-    final deltaColor = _deltaColor(context, delta);
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressive = context.usesExpressivePresentation;
+    final destination = usesExpressive
+        ? theme.extension<AppExpressiveDestinationTokens>()
+        : null;
+    final profileMeasurement =
+        measurementLibrary &&
+        destination?.family == AppExpressiveDestinationFamily.profile;
     final expressiveTokens = usesExpressive
         ? theme.extension<AppExpressiveTrainTokens>()!
         : null;
@@ -937,13 +1239,20 @@ class _TrendTile extends StatelessWidget {
     final cardForeground = usesInkRecipe
         ? tonosForegroundForSurface(context, cardSurface)
         : usesExpressive
-        ? theme.colorScheme.onSurface
+        ? profileMeasurement
+              ? destination!.onSurfaceAccent
+              : theme.colorScheme.onSurface
         : null;
     final cardSecondaryForeground = usesInkRecipe
         ? tonosSecondaryForegroundForSurface(context, cardSurface)
         : usesExpressive
-        ? theme.colorScheme.onSurfaceVariant
+        ? profileMeasurement
+              ? destination!.onSurfaceAccent
+              : theme.colorScheme.onSurfaceVariant
         : null;
+    final deltaColor = profileMeasurement
+        ? cardSecondaryForeground!
+        : _deltaColor(context, delta);
     final effects = context.effectTokens;
     final borderColor = usesInkRecipe
         ? tonosOutlineForSurface(context, cardSurface)
@@ -1038,6 +1347,7 @@ class _TrendTile extends StatelessWidget {
                       : dataVisualization.tertiarySeries,
                   emptyColor: cardSecondaryForeground,
                   useExpressiveEmptyState: usesExpressive,
+                  hideEmptyPrompt: profileMeasurement && latest == null,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1056,7 +1366,12 @@ class _TrendTile extends StatelessWidget {
               Text(
                 latest == null
                     ? strings.healthTapToLog
-                    : _formatDelta(delta, strings, locale),
+                    : _formatDelta(
+                        delta,
+                        strings,
+                        locale,
+                        unit: profileMeasurement ? latest.unit : null,
+                      ),
                 maxLines: usesInkRecipe ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -1211,6 +1526,7 @@ class _MeasurementSparkline extends StatelessWidget {
   final Color lineColor;
   final Color? emptyColor;
   final bool useExpressiveEmptyState;
+  final bool hideEmptyPrompt;
 
   const _MeasurementSparkline({
     required this.definition,
@@ -1218,6 +1534,7 @@ class _MeasurementSparkline extends StatelessWidget {
     required this.lineColor,
     this.emptyColor,
     this.useExpressiveEmptyState = false,
+    this.hideEmptyPrompt = false,
   });
 
   @override
@@ -1236,7 +1553,16 @@ class _MeasurementSparkline extends StatelessWidget {
         ),
         child: ExcludeSemantics(
           child: Center(
-            child: useExpressiveEmptyState
+            child: hideEmptyPrompt && entries.isEmpty
+                ? Icon(
+                    Icons.show_chart,
+                    size: 19,
+                    color:
+                        emptyColor ??
+                        Theme.of(context).iconTheme.color
+                            ?.withValues(alpha: 0.55),
+                  )
+                : useExpressiveEmptyState
                 ? LayoutBuilder(
                     builder: (context, constraints) {
                       final prompt = entries.isEmpty
@@ -1455,11 +1781,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
     final expressiveRecords = _SummaryStat(
       valueKey: const ValueKey('measurement-trend-summary-records'),
       label: strings.healthRecords,
-      value: LocalizedFormatters.number(
-        entries.length,
-        locale,
-        maximumFractionDigits: 0,
-      ),
+      value: strings.healthRecordCount(entries.length),
       detail: null,
       foreground: expressiveForeground,
       supportingForeground: expressiveSupportingForeground,
@@ -1471,11 +1793,13 @@ class _MeasurementSummaryCard extends StatelessWidget {
       label: strings.healthChange,
       value: delta == null
           ? (entries.isEmpty ? '—' : strings.healthNoChange)
+          : definition.type == MeasurementType.BodyWeight
+          ? _formatSignedMeasurementDelta(delta, latest!.unit, locale)
           : _formatDelta(delta, strings, locale),
       detail: entries.length < 2
           ? strings.healthNeedTwoEntries
           : strings.healthVersusPrevious,
-      valueColor: delta == null
+      valueColor: delta == null || definition.type == MeasurementType.BodyWeight
           ? expressiveForeground
           : _deltaColor(context, delta),
       foreground: expressiveForeground,
@@ -1492,7 +1816,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
           color: surface,
           borderRadius: shapes.healthTrendCard,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1501,39 +1825,64 @@ class _MeasurementSummaryCard extends StatelessWidget {
                     title: strings.healthNoEntry,
                     detail: strings.healthNotTrackedYet,
                   )
-                else ...[
-                  Text(
-                    strings.healthLatest,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: expressiveSupportingForeground,
-                    ),
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              strings.healthLatest,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: expressiveSupportingForeground,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _formatMeasurement(latest, locale),
+                              key: const ValueKey(
+                                'measurement-trend-summary-latest',
+                              ),
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                color: expressiveForeground,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              LocalizedFormatters.date(
+                                latest.calendarDay.toLocalDateTime(),
+                                locale,
+                              ),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: expressiveSupportingForeground,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: expressiveForeground.withValues(alpha: 0.12),
+                          borderRadius: shapes.healthTrendEntry,
+                        ),
+                        child: Icon(
+                          Icons.monitor_heart_outlined,
+                          color: expressiveForeground,
+                          size: 24,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    _formatMeasurement(latest, locale),
-                    key: const ValueKey('measurement-trend-summary-latest'),
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: expressiveForeground,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    LocalizedFormatters.date(
-                      latest.calendarDay.toLocalDateTime(),
-                      locale,
-                    ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: expressiveSupportingForeground,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
                 Divider(
                   height: 1,
-                  color: expressiveForeground.withValues(alpha: 0.22),
+                  color: expressiveForeground.withValues(alpha: 0.18),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 10),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final stackStats =
@@ -1566,7 +1915,7 @@ class _MeasurementSummaryCard extends StatelessWidget {
         surface: surface,
       ),
     );
-    if (_progressDetailTokens(context) != null) return expressiveSummary;
+    if (_measurementDetailTokens(context) != null) return expressiveSummary;
     return legacySummary;
   }
 }
@@ -1580,7 +1929,7 @@ class _EmptyMeasurementSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final destination = _progressDetailTokens(context);
+    final destination = _measurementDetailTokens(context);
     final iconSurface =
         destination?.surfaceSecondary ??
         theme.colorScheme.surfaceContainerHighest;
@@ -1781,7 +2130,7 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
     final canDecrease = previousPoint != null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final isSparse = entries.length < 2;
-    final expressiveDetail = _progressDetailTokens(context) != null;
+    final expressiveDetail = _usesExpressiveHealthTrendChart(context);
     final compactExpressiveEmpty = isSparse && expressiveDetail;
     final responsiveHeight = compactExpressiveEmpty
         ? math
@@ -1806,23 +2155,15 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
       onIncrease: canIncrease ? _selectNext : null,
       onDecrease: canDecrease ? _selectPrevious : null,
       child: ExcludeSemantics(
-        child: _withMeasurementDetailSurfaceTheme(
+        child: _withMeasurementTrendChartTheme(
           context,
-          role: _MeasurementDetailRole.analytical,
           child: Container(
             height: responsiveHeight,
             padding: expressiveDetail
                 ? const EdgeInsets.fromLTRB(18, 13, 18, 16)
                 : const EdgeInsets.fromLTRB(14, 16, 14, 12),
             decoration: BoxDecoration(
-              color: _progressDetailTokens(context) != null
-                  ? _measurementDetailSurface(
-                      context,
-                      role: _MeasurementDetailRole.analytical,
-                    )
-                  : context.usesNeoPresentation
-                  ? context.surfaceTokens.card
-                  : context.progressColors.healthCard,
+              color: _measurementTrendChartSurface(context),
               borderRadius: shapes.healthTrendCard,
             ),
             child: _buildChart(
@@ -1856,16 +2197,13 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
       final message = entries.isEmpty
           ? strings.healthTrendNeedEntries
           : strings.healthTrendNeedOneMore;
-      if (_progressDetailTokens(context) != null) {
+      if (_usesExpressiveHealthTrendChart(context)) {
         return Container(
           key: const ValueKey('measurement-trend-chart-empty'),
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: _measurementDetailSurface(
-              context,
-              role: _MeasurementDetailRole.analytical,
-            ),
+            color: _measurementTrendChartSurface(context),
             borderRadius: context.shapeTokens.healthTrendEntry,
           ),
           child: Row(
@@ -1902,8 +2240,8 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
       );
     }
 
-    final expressiveDetail = _progressDetailTokens(context) != null;
-    final xInset = expressiveDetail ? 0.18 : 0.0;
+    final expressiveDetail = _usesExpressiveHealthTrendChart(context);
+    final xInset = expressiveDetail ? 0.12 : 0.0;
     final chartLine = LineChartBarData(
       spots: spots,
       isCurved: !expressiveDetail,
@@ -1951,7 +2289,9 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
         gridData: FlGridData(
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(
-            color: context.progressColors.healthGrid.withValues(alpha: 0.35),
+            color: context.progressColors.healthGrid.withValues(
+              alpha: expressiveDetail ? 0.16 : 0.35,
+            ),
             strokeWidth: 1,
           ),
         ),
@@ -1963,39 +2303,43 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
           rightTitles: const AxisTitles(
             sideTitles: SideTitles(showTitles: false),
           ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: yAxisReservedSize,
-              interval: bounds.interval,
-              getTitlesWidget: (value, _) {
-                final tickIndex = ((value - bounds.minY) / bounds.interval)
-                    .round();
-                if (tickIndex < 0 || tickIndex >= yAxisLabels.length) {
-                  return const SizedBox.shrink();
-                }
-                return SizedBox(
-                  width: yAxisReservedSize - 6,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        yAxisLabels[tickIndex],
-                        key: ValueKey(
-                          'measurement-trend-chart-y-tick-$tickIndex',
+          leftTitles: expressiveDetail
+              ? const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false, reservedSize: 0),
+                )
+              : AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: yAxisReservedSize,
+                    interval: bounds.interval,
+                    getTitlesWidget: (value, _) {
+                      final tickIndex =
+                          ((value - bounds.minY) / bounds.interval).round();
+                      if (tickIndex < 0 || tickIndex >= yAxisLabels.length) {
+                        return const SizedBox.shrink();
+                      }
+                      return SizedBox(
+                        width: yAxisReservedSize - 6,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              yAxisLabels[tickIndex],
+                              key: ValueKey(
+                                'measurement-trend-chart-y-tick-$tickIndex',
+                              ),
+                              maxLines: 1,
+                              softWrap: false,
+                              style: yAxisLabelStyle,
+                            ),
+                          ),
                         ),
-                        maxLines: 1,
-                        softWrap: false,
-                        style: yAxisLabelStyle,
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
-          ),
+                ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -2073,17 +2417,30 @@ class _MeasurementEntryTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final expressive = _progressDetailTokens(context) != null;
+    final expressiveRow = _measurementDetailTokens(context) != null;
     final surface = _measurementDetailSurface(
       context,
       role: _MeasurementDetailRole.history,
     );
-    final foreground = expressive
+    final menuSurface = expressive
+        ? _measurementDetailSurface(
+            context,
+            role: _MeasurementDetailRole.dialog,
+          )
+        : null;
+    final menuForeground = expressive
+        ? _measurementDetailForeground(
+            context,
+            role: _MeasurementDetailRole.dialog,
+          )
+        : null;
+    final foreground = expressiveRow
         ? _measurementDetailForeground(
             context,
             role: _MeasurementDetailRole.history,
           )
         : null;
-    final supportingForeground = expressive
+    final supportingForeground = expressiveRow
         ? _measurementDetailSupportingForeground(
             context,
             role: _MeasurementDetailRole.history,
@@ -2103,16 +2460,40 @@ class _MeasurementEntryTile extends StatelessWidget {
         context,
         Card(
           key: ValueKey('measurement-trend-entry-${entry.id}'),
-          color: expressive ? surface : null,
-          elevation: expressive ? 0 : null,
-          margin: EdgeInsets.symmetric(vertical: expressive ? 3 : 5),
+          color: expressiveRow ? surface : null,
+          elevation: expressiveRow ? 0 : null,
+          margin: EdgeInsets.symmetric(vertical: expressiveRow ? 4 : 5),
+          shape: expressiveRow
+              ? RoundedRectangleBorder(borderRadius: shapes.healthTrendEntry)
+              : null,
+          clipBehavior: expressiveRow ? Clip.antiAlias : Clip.none,
           child: ListTile(
-            dense: expressive,
-            visualDensity: expressive ? VisualDensity.compact : null,
+            dense: expressiveRow,
+            visualDensity: expressiveRow ? VisualDensity.compact : null,
+            minTileHeight: expressiveRow ? 64 : null,
+            contentPadding: expressiveRow
+                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 4)
+                : null,
+            horizontalTitleGap: expressiveRow ? 12 : null,
+            leading: expressiveRow
+                ? Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: foreground!.withValues(alpha: 0.08),
+                      borderRadius: shapes.healthTrendEntry,
+                    ),
+                    child: Icon(
+                      Icons.calendar_today_outlined,
+                      color: foreground,
+                      size: 18,
+                    ),
+                  )
+                : null,
             onTap: onTap,
             title: Text(
               _formatMeasurement(entry, locale),
-              style: expressive
+              style: expressiveRow
                   ? Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: foreground,
                       fontWeight: FontWeight.w700,
@@ -2121,13 +2502,36 @@ class _MeasurementEntryTile extends StatelessWidget {
             ),
             subtitle: Text(
               details,
-              style: expressive
+              style: expressiveRow
                   ? Theme.of(context).textTheme.bodySmall
                         ?.copyWith(color: supportingForeground)
                   : null,
             ),
             trailing: PopupMenuButton<String>(
+              key: ValueKey('measurement-trend-entry-actions-${entry.id}'),
               tooltip: strings.healthEntryActions,
+              position: expressive ? PopupMenuPosition.over : null,
+              // Two 48dp actions plus vertical menu padding leave a small gap
+              // above the trigger and keep the menu clear of Log entry.
+              offset: expressive ? const Offset(0, -112) : Offset.zero,
+              constraints: expressive
+                  ? const BoxConstraints(minWidth: 172, maxWidth: 232)
+                  : null,
+              menuPadding: expressive
+                  ? const EdgeInsets.symmetric(vertical: 4)
+                  : null,
+              color: menuSurface,
+              surfaceTintColor: expressive ? Colors.transparent : null,
+              elevation: expressive ? 4 : null,
+              shape: expressive
+                  ? RoundedRectangleBorder(
+                      borderRadius: ExpressiveTrainShapes.menu,
+                      side: BorderSide(
+                        color: _progressDetailTokens(context)!.outlineAccent
+                            .withValues(alpha: 0.50),
+                      ),
+                    )
+                  : null,
               onSelected: (value) {
                 if (value == 'edit') onTap();
                 if (value == 'delete') onDelete();
@@ -2135,11 +2539,51 @@ class _MeasurementEntryTile extends StatelessWidget {
               itemBuilder: (_) => [
                 PopupMenuItem(
                   value: 'edit',
-                  child: Text(AppLocalizations.of(context).commonEdit),
+                  height: 48,
+                  child: expressive
+                      ? Row(
+                          children: [
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 20,
+                              color: menuForeground,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context).commonEdit,
+                                style: expressive
+                                    ? TextStyle(color: menuForeground)
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(AppLocalizations.of(context).commonEdit),
                 ),
                 PopupMenuItem(
                   value: 'delete',
-                  child: Text(AppLocalizations.of(context).commonDelete),
+                  height: 48,
+                  child: expressive
+                      ? Row(
+                          children: [
+                            Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                AppLocalizations.of(context).commonDelete,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(AppLocalizations.of(context).commonDelete),
                 ),
               ],
             ),
@@ -2343,12 +2787,14 @@ class _MeasurementEntryDialog extends StatefulWidget {
   final MeasurementDefinition definition;
   final String defaultUnit;
   final Measurement? entry;
+  final bool measurementLibrary;
 
   const _MeasurementEntryDialog({
     required this.title,
     required this.definition,
     required this.defaultUnit,
     this.entry,
+    this.measurementLibrary = false,
   });
 
   @override
@@ -2427,11 +2873,63 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   }
 
   Future<void> _pickDate() async {
+    final profileTokens = widget.measurementLibrary
+        ? _profileMeasurementTokens(context)
+        : null;
     final date = await showDatePicker(
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 1)),
       initialDate: _timestamp,
+      builder: profileTokens == null
+          ? null
+          : (pickerContext, child) {
+              final theme = _profileMeasurementDialogTheme(
+                pickerContext,
+                profileTokens,
+              );
+              final pickerShape = RoundedRectangleBorder(
+                borderRadius: pickerContext.shapeTokens.dialogChoice,
+                side: BorderSide(
+                  color: profileTokens.outlineAccent.withValues(alpha: 0.48),
+                ),
+              );
+              return Theme(
+                data: theme.copyWith(
+                  datePickerTheme: theme.datePickerTheme.copyWith(
+                    backgroundColor: _profileMeasurementDialogSurface(
+                      pickerContext,
+                      profileTokens,
+                    ),
+                    surfaceTintColor: Colors.transparent,
+                    shape: pickerShape,
+                    headerBackgroundColor: profileTokens.surfacePrimary,
+                    headerForegroundColor: profileTokens.onSurfacePrimary,
+                    dayForegroundColor: WidgetStateProperty.resolveWith((
+                      states,
+                    ) {
+                      return states.contains(WidgetState.selected)
+                          ? profileTokens.onActionPrimary
+                          : profileTokens.supportingForeground;
+                    }),
+                    dayBackgroundColor: WidgetStateProperty.resolveWith((
+                      states,
+                    ) {
+                      return states.contains(WidgetState.selected)
+                          ? profileTokens.actionPrimary
+                          : null;
+                    }),
+                    confirmButtonStyle: TextButton.styleFrom(
+                      foregroundColor: profileTokens.actionPrimary,
+                    ),
+                    cancelButtonStyle: TextButton.styleFrom(
+                      foregroundColor: profileTokens.actionPrimary,
+                    ),
+                  ),
+                ),
+                child: child!,
+              );
+            },
     );
     if (date == null || !mounted) return;
     final time = await showTimePicker(
@@ -2564,51 +3062,123 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final destination = _progressDetailTokens(context);
-    final expressiveBodyWeight = _isBodyWeight && destination != null;
+    final profileTokens = widget.measurementLibrary
+        ? _profileMeasurementTokens(context)
+        : null;
+    final expressiveLibrary = profileTokens != null;
+    final expressiveProgressEntry = destination != null;
+    final expressiveBodyWeight = _isBodyWeight && expressiveProgressEntry;
+    final expressiveWeightDialog = expressiveBodyWeight;
+    final expressiveForm = expressiveLibrary || expressiveProgressEntry;
+    final compactLibraryLayout =
+        MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.textScalerOf(context).scale(1) > 1.5;
     final surface = _measurementDetailSurface(
       context,
       role: _MeasurementDetailRole.dialog,
     );
-    final dialogForeground = _measurementDetailForeground(
-      context,
-      role: _MeasurementDetailRole.dialog,
-    );
-    final fieldPadding = expressiveBodyWeight
+    final dialogSurface = expressiveLibrary
+        ? _profileMeasurementDialogSurface(context, profileTokens)
+        : surface;
+    final dialogForeground = expressiveLibrary
+        ? profileTokens.supportingForeground
+        : _measurementDetailForeground(
+            context,
+            role: _MeasurementDetailRole.dialog,
+          );
+    final dialogTokens = profileTokens ?? destination;
+    final dialogFieldFill = expressiveForm
+        ? Color.alphaBlend(
+            dialogTokens!.surfaceSelected.withValues(
+              alpha: expressiveLibrary && theme.brightness == Brightness.dark
+                  ? 0.48
+                  : 0.30,
+            ),
+            dialogSurface,
+          )
+        : null;
+    final variationMenuHighlight = expressiveLibrary
+        ? Color.alphaBlend(
+            profileTokens!.surfaceSelected.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.72 : 0.48,
+            ),
+            dialogSurface,
+          )
+        : null;
+    final fieldPadding = expressiveForm
         ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
         : null;
-    final fieldGap = expressiveBodyWeight ? 8.0 : 10.0;
-    final dateGap = expressiveBodyWeight ? 10.0 : 12.0;
+    final fieldGap = expressiveForm ? 8.0 : 10.0;
+    final dateGap = expressiveForm ? 10.0 : 12.0;
+    Widget withWeightFieldLabel(String label, String key, Widget field) {
+      if (!expressiveWeightDialog) return field;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            key: ValueKey('measurement-entry-label-$key'),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: dialogForeground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Semantics(label: label, child: field),
+        ],
+      );
+    }
+
+    final feetField = TextField(
+      key: const ValueKey('measurement-entry-height-feet'),
+      controller: _valueController,
+      autofocus: true,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: strings.measurementFeet),
+    );
+    final inchesField = TextField(
+      key: const ValueKey('measurement-entry-height-inches'),
+      controller: _heightInchesController,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: strings.measurementInches),
+    );
     final dialog = AlertDialog(
       key: const ValueKey('measurement-trend-entry-dialog'),
+      scrollable: expressiveForm,
+      insetPadding: expressiveForm
+          ? const EdgeInsets.symmetric(horizontal: 20, vertical: 16)
+          : null,
+      actionsPadding: expressiveForm
+          ? const EdgeInsets.fromLTRB(20, 4, 20, 12)
+          : null,
       title: Text(widget.title),
-      backgroundColor: expressiveBodyWeight ? surface : null,
-      surfaceTintColor: expressiveBodyWeight ? Colors.transparent : null,
-      titleTextStyle: expressiveBodyWeight
+      backgroundColor: expressiveForm ? dialogSurface : null,
+      surfaceTintColor: expressiveForm ? Colors.transparent : null,
+      titleTextStyle: expressiveForm
           ? theme.textTheme.titleLarge?.copyWith(
-              color: _measurementDetailForeground(
-                context,
-                role: _MeasurementDetailRole.dialog,
-              ),
+              color: dialogForeground,
               fontWeight: FontWeight.w800,
             )
           : null,
-      contentTextStyle: expressiveBodyWeight
+      contentTextStyle: expressiveForm
           ? theme.textTheme.bodyMedium?.copyWith(
-              color: _measurementDetailSupportingForeground(
-                context,
-                role: _MeasurementDetailRole.dialog,
-              ),
+              color: expressiveLibrary
+                  ? profileTokens.supportingForeground
+                  : _measurementDetailSupportingForeground(
+                      context,
+                      role: _MeasurementDetailRole.dialog,
+                    ),
             )
           : null,
-      shape: expressiveBodyWeight
+      shape: expressiveForm
           ? RoundedRectangleBorder(
               borderRadius: context.shapeTokens.healthTrendCard,
               side: BorderSide(
-                color: destination.outlineAccent.withValues(alpha: 0.48),
+                color: dialogTokens!.outlineAccent.withValues(alpha: 0.48),
               ),
             )
           : null,
-      contentPadding: expressiveBodyWeight
+      contentPadding: expressiveForm
           ? const EdgeInsets.fromLTRB(24, 12, 24, 6)
           : null,
       content: SingleChildScrollView(
@@ -2616,129 +3186,184 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_isHeight) ...[
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: Text(
-                      '${strings.measurementFeet}/${strings.measurementInches}',
+              if (expressiveLibrary)
+                SegmentedButton<bool>(
+                  key: const ValueKey('measurement-height-unit-selector'),
+                  segments: [
+                    ButtonSegment<bool>(
+                      value: true,
+                      label: Text(
+                        '${strings.measurementFeet}/${strings.measurementInches}',
+                        maxLines: compactLibraryLayout ? 2 : 1,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    selected: _heightUsesFeetAndInches,
-                    onSelected: (_) => _setHeightUnit(true),
-                  ),
-                  ChoiceChip(
-                    label: Text(strings.measurementCentimeters),
-                    selected: !_heightUsesFeetAndInches,
-                    onSelected: (_) => _setHeightUnit(false),
-                  ),
-                ],
-              ),
+                    ButtonSegment<bool>(
+                      value: false,
+                      label: Text(
+                        strings.measurementCentimeters,
+                        maxLines: compactLibraryLayout ? 2 : 1,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                  selected: {_heightUsesFeetAndInches},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (selection) =>
+                      _setHeightUnit(selection.single),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    ChoiceChip(
+                      label: Text(
+                        '${strings.measurementFeet}/${strings.measurementInches}',
+                      ),
+                      selected: _heightUsesFeetAndInches,
+                      onSelected: (_) => _setHeightUnit(true),
+                    ),
+                    ChoiceChip(
+                      label: Text(strings.measurementCentimeters),
+                      selected: !_heightUsesFeetAndInches,
+                      onSelected: (_) => _setHeightUnit(false),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 10),
             ],
             if (_heightUsesFeetAndInches)
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _valueController,
-                      autofocus: true,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: strings.measurementFeet,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _heightInchesController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: strings.measurementInches,
-                      ),
-                    ),
-                  ),
-                ],
-              )
+              expressiveLibrary && compactLibraryLayout
+                  ? Column(
+                      children: [
+                        feetField,
+                        const SizedBox(height: 8),
+                        inchesField,
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: feetField),
+                        const SizedBox(width: 10),
+                        Expanded(child: inchesField),
+                      ],
+                    )
             else
-              TextField(
-                key: AppTestKeys.measurementEntryValue,
-                controller: _valueController,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                style: expressiveBodyWeight
-                    ? theme.textTheme.headlineSmall?.copyWith(
-                        color: dialogForeground,
-                        fontWeight: FontWeight.w700,
-                      )
-                    : null,
-                decoration: InputDecoration(
-                  contentPadding: fieldPadding,
-                  prefixIcon: expressiveBodyWeight
-                      ? const Icon(Icons.monitor_weight_outlined)
-                      : null,
-                  filled: expressiveBodyWeight,
-                  fillColor: expressiveBodyWeight
-                      ? Color.alphaBlend(
-                          destination.surfaceSelected.withValues(alpha: 0.30),
-                          surface,
-                        )
-                      : null,
-                  prefixIconColor: expressiveBodyWeight
-                      ? destination.actionPrimary
-                      : null,
-                  labelText: _measurementTitle(widget.definition, strings),
-                  labelStyle: expressiveBodyWeight
-                      ? theme.textTheme.bodySmall?.copyWith(
+              withWeightFieldLabel(
+                strings.measurementWeight,
+                'weight',
+                TextField(
+                  key: AppTestKeys.measurementEntryValue,
+                  controller: _valueController,
+                  autofocus: true,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: expressiveBodyWeight
+                      ? theme.textTheme.headlineSmall?.copyWith(
                           color: dialogForeground,
+                          fontWeight: FontWeight.w700,
                         )
                       : null,
-                  floatingLabelStyle: expressiveBodyWeight
-                      ? theme.textTheme.bodySmall?.copyWith(
-                          color: destination.actionPrimary,
-                        )
-                      : null,
+                  decoration: InputDecoration(
+                    contentPadding: fieldPadding,
+                    prefixIcon: expressiveBodyWeight
+                        ? const Icon(Icons.monitor_weight_outlined)
+                        : null,
+                    filled: expressiveForm,
+                    fillColor: dialogFieldFill,
+                    prefixIconColor: expressiveBodyWeight
+                        ? destination.actionPrimary
+                        : null,
+                    labelText: expressiveWeightDialog
+                        ? null
+                        : _measurementTitle(widget.definition, strings),
+                    labelStyle: expressiveBodyWeight
+                        ? theme.textTheme.bodySmall?.copyWith(
+                            color: dialogForeground,
+                          )
+                        : null,
+                    floatingLabelStyle: expressiveBodyWeight
+                        ? theme.textTheme.bodySmall?.copyWith(
+                            color: destination.actionPrimary,
+                          )
+                        : null,
+                  ),
                 ),
               ),
             SizedBox(height: fieldGap),
             if (!_heightUsesFeetAndInches)
-              TextField(
-                key: AppTestKeys.measurementEntryUnit,
-                controller: _unitController,
-                decoration: InputDecoration(
-                  contentPadding: fieldPadding,
-                  labelText: strings.healthUnit,
+              withWeightFieldLabel(
+                strings.healthUnit,
+                'unit',
+                TextField(
+                  key: AppTestKeys.measurementEntryUnit,
+                  controller: _unitController,
+                  decoration: InputDecoration(
+                    contentPadding: fieldPadding,
+                    labelText: expressiveWeightDialog
+                        ? null
+                        : strings.healthUnit,
+                  ),
                 ),
               ),
             if (!_heightUsesFeetAndInches) SizedBox(height: fieldGap),
             if (_isBodyWeight) ...[
-              DropdownButtonFormField<String>(
-                key: const ValueKey('measurement-entry-variation'),
-                initialValue: _bodyWeightVariation,
-                isExpanded: expressiveBodyWeight,
-                decoration: InputDecoration(
-                  contentPadding: fieldPadding,
-                  labelText: strings.measurementVariation,
+              withWeightFieldLabel(
+                strings.measurementVariation,
+                'variation',
+                Builder(
+                  builder: (context) {
+                    final dropdown = DropdownButtonFormField<String>(
+                      key: const ValueKey('measurement-entry-variation'),
+                      initialValue: _bodyWeightVariation,
+                      hint: expressiveWeightDialog
+                          ? Text(strings.measurementOptional)
+                          : null,
+                      isExpanded: expressiveForm,
+                      dropdownColor: expressiveLibrary ? dialogSurface : null,
+                      borderRadius: expressiveLibrary
+                          ? context.shapeTokens.dialogChoice
+                          : null,
+                      itemHeight: expressiveLibrary ? 52 : null,
+                      menuMaxHeight: expressiveLibrary ? 240 : null,
+                      decoration: InputDecoration(
+                        contentPadding: fieldPadding,
+                        labelText: expressiveWeightDialog
+                            ? null
+                            : strings.measurementVariation,
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'WakeUp',
+                          child: Text(strings.measurementWakeUp),
+                        ),
+                        DropdownMenuItem(
+                          value: 'BedTime',
+                          child: Text(strings.measurementBedtime),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Overall',
+                          child: Text(strings.measurementOverall),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _bodyWeightVariation = value);
+                      },
+                    );
+                    if (!expressiveLibrary) return dropdown;
+
+                    return Theme(
+                      data: _profileMeasurementDialogTheme(
+                        context,
+                        profileTokens!,
+                      ).copyWith(focusColor: variationMenuHighlight),
+                      child: dropdown,
+                    );
+                  },
                 ),
-                items: [
-                  DropdownMenuItem(
-                    value: 'WakeUp',
-                    child: Text(strings.measurementWakeUp),
-                  ),
-                  DropdownMenuItem(
-                    value: 'BedTime',
-                    child: Text(strings.measurementBedtime),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Overall',
-                    child: Text(strings.measurementOverall),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() => _bodyWeightVariation = value);
-                },
               ),
               SizedBox(height: fieldGap),
             ],
@@ -2750,26 +3375,68 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                     setState(() => _withPump = value ?? false),
                 title: Text(strings.measurementWithPump),
               ),
-            TextField(
-              key: const ValueKey('measurement-entry-note'),
-              controller: _noteController,
-              decoration: InputDecoration(
-                contentPadding: fieldPadding,
-                labelText: strings.healthNote,
-                hintText: strings.healthOptional,
+            withWeightFieldLabel(
+              strings.healthNote,
+              'note',
+              TextField(
+                key: const ValueKey('measurement-entry-note'),
+                controller: _noteController,
+                minLines: expressiveLibrary ? 1 : null,
+                maxLines: expressiveLibrary ? 3 : 1,
+                decoration: InputDecoration(
+                  contentPadding: fieldPadding,
+                  labelText: expressiveWeightDialog ? null : strings.healthNote,
+                  hintText: strings.healthOptional,
+                ),
               ),
             ),
             SizedBox(height: dateGap),
             SizedBox(
-              width: expressiveBodyWeight ? double.infinity : null,
-              child: expressiveBodyWeight
+              width: expressiveProgressEntry || expressiveLibrary
+                  ? double.infinity
+                  : null,
+              child: expressiveProgressEntry
                   ? OutlinedButton(
                       key: const ValueKey('measurement-entry-date'),
                       onPressed: _pickDate,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: destination.actionPrimary,
+                        backgroundColor: dialogFieldFill,
+                        foregroundColor: dialogTokens!.actionPrimary,
                         side: BorderSide(
-                          color: destination.outlineAccent.withValues(
+                          color: dialogTokens.outlineAccent.withValues(
+                            alpha: 0.72,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 18),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _formatDateTime(
+                                _timestamp,
+                                Localizations.localeOf(context),
+                              ),
+                              softWrap: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : expressiveForm
+                  ? OutlinedButton(
+                      key: const ValueKey('measurement-entry-date'),
+                      onPressed: _pickDate,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: dialogTokens!.actionPrimary,
+                        side: BorderSide(
+                          color: dialogTokens.outlineAccent.withValues(
                             alpha: 0.72,
                           ),
                         ),
@@ -2813,27 +3480,42 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: expressiveForm
+              ? TextButton.styleFrom(minimumSize: const Size(72, 48))
+              : null,
           child: Text(AppLocalizations.of(context).commonCancel),
         ),
         FilledButton(
           key: AppTestKeys.measurementEntrySave,
           onPressed: _save,
+          style: expressiveForm
+              ? FilledButton.styleFrom(minimumSize: const Size(72, 48))
+              : null,
           child: Text(AppLocalizations.of(context).commonSave),
         ),
       ],
     );
-    return expressiveBodyWeight
+    if (expressiveLibrary) {
+      return Theme(
+        data: _profileMeasurementDialogTheme(context, profileTokens),
+        child: dialog,
+      );
+    }
+    return expressiveProgressEntry
         ? _withMeasurementDetailSurfaceTheme(
             context,
             role: _MeasurementDetailRole.dialog,
             child: dialog,
+            expressiveFormFields: expressiveForm,
           )
         : dialog;
   }
 }
 
 class _MeasurementDefinitionDialog extends StatefulWidget {
-  const _MeasurementDefinitionDialog();
+  final bool measurementLibrary;
+
+  const _MeasurementDefinitionDialog({this.measurementLibrary = false});
 
   @override
   State<_MeasurementDefinitionDialog> createState() =>
@@ -2911,8 +3593,36 @@ class _MeasurementDefinitionDialogState
   @override
   Widget build(BuildContext context) {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
-    return AlertDialog(
+    final profileTokens = widget.measurementLibrary
+        ? _profileMeasurementTokens(context)
+        : null;
+    final dialog = AlertDialog(
       title: Text(AppLocalizations.of(context).healthCreateMetric),
+      backgroundColor: profileTokens == null
+          ? null
+          : _profileMeasurementDialogSurface(context, profileTokens),
+      surfaceTintColor: profileTokens == null ? null : Colors.transparent,
+      titleTextStyle: profileTokens == null
+          ? null
+          : Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: profileTokens.supportingForeground,
+              fontWeight: FontWeight.w800,
+            ),
+      contentTextStyle: profileTokens == null
+          ? null
+          : Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: profileTokens.supportingForeground),
+      shape: profileTokens == null
+          ? null
+          : RoundedRectangleBorder(
+              borderRadius: context.shapeTokens.healthTrendCard,
+              side: BorderSide(
+                color: profileTokens.outlineAccent.withValues(alpha: 0.48),
+              ),
+            ),
+      contentPadding: profileTokens == null
+          ? null
+          : const EdgeInsets.fromLTRB(24, 12, 24, 6),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2949,6 +3659,8 @@ class _MeasurementDefinitionDialogState
             const SizedBox(height: 10),
             TextField(
               controller: _noteController,
+              minLines: profileTokens == null ? null : 1,
+              maxLines: profileTokens == null ? 1 : 3,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).healthNote,
                 hintText: AppLocalizations.of(context).healthOptional,
@@ -2968,6 +3680,12 @@ class _MeasurementDefinitionDialogState
         ),
       ],
     );
+    return profileTokens == null
+        ? dialog
+        : Theme(
+            data: _profileMeasurementDialogTheme(context, profileTokens),
+            child: dialog,
+          );
   }
 }
 
@@ -3302,12 +4020,22 @@ String _formatMeasurement(Measurement entry, Locale locale) {
   return '${_localizedNumber(entry.value, locale)} ${entry.unit}'.trim();
 }
 
-String _formatDelta(double? delta, AppLocalizations strings, Locale locale) {
+String _formatDelta(
+  double? delta,
+  AppLocalizations strings,
+  Locale locale, {
+  String? unit,
+}) {
   if (delta == null || delta.abs() < 0.001) return strings.healthNoChange;
   final prefix = delta > 0 ? '+' : '';
   return strings.healthChangeSinceLast(
-    '$prefix${_localizedNumber(delta, locale)}',
+    '$prefix${_localizedNumber(delta, locale)}${unit == null ? '' : ' $unit'}',
   );
+}
+
+String _formatSignedMeasurementDelta(double delta, String unit, Locale locale) {
+  final prefix = delta > 0 ? '+' : '';
+  return '$prefix${_localizedNumber(delta, locale)} $unit';
 }
 
 String _localizedNumber(double value, Locale locale) {

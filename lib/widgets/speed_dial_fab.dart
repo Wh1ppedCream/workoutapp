@@ -2,6 +2,7 @@
 // for logging food intake and measurements
 
 import 'package:material_ui/material_ui.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/measured_items_page.dart';
@@ -13,8 +14,14 @@ import '../theme/theme_extensions.dart';
 class SpeedDialFab extends StatefulWidget {
   final Future<void> Function()? onFoodLogged;
   final Future<void> Function()? onMeasurementLogged;
+  final String? toggleTooltip;
 
-  const SpeedDialFab({super.key, this.onFoodLogged, this.onMeasurementLogged});
+  const SpeedDialFab({
+    super.key,
+    this.onFoodLogged,
+    this.onMeasurementLogged,
+    this.toggleTooltip,
+  });
 
   @override
   State<SpeedDialFab> createState() => _SpeedDialFabState();
@@ -70,6 +77,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
           ],
           FloatingActionButton(
             heroTag: 'toggle',
+            tooltip: widget.toggleTooltip,
             onPressed: _toggle,
             child: AnimatedRotation(
               turns: _open ? 0.125 : 0,

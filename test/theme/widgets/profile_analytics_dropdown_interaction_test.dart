@@ -131,11 +131,14 @@ void main() {
           await tester.pumpAndSettle();
           final laterBodyPart = find.text('Additional body part 14');
           expect(laterBodyPart.hitTestable(), findsNothing, reason: mode);
-          final bodyPartMenuScrollable = find.ancestor(
-            of: find.text(volumeStrings.bodyPartShoulders),
-            matching: find.byType(Scrollable),
-          );
-          expect(bodyPartMenuScrollable, findsOneWidget, reason: mode);
+          final bodyPartMenuScrollable = find
+              .ancestor(
+                of: find.byKey(
+                  const ValueKey('volume-choice-body-part-option-1'),
+                ),
+                matching: find.byType(Scrollable),
+              )
+              .first;
           await tester.drag(bodyPartMenuScrollable, const Offset(0, -480));
           await tester.pumpAndSettle();
           expect(laterBodyPart.hitTestable(), findsOneWidget, reason: mode);
@@ -253,11 +256,12 @@ void main() {
           await tester.pumpAndSettle();
           final laterMuscle = find.text('Additional muscle 14');
           expect(laterMuscle.hitTestable(), findsNothing, reason: mode);
-          final muscleMenuScrollable = find.ancestor(
-            of: find.text('Latissimus dorsi'),
-            matching: find.byType(Scrollable),
-          );
-          expect(muscleMenuScrollable, findsOneWidget, reason: mode);
+          final muscleMenuScrollable = find
+              .ancestor(
+                of: find.byKey(const ValueKey('volume-choice-muscle-option-1')),
+                matching: find.byType(Scrollable),
+              )
+              .first;
           await tester.drag(muscleMenuScrollable, const Offset(0, -480));
           await tester.pumpAndSettle();
           expect(laterMuscle.hitTestable(), findsOneWidget, reason: mode);
@@ -298,26 +302,187 @@ void main() {
         }
 
         await mount(const BodyPartMuscleMappingScreen());
-        final mappingDropdown = find.byType(DropdownButtonFormField<BodyPart>);
-        expect(mappingDropdown, findsOneWidget, reason: mode);
-        await tester.tap(mappingDropdown);
-        await tester.pumpAndSettle();
-        expect(
-          find.byType(TonosChoiceDialog<BodyPart?>),
-          findsNothing,
-          reason: '$mode: mapping field is not a modal picker',
+        final mappingStrings = AppLocalizations.of(
+          tester.element(find.byType(BodyPartMuscleMappingScreen)),
         );
-        await tester.tap(
-          find.text(
-            AppLocalizations.of(
-              tester.element(find.byType(BodyPartMuscleMappingScreen)),
-            ).bodyPartShoulders,
-          ),
-        );
+        if (expressive) {
+          final mappingChoice = find.byKey(
+            const ValueKey('mapping-body-part-choice'),
+          );
+          expect(mappingChoice, findsOneWidget, reason: mode);
+          expect(
+            find.byType(DropdownButtonFormField<BodyPart>),
+            findsNothing,
+            reason: '$mode: mapping uses the anchored Expressive selector',
+          );
+          await tester.tap(mappingChoice);
+          await tester.pumpAndSettle();
+          expect(find.byType(MenuAnchor), findsOneWidget, reason: mode);
+          expect(
+            find.byType(TonosChoiceDialog<BodyPart?>),
+            findsNothing,
+            reason: '$mode: mapping field is not a modal picker',
+          );
+          await tester.tap(find.text(mappingStrings.bodyPartShoulders));
+        } else {
+          final mappingDropdown = find.byType(
+            DropdownButtonFormField<BodyPart>,
+          );
+          expect(mappingDropdown, findsOneWidget, reason: mode);
+          await tester.tap(mappingDropdown);
+          await tester.pumpAndSettle();
+          expect(
+            find.byType(TonosChoiceDialog<BodyPart?>),
+            findsNothing,
+            reason: '$mode: mapping field is not a modal picker',
+          );
+          await tester.tap(find.text(mappingStrings.bodyPartShoulders));
+        }
         await tester.pumpAndSettle();
         expect(repository.mappingLoads.last, 2);
         expect(tester.takeException(), isNull, reason: mode);
       }
+    },
+  );
+
+  testWidgets(
+    'Expressive anatomy search and selected filter preserve edits on cancel/save',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      addTearDown(tester.view.resetViewInsets);
+
+      final repository = _AnalyticsSelectorRepository();
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF345B50)),
+        extensions: const [
+          AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+        ],
+      );
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [Provider<AppRepository>.value(value: repository)],
+          child: MaterialApp(
+            theme: theme,
+            themeAnimationDuration: Duration.zero,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const BodyPartMuscleMappingScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(BodyPartMuscleMappingScreen)),
+      );
+
+      await tester.tap(find.text(strings.commonEdit));
+      await tester.pumpAndSettle();
+      final search = find.byKey(const ValueKey('mapping-muscle-search'));
+      await tester.ensureVisible(search);
+      await tester.tap(search);
+      await tester.pumpAndSettle();
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 280 * tester.view.devicePixelRatio,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.text(strings.commonSave)).bottom,
+        lessThanOrEqualTo(844 - 280),
+        reason: 'sticky Save remains above the software keyboard',
+      );
+      expect(find.text(strings.commonCancel).hitTestable(), findsOneWidget);
+      tester.view.viewInsets = FakeViewPadding();
+      await tester.pumpAndSettle();
+      await tester.enterText(search, 'latissimus dorsi');
+      await tester.pumpAndSettle();
+      tester.testTextInput.hide();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      final latissimusTile = find.byKey(
+        const ValueKey('mapping-muscle-checkbox-2'),
+      );
+      expect(
+        find.descendant(
+          of: latissimusTile,
+          matching: find.text('Latissimus dorsi'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Pectoralis major'), findsNothing);
+
+      await tester.ensureVisible(latissimusTile);
+      await tester.tap(latissimusTile);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(strings.mappingSelectedCount(2)),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('mapping-selected-only-filter')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: latissimusTile,
+          matching: find.text('Latissimus dorsi'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Pectoralis major'), findsNothing);
+
+      await tester.tap(find.byTooltip(strings.gymProfileClear));
+      await tester.pumpAndSettle();
+      expect(latissimusTile, findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('mapping-muscle-checkbox-1')),
+        findsOneWidget,
+      );
+      expect(find.text('Additional muscle 1'), findsNothing);
+      expect(
+        tester
+            .widget<CheckboxListTile>(
+              find.byKey(const ValueKey('mapping-muscle-checkbox-1')),
+            )
+            .value,
+        isTrue,
+        reason: 'the initially linked muscle stays selected while filtered',
+      );
+
+      tester.testTextInput.hide();
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.commonCancel));
+      await tester.pumpAndSettle();
+      expect(repository.linkedMuscleIds, isEmpty);
+      await tester.tap(find.text(strings.commonEdit));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(strings.mappingSelectedCount(1)),
+        findsOneWidget,
+      );
+      final savedMuscleTile = find.byKey(
+        const ValueKey('mapping-muscle-checkbox-2'),
+      );
+      await Scrollable.ensureVisible(
+        tester.element(savedMuscleTile),
+        alignment: 0.5,
+        duration: Duration.zero,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<CheckboxListTile>(savedMuscleTile).value,
+        isFalse,
+        reason: 'Cancel restores the original full selection',
+      );
+
+      await tester.tap(savedMuscleTile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.commonSave));
+      await tester.pumpAndSettle();
+      expect(repository.linkedMuscleIds, [2]);
+      expect(tester.takeException(), isNull);
     },
   );
 }
@@ -338,6 +503,7 @@ class _AnalyticsSelectorRepository extends AppRepository {
   final bodyPartBoundsLoads = <int>[];
   final muscleBoundsLoads = <int>[];
   final mappingLoads = <int>[];
+  final linkedMuscleIds = <int>[];
 
   @override
   Future<List<BodyPart>> fetchAllBodyPartsFull() async => [
@@ -381,5 +547,16 @@ class _AnalyticsSelectorRepository extends AppRepository {
   Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodyPartId) async {
     mappingLoads.add(bodyPartId);
     return [MuscleBodyPart(muscleId: pec.id, bodyPartId: bodyPartId)];
+  }
+
+  @override
+  Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
+    linkedMuscleIds.add(muscleId);
+    return linkedMuscleIds.length;
+  }
+
+  @override
+  Future<int> unlinkMuscleFromBodyPart(int muscleId, int bodypartId) async {
+    return 1;
   }
 }

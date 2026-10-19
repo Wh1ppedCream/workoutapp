@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tonos Expressive — Menus and Pop-ups Inventory</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #342049;
+      --muted: #62556f;
+      --canvas: #fff8f1;
+      --surface: #f0e7f5;
+      --surface-strong: #e1d0ff;
+      --outline: #a98bb6;
+      --purple: #58219a;
+      --red: #b82424;
+      --green: #e4f3ea;
+      --shadow: 0 10px 28px #34204918;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 16px/1.55 "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    header {
+      padding: clamp(24px, 5vw, 56px) max(22px, calc((100vw - 1100px) / 2));
+      background: #39204c;
+      color: #fff;
+      border-radius: 0 0 32px 12px;
+    }
+    header p { max-width: 850px; color: #eee3f6; }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 44px); line-height: 1.12; }
+    h2 { margin: 0 0 10px; font-size: clamp(23px, 3vw, 30px); line-height: 1.2; }
+    h3 { margin: 0 0 8px; font-size: 19px; line-height: 1.3; }
+    main { max-width: 1100px; margin: 0 auto; padding: 22px; }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px;
+      position: sticky; top: 0; z-index: 2; padding: 10px 0;
+      background: color-mix(in srgb, var(--canvas) 92%, transparent);
+      backdrop-filter: blur(12px);
+    }
+    nav a, .tag {
+      display: inline-block; padding: 7px 13px; border-radius: 999px;
+      background: var(--surface-strong); color: var(--ink); text-decoration: none;
+      font-size: 14px; font-weight: 700;
+    }
+    section { margin: 34px 0; scroll-margin-top: 60px; }
+    .lead, .callout, .pattern, .note {
+      background: white; border: 1px solid #d7c6df; border-radius: 24px 24px 24px 10px;
+      box-shadow: var(--shadow);
+    }
+    .lead { padding: 22px; border-left: 7px solid var(--purple); }
+    .lead strong { color: var(--purple); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+    .pattern { overflow: hidden; }
+    .pattern-body { padding: 18px; }
+    .pattern p { margin: 8px 0; color: var(--muted); }
+    .pattern ul { margin: 8px 0 0; padding-left: 20px; }
+    .pattern li { margin: 5px 0; }
+    .callout { padding: 20px; background: var(--green); }
+    .note { padding: 14px 18px; box-shadow: none; color: var(--muted); font-size: 14px; }
+    .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 10px; padding: 12px; background: #ece6ef; }
+    figure { margin: 0; min-width: 0; }
+    figure a { display: block; }
+    figure img {
+      display: block; width: 100%; height: min(62vh, 620px); object-fit: contain;
+      background: #ddd5e2; border-radius: 12px;
+    }
+    figcaption { padding: 7px 2px 2px; color: #51465c; font-size: 12px; line-height: 1.35; }
+    .source { display: inline-block; margin-top: 10px; color: var(--purple); font-size: 13px; font-weight: 700; }
+    .source-list { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+    .source-list a { color: var(--purple); }
+    .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+    .mini { border-radius: 16px; background: var(--surface); padding: 14px; }
+    .mini b { display: block; margin-bottom: 4px; }
+    code { color: #4f286e; background: #f4edf8; padding: 2px 5px; border-radius: 5px; }
+    footer { padding: 20px 0 44px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 560px) {
+      main { padding: 14px; }
+      .shots { grid-template-columns: 1fr 1fr; }
+      figure img { height: 44vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="tag">Source and screenshot inventory · 17 October 2026</div>
+    <h1>Tonos Expressive menus and pop-ups</h1>
+    <p>A map of the overlay patterns currently present in the app, with examples of how their behavior and presentation differ.</p>
+  </header>
+  <main>
+    <div class="lead">
+      <strong>Your impression is accurate.</strong> Expressive currently has several separate menu and overlay implementations. They serve different jobs, but their surfaces, outlines, shapes, spacing, and action treatments are not all driven by one shared overlay system. The screenshots below show both current widget renders and older device captures; each image is labeled with its source and date so the two kinds of evidence are not confused.
+    </div>
+    <nav aria-label="Page sections">
+      <a href="#map">Quick map</a><a href="#menus">Menus</a><a href="#dialogs">Dialogs</a><a href="#sheets">Sheets and viewers</a><a href="#why">Why they vary</a>
+    </nav>
+
+    <section id="map">
+      <h2>Quick map</h2>
+      <div class="split">
+        <div class="mini"><b>3 menu mechanics</b><code>PopupMenuButton</code> for actions; <code>MenuAnchor</code> for custom anchored options; <code>DropdownButton</code> for field selections.</div>
+        <div class="mini"><b>Several modal dialog layouts</b> Destination-themed <code>AlertDialog</code>, locally composed <code>Dialog</code>/<code>AlertDialog</code>, reusable choice dialog, and Material date/time pickers.</div>
+        <div class="mini"><b>2 sheet approaches</b> A reusable <code>TonosSheet</code> primitive exists, while most user-facing sheets build their own feature-specific surface and header.</div>
+      </div>
+      <p class="note">This groups visual and interaction families, not every call site. Source inspection covered the shared primitives and the main Expressive flows; it is not a claim that every dialog in the application was runtime-tested.</p>
+    </section>
+
+    <section id="menus">
+      <h2>Menus</h2>
+      <div class="grid">
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>1. Action pop-ups — <code>PopupMenuButton</code></h3>
+            <p>Anchored to an overflow or row action control. It presents commands such as Activate, Rename, Delete, Edit, or Archive. These are action lists; they do not represent a selected field value.</p>
+            <ul>
+              <li><b>Archived plan card:</b> recent custom lavender/plum menu, leading icon tiles, semantic red Delete, and a separated destructive action.</li>
+              <li><b>Plan detail and health entries:</b> separate popup-menu styling and item hierarchy. Historical captures show a warmer/default-looking surface and simpler rows.</li>
+              <li>Enabled/disabled states depend on the action and current record state.</li>
+            </ul>
+            <a class="source" href="../../../lib/widgets/preset_bar.dart#L91">Archived plan implementation</a>
+            <div class="source-list"><a href="../../../lib/screens/exercise/preset_detail_screen.dart#L744">Plan detail menu</a><a href="../../../lib/widgets/health_trends_section.dart#L2510">Health entry menu</a></div>
+          </div>
+          <div class="shots">
+            <figure><a href="../../../tmp/archived-plan-overlay-polish-20261017/after-light-menu.png"><img src="../../../tmp/archived-plan-overlay-polish-20261017/after-light-menu.png" alt="Archived plan action menu in light mode"></a><figcaption>Light — isolated widget render of current archived-plan code, 17 Oct 2026; not a device capture.</figcaption></figure>
+            <figure><a href="../../../tmp/archived-plan-overlay-polish-20261017/after-dark-menu.png"><img src="../../../tmp/archived-plan-overlay-polish-20261017/after-dark-menu.png" alt="Archived plan action menu in dark mode"></a><figcaption>Dark — same isolated current widget render, 17 Oct 2026.</figcaption></figure>
+          </div>
+          <div class="shots">
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/preset-detail/light/01-plan-overflow-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/preset-detail/light/01-plan-overflow-menu.png" alt="Historical plan detail overflow menu"></a><figcaption>Plan detail overflow — device capture in the 13 Oct review campaign; earlier visual state.</figcaption></figure>
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/health-entry-actions/light/01-entry-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/health-entry-actions/light/01-entry-menu.png" alt="Historical health entry action menu"></a><figcaption>Health entry actions — device capture in the 13 Oct review campaign.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>2. Custom anchored selectors — <code>MenuAnchor</code></h3>
+            <p>Anchored to a choice field, usually sized to that field and styled locally. This gives the screen control over width, maximum height, scrolling, outside taps, and focus behavior.</p>
+            <ul>
+              <li>Used for Volume Boundaries, Flow Methods, Body Part / Muscle Mapping, Exercise Editor equipment, and plan-flow choices.</li>
+              <li>The implementation is similar, but the menus choose different token surfaces: configuration, tertiary, or accent.</li>
+              <li>Selection marks and item density also vary by caller.</li>
+            </ul>
+            <a class="source" href="../../../lib/screens/profile/settings/volume_boundaries_screen.dart#L783">Volume Boundaries selector</a>
+            <div class="source-list"><a href="../../../lib/screens/profile/settings/flow_methods_page.dart#L1737">Flow Methods selector</a><a href="../../../lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart#L667">Anatomy Mapping selector</a><a href="../../../lib/screens/profile/settings/exercise_editor_screen.dart#L1720">Exercise Editor equipment selector</a></div>
+          </div>
+          <div class="shots">
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/pages/13-plan-flow-editor/light/02-rule-type-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/pages/13-plan-flow-editor/light/02-rule-type-menu.png" alt="Anchored rule type choices inside a form dialog"></a><figcaption>Plan-flow choice menu — 13 Oct capture. It is anchored to a field inside a larger dialog, so the two surfaces overlap.</figcaption></figure>
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/pages/13-plan-flow-editor/dark/02-rule-type-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/pages/13-plan-flow-editor/dark/02-rule-type-menu.png" alt="Anchored rule type choices in dark mode"></a><figcaption>Dark mode — same historical screen and capture set.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>3. Field dropdowns — <code>DropdownButton</code></h3>
+            <p>These open a selection route from inside forms and dialogs. They inherit more of the Material dropdown sizing and menu behavior than the custom <code>MenuAnchor</code> selectors.</p>
+            <ul>
+              <li>Exercise Catalog Filters uses them for workspace profile, equipment, body part, and muscle.</li>
+              <li>Dialog form fields also use <code>TonosDialogDropdownButton</code>, which applies a theme-aware surface and rounded Expressive menu corners.</li>
+              <li>The open menu can occupy a much larger viewport area than its trigger field, especially for long lists.</li>
+            </ul>
+            <a class="source" href="../../../lib/theme/widgets/tonos_dialog.dart#L151">Shared dialog dropdown wrapper</a>
+            <div class="source-list"><a href="../../../lib/screens/exercise/exercise_catalog_page.dart#L404">Catalog filter flow</a><a href="../../../lib/screens/profile/settings/flow_methods_page.dart#L247">Flow Methods dialog fields</a></div>
+          </div>
+          <div class="shots">
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/light/02-equipment-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/light/02-equipment-menu.png" alt="Equipment field dropdown open over the Filters dialog"></a><figcaption>Equipment dropdown over Filters — 13 Oct device capture. The tall list and broad surface make this feel different from a compact action pop-up.</figcaption></figure>
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/dark/02-equipment-menu.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/dark/02-equipment-menu.png" alt="Equipment field dropdown in dark mode"></a><figcaption>Dark mode — same historical capture set.</figcaption></figure>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="dialogs">
+      <h2>Dialogs</h2>
+      <div class="grid">
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>4. Destination-themed alert dialogs</h3>
+            <p>Ordinary <code>AlertDialog</code> content inherits a destination-scoped Expressive dialog theme: tertiary surface and foreground tokens, an asymmetric rounded shape, and an accent outline. Each screen still supplies its own title, body, and actions.</p>
+            <p><code>TonosDialogFrame</code> does not provide this Expressive treatment; it returns its child unchanged for Expressive and supplies additional theming for Neo.</p>
+            <a class="source" href="../../../lib/theme/widgets/app_expressive_destination_theme.dart#L12">Destination dialog theme</a>
+            <a class="source" href="../../../lib/theme/widgets/tonos_dialog.dart#L9">TonosDialogFrame behavior</a>
+          </div>
+          <div class="shots">
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/preset-detail/light/04-delete-preset-confirm.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/preset-detail/light/04-delete-preset-confirm.png" alt="Earlier preset delete confirmation dialog"></a><figcaption>Plan detail delete confirmation — 13 Oct capture; its content order and action treatment differ from the newer archived-plan confirmation.</figcaption></figure>
+            <figure><a href="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/light/01-filter-dialog.png"><img src="../tonos-expressive-visual-evidence/unapproved-review-campaign-20261013/overlays/filters/light/01-filter-dialog.png" alt="Exercise Catalog Filters dialog"></a><figcaption>Filters uses a purpose-built large dialog with grouped controls and a three-action footer.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>5. Task-specific confirmations and form dialogs</h3>
+            <p>Several flows compose their own layout inside a dialog. The archived-plan confirmation is now a distinct custom layout: named question, warning icon, explanatory text, neutral Cancel, and semantic red Delete. Form dialogs add inputs, validation, date/time controls, or long scrolling content.</p>
+            <ul>
+              <li>The archived-plan delete dialog uses the planning surface and custom layout.</li>
+              <li>Plan Detail has a separate delete confirmation implementation, even though it performs the same kind of action.</li>
+              <li>Measurement entry dialogs use form-focused layouts, with nested date/time pickers.</li>
+            </ul>
+            <a class="source" href="../../../lib/widgets/preset_bar.dart#L482">Current archived-plan confirmation</a>
+            <div class="source-list"><a href="../../../lib/screens/exercise/preset_detail_screen.dart#L541">Plan Detail confirmation</a><a href="../../../lib/widgets/health_trends_section.dart#L2785">Measurement entry dialog</a></div>
+          </div>
+          <div class="shots">
+            <figure><a href="../../../tmp/archived-plan-overlay-polish-20261017/after-light-dialog.png"><img src="../../../tmp/archived-plan-overlay-polish-20261017/after-light-dialog.png" alt="Current archived plan delete confirmation in light mode"></a><figcaption>Light — isolated render of current archived-plan confirmation, 17 Oct 2026; not a device capture.</figcaption></figure>
+            <figure><a href="../../../tmp/archived-plan-overlay-polish-20261017/after-dark-dialog.png"><img src="../../../tmp/archived-plan-overlay-polish-20261017/after-dark-dialog.png" alt="Current archived plan delete confirmation in dark mode"></a><figcaption>Dark — same isolated current widget render.</figcaption></figure>
+            <figure><a href="../tonos-expressive-measurement-detail-20261006/pixel7-current-source/weight-log-dialog-light-final.png"><img src="../tonos-expressive-measurement-detail-20261006/pixel7-current-source/weight-log-dialog-light-final.png" alt="Weight entry form dialog in light mode"></a><figcaption>Weight entry form — 6 Oct evidence. Form dialog, rather than an action confirmation.</figcaption></figure>
+            <figure><a href="../tonos-expressive-measurement-detail-20261006/pixel7-current-source/weight-log-dialog-dark-final.png"><img src="../tonos-expressive-measurement-detail-20261006/pixel7-current-source/weight-log-dialog-dark-final.png" alt="Weight entry form dialog in dark mode"></a><figcaption>Dark mode — same 6 Oct evidence batch.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>6. Choice dialogs and native pickers</h3>
+            <p><code>TonosChoiceDialog</code> wraps an alert dialog around a list of radio-style choices, sometimes with a preview or subtitle. Date and time selectors use Flutter's calendar and clock picker routes. These are modal selection tasks, not anchored dropdowns.</p>
+            <p>Both share the dialog route, but the choice list and native picker controls have their own row geometry, selection marks, and content density.</p>
+            <a class="source" href="../../../lib/theme/widgets/tonos_dialog.dart#L306">TonosChoiceDialog</a>
+            <div class="source-list"><a href="../../../lib/screens/profile/settings/ui_appearance_settings_page.dart#L390">Appearance choice dialog</a><a href="../../../lib/widgets/health_trends_section.dart#L2879">Measurement date/time pickers</a></div>
+          </div>
+          <div class="pattern-body note">I did not find a clean, isolated current screenshot of these picker states in the selected evidence sets. They are listed from source inspection; this page does not imply current visual verification.</div>
+        </article>
+      </div>
+    </section>
+
+    <section id="sheets">
+      <h2>Sheets and full-screen viewers</h2>
+      <div class="grid">
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>7. Modal bottom sheets</h3>
+            <p><code>TonosSheet</code> is a reusable token-driven shell with a top handle, optional title/close action, safe area, and theme surface. In product flows, however, the main sheets are custom widgets that control their own header, height, scrolling, drag behavior, and surfaces.</p>
+            <ul>
+              <li>Exercise Details is a tall, draggable multi-tab sheet.</li>
+              <li>Swap Exercise, Automatic Settings, and Session Complete use their own feature-specific sheet content.</li>
+              <li>Current source search found <code>TonosSheet</code> used by Theme Lab examples; production feature sheets call modal bottom-sheet routes directly.</li>
+            </ul>
+            <a class="source" href="../../../lib/theme/widgets/tonos_sheet.dart#L7">Reusable TonosSheet shell</a>
+            <div class="source-list"><a href="../../../lib/widgets/exercise_detail_sheet.dart#L214">Exercise Details sheet</a><a href="../../../lib/widgets/swap_exercise_sheet.dart#L29">Swap Exercise sheet</a></div>
+          </div>
+          <div class="shots">
+            <figure><a href="../tonos-expressive-major-amplification-20261004/captures/20261005-pixel7/catalog/exercise-detail-sheet-light.png"><img src="../tonos-expressive-major-amplification-20261004/captures/20261005-pixel7/catalog/exercise-detail-sheet-light.png" alt="Exercise Details bottom sheet in light mode"></a><figcaption>Exercise Details — Pixel 7 capture from 5 Oct. Older than the current source; illustrates the tall sheet interaction only.</figcaption></figure>
+            <figure><a href="../tonos-expressive-major-amplification-20261004/captures/20261005-pixel7/catalog/exercise-detail-sheet-dark.png"><img src="../tonos-expressive-major-amplification-20261004/captures/20261005-pixel7/catalog/exercise-detail-sheet-dark.png" alt="Exercise Details bottom sheet in dark mode"></a><figcaption>Dark mode — same 5 Oct capture batch.</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="pattern">
+          <div class="pattern-body">
+            <h3>8. Full-screen image viewer dialogs</h3>
+            <p>The exercise image viewer uses a dialog route to provide a darkened backdrop, enlarged media, zoom/pan gestures, close control, and—in the Catalog Expressive caller—the form guide below the image. It behaves like a full-screen media view rather than a compact alert dialog.</p>
+            <a class="source" href="../../../lib/theme/widgets/media_viewer_image.dart">Image viewer route helper</a>
+            <div class="source-list"><a href="../../../lib/widgets/exercise_detail_sheet.dart#L1355">Catalog detail sheet image action</a></div>
+          </div>
+          <div class="pattern-body note">No current isolated viewer screenshot is embedded here. The approved media-viewer screenshots live in the visual-review evidence archive; this inventory distinguishes it by route and interaction instead of reusing a possibly stale capture.</div>
+        </article>
+      </div>
+    </section>
+
+    <section id="why">
+      <h2>Why they look different</h2>
+      <div class="callout">
+        <ul>
+          <li><b>There is no single Expressive menu theme.</b> Source defines popup styling in individual <code>PopupMenuButton</code> or <code>MenuAnchor</code> call sites; no global Expressive <code>PopupMenuThemeData</code> or dropdown menu theme was found.</li>
+          <li><b>Three separate menu mechanics are in use.</b> Action pop-ups, anchored custom selectors, and field dropdown routes have different positioning and sizing rules.</li>
+          <li><b>Dialog colors are shared more than dialog layouts.</b> A destination wrapper sets the Expressive <code>AlertDialog</code> theme, but each caller still chooses its own layout; custom dialog surfaces can also override it.</li>
+          <li><b>The reusable sheet shell has limited product coverage.</b> Most user-facing sheets use feature-specific widgets and shapes.</li>
+          <li><b>Same action, different confirmation:</b> archived plan deletion and Plan Detail deletion currently use separate confirmation layouts.</li>
+        </ul>
+      </div>
+      <p>A unified system can keep the right interaction for each job—anchored choices remain menus, confirmations remain dialogs, and large content remains sheets—while sharing tokenized surfaces, outlines, shapes, row heights, selected/disabled states, and destructive action hierarchy.</p>
+    </section>
+
+    <section>
+      <h2>Evidence limits</h2>
+      <p class="note">The archived-plan action menu and delete dialog screenshots are isolated Flutter widget renders of the current source dated 17 Oct 2026. They were not captured from the Pixel 7. Other embedded images are labeled from the existing review campaign (13 Oct), measurement evidence (6 Oct), or earlier Catalog capture (5 Oct); treat them as visual examples of those recorded states, not proof of the current installed build. Source links are included for checking implementation. No source, approval ledger, preview database, or screenshot gallery was changed for this inventory.</p>
+    </section>
+    <footer>Generated as a read-only design inventory for the Tonos Expressive overlay discussion.</footer>
+  </main>
+</body>
+</html>

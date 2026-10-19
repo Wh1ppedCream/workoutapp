@@ -24,6 +24,7 @@ class PresetInfoCard extends StatefulWidget {
   final List<WorkoutExercise> exercises;
   final List<CardType> cardTypes;
   final List<int?> definitionIds;
+  final bool compactExpressive;
 
   const PresetInfoCard({
     super.key,
@@ -31,6 +32,7 @@ class PresetInfoCard extends StatefulWidget {
     required this.exercises,
     required this.cardTypes,
     required this.definitionIds,
+    this.compactExpressive = false,
   });
 
   @override
@@ -74,8 +76,9 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     for (var i = 0; i < widget.exercises.length; i++) {
       final exercise = widget.exercises[i];
       final type = i < widget.cardTypes.length ? widget.cardTypes[i].name : '';
-      final defId =
-          i < widget.definitionIds.length ? widget.definitionIds[i] : null;
+      final defId = i < widget.definitionIds.length
+          ? widget.definitionIds[i]
+          : null;
       if (exercise is WeightExercise) {
         final sets = _allWeightSets(exercise);
         parts.add(
@@ -197,12 +200,11 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     >(
       requests,
       maxConcurrency: _focusLoadConcurrency,
-      mapper:
-          (request, _) => _loadBodyPartFocus(
-            index: request.index,
-            exercise: request.exercise,
-            setCount: request.setCount,
-          ),
+      mapper: (request, _) => _loadBodyPartFocus(
+        index: request.index,
+        exercise: request.exercise,
+        setCount: request.setCount,
+      ),
     );
   }
 
@@ -220,6 +222,8 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
+    final compactExpressive =
+        widget.compactExpressive && context.usesExpressivePresentation;
 
     return FutureBuilder<_PresetInfoSummary>(
       future: _summaryFuture,
@@ -228,94 +232,98 @@ class _PresetInfoCardState extends State<PresetInfoCard>
         final strings = AppLocalizations.of(context);
 
         final content = Padding(
-          padding: const EdgeInsets.all(16),
-          child:
-              summary == null
-                  ? const SizedBox(
-                    height: 220,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                  : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _PresetMetricTile(
-                              icon: Icons.schedule,
-                              value: _formatMinutes(
-                                summary.estimatedMinutes,
-                                strings,
-                              ),
-                              label: strings.presetEstimatedTime,
+          padding: EdgeInsets.all(compactExpressive ? 12 : 16),
+          child: summary == null
+              ? SizedBox(
+                  height: compactExpressive ? 180 : 220,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PresetMetricTile(
+                            icon: Icons.schedule,
+                            value: _formatMinutes(
+                              summary.estimatedMinutes,
+                              strings,
                             ),
+                            label: strings.presetEstimatedTime,
+                            compactExpressive: compactExpressive,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _PresetMetricTile(
-                              icon: Icons.fitness_center,
-                              value: WeightUnitFormatter.formatVolume(
-                                summary.totalVolume,
-                                weightUnit,
-                                locale: Localizations.localeOf(context),
-                              ),
-                              label: strings.logbookTotalVolume,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _PresetMetricTile(
+                            icon: Icons.fitness_center,
+                            value: WeightUnitFormatter.formatVolume(
+                              summary.totalVolume,
+                              weightUnit,
+                              locale: Localizations.localeOf(context),
                             ),
+                            label: strings.logbookTotalVolume,
+                            compactExpressive: compactExpressive,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final maxWidth = constraints.maxWidth;
-                          final gap = maxWidth < 330 ? 10.0 : 16.0;
-                          final heatmapWidth =
-                              (maxWidth * 0.46).clamp(124.0, 180.0).toDouble();
-                          final heatmapSize =
-                              heatmapWidth.clamp(118.0, 180.0).toDouble();
-                          final heatmap = SizedBox(
-                            width: heatmapWidth,
-                            height: heatmapSize,
-                            child: Center(
-                              child: BodyHeatmap(
-                                frequencyMap: summary.frequencyMap,
-                                lowColor: tonosHeatmapLowForSurface(
-                                  context,
-                                  surfaces.panelRaised,
-                                ),
-                                highColor: tonosHeatmapHighForSurface(
-                                  context,
-                                  surfaces.panelRaised,
-                                ),
-                                width: heatmapSize,
-                                height: heatmapSize,
-                              ),
-                            ),
-                          );
-                          final focusList = FocusedSetsList(
-                            hits: summary.bodyPartHits,
-                            emptyMessage: strings.presetNoFocusData,
-                          );
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              heatmap,
-                              SizedBox(width: gap),
-                              Expanded(child: focusList),
-                            ],
-                          );
-                        },
-                      ),
-                      if (summary.bodyPartHits.isEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          strings.presetFocusPreviewHelp,
-                          style: theme.textTheme.bodySmall,
                         ),
                       ],
+                    ),
+                    SizedBox(height: compactExpressive ? 10 : 16),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxWidth = constraints.maxWidth;
+                        final gap = maxWidth < 330 ? 10.0 : 16.0;
+                        final heatmapWidth = compactExpressive
+                            ? (maxWidth * 0.40).clamp(112.0, 154.0).toDouble()
+                            : (maxWidth * 0.46).clamp(124.0, 180.0).toDouble();
+                        final heatmapSize = heatmapWidth
+                            .clamp(118.0, 180.0)
+                            .toDouble();
+                        final heatmap = SizedBox(
+                          width: heatmapWidth,
+                          height: heatmapSize,
+                          child: Center(
+                            child: BodyHeatmap(
+                              frequencyMap: summary.frequencyMap,
+                              lowColor: tonosHeatmapLowForSurface(
+                                context,
+                                surfaces.panelRaised,
+                              ),
+                              highColor: tonosHeatmapHighForSurface(
+                                context,
+                                surfaces.panelRaised,
+                              ),
+                              width: heatmapSize,
+                              height: heatmapSize,
+                            ),
+                          ),
+                        );
+                        final focusList = FocusedSetsList(
+                          hits: summary.bodyPartHits,
+                          emptyMessage: strings.presetNoFocusData,
+                          compact: compactExpressive,
+                        );
+
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            heatmap,
+                            SizedBox(width: gap),
+                            Expanded(child: focusList),
+                          ],
+                        );
+                      },
+                    ),
+                    if (summary.bodyPartHits.isEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        strings.presetFocusPreviewHelp,
+                        style: theme.textTheme.bodySmall,
+                      ),
                     ],
-                  ),
+                  ],
+                ),
         );
 
         if (context.usesNeoPresentation) {
@@ -328,7 +336,10 @@ class _PresetInfoCardState extends State<PresetInfoCard>
           );
         }
 
-        return Card(margin: const EdgeInsets.only(bottom: 16), child: content);
+        return Card(
+          margin: EdgeInsets.only(bottom: compactExpressive ? 0 : 16),
+          child: content,
+        );
       },
     );
   }
@@ -346,11 +357,13 @@ class _PresetMetricTile extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
+  final bool compactExpressive;
 
   const _PresetMetricTile({
     required this.icon,
     required this.value,
     required this.label,
+    this.compactExpressive = false,
   });
 
   @override
@@ -361,10 +374,9 @@ class _PresetMetricTile extends StatelessWidget {
     final semantic = context.semanticColors;
     final usesInkRecipe = context.usesNeoPresentation;
     final outlined = context.surfaceDecorationTokens.card.outlined;
-    final foreground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.card)
-            : semantic.strongContent;
+    final foreground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.card)
+        : semantic.strongContent;
     final secondaryForeground = semantic.mutedContent;
 
     return LayoutBuilder(
@@ -372,29 +384,39 @@ class _PresetMetricTile extends StatelessWidget {
         final compact = constraints.maxWidth < 150;
         return Container(
           padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 14,
-            vertical: compact ? 10 : 12,
+            horizontal: compactExpressive
+                ? 8
+                : compact
+                ? 10
+                : 14,
+            vertical: compactExpressive
+                ? 8
+                : compact
+                ? 10
+                : 12,
           ),
           decoration: BoxDecoration(
             color: surfaces.card,
             borderRadius: shapes.metric,
-            border:
-                outlined
-                    ? Border.all(
-                      color: tonosOutlineForSurface(context, surfaces.card),
-                      width: shapes.outlineWidth,
-                    )
-                    : null,
+            border: outlined
+                ? Border.all(
+                    color: tonosOutlineForSurface(context, surfaces.card),
+                    width: shapes.outlineWidth,
+                  )
+                : null,
           ),
           child: Row(
             children: [
               Icon(
                 icon,
-                size: compact ? 18 : 20,
-                color:
-                    usesInkRecipe
-                        ? tonosForegroundForSurface(context, surfaces.card)
-                        : theme.colorScheme.primary,
+                size: compactExpressive
+                    ? 17
+                    : compact
+                    ? 18
+                    : 20,
+                color: usesInkRecipe
+                    ? tonosForegroundForSurface(context, surfaces.card)
+                    : theme.colorScheme.primary,
               ),
               SizedBox(width: compact ? 8 : 10),
               Expanded(

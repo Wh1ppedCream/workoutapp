@@ -91,6 +91,85 @@ void main() {
       expect(insert.orderIndex, 1);
     });
 
+    for (final (index, expectedPosition) in [
+      (-1, 4),
+      (0, 0),
+      (1, 1),
+      (4, 4),
+      (20, 4),
+    ]) {
+      test('copy source $index resolves correctly with five sets', () async {
+        final repo = _FakeProgressionRepository(
+          successScope: ProgressionSuccessScope.set,
+          methods: [
+            FlowMethod(
+              id: 1,
+              presetId: 1,
+              name: 'Copy set',
+              type: MethodType.addSet,
+              params: {'copyFromSetIndex': index},
+            ),
+          ],
+          presetSets: {
+            10: [
+              for (var i = 0; i < 5; i++)
+                _presetSet(11 + i, 100.0 + i * 10, 5 + i, i),
+            ],
+          },
+        );
+        await AutoIncrementService(repo).apply(sessionId: 1, presetId: 1);
+        final insert = repo.appliedBatch!.inserts.single;
+        expect(insert.weight, 100.0 + expectedPosition * 10);
+        expect(insert.reps, 5 + expectedPosition);
+        expect(insert.orderIndex, 5);
+      });
+    }
+
+    test('last set includes a set added by an earlier rule', () async {
+      final repo = _FakeProgressionRepository(
+        successScope: ProgressionSuccessScope.set,
+        methods: [
+          FlowMethod(
+            id: 1,
+            presetId: 1,
+            name: 'Add a set',
+            type: MethodType.addSet,
+            params: const {'weight': 75.0, 'reps': 12},
+          ),
+          FlowMethod(
+            id: 2,
+            presetId: 1,
+            name: 'Copy last set',
+            type: MethodType.addSet,
+            params: const {'copyFromSetIndex': -1},
+          ),
+        ],
+      );
+      await AutoIncrementService(repo).apply(sessionId: 1, presetId: 1);
+      expect(repo.appliedBatch!.inserts, hasLength(2));
+      expect(repo.appliedBatch!.inserts.last.weight, 75);
+      expect(repo.appliedBatch!.inserts.last.reps, 12);
+    });
+
+    test('copying safely skips an exercise without sets', () async {
+      final repo = _FakeProgressionRepository(
+        successScope: ProgressionSuccessScope.set,
+        presetSets: const {10: []},
+        methods: [
+          FlowMethod(
+            id: 1,
+            presetId: 1,
+            name: 'Copy last set',
+            type: MethodType.addSet,
+            params: const {'copyFromSetIndex': -1},
+          ),
+        ],
+      );
+      await AutoIncrementService(repo).apply(sessionId: 1, presetId: 1);
+      expect(repo.appliedBatch!.inserts, isEmpty);
+      expect(repo.appliedBatch!.updates, isEmpty);
+    });
+
     test('delete-set actions never remove the final parent set', () async {
       final repo = _FakeProgressionRepository(
         successScope: ProgressionSuccessScope.set,

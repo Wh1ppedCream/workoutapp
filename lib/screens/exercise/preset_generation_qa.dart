@@ -56,17 +56,21 @@ AppGenerationTokens _generationTokensForPresentation(BuildContext context) {
     sectionSurface: planning.configurationSurface,
     sectionBorder: planning.outline,
     sectionIconFill: planning.planAccent,
-    sectionShape: planning.supportShape,
+    sectionShape: BorderRadius.lerp(
+      planning.supportShape,
+      BorderRadius.zero,
+      0.1,
+    )!,
     sectionIconShape: planning.rowShape,
     fieldLabel: planning.configurationForeground,
     fieldBorder: planning.outline,
     fieldFill: planning.configurationSurface,
     fieldShape: planning.rowShape,
     secondaryText: planning.configurationForeground,
-    choiceSelectedSurface: planning.planAccent,
-    choiceUnselectedSurface: planning.equipmentSurface,
+    choiceSelectedSurface: planning.actionPrimary,
+    choiceUnselectedSurface: planning.configurationSurface,
     choiceSelectedBorder: planning.outline,
-    choiceUnselectedBorder: planning.outline.withValues(alpha: 0.55),
+    choiceUnselectedBorder: planning.outline.withValues(alpha: 0.35),
     choiceShape: planning.rowShape,
     actionBarSurface: planning.planSupportSurface,
     actionBarBorder: planning.outline,
@@ -130,6 +134,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   bool _isDiscardingOnboardingPlans = false;
   bool _tutorialQueued = false;
   final _onboardingGeneratedPlanIds = <int>[];
+  final _expandedSettingsSections = <String>{};
 
   @override
   void initState() {
@@ -423,12 +428,18 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     return value.isEmpty ? fallback : value;
   }
 
+  int _weeklyPlanCount() =>
+      int.tryParse(_weeklyFrequencyController.text.trim()) ?? 1;
+
   Widget _buildIntroCard() {
     final generation = _generationTokensForPresentation(context);
     final expressive = _expressivePlanningTokens(context);
     final strings = AppLocalizations.of(context);
+    final cardPadding = expressive == null ? 18.0 : 14.0;
+    final iconSize = expressive == null ? 48.0 : 44.0;
+    final summarySpacing = expressive == null ? 16.0 : 12.0;
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(cardPadding),
       decoration: BoxDecoration(
         borderRadius: generation.introShape,
         gradient: LinearGradient(
@@ -444,8 +455,8 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: iconSize,
+                height: iconSize,
                 decoration: BoxDecoration(
                   color: generation.introIconFill,
                   borderRadius: generation.introIconShape,
@@ -481,7 +492,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: summarySpacing),
           _buildSummaryPills(),
         ],
       ),
@@ -490,8 +501,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
 
   Widget _buildSummaryPills() {
     final strings = AppLocalizations.of(context);
-    final planCount =
-        int.tryParse(_fieldValue(_weeklyFrequencyController, '1')) ?? 1;
+    final planCount = _weeklyPlanCount();
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -558,15 +568,97 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }
 
   Widget _buildSettingsSection({
+    required String sectionId,
     required IconData icon,
     required String title,
     required String subtitle,
     required List<Widget> children,
+    int? subtitleMaxLines = 2,
   }) {
     final generation = _generationTokensForPresentation(context);
     final expressive = _expressivePlanningTokens(context);
+    final headerSurface = expressive == null
+        ? null
+        : Color.alphaBlend(
+            expressive.planAccent.withValues(alpha: 0.12),
+            generation.sectionSurface,
+          );
+    Widget buildExpansionTile(double headerInset) {
+      final expansionTile = ExpansionTile(
+        onExpansionChanged: expressive == null
+            ? null
+            : (expanded) => setState(() {
+                if (expanded) {
+                  _expandedSettingsSections.add(sectionId);
+                } else {
+                  _expandedSettingsSections.remove(sectionId);
+                }
+              }),
+        tilePadding: EdgeInsets.fromLTRB(
+          16 - headerInset,
+          expressive == null ? 8 : 7,
+          16 - headerInset,
+          expressive == null ? 8 : 7,
+        ),
+        backgroundColor: expressive == null ? null : generation.sectionSurface,
+        collapsedBackgroundColor: expressive == null
+            ? null
+            : generation.sectionSurface,
+        childrenPadding: expressive == null
+            ? const EdgeInsets.fromLTRB(16, 8, 16, 16)
+            : EdgeInsets.fromLTRB(16 - headerInset, 5, 16 - headerInset, 10),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: generation.sectionIconFill,
+            borderRadius: generation.sectionIconShape,
+          ),
+          child: Icon(
+            icon,
+            color: expressive?.planAccentForeground ?? generation.accent,
+          ),
+        ),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w900)
+              .copyWith(color: expressive?.configurationForeground),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: subtitleMaxLines,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color:
+                expressive?.configurationForeground ?? generation.secondaryText,
+          ),
+        ),
+        children: children,
+      );
+      if (expressive == null) return expansionTile;
+
+      // Offset the existing inner padding so content keeps its current alignment.
+      return Padding(
+        padding: EdgeInsets.fromLTRB(headerInset, headerInset, headerInset, 0),
+        child: ListTileTheme(
+          data: Theme.of(context).listTileTheme.copyWith(
+            tileColor: headerSurface,
+            shape: RoundedRectangleBorder(
+              borderRadius: generation.sectionShape,
+              side: headerInset > 0
+                  ? BorderSide(color: generation.sectionBorder)
+                  : BorderSide.none,
+            ),
+          ),
+          child: expansionTile,
+        ),
+      );
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: expressive == null ? 10 : 9),
       child: Material(
         color: generation.sectionSurface,
         shape: RoundedRectangleBorder(
@@ -575,40 +667,21 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         ),
         clipBehavior: Clip.antiAlias,
         child: TonosExpansionTileScope(
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            childrenPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            leading: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: generation.sectionIconFill,
-                borderRadius: generation.sectionIconShape,
-              ),
-              child: Icon(
-                icon,
-                color: expressive?.planAccentForeground ?? generation.accent,
-              ),
-            ),
-            title: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w900)
-                  .copyWith(color: expressive?.configurationForeground),
-            ),
-            subtitle: Text(
-              subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    expressive?.configurationForeground ??
-                    generation.secondaryText,
-              ),
-            ),
-            children: children,
-          ),
+          child: expressive == null
+              ? buildExpansionTile(0)
+              : TweenAnimationBuilder<double>(
+                  tween: Tween<double>(
+                    begin: 0,
+                    end: _expandedSettingsSections.contains(sectionId) ? 10 : 0,
+                  ),
+                  duration: appMotionDuration(
+                    context,
+                    context.motionTokens.standard,
+                  ),
+                  curve: context.motionTokens.standardCurve,
+                  builder: (context, headerInset, child) =>
+                      buildExpansionTile(headerInset),
+                ),
         ),
       ),
     );
@@ -623,6 +696,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   }) {
     final generation = _generationTokensForPresentation(context);
     final expressive = _expressivePlanningTokens(context);
+    final fieldGap = expressive == null ? 6.0 : 3.0;
     final border = OutlineInputBorder(
       borderRadius: generation.fieldShape,
       borderSide: BorderSide(color: generation.fieldBorder),
@@ -638,7 +712,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: fieldGap),
         TextFormField(
           controller: controller,
           keyboardType: TextInputType.number,
@@ -661,7 +735,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             enabledBorder: border,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: fieldGap),
         Text(
           helperText,
           maxLines: 2,
@@ -672,6 +746,66 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           ).copyWith(color: expressive?.configurationForeground),
         ),
       ],
+    );
+  }
+
+  Widget _buildRecentTrainingOption(AppLocalizations strings) {
+    final expressive = _expressivePlanningTokens(context);
+    if (expressive == null) {
+      return CheckboxListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(strings.generateUseRecentTraining),
+        subtitle: Text(strings.generateUseRecentTrainingBody),
+        value: _useRecentTrainingHistory,
+        onChanged: (value) =>
+            setState(() => _useRecentTrainingHistory = value ?? false),
+      );
+    }
+
+    final generation = _generationTokensForPresentation(context);
+    void toggle() =>
+        setState(() => _useRecentTrainingHistory = !_useRecentTrainingHistory);
+
+    return MergeSemantics(
+      child: InkWell(
+        key: const ValueKey('generate-use-recent-training'),
+        onTap: toggle,
+        borderRadius: generation.choiceShape,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Checkbox(
+                  value: _useRecentTrainingHistory,
+                  onChanged: (value) => setState(
+                    () => _useRecentTrainingHistory = value ?? false,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    strings.generateUseRecentTraining,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: expressive.configurationForeground,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 52, right: 8, bottom: 4),
+              child: Text(
+                strings.generateUseRecentTrainingBody,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: expressive.configurationForeground),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -689,6 +823,79 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         selected && (context.usesNeoPresentation || expressive != null);
     final selectedInk =
         expressive?.planAccentForeground ?? context.cs.onPrimaryContainer;
+    if (expressive != null) {
+      final foreground = selected
+          ? expressive.actionPrimaryForeground
+          : expressive.configurationForeground;
+      final shape = RoundedRectangleBorder(
+        borderRadius: generation.choiceShape,
+        side: BorderSide(
+          color: selected
+              ? expressive.outline
+              : generation.choiceUnselectedBorder,
+          width: selected ? 1.5 : 1,
+        ),
+      );
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Semantics(
+          selected: selected,
+          inMutuallyExclusiveGroup: true,
+          button: true,
+          label: '$title. $subtitle',
+          child: Material(
+            color: selected
+                ? generation.choiceSelectedSurface
+                : generation.choiceUnselectedSurface,
+            shape: shape,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => onChanged(value),
+              customBorder: shape,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      selected
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      size: 21,
+                      color: foreground,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  color: foreground,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: foreground, height: 1.2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final shape = RoundedRectangleBorder(
       borderRadius: generation.choiceShape,
       side: BorderSide(
@@ -791,11 +998,30 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
     }
   }
 
+  TextStyle? _subsectionLabelStyle(BuildContext context) {
+    final expressive = _expressivePlanningTokens(context);
+    if (expressive == null) return const TextStyle(fontWeight: FontWeight.bold);
+    return Theme.of(context).textTheme.titleSmall?.copyWith(
+      color: expressive.configurationForeground,
+      fontWeight: FontWeight.w800,
+    );
+  }
+
+  Widget _buildSubsectionHeading(String label) {
+    final heading = Text(
+      label,
+      textAlign: TextAlign.start,
+      style: _subsectionLabelStyle(context),
+    );
+    return _expressivePlanningTokens(context) == null
+        ? heading
+        : Align(alignment: AlignmentDirectional.centerStart, child: heading);
+  }
+
   String _generateButtonLabel() {
     final strings = AppLocalizations.of(context);
     if (_isGenerating) return strings.generateGenerating;
-    final count = int.tryParse(_weeklyFrequencyController.text.trim()) ?? 1;
-    return strings.generateButton(count);
+    return strings.generateButton(_weeklyPlanCount());
   }
 
   String _generatedPlansMessage({
@@ -858,9 +1084,31 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final expressive = _expressivePlanningTokens(context);
+    final mediaQuery = MediaQuery.of(context);
+    final keyboardIsOpen = mediaQuery.viewInsets.bottom > 0;
+    final expressiveBottomPadding =
+        80.0 + (keyboardIsOpen ? 0.0 : mediaQuery.viewPadding.bottom);
+    final focusHistoryStatus = _useRecentTrainingHistory
+        ? strings.generateHistoryUsing
+        : strings.generateHistoryNotUsing;
+    final recentTrainingSummary = _useRecentTrainingHistory
+        ? strings.generateRecentTrainingOnSummary
+        : strings.generateRecentTrainingOffSummary;
+    final focusSummary = expressive == null
+        ? strings.generateFocusSummary(
+            _preferredBodypartIds.length,
+            _blacklistedBodypartIds.length,
+            focusHistoryStatus,
+          )
+        : '${strings.generateFocusCountsSummary(_preferredBodypartIds.length, _blacklistedBodypartIds.length)}\n$recentTrainingSummary';
     final content = Scaffold(
       backgroundColor: expressive?.pageCanvas,
-      appBar: AppBar(title: Text(strings.generatePageTitle)),
+      appBar: AppBar(
+        backgroundColor: expressive?.pageCanvas,
+        foregroundColor: expressive?.onPage,
+        surfaceTintColor: expressive == null ? null : Colors.transparent,
+        title: Text(strings.generatePageTitle),
+      ),
       floatingActionButton: KeyedSubtree(
         key: _generateTutorialKey,
         child: FloatingActionButton.extended(
@@ -894,7 +1142,13 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           16,
           16,
           16,
-          widget.onboardingMode ? 136 : 16,
+          widget.onboardingMode
+              ? 136
+              : expressive != null
+              ? expressiveBottomPadding < 96
+                    ? 96
+                    : expressiveBottomPadding
+              : 16,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -904,10 +1158,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             KeyedSubtree(
               key: _workoutSetupTutorialKey,
               child: _buildSettingsSection(
+                sectionId: 'workout-setup',
                 icon: Icons.timer_outlined,
                 title: strings.generateWorkoutSetupTitle,
                 subtitle: strings.generateSetupSummary(
-                  _fieldValue(_weeklyFrequencyController, '1'),
+                  _weeklyPlanCount().toString(),
                   _fieldValue(_sessionDurationController, '60'),
                   _fieldValue(
                     _maxSetsController,
@@ -922,7 +1177,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     helperText: strings.generateSessionLengthHelp,
                     suffixText: strings.unitMinutesShort,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: expressive == null ? 14 : 7),
                   _buildNumberField(
                     controller: _weeklyFrequencyController,
                     label: strings.generatePlansToCreate,
@@ -930,9 +1185,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     helperText: strings.generatePlansToCreateHelp(
                       SessionSpec.maxGeneratedPlansPerBundle,
                     ),
-                    suffixText: strings.unitPlans,
+                    suffixText: strings.generatePlanUnit(_weeklyPlanCount()),
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: expressive == null ? 14 : 7),
                   _buildNumberField(
                     controller: _maxSetsController,
                     label: strings.generateMaxSetsPerExercise,
@@ -949,40 +1204,43 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             KeyedSubtree(
               key: _focusTutorialKey,
               child: _buildSettingsSection(
+                sectionId: 'training-focus',
                 icon: Icons.track_changes_outlined,
                 title: strings.generateTrainingFocusTitle,
-                subtitle: strings.generateFocusSummary(
-                  _preferredBodypartIds.length,
-                  _blacklistedBodypartIds.length,
-                  _useRecentTrainingHistory
-                      ? strings.generateHistoryUsing
-                      : strings.generateHistoryNotUsing,
-                ),
+                subtitle: focusSummary,
+                subtitleMaxLines: expressive == null ? 2 : null,
                 children: [
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(strings.generateUseRecentTraining),
-                    subtitle: Text(strings.generateUseRecentTrainingBody),
-                    value: _useRecentTrainingHistory,
-                    onChanged: (value) => setState(
-                      () => _useRecentTrainingHistory = value ?? false,
+                  _buildRecentTrainingOption(strings),
+                  SizedBox(height: expressive == null ? 16 : 8),
+                  _buildSubsectionHeading(strings.optimizedBodypartFocusTitle),
+                  SizedBox(height: expressive == null ? 4 : 3),
+                  if (expressive != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          '${strings.generateFocusPreferred} (+) · ${strings.generateFocusAvoided} (−) · ${strings.generateFocusNeutral} (↺)',
+                          textAlign: TextAlign.start,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: expressive.configurationForeground,
+                              ),
+                        ),
+                      ),
+                    )
+                  else
+                    Text(
+                      strings.generateBodypartFocusInstruction,
+                      style: const TextStyle(fontSize: 12),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    strings.optimizedBodypartFocusTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    strings.generateBodypartFocusInstruction,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: expressive == null ? 8 : 6),
                   BodypartFocusChips(
                     bodyParts: _bodyParts,
                     preferredBodypartIds: _preferredBodypartIds,
                     blacklistedBodypartIds: _blacklistedBodypartIds,
+                    expressiveTokens: expressive,
+                    showExpressiveStateIndicators: expressive != null,
                     emptyText: strings.optimizedBodypartsUnavailable,
                     onChanged: (selection) => setState(() {
                       _preferredBodypartIds = selection.preferredBodypartIds;
@@ -996,6 +1254,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             KeyedSubtree(
               key: _repWeightTutorialKey,
               child: _buildSettingsSection(
+                sectionId: 'reps-weights',
                 icon: Icons.fitness_center_outlined,
                 title: strings.generateRepsWeightsTitle,
                 subtitle: strings.generateRepsSummary(
@@ -1037,7 +1296,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                           value ?? RepWeightGenerationMode.consistent,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: expressive == null ? 8 : 6),
                   _buildNumberField(
                     controller: _targetRepCountController,
                     label: strings.optimizedTargetReps,
@@ -1045,12 +1304,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     helperText: strings.generateTargetRepsHelp,
                     suffixText: strings.unitReps,
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    strings.optimizedWeightIntensity,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: expressive == null ? 14 : 6),
+                  _buildSubsectionHeading(strings.optimizedWeightIntensity),
+                  SizedBox(height: expressive == null ? 6 : 5),
                   _buildChoiceTile<StarterWeightIntensity>(
                     title: strings.intensityEasy,
                     subtitle: strings.generateEasyBody,
@@ -1087,6 +1343,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             KeyedSubtree(
               key: _allocationTutorialKey,
               child: _buildSettingsSection(
+                sectionId: 'set-allocation',
                 icon: Icons.tune_outlined,
                 title: strings.generateSetAllocationTitle,
                 subtitle: _requirementSummary(),
@@ -1137,7 +1394,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 88),
+            if (expressive == null) const SizedBox(height: 88),
           ],
         ),
       ),

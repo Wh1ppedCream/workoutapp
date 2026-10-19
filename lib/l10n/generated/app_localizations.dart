@@ -107,6 +107,105 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @nutritionSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily nutrition'**
+  String get nutritionSummaryTitle;
+
+  /// No description provided for @nutritionRingView.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring view'**
+  String get nutritionRingView;
+
+  /// No description provided for @nutritionBarView.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar view'**
+  String get nutritionBarView;
+
+  /// No description provided for @nutritionSummaryView.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary view'**
+  String get nutritionSummaryView;
+
+  /// No description provided for @nutritionGoalComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'of {target} {unit}'**
+  String nutritionGoalComparison(int target, String unit);
+
+  /// No description provided for @nutritionUnsetGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{unit} · No goal set'**
+  String nutritionUnsetGoal(String unit);
+
+  /// No description provided for @nutritionGoalSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{nutrient}: {consumed} of {target} {unit} consumed.'**
+  String nutritionGoalSemantics(
+    String nutrient,
+    int consumed,
+    int target,
+    String unit,
+  );
+
+  /// No description provided for @nutritionUnsetGoalSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{nutrient}: {consumed} {unit} consumed. No daily goal set.'**
+  String nutritionUnsetGoalSemantics(
+    String nutrient,
+    int consumed,
+    String unit,
+  );
+
+  /// No description provided for @nutritionPantryLogAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pantry Log'**
+  String get nutritionPantryLogAction;
+
+  /// No description provided for @nutritionAddMealAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Meal'**
+  String get nutritionAddMealAction;
+
+  /// No description provided for @nutritionPlanMealAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan Meal'**
+  String get nutritionPlanMealAction;
+
+  /// No description provided for @nutritionActionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get nutritionActionUnavailable;
+
+  /// No description provided for @nutritionActionUnavailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} is not available yet.'**
+  String nutritionActionUnavailableHint(String action);
+
+  /// No description provided for @nutritionUnitGrams.
+  ///
+  /// In en, this message translates to:
+  /// **'g'**
+  String get nutritionUnitGrams;
+
+  /// No description provided for @nutritionUnitCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal'**
+  String get nutritionUnitCalories;
+
   /// No description provided for @onboardingBodyWeightPerWeek.
   ///
   /// In en, this message translates to:
@@ -1673,6 +1772,12 @@ abstract class AppLocalizations {
   /// **'Target Anatomy'**
   String get catalogTargetAnatomyTitle;
 
+  /// No description provided for @catalogAnatomyHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocated set credit across completed workouts'**
+  String get catalogAnatomyHistorySubtitle;
+
   /// No description provided for @catalogBodyparts.
   ///
   /// In en, this message translates to:
@@ -2129,6 +2234,12 @@ abstract class AppLocalizations {
   /// **'Choose what stays ready on your Train overview. Archived plans are still saved and can be activated anytime.'**
   String get planManagementIntro;
 
+  /// No description provided for @planManagementExpressiveIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep plans active on Train or archive them for later; restore them anytime.'**
+  String get planManagementExpressiveIntro;
+
   /// No description provided for @planManagementActiveSubtitle.
   ///
   /// In en, this message translates to:
@@ -2267,6 +2378,18 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this plan?'**
   String get planDeleteConfirmation;
 
+  /// No description provided for @presetBarDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{planName}\"?'**
+  String presetBarDeleteTitle(String planName);
+
+  /// No description provided for @presetBarDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This plan will be permanently deleted. This action cannot be undone.'**
+  String get presetBarDeleteBody;
+
   /// No description provided for @commonCancel.
   ///
   /// In en, this message translates to:
@@ -2378,7 +2501,7 @@ abstract class AppLocalizations {
   /// No description provided for @optimizedMaximumSets.
   ///
   /// In en, this message translates to:
-  /// **'Up to sets per exercise'**
+  /// **'Maximum sets per exercise'**
   String get optimizedMaximumSets;
 
   /// No description provided for @unitSets.
@@ -2396,7 +2519,7 @@ abstract class AppLocalizations {
   /// No description provided for @optimizedRepsWeightsDescription.
   ///
   /// In en, this message translates to:
-  /// **'Uses history-based strength estimates when available, with Easy and Medium backing off more than Hard. New exercises use conservative starter estimates.'**
+  /// **'Uses history-based strength estimates when available.'**
   String get optimizedRepsWeightsDescription;
 
   /// No description provided for @optimizedRepPattern.
@@ -2468,7 +2591,7 @@ abstract class AppLocalizations {
   /// No description provided for @optimizedBodypartFocusDescription.
   ///
   /// In en, this message translates to:
-  /// **'These picks apply only to the next optimized workout you start. Tap once to prefer, tap twice to avoid, and tap again to clear.'**
+  /// **'Choose what to prioritize or avoid in your next optimized workout. Tap again to cycle each selection.'**
   String get optimizedBodypartFocusDescription;
 
   /// No description provided for @optimizedBodypartsUnavailable.
@@ -2588,7 +2711,7 @@ abstract class AppLocalizations {
   /// No description provided for @generateIntroTitle.
   ///
   /// In en, this message translates to:
-  /// **'Build your plan week'**
+  /// **'Build your training week'**
   String get generateIntroTitle;
 
   /// No description provided for @generateIntroBody.
@@ -2618,7 +2741,7 @@ abstract class AppLocalizations {
   /// No description provided for @generateSetupSummary.
   ///
   /// In en, this message translates to:
-  /// **'{plans} plan(s), {minutes} min, {sets} max sets'**
+  /// **'{plans, select, 1{1 plan} other{{plans} plans}} · {minutes} min · {sets} sets/exercise'**
   String generateSetupSummary(String plans, String minutes, String sets);
 
   /// No description provided for @generateSessionLength.
@@ -2636,7 +2759,7 @@ abstract class AppLocalizations {
   /// No description provided for @generatePlansToCreate.
   ///
   /// In en, this message translates to:
-  /// **'Plans to create'**
+  /// **'Number of plans'**
   String get generatePlansToCreate;
 
   /// No description provided for @generatePlansToCreateHelp.
@@ -2651,10 +2774,16 @@ abstract class AppLocalizations {
   /// **'plans'**
   String get unitPlans;
 
+  /// No description provided for @generatePlanUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{plan} other{plans}}'**
+  String generatePlanUnit(int count);
+
   /// No description provided for @generateMaxSetsPerExercise.
   ///
   /// In en, this message translates to:
-  /// **'Max sets per exercise'**
+  /// **'Maximum sets per exercise'**
   String get generateMaxSetsPerExercise;
 
   /// No description provided for @generateSetLimitHelp.
@@ -2666,19 +2795,55 @@ abstract class AppLocalizations {
   /// No description provided for @generateFocusSummary.
   ///
   /// In en, this message translates to:
-  /// **'{preferred} preferred, {avoided} avoided, {history} 7-day history'**
+  /// **'{preferred} preferred · {avoided} avoided · History {history}'**
   String generateFocusSummary(int preferred, int avoided, String history);
+
+  /// No description provided for @generateFocusCountsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{preferred} preferred · {avoided} avoided'**
+  String generateFocusCountsSummary(int preferred, int avoided);
+
+  /// No description provided for @generateRecentTrainingOnSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent training: On'**
+  String get generateRecentTrainingOnSummary;
+
+  /// No description provided for @generateRecentTrainingOffSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent training: Off'**
+  String get generateRecentTrainingOffSummary;
+
+  /// No description provided for @generateFocusNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'neutral'**
+  String get generateFocusNeutral;
+
+  /// No description provided for @generateFocusPreferred.
+  ///
+  /// In en, this message translates to:
+  /// **'preferred'**
+  String get generateFocusPreferred;
+
+  /// No description provided for @generateFocusAvoided.
+  ///
+  /// In en, this message translates to:
+  /// **'avoided'**
+  String get generateFocusAvoided;
 
   /// No description provided for @generateHistoryUsing.
   ///
   /// In en, this message translates to:
-  /// **'using'**
+  /// **'on'**
   String get generateHistoryUsing;
 
   /// No description provided for @generateHistoryNotUsing.
   ///
   /// In en, this message translates to:
-  /// **'not using'**
+  /// **'off'**
   String get generateHistoryNotUsing;
 
   /// No description provided for @generateUseRecentTraining.
@@ -4235,6 +4400,42 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get catalogFilters;
 
+  /// No description provided for @catalogApplyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply filters'**
+  String get catalogApplyFilters;
+
+  /// No description provided for @catalogResetAllFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all'**
+  String get catalogResetAllFilters;
+
+  /// No description provided for @catalogWorkspaceProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit results to this profile\'s equipment.'**
+  String get catalogWorkspaceProfileDescription;
+
+  /// No description provided for @catalogFiltersCombined.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment, Body Part, and Muscle filters are combined.'**
+  String get catalogFiltersCombined;
+
+  /// No description provided for @catalogExpressiveWorkspaceProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit results to this profile\'s equipment, along with any other selected filters.'**
+  String get catalogExpressiveWorkspaceProfileDescription;
+
+  /// No description provided for @catalogExpressiveFiltersCombined.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercises must match all selected filters.'**
+  String get catalogExpressiveFiltersCombined;
+
   /// No description provided for @catalogGuideFiltersBody.
   ///
   /// In en, this message translates to:
@@ -4289,6 +4490,18 @@ abstract class AppLocalizations {
   /// **'Specific Muscle'**
   String get catalogSpecificMuscle;
 
+  /// No description provided for @catalogBodyPartFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Part'**
+  String get catalogBodyPartFilter;
+
+  /// No description provided for @catalogMuscleFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle'**
+  String get catalogMuscleFilter;
+
   /// No description provided for @catalogPageTitle.
   ///
   /// In en, this message translates to:
@@ -4306,6 +4519,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No exercises match filters.'**
   String get catalogNoMatches;
+
+  /// No description provided for @catalogNoSearchMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises found'**
+  String get catalogNoSearchMatches;
+
+  /// No description provided for @catalogNoCombinedMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises match your search and filters'**
+  String get catalogNoCombinedMatches;
+
+  /// No description provided for @catalogNoSearchMatchesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another exercise name, or clear your search.'**
+  String get catalogNoSearchMatchesBody;
+
+  /// No description provided for @catalogNoFilteredMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises match these filters'**
+  String get catalogNoFilteredMatches;
+
+  /// No description provided for @catalogNoFilteredMatchesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust your filters, or reset them to browse all exercises.'**
+  String get catalogNoFilteredMatchesBody;
+
+  /// No description provided for @catalogNoCombinedMatchesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another exercise name, clear your search, or reset your filters.'**
+  String get catalogNoCombinedMatchesBody;
+
+  /// No description provided for @catalogClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get catalogClearSearch;
+
+  /// No description provided for @catalogResetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get catalogResetFilters;
+
+  /// No description provided for @catalogEditFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit filters'**
+  String get catalogEditFilters;
+
+  /// No description provided for @catalogNoExercisesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No exercises available'**
+  String get catalogNoExercisesAvailable;
+
+  /// No description provided for @catalogNoExercisesAvailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise definitions will appear here when they are available.'**
+  String get catalogNoExercisesAvailableBody;
 
   /// No description provided for @catalogOpenExerciseInfo.
   ///
@@ -4469,6 +4748,12 @@ abstract class AppLocalizations {
   /// **'Pinch or drag to zoom'**
   String get exerciseDetailZoomHint;
 
+  /// No description provided for @exerciseDetailZoomPanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch to zoom · Drag to pan'**
+  String get exerciseDetailZoomPanHint;
+
   /// No description provided for @exerciseDetailLoadingBestLifts.
   ///
   /// In en, this message translates to:
@@ -4532,7 +4817,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseDetailTopEstimatedOneRm.
   ///
   /// In en, this message translates to:
-  /// **'Top est. 1RM'**
+  /// **'Peak estimated 1RM'**
   String get exerciseDetailTopEstimatedOneRm;
 
   /// No description provided for @exerciseDetailVolumeBest.
@@ -4556,7 +4841,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseDetailRanges.
   ///
   /// In en, this message translates to:
-  /// **'{count} ranges'**
+  /// **'{count, plural, =1{1 rep range} other{{count} rep ranges}}'**
   String exerciseDetailRanges(int count);
 
   /// No description provided for @exerciseDetailHistoryLoadFailed.
@@ -4570,6 +4855,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No history for this exercise.'**
   String get exerciseDetailNoHistory;
+
+  /// No description provided for @exerciseDetailNoHistoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a workout with this exercise to see its performance trend and session records here.'**
+  String get exerciseDetailNoHistoryBody;
 
   /// No description provided for @exerciseDetailPerformanceTrend.
   ///
@@ -4667,6 +4958,12 @@ abstract class AppLocalizations {
   /// **'No completed set records to chart yet.'**
   String get exerciseDetailNoChartData;
 
+  /// No description provided for @exerciseDetailNoChartDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish tracked sets for this exercise to see performance trends.'**
+  String get exerciseDetailNoChartDataBody;
+
   /// No description provided for @exerciseDetailWeightAbbreviation.
   ///
   /// In en, this message translates to:
@@ -4733,6 +5030,18 @@ abstract class AppLocalizations {
   /// **'Weekly sets overview'**
   String get weeklySetsTitle;
 
+  /// No description provided for @weeklySetsLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get weeklySetsLastSevenDays;
+
+  /// No description provided for @weeklySetsExplanationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed sets are credited across each exercise’s assigned muscles and body parts using its allocation weights, so totals can be fractional. These weighted credits are not a split of the total sets, so anatomy totals may differ from completed sets. Green rows are within their effective-to-recoverable set range; rows above it are red, while below-range or unconfigured rows stay neutral.'**
+  String get weeklySetsExplanationBody;
+
   /// No description provided for @weeklySetsLoadError.
   ///
   /// In en, this message translates to:
@@ -4786,6 +5095,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} sets'**
   String weeklySetsCount(String count);
+
+  /// No description provided for @weeklySetsSingleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} set'**
+  String weeklySetsSingleCount(String count);
 
   /// No description provided for @weeklySetsTutorialOverviewTitle.
   ///
@@ -6070,6 +6385,12 @@ abstract class AppLocalizations {
   /// **'Unable to load anatomy filters.'**
   String get anatomyLoadFailed;
 
+  /// No description provided for @anatomySearchBodyParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search bodyparts'**
+  String get anatomySearchBodyParts;
+
   /// No description provided for @anatomySearchLabel.
   ///
   /// In en, this message translates to:
@@ -6154,6 +6475,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 linked exercise} other{{count} linked exercises}}'**
   String anatomyLinkedExerciseCount(int count);
 
+  /// No description provided for @anatomyDoneSevenDaysCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Done · 7 days'**
+  String get anatomyDoneSevenDaysCompact;
+
   /// No description provided for @anatomyDoneLastSevenDays.
   ///
   /// In en, this message translates to:
@@ -6177,6 +6504,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recommended'**
   String get anatomyRecommended;
+
+  /// No description provided for @anatomyRecommendedWeeklyCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended · weekly'**
+  String get anatomyRecommendedWeeklyCompact;
 
   /// No description provided for @anatomyNotSet.
   ///
@@ -6805,6 +7138,30 @@ abstract class AppLocalizations {
   /// **'No muscles linked yet. Tap Edit to add some.'**
   String get mappingNoLinkedMuscles;
 
+  /// No description provided for @mappingSearchMuscles.
+  ///
+  /// In en, this message translates to:
+  /// **'Search muscles'**
+  String get mappingSearchMuscles;
+
+  /// No description provided for @mappingSelectedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected only'**
+  String get mappingSelectedOnly;
+
+  /// No description provided for @mappingSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String mappingSelectedCount(int count);
+
+  /// No description provided for @mappingNoFilteredMuscles.
+  ///
+  /// In en, this message translates to:
+  /// **'No muscles match the current filters.'**
+  String get mappingNoFilteredMuscles;
+
   /// No description provided for @volumeMaintenance.
   ///
   /// In en, this message translates to:
@@ -6960,6 +7317,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today\'s Records'**
   String get nutritionTodayRecords;
+
+  /// No description provided for @nutritionNoGoalSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No goal set'**
+  String get nutritionNoGoalSet;
+
+  /// No description provided for @nutritionNoFoodLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'No food logged for this day'**
+  String get nutritionNoFoodLogged;
+
+  /// No description provided for @nutritionTapToAddFirstEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to add your first entry'**
+  String get nutritionTapToAddFirstEntry;
+
+  /// No description provided for @nutritionAddEntryActionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add food or measurement'**
+  String get nutritionAddEntryActionLabel;
+
+  /// No description provided for @nutritionOptionalTargetsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All nutrient targets are optional. Leave a field blank to keep it unset.'**
+  String get nutritionOptionalTargetsHint;
 
   /// No description provided for @nutritionGoalsMenu.
   ///
@@ -8251,6 +8638,24 @@ abstract class AppLocalizations {
   /// **'Make ChangeSet'**
   String get weightMakeChangeSet;
 
+  /// No description provided for @presetCreateChangeSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Create change set'**
+  String get presetCreateChangeSet;
+
+  /// No description provided for @planAddExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Add exercise'**
+  String get planAddExercise;
+
+  /// No description provided for @presetExerciseSetCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{# set} other{# sets}}'**
+  String presetExerciseSetCount(int count);
+
   /// No description provided for @weightSetLabel.
   ///
   /// In en, this message translates to:
@@ -8407,6 +8812,12 @@ abstract class AppLocalizations {
   /// **'Bodyparts Hit'**
   String get swapBodypartsHit;
 
+  /// No description provided for @swapBodyPartsWorked.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Parts Worked'**
+  String get swapBodyPartsWorked;
+
   /// No description provided for @swapMatch.
   ///
   /// In en, this message translates to:
@@ -8490,6 +8901,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy coach, influencer, and app-curated routines into your own plans. Once added, you can edit them like any other plan.'**
   String get premadeDescription;
+
+  /// No description provided for @premadeExpressiveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore ready-made workout routines. Add any plan to customize it.'**
+  String get premadeExpressiveDescription;
+
+  /// No description provided for @premadeBuiltinPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonos Plans'**
+  String get premadeBuiltinPlansTitle;
+
+  /// No description provided for @premadeEquipmentFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Match my gym equipment'**
+  String get premadeEquipmentFilterLabel;
 
   /// No description provided for @premadeDiscarding.
   ///
@@ -8646,6 +9075,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health Trends'**
   String get healthTrendsTitle;
+
+  /// No description provided for @healthTrackedMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracked metrics'**
+  String get healthTrackedMetrics;
 
   /// No description provided for @healthMetric.
   ///
@@ -9073,6 +9508,12 @@ abstract class AppLocalizations {
   /// **'Exercise Editor'**
   String get exerciseEditorTitle;
 
+  /// No description provided for @exerciseEditorHeroDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review and update an exercise’s details.'**
+  String get exerciseEditorHeroDescription;
+
   /// No description provided for @exerciseEditorLoadFailed.
   ///
   /// In en, this message translates to:
@@ -9118,7 +9559,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorBodyparts.
   ///
   /// In en, this message translates to:
-  /// **'Bodyparts'**
+  /// **'Body Parts'**
   String get exerciseEditorBodyparts;
 
   /// No description provided for @exerciseEditorEquipment.
@@ -9811,6 +10252,54 @@ abstract class AppLocalizations {
   /// **'Plans already fit the current profile equipment.'**
   String get premadeEquipmentFits;
 
+  /// No description provided for @premadeExpressiveEquipmentSelectProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a gym profile to filter plans by its equipment.'**
+  String get premadeExpressiveEquipmentSelectProfile;
+
+  /// No description provided for @premadeExpressiveEquipmentAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all plans, including those needing other equipment.'**
+  String get premadeExpressiveEquipmentAll;
+
+  /// No description provided for @premadeExpressiveEquipmentChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking equipment compatibility...'**
+  String get premadeExpressiveEquipmentChecking;
+
+  /// No description provided for @premadeExpressiveEquipmentMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Add equipment to your active gym profile to match plans.'**
+  String get premadeExpressiveEquipmentMissing;
+
+  /// No description provided for @premadeExpressiveEquipmentNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No plans match your gym equipment.'**
+  String get premadeExpressiveEquipmentNoMatches;
+
+  /// No description provided for @premadeExpressiveEquipmentCompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Only show plans compatible with your active gym profile.'**
+  String get premadeExpressiveEquipmentCompatible;
+
+  /// No description provided for @premadeExpressiveOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get premadeExpressiveOneHour;
+
+  /// No description provided for @premadeExpressiveTwoHours.
+  ///
+  /// In en, this message translates to:
+  /// **'2 hours'**
+  String get premadeExpressiveTwoHours;
+
   /// No description provided for @premadeOneHour.
   ///
   /// In en, this message translates to:
@@ -9864,6 +10353,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} swapped'**
   String premadeSwappedCount(int count);
+
+  /// No description provided for @premadeExpressivePlansAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No plans available} =1{1 plan available} other{{count} plans available}}'**
+  String premadeExpressivePlansAvailable(int count);
+
+  /// No description provided for @premadeExpressivePlansCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 plan} other{{count} plans}}'**
+  String premadeExpressivePlansCount(int count);
 
   /// No description provided for @premadeAdding.
   ///
@@ -9976,7 +10477,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorAddBodyparts.
   ///
   /// In en, this message translates to:
-  /// **'Add Associated Bodyparts'**
+  /// **'Add Associated Body Parts'**
   String get exerciseEditorAddBodyparts;
 
   /// No description provided for @exerciseEditorAddMuscles.
@@ -10288,7 +10789,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorMuscleOrderBody.
   ///
   /// In en, this message translates to:
-  /// **'Order muscles by how strongly the exercise targets them. This helps Tonos estimate anatomy focus and make better exercise recommendations.'**
+  /// **'Order by target emphasis. Tonos uses this to estimate anatomy focus and recommend exercises.'**
   String get exerciseEditorMuscleOrderBody;
 
   /// No description provided for @exerciseEditorExactSetCredit.
@@ -10342,7 +10843,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorMusclesAssociated.
   ///
   /// In en, this message translates to:
-  /// **'{count} muscles currently associated.'**
+  /// **'{count, plural, =0 {No target muscles are associated yet.} =1 {1 muscle currently associated.} other {{count} muscles currently associated.}}'**
   String exerciseEditorMusclesAssociated(int count);
 
   /// No description provided for @exerciseEditorNoTargetMuscles.
@@ -10390,7 +10891,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorAssociatedBodypartsBody.
   ///
   /// In en, this message translates to:
-  /// **'These broad areas drive body heatmaps, weekly coverage, and equipment-aware workout recommendations.'**
+  /// **'These broad areas power heatmaps, weekly coverage, and equipment-aware recommendations.'**
   String get exerciseEditorAssociatedBodypartsBody;
 
   /// No description provided for @exerciseEditorExactBodypartCredit.
@@ -10402,7 +10903,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorExactBodypartCreditBody.
   ///
   /// In en, this message translates to:
-  /// **'Use Exercise Set Allocation when a set should count as a specific partial amount for a body part.'**
+  /// **'Use Exercise Set Allocation to assign partial credit per body part.'**
   String get exerciseEditorExactBodypartCreditBody;
 
   /// No description provided for @exerciseEditorBodypartsHint.
@@ -10414,8 +10915,14 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorBodypartsAssociated.
   ///
   /// In en, this message translates to:
-  /// **'{count} body parts currently associated.'**
+  /// **'{count, plural, =1 {1 body part currently associated.} other {{count} body parts currently associated.}}'**
   String exerciseEditorBodypartsAssociated(int count);
+
+  /// No description provided for @exerciseEditorSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String exerciseEditorSelectedCount(int count);
 
   /// No description provided for @exerciseEditorNoBodyparts.
   ///
@@ -10456,7 +10963,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorAvailableEquipmentBody.
   ///
   /// In en, this message translates to:
-  /// **'Associated equipment determines which profiles can use this exercise and which replacements Tonos can recommend.'**
+  /// **'Equipment determines profile availability and replacement recommendations.'**
   String get exerciseEditorAvailableEquipmentBody;
 
   /// No description provided for @exerciseEditorEquipmentHint.
@@ -10468,7 +10975,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorEquipmentAssociated.
   ///
   /// In en, this message translates to:
-  /// **'{count} items associated.'**
+  /// **'{count, plural, =0 {No equipment items are associated.} =1 {1 equipment item associated.} other {{count} equipment items associated.}}'**
   String exerciseEditorEquipmentAssociated(int count);
 
   /// No description provided for @exerciseEditorNoEquipment.
@@ -10717,6 +11224,12 @@ abstract class AppLocalizations {
   /// **'Remote URL'**
   String get exerciseEditorMediaRemoteUrl;
 
+  /// No description provided for @exerciseEditorMediaUrlRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a remote URL.'**
+  String get exerciseEditorMediaUrlRequired;
+
   /// No description provided for @exerciseEditorMediaThumbnailUrl.
   ///
   /// In en, this message translates to:
@@ -10744,7 +11257,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorFormGuideBody.
   ///
   /// In en, this message translates to:
-  /// **'These notes appear in the exercise details sheet to help people set up, perform, and understand the movement safely.'**
+  /// **'These notes appear in exercise details to help people set up and perform the movement safely.'**
   String get exerciseEditorFormGuideBody;
 
   /// No description provided for @exerciseEditorGuidance.
@@ -10810,7 +11323,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorReferenceMediaBody.
   ///
   /// In en, this message translates to:
-  /// **'Use media links for private reference material. Managed catalog media can be refreshed by the content sync pipeline.'**
+  /// **'Use links for private references. Managed catalog media can refresh through content sync.'**
   String get exerciseEditorReferenceMediaBody;
 
   /// No description provided for @exerciseEditorMediaLinks.
@@ -10828,7 +11341,7 @@ abstract class AppLocalizations {
   /// No description provided for @exerciseEditorMediaLinksCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} media item(s) currently linked.'**
+  /// **'{count, plural, =0 {No media items linked.} =1 {1 media item linked.} other {{count} media items linked.}}'**
   String exerciseEditorMediaLinksCount(int count);
 
   /// No description provided for @exerciseEditorNoReferenceMedia.
@@ -11166,6 +11679,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Records'**
   String get healthRecords;
+
+  /// No description provided for @healthRecordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {0 records} =1 {1 record} other {{count} records}}'**
+  String healthRecordCount(num count);
 
   /// No description provided for @presetEstimatedTime.
   ///
@@ -11563,6 +12082,18 @@ abstract class AppLocalizations {
   /// **'Remove all locally stored sync diagnostic entries.'**
   String get diagnosticsClearHistoryBody;
 
+  /// No description provided for @diagnosticsShowAllHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all history'**
+  String get diagnosticsShowAllHistory;
+
+  /// No description provided for @diagnosticsShowLessHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get diagnosticsShowLessHistory;
+
   /// No description provided for @diagnosticsHistoryCleared.
   ///
   /// In en, this message translates to:
@@ -11604,6 +12135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed'**
   String get diagnosticsSyncFailed;
+
+  /// No description provided for @diagnosticsSyncSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get diagnosticsSyncSkipped;
 
   /// No description provided for @diagnosticsSyncEventTitle.
   ///
@@ -11650,13 +12187,13 @@ abstract class AppLocalizations {
   /// No description provided for @diagnosticsDeletionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete diagnostic and app data'**
+  /// **'How to delete your data'**
   String get diagnosticsDeletionTitle;
 
   /// No description provided for @diagnosticsDeletionBody.
   ///
   /// In en, this message translates to:
-  /// **'Clear sync history above and turn off anonymous diagnostics to request deletion of reports shared by this installation. Clear Tonos storage in device settings or uninstall Tonos to remove the local database and caches.'**
+  /// **'Clear Tonos storage in device settings or uninstall Tonos to delete local app data. To request deletion of reports shared by this installation, turn off anonymous diagnostics. This does not clear local sync history; clear it separately above.'**
   String get diagnosticsDeletionBody;
 
   /// No description provided for @diagnosticsSendTestReport.
@@ -11692,8 +12229,14 @@ abstract class AppLocalizations {
   /// No description provided for @diagnosticsDeleteSharedBody.
   ///
   /// In en, this message translates to:
-  /// **'Requests deletion of reports this app can prove it sent. Provider recovery history may retain deleted rows for up to 30 days.'**
+  /// **'Requests deletion only for reports this installation can prove it sent. Future sharing stays on; provider recovery may retain deleted rows for up to 30 additional days.'**
   String get diagnosticsDeleteSharedBody;
+
+  /// No description provided for @diagnosticsDeleteSharedConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This requests deletion only for receipt-backed reports this installation can prove it sent. It does not turn off future sharing, clear local sync history, or delete your local fitness database. Turn off sharing to stop future reports; clear sync history separately. Reports expire after 14 days, and provider recovery may retain deleted rows for up to 30 additional days. Clearing Tonos storage first removes the receipts needed to request deletion.'**
+  String get diagnosticsDeleteSharedConfirmBody;
 
   /// No description provided for @diagnosticsSharedDeleted.
   ///
@@ -11881,6 +12424,12 @@ abstract class AppLocalizations {
   /// **'{duration} version of {planName} using the main movements from the full template.'**
   String premadeOneHourDescription(String duration, String planName);
 
+  /// No description provided for @premadePlanQuickDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} {planName} workout'**
+  String premadePlanQuickDescription(String duration, String planName);
+
   /// No description provided for @rulesPageSubtitleExpressive.
   ///
   /// In en, this message translates to:
@@ -11940,6 +12489,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plan-specific rules.'**
   String get rulesPlanOnlySubtitleExpressive;
+
+  /// No description provided for @rulesCopyIndexHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexes are zero-based: 0 = first set, 1 = second. −1 copies the last available set, including sets added by earlier rules.'**
+  String get rulesCopyIndexHelper;
+
+  /// No description provided for @rulesFactorHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplies the configured weight increment; 1 uses the full increment.'**
+  String get rulesFactorHelper;
+
+  /// No description provided for @rulesAmountHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of reps to add or remove from each targeted set.'**
+  String get rulesAmountHelper;
+
+  /// No description provided for @rulesOperationSubtract.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtract'**
+  String get rulesOperationSubtract;
+
+  /// No description provided for @rulesCopyFromLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from'**
+  String get rulesCopyFromLabel;
+
+  /// No description provided for @rulesCopyFromLastSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Last set'**
+  String get rulesCopyFromLastSet;
+
+  /// No description provided for @rulesCopyFromFirstSet.
+  ///
+  /// In en, this message translates to:
+  /// **'First set'**
+  String get rulesCopyFromFirstSet;
+
+  /// No description provided for @rulesCopyFromSpecificSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific set…'**
+  String get rulesCopyFromSpecificSet;
+
+  /// No description provided for @rulesCopyFromLastHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Copies the last set’s weight and reps, including sets added by earlier rules.'**
+  String get rulesCopyFromLastHelper;
+
+  /// No description provided for @rulesCopyFromFirstHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Copies the first set’s current weight and reps.'**
+  String get rulesCopyFromFirstHelper;
+
+  /// No description provided for @rulesCopySetNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Set number'**
+  String get rulesCopySetNumberLabel;
+
+  /// No description provided for @rulesCopySpecificHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Copies that set’s weight and reps. If it doesn’t exist, copies the last available set.'**
+  String get rulesCopySpecificHelper;
+
+  /// No description provided for @rulesCopySetNumberInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole set number of 1 or more.'**
+  String get rulesCopySetNumberInvalid;
 }
 
 class _AppLocalizationsDelegate

@@ -181,12 +181,19 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
     final archivedPlans = _plans
         .where((plan) => !_activePlanIds.contains(plan.id))
         .toList();
-
     return Scaffold(
       backgroundColor: expressive?.pageCanvas,
       appBar: AppBar(
-        title: Text(strings.planManagementTitle),
-        centerTitle: true,
+        title: expressive == null
+            ? Text(strings.planManagementTitle)
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(strings.planManagementTitle),
+              ),
+        centerTitle: expressive == null ? true : false,
+        elevation: expressive == null ? null : 0,
+        scrolledUnderElevation: expressive == null ? null : 0,
         backgroundColor: expressive?.pageCanvas,
         foregroundColor: expressive?.onPage,
       ),
@@ -205,12 +212,14 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
                 children: [
                   Text(
-                    strings.planManagementIntro,
+                    expressive == null
+                        ? strings.planManagementIntro
+                        : strings.planManagementExpressiveIntro,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: expressive?.onPage ?? colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: expressive == null ? 16 : 12),
                   KeyedSubtree(
                     key: _activePlansTutorialKey,
                     child: _PlanManagementSection(
@@ -223,15 +232,16 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                       savingPlanIds: _savingPlanIds,
                       actionLabel: strings.planManagementArchive,
                       actionIcon: Icons.archive_outlined,
-                      surfaceColor: expressive?.planFocalSurface,
-                      foregroundColor: expressive?.planFocalForeground,
-                      tileSurfaceColor: expressive?.planSupportSurface,
-                      tileForegroundColor: expressive?.planSupportForeground,
+                      surfaceColor: expressive?.planManagementActiveSurface,
+                      foregroundColor:
+                          expressive?.planManagementActiveForeground,
+                      tileSurfaceColor: expressive?.pageCanvas,
+                      tileForegroundColor: expressive?.onPage,
                       outlineColor: expressive?.outline,
                       onAction: (plan) => _setPlanActive(plan, false),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: expressive == null ? 16 : 14),
                   KeyedSubtree(
                     key: _archivedPlansTutorialKey,
                     child: _PlanManagementSection(
@@ -244,10 +254,11 @@ class _PlanManagementPageState extends State<PlanManagementPage> {
                       savingPlanIds: _savingPlanIds,
                       actionLabel: strings.planManagementActivate,
                       actionIcon: Icons.check_circle_outline,
-                      surfaceColor: expressive?.planSupportSurface,
-                      foregroundColor: expressive?.planSupportForeground,
-                      tileSurfaceColor: expressive?.configurationSurface,
-                      tileForegroundColor: expressive?.configurationForeground,
+                      surfaceColor: expressive?.planManagementArchivedSurface,
+                      foregroundColor:
+                          expressive?.planManagementArchivedForeground,
+                      tileSurfaceColor: expressive?.pageCanvas,
+                      tileForegroundColor: expressive?.onPage,
                       outlineColor: expressive?.outline,
                       onAction: (plan) => _setPlanActive(plan, true),
                     ),
@@ -312,7 +323,7 @@ class _PlanManagementSection extends StatelessWidget {
               ),
             ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(expressive == null ? 14 : 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -345,24 +356,61 @@ class _PlanManagementSection extends StatelessWidget {
                 _PlanCountPill(count: plans.length),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: foregroundColor ?? colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (plans.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Text(
-                  emptyMessage,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: foregroundColor ?? colorScheme.onSurfaceVariant,
-                  ),
+            if (expressive == null) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: foregroundColor ?? colorScheme.onSurfaceVariant,
                 ),
-              )
+              ),
+              const SizedBox(height: 12),
+            ] else
+              const SizedBox(height: 10),
+            if (plans.isEmpty)
+              expressive == null
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Text(
+                        emptyMessage,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color:
+                              foregroundColor ?? colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tileSurfaceColor,
+                        borderRadius: expressive.rowShape,
+                        border: Border.all(
+                          color: (outlineColor ?? expressive.outline)
+                              .withValues(alpha: 0.42),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            sectionIcon,
+                            color: expressive.planAccent,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              emptyMessage,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: tileForegroundColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
             else
               for (var index = 0; index < plans.length; index++) ...[
                 _PlanManagementTile(
@@ -376,7 +424,8 @@ class _PlanManagementSection extends StatelessWidget {
                   outlineColor: outlineColor,
                   onAction: () => onAction(plans[index]),
                 ),
-                if (index != plans.length - 1) const SizedBox(height: 8),
+                if (index != plans.length - 1)
+                  SizedBox(height: expressive == null ? 8 : 6),
               ],
           ],
         ),
@@ -445,7 +494,7 @@ class _PlanManagementTile extends StatelessWidget {
           builder: (context, constraints) {
             final compactExpressive =
                 expressive != null &&
-                (constraints.maxWidth < 360 ||
+                (constraints.maxWidth < 300 ||
                     MediaQuery.textScalerOf(context).scale(14) > 18);
             final status = CircleAvatar(
               radius: 18,
@@ -466,19 +515,31 @@ class _PlanManagementTile extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  plan.isAutomatic
-                      ? strings.planManagementAutomatic
-                      : isActive
-                      ? strings.planManagementVisible
-                      : strings.planManagementHidden,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: foregroundColor ?? planSecondary,
+                if (expressive != null && plan.isAutomatic) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    strings.planManagementAutomatic,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: foregroundColor ?? planSecondary,
+                    ),
                   ),
-                ),
+                ] else if (expressive == null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    plan.isAutomatic
+                        ? strings.planManagementAutomatic
+                        : isActive
+                        ? strings.planManagementVisible
+                        : strings.planManagementHidden,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: foregroundColor ?? planSecondary,
+                    ),
+                  ),
+                ],
               ],
             );
             final actionButton = OutlinedButton.icon(
@@ -486,12 +547,24 @@ class _PlanManagementTile extends StatelessWidget {
               style: expressive == null
                   ? null
                   : OutlinedButton.styleFrom(
-                      foregroundColor: expressive.actionSecondaryForeground,
-                      backgroundColor: expressive.actionSecondary,
-                      side: BorderSide(color: expressive.outline),
+                      foregroundColor: isActive
+                          ? expressive.actionSecondaryForeground
+                          : expressive.actionPrimaryForeground,
+                      backgroundColor: isActive
+                          ? expressive.planManagementArchiveActionSurface
+                          : expressive.actionPrimary,
+                      side: BorderSide(
+                        color:
+                            (isActive
+                                    ? expressive.actionSecondaryForeground
+                                    : expressive.actionPrimary)
+                                .withValues(alpha: 0.62),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: expressive.rowShape,
                       ),
+                      minimumSize: const Size(0, 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
               icon: isSaving
                   ? const SizedBox(
@@ -522,8 +595,8 @@ class _PlanManagementTile extends StatelessWidget {
                       Expanded(child: details),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  action,
+                  const SizedBox(height: 8),
+                  Align(alignment: Alignment.centerRight, child: action),
                 ],
               );
             }

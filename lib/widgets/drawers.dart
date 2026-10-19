@@ -113,14 +113,20 @@ class ProfileDrawer extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
+    final useExpressive = context.usesExpressivePresentation;
     return Drawer(
-      backgroundColor: scheme.surface,
+      backgroundColor: useExpressive
+          ? (theme.brightness == Brightness.dark
+                ? scheme.surfaceContainerHigh
+                : scheme.surfaceContainerLow)
+          : scheme.surface,
+      surfaceTintColor: useExpressive ? Colors.transparent : null,
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
           children: [
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(useExpressive ? 16 : 18),
               decoration: BoxDecoration(
                 borderRadius: shapes.sheet,
                 gradient: LinearGradient(
@@ -135,20 +141,44 @@ class ProfileDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.fitness_center,
-                    color: scheme.onPrimaryContainer,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    strings.drawerGymProfiles,
-                    style: theme.textTheme.headlineSmall?.copyWith(
+                  if (useExpressive)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.fitness_center,
+                          color: scheme.onPrimaryContainer,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            strings.drawerGymProfiles,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              color: scheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    Icon(
+                      Icons.fitness_center,
                       color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w900,
+                      size: 28,
                     ),
-                  ),
-                  const SizedBox(height: 6),
+                    const SizedBox(height: 14),
+                    Text(
+                      strings.drawerGymProfiles,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: scheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: useExpressive ? 8 : 6),
                   Text(
                     selected == null
                         ? strings.drawerSavedSpaces(profiles.length)
@@ -166,14 +196,14 @@ class ProfileDrawer extends StatelessWidget {
             ...profiles.asMap().entries.map((entry) {
               final index = entry.key;
               final profile = entry.value;
-              final color =
-                  ProfileIdentityPalette.colors[index %
-                      ProfileIdentityPalette.colors.length];
+              final color = ProfileIdentityPalette
+                  .colors[index % ProfileIdentityPalette.colors.length];
               final isSelected = profile.id == selected?.id;
               return ProfileTile(
                 profile: profile,
                 isSelected: isSelected,
                 color: color,
+                selectionColor: useExpressive ? scheme.primary : color,
                 onSelect: onSelect,
                 onEdit: onEdit,
                 onDelete: () => onDelete(profile),
@@ -206,6 +236,7 @@ class ProfileTile extends StatelessWidget {
   final dynamic profile;
   final bool isSelected;
   final Color color;
+  final Color? selectionColor;
   final ValueChanged<dynamic> onSelect;
   final ValueChanged<dynamic> onEdit;
   final VoidCallback onDelete;
@@ -215,6 +246,7 @@ class ProfileTile extends StatelessWidget {
     required this.profile,
     required this.isSelected,
     required this.color,
+    this.selectionColor,
     required this.onSelect,
     required this.onEdit,
     required this.onDelete,
@@ -227,10 +259,11 @@ class ProfileTile extends StatelessWidget {
     final scheme = theme.colorScheme;
     final shapes = context.shapeTokens;
     final motion = context.motionTokens;
-    final tileColor =
-        isSelected
-            ? color.withValues(alpha: 0.22)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.36);
+    final useExpressive = context.usesExpressivePresentation;
+    final activeColor = selectionColor ?? color;
+    final tileColor = isSelected
+        ? activeColor.withValues(alpha: useExpressive ? 0.18 : 0.22)
+        : scheme.surfaceContainerHighest.withValues(alpha: 0.36);
 
     return AnimatedContainer(
       duration: appMotionDuration(context, motion.quick),
@@ -238,8 +271,9 @@ class ProfileTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: tileColor,
         border: Border.all(
-          color:
-              isSelected ? color : scheme.outlineVariant.withValues(alpha: 0.5),
+          color: isSelected
+              ? activeColor
+              : scheme.outlineVariant.withValues(alpha: 0.5),
           width: isSelected ? 1.4 : 1,
         ),
         borderRadius: shapes.profileTile,
@@ -260,7 +294,7 @@ class ProfileTile extends StatelessWidget {
                 ),
                 child: Icon(
                   isSelected ? Icons.check : Icons.fitness_center,
-                  color: isSelected ? color : scheme.onSurfaceVariant,
+                  color: isSelected ? activeColor : scheme.onSurfaceVariant,
                   size: 20,
                 ),
               ),
@@ -271,7 +305,7 @@ class ProfileTile extends StatelessWidget {
                   children: [
                     Text(
                       profile.name,
-                      maxLines: 1,
+                      maxLines: useExpressive ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
@@ -292,7 +326,35 @@ class ProfileTile extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: scheme.onSurfaceVariant),
+                icon: Icon(
+                  Icons.more_vert,
+                  color: scheme.onSurfaceVariant,
+                  size: useExpressive ? 20 : null,
+                ),
+                padding: useExpressive
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.all(8),
+                constraints: useExpressive
+                    ? const BoxConstraints(
+                        minWidth: 132,
+                        maxWidth: 192,
+                        minHeight: 48,
+                        maxHeight: 240,
+                      )
+                    : null,
+                shape: useExpressive
+                    ? RoundedRectangleBorder(
+                        borderRadius: shapes.settingsPicker,
+                        side: BorderSide(
+                          color: scheme.outlineVariant.withValues(alpha: 0.55),
+                        ),
+                      )
+                    : null,
+                color: useExpressive ? scheme.surfaceContainerHigh : null,
+                surfaceTintColor: useExpressive ? Colors.transparent : null,
+                menuPadding: useExpressive
+                    ? const EdgeInsets.symmetric(vertical: 4)
+                    : null,
                 onSelected: (action) {
                   if (action == 'edit') {
                     onEdit(profile);
@@ -300,17 +362,58 @@ class ProfileTile extends StatelessWidget {
                     onDelete();
                   }
                 },
-                itemBuilder:
-                    (_) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Text(strings.commonEdit),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(strings.commonDelete),
-                      ),
-                    ],
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    height: useExpressive ? 44 : kMinInteractiveDimension,
+                    padding: useExpressive
+                        ? const EdgeInsets.symmetric(horizontal: 16)
+                        : null,
+                    child: useExpressive
+                        ? Row(
+                            children: [
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                strings.commonEdit,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(strings.commonEdit),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    height: useExpressive ? 44 : kMinInteractiveDimension,
+                    padding: useExpressive
+                        ? const EdgeInsets.symmetric(horizontal: 16)
+                        : null,
+                    child: useExpressive
+                        ? Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: scheme.error,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                strings.commonDelete,
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: scheme.error,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(strings.commonDelete),
+                  ),
+                ],
               ),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/screens/exercise/analytics_dashboard_screen.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
@@ -41,25 +42,38 @@ void main() {
     expect(rule.status, 'migrated');
     expect(
       rule.kinds,
-      unorderedEquals(['color', 'color_transform', 'decoration', 'geometry']),
+      unorderedEquals([
+        'color',
+        'color_transform',
+        'component_style',
+        'decoration',
+        'geometry',
+      ]),
     );
-    expect(rule.rationale, contains('eight current inventory findings'));
+    expect(
+      rule.rationale,
+      contains('device visual review of this screen remains separate'),
+    );
 
     final ownedFindings = report.findings
         .where((finding) => finding.ruleId == rule.id)
         .toList();
-    expect(ownedFindings, hasLength(8));
+    expect(ownedFindings, hasLength(30));
     expect(
       ownedFindings.where((finding) => finding.kind == 'color_transform'),
-      hasLength(4),
+      hasLength(12),
     );
     expect(
       ownedFindings.where((finding) => finding.kind == 'decoration'),
-      hasLength(3),
+      hasLength(4),
     );
     expect(
       ownedFindings.where((finding) => finding.kind == 'geometry'),
-      hasLength(1),
+      hasLength(8),
+    );
+    expect(
+      ownedFindings.where((finding) => finding.kind == 'component_style'),
+      hasLength(5),
     );
     expect(
       ownedFindings.map((finding) => finding.status),
@@ -256,15 +270,9 @@ void main() {
         SharedPreferences.setMockInitialValues({
           'guided_tutorial_completed.${TutorialIds.weeklySetsOverview}': true,
         });
-        final theme = ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF345B50),
-            brightness: brightness,
-          ),
-          extensions: const [
-            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
-          ],
-        );
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
         final repository = _WeeklySetsRepository();
         final units = UnitPreferenceProvider();
         await units.ready;
@@ -300,21 +308,69 @@ void main() {
         final tokens = Theme.of(routeContext)
             .extension<AppExpressiveDestinationTokens>()!;
         expect(tokens.family, AppExpressiveDestinationFamily.analytics);
+        final overviewCard = tester.widget<Card>(find.byType(Card));
+        expect(overviewCard.color, tokens.surfacePrimary);
+        final overviewShape = overviewCard.shape! as RoundedRectangleBorder;
+        expect(
+          overviewShape.borderRadius,
+          const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+            bottomRight: Radius.circular(30),
+            bottomLeft: Radius.circular(12),
+          ),
+        );
+        expect(
+          overviewShape.side.color,
+          tokens.outlineAccent.withValues(
+            alpha: brightness == Brightness.dark ? 0.32 : 0.46,
+          ),
+        );
+        expect(overviewShape.side.width, 1);
         expect(find.text(strings.weeklySetsTitle), findsOneWidget);
+        expect(find.text(strings.weeklySetsLastSevenDays), findsNothing);
         expect(find.text(strings.weeklySetsTotal), findsOneWidget);
         expect(find.text(strings.weeklySetsTime), findsOneWidget);
         expect(find.text(strings.weeklySetsVolume), findsOneWidget);
+        expect(find.text(strings.anatomySetsLastSevenDays), findsNothing);
         expect(find.byType(BodyHeatmap), findsOneWidget);
-        expect(find.byType(TabBar), findsOneWidget);
-        final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-        expect(tabBar.labelColor, tokens.actionPrimary);
-        expect(tabBar.indicatorColor, tokens.outlineAccent);
+        expect(
+          tester.widget<BodyHeatmap>(find.byType(BodyHeatmap)).lowColor,
+          Theme.of(routeContext).colorScheme.onSurfaceVariant,
+        );
+        expect(find.byType(SegmentedButton<int>), findsOneWidget);
+        expect(find.byType(TabBar), findsNothing);
+        final selector = tester.widget<SegmentedButton<int>>(
+          find.byType(SegmentedButton<int>),
+        );
+        expect(selector.selected, {0});
+        expect(selector.segments, hasLength(2));
+        expect(find.byTooltip(strings.allocationHowTitle), findsOneWidget);
+        await tester.tap(find.byTooltip(strings.allocationHowTitle));
+        await tester.pumpAndSettle();
+        expect(find.text(strings.weeklySetsExplanationBody), findsOneWidget);
+        await tester.tap(find.text(strings.commonClose));
+        await tester.pumpAndSettle();
 
         await tester.tap(find.text(strings.weeklySetsMuscles));
         await tester.pumpAndSettle();
         expect(
+          tester
+              .widget<SegmentedButton<int>>(find.byType(SegmentedButton<int>))
+              .selected,
+          {1},
+        );
+        expect(
           find.byType(LocalizedCatalogEntityName),
           findsAtLeastNWidgets(1),
+        );
+        await tester.drag(find.byType(TabBarView), const Offset(250, 0));
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<SegmentedButton<int>>(find.byType(SegmentedButton<int>))
+              .selected,
+          {0},
         );
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -340,15 +396,9 @@ void main() {
         SharedPreferences.setMockInitialValues({
           'guided_tutorial_completed.${TutorialIds.weeklySetsOverview}': true,
         });
-        final theme = ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF345B50),
-            brightness: brightness,
-          ),
-          extensions: const [
-            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
-          ],
-        );
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
         final repository = _WeeklySetsRepository();
         final units = UnitPreferenceProvider();
         await units.ready;
@@ -383,10 +433,110 @@ void main() {
           final page = find.byType(AnalyticsDashboardScreen);
           final strings = AppLocalizations.of(tester.element(page));
           expect(find.text(strings.weeklySetsTitle), findsOneWidget);
+          expect(find.text(strings.weeklySetsLastSevenDays), findsNothing);
           expect(find.byType(BodyHeatmap), findsOneWidget);
-          expect(find.byType(TabBar).hitTestable(), findsOneWidget);
+          final routeContext = tester.element(
+            find.text(strings.weeklySetsTitle),
+          );
+          final tokens = Theme.of(routeContext)
+              .extension<AppExpressiveDestinationTokens>()!;
+          final appBar = tester.widget<AppBar>(find.byType(AppBar));
+          expect(appBar.foregroundColor, tokens.supportingForeground);
+          expect(appBar.titleTextStyle?.color, appBar.foregroundColor);
+          final foregroundLuminance = tokens.supportingForeground
+              .computeLuminance();
+          final backgroundLuminance = tokens.pageCanvas.computeLuminance();
+          final headerContrast = foregroundLuminance > backgroundLuminance
+              ? (foregroundLuminance + 0.05) / (backgroundLuminance + 0.05)
+              : (backgroundLuminance + 0.05) / (foregroundLuminance + 0.05);
+          expect(headerContrast, greaterThanOrEqualTo(4.5));
+          final compactLandscape =
+              layout.size.width > layout.size.height &&
+              layout.size.height < 436;
+          if (!compactLandscape) {
+            expect(
+              tester.getTopLeft(find.text(strings.weeklySetsTotal)).dy,
+              lessThan(tester.getTopLeft(find.text(strings.weeklySetsTime)).dy),
+            );
+            expect(
+              tester.getTopLeft(find.text(strings.weeklySetsTime)).dy,
+              lessThan(
+                tester.getTopLeft(find.text(strings.weeklySetsVolume)).dy,
+              ),
+            );
+          }
+          if (layout.size == const Size(390, 844) && layout.scale == 1) {
+            expect(
+              find.ancestor(
+                of: find.byType(BodyHeatmap),
+                matching: find.byType(Row),
+              ),
+              findsOneWidget,
+            );
+            final heatmapRect = tester.getRect(
+              find
+                  .ancestor(
+                    of: find.byType(BodyHeatmap),
+                    matching: find.byType(Container),
+                  )
+                  .first,
+            );
+            final statRect = tester.getRect(
+              find
+                  .ancestor(
+                    of: find.text(strings.weeklySetsTotal),
+                    matching: find.byType(Container),
+                  )
+                  .first,
+            );
+            expect(
+              heatmapRect.width / (heatmapRect.width + statRect.width),
+              closeTo(0.55, 0.02),
+            );
+            expect(heatmapRect.height, greaterThanOrEqualTo(216));
+            expect(statRect.height, greaterThanOrEqualTo(68));
+            expect(statRect.width / statRect.height, lessThan(3));
+            expect(heatmapRect.top, closeTo(statRect.top, 1));
+          }
+          expect(
+            find.byType(SegmentedButton<int>).hitTestable(),
+            findsOneWidget,
+          );
+          final selector = tester.widget<SegmentedButton<int>>(
+            find.byType(SegmentedButton<int>),
+          );
+          expect(
+            selector.style?.backgroundColor?.resolve({WidgetState.selected}),
+            tokens.actionPrimary,
+          );
+          expect(
+            selector.style?.foregroundColor?.resolve({WidgetState.selected}),
+            tokens.onActionPrimary,
+          );
           await tester.tap(find.text(strings.weeklySetsMuscles));
           await tester.pumpAndSettle();
+          if (layout.size == const Size(390, 844) && layout.scale == 1) {
+            final theme = Theme.of(tester.element(page));
+            final positive = theme.dataVisualizationTokens.positive;
+            final fill = positive.withValues(
+              alpha: brightness == Brightness.dark ? 0.34 : 0.18,
+            );
+            final highlighted = tester.widgetList<Ink>(find.byType(Ink)).where((
+              ink,
+            ) {
+              final decoration = ink.decoration;
+              return decoration is BoxDecoration && decoration.color == fill;
+            }).toList();
+            expect(highlighted, isNotEmpty);
+            final decoration = highlighted.first.decoration! as BoxDecoration;
+            final border = decoration.border! as Border;
+            expect(
+              border.top.color,
+              positive.withValues(
+                alpha: brightness == Brightness.dark ? 0.82 : 0.64,
+              ),
+            );
+          }
           expect(
             find.byType(LocalizedCatalogEntityName),
             findsAtLeastNWidgets(1),

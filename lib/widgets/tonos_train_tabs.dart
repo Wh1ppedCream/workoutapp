@@ -19,6 +19,7 @@ class TonosTrainTabs extends StatelessWidget {
     required this.onChanged,
     this.overviewKey,
     this.plansKey,
+    this.compact = false,
   });
 
   final String overviewLabel;
@@ -27,6 +28,7 @@ class TonosTrainTabs extends StatelessWidget {
   final ValueChanged<int> onChanged;
   final Key? overviewKey;
   final Key? plansKey;
+  final bool compact;
 
   /// Keeps the ordinary selector compact while allowing large text to reflow.
   /// The extra AppBar room is supplied separately so the Neo hard shadow is
@@ -35,19 +37,22 @@ class TonosTrainTabs extends StatelessWidget {
     BuildContext context, {
     String? overviewLabel,
     String? plansLabel,
+    bool compact = false,
   }) {
     if (context.usesClassicPresentation) return 44;
 
     final theme = Theme.of(context);
     if (context.usesExpressivePresentation) {
-      final textStyle = theme.textTheme.labelLarge;
+      final textStyle = compact
+          ? theme.textTheme.labelMedium
+          : theme.textTheme.labelLarge;
       final textScaler = MediaQuery.textScalerOf(context);
       final labels = <String>[
         overviewLabel ?? 'Overview',
         plansLabel ?? 'Plans',
       ];
       final availableWidth = (MediaQuery.sizeOf(context).width - 32)
-          .clamp(0.0, 320.0)
+          .clamp(0.0, compact ? 280.0 : 320.0)
           .toDouble();
       final labelWidth = ((availableWidth - 8) / 2)
           .clamp(1.0, 156.0)
@@ -65,7 +70,9 @@ class TonosTrainTabs extends StatelessWidget {
           ),
         ),
       );
-      return math.max(56.0, textHeight + 8).toDouble();
+      return math
+          .max(compact ? 48.0 : 56.0, textHeight + (compact ? 6 : 8))
+          .toDouble();
     }
     if (!theme.usesNeoPresentation) {
       final textScale = MediaQuery.textScalerOf(context).scale(1);
@@ -88,14 +95,16 @@ class TonosTrainTabs extends StatelessWidget {
     BuildContext context, {
     String? overviewLabel,
     String? plansLabel,
+    bool compact = false,
   }) {
     return context.usesNeoPresentation || context.usesExpressivePresentation
         ? preferredHeight(
                 context,
                 overviewLabel: overviewLabel,
                 plansLabel: plansLabel,
+                compact: compact,
               ) +
-              8
+              (compact ? 4 : 8)
         : kToolbarHeight;
   }
 
@@ -186,9 +195,10 @@ class TonosTrainTabs extends StatelessWidget {
         context,
         overviewLabel: overviewLabel,
         plansLabel: plansLabel,
+        compact: compact,
       ),
-      constraints: const BoxConstraints(maxWidth: 320),
-      padding: const EdgeInsets.all(4),
+      constraints: BoxConstraints(maxWidth: compact ? 280 : 320),
+      padding: EdgeInsets.all(compact ? 3 : 4),
       decoration: BoxDecoration(
         color: tokens.selectorTrack,
         borderRadius: trackShape,
@@ -208,12 +218,14 @@ class TonosTrainTabs extends StatelessWidget {
               key: overviewKey,
               label: overviewLabel,
               selected: selected == 0,
+              compact: compact,
               onTap: () => onChanged(0),
             ),
             _TonosTrainTabButton(
               key: plansKey,
               label: plansLabel,
               selected: selected == 1,
+              compact: compact,
               onTap: () => onChanged(1),
             ),
           ],
@@ -299,11 +311,13 @@ class _TonosTrainTabButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.compact = false,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +368,9 @@ class _TonosTrainTabButton extends StatelessWidget {
                 overflow: usesInkRecipe ? TextOverflow.ellipsis : null,
                 style:
                     (usesExpressiveRecipe
-                            ? textTheme.labelLarge
+                            ? compact
+                                  ? textTheme.labelMedium
+                                  : textTheme.labelLarge
                             : textTheme.bodyMedium)
                         ?.copyWith(
                           fontWeight: usesExpressiveRecipe

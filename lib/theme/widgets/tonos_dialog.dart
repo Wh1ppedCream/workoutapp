@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme_extensions.dart';
+import '../tokens/app_expressive_train_tokens.dart';
 import '../tokens/app_shape_tokens.dart';
 import '../tokens/app_surface_tokens.dart';
 
@@ -165,9 +166,11 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final usesNeoDialog = context.usesNeoPresentation;
+    final usesExpressiveDialog = context.usesExpressivePresentation;
     final dialogSurface =
         theme.dialogTheme.backgroundColor ?? context.surfaceTokens.dialog;
-    final foreground = usesNeoDialog
+    final styleDialogMenu = usesNeoDialog || usesExpressiveDialog;
+    final foreground = styleDialogMenu
         ? tonosForegroundForSurface(context, dialogSurface)
         : null;
 
@@ -177,7 +180,8 @@ class TonosDialogDropdownButton<T> extends StatelessWidget {
       onChanged: onChanged,
       isExpanded: isExpanded,
       style: foreground == null ? null : TextStyle(color: foreground),
-      dropdownColor: usesNeoDialog ? dialogSurface : null,
+      dropdownColor: styleDialogMenu ? dialogSurface : null,
+      borderRadius: usesExpressiveDialog ? ExpressiveTrainShapes.menu : null,
       iconEnabledColor: foreground,
     );
   }

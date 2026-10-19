@@ -124,18 +124,29 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final destination = analyticsDestinationTokens(context);
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return AppExpressiveDestinationTheme(
       family: AppExpressiveDestinationFamily.analytics,
       child: Scaffold(
         backgroundColor: destination?.pageCanvas,
-        appBar: AppBar(
-          title: Text(strings.rankingsTitle(strings.anatomyMuscles)),
-          backgroundColor: destination?.surfacePrimary,
-          foregroundColor: destination?.onSurfacePrimary,
-          scrolledUnderElevation: 0,
-        ),
-        bottomNavigationBar: _dirty
+        appBar: destination == null
+            ? AppBar(
+                title: Text(strings.rankingsTitle(strings.anatomyMuscles)),
+                scrolledUnderElevation: 0,
+              )
+            : null,
+        floatingActionButton: destination != null && _dirty && !keyboardVisible
+            ? AnalyticsRankingSaveFab(
+                label: _isSaving
+                    ? strings.nutritionSaving
+                    : strings.rankingsSave,
+                onPressed: _isSaving ? null : _saveAll,
+                isSaving: _isSaving,
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        bottomNavigationBar: destination == null && _dirty
             ? SettingsSaveBar(
                 label: _isSaving
                     ? strings.nutritionSaving
@@ -160,20 +171,30 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   Widget _buildBody() {
     final strings = AppLocalizations.of(context);
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return _withExpressiveBackButton(
+        context,
+        content: const Center(child: CircularProgressIndicator()),
+      );
     }
     if (_failure != null) {
-      return SafeErrorView(
-        title: strings.safeFailureLoadTitle,
-        failure: _failure!,
-        onRetry: _load,
+      return _withExpressiveBackButton(
+        context,
+        content: SafeErrorView(
+          title: strings.safeFailureLoadTitle,
+          failure: _failure!,
+          onRetry: _load,
+        ),
       );
     }
     if (_muscles.isEmpty) {
-      return Center(child: Text(strings.rankingsNoMuscles));
+      return _withExpressiveBackButton(
+        context,
+        content: Center(child: Text(strings.rankingsNoMuscles)),
+      );
     }
 
-    if (analyticsDestinationTokens(context) == null) {
+    final destination = analyticsDestinationTokens(context);
+    if (destination == null) {
       return Column(
         children: [
           Padding(
@@ -224,95 +245,314 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
       );
     }
 
-    final theme = Theme.of(context);
-    return Theme(
-      data: theme.copyWith(
-        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 2,
-            vertical: 8,
-          ),
-        ),
+    return ReorderableListView.builder(
+      itemCount: _muscles.length,
+      onReorder: _onReorder,
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        analyticsRankingFabScrollClearance,
       ),
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-            sliver: SliverToBoxAdapter(
-              child: AnalyticsRouteHeader(
-                title: strings.rankingsTitle(strings.anatomyMuscles),
-                subtitle: strings.rankingsHero(
-                  strings.anatomyMuscles.toLowerCase(),
-                ),
-                icon: Icons.fitness_center,
-              ),
-            ),
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _expressiveBackButton(context),
+          const SizedBox(height: 4),
+          AnalyticsRouteHeader(
+            title: strings.settingsMuscleRankings,
+            subtitle: strings.settingsMuscleRankingsSubtitle,
+            icon: Icons.fitness_center,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-            sliver: SliverReorderableList(
-              itemCount: _muscles.length,
-              onReorder: _onReorder,
-              itemBuilder: (context, index) {
-                final muscle = _muscles[index];
-                final rank = _ranks[muscle.id] ?? index + 1;
-                return _ExpressiveMuscleRankingRow(
-                  key: ValueKey(muscle.id),
-                  index: index,
-                  name: LocalizedCatalogEntityName(
-                    entity: CatalogEntityDisplayName(
-                      catalogId: muscle.catalogId,
-                      canonicalName: muscle.name,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: settingsRankingNameTextStyle(context),
-                  ),
-                  rank: rank,
-                  icon: Icons.fitness_center,
-                  rankLabel: strings.rankingsRank,
-                  onRankSubmitted: (value) {
-                    setState(() {
-                      _ranks[muscle.id] = int.tryParse(value) ?? rank;
-                      _sortByRank();
-                      _dirty = true;
-                    });
-                  },
-                );
-              },
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(right: 10, bottom: 2),
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Text(
+                strings.rankingsRank,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: destination.supportingForeground,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
         ],
       ),
+      itemBuilder: (context, index) {
+        final muscle = _muscles[index];
+        final rank = _ranks[muscle.id] ?? index + 1;
+        final entity = CatalogEntityDisplayName(
+          catalogId: muscle.catalogId,
+          canonicalName: muscle.name,
+        );
+        return KeyedSubtree(
+          key: ValueKey(muscle.id),
+          child: LocalizedCatalogEntityNamesBuilder(
+            entities: [entity],
+            builder: (context, names) {
+              final localizedName = names.single;
+              return _ExpressiveMuscleRankingRow(
+                index: index,
+                muscleName: localizedName,
+                name: Text(
+                  localizedName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: settingsRankingNameTextStyle(context),
+                ),
+                rank: rank,
+                rankLabel: strings.rankingsRank,
+                onRankSubmitted: (value) {
+                  setState(() {
+                    _ranks[muscle.id] = int.tryParse(value) ?? rank;
+                    _sortByRank();
+                    _dirty = true;
+                  });
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
+
+  Widget _withExpressiveBackButton(
+    BuildContext context, {
+    required Widget content,
+  }) {
+    if (analyticsDestinationTokens(context) == null) return content;
+    return Column(
+      children: [
+        _expressiveBackButton(context),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _expressiveBackButton(BuildContext context) => Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: IconButton(
+      tooltip: AppLocalizations.of(context).commonBack,
+      onPressed: () => Navigator.maybePop(context),
+      icon: const Icon(Icons.arrow_back),
+    ),
+  );
 }
 
-class _ExpressiveMuscleRankingRow extends StatelessWidget {
+class _ExpressiveMuscleRankingRow extends StatefulWidget {
   const _ExpressiveMuscleRankingRow({
-    super.key,
     required this.index,
+    required this.muscleName,
     required this.name,
     required this.rank,
-    required this.icon,
     required this.rankLabel,
     required this.onRankSubmitted,
   });
 
   final int index;
+  final String muscleName;
   final Widget name;
   final int rank;
-  final IconData icon;
   final String rankLabel;
   final ValueChanged<String> onRankSubmitted;
 
   @override
-  Widget build(BuildContext context) => AnalyticsRankingRow(
-    index: index,
-    name: name,
-    rank: rank,
-    icon: icon,
-    rankLabel: rankLabel,
-    onRankSubmitted: onRankSubmitted,
-  );
+  State<_ExpressiveMuscleRankingRow> createState() =>
+      _ExpressiveMuscleRankingRowState();
+}
+
+class _ExpressiveMuscleRankingRowState
+    extends State<_ExpressiveMuscleRankingRow> {
+  late final TextEditingController _rankController;
+  late final FocusNode _rankFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _rankController = TextEditingController(text: widget.rank.toString());
+    _rankFocusNode = FocusNode();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ExpressiveMuscleRankingRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.rank != widget.rank) {
+      _rankController.value = TextEditingValue(
+        text: widget.rank.toString(),
+        selection: TextSelection.collapsed(
+          offset: widget.rank.toString().length,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _rankController.dispose();
+    _rankFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = analyticsDestinationTokens(context)!;
+    final widgetData = widget;
+    final role = switch (widgetData.index % 3) {
+      0 => AnalyticsSurfaceRole.secondary,
+      1 => AnalyticsSurfaceRole.tertiary,
+      _ => AnalyticsSurfaceRole.accent,
+    };
+    final foreground = analyticsForegroundColor(tokens, role);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final compactLayout =
+        MediaQuery.sizeOf(context).width <= 360 || textScale > 1.15;
+    final rankFieldWidth = textScale <= 1.15
+        ? 80.0
+        : (80 * (textScale / 1.15)).clamp(80.0, 108.0).toDouble();
+    final semanticFieldLabel =
+        '${widgetData.muscleName}, ${widgetData.rankLabel} ${widgetData.rank}';
+    final rankField = SizedBox(
+      width: rankFieldWidth,
+      height: 52,
+      child: AnimatedBuilder(
+        animation: _rankFocusNode,
+        builder: (context, _) {
+          final isFocused = _rankFocusNode.hasFocus;
+          return DecoratedBox(
+            key: ValueKey('rank-painted-box-${widgetData.rank}'),
+            decoration: BoxDecoration(
+              color: tokens.pageCanvas.withValues(alpha: 0.58),
+              border: Border.all(
+                color: isFocused
+                    ? tokens.outlineAccent
+                    : tokens.outlineAccent.withValues(alpha: 0.6),
+                width: isFocused ? 2 : 1,
+              ),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: MergeSemantics(
+                child: Semantics(
+                  label: semanticFieldLabel,
+                  child: TextFormField(
+                    key: ValueKey('rank-${widgetData.rank}'),
+                    controller: _rankController,
+                    focusNode: _rankFocusNode,
+                    textAlign: TextAlign.center,
+                    textAlignVertical: TextAlignVertical.center,
+                    keyboardType: TextInputType.number,
+                    minLines: null,
+                    maxLines: null,
+                    expands: true,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                    ),
+                    onFieldSubmitted: widgetData.onRankSubmitted,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    final leadingContent = Row(
+      children: [
+        ReorderableDragStartListener(
+          index: widgetData.index,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: Icon(Icons.drag_indicator, color: foreground, size: 21),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: tokens.surfacePrimary,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            Icons.fitness_center,
+            color: tokens.onSurfacePrimary,
+            size: 19,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: DefaultTextStyle.merge(
+            style: TextStyle(color: foreground),
+            child: IconTheme.merge(
+              data: IconThemeData(color: foreground),
+              child: widgetData.name,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rowWidth = constraints.hasBoundedWidth
+            ? constraints.maxWidth
+            : (MediaQuery.sizeOf(context).width - 32)
+                  .clamp(0.0, double.infinity)
+                  .toDouble();
+        return SizedBox(
+          width: rowWidth,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.fromLTRB(12, 2, 10, 2),
+            decoration: BoxDecoration(
+              color: analyticsSurfaceColor(tokens, role),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(22),
+                topRight: const Radius.circular(22),
+                bottomRight: const Radius.circular(22),
+                bottomLeft: Radius.circular(widgetData.index.isEven ? 8 : 22),
+              ),
+            ),
+            child: compactLayout
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      leadingContent,
+                      const SizedBox(height: 4),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: rankField,
+                      ),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: leadingContent),
+                      const SizedBox(width: 8),
+                      rankField,
+                    ],
+                  ),
+          ),
+        );
+      },
+    );
+  }
 }

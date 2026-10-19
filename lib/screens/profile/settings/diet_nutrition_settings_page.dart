@@ -46,7 +46,7 @@ class DietNutritionSettingsPage extends StatelessWidget {
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: tokens.surfacePrimary,
                 borderRadius: const BorderRadius.only(
@@ -60,7 +60,7 @@ class DietNutritionSettingsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.restaurant_menu, color: tokens.onSurfacePrimary),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Text(
                     strings.nutritionSettingsTitle,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -68,9 +68,9 @@ class DietNutritionSettingsPage extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
-                    strings.nutritionSettingsSubtitle,
+                    strings.nutritionGoalsSubtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: tokens.onSurfacePrimary.withValues(alpha: 0.9),
                     ),
@@ -94,12 +94,11 @@ class DietNutritionSettingsPage extends StatelessWidget {
               foreground: tokens.onSurfaceSecondary,
               icon: Icons.tune,
               title: strings.nutritionGoals,
-              body: strings.nutritionGoalsSubtitle,
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
                 onTap: () => _openEditor(context, strings),
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.only(top: 12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -213,7 +212,7 @@ class _NutritionGoalSurface extends StatelessWidget {
     required this.foreground,
     required this.icon,
     required this.title,
-    required this.body,
+    this.body,
     this.child,
   });
 
@@ -221,12 +220,12 @@ class _NutritionGoalSurface extends StatelessWidget {
   final Color foreground;
   final IconData icon;
   final String title;
-  final String body;
+  final String? body;
   final Widget? child;
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(18),
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: color,
       borderRadius: const BorderRadius.only(
@@ -240,18 +239,20 @@ class _NutritionGoalSurface extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: foreground),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium
               ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
         ),
-        const SizedBox(height: 5),
-        Text(
-          body,
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: foreground),
-        ),
+        if (body != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            body!,
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: foreground),
+          ),
+        ],
         if (child != null) child!,
       ],
     ),

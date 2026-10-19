@@ -121,33 +121,54 @@ void main() {
           (neo
               ? surfaces.settingsSection
               : scheme.surfaceContainerHighest.withValues(alpha: 0.42));
+      final expressiveSectionSurface = planning == null
+          ? null
+          : Color.alphaBlend(
+              planning.configurationSurface.withValues(
+                alpha: entry.key.endsWith('dark') ? 0.8 : 0.38,
+              ),
+              planning.pageCanvas,
+            );
       final sectionSurface =
-          planning?.equipmentSurface ??
+          expressiveSectionSurface ??
           (neo
               ? surfaces.settingsSection
               : scheme.surfaceContainerHighest.withValues(alpha: 0.28));
       final fieldSurface =
-          planning?.equipmentSurface ??
+          expressiveSectionSurface ??
           (neo
               ? surfaces.settingsInput
               : scheme.surfaceContainerHighest.withValues(alpha: 0.48));
+      final expressiveThumbnailSurface = planning == null
+          ? null
+          : Color.alphaBlend(
+              planning.configurationSurface.withValues(
+                alpha: entry.key.endsWith('dark') ? 0.92 : 0.62,
+              ),
+              planning.pageCanvas,
+            );
       final selectedTileSurface =
           planning?.selectedSurface ??
           (neo
               ? surfaces.settingsInput
               : scheme.primary.withValues(alpha: 0.18));
       final unselectedTileSurface =
+          expressiveThumbnailSurface ??
           planning?.planSupportSurface ??
           (neo
               ? surfaces.settingsSection
               : scheme.surface.withValues(alpha: 0.34));
       final selectedTileOutline =
-          planning?.outline ??
+          planning?.outline.withValues(
+            alpha: entry.key.endsWith('dark') ? 0.62 : 0.46,
+          ) ??
           (neo
               ? tonosOutlineForSurface(pageContext, surfaces.settingsInput)
               : scheme.primary.withValues(alpha: 0.6));
       final unselectedTileOutline =
-          planning?.outline ??
+          planning?.outline.withValues(
+            alpha: entry.key.endsWith('dark') ? 0.62 : 0.46,
+          ) ??
           (neo
               ? tonosOutlineForSurface(pageContext, surfaces.settingsSection)
               : scheme.outlineVariant.withValues(alpha: 0.34));
@@ -167,8 +188,12 @@ void main() {
           .widgetList<InputDecorator>(find.byType(InputDecorator))
           .map((decorator) => decorator.decoration)
           .singleWhere(
-            (decoration) => decoration.labelText == strings.gymProfileName,
+            (decoration) => decoration.hintText == strings.gymProfileNameHint,
           );
+      expect(
+        nameDecoration.labelText,
+        planning == null ? strings.gymProfileName : isNull,
+      );
       expect(
         nameDecoration.fillColor,
         planning?.planSupportSurface ??
@@ -204,7 +229,7 @@ void main() {
       expect(
         searchDecoration.hintStyle?.color,
         planning != null
-            ? planning.equipmentForeground.withValues(alpha: 0.72)
+            ? planning.configurationForeground.withValues(alpha: 0.72)
             : neo
             ? tonosForegroundForSurface(
                 pageContext,
@@ -281,15 +306,9 @@ void main() {
         );
         expect(
           tester.widget<Text>(find.text('Barbell')).style?.color,
-          planning!.equipmentForeground,
+          planning!.configurationForeground,
         );
-        expect(
-          tester
-              .widget<Text>(find.text(strings.equipmentFreeWeightTraining))
-              .style
-              ?.color,
-          planning.equipmentForeground,
-        );
+        expect(find.text(strings.equipmentFreeWeightTraining), findsNothing);
       } else {
         expect(thumbnails, hasLength(3));
         expect(thumbnails.map((thumbnail) => thumbnail.backgroundColor), [
@@ -404,30 +423,31 @@ void main() {
             : Colors.transparent,
       );
 
-      final saveSurface =
-          planning?.planSupportSurface ??
-          (neo
-              ? surfaces.settingsSaveBar
-              : scheme.surface.withValues(alpha: 0.96));
-      final saveDecoration = decorations.singleWhere(
-        (decoration) =>
-            decoration.color == saveSurface &&
-            decoration.borderRadius ==
-                (planning != null
-                    ? planning.supportShape
-                    : neo
-                    ? shapes.actionBar
-                    : BorderRadius.zero),
-      );
-      final saveBorder = saveDecoration.border! as Border;
-      expect(
-        saveBorder.top.color,
-        planning?.outline ??
-            (neo
-                ? tonosOutlineForSurface(pageContext, surfaces.settingsSaveBar)
-                : scheme.outlineVariant),
-      );
-      expect(saveBorder.top.width, neo ? shapes.outlineWidth : 1);
+      if (planning == null) {
+        final saveSurface = (neo
+            ? surfaces.settingsSaveBar
+            : scheme.surface.withValues(alpha: 0.96));
+        final saveDecoration = decorations.singleWhere(
+          (decoration) =>
+              decoration.color == saveSurface &&
+              decoration.borderRadius ==
+                  (neo ? shapes.actionBar : BorderRadius.zero),
+        );
+        final saveBorder = saveDecoration.border! as Border;
+        expect(
+          saveBorder.top.color,
+          planning?.outline ??
+              (neo
+                  ? tonosOutlineForSurface(
+                      pageContext,
+                      surfaces.settingsSaveBar,
+                    )
+                  : scheme.outlineVariant),
+        );
+        expect(saveBorder.top.width, neo ? shapes.outlineWidth : 1);
+      } else {
+        expect(find.byType(FloatingActionButton), findsNothing);
+      }
 
       if (planning != null) {
         await tester.drag(find.byType(ListView), const Offset(0, 1200));
@@ -479,7 +499,9 @@ void main() {
       );
 
       await tester.tap(
-        find.widgetWithText(FilledButton, strings.gymProfileSave),
+        planning != null
+            ? find.widgetWithText(FloatingActionButton, strings.gymProfileSave)
+            : find.widgetWithText(FilledButton, strings.gymProfileSave),
       );
       await tester.pumpAndSettle();
 

@@ -52,7 +52,17 @@ void main() {
     expect(source, contains('_generationTokensForPresentation(context)'));
     expect(source, contains('_expressivePlanningTokens(context)'));
     expect(source, contains('introGradientStart: planning.planFocalSurface'));
-    expect(source, contains('choiceSelectedSurface: planning.planAccent'));
+    expect(source, contains('choiceSelectedSurface: planning.actionPrimary'));
+    expect(
+      source,
+      contains('choiceUnselectedSurface: planning.configurationSurface'),
+    );
+    expect(
+      source,
+      contains(
+        'choiceUnselectedBorder: planning.outline.withValues(alpha: 0.35)',
+      ),
+    );
     expect(source, contains('actionBarSurface: planning.planSupportSurface'));
     expect(
       source,

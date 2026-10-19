@@ -23,6 +23,7 @@ import '../services/active_plan_store.dart';
 import '../services/catalog_entity_localizer.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../utils/localized_body_part_name.dart';
 import '../utils/completed_workout_duration_formatter.dart';
 import '../utils/localized_formatters.dart';
@@ -53,18 +54,18 @@ class DashboardHero extends StatelessWidget {
         destinationTokens?.surfacePrimary ?? surfaces.dashboardHero;
     final heroGradientColors = destinationTokens == null
         ? [dashboardHeroAccent.withValues(alpha: 0.25), surfaces.dashboardHero]
-        : [heroSurface, heroSurface];
+            : [heroSurface, heroSurface];
     final heroForeground =
         destinationTokens?.onSurfacePrimary ??
         (context.usesNeoPresentation
             ? tonosForegroundForSurface(context, surfaces.dashboardHero)
             : null);
     final title = isEditing
-        ? AppLocalizations.of(context).dashboardCustomize
-        : AppLocalizations.of(context).dashboardTitle;
+            ? AppLocalizations.of(context).dashboardCustomize
+            : AppLocalizations.of(context).dashboardTitle;
     final actionTooltip = isEditing
-        ? AppLocalizations.of(context).dashboardDoneCustomizing
-        : AppLocalizations.of(context).dashboardCustomize;
+            ? AppLocalizations.of(context).dashboardDoneCustomizing
+            : AppLocalizations.of(context).dashboardCustomize;
     final icon = Container(
       width: 42,
       height: 42,
@@ -169,8 +170,8 @@ class DashboardQuickActions extends StatelessWidget {
     final workoutAction = _DashboardActionButton(
       icon: workoutActive ? Icons.play_arrow_rounded : Icons.fitness_center,
       title: workoutActive
-          ? AppLocalizations.of(context).dashboardResumeWorkout
-          : AppLocalizations.of(context).dashboardStartWorkout,
+              ? AppLocalizations.of(context).dashboardResumeWorkout
+              : AppLocalizations.of(context).dashboardStartWorkout,
       color: dashboardTrainingActionAccent,
       onPressed: () async {
         if (!workoutActive) {
@@ -399,7 +400,11 @@ class _DashboardRecentWorkoutsCardState
                 onPressed: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const FullHistoryScreen(),
+                      builder:
+                          (_) => AppExpressiveDestinationTheme(
+                            family: AppExpressiveDestinationFamily.logbook,
+                            child: const FullHistoryScreen(),
+                          ),
                     ),
                   );
                   widget.onChanged();
@@ -452,8 +457,12 @@ class _DashboardRecentWorkoutsCardState
                       onOpen: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) =>
-                                SessionDetailScreen(sessions[index]),
+                            builder:
+                                (_) => AppExpressiveDestinationTheme(
+                                  family:
+                                      AppExpressiveDestinationFamily.logbook,
+                                  child: SessionDetailScreen(sessions[index]),
+                                ),
                           ),
                         );
                         widget.onChanged();
@@ -611,8 +620,8 @@ class _DashboardPlanCollectionCardState
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final title = widget.archived
-        ? strings.dashboardArchivedPlans
-        : strings.dashboardActivePlans;
+            ? strings.dashboardArchivedPlans
+            : strings.dashboardActivePlans;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -669,8 +678,8 @@ class _DashboardPlanCollectionCardState
                     padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
                     emptyMessage: widget.archived
-                        ? strings.dashboardNoArchivedPlans
-                        : strings.dashboardNoActivePlans,
+                            ? strings.dashboardNoArchivedPlans
+                            : strings.dashboardNoActivePlans,
                     onRefresh: widget.onChanged,
                   ),
               ],
@@ -728,19 +737,19 @@ class DashboardPremadePlansCard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.tonalIcon(
                 onPressed: profileId == null
-                    ? null
-                    : () async {
-                        final navigator = Navigator.of(context);
-                        await navigator.push(
-                          MaterialPageRoute(
-                            builder: (_) => PremadePlansPage(
-                              profileId: profileId,
-                              onPlanAdded: onChanged,
+                        ? null
+                        : () async {
+                          final navigator = Navigator.of(context);
+                          await navigator.push(
+                            MaterialPageRoute(
+                              builder: (_) => PremadePlansPage(
+                                    profileId: profileId,
+                                    onPlanAdded: onChanged,
+                                  ),
                             ),
-                          ),
-                        );
-                        onChanged();
-                      },
+                          );
+                          onChanged();
+                        },
                 icon: const Icon(Icons.arrow_forward),
                 label: Text(strings.dashboardBrowsePremadePlans),
               ),
@@ -763,17 +772,17 @@ class DashboardPlanToolsCard extends StatelessWidget {
     await navigator.push(
       MaterialPageRoute(
         builder: (_) => MultiProvider(
-          providers: [
+              providers: [
             ChangeNotifierProvider<ActiveSession>.value(value: activeSession),
-            ChangeNotifierProvider(
+                ChangeNotifierProvider(
               create: (context) => PresetSession(
-                presetId,
-                repository: context.read<AppRepository>(),
-              ),
+                        presetId,
+                        repository: context.read<AppRepository>(),
+                      ),
+                ),
+              ],
+              child: const PresetDetailScreen(),
             ),
-          ],
-          child: const PresetDetailScreen(),
-        ),
       ),
     );
     if (!context.mounted) return;
@@ -834,8 +843,8 @@ class DashboardPlanToolsCard extends StatelessWidget {
     final existing = await repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNumber = existing.length + 1;
     final name = nextNumber == 1
-        ? strings.dashboardNewPlanFirst
-        : strings.dashboardNewPlan(nextNumber);
+            ? strings.dashboardNewPlanFirst
+            : strings.dashboardNewPlan(nextNumber);
     await ActivePlanStore(repository: repo).load(profileId);
     final presetId = await repo.createPresetAtomic(
       name: name,
@@ -929,9 +938,9 @@ class _DashboardExerciseCatalogCardState
   Future<List<_DashboardExerciseUsage>> _loadUsage() async {
     final rows = await _repo.fetchMostUsedExerciseDefinitionsRaw(limit: 4);
     final definitionIds = rows
-        .map((row) => (row['definition_id'] as num?)?.toInt())
-        .whereType<int>()
-        .toList();
+            .map((row) => (row['definition_id'] as num?)?.toInt())
+            .whereType<int>()
+            .toList();
     final definitions = await _repo.lookupDefsDetailedByIds(definitionIds);
     final definitionsById = {
       for (final definition in definitions) definition.id: definition,
@@ -957,9 +966,19 @@ class _DashboardExerciseCatalogCardState
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ExerciseCatalogPage()),
-            ),
+            onTap:
+                () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => AppExpressiveDestinationTheme(
+                          family: AppExpressiveDestinationFamily.catalog,
+                          child: ExerciseCatalogPage(
+                            expressiveCatalogPresentation:
+                                context.usesExpressivePresentation,
+                          ),
+                        ),
+                  ),
+                ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1110,12 +1129,23 @@ class _DashboardTargetAnatomyCardState
                             items: usage?.bodyParts ?? const [],
                             emptyText: 'No bodypart history yet.',
                             localizeBuiltInBodyPartNames: true,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const MuscleFilterPage(initialTabIndex: 0),
-                              ),
-                            ),
+                            onTap:
+                                () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => AppExpressiveDestinationTheme(
+                                          family:
+                                              AppExpressiveDestinationFamily
+                                                  .catalog,
+                                          child: MuscleFilterPage(
+                                            initialTabIndex: 0,
+                                            expressiveCatalogPresentation:
+                                                context
+                                                    .usesExpressivePresentation,
+                                          ),
+                                        ),
+                                  ),
+                                ),
                           ),
                         ),
                         const VerticalDivider(width: 25),
@@ -1126,12 +1156,23 @@ class _DashboardTargetAnatomyCardState
                             items: usage?.muscles ?? const [],
                             emptyText: 'No muscle history yet.',
                             localizeBuiltInBodyPartNames: false,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const MuscleFilterPage(initialTabIndex: 1),
-                              ),
-                            ),
+                            onTap:
+                                () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => AppExpressiveDestinationTheme(
+                                          family:
+                                              AppExpressiveDestinationFamily
+                                                  .catalog,
+                                          child: MuscleFilterPage(
+                                            initialTabIndex: 1,
+                                            expressiveCatalogPresentation:
+                                                context
+                                                    .usesExpressivePresentation,
+                                          ),
+                                        ),
+                                  ),
+                                ),
                           ),
                         ),
                       ],
@@ -1189,11 +1230,11 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
     final usageForeground = neo
-        ? tonosForegroundForSurface(context, surfaces.dashboardUsage)
-        : theme.colorScheme.onSurface;
+            ? tonosForegroundForSurface(context, surfaces.dashboardUsage)
+            : theme.colorScheme.onSurface;
     final usageSecondary = neo
         ? tonosSecondaryForegroundForSurface(context, surfaces.dashboardUsage)
-        : theme.colorScheme.onSurfaceVariant;
+            : theme.colorScheme.onSurfaceVariant;
     final equipment = usage.definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -1229,18 +1270,18 @@ class _DashboardExerciseUsageRow extends StatelessWidget {
                 LocalizedCatalogEntityNamesBuilder(
                   entities: equipment,
                   builder: (context, names) => Text(
-                    strings.dashboardExerciseUsage(
-                      names.isEmpty
-                          ? strings.dashboardExerciseFallback
-                          : names.join(', '),
-                      usage.useCount,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: usageSecondary,
-                    ),
-                  ),
+                        strings.dashboardExerciseUsage(
+                          names.isEmpty
+                              ? strings.dashboardExerciseFallback
+                              : names.join(', '),
+                          usage.useCount,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: usageSecondary,
+                        ),
+                      ),
                 ),
               ],
             ),
@@ -1308,20 +1349,20 @@ class _DashboardFocusPane extends StatelessWidget {
                     children: [
                       Expanded(
                         child: item.entity == null
-                            ? Text(
-                                localizeBuiltInBodyPartNames
+                                ? Text(
+                                  localizeBuiltInBodyPartNames
                                     ? localizedBodyPartName(context, item.name)
-                                    : item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall,
-                              )
-                            : LocalizedCatalogEntityName(
-                                entity: item.entity!,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall,
-                              ),
+                                      : item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                )
+                                : LocalizedCatalogEntityName(
+                                  entity: item.entity!,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall,
+                                ),
                       ),
                       const SizedBox(width: 5),
                       Text(

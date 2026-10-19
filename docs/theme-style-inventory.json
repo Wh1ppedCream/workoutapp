@@ -168,52 +168,68 @@
       "id": "anatomy-filter-expressive-surfaces",
       "pattern": "lib/screens/exercise/muscle_filter_page.dart",
       "kinds": [
+        "color",
         "decoration",
         "geometry"
       ],
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Expressive anatomy tab and search-panel surfaces",
-      "rationale": "The Expressive anatomy selector uses role-specific geometry for the selected tab indicator and nested search-panel surfaces. This exact source-scoped rule records those three decorations and their three shapes; the Material search input remains owned separately. Device visual acceptance remains separate.",
-      "sourcePattern": "indicator:\\s*expressive[\\s\\S]*?labelColor:|if\\s*\\(expressive\\)\\s*Padding\\([\\s\\S]*?else\\s*Padding\\("
+      "rationale": "The Expressive anatomy selector uses a tonal selected-tab indicator, hides the Material divider, and groups its search toolbar in a restrained surface. This exact source-scoped rule records those local styles; the Material search input remains owned separately. Device visual acceptance remains separate.",
+      "sourcePattern": "dividerColor:\\s*expressive[\\s\\S]*?labelColor:|indicator:\\s*expressive[\\s\\S]*?labelColor:|if\\s*\\(expressive\\)\\s*Padding\\([\\s\\S]*?else\\s*Padding\\("
     },
     {
       "id": "anatomy-filter-expressive-search-recipe",
       "pattern": "lib/screens/exercise/muscle_filter_page.dart",
       "kinds": [
+        "color_transform",
         "text_style",
         "geometry"
       ],
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Expressive anatomy search foreground and field geometry",
-      "rationale": "The search field uses Catalog destination foreground tokens for its resting and floating labels, plus a family-gated filled-field outline with a clear focus border. This exact source-scoped rule records the field recipe while the input decoration remains Material-owned. Device visual acceptance remains separate.",
+      "rationale": "The search field uses an inline tab-specific hint, readable Expressive foregrounds, a soft fill, and a clear focus border. This exact source-scoped rule records the field recipe while the input decoration remains Material-owned. Device visual acceptance remains separate.",
       "sourcePattern": "style:\\s*expressive[\\s\\S]*?onChanged:"
     },
     {
       "id": "anatomy-filter-expressive-row-shape",
       "pattern": "lib/screens/exercise/muscle_filter_page.dart",
       "kinds": [
-        "geometry"
+        "geometry",
+        "color_transform"
       ],
       "classification": "structural_theme",
       "status": "migrated",
-      "target": "Expressive anatomy result-row shape hierarchy",
-      "rationale": "Expressive anatomy result rows use a larger mixed-corner shape for directional rows and a compact rounded shape for other results; Classic and Neo retain their existing defaults. This source-scoped rule records only the result-row shape recipe. Device visual acceptance remains separate.",
-      "sourcePattern": "shape:\\s*expressive[\\s\\S]*?:\\s*null"
+      "target": "Expressive anatomy result-row shape and ink hierarchy",
+      "rationale": "Expressive anatomy result rows use a shared moderately rounded shape and subdued supporting ink; Classic and Neo retain their existing defaults. This source-scoped rule records the row geometry and secondary-ink recipe. Device visual acceptance remains separate.",
+      "sourcePattern": "final tile = ListTile\\([\\s\\S]*?onTap:\\s*\\(\\)\\s*=>\\s*onTap\\(item\\)"
     },
     {
       "id": "anatomy-filter-fallback-artwork",
       "pattern": "lib/screens/exercise/muscle_filter_page.dart",
       "kinds": [
         "color",
+        "color_transform",
         "geometry"
       ],
       "classification": "intentional_one_off",
       "status": "allowlisted",
       "target": "Anatomy silhouette and circular muscle fallback artwork",
-      "rationale": "The exact fallback artwork intentionally leaves the body-part silhouette transparent and square while presenting the 44px muscle icon in a circular, primary-colored thumbnail with onPrimary ink. A four-mode route contract pins those values. This artwork-only exception does not cover the search field or other route styling.",
+      "rationale": "The route keeps its existing front/back body-part media and heatmap fallback, plus optional manifest-backed muscle media with a compact muted icon fallback. These exact source-scoped candidates cover thumbnail frames and fallback artwork only; anatomy data and media loading remain unchanged.",
       "sourcePattern": "leadingFor:\\s*\\(part\\)\\s*=>\\s*SharedEntityMediaThumbnail\\([\\s\\S]*?\\)\\s*,\\s*onTap:|leadingFor:\\s*\\(muscle\\)\\s*=>\\s*SharedEntityMediaThumbnail\\([\\s\\S]*?\\)\\s*,\\s*onTap:"
+    },
+    {
+      "id": "anatomy-filter-expressive-empty-search-state",
+      "pattern": "lib/screens/exercise/muscle_filter_page.dart",
+      "kinds": [
+        "geometry"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive anatomy empty-search action geometry",
+      "rationale": "The Expressive empty-search action uses a compact rounded button while preserving its accessible clear-search behavior. This source-scoped rule records only its geometry; device visual acceptance remains separate.",
+      "sourcePattern": "_buildSearchEmptyState\\([\\s\\S]*?(?=\\nclass _FocusList<T>)"
     },
     {
       "id": "navigation-settings-theme-recipes",
@@ -275,13 +291,14 @@
       "kinds": [
         "color",
         "color_transform",
+        "component_style",
         "decoration",
         "geometry"
       ],
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Weekly Set Analytics theme-token, surface, and status decoration ownership",
-      "rationale": "A four-mode production-screen contract verifies the summary/icon surfaces, data-visualization positive status role, token-owned row/stat/icon geometry, outline width, transparent Material ink surface, and boundary-status transforms. Classic keeps its 14px/18px radii and 1px border while Neo uses its 4px/2px angular treatment. This exact kind-limited rule covers the eight current inventory findings; device visual review of this screen remains separate."
+      "rationale": "A four-mode production-screen contract verifies the summary/icon surfaces, data-visualization positive status role, token-owned row/stat/icon geometry, outline width, transparent Material ink surface, boundary-status transforms, Expressive segmented selector, and compact Expressive hero and row treatments. Classic keeps its 14px/18px radii and 1px border while Neo uses its 4px/2px angular treatment. This exact kind-limited rule covers the 26 current inventory findings; device visual review of this screen remains separate."
     },
     {
       "id": "plan-management-theme-recipes",
@@ -295,7 +312,7 @@
       "classification": "release_surface",
       "status": "migrated",
       "target": "Active and archived plan cards, status markers, and count pills",
-      "rationale": "A four-mode production-route contract renders active and archived plans, checking their AppSurfaceTokens/AppShapeTokens card recipe, ColorScheme outline and status colors, status alpha, and ColorScheme count-pill ink. It also verifies the screen keeps its Material OutlinedButton actions. This exact rule owns the five current findings and qualifies presentation ownership only; active-plan persistence and device visual review remain separate."
+      "rationale": "The theme-family route contract renders active and archived plans, checking theme-family-specific row surfaces and geometry, text and status colors, count pills, and legacy per-plan status copy outside Expressive. It also exercises archive/activate updates and section counts. This exact rule covers the sixteen current style findings, including compact Expressive rows and empty states; visual review and device review remain separate."
     },
     {
       "id": "exercise-muscle-percent-material-input",
@@ -322,6 +339,18 @@
       "rationale": "A four-mode production-screen contract opens a new plan in the guided naming step and verifies its InputDecoration uses the ColorScheme primary underline at the specified focus width while the name uses the established 20px bold title style. This exact rule covers only the name field; plan editing, persistence, and device review remain separate."
     },
     {
+      "id": "preset-detail-overflow-menu-tint",
+      "pattern": "lib/screens/exercise/preset_detail_screen.dart",
+      "kinds": [
+        "color"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive Preset Detail overflow menu tonal surface tint",
+      "sourcePattern": "PopupMenuButton<String>\\([\\s\\S]{0,700}?surfaceTintColor:\\s*Colors\\.transparent",
+      "rationale": "The Expressive overflow popup explicitly suppresses Material surface tint so the planning support surface remains stable in light and dark mode. This narrowly scoped inventory rule covers that menu tint only; menu actions and device visual review remain separate."
+    },
+    {
       "id": "swap-exercise-secondary-equipment-ink",
       "pattern": "lib/widgets/swap_exercise_sheet.dart",
       "kinds": [
@@ -331,6 +360,19 @@
       "status": "migrated",
       "target": "Secondary equipment label contrast on the swap sheet",
       "rationale": "A four-mode production-sheet contract loads matching exercises from a fake repository and verifies each inline equipment subtitle derives its ink from bodySmall color attenuated by AppSurfaceTokens.swapSecondaryTextOpacity. This exact rule owns only the subtitle transform; replacement behavior and device visual acceptance remain separate."
+    },
+    {
+      "id": "swap-exercise-expressive-surfaces-and-actions",
+      "pattern": "lib/widgets/swap_exercise_sheet.dart",
+      "kinds": [
+        "geometry",
+        "component_style",
+        "local_theme"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Expressive swap sheet surfaces, actions, and nested Catalog theme",
+      "rationale": "The swap sheet's locally scoped Expressive branch owns its rounded comparison and recovery surfaces, Expressive fixed actions, and Catalog destination theme. Classic and Neo continue through their existing presentation branches; this rule covers only the new Expressive overlay treatment."
     },
     {
       "id": "generated-localization",

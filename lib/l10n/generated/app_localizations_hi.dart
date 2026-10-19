@@ -10,6 +10,70 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get nutritionSummaryTitle => 'दैनिक पोषण';
+
+  @override
+  String get nutritionRingView => 'रिंग दृश्य';
+
+  @override
+  String get nutritionBarView => 'बार दृश्य';
+
+  @override
+  String get nutritionSummaryView => 'सारांश दृश्य';
+
+  @override
+  String nutritionGoalComparison(int target, String unit) {
+    return 'लक्ष्य $target $unit';
+  }
+
+  @override
+  String nutritionUnsetGoal(String unit) {
+    return '$unit · कोई लक्ष्य नहीं';
+  }
+
+  @override
+  String nutritionGoalSemantics(
+    String nutrient,
+    int consumed,
+    int target,
+    String unit,
+  ) {
+    return '$nutrient: $consumed $unit का सेवन किया, लक्ष्य $target $unit।';
+  }
+
+  @override
+  String nutritionUnsetGoalSemantics(
+    String nutrient,
+    int consumed,
+    String unit,
+  ) {
+    return '$nutrient: $consumed $unit का सेवन किया। दैनिक लक्ष्य निर्धारित नहीं है।';
+  }
+
+  @override
+  String get nutritionPantryLogAction => 'पैंट्री लॉग';
+
+  @override
+  String get nutritionAddMealAction => 'भोजन जोड़ें';
+
+  @override
+  String get nutritionPlanMealAction => 'भोजन की योजना';
+
+  @override
+  String get nutritionActionUnavailable => 'अनुपलब्ध';
+
+  @override
+  String nutritionActionUnavailableHint(String action) {
+    return '$action अभी उपलब्ध नहीं है।';
+  }
+
+  @override
+  String get nutritionUnitGrams => 'ग्राम';
+
+  @override
+  String get nutritionUnitCalories => 'किलोकैलोरी';
+
+  @override
   String onboardingBodyWeightPerWeek(String percent) {
     return '$percent% शरीर का वजन/सप्ताह';
   }
@@ -918,6 +982,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get catalogTargetAnatomyTitle => 'लक्षित शरीर रचना';
 
   @override
+  String get catalogAnatomyHistorySubtitle =>
+      'पूरे किए गए वर्कआउट में आवंटित सेट क्रेडिट';
+
+  @override
   String get catalogBodyparts => 'शरीर भाग';
 
   @override
@@ -1218,6 +1286,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'चुनें कि आपके ट्रेन अवलोकन पर क्या तैयार रहे। संग्रहित योजनाएँ सहेजी रहती हैं और कभी भी सक्रिय की जा सकती हैं।';
 
   @override
+  String get planManagementExpressiveIntro =>
+      'योजनाओं को Train में सक्रिय रखें या बाद के लिए संग्रहित करें; उन्हें कभी भी वापस लाएँ।';
+
+  @override
   String get planManagementActiveSubtitle => 'ट्रेन अवलोकन पर दिखाया गया।';
 
   @override
@@ -1296,6 +1368,15 @@ class AppLocalizationsHi extends AppLocalizations {
       'क्या आप वाकई इस योजना को हटाना चाहते हैं?';
 
   @override
+  String presetBarDeleteTitle(String planName) {
+    return '“$planName” हटाएँ?';
+  }
+
+  @override
+  String get presetBarDeleteBody =>
+      'यह योजना स्थायी रूप से हटा दी जाएगी। इस कार्रवाई को पूर्ववत नहीं किया जा सकता।';
+
+  @override
   String get commonCancel => 'रद्द करें';
 
   @override
@@ -1368,7 +1449,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get optimizedRepsWeightsDescription =>
-      'उपलब्ध होने पर इतिहास-आधारित शक्ति अनुमान उपयोग करता है; आसान और मध्यम, कठिन की तुलना में अधिक पीछे हटते हैं। नए व्यायाम रूढ़िवादी शुरुआती अनुमान उपयोग करते हैं।';
+      'उपलब्ध होने पर इतिहास-आधारित शक्ति अनुमान उपयोग करता है।';
 
   @override
   String get optimizedRepPattern => 'रिप पैटर्न';
@@ -1477,7 +1558,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get generateIntroTitle => 'अपना योजना सप्ताह बनाएँ';
+  String get generateIntroTitle => 'अपना प्रशिक्षण सप्ताह बनाएँ';
 
   @override
   String get generateIntroBody =>
@@ -1506,7 +1587,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String generateSetupSummary(String plans, String minutes, String sets) {
-    return '$plans योजना(एँ), $minutes मिनट, अधिकतम $sets सेट';
+    String _temp0 = intl.Intl.selectLogic(plans, {
+      '1': '1 योजना',
+      'other': '$plans योजनाएँ',
+    });
+    return '$_temp0 · $minutes मिनट · प्रति व्यायाम अधिकतम $sets सेट';
   }
 
   @override
@@ -1517,7 +1602,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'अनुमान: 3 मिनट/सेट + 5 मिनट/व्यायाम।';
 
   @override
-  String get generatePlansToCreate => 'बनाने के लिए योजनाएँ';
+  String get generatePlansToCreate => 'योजनाओं की संख्या';
 
   @override
   String generatePlansToCreateHelp(int maxPlans) {
@@ -1526,6 +1611,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get unitPlans => 'योजनाएँ';
+
+  @override
+  String generatePlanUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'योजनाएँ',
+      one: 'योजना',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get generateMaxSetsPerExercise => 'प्रति व्यायाम अधिकतम सेट';
@@ -1537,14 +1633,34 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String generateFocusSummary(int preferred, int avoided, String history) {
-    return '$preferred पसंदीदा, $avoided टाले गए, $history 7-दिन इतिहास';
+    return '$preferred पसंदीदा · $avoided टाले गए · इतिहास $history';
   }
 
   @override
-  String get generateHistoryUsing => 'उपयोग हो रहा है';
+  String generateFocusCountsSummary(int preferred, int avoided) {
+    return '$preferred पसंदीदा · $avoided टाले गए';
+  }
 
   @override
-  String get generateHistoryNotUsing => 'उपयोग नहीं हो रहा';
+  String get generateRecentTrainingOnSummary => 'हाल का प्रशिक्षण: चालू';
+
+  @override
+  String get generateRecentTrainingOffSummary => 'हाल का प्रशिक्षण: बंद';
+
+  @override
+  String get generateFocusNeutral => 'तटस्थ';
+
+  @override
+  String get generateFocusPreferred => 'पसंदीदा';
+
+  @override
+  String get generateFocusAvoided => 'टाला गया';
+
+  @override
+  String get generateHistoryUsing => 'चालू';
+
+  @override
+  String get generateHistoryNotUsing => 'बंद';
 
   @override
   String get generateUseRecentTraining => 'हाल का प्रशिक्षण उपयोग करें';
@@ -2461,6 +2577,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get catalogFilters => 'फ़िल्टर';
 
   @override
+  String get catalogApplyFilters => 'फ़िल्टर लागू करें';
+
+  @override
+  String get catalogResetAllFilters => 'सभी रीसेट करें';
+
+  @override
+  String get catalogWorkspaceProfileDescription =>
+      'परिणाम इस प्रोफ़ाइल के उपकरण तक सीमित करें।';
+
+  @override
+  String get catalogFiltersCombined =>
+      'परिणाम सीमित करने के लिए फ़िल्टर एक साथ लागू होते हैं।';
+
+  @override
+  String get catalogExpressiveWorkspaceProfileDescription =>
+      'परिणामों को इस प्रोफ़ाइल के उपकरण और अन्य चुने गए फ़िल्टर तक सीमित करें।';
+
+  @override
+  String get catalogExpressiveFiltersCombined =>
+      'अभ्यासों को सभी चुने गए फ़िल्टर से मेल खाना चाहिए।';
+
+  @override
   String get catalogGuideFiltersBody =>
       'कैटलॉग को जल्दी सीमित करने के लिए जिम प्रोफ़ाइल, उपकरण, शरीर भाग या मांसपेशी से फ़िल्टर करें।';
 
@@ -2490,6 +2628,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get catalogSpecificMuscle => 'विशिष्ट मांसपेशी';
 
   @override
+  String get catalogBodyPartFilter => 'शरीर का भाग';
+
+  @override
+  String get catalogMuscleFilter => 'मांसपेशी';
+
+  @override
   String get catalogPageTitle => 'व्यायाम कैटलॉग';
 
   @override
@@ -2497,6 +2641,45 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get catalogNoMatches => 'कोई व्यायाम फ़िल्टर से मेल नहीं खाता।';
+
+  @override
+  String get catalogNoSearchMatches => 'कोई व्यायाम नहीं मिला';
+
+  @override
+  String get catalogNoCombinedMatches =>
+      'आपकी खोज और फ़िल्टर से कोई व्यायाम मेल नहीं खाता';
+
+  @override
+  String get catalogNoSearchMatchesBody =>
+      'दूसरे व्यायाम का नाम खोजें या खोज साफ़ करें।';
+
+  @override
+  String get catalogNoFilteredMatches =>
+      'इन फ़िल्टर से कोई व्यायाम मेल नहीं खाता';
+
+  @override
+  String get catalogNoFilteredMatchesBody =>
+      'फ़िल्टर बदलें या सभी व्यायाम देखने के लिए उन्हें रीसेट करें।';
+
+  @override
+  String get catalogNoCombinedMatchesBody =>
+      'दूसरे व्यायाम का नाम खोजें, खोज साफ़ करें या फ़िल्टर रीसेट करें।';
+
+  @override
+  String get catalogClearSearch => 'खोज साफ़ करें';
+
+  @override
+  String get catalogResetFilters => 'फ़िल्टर रीसेट करें';
+
+  @override
+  String get catalogEditFilters => 'फ़िल्टर संपादित करें';
+
+  @override
+  String get catalogNoExercisesAvailable => 'कोई व्यायाम उपलब्ध नहीं है';
+
+  @override
+  String get catalogNoExercisesAvailableBody =>
+      'व्यायाम की परिभाषाएँ उपलब्ध होने पर यहाँ दिखाई देंगी।';
 
   @override
   String get catalogOpenExerciseInfo => 'व्यायाम जानकारी खोलें';
@@ -2585,6 +2768,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get exerciseDetailZoomHint => 'ज़ूम करने के लिए पिंच या ड्रैग करें';
 
   @override
+  String get exerciseDetailZoomPanHint =>
+      'ज़ूम करने के लिए पिंच करें · पैन करने के लिए खींचें';
+
+  @override
   String get exerciseDetailLoadingBestLifts =>
       'सर्वश्रेष्ठ लिफ्ट लोड की जा रही हैं';
 
@@ -2635,7 +2822,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String exerciseDetailRanges(int count) {
-    return '$count रेंज';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count रेप रेंज',
+      one: '1 रेप रेंज',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2644,6 +2837,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get exerciseDetailNoHistory => 'इस व्यायाम का कोई इतिहास नहीं है।';
+
+  @override
+  String get exerciseDetailNoHistoryBody =>
+      'यहाँ प्रदर्शन का रुझान और सत्रों के रिकॉर्ड देखने के लिए इस व्यायाम के साथ वर्कआउट पूरा करें।';
 
   @override
   String get exerciseDetailPerformanceTrend => 'प्रदर्शन रुझान';
@@ -2708,6 +2905,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'चार्ट के लिए अभी कोई पूरे किए गए सेट रिकॉर्ड नहीं हैं।';
 
   @override
+  String get exerciseDetailNoChartDataBody =>
+      'प्रदर्शन के रुझान देखने के लिए इस व्यायाम के ट्रैक किए गए सेट पूरे करें।';
+
+  @override
   String get exerciseDetailWeightAbbreviation => 'वजन';
 
   @override
@@ -2746,6 +2947,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get weeklySetsTitle => 'साप्ताहिक सेट अवलोकन';
 
   @override
+  String get weeklySetsLastSevenDays => 'पिछले 7 दिन';
+
+  @override
+  String get weeklySetsExplanationBody =>
+      'पूरे किए गए सेट हर व्यायाम के आवंटन भार के अनुसार उससे जुड़े मांसपेशियों और शरीर के भागों को क्रेडिट देते हैं, इसलिए कुल संख्या भिन्नात्मक हो सकती है। ये भारित क्रेडिट कुल सेटों का विभाजन नहीं हैं, इसलिए शरीर-भाग या मांसपेशी के कुल पूरे किए गए सेटों की संख्या से मेल नहीं खा सकते। हरी पंक्तियाँ प्रभावी न्यूनतम और पुनर्प्राप्ति योग्य अधिकतम सीमा के भीतर हैं; लाल पंक्तियाँ अधिकतम से ऊपर हैं। न्यूनतम से नीचे या बिना निर्धारित सीमा वाली पंक्तियाँ तटस्थ रहती हैं।';
+
+  @override
   String get weeklySetsLoadError =>
       'आपका साप्ताहिक प्रशिक्षण अवलोकन लोड नहीं हो सका।';
 
@@ -2772,6 +2980,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String weeklySetsCount(String count) {
+    return '$count सेट';
+  }
+
+  @override
+  String weeklySetsSingleCount(String count) {
     return '$count सेट';
   }
 
@@ -3522,6 +3735,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get anatomyLoadFailed => 'शरीर रचना फ़िल्टर लोड नहीं हो सके।';
 
   @override
+  String get anatomySearchBodyParts => 'शरीर के भाग खोजें';
+
+  @override
   String get anatomySearchLabel => 'शरीर भाग या मांसपेशी खोजें';
 
   @override
@@ -3586,6 +3802,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get anatomyDoneSevenDaysCompact => 'पूर्ण · 7 दिन';
+
+  @override
   String get anatomyDoneLastSevenDays => 'पूर्ण (7 दिन)';
 
   @override
@@ -3598,6 +3817,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get anatomyRecommended => 'सुझाया गया';
+
+  @override
+  String get anatomyRecommendedWeeklyCompact => 'साप्ताहिक सुझाव';
 
   @override
   String get anatomyNotSet => 'सेट नहीं';
@@ -3970,6 +4192,21 @@ class AppLocalizationsHi extends AppLocalizations {
       'अभी कोई मांसपेशी नहीं जुड़ी है। कुछ जोड़ने के लिए संपादित करें टैप करें।';
 
   @override
+  String get mappingSearchMuscles => 'मांसपेशियाँ खोजें';
+
+  @override
+  String get mappingSelectedOnly => 'केवल चुनी हुई';
+
+  @override
+  String mappingSelectedCount(int count) {
+    return '$count चुनी गईं';
+  }
+
+  @override
+  String get mappingNoFilteredMuscles =>
+      'मौजूदा फ़िल्टर से कोई मांसपेशी मेल नहीं खाती।';
+
+  @override
   String get volumeMaintenance => 'रखरखाव';
 
   @override
@@ -4055,6 +4292,23 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nutritionTodayRecords => 'आज के रिकॉर्ड';
+
+  @override
+  String get nutritionNoGoalSet => 'कोई लक्ष्य निर्धारित नहीं है';
+
+  @override
+  String get nutritionNoFoodLogged =>
+      'इस दिन के लिए कोई भोजन लॉग नहीं किया गया';
+
+  @override
+  String get nutritionTapToAddFirstEntry => 'पहली एंट्री जोड़ने के लिए + दबाएँ';
+
+  @override
+  String get nutritionAddEntryActionLabel => 'भोजन या माप जोड़ें';
+
+  @override
+  String get nutritionOptionalTargetsHint =>
+      'सभी पोषक लक्ष्य वैकल्पिक हैं। लक्ष्य खाली रखने के लिए फ़ील्ड खाली छोड़ें।';
 
   @override
   String get nutritionGoalsMenu => 'पोषण लक्ष्य';
@@ -4761,6 +5015,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get weightMakeChangeSet => 'ChangeSet बनाएँ';
 
   @override
+  String get presetCreateChangeSet => 'ChangeSet बनाएँ';
+
+  @override
+  String get planAddExercise => 'व्यायाम जोड़ें';
+
+  @override
+  String presetExerciseSetCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# सेट',
+      one: '# सेट',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String weightSetLabel(int number) {
     return 'सेट $number';
   }
@@ -4853,6 +5124,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get swapBodypartsHit => 'प्रशिक्षित शरीर भाग';
 
   @override
+  String get swapBodyPartsWorked => 'काम किए गए शरीर के भाग';
+
+  @override
   String swapMatch(int percent) {
     return '$percent% मैच';
   }
@@ -4904,6 +5178,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get premadeDescription =>
       'कोच, इन्फ्लुएंसर और ऐप-चयनित रूटीन को अपनी योजनाओं में कॉपी करें। जोड़ने के बाद आप इन्हें किसी भी अन्य योजना की तरह संपादित कर सकते हैं।';
+
+  @override
+  String get premadeExpressiveDescription =>
+      'तैयार वर्कआउट रूटीन देखें। कस्टमाइज़ करने के लिए कोई भी योजना जोड़ें।';
+
+  @override
+  String get premadeBuiltinPlansTitle => 'Tonos योजनाएँ';
+
+  @override
+  String get premadeEquipmentFilterLabel => 'मेरे जिम उपकरण से मेल खाएँ';
 
   @override
   String get premadeDiscarding => 'त्यागा जा रहा है...';
@@ -4993,6 +5277,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get healthTrendsTitle => 'स्वास्थ्य रुझान';
+
+  @override
+  String get healthTrackedMetrics => 'ट्रैक किए गए मेट्रिक्स';
 
   @override
   String get healthMetric => 'मेट्रिक';
@@ -5237,6 +5524,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get exerciseEditorTitle => 'व्यायाम संपादक';
 
   @override
+  String get exerciseEditorHeroDescription =>
+      'व्यायाम का विवरण देखें और अपडेट करें।';
+
+  @override
   String get exerciseEditorLoadFailed => 'व्यायाम परिभाषाएँ लोड नहीं हो सकीं।';
 
   @override
@@ -5258,7 +5549,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get exerciseEditorMuscles => 'मांसपेशियाँ';
 
   @override
-  String get exerciseEditorBodyparts => 'शरीर भाग';
+  String get exerciseEditorBodyparts => 'शरीर के भाग';
 
   @override
   String get exerciseEditorEquipment => 'उपकरण';
@@ -5658,6 +5949,36 @@ class AppLocalizationsHi extends AppLocalizations {
       'योजनाएँ पहले से वर्तमान प्रोफ़ाइल उपकरण में फिट हैं।';
 
   @override
+  String get premadeExpressiveEquipmentSelectProfile =>
+      'उपकरण के अनुसार योजनाएँ फ़िल्टर करने के लिए जिम प्रोफ़ाइल चुनें।';
+
+  @override
+  String get premadeExpressiveEquipmentAll =>
+      'अन्य उपकरण की ज़रूरत वाली योजनाओं सहित सभी योजनाएँ दिखाएँ।';
+
+  @override
+  String get premadeExpressiveEquipmentChecking =>
+      'उपकरण की संगतता जाँची जा रही है...';
+
+  @override
+  String get premadeExpressiveEquipmentMissing =>
+      'योजनाएँ मिलाने के लिए अपनी सक्रिय जिम प्रोफ़ाइल में उपकरण जोड़ें।';
+
+  @override
+  String get premadeExpressiveEquipmentNoMatches =>
+      'कोई योजना आपके जिम उपकरण से मेल नहीं खाती।';
+
+  @override
+  String get premadeExpressiveEquipmentCompatible =>
+      'केवल सक्रिय जिम प्रोफ़ाइल के उपकरणों के अनुकूल योजनाएँ दिखाएँ।';
+
+  @override
+  String get premadeExpressiveOneHour => '1 घंटा';
+
+  @override
+  String get premadeExpressiveTwoHours => '2 घंटे';
+
+  @override
   String get premadeOneHour => '1 घंटा';
 
   @override
@@ -5693,6 +6014,29 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String premadeSwappedCount(int count) {
     return '$count बदले गए';
+  }
+
+  @override
+  String premadeExpressivePlansAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count योजनाएँ उपलब्ध',
+      one: '1 योजना उपलब्ध',
+      zero: 'कोई योजना उपलब्ध नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String premadeExpressivePlansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count योजनाएँ',
+      one: '1 योजना',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -6026,7 +6370,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
-    return 'वर्तमान में $count शरीर भाग जुड़े हैं।';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'वर्तमान में $count शरीर के भाग जुड़े हैं।',
+      one: 'वर्तमान में 1 शरीर का भाग जुड़ा है।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exerciseEditorSelectedCount(int count) {
+    return '$count चुनी गईं';
   }
 
   @override
@@ -6205,6 +6560,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get exerciseEditorMediaRemoteUrl => 'रिमोट URL';
+
+  @override
+  String get exerciseEditorMediaUrlRequired => 'एक रिमोट URL दर्ज करें।';
 
   @override
   String get exerciseEditorMediaThumbnailUrl => 'थंबनेल URL';
@@ -6452,6 +6810,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get healthRecords => 'रिकॉर्ड';
 
   @override
+  String healthRecordCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count रिकॉर्ड',
+      one: '1 रिकॉर्ड',
+      zero: '0 रिकॉर्ड',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presetEstimatedTime => 'अनुमानित समय';
 
   @override
@@ -6687,6 +7057,12 @@ class AppLocalizationsHi extends AppLocalizations {
       'स्थानीय रूप से रखी सभी सिंक डायग्नोस्टिक प्रविष्टियाँ हटाएँ।';
 
   @override
+  String get diagnosticsShowAllHistory => 'पूरा इतिहास दिखाएँ';
+
+  @override
+  String get diagnosticsShowLessHistory => 'कम दिखाएँ';
+
+  @override
   String get diagnosticsHistoryCleared =>
       'सिंक डायग्नोस्टिक इतिहास साफ़ हो गया।';
 
@@ -6707,6 +7083,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get diagnosticsSyncFailed => 'विफल';
+
+  @override
+  String get diagnosticsSyncSkipped => 'छोड़ा गया';
 
   @override
   String diagnosticsSyncEventTitle(String operation, String outcome) {
@@ -6739,11 +7118,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'जब तक आप स्वयं बैकअप एक्सपोर्ट नहीं करते, वर्कआउट, पोषण, शारीरिक माप और प्रोफ़ाइल रिकॉर्ड इसी डिवाइस के ऐप डेटाबेस में रहते हैं।';
 
   @override
-  String get diagnosticsDeletionTitle => 'डायग्नोस्टिक और ऐप डेटा हटाएँ';
+  String get diagnosticsDeletionTitle => 'अपना डेटा कैसे हटाएँ';
 
   @override
   String get diagnosticsDeletionBody =>
-      'ऊपर का सिंक इतिहास साफ़ करें और इस इंस्टॉलेशन से साझा रिपोर्ट हटाने का अनुरोध करने के लिए अनाम डायग्नोस्टिक्स बंद करें। स्थानीय डेटाबेस और कैश हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें।';
+      'स्थानीय डेटा हटाने के लिए डिवाइस सेटिंग में Tonos स्टोरेज साफ़ करें या ऐप अनइंस्टॉल करें। इस इंस्टॉलेशन से भेजी गई रिपोर्ट हटाने का अनुरोध करने के लिए अनाम डायग्नोस्टिक्स बंद करें। इससे स्थानीय सिंक इतिहास नहीं मिटता; उसे ऊपर अलग से साफ़ करें।';
 
   @override
   String get diagnosticsSendTestReport => 'नियंत्रित डायग्नोस्टिक इवेंट भेजें';
@@ -6765,7 +7144,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get diagnosticsDeleteSharedBody =>
-      'उन रिपोर्टों को हटाने का अनुरोध करता है जिन्हें यह इंस्टॉलेशन भेजना सिद्ध कर सकता है। प्रदाता के पुनर्प्राप्ति इतिहास में हटाई गई पंक्तियाँ 30 दिनों तक रह सकती हैं।';
+      'केवल इस इंस्टॉलेशन द्वारा भेजी गई साबित हो सकने वाली रिपोर्ट हटाने का अनुरोध करता है। साझा करना चालू रहेगा; प्रदाता हटाई गई पंक्तियाँ 30 अतिरिक्त दिनों तक रख सकता है।';
+
+  @override
+  String get diagnosticsDeleteSharedConfirmBody =>
+      'यह केवल उन रिपोर्टों को हटाने का अनुरोध करता है जिनके लिए यह इंस्टॉलेशन भेजने का प्रमाण और रसीद रखता है। इससे भविष्य में साझा होना बंद नहीं होता, स्थानीय सिंक इतिहास नहीं मिटता और स्थानीय ऐप डेटाबेस नहीं हटता। भविष्य की रिपोर्ट रोकने के लिए साझा करना बंद करें; सिंक इतिहास अलग से साफ़ करें। रिपोर्ट 14 दिनों बाद समाप्त होती हैं और प्रदाता का पुनर्प्राप्ति इतिहास हटाई गई पंक्तियाँ 30 अतिरिक्त दिनों तक रख सकता है। पहले Tonos स्टोरेज साफ़ करने से हटाने का अनुरोध करने वाली रसीदें भी मिट जाती हैं।';
 
   @override
   String get diagnosticsSharedDeleted =>
@@ -6888,6 +7271,11 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String premadePlanQuickDescription(String duration, String planName) {
+    return '$duration का $planName वर्कआउट';
+  }
+
+  @override
   String get rulesPageSubtitleExpressive =>
       'वज़न, रेप और सेट की प्रगति के लिए पुन: उपयोग योग्य नियम बनाएँ।';
 
@@ -6927,4 +7315,50 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get rulesPlanOnlySubtitleExpressive => 'सिर्फ़ इसी प्लान के नियम।';
+
+  @override
+  String get rulesCopyIndexHelper =>
+      '−1 आखिरी उपलब्ध सेट की कॉपी करता है, जिसमें पहले के नियमों से जोड़े गए सेट भी शामिल हैं। 0 = पहला सेट, 1 = दूसरा।';
+
+  @override
+  String get rulesFactorHelper =>
+      'सेट किए गए वज़न बढ़ोतरी को गुणा करता है; 1 पूरी बढ़ोतरी लागू करता है।';
+
+  @override
+  String get rulesAmountHelper =>
+      'हर लक्षित सेट में जोड़े या घटाए जाने वाले रेप्स की संख्या।';
+
+  @override
+  String get rulesOperationSubtract => 'घटाएँ';
+
+  @override
+  String get rulesCopyFromLabel => 'इससे कॉपी करें';
+
+  @override
+  String get rulesCopyFromLastSet => 'आखिरी सेट';
+
+  @override
+  String get rulesCopyFromFirstSet => 'पहला सेट';
+
+  @override
+  String get rulesCopyFromSpecificSet => 'विशिष्ट सेट…';
+
+  @override
+  String get rulesCopyFromLastHelper =>
+      'आखिरी सेट का वज़न और रेप्स कॉपी करता है, जिसमें पहले के नियमों से जोड़े गए सेट भी शामिल हैं।';
+
+  @override
+  String get rulesCopyFromFirstHelper =>
+      'पहले सेट का मौजूदा वज़न और रेप्स कॉपी करता है।';
+
+  @override
+  String get rulesCopySetNumberLabel => 'सेट नंबर';
+
+  @override
+  String get rulesCopySpecificHelper =>
+      'उस सेट का वज़न और रेप्स कॉपी करता है। यदि वह मौजूद नहीं है, तो आखिरी उपलब्ध सेट कॉपी करता है।';
+
+  @override
+  String get rulesCopySetNumberInvalid =>
+      '1 या उससे बड़ा पूर्णांक सेट नंबर दर्ज करें।';
 }

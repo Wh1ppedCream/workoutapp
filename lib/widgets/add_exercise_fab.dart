@@ -6,7 +6,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../models/models.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 
 /// Callback when a weight exercise definition is picked.
@@ -19,6 +21,7 @@ class AddExerciseFab extends StatelessWidget {
   final VoidCallback? onCatalogTutorialSkipped;
   final VoidCallback? onCatalogClosed;
   final bool expressiveWorkoutPresentation;
+  final String? semanticLabel;
 
   const AddExerciseFab({
     super.key,
@@ -28,12 +31,14 @@ class AddExerciseFab extends StatelessWidget {
     this.onCatalogTutorialSkipped,
     this.onCatalogClosed,
     this.expressiveWorkoutPresentation = false,
+    this.semanticLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     final actionColors = context.semanticColors;
     final strings = AppLocalizations.of(context);
+    final label = semanticLabel ?? strings.commonAdd;
     final expressiveTokens = expressiveWorkoutPresentation
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()
         : null;
@@ -45,7 +50,7 @@ class AddExerciseFab extends StatelessWidget {
     );
 
     Widget fab = FloatingActionButton(
-      tooltip: strings.commonAdd,
+      tooltip: label,
       backgroundColor:
           expressiveTokens?.actionSecondary ?? actionColors.primaryAction,
       foregroundColor:
@@ -69,7 +74,7 @@ class AddExerciseFab extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: strings.commonAdd,
+      label: label,
       onTap: () => _openExerciseCatalog(context),
       child: ExcludeSemantics(child: fab),
     );
@@ -80,14 +85,18 @@ class AddExerciseFab extends StatelessWidget {
     // cardio and stretch cards are fixed, updated, and ready for users again.
     await Navigator.of(ctx).push(
       MaterialPageRoute(
-        builder: (_) => ExerciseCatalogPage(
-          showPlanBuilderGuide: onCatalogSelectionChanged != null,
-          onPlanBuilderSelectionChanged: onCatalogSelectionChanged,
-          onPlanBuilderExerciseAdded: onCatalogExerciseAdded,
-          onPlanBuilderGuideSkipped: onCatalogTutorialSkipped,
-          onExercisePicked: (def) async {
-            await onWeightPicked?.call(def);
-          },
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.catalog,
+          child: ExerciseCatalogPage(
+            expressiveCatalogPresentation: ctx.usesExpressivePresentation,
+            showPlanBuilderGuide: onCatalogSelectionChanged != null,
+            onPlanBuilderSelectionChanged: onCatalogSelectionChanged,
+            onPlanBuilderExerciseAdded: onCatalogExerciseAdded,
+            onPlanBuilderGuideSkipped: onCatalogTutorialSkipped,
+            onExercisePicked: (def) async {
+              await onWeightPicked?.call(def);
+            },
+          ),
         ),
       ),
     );

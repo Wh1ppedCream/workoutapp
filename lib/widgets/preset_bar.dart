@@ -10,11 +10,14 @@ import '../providers/preset_session.dart';
 import '../screens/exercise/preset_detail_screen.dart';
 import 'body_heatmap.dart';
 import 'generic_bar.dart';
+import '../theme/expressive_planning_tokens.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../theme/widgets/workout_thumbnail_frame.dart';
+
+const _expressivePlanMenuDismissDuration = Duration(milliseconds: 300);
 
 /// A colored bar that *knows* how to open, rename, & delete its own preset.
 class PresetBar extends StatelessWidget {
@@ -123,6 +126,7 @@ class PresetBar extends StatelessWidget {
       neutralContainer,
     );
     final menuFill = theme.colorScheme.surfaceContainerHigh;
+    final planning = AppExpressivePlanningTokens.maybeOf(context)!;
     final textColor = theme.colorScheme.onSurface;
     final scaleFactor = scale;
     final radius = index.isEven
@@ -215,11 +219,33 @@ class PresetBar extends StatelessWidget {
                     pressedOffset: TonosExpressiveMotionTiers.compactOffset,
                     pressedRotation: TonosExpressiveMotionTiers.compactRotation,
                     child: PopupMenuButton<String>(
+                      key: ValueKey<String>(
+                        'expressive-plan-actions-$presetId',
+                      ),
                       padding: EdgeInsets.zero,
+                      position: PopupMenuPosition.under,
+                      offset: const Offset(0, 6),
+                      constraints: const BoxConstraints(
+                        minWidth: 224,
+                        maxWidth: 296,
+                      ),
+                      menuPadding: const EdgeInsets.symmetric(vertical: 6),
+                      popUpAnimationStyle: const AnimationStyle(
+                        duration: _expressivePlanMenuDismissDuration,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      elevation: 6,
+                      shadowColor: theme.colorScheme.shadow.withValues(
+                        alpha: 0.24,
+                      ),
+                      surfaceTintColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: ExpressiveTrainShapes.menu,
+                        side: BorderSide(
+                          color: planning.outline.withValues(alpha: 0.56),
+                        ),
                       ),
-                      color: menuFill,
+                      color: planning.configurationSurface,
                       iconColor: theme.colorScheme.onSurface,
                       icon: Container(
                         key: ValueKey<String>(
@@ -239,25 +265,13 @@ class PresetBar extends StatelessWidget {
                         ),
                       ),
                       onSelected: (action) => _handleMenu(context, action),
-                      itemBuilder: (_) => [
-                        if (isActivePlan != null)
-                          PopupMenuItem(
-                            value: isActivePlan! ? 'archive' : 'activate',
-                            child: Text(
-                              isActivePlan!
-                                  ? strings.planArchive
-                                  : strings.planActivate,
-                            ),
+                      itemBuilder: (menuContext) =>
+                          _buildExpressivePlanMenuItems(
+                            context: menuContext,
+                            strings: strings,
+                            isActivePlan: isActivePlan,
+                            canChangeActiveState: onSetActivePlan != null,
                           ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text(strings.commonDelete),
-                        ),
-                        PopupMenuItem(
-                          value: 'rename',
-                          child: Text(strings.commonRename),
-                        ),
-                      ],
                     ),
                   ),
                 ],
@@ -309,24 +323,38 @@ class PresetBar extends StatelessWidget {
       );
     } else if (action == 'delete') {
       final repo = context.read<AppRepository>();
+      final expressive =
+          useExpressiveTrainPresentation && context.usesExpressivePresentation;
+      final parentRoute = ModalRoute.of(context);
+      final planName = label.trim().isNotEmpty
+          ? _planDisplayText(label)
+          : strings.planDefaultName(index + 1);
+      if (expressive) {
+        // PopupMenuButton reports its selection as the reverse transition
+        // begins. Let its route finish before opening another overlay.
+        await Future<void>.delayed(_expressivePlanMenuDismissDuration);
+        if (!context.mounted || parentRoute?.isCurrent == false) return;
+      }
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (dCtx) => TonosDialogFrame(
-          child: AlertDialog(
-            title: Text(strings.planDeleteTitle),
-            content: Text(strings.planDeleteConfirmation),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dCtx, false),
-                child: Text(strings.commonCancel),
+        builder: (dCtx) => expressive
+            ? _ExpressivePlanDeleteDialog(planName: planName, strings: strings)
+            : TonosDialogFrame(
+                child: AlertDialog(
+                  title: Text(strings.planDeleteTitle),
+                  content: Text(strings.planDeleteConfirmation),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dCtx, false),
+                      child: Text(strings.commonCancel),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(dCtx, true),
+                      child: Text(strings.commonDelete),
+                    ),
+                  ],
+                ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(dCtx, true),
-                child: Text(strings.commonDelete),
-              ),
-            ],
-          ),
-        ),
       );
       if (!context.mounted) return;
       if (confirm == true) {
@@ -348,6 +376,203 @@ class PresetBar extends StatelessWidget {
         onRefresh();
       }
     }
+  }
+}
+
+List<PopupMenuEntry<String>> _buildExpressivePlanMenuItems({
+  required BuildContext context,
+  required AppLocalizations strings,
+  required bool? isActivePlan,
+  required bool canChangeActiveState,
+}) {
+  final theme = Theme.of(context);
+  final colors = theme.colorScheme;
+  final planning = AppExpressivePlanningTokens.maybeOf(context)!;
+  final surface = planning.configurationSurface;
+  final normal = planning.configurationForeground;
+  final disabled = Color.alphaBlend(normal.withValues(alpha: 0.60), surface);
+
+  PopupMenuItem<String> item({
+    required String value,
+    required IconData icon,
+    required String label,
+    required Color foreground,
+    bool enabled = true,
+    bool destructive = false,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      enabled: enabled,
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Color.alphaBlend(
+                (destructive
+                        ? colors.error
+                        : enabled
+                        ? planning.actionPrimary
+                        : disabled)
+                    .withValues(alpha: enabled ? 0.12 : 0.06),
+                surface,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              size: 20,
+              color: destructive || !enabled
+                  ? foreground
+                  : planning.actionPrimary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  return [
+    if (isActivePlan != null)
+      item(
+        value: isActivePlan ? 'archive' : 'activate',
+        icon: isActivePlan ? Icons.archive_outlined : Icons.unarchive_outlined,
+        label: isActivePlan ? strings.planArchive : strings.planActivate,
+        foreground: canChangeActiveState ? normal : disabled,
+        enabled: canChangeActiveState,
+      ),
+    item(
+      value: 'rename',
+      icon: Icons.drive_file_rename_outline,
+      label: strings.commonRename,
+      foreground: normal,
+    ),
+    PopupMenuDivider(
+      height: 12,
+      indent: 14,
+      endIndent: 14,
+      color: planning.outline.withValues(alpha: 0.32),
+    ),
+    item(
+      value: 'delete',
+      icon: Icons.delete_outline,
+      label: strings.commonDelete,
+      foreground: colors.error,
+      destructive: true,
+    ),
+  ];
+}
+
+class _ExpressivePlanDeleteDialog extends StatelessWidget {
+  const _ExpressivePlanDeleteDialog({
+    required this.planName,
+    required this.strings,
+  });
+
+  final String planName;
+  final AppLocalizations strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final planning = AppExpressivePlanningTokens.maybeOf(context)!;
+    final surface = planning.configurationSurface;
+    final foreground = planning.configurationForeground;
+    final outline = planning.outline.withValues(alpha: 0.56);
+    final actionShape = RoundedRectangleBorder(borderRadius: planning.rowShape);
+
+    return AlertDialog(
+      scrollable: true,
+      backgroundColor: surface,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      constraints: const BoxConstraints(maxWidth: 420),
+      elevation: 6,
+      shadowColor: colors.shadow.withValues(alpha: 0.24),
+      shape: RoundedRectangleBorder(
+        borderRadius: planning.focalShape,
+        side: BorderSide(color: outline),
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      actionsOverflowButtonSpacing: 8,
+      titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+        color: foreground,
+        fontSize: 20,
+        height: 1.25,
+        fontWeight: FontWeight.w800,
+      ),
+      contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+        color: foreground.withValues(alpha: 0.90),
+        height: 1.45,
+      ),
+      title: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Color.alphaBlend(
+                colors.error.withValues(alpha: 0.12),
+                surface,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.delete_outline, color: colors.error, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(strings.presetBarDeleteTitle(planName))),
+        ],
+      ),
+      content: Text(strings.presetBarDeleteBody),
+      actions: [
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: foreground,
+            backgroundColor: Color.alphaBlend(
+              planning.pageCanvas.withValues(alpha: 0.60),
+              surface,
+            ),
+            side: BorderSide(color: outline),
+            minimumSize: const Size(112, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            shape: actionShape,
+          ),
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(strings.commonCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: colors.error,
+            foregroundColor: colors.onError,
+            minimumSize: const Size(112, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            shape: actionShape,
+          ),
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(strings.commonDelete),
+        ),
+      ],
+    );
   }
 }
 

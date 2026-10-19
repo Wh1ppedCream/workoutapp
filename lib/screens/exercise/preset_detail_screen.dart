@@ -30,6 +30,7 @@ import '../../theme/tokens/app_surface_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_action_depth.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_action.dart';
 import '../../theme/widgets/tonos_expressive_motion.dart';
 import '../../theme/widgets/tonos_surface.dart';
 import 'session_screen.dart';
@@ -480,8 +481,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     return TonosSurface(
       variant: TonosSurfaceVariant.panelRaised,
       color: planning.planFocalSurface,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(5),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(3),
       borderRadius: planning.supportShape,
       outlined: true,
       // Keep this constructor tear-off outside the route-style inventory matcher.
@@ -534,6 +535,86 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     return Theme.new(
       data: theme.copyWith(colorScheme: colorScheme, extensions: extensions),
       child: child,
+    );
+  }
+
+  Widget _buildDeletePresetDialog(
+    BuildContext context,
+    AppLocalizations strings,
+    String presetName,
+    AppExpressivePlanningTokens? planning,
+  ) {
+    if (planning == null) {
+      return TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.planDeleteTitle),
+          content: Text(strings.planDeleteBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(strings.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(strings.commonDelete),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final foreground = planning.configurationForeground;
+    final theme = Theme.of(context);
+    return TonosDialogFrame(
+      child: AlertDialog(
+        scrollable: true,
+        backgroundColor: planning.configurationSurface,
+        shape: RoundedRectangleBorder(borderRadius: planning.focalShape),
+        titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        titleTextStyle: theme.textTheme.titleLarge?.copyWith(
+          color: foreground,
+          fontWeight: FontWeight.w800,
+        ),
+        contentTextStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: foreground,
+        ),
+        title: Text(strings.planDeleteTitle),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(strings.planDeleteBody),
+            if (presetName.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                presetName,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: foreground,
+              side: BorderSide(color: planning.outline),
+            ),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(strings.commonCancel),
+          ),
+          TonosAction(
+            label: strings.commonDelete,
+            variant: TonosActionVariant.destructive,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
     );
   }
 
@@ -653,7 +734,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     icon: Icon(
                       Icons.edit,
                       color: _isEditing
-                          ? semantic.editingActive
+                          ? planning?.actionPrimary ?? semantic.editingActive
                           : semantic.editingInactive,
                     ),
                     onPressed: () => setState(() => _isEditing = !_isEditing),
@@ -662,27 +743,24 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                 // Overflow menu replacing delete icon
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
+                  color: planning?.planSupportSurface,
+                  surfaceTintColor: Colors.transparent,
+                  shape: planning == null
+                      ? null
+                      : RoundedRectangleBorder(
+                          borderRadius: planning.supportShape,
+                        ),
                   onSelected: (action) async {
                     if (action == 'delete') {
                       final repository = context.read<AppRepository>();
                       final navigator = Navigator.of(context);
                       final confirm = await showDialog<bool>(
                         context: context,
-                        builder: (ctx) => TonosDialogFrame(
-                          child: AlertDialog(
-                            title: Text(strings.planDeleteTitle),
-                            content: Text(strings.planDeleteBody),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, false),
-                                child: Text(strings.commonCancel),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: Text(strings.commonDelete),
-                              ),
-                            ],
-                          ),
+                        builder: (ctx) => _buildDeletePresetDialog(
+                          ctx,
+                          strings,
+                          preset.presetName,
+                          planning,
                         ),
                       );
                       if (confirm == true) {
@@ -723,14 +801,50 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     }
                   },
                   itemBuilder: (_) {
+                    Widget menuContent(
+                      IconData icon,
+                      String label, {
+                      bool destructive = false,
+                      bool disabled = false,
+                    }) {
+                      if (planning == null) return Text(label);
+                      final color = disabled
+                          ? Theme.of(context).disabledColor
+                          : destructive
+                          ? Theme.of(context).colorScheme.error
+                          : planning.configurationForeground;
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, size: 20, color: color),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: color),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+
                     return [
                       PopupMenuItem(
                         value: 'delete',
-                        child: Text(strings.planDeletePreset),
+                        child: menuContent(
+                          Icons.delete_outline,
+                          strings.planDeletePreset,
+                          destructive: true,
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'toggle_auto',
-                        child: Text(
+                        child: menuContent(
+                          preset.isAutomatic
+                              ? Icons.auto_mode_outlined
+                              : Icons.auto_awesome_outlined,
                           preset.isAutomatic
                               ? strings.planDisableAutomatic
                               : strings.planMakeAutomatic,
@@ -739,13 +853,21 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       PopupMenuItem(
                         value: 'settings',
                         enabled: preset.isAutomatic,
-                        child: Text(strings.planAutomaticSettings),
+                        child: menuContent(
+                          Icons.tune,
+                          strings.planAutomaticSettings,
+                          disabled: !preset.isAutomatic,
+                        ),
                       ),
 
                       PopupMenuItem(
                         value: 'flow',
                         enabled: preset.isAutomatic,
-                        child: Text(strings.planProgression),
+                        child: menuContent(
+                          Icons.trending_up,
+                          strings.planProgression,
+                          disabled: !preset.isAutomatic,
+                        ),
                       ),
                     ];
                   },
@@ -757,7 +879,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                 ? Center(child: Text(strings.planNoExercises))
                 : _isEditing
                 ? ReorderableListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: planning == null
+                        ? const EdgeInsets.all(16)
+                        : const EdgeInsets.fromLTRB(16, 16, 16, 112),
                     onReorderStart: (_) {
                       setState(() => _collapseWeightCardsForReorder = true);
                     },
@@ -786,6 +910,10 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                 readOnlyMode: false,
                                 expressiveWorkoutPresentation:
                                     context.usesExpressivePresentation,
+                                expressivePresetDetail: planning != null,
+                                createChangeSetLabel: planning == null
+                                    ? null
+                                    : strings.presetCreateChangeSet,
                                 forceCollapsed: _collapseWeightCardsForReorder,
                                 initialCompletedParents:
                                     preset.exercises[i] is WeightExercise
@@ -867,6 +995,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           repository: context.read<AppRepository>(),
                           exercises: preset.exercises,
                           cardTypes: preset.cardTypes,
+                          compactExpressive: planning != null,
                           definitionIds: List<int?>.generate(
                             preset.exercises.length,
                             preset.definitionIdForExercise,
@@ -880,14 +1009,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                   context,
                                   planning,
                                   Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.all(5),
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    padding: const EdgeInsets.all(3),
                                     decoration: BoxDecoration(
                                       color: planning.planFocalSurface,
                                       borderRadius: planning.focalShape,
-                                      border: Border.all(
-                                        color: planning.outline,
-                                      ),
                                     ),
                                     child: summary,
                                   ),
@@ -905,6 +1031,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         readOnlyMode: true,
                         expressiveWorkoutPresentation:
                             context.usesExpressivePresentation,
+                        expressivePresetDetail: planning != null,
                         initialCompletedParents:
                             preset.exercises[exerciseIndex] is WeightExercise
                             ? (preset.exercises[exerciseIndex]
@@ -949,6 +1076,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     child: AddExerciseFab(
                       expressiveWorkoutPresentation:
                           context.usesExpressivePresentation,
+                      semanticLabel: planning == null
+                          ? null
+                          : strings.planAddExercise,
                       onCatalogSelectionChanged: _showsOnboardingPlanGuide
                           ? (_) {}
                           : null,

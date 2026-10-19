@@ -285,6 +285,261 @@ void main() {
       154,
     );
   });
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive Measurements title and concise empty cards (${brightness.name})',
+      (tester) async {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final strings = await AppLocalizations.delegate.load(
+          const Locale('en'),
+        );
+        await tester.binding.setSurfaceSize(const Size(380, 820));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: _MeasurementRepository(empty: true),
+            child: MaterialApp(
+              theme: theme,
+              locale: const Locale('en'),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const AppExpressiveDestinationTheme(
+                family: AppExpressiveDestinationFamily.profile,
+                child: MeasuredItemsPage(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(strings.progressMeasurements), findsOneWidget);
+        expect(find.text(strings.healthTrackedMetrics), findsOneWidget);
+        expect(
+          find.text(strings.healthTrendNeedEntries, skipOffstage: false),
+          findsNothing,
+        );
+        expect(find.text(strings.healthNoEntries), findsNWidgets(2));
+        expect(find.text(strings.healthTapToLog), findsNWidgets(2));
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'Expressive Measurement Library fields and height conversion (${brightness.name})',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final units = UnitPreferenceProvider();
+        addTearDown(units.dispose);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await units.ready;
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final strings = await AppLocalizations.delegate.load(
+          const Locale('en'),
+        );
+
+        for (final (size, textScale) in [
+          (const Size(320, 860), 1.5),
+          (const Size(400, 860), 1.0),
+        ]) {
+          await tester.binding.setSurfaceSize(size);
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(
+                  value: _MeasurementRepository(includeHeight: true),
+                ),
+                ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                  value: units,
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                locale: const Locale('en'),
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(textScale)),
+                  child: child!,
+                ),
+                home: const AppExpressiveDestinationTheme(
+                  family: AppExpressiveDestinationFamily.profile,
+                  child: MeasuredItemsPage(),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text(strings.progressMeasurements), findsOneWidget);
+          expect(tester.takeException(), isNull);
+
+          await tester.tap(find.text(strings.healthMetric));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'create dialog open');
+          expect(find.byType(AlertDialog), findsOneWidget);
+          expect(
+            Theme.of(tester.element(find.byType(TextField).first))
+                .inputDecorationTheme
+                .filled,
+            isTrue,
+          );
+          expect(
+            Theme.of(tester.element(find.byType(TextField).first))
+                .inputDecorationTheme
+                .border,
+            isA<OutlineInputBorder>(),
+          );
+          final note = tester.widget<TextField>(find.byType(TextField).last);
+          expect(note.maxLines, 3);
+          await tester.tap(find.text(strings.commonCancel));
+          await tester.pumpAndSettle();
+
+          final weightAdd = find.byKey(AppTestKeys.measurementTrendAdd(1));
+          await tester.ensureVisible(weightAdd);
+          await tester.tap(weightAdd);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'log dialog open');
+          final measurementValue = tester.widget<TextField>(
+            find.byKey(AppTestKeys.measurementEntryValue),
+          );
+          expect(measurementValue.decoration?.filled, isTrue);
+          expect(
+            measurementValue.keyboardType,
+            const TextInputType.numberWithOptions(decimal: true),
+          );
+          expect(
+            tester
+                .widget<TextField>(find.byKey(AppTestKeys.measurementEntryUnit))
+                .controller
+                ?.text,
+            'lbs',
+          );
+          expect(
+            tester
+                .widget<TextField>(
+                  find.byKey(const ValueKey('measurement-entry-note')),
+                )
+                .maxLines,
+            3,
+          );
+          await tester.tap(find.text(strings.commonCancel));
+          await tester.pumpAndSettle();
+
+          final heightAdd = find.byKey(AppTestKeys.measurementTrendAdd(3));
+          await tester.ensureVisible(heightAdd);
+          await tester.tap(heightAdd);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'height dialog open');
+          final selector = tester.widget<SegmentedButton<bool>>(
+            find.byKey(const ValueKey('measurement-height-unit-selector')),
+          );
+          expect(selector.segments, hasLength(2));
+          expect(selector.selected, {false});
+          expect(
+            tester
+                .widget<TextField>(
+                  find.byKey(AppTestKeys.measurementEntryValue),
+                )
+                .controller
+                ?.text,
+            '',
+          );
+          await tester.enterText(
+            find.byKey(AppTestKeys.measurementEntryValue),
+            '180',
+          );
+
+          await tester.tap(
+            find.text(
+              '${strings.measurementFeet}/${strings.measurementInches}',
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'height unit changed');
+          expect(
+            tester
+                .widget<TextField>(
+                  find.byKey(const ValueKey('measurement-entry-height-feet')),
+                )
+                .controller
+                ?.text,
+            '5',
+          );
+          expect(
+            tester
+                .widget<TextField>(
+                  find.byKey(const ValueKey('measurement-entry-height-inches')),
+                )
+                .controller
+                ?.text,
+            '11',
+          );
+
+          final dateButton = find.byKey(
+            const ValueKey('measurement-entry-date'),
+          );
+          await tester.ensureVisible(dateButton);
+          await tester.tap(dateButton);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull, reason: 'date picker open');
+          final datePicker = find.byType(DatePickerDialog);
+          expect(datePicker, findsOneWidget);
+          expect(
+            Theme.of(tester.element(datePicker)).datePickerTheme.shape,
+            isNotNull,
+          );
+          Navigator.of(tester.element(datePicker)).pop();
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(strings.commonCancel));
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+
+    testWidgets(
+      'Measurement Library delta includes unit with neutral foreground (${brightness.name})',
+      (tester) async {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final strings = await AppLocalizations.delegate.load(
+          const Locale('en'),
+        );
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: _MeasurementRepository(multipleEntries: true),
+            child: MaterialApp(
+              theme: theme,
+              locale: const Locale('en'),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const AppExpressiveDestinationTheme(
+                family: AppExpressiveDestinationFamily.profile,
+                child: MeasuredItemsPage(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final delta = find.text(strings.healthChangeSinceLast('+30 lbs'));
+        expect(delta, findsOneWidget);
+        expect(
+          tester.widget<Text>(delta).style?.color,
+          AppExpressiveDestinationTokens.forFamily(
+            AppExpressiveDestinationFamily.profile,
+            brightness,
+          ).onSurfaceAccent,
+        );
+      },
+    );
+  }
 }
 
 Future<void> _settleHealthTrends(WidgetTester tester) async {
@@ -371,9 +626,15 @@ Future<void> _expectHealthCardPaint(
 }
 
 class _MeasurementRepository extends AppRepository {
-  _MeasurementRepository({this.empty = false});
+  _MeasurementRepository({
+    this.empty = false,
+    this.includeHeight = false,
+    this.multipleEntries = false,
+  });
 
   final bool empty;
+  final bool includeHeight;
+  final bool multipleEntries;
 
   @override
   Future<void> ensureDefaultMeasurementDefinitions() async {}
@@ -387,6 +648,12 @@ class _MeasurementRepository extends AppRepository {
         type: MeasurementType.BodyWeight,
       ),
       MeasurementDefinition(id: 2, name: 'Waist', type: MeasurementType.Waist),
+      if (includeHeight)
+        MeasurementDefinition(
+          id: 3,
+          name: 'Height',
+          type: MeasurementType.Height,
+        ),
     ];
   }
 
@@ -395,13 +662,42 @@ class _MeasurementRepository extends AppRepository {
     int defId,
   ) async {
     if (empty) return [];
+    final value = switch (defId) {
+      1 => 180.0,
+      2 => 32.0,
+      3 => 180.0,
+      _ => 1.0,
+    };
+    final unit = defId == 1
+        ? 'lbs'
+        : defId == 3
+        ? 'cm'
+        : 'in';
+    if (multipleEntries) {
+      return [
+        Measurement(
+          id: defId * 10,
+          defId: defId,
+          timestamp: DateTime(2026, 8, 1),
+          value: value - 30,
+          unit: unit,
+        ),
+        Measurement(
+          id: defId * 10 + 1,
+          defId: defId,
+          timestamp: DateTime(2026, 8, 13),
+          value: value,
+          unit: unit,
+        ),
+      ];
+    }
     return [
       Measurement(
         id: defId,
         defId: defId,
         timestamp: DateTime(2026, 8, 13),
-        value: defId == 1 ? 180 : 32,
-        unit: defId == 1 ? 'lbs' : 'in',
+        value: value,
+        unit: unit,
       ),
     ];
   }

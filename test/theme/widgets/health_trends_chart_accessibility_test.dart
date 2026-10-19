@@ -369,15 +369,16 @@ void main() {
           const ValueKey('measurement-trend-summary-change'),
         );
         final changeForeground = tester.widget<Text>(changeValue).style?.color;
-        final expectedIncrease = Theme.of(tester.element(changeValue))
-            .progressColors
-            .healthIncrease;
-        expect(changeForeground, expectedIncrease);
+        expect(changeForeground, destination.onSurfacePrimary);
         _expectReadable(changeForeground!, destination.surfacePrimary);
         final recordsValue = find.byKey(
           const ValueKey('measurement-trend-summary-records'),
         );
-        expect(tester.widget<Text>(recordsValue).data, '3');
+        expect(
+          tester.widget<Text>(recordsValue).data,
+          AppLocalizations.of(tester.element(recordsValue))
+              .healthRecordCount(3),
+        );
         expect(
           tester.widget<Text>(recordsValue).style?.color,
           destination.onSurfacePrimary,
@@ -394,7 +395,8 @@ void main() {
               .whereType<String>(),
           [
             AppLocalizations.of(tester.element(recordsValue)).healthRecords,
-            '3',
+            AppLocalizations.of(tester.element(recordsValue))
+                .healthRecordCount(3),
           ],
           reason: 'Expressive records count has no measurement unit detail.',
         );
@@ -431,18 +433,69 @@ void main() {
         expect(tester.getSize(chart).height, 225);
         final chartData = tester.widget<LineChart>(find.byType(LineChart)).data;
         expect(chartData.lineBarsData.single.isCurved, isFalse);
-        expect(chartData.minX, lessThan(0));
-        expect(chartData.maxX, greaterThan(2));
+        expect(chartData.minX, closeTo(-0.12, 0.0001));
+        expect(chartData.maxX, closeTo(2.12, 0.0001));
         expect(chartData.titlesData.bottomTitles.sideTitles.reservedSize, 34);
-        final yTick = find.byKey(
-          const ValueKey('measurement-trend-chart-y-tick-0'),
+        expect(chartData.titlesData.leftTitles.sideTitles.showTitles, isFalse);
+        expect(chartData.titlesData.leftTitles.sideTitles.reservedSize, 0);
+        expect(
+          find.byKey(const ValueKey('measurement-trend-chart-y-tick-0')),
+          findsNothing,
         );
-        final yTickText = tester.widget<Text>(yTick);
-        final yTickForeground =
-            yTickText.style?.color ??
-            Theme.of(tester.element(yTick)).colorScheme.onSurface;
-        expect(yTickForeground, destination.onSurfaceSecondary);
-        _expectReadable(yTickForeground, chartSurface);
+        expect(
+          find.byKey(const ValueKey('measurement-trend-chart-tick-0')),
+          findsOneWidget,
+          reason: 'Date labels remain below the expanded plot.',
+        );
+
+        final lineChartFinder = find.byType(LineChart);
+        final lineChartRect = tester.getRect(lineChartFinder);
+        final spots = chartData.lineBarsData.single.spots;
+        Offset chartPointPosition(int index) {
+          final spot = spots[index];
+          final plotHeight =
+              lineChartRect.height -
+              chartData.titlesData.bottomTitles.sideTitles.reservedSize;
+          return Offset(
+            lineChartRect.left +
+                (spot.x - chartData.minX) /
+                    (chartData.maxX - chartData.minX) *
+                    lineChartRect.width,
+            lineChartRect.top +
+                (chartData.maxY - spot.y) /
+                    (chartData.maxY - chartData.minY) *
+                    plotHeight,
+          );
+        }
+
+        await tester.tapAt(chartPointPosition(0));
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<LineChart>(lineChartFinder)
+              .data
+              .showingTooltipIndicators
+              .single
+              .showingSpots
+              .single
+              .spotIndex,
+          0,
+          reason: 'The leftmost point still selects its tooltip.',
+        );
+        await tester.tapAt(chartPointPosition(spots.length - 1));
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<LineChart>(lineChartFinder)
+              .data
+              .showingTooltipIndicators
+              .single
+              .showingSpots
+              .single
+              .spotIndex,
+          spots.length - 1,
+          reason: 'The rightmost point still selects its tooltip.',
+        );
 
         final historyKey = const ValueKey('measurement-trend-entry-100');
         final historyCard = tester.widget<Card>(find.byKey(historyKey));
@@ -490,13 +543,11 @@ void main() {
         final dialog = tester.widget<AlertDialog>(
           find.byKey(const ValueKey('measurement-trend-entry-dialog')),
         );
-        final expectedDialogSurface = brightness == Brightness.light
-            ? Color.lerp(
-                destination.pageCanvas,
-                destination.surfaceTertiary,
-                0.30,
-              )!
-            : destination.surfaceTertiary;
+        final expectedDialogSurface = Color.lerp(
+          destination.pageCanvas,
+          destination.surfaceSelected,
+          brightness == Brightness.light ? 0.54 : 0.56,
+        )!;
         expect(dialog.backgroundColor, expectedDialogSurface);
         expect(dialog.titleTextStyle?.color, destination.supportingForeground);
         expect(
@@ -667,7 +718,7 @@ void main() {
   });
 
   testWidgets(
-    'Expressive health detail route keeps destination and health card theme',
+    'Expressive health detail keeps its caller and uses coherent detail surfaces',
     (tester) async {
       final units = await _readyUnits();
       addTearDown(units.dispose);
@@ -702,6 +753,10 @@ void main() {
         AppExpressiveDestinationFamily.profile,
       );
       expect(Theme.of(detailContext).progressColors.healthCard, healthCard);
+      final destination = AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.profile,
+        Brightness.light,
+      );
       final chartSurface = tester.widget<Container>(
         find
             .descendant(
@@ -712,31 +767,38 @@ void main() {
             )
             .first,
       );
-      expect((chartSurface.decoration! as BoxDecoration).color, healthCard);
+      expect(
+        (chartSurface.decoration! as BoxDecoration).color,
+        Color.lerp(destination.surfaceSecondary, destination.pageCanvas, 0.28),
+      );
 
       final summaryValue = find.byKey(
         const ValueKey('measurement-trend-summary-latest'),
       );
-      final summaryContainer = tester.widget<Container>(
-        find.ancestor(of: summaryValue, matching: find.byType(Container)).first,
+      final summaryMaterial = tester.widget<Material>(
+        find.ancestor(of: summaryValue, matching: find.byType(Material)).first,
       );
-      expect((summaryContainer.decoration! as BoxDecoration).color, healthCard);
+      expect(summaryMaterial.color, destination.surfacePrimary);
       expect(
         tester.widget<Text>(summaryValue).style?.color,
-        Theme.of(detailContext).colorScheme.onSurface,
+        destination.onSurfacePrimary,
       );
 
+      final historySurface = Color.alphaBlend(
+        destination.surfaceAccent.withValues(alpha: 0.42),
+        destination.pageCanvas,
+      );
       final historyCard = tester.widget<Card>(
         find.byKey(const ValueKey('measurement-trend-entry-100')),
       );
-      expect(historyCard.color, isNull);
+      expect(historyCard.color, historySurface);
       final historyTile = tester.widget<ListTile>(
         find.descendant(
           of: find.byKey(const ValueKey('measurement-trend-entry-100')),
           matching: find.byType(ListTile),
         ),
       );
-      expect(historyTile.tileColor, healthCard);
+      expect(historyTile.tileColor, historySurface);
 
       await tester.tap(
         find.byKey(const ValueKey('measurement-trend-detail-add')),
@@ -751,6 +813,85 @@ void main() {
         isNull,
       );
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Expressive Health entry action popup keeps Tonos shape and actions',
+    (tester) async {
+      final units = await _readyUnits();
+      addTearDown(units.dispose);
+      await tester.binding.setSurfaceSize(const Size(390, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final brightness in Brightness.values) {
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.measurement_trend_detail_v1': true,
+        });
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        final repository = _MeasurementRepository(
+          entryCount: 1,
+          measurementType: MeasurementType.BodyWeight,
+        );
+        await tester.pumpWidget(
+          _healthApp(
+            units,
+            entryCount: 1,
+            measurementType: MeasurementType.BodyWeight,
+            repository: repository,
+            theme: theme,
+            destinationFamily: AppExpressiveDestinationFamily.progress,
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(AppTestKeys.measurementTrend(1)));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(MeasurementTrendDetailPage)),
+        );
+        final actionFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuButton &&
+              widget.tooltip == strings.healthEntryActions,
+        );
+        expect(actionFinder, findsOneWidget);
+        final actionMenu = tester.widget<PopupMenuButton>(actionFinder);
+        expect(actionMenu.shape, isA<RoundedRectangleBorder>());
+        expect(
+          (actionMenu.shape! as RoundedRectangleBorder).borderRadius,
+          ExpressiveTrainShapes.menu,
+          reason: '$brightness menu keeps its Expressive shape',
+        );
+
+        await tester.tap(actionFinder);
+        await tester.pumpAndSettle();
+        expect(find.text(strings.commonEdit), findsOneWidget);
+        expect(find.text(strings.commonDelete), findsOneWidget);
+        await tester.tap(find.text(strings.commonEdit));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('measurement-trend-entry-dialog')),
+          findsOneWidget,
+        );
+        await tester.tap(find.text(strings.commonCancel));
+        await tester.pumpAndSettle();
+
+        await tester.tap(actionFinder);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(strings.commonDelete));
+        await tester.pumpAndSettle();
+        expect(find.text(strings.healthDeleteEntryTitle), findsOneWidget);
+        await tester.tap(find.text(strings.commonCancel));
+        await tester.pumpAndSettle();
+        expect(repository.deletedMeasurementIds, isEmpty);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
     },
   );
 
@@ -917,6 +1058,99 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'Expressive detail charts share one style across destination families',
+    (tester) async {
+      final units = await _readyUnits();
+      addTearDown(units.dispose);
+      await tester.binding.setSurfaceSize(const Size(390, 1100));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      const families = [
+        AppExpressiveDestinationFamily.dashboard,
+        AppExpressiveDestinationFamily.nutrition,
+        AppExpressiveDestinationFamily.profile,
+        AppExpressiveDestinationFamily.progress,
+      ];
+
+      for (final brightness in Brightness.values) {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        for (final family in families) {
+          SharedPreferences.setMockInitialValues({
+            'guided_tutorial_completed.measurement_trend_detail_v1': true,
+          });
+          final destination = AppExpressiveDestinationTokens.forFamily(
+            family,
+            brightness,
+          );
+          await tester.pumpWidget(
+            _healthApp(
+              units,
+              entryCount: 3,
+              theme: theme,
+              fullPage: true,
+              destinationFamily: family,
+              healthCardOverride: destination.surfaceAccent,
+            ),
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(AppTestKeys.measurementTrend(1)));
+          await tester.pumpAndSettle();
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.pumpAndSettle();
+
+          final chart = find.byKey(
+            const ValueKey('measurement-trend-chart-semantics'),
+          );
+          final chartContainer = tester.widget<Container>(
+            find.descendant(of: chart, matching: find.byType(Container)).first,
+          );
+          final expectedSurface = brightness == Brightness.light
+              ? Color.lerp(
+                  destination.surfaceSecondary,
+                  destination.pageCanvas,
+                  0.28,
+                )
+              : destination.surfaceSecondary;
+          expect(
+            (chartContainer.decoration! as BoxDecoration).color,
+            expectedSurface,
+            reason: '$family chart surface in $brightness mode',
+          );
+          expect(
+            chartContainer.padding,
+            const EdgeInsets.fromLTRB(18, 13, 18, 16),
+            reason: '$family chart padding in $brightness mode',
+          );
+          expect(tester.getSize(chart).height, 225);
+
+          final chartData = tester
+              .widget<LineChart>(find.byType(LineChart))
+              .data;
+          expect(chartData.lineBarsData.single.isCurved, isFalse);
+          expect(chartData.minX, closeTo(-0.12, 0.0001));
+          expect(chartData.maxX, closeTo(2.12, 0.0001));
+          expect(
+            chartData.titlesData.leftTitles.sideTitles.showTitles,
+            isFalse,
+          );
+          expect(chartData.titlesData.leftTitles.sideTitles.reservedSize, 0);
+          expect(
+            find.byKey(const ValueKey('measurement-trend-chart-y-tick-0')),
+            findsNothing,
+          );
+          expect(
+            find.byKey(const ValueKey('measurement-trend-chart-tick-0')),
+            findsOneWidget,
+          );
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+        }
+      }
+    },
+  );
 
   testWidgets('detail chart supports semantic point navigation', (
     tester,
@@ -1145,11 +1379,14 @@ void main() {
       final recordsValue = find.byKey(
         const ValueKey('measurement-trend-summary-records'),
       );
-      expect(tester.widget<Text>(recordsValue).data, '0');
       final summaryStrings = AppLocalizations.of(
         tester.element(
           find.byKey(const ValueKey('measurement-trend-summary-latest')),
         ),
+      );
+      expect(
+        tester.widget<Text>(recordsValue).data,
+        summaryStrings.healthRecordCount(0),
       );
       final recordsStat = find
           .ancestor(of: recordsValue, matching: find.byType(Column))
@@ -1161,8 +1398,8 @@ void main() {
             )
             .map((text) => text.data)
             .whereType<String>(),
-        [summaryStrings.healthRecords, '0'],
-        reason: 'Expressive records count has no measurement unit detail.',
+        [summaryStrings.healthRecords, summaryStrings.healthRecordCount(0)],
+        reason: 'Expressive records count is localized and has no unit detail.',
       );
       expect(find.text(summaryStrings.healthChange), findsOneWidget);
       expect(find.text(summaryStrings.healthNeedTwoEntries), findsOneWidget);
@@ -1727,6 +1964,7 @@ class _MeasurementRepository extends AppRepository {
   final List<Measurement>? measurements;
   final MeasurementType measurementType;
   Measurement? updatedMeasurement;
+  final List<int> deletedMeasurementIds = <int>[];
 
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
@@ -1798,6 +2036,11 @@ class _MeasurementRepository extends AppRepository {
       note: note,
       context: context,
     );
+  }
+
+  @override
+  Future<void> deleteMeasurement(int measurementId) async {
+    deletedMeasurementIds.add(measurementId);
   }
 }
 

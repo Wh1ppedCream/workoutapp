@@ -11,6 +11,7 @@ import '../providers/nutrition_profile.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/tokens/app_progress_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_dialog.dart';
@@ -45,12 +46,15 @@ class _DashboardPageState extends State<DashboardPage> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (_) => SessionDetailScreen(
-              WorkoutSession(
-                id: reportSession.id,
-                date: reportSession.date,
-                calendarDayKey: reportSession.calendarDayKey,
-                duration: reportSession.durationSeconds,
+            builder: (_) => AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.logbook,
+              child: SessionDetailScreen(
+                WorkoutSession(
+                  id: reportSession.id,
+                  date: reportSession.date,
+                  calendarDayKey: reportSession.calendarDayKey,
+                  duration: reportSession.durationSeconds,
+                ),
               ),
             ),
           ),
@@ -60,8 +64,53 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _openFullHistory() {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const FullHistoryScreen()))
+        .push(
+          MaterialPageRoute(
+            builder: (_) => AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.logbook,
+              child: const FullHistoryScreen(),
+            ),
+          ),
+        )
         .then((_) => _refreshHistoryWidgets());
+  }
+
+  Widget _withExpressiveDestinationTheme(
+    AppExpressiveDestinationFamily family,
+    Widget child,
+  ) {
+    if (!context.usesExpressivePresentation) return child;
+    return AppExpressiveDestinationTheme(family: family, child: child);
+  }
+
+  Widget _buildHealthTrendsTile() {
+    final healthTrends = HealthTrendsSection(
+      refreshToken: _historyRefreshToken,
+    );
+    if (!context.usesExpressivePresentation) return healthTrends;
+
+    return _withExpressiveDestinationTheme(
+      AppExpressiveDestinationFamily.progress,
+      Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final destination = theme
+              .extension<AppExpressiveDestinationTokens>()!;
+          return Theme(
+            data: theme.copyWith(
+              extensions: [
+                for (final extension in theme.extensions.values)
+                  if (extension is! AppProgressColors) extension,
+                context.progressColors.copyWith(
+                  healthCard: destination.surfaceAccent,
+                ),
+              ],
+            ),
+            child: healthTrends,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -226,7 +275,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   Text(
                     details.description,
                     maxLines: showFullDescription ? null : 2,
-                    overflow: showFullDescription ? null : TextOverflow.ellipsis,
+                    overflow: showFullDescription
+                        ? null
+                        : TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -382,38 +433,57 @@ class _DashboardPageState extends State<DashboardPage> {
           onChanged: _refreshHistoryWidgets,
         );
       case 'workoutMetrics':
-        return WorkoutMetricChartCard(refreshToken: _historyRefreshToken);
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.progress,
+          WorkoutMetricChartCard(refreshToken: _historyRefreshToken),
+        );
       case 'exerciseProgress':
-        return ExerciseProgressSection(refreshToken: _historyRefreshToken);
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.progress,
+          ExerciseProgressSection(refreshToken: _historyRefreshToken),
+        );
       // TODO(nutrition): Add the remaining nutrition Dashboard widgets after
       // the nutrition tracking flows and calculations are fully rebuilt.
       case 'nutritionDash':
-        return Consumer<NutritionProfile>(
-          builder: (context, profile, _) {
-            return NutritionDash(
-              caloriesConsumed: (profile.totals?.kcal ?? 0).round(),
-              calorieGoal: (profile.activeGoal?.kcalTarget ?? 0).round(),
-              proteinConsumed: (profile.totals?.proteinG ?? 0).round(),
-              proteinTarget: (profile.activeGoal?.proteinG ?? 0).round(),
-              carbConsumed: (profile.totals?.carbsG ?? 0).round(),
-              carbTarget: (profile.activeGoal?.carbsG ?? 0).round(),
-              fatConsumed: (profile.totals?.fatG ?? 0).round(),
-              fatTarget: (profile.activeGoal?.fatG ?? 0).round(),
-              scale: 0.7,
-            );
-          },
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.nutrition,
+          Consumer<NutritionProfile>(
+            builder: (context, profile, _) {
+              return NutritionDash(
+                caloriesConsumed: (profile.totals?.kcal ?? 0).round(),
+                calorieGoal: (profile.activeGoal?.kcalTarget ?? 0).round(),
+                proteinConsumed: (profile.totals?.proteinG ?? 0).round(),
+                proteinTarget: (profile.activeGoal?.proteinG ?? 0).round(),
+                carbConsumed: (profile.totals?.carbsG ?? 0).round(),
+                carbTarget: (profile.activeGoal?.carbsG ?? 0).round(),
+                fatConsumed: (profile.totals?.fatG ?? 0).round(),
+                fatTarget: (profile.activeGoal?.fatG ?? 0).round(),
+                scale: context.usesExpressivePresentation ? 1 : 0.7,
+              );
+            },
+          ),
         );
       case 'dataRecords':
-        return const DataRecordsSection(padding: EdgeInsets.zero);
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.nutrition,
+          DataRecordsSection(
+            padding: context.usesExpressivePresentation
+                ? const EdgeInsets.symmetric(vertical: 8)
+                : EdgeInsets.zero,
+          ),
+        );
       case 'healthTrends':
-        return HealthTrendsSection(refreshToken: _historyRefreshToken);
+        return _buildHealthTrendsTile();
       case 'training':
         return WorkoutDashboard(onSessionComplete: _refreshHistoryWidgets);
       case 'historySummary':
-        return WorkoutHistoryCalendar(
-          refreshToken: _historyRefreshToken,
-          onSessionTap: _openHistorySession,
-          onOpenFullHistory: _openFullHistory,
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.logbook,
+          WorkoutHistoryCalendar(
+            refreshToken: _historyRefreshToken,
+            onSessionTap: _openHistorySession,
+            onOpenFullHistory: _openFullHistory,
+          ),
         );
       case 'recentWorkouts':
         return DashboardRecentWorkoutsCard(
@@ -447,16 +517,35 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildDashboardSection(String id) {
     final tile = _buildDashboardTile(id);
-    final section =
-        id == 'exerciseProgress' ||
-            id == 'workoutMetrics' ||
-            id == 'historySummary' ||
-            id == 'healthTrends'
-        ? tile
-        : Padding(
+    final Widget section;
+    if (id == 'exerciseProgress' ||
+        id == 'workoutMetrics' ||
+        id == 'historySummary' ||
+        id == 'healthTrends') {
+      section = tile;
+    } else if (id == 'weeklyFocus' && context.usesExpressivePresentation) {
+      // Match Train's 880px content width and 16px inner list inset.
+      section = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 880),
+          child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: tile,
-          );
+          ),
+        ),
+      );
+    } else if (id == 'nutritionDash' && context.usesExpressivePresentation) {
+      // NutritionPage gives this shared carousel the same outer spacing.
+      section = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: tile,
+      );
+    } else {
+      section = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: tile,
+      );
+    }
     return KeyedSubtree(
       key: ValueKey<String>('dashboard_section_$id'),
       child: section,

@@ -19,7 +19,6 @@ import 'package:env_test/utils/localized_body_part_name.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
 import 'package:env_test/widgets/exercise_detail_sheet.dart';
 import 'package:env_test/widgets/exercise_definition_info_tile.dart';
-import 'package:env_test/widgets/recommended_sets_editor_dialog.dart';
 import 'package:env_test/widgets/shared_entity_media_thumbnail.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -90,28 +89,34 @@ void main() {
         ['decoration'],
       ),
       'anatomy-filter-expressive-surfaces': (
-        6,
+        5,
         'structural_theme',
         'migrated',
-        ['decoration', 'geometry'],
+        ['color', 'decoration', 'geometry'],
       ),
       'anatomy-filter-expressive-search-recipe': (
         7,
         'structural_theme',
         'migrated',
-        ['text_style', 'geometry'],
+        ['text_style', 'geometry', 'color_transform'],
       ),
       'anatomy-filter-expressive-row-shape': (
-        3,
+        4,
+        'structural_theme',
+        'migrated',
+        ['geometry', 'color_transform'],
+      ),
+      'anatomy-filter-fallback-artwork': (
+        9,
+        'intentional_one_off',
+        'allowlisted',
+        ['color', 'color_transform', 'geometry'],
+      ),
+      'anatomy-filter-expressive-empty-search-state': (
+        2,
         'structural_theme',
         'migrated',
         ['geometry'],
-      ),
-      'anatomy-filter-fallback-artwork': (
-        7,
-        'intentional_one_off',
-        'allowlisted',
-        ['color', 'geometry'],
       ),
     };
 
@@ -219,7 +224,11 @@ void main() {
         final exerciseTile = tester.widget<ExerciseDefinitionInfoTile>(
           find.byType(ExerciseDefinitionInfoTile),
         );
-        expect(exerciseTile.expressiveCatalogPresentation, isTrue);
+        expect(exerciseTile.expressiveCatalogPresentation, isFalse);
+        expect(
+          exerciseTile.expressiveDestinationFamily,
+          AppExpressiveDestinationFamily.catalog,
+        );
 
         await tester.tap(find.text(muscle.name).first);
         await tester.pumpAndSettle();
@@ -326,9 +335,14 @@ void main() {
         );
         expect(tabBar.labelColor, tokens.onActionPrimary);
         expect(tabBar.unselectedLabelColor, tokens.onSurfaceAccent);
-        expect(
-          DefaultTabController.of(tester.element(find.byType(TabBar))).index,
-          1,
+        expect(tabBar.controller?.index, 1);
+        final colorScheme = Theme.of(filterContext).colorScheme;
+        final expectedRowSurface = Color.lerp(
+          brightness == Brightness.dark
+              ? tokens.surfaceAccent
+              : tokens.surfaceTertiary,
+          colorScheme.surface,
+          brightness == Brightness.dark ? 0.45 : 0.60,
         );
 
         final muscleRow = find
@@ -339,7 +353,7 @@ void main() {
             .first;
         expect(
           tester.widget<ListTile>(muscleRow).tileColor,
-          tokens.surfaceTertiary,
+          expectedRowSurface,
         );
         final muscleMedia = tester.widget<SharedEntityMediaThumbnail>(
           find.descendant(
@@ -352,18 +366,25 @@ void main() {
             ),
           ),
         );
-        expect(muscleMedia.size, 50);
-        expect(muscleMedia.padding, const EdgeInsets.all(4));
-        expect(muscleMedia.borderRadius, BorderRadius.circular(15));
-        expect(muscleMedia.backgroundColor, tokens.actionPrimary);
-        expect(muscleMedia.borderColor, tokens.outlineAccent);
+        expect(muscleMedia.size, 54);
+        expect(muscleMedia.padding, const EdgeInsets.all(3));
+        expect(muscleMedia.borderRadius, BorderRadius.circular(16));
+        expect(
+          muscleMedia.backgroundColor,
+          Color.lerp(tokens.surfaceAccent, colorScheme.surface, 0.78),
+        );
+        expect(
+          muscleMedia.borderColor,
+          tokens.outlineAccent.withValues(alpha: 0.30),
+        );
         expect(find.text(strings.anatomyBodyParts), findsOneWidget);
         expect(find.text(strings.anatomyMuscles), findsOneWidget);
 
         final search = find.byType(TextField);
+        expect(tester.widget<TextField>(search).decoration?.labelText, isNull);
         expect(
-          tester.widget<TextField>(search).decoration?.labelText,
-          strings.anatomySearchLabel,
+          tester.widget<TextField>(search).decoration?.hintText,
+          strings.mappingSearchMuscles,
         );
         await tester.enterText(search, 'pect');
         await tester.pumpAndSettle();
@@ -372,11 +393,12 @@ void main() {
 
         await tester.tap(find.text(strings.anatomyBodyParts));
         await tester.pumpAndSettle();
+        expect(tester.widget<TabBar>(find.byType(TabBar)).controller?.index, 0);
+        expect(tester.widget<TextField>(search).controller?.text, isEmpty);
         expect(
-          DefaultTabController.of(tester.element(find.byType(TabBar))).index,
-          0,
+          tester.widget<TextField>(search).decoration?.hintText,
+          strings.anatomySearchBodyParts,
         );
-        await tester.enterText(search, '');
         await tester.pumpAndSettle();
         expect(find.text('Chest'), findsOneWidget);
         expect(find.text('Legs'), findsOneWidget);
@@ -388,7 +410,7 @@ void main() {
             .first;
         expect(
           tester.widget<ListTile>(bodyPartRow).tileColor,
-          tokens.surfaceTertiary,
+          expectedRowSurface,
         );
         final bodyPartMedia = tester.widget<SharedEntityMediaThumbnail>(
           find.descendant(
@@ -402,17 +424,45 @@ void main() {
           ),
         );
         expect(bodyPartMedia.size, 54);
-        expect(bodyPartMedia.padding, EdgeInsets.zero);
+        expect(bodyPartMedia.padding, const EdgeInsets.all(2));
+        expect(bodyPartMedia.borderRadius, BorderRadius.circular(16));
         expect(
-          bodyPartMedia.borderRadius,
-          const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(6),
-            bottomRight: Radius.circular(20),
-            bottomLeft: Radius.circular(6),
-          ),
+          bodyPartMedia.backgroundColor,
+          Color.lerp(tokens.surfaceAccent, colorScheme.surface, 0.78),
+        );
+        expect(
+          bodyPartMedia.borderColor,
+          tokens.outlineAccent.withValues(alpha: 0.30),
         );
         expect(find.byType(SingleBodyPartHeatmap), findsWidgets);
+
+        await tester.enterText(search, 'no matching anatomy');
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.search_off_rounded), findsOneWidget);
+        expect(find.text(strings.anatomyNoBodyParts), findsOneWidget);
+        final clearSearch = find.widgetWithText(
+          OutlinedButton,
+          strings.catalogClearSearch,
+        );
+        expect(clearSearch, findsOneWidget);
+        await tester.tap(clearSearch);
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(search).controller?.text, isEmpty);
+        expect(find.text('Chest'), findsOneWidget);
+        expect(find.text('Legs'), findsOneWidget);
+
+        await tester.enterText(search, 'leg');
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(TabBarView), const Offset(-280, 0));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TabBar>(find.byType(TabBar)).controller?.index, 1);
+        expect(tester.widget<TextField>(search).controller?.text, isEmpty);
+        expect(
+          tester.widget<TextField>(search).decoration?.hintText,
+          strings.mappingSearchMuscles,
+        );
+        expect(find.text(pectorals.name), findsOneWidget);
+        expect(find.text(quadriceps.name), findsOneWidget);
         await tester.pump(const Duration(milliseconds: 600));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
@@ -469,11 +519,23 @@ void main() {
         find.byType(DefinitionsByBodyPartPage),
       );
       final strings = AppLocalizations.of(bodyContext);
+      expect(find.text(strings.anatomyDoneSevenDaysCompact), findsOneWidget);
+      expect(
+        find.text(strings.anatomyRecommendedWeeklyCompact),
+        findsOneWidget,
+      );
       expect(find.text(strings.anatomySetUnits('8.5')), findsOneWidget);
       expect(find.text(strings.anatomySetRange('6', '18')), findsOneWidget);
       expect(find.widgetWithText(ActionChip, muscle.name), findsOneWidget);
 
-      await tester.tap(find.byType(RecommendedSetsEditButton).first);
+      final recommendedStat = find.byWidgetPredicate(
+        (widget) =>
+            widget is Semantics &&
+            widget.properties.button == true &&
+            widget.properties.label == strings.recommendedSetsEdit,
+      );
+      expect(recommendedStat, findsOneWidget);
+      await tester.tap(recommendedStat);
       await tester.pumpAndSettle();
       expect(find.text(strings.recommendedSetsTitle), findsOneWidget);
       await tester.tap(find.text(strings.commonCancel));
@@ -557,9 +619,29 @@ void main() {
     final muscleStrings = AppLocalizations.of(
       tester.element(find.byType(DefinitionsByMusclePage)),
     );
+    expect(
+      find.text(muscleStrings.anatomyDoneSevenDaysCompact),
+      findsOneWidget,
+    );
+    expect(
+      find.text(muscleStrings.anatomyRecommendedWeeklyCompact),
+      findsOneWidget,
+    );
     expect(find.text(muscleStrings.anatomySetUnits('5.5')), findsOneWidget);
     expect(find.text(muscleStrings.anatomySetRange('7', '15')), findsOneWidget);
     expect(find.byType(ActionChip), findsOneWidget);
+    final muscleRecommendedStat = find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics &&
+          widget.properties.button == true &&
+          widget.properties.label == muscleStrings.recommendedSetsEdit,
+    );
+    expect(muscleRecommendedStat, findsOneWidget);
+    await tester.tap(muscleRecommendedStat);
+    await tester.pumpAndSettle();
+    expect(find.text(muscleStrings.recommendedSetsTitle), findsOneWidget);
+    await tester.tap(find.text(muscleStrings.commonCancel));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ActionChip, 'Chest'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(milliseconds: 600));

@@ -441,10 +441,6 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     );
   }
 
-  Future<String> _loadCustomManifestUrl() async {
-    return _contentEnvironmentPreferences.loadCustomExerciseMediaManifestUrl();
-  }
-
   Future<EffectiveContentEnvironment> _loadSelectedContentEnvironment() async {
     final config = await _repo.loadContentEnvironments();
     return _contentEnvironmentPreferences.loadEffectiveEnvironment(config);
@@ -510,7 +506,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<void> _editManifestUrl() async {
-    final currentUrl = await _loadCustomManifestUrl();
+    final currentUrl = await _loadManifestUrl();
     if (!mounted) return;
 
     final result = await showDialog<String>(
@@ -715,12 +711,14 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
 
   Widget _buildCloudContentSection() {
     final theme = Theme.of(context);
+    final expressive = theme.usesExpressivePresentation;
     final strings = _strings;
 
     return SettingsSection(
       title: strings.databaseCloudContent,
       subtitle: strings.databaseCloudContentSubtitle,
       accentColor: SettingsAccent.data,
+      titleColor: _databaseSectionTitleColor(context, SettingsAccent.data),
       children: settingsTilesWithDividers(context, [
         FutureBuilder<EffectiveContentEnvironment>(
           future: _selectedContentEnvironmentFuture,
@@ -735,13 +733,17 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 : environment.isProduction
                 ? strings.databaseProductionEnvironment(environment.label)
                 : environment.label;
+            final environmentDescription = environment == null
+                ? null
+                : _compactEnvironmentDescription(environment.description);
             return SettingsActionTile(
               icon: Icons.public_outlined,
               title: strings.databaseContentEnvironment,
               subtitle: environment == null
                   ? environmentLabel
                   : '$environmentLabel'
-                        '${!canOverride || environment.description.isEmpty ? '' : '\n${environment.description}'}',
+                        '${environmentDescription == null || environmentDescription.isEmpty ? '' : ' · $environmentDescription'}',
+              subtitleMaxLines: expressive ? 1 : 3,
               trailing: canOverride
                   ? IconButton(
                       tooltip: strings.databaseChangeEnvironment,
@@ -771,6 +773,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 subtitle: url.isEmpty
                     ? strings.databaseNoExerciseManifestUrl
                     : url,
+                subtitleMaxLines: expressive ? 1 : 3,
                 trailing: IconButton(
                   tooltip: strings.databaseOverrideUrl,
                   icon: const Icon(Icons.edit),
@@ -827,6 +830,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
                 subtitle: url.isEmpty
                     ? strings.databaseNoSharedManifestUrl
                     : url,
+                subtitleMaxLines: expressive ? 1 : 3,
                 trailing: const SizedBox.shrink(),
               );
             },
@@ -961,6 +965,10 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
               title: strings.databaseBackupRestore,
               subtitle: strings.databaseBackupRestoreSubtitle,
               accentColor: SettingsAccent.data,
+              titleColor: _databaseSectionTitleColor(
+                context,
+                SettingsAccent.data,
+              ),
               children: settingsTilesWithDividers(context, [
                 SettingsActionTile(
                   key: AppTestKeys.databaseExport,
@@ -1000,6 +1008,11 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       title: strings.databaseHealth,
       subtitle: strings.databaseHealthSubtitle,
       accentColor: SettingsAccent.progress,
+      titleColor: _databaseSectionTitleColor(
+        context,
+        SettingsAccent.progress,
+        green: true,
+      ),
       children: [
         FutureBuilder<DatabaseHealthSnapshot>(
           future: _healthFuture,
@@ -1103,6 +1116,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
       title: strings.databaseDefinitionExports,
       subtitle: strings.databaseDefinitionExportsSubtitle,
       accentColor: SettingsAccent.data,
+      titleColor: _databaseSectionTitleColor(context, SettingsAccent.data),
       children: settingsTilesWithDividers(context, [
         SettingsActionTile(
           icon: Icons.data_object,
@@ -1180,6 +1194,36 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 }
 
+Color? _databaseSectionTitleColor(
+  BuildContext context,
+  Color accent, {
+  bool green = false,
+}) {
+  final theme = Theme.of(context);
+  if (!theme.usesExpressivePresentation) return null;
+
+  final tokens =
+      theme.extension<AppExpressiveDestinationTokens>() ??
+      AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.profile,
+        theme.brightness,
+      );
+  final foreground = green ? tokens.onSurfaceSecondary : tokens.onSurfaceAccent;
+  return Color.lerp(accent, foreground, 0.4);
+}
+
+String _compactEnvironmentDescription(String description) {
+  final concise = description
+      .trim()
+      .split(RegExp(r'\.\s+|\s+used for\b', caseSensitive: false))
+      .first
+      .replaceAll(RegExp(r'[. ]+$'), '');
+  return concise.replaceFirst(
+    RegExp(r'\bdevelopment bucket\b', caseSensitive: false),
+    'test bucket',
+  );
+}
+
 class _DatabaseHealthCard extends StatelessWidget {
   final DatabaseHealthSnapshot health;
   final String Function(int bytes) formatBytes;
@@ -1189,6 +1233,9 @@ class _DatabaseHealthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressive = Theme.of(context).usesExpressivePresentation;
+    final normalizedPath = health.path.replaceAll('\\', '/');
+    final filename = normalizedPath.split('/').last;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
@@ -1221,6 +1268,7 @@ class _DatabaseHealthCard extends StatelessWidget {
               health.indexCount,
               health.triggerCount,
             ),
+            maxLines: expressive ? null : 1,
           ),
           const Divider(height: 1),
           _HealthInfoRow(
@@ -1234,8 +1282,22 @@ class _DatabaseHealthCard extends StatelessWidget {
           const Divider(height: 1),
           _HealthInfoRow(
             label: strings.databaseHealthPath,
-            value: health.path,
-            maxLines: 2,
+            value: expressive && filename.isNotEmpty ? filename : health.path,
+            maxLines: expressive ? 1 : 2,
+            trailing: expressive
+                ? IconButton(
+                    tooltip: strings.commonCopy,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.copy_outlined),
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: health.path));
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(strings.databaseCopied)),
+                      );
+                    },
+                  )
+                : null,
           ),
         ],
       ),
@@ -1247,13 +1309,15 @@ class _HealthInfoRow extends StatelessWidget {
   final String label;
   final String value;
   final bool? healthy;
-  final int maxLines;
+  final int? maxLines;
+  final Widget? trailing;
 
   const _HealthInfoRow({
     required this.label,
     required this.value,
     this.healthy,
     this.maxLines = 1,
+    this.trailing,
   });
 
   @override
@@ -1270,7 +1334,9 @@ class _HealthInfoRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: trailing == null
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Icon(
             healthy == null
@@ -1299,12 +1365,13 @@ class _HealthInfoRow extends StatelessWidget {
             child: Text(
               value,
               maxLines: maxLines,
-              overflow: TextOverflow.ellipsis,
+              overflow: maxLines == null ? null : TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
+          if (trailing != null) ...[const SizedBox(width: 4), trailing!],
         ],
       ),
     );
@@ -1337,19 +1404,72 @@ class _ManifestUrlDialogState extends State<_ManifestUrlDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final expressive = theme.usesExpressivePresentation;
+    final fieldSurface = context.surfaceTokens.dialogChoice;
+    final fieldForeground = tonosForegroundForSurface(context, fieldSurface);
+    final fieldOutline = tonosOutlineForSurface(context, fieldSurface);
+    final shapes = context.shapeTokens;
+    final field = TonosField(
+      controller: _controller,
+      keyboardType: TextInputType.url,
+      labelText: AppLocalizations.of(context).databaseManifestUrl,
+      hintText: 'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
+      minLines: 1,
+      maxLines: 3,
+    );
+    final urlField = expressive
+        ? Theme(
+            data: theme.copyWith(
+              inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+                filled: true,
+                fillColor: fieldSurface,
+                labelStyle: TextStyle(
+                  color: fieldForeground.withValues(alpha: 0.78),
+                ),
+                floatingLabelStyle: TextStyle(color: fieldForeground),
+                hintStyle: TextStyle(
+                  color: fieldForeground.withValues(alpha: 0.62),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: shapes.dialogChoice,
+                  borderSide: BorderSide(
+                    color: fieldOutline,
+                    width: shapes.outlineWidth,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: shapes.dialogChoice,
+                  borderSide: BorderSide(
+                    color: context.semanticColors.focusRing,
+                    width: shapes.focusRingWidth,
+                  ),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: shapes.dialogChoice,
+                  borderSide: BorderSide(
+                    color: fieldForeground.withValues(alpha: 0.38),
+                    width: shapes.outlineWidth,
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: shapes.dialogChoice,
+                  borderSide: BorderSide(
+                    color: fieldOutline,
+                    width: shapes.outlineWidth,
+                  ),
+                ),
+              ),
+            ),
+            child: field,
+          )
+        : field;
+
     return AlertDialog(
       title: Text(
         AppLocalizations.of(context).databaseExerciseManifestDialogTitle,
       ),
-      content: TonosField(
-        controller: _controller,
-        keyboardType: TextInputType.url,
-        labelText: AppLocalizations.of(context).databaseManifestUrl,
-        hintText:
-            'https://cdn.tonos.app/manifests/exercise_media_manifest.json',
-        minLines: 1,
-        maxLines: 3,
-      ),
+      content: urlField,
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

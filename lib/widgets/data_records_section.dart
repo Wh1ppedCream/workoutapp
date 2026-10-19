@@ -1,10 +1,12 @@
 // File: lib/widgets/data_records_section.dart
 
 import 'package:material_ui/material_ui.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../screens/nutrition/log_entry_page.dart';
 
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../utils/localized_formatters.dart';
 
 /// A calendar‐style grid plus summary for “Data & Records”.
@@ -22,11 +24,17 @@ class DataRecordsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final dataVisualization = context.dataVisualizationTokens;
+    final destination = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveNutrition =
+        context.usesExpressivePresentation &&
+        destination?.family == AppExpressiveDestinationFamily.nutrition;
+    final expressiveTokens = expressiveNutrition ? destination : null;
+    final dark = theme.brightness == Brightness.dark;
     final calendarDayBorder =
         context.surfaceDecorationTokens.panel.outlined &&
-                theme.brightness == Brightness.dark
-            ? surfaces.neutralOutline
-            : surfaces.divider;
+            theme.brightness == Brightness.dark
+        ? surfaces.neutralOutline
+        : surfaces.divider;
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
 
@@ -41,116 +49,157 @@ class DataRecordsSection extends StatelessWidget {
       ),
     );
 
-    return Padding(
-      padding: padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            strings.dashboardSectionDataRecordsTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-
-          // ─── New: Day‐of‐week header ───────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children:
-                  dayLabels.map((lbl) {
-                    return Expanded(
-                      child: Center(
-                        child: Text(
-                          lbl,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+    final weekdayLabels = Padding(
+      padding: EdgeInsets.symmetric(horizontal: expressiveNutrition ? 4 : 16),
+      child: Row(
+        children: dayLabels.map((label) {
+          return Expanded(
+            child: Center(
+              child: Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: expressiveTokens?.supportingForeground,
+                  fontWeight: expressiveNutrition ? FontWeight.w700 : null,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
+          );
+        }).toList(),
+      ),
+    );
 
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GridView.count(
-              shrinkWrap: true,
-              primary: false,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 7,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 1,
-              children: List.generate(28, (i) {
-                final date = today.subtract(Duration(days: 27 - i));
-                final isToday =
-                    date.year == today.year &&
-                    date.month == today.month &&
-                    date.day == today.day;
+    final calendarDays = Padding(
+      padding: EdgeInsets.symmetric(horizontal: expressiveNutrition ? 4 : 16),
+      child: GridView.count(
+        shrinkWrap: true,
+        primary: false,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 7,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+        children: List.generate(28, (i) {
+          final date = today.subtract(Duration(days: 27 - i));
+          final isToday =
+              date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day;
 
-                return Semantics(
-                  button: true,
-                  label: LocalizedFormatters.longDate(date, locale),
-                  child: GestureDetector(
-                    onTap:
-                        () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => LogEntryPage(date: date),
-                          ),
-                        ),
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            isToday
-                                ? dataVisualization.recordTodayContainer
-                                : Colors.transparent,
-                        border: Border.all(
-                          color:
-                              isToday
-                                  ? dataVisualization.recordTodayBorder
-                                  : calendarDayBorder,
-                        ),
-                      ),
-                      child: Text(
-                        LocalizedFormatters.number(
-                          date.day,
-                          locale,
-                          maximumFractionDigits: 0,
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color:
-                              isToday
-                                  ? dataVisualization.onRecordTodayContainer
-                                  : null,
-                        ),
-                      ),
-                    ),
+          return Semantics(
+            button: true,
+            label: LocalizedFormatters.longDate(date, locale),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => LogEntryPage(date: date)),
+              ),
+              child: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isToday
+                      ? expressiveTokens?.surfaceSelected ??
+                            dataVisualization.recordTodayContainer
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isToday
+                        ? expressiveTokens?.outlineAccent ??
+                              dataVisualization.recordTodayBorder
+                        : expressiveTokens?.outlineAccent.withValues(
+                                alpha: dark ? 0.30 : 0.24,
+                              ) ??
+                              calendarDayBorder,
                   ),
-                );
-              }),
+                ),
+                child: Text(
+                  LocalizedFormatters.number(
+                    date.day,
+                    locale,
+                    maximumFractionDigits: 0,
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: isToday
+                        ? expressiveTokens?.onSurfaceSelected ??
+                              dataVisualization.onRecordTodayContainer
+                        : expressiveTokens?.onSurfaceTertiary,
+                    fontWeight: isToday || expressiveNutrition
+                        ? FontWeight.w700
+                        : null,
+                  ),
+                ),
+              ),
             ),
+          );
+        }),
+      ),
+    );
+
+    final weekCount = strings.dashboardRecordsThisWeek(1, 7);
+    final allTimeCount = strings.dashboardRecordsAllTime(1);
+    Widget countChip(String label, IconData icon) {
+      final tokens = expressiveTokens!;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: tokens.surfaceSelected,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: tokens.outlineAccent.withValues(alpha: 0.2),
           ),
-          const SizedBox(height: 8),
-          Row(
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: tokens.onSurfaceSelected),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: tokens.onSurfaceSelected,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final countSummary = expressiveNutrition
+        ? Row(
+            children: [
+              Expanded(
+                child: countChip(weekCount, Icons.calendar_view_week_rounded),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: countChip(allTimeCount, Icons.history_rounded)),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: expressiveTokens!.outlineAccent,
+              ),
+            ],
+          )
+        : Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
                 child: Text(
-                  strings.dashboardRecordsThisWeek(1, 7),
+                  weekCount,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall,
                 ),
               ),
               Flexible(
                 child: Text(
-                  strings.dashboardRecordsAllTime(1),
+                  allTimeCount,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall,
                 ),
               ),
               Icon(
@@ -159,8 +208,50 @@ class DataRecordsSection extends StatelessWidget {
                 color: dataVisualization.label.withValues(alpha: 0.45),
               ),
             ],
+          );
+
+    final calendarContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        weekdayLabels,
+        const SizedBox(height: 8),
+        calendarDays,
+        const SizedBox(height: 8),
+        countSummary,
+      ],
+    );
+
+    return Padding(
+      padding: padding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            strings.dashboardSectionDataRecordsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: expressiveTokens?.supportingForeground,
+              fontWeight: expressiveNutrition ? FontWeight.w800 : null,
+            ),
           ),
-          const Divider(height: 32),
+          const SizedBox(height: 8),
+          if (expressiveTokens != null)
+            Container(
+              decoration: BoxDecoration(
+                color: expressiveTokens.surfaceTertiary,
+                borderRadius: context.shapeTokens.healthTrendCard,
+                border: Border.all(
+                  color: expressiveTokens.outlineAccent.withValues(
+                    alpha: dark ? 0.32 : 0.22,
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: calendarContent,
+            )
+          else ...[
+            calendarContent,
+            const Divider(height: 32),
+          ],
         ],
       ),
     );

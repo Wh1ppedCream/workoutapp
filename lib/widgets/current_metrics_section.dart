@@ -8,6 +8,7 @@ import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/localized_formatters.dart';
 
@@ -74,7 +75,64 @@ class MetricItem extends StatelessWidget {
   }
 }
 
-/// Shows “Current Metrics” with a date, dynamic metric tiles, and add button
+class _ExpressiveMetricQuickCard extends StatelessWidget {
+  const _ExpressiveMetricQuickCard({
+    required this.label,
+    required this.value,
+    required this.tokens,
+  });
+
+  final String label;
+  final String value;
+  final AppExpressiveDestinationTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return SizedBox(
+      width: 140,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: tokens.surfaceSelected,
+          borderRadius: context.shapeTokens.healthTrendEntry,
+          border: Border.all(
+            color: tokens.outlineAccent.withValues(alpha: dark ? 0.32 : 0.2),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: tokens.onSurfaceSelected.withValues(alpha: 0.82),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: tokens.onSurfaceSelected,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shows the latest saved measurement values and opens the measurement logger.
 class CurrentMetricsSection extends StatefulWidget {
   const CurrentMetricsSection({super.key, this.refreshToken = 0});
 
@@ -126,10 +184,10 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
       }),
     );
 
-    final savedMetrics =
-        metrics.whereType<_CurrentMetric>().toList()..sort(
-          (a, b) => b.measurement.timestamp.compareTo(a.measurement.timestamp),
-        );
+    final savedMetrics = metrics.whereType<_CurrentMetric>().toList()
+      ..sort(
+        (a, b) => b.measurement.timestamp.compareTo(a.measurement.timestamp),
+      );
     return savedMetrics;
   }
 
@@ -147,6 +205,14 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
   Widget build(BuildContext context) {
     super.build(context);
     final strings = AppLocalizations.of(context);
+    final destination = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
+    final expressiveTokens =
+        context.usesExpressivePresentation &&
+            destination?.family == AppExpressiveDestinationFamily.nutrition
+        ? destination
+        : null;
+    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -158,14 +224,39 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
               Expanded(
                 child: Text(
                   strings.dashboardCurrentMetrics,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: expressiveTokens?.supportingForeground,
+                    fontWeight: expressiveTokens == null
+                        ? null
+                        : FontWeight.w800,
+                  ),
                 ),
               ),
-              TextButton.icon(
-                onPressed: _openMeasurementLogger,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(strings.nutritionTrackMeasurement),
-              ),
+              if (expressiveTokens != null)
+                FilledButton.icon(
+                  onPressed: _openMeasurementLogger,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: expressiveTokens.surfaceSecondary,
+                    foregroundColor: expressiveTokens.onSurfaceSecondary,
+                    minimumSize: const Size(0, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(
+                    strings.nutritionTrackMeasurement,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              else
+                TextButton.icon(
+                  onPressed: _openMeasurementLogger,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(strings.nutritionTrackMeasurement),
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -183,6 +274,8 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                   title: strings.healthUnableToLoad,
                   actionLabel: strings.commonRetry,
                   onAction: _reload,
+                  expressiveTokens: expressiveTokens,
+                  actionIcon: Icons.refresh_rounded,
                 );
               }
 
@@ -193,6 +286,8 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                   body: strings.healthNoMeasurementsBody,
                   actionLabel: strings.healthCreateMetric,
                   onAction: _openMeasurementLogger,
+                  expressiveTokens: expressiveTokens,
+                  actionIcon: Icons.add_rounded,
                 );
               }
 
@@ -202,26 +297,46 @@ class CurrentMetricsSectionState extends State<CurrentMetricsSection>
                   children: [
                     for (final metric in metrics)
                       Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: MetricItem(
-                          color: _metricColor(context, metric.definition.type),
-                          label: _metricLabel(metric.definition, strings),
-                          value: _formatMeasurement(
-                            metric.measurement,
-                            Localizations.localeOf(context),
-                          ),
-                          recordedOn: LocalizedFormatters.monthDay(
-                            metric.measurement.calendarDay.toLocalDateTime(),
-                            Localizations.localeOf(context),
-                          ),
+                        padding: EdgeInsets.only(
+                          right: expressiveTokens == null ? 16 : 10,
                         ),
+                        child: expressiveTokens != null
+                            ? _ExpressiveMetricQuickCard(
+                                label: _metricLabel(metric.definition, strings),
+                                value: _formatMeasurement(
+                                  metric.measurement,
+                                  Localizations.localeOf(context),
+                                ),
+                                tokens: expressiveTokens,
+                              )
+                            : MetricItem(
+                                color: _metricColor(
+                                  context,
+                                  metric.definition.type,
+                                ),
+                                label: _metricLabel(metric.definition, strings),
+                                value: _formatMeasurement(
+                                  metric.measurement,
+                                  Localizations.localeOf(context),
+                                ),
+                                recordedOn: LocalizedFormatters.monthDay(
+                                  metric.measurement.calendarDay
+                                      .toLocalDateTime(),
+                                  Localizations.localeOf(context),
+                                ),
+                              ),
                       ),
                   ],
                 ),
               );
             },
           ),
-          const Divider(height: 32),
+          Divider(
+            height: 32,
+            color: expressiveTokens?.outlineAccent.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.22 : 0.16,
+            ),
+          ),
         ],
       ),
     );
@@ -234,49 +349,138 @@ class _MetricsMessage extends StatelessWidget {
     required this.actionLabel,
     required this.onAction,
     this.body,
+    this.expressiveTokens,
+    this.actionIcon = Icons.arrow_forward_rounded,
   });
 
   final String title;
   final String? body;
   final String actionLabel;
   final VoidCallback onAction;
+  final AppExpressiveDestinationTokens? expressiveTokens;
+  final IconData actionIcon;
 
   @override
   Widget build(BuildContext context) {
+    if (expressiveTokens != null) {
+      final tokens = expressiveTokens!;
+      final dark = Theme.of(context).brightness == Brightness.dark;
+      return SizedBox(
+        width: double.infinity,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: tokens.surfaceSelected,
+            borderRadius: context.shapeTokens.healthTrendCard,
+            border: Border.all(
+              color: tokens.outlineAccent.withValues(alpha: dark ? 0.34 : 0.22),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: tokens.outlineAccent.withValues(alpha: 0.14),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.monitor_weight_outlined,
+                      color: tokens.onSurfaceSelected,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                color: tokens.onSurfaceSelected,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        if (body != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            body!,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: tokens.onSurfaceSelected.withValues(
+                                    alpha: 0.82,
+                                  ),
+                                ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: FilledButton.icon(
+                  onPressed: onAction,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tokens.actionPrimary,
+                    foregroundColor: tokens.onActionPrimary,
+                    minimumSize: const Size(0, 44),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: Icon(actionIcon, size: 18),
+                  label: Text(actionLabel),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       child: TonosSurfaceTheme(
         surface: context.surfaceTokens.panelRaised,
         child: Builder(
-          builder:
-              (surfaceContext) => TonosSurface(
-                variant: TonosSurfaceVariant.panelRaised,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(surfaceContext).textTheme.titleSmall,
-                    ),
-                    if (body != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        body!,
-                        style: Theme.of(surfaceContext).textTheme.bodySmall,
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: OutlinedButton(
-                        onPressed: onAction,
-                        child: Text(actionLabel),
-                      ),
-                    ),
-                  ],
+          builder: (surfaceContext) => TonosSurface(
+            variant: TonosSurfaceVariant.panelRaised,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(surfaceContext).textTheme.titleSmall,
                 ),
-              ),
+                if (body != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    body!,
+                    style: Theme.of(surfaceContext).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton(
+                    onPressed: onAction,
+                    child: Text(actionLabel),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -330,8 +534,9 @@ String _metricLabel(
 }
 
 String _formatMeasurement(Measurement measurement, Locale locale) {
-  final fractionDigits =
-      measurement.value == measurement.value.roundToDouble() ? 0 : 1;
+  final fractionDigits = measurement.value == measurement.value.roundToDouble()
+      ? 0
+      : 1;
   final value = LocalizedFormatters.number(
     measurement.value,
     locale,

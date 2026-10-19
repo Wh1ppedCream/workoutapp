@@ -1,18 +1,24 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:env_test/db/database_helper.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
+import 'package:env_test/providers/selected_profile.dart';
 import 'package:env_test/repositories/app_repository.dart';
+import 'package:env_test/screens/exercise/exercise_catalog_page.dart';
 import 'package:env_test/screens/profile/settings/exercise_analytics_screen.dart';
+import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../tools/theme_style_inventory.dart';
 
@@ -43,7 +49,7 @@ void main() {
     final ownedFindings = report.findings
         .where((finding) => finding.ruleId == rule.id)
         .toList();
-    expect(ownedFindings, hasLength(28));
+    expect(ownedFindings, hasLength(34));
     expect(ownedFindings.map((finding) => finding.kind).toSet(), {
       'color',
       'color_transform',
@@ -500,6 +506,371 @@ void main() {
       }
     }
   });
+
+  testWidgets(
+    'Expressive allocation tabs and long credit entry stay readable in both themes',
+    (tester) async {
+      final semanticsHandle = tester.ensureSemantics();
+      await tester.binding.setSurfaceSize(const Size(430, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final brightness in Brightness.values) {
+        final bodyPart = BodyPart(4, 'Upper chest');
+        final muscle = Muscle(
+          id: 7,
+          name: 'Pectoralis major and upper chest fibers',
+        );
+        final definition = ExerciseDefinition(
+          id: 11,
+          name: 'Cable Chest Press',
+          bodyParts: [bodyPart],
+          muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+          useManualBodyparts: false,
+          multiplyByRating: false,
+        );
+        final repository = _ExerciseAnalyticsRepository(
+          definition: definition,
+          bodyPart: bodyPart,
+          muscle: muscle,
+        );
+        await _mountExpressiveExerciseAnalytics(
+          tester,
+          repository,
+          brightness,
+          textScale: 1.15,
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text(definition.name), findsOneWidget);
+        final tabBarFinder = find.byType(TabBar);
+        final tabBar = tester.widget<TabBar>(tabBarFinder);
+        final tokens = Theme.of(tester.element(tabBarFinder))
+            .extension<AppExpressiveDestinationTokens>()!;
+        final strings = AppLocalizations.of(tester.element(tabBarFinder));
+        expect(tabBar.labelColor, tokens.onSurfaceSecondary);
+        expect(
+          tabBar.unselectedLabelColor,
+          tokens.onSurfacePrimary.withValues(alpha: 0.74),
+        );
+        expect(tabBar.controller!.index, 0);
+
+        final creditFieldFinder = find.byType(TextFormField).first;
+        final creditTextField = tester.widget<TextField>(
+          find.descendant(
+            of: creditFieldFinder,
+            matching: find.byType(TextField),
+          ),
+        );
+        expect(creditTextField.decoration?.labelText, isNull);
+        expect(creditTextField.textAlign, TextAlign.center);
+        expect(creditTextField.textAlignVertical, TextAlignVertical.center);
+        expect(
+          tester.getSize(creditFieldFinder).width,
+          closeTo(96 * 1.15, 0.1),
+        );
+        expect(
+          find.bySemanticsLabel('${muscle.name}, ${strings.allocationCredit}'),
+          findsOneWidget,
+        );
+        expect(find.text(strings.allocationSourceAutomatic), findsOneWidget);
+        expect(find.text(strings.measurementCustom), findsNothing);
+
+        final selectedExerciseCard = find
+            .ancestor(
+              of: find.text(strings.allocationSelectedExercise),
+              matching: find.byType(Container),
+            )
+            .first;
+        final selectedExerciseDecoration =
+            tester.widget<Container>(selectedExerciseCard).decoration!
+                as BoxDecoration;
+        expect(selectedExerciseDecoration.border, isNull);
+
+        final roundedPickerMaterials = tester
+            .widgetList<Material>(find.byType(Material))
+            .where(
+              (material) =>
+                  material.color == Colors.transparent &&
+                  material.shape is RoundedRectangleBorder,
+            );
+        expect(roundedPickerMaterials, isNotEmpty);
+
+        await tester.tap(
+          find.descendant(
+            of: tabBarFinder,
+            matching: find.text(strings.allocationBodypartCredit),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tabBar.controller!.index, 1);
+        final bodyPartFieldFinder = find.byType(TextFormField).first;
+        await tester.enterText(bodyPartFieldFinder, '0.144444');
+        await tester.pumpAndSettle();
+        expect(
+          tester.widget<TextFormField>(bodyPartFieldFinder).controller!.text,
+          '0.144444',
+        );
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(
+          find.text(strings.allocationSaveChanges),
+          findsAtLeastNWidgets(1),
+        );
+
+        tester.testTextInput.hide();
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: tabBarFinder,
+            matching: find.text(strings.allocationMuscleCredit),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tabBar.controller!.index, 0);
+        expect(find.text(strings.allocationSourceAutomatic), findsOneWidget);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+      semanticsHandle.dispose();
+    },
+  );
+
+  testWidgets(
+    'Expressive personal allocation is labeled Custom until an edit is pending',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final brightness in Brightness.values) {
+        final bodyPart = BodyPart(4, 'Chest');
+        final muscle = Muscle(id: 7, name: 'Pectoralis major');
+        final definition = ExerciseDefinition(
+          id: 11,
+          name: 'Cable Chest Press',
+          bodyParts: [bodyPart],
+          muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+          useManualBodyparts: false,
+          multiplyByRating: false,
+        );
+        final repository = _ExerciseAnalyticsRepository(
+          definition: definition,
+          bodyPart: bodyPart,
+          muscle: muscle,
+          muscleSource: ExerciseAllocationSource.personalOverride,
+        );
+        await _mountExpressiveExerciseAnalytics(tester, repository, brightness);
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(ExerciseAnalyticsScreen)),
+        );
+        expect(find.text(strings.measurementCustom), findsNWidgets(2));
+        await tester.enterText(find.byType(TextFormField).first, '0.144');
+        await tester.pumpAndSettle();
+        expect(find.text(strings.measurementCustom), findsNothing);
+        expect(find.text(strings.allocationSaveChanges), findsNWidgets(2));
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    },
+  );
+
+  testWidgets(
+    'Exercise picker uses Expressive Catalog and returns the selected exercise',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      for (final brightness in Brightness.values) {
+        final bodyPart = BodyPart(4, 'Chest');
+        final muscle = Muscle(id: 7, name: 'Pectoralis major');
+        final definition = ExerciseDefinition(
+          id: 11,
+          name: 'Cable Chest Press',
+          bodyParts: [bodyPart],
+          muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+          useManualBodyparts: false,
+          multiplyByRating: false,
+        );
+        final alternate = ExerciseDefinition(
+          id: 12,
+          name: 'Cable Row',
+          bodyParts: [bodyPart],
+          muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+          useManualBodyparts: false,
+          multiplyByRating: false,
+        );
+        final expressiveTheme = ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF345B50),
+            brightness: brightness,
+          ),
+          extensions: const [
+            AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+          ],
+        );
+        final modes = [
+          ('Expressive', expressiveTheme, true),
+          (
+            'Classic',
+            brightness == Brightness.light
+                ? AppThemeFactory.light(AppThemeFamily.classic)
+                : AppThemeFactory.dark(AppThemeFamily.classic),
+            false,
+          ),
+          (
+            'Neo',
+            brightness == Brightness.light
+                ? AppThemeFactory.light(AppThemeFamily.neoBrutalism)
+                : AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+            false,
+          ),
+        ];
+
+        for (final mode in modes) {
+          SharedPreferences.setMockInitialValues({
+            'guided_tutorial_completed.${TutorialIds.exerciseCatalog}': true,
+          });
+          final repository = _ExerciseAnalyticsRepository(
+            definition: definition,
+            bodyPart: bodyPart,
+            muscle: muscle,
+          )..additionalDefinitions.add(alternate);
+          final selectedProfile = SelectedProfile(repository: repository);
+          addTearDown(selectedProfile.dispose);
+
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider<SelectedProfile>.value(
+                  value: selectedProfile,
+                ),
+              ],
+              child: MaterialApp(
+                theme: mode.$2,
+                themeAnimationDuration: Duration.zero,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: const ExerciseAnalyticsScreen(),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          await tester.pumpAndSettle();
+
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(ExerciseAnalyticsScreen)),
+          );
+          await tester.tap(find.text(strings.allocationSelectedExercise));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(ExerciseCatalogPage), findsOneWidget);
+          final catalog = tester.widget<ExerciseCatalogPage>(
+            find.byType(ExerciseCatalogPage),
+          );
+          expect(
+            catalog.expressiveCatalogPresentation,
+            mode.$3,
+            reason: '${mode.$1} ${brightness.name}',
+          );
+          final catalogTokens = Theme.of(
+            tester.element(find.byType(ExerciseCatalogPage)),
+          ).extension<AppExpressiveDestinationTokens>();
+          expect(
+            catalogTokens?.family,
+            mode.$3 ? AppExpressiveDestinationFamily.catalog : null,
+            reason: '${mode.$1} ${brightness.name} picker theme scope',
+          );
+          expect(
+            find.byKey(const ValueKey('expressive-catalog-search-panel')),
+            mode.$3 ? findsOneWidget : findsNothing,
+            reason: '${mode.$1} ${brightness.name}',
+          );
+
+          await tester.tap(find.text(alternate.name));
+          await tester.pumpAndSettle();
+          expect(find.byTooltip(strings.commonAdd), findsOneWidget);
+          await tester.tap(find.byTooltip(strings.commonAdd));
+          await tester.pumpAndSettle();
+
+          expect(find.byType(ExerciseCatalogPage), findsNothing);
+          expect(find.text(alternate.name), findsOneWidget);
+          expect(
+            repository.resolvedDefinitionIds,
+            contains(alternate.id),
+            reason: 'Allocation data reloads for ${mode.$1} ${brightness.name}',
+          );
+          expect(tester.takeException(), isNull);
+        }
+      }
+    },
+  );
+
+  testWidgets('Expressive hides only the legacy Muscle Credit section badge', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final brightness in Brightness.values) {
+      final bodyPart = BodyPart(4, 'Chest');
+      final muscle = Muscle(id: 7, name: 'Pectoralis major');
+      final definition = ExerciseDefinition(
+        id: 11,
+        name: 'Cable Chest Press',
+        bodyParts: [bodyPart],
+        muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+        useManualBodyparts: false,
+        multiplyByRating: false,
+      );
+      final repository = _ExerciseAnalyticsRepository(
+        definition: definition,
+        bodyPart: bodyPart,
+        muscle: muscle,
+        muscleSource: ExerciseAllocationSource.legacy,
+      );
+      await _mountExpressiveExerciseAnalytics(tester, repository, brightness);
+      await tester.pumpAndSettle();
+
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(ExerciseAnalyticsScreen)),
+      );
+      expect(
+        find.widgetWithText(SettingsAccentPill, strings.allocationSourceLegacy),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('muscle-credit-section-header')),
+          matching: find.byType(SettingsAccentPill),
+        ),
+        findsNothing,
+      );
+
+      final tabBar = tester.widget<TabBar>(find.byType(TabBar));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(TabBar),
+          matching: find.text(strings.allocationBodypartCredit),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tabBar.controller!.index, 1);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('bodypart-credit-section-header')),
+          matching: find.widgetWithText(
+            SettingsAccentPill,
+            strings.allocationSourceAutomatic,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
 }
 
 Container _containerWithPadding(WidgetTester tester, EdgeInsets padding) {
@@ -534,13 +905,17 @@ class _ExerciseAnalyticsRepository extends AppRepository {
     this.failFirstDefinitionLoad = false,
     this.allocationGate,
     this.failAllocationSave = false,
-  });
+    this.muscleSource = ExerciseAllocationSource.automatic,
+  }) : super(db: _ExerciseAnalyticsDatabaseHelper());
 
   final ExerciseDefinition definition;
   final BodyPart bodyPart;
   final Muscle muscle;
   final bool failFirstDefinitionLoad;
   final Completer<ResolvedExerciseAllocation>? allocationGate;
+  final ExerciseAllocationSource muscleSource;
+  final List<ExerciseDefinition> additionalDefinitions = [];
+  final List<int> resolvedDefinitionIds = [];
   bool failAllocationSave;
   var definitionLoadCount = 0;
   var allocationSaveCalls = 0;
@@ -551,12 +926,14 @@ class _ExerciseAnalyticsRepository extends AppRepository {
     if (failFirstDefinitionLoad && definitionLoadCount == 1) {
       throw StateError('private query details');
     }
-    return [definition];
+    return [definition, ...additionalDefinitions];
   }
 
   @override
-  Future<ResolvedExerciseAllocation> resolveExerciseAllocation(int defId) =>
-      allocationGate?.future ?? Future.value(_allocationFor(defId));
+  Future<ResolvedExerciseAllocation> resolveExerciseAllocation(int defId) {
+    resolvedDefinitionIds.add(defId);
+    return allocationGate?.future ?? Future.value(_allocationFor(defId));
+  }
 
   ResolvedExerciseAllocation get allocation => _allocationFor(definition.id);
 
@@ -568,7 +945,7 @@ class _ExerciseAnalyticsRepository extends AppRepository {
         derivedBodyPartCredits: {bodyPart.id: 1.25},
         muscleHistoryCredits: const {},
         bodyPartHistoryCredits: const {},
-        muscleSource: ExerciseAllocationSource.automatic,
+        muscleSource: muscleSource,
         bodyPartSource: ExerciseAllocationSource.automatic,
       );
 
@@ -586,4 +963,77 @@ class _ExerciseAnalyticsRepository extends AppRepository {
 
   @override
   Future<List<BodyPart>> fetchAllBodyParts() async => [bodyPart];
+
+  @override
+  Future<List<Muscle>> fetchAllMuscles() async => [muscle];
+
+  @override
+  Future<List<Equipment>> fetchAllEquipment() async => const [];
+
+  @override
+  Future<List<GymProfile>> fetchAllProfiles() async => [_analyticsTestProfile];
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchEquipmentForProfile(
+    int profileId,
+  ) async => const [];
+
+  @override
+  Future<String?> getAppState(String key) async => null;
+
+  @override
+  Future<void> setAppState(String key, String? value) async {}
+}
+
+final _analyticsTestProfile = GymProfile(
+  id: 1,
+  name: 'Test gym',
+  createdAt: DateTime.utc(2026),
+);
+
+class _ExerciseAnalyticsDatabaseHelper implements DatabaseHelper {
+  @override
+  Future<List<GymProfile>> fetchAllProfiles() async => [_analyticsTestProfile];
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchEquipmentForProfile(
+    int profileId,
+  ) async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Future<void> _mountExpressiveExerciseAnalytics(
+  WidgetTester tester,
+  AppRepository repository,
+  Brightness brightness, {
+  double textScale = 1,
+}) async {
+  final theme = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: const Color(0xFF345B50),
+      brightness: brightness,
+    ),
+    extensions: const [
+      AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+    ],
+  );
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [Provider<AppRepository>.value(value: repository)],
+      child: MaterialApp(
+        theme: theme,
+        themeAnimationDuration: Duration.zero,
+        localizationsDelegates: tonosLocalizationDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: const ExerciseAnalyticsScreen(),
+      ),
+    ),
+  );
 }

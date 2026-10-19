@@ -48,7 +48,7 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == rule.id)
         .toList();
-    expect(findings, hasLength(12));
+    expect(findings, hasLength(16));
     expect(findings.map((finding) => finding.kind).toSet(), {
       'color_transform',
       'decoration',
@@ -108,6 +108,7 @@ void main() {
         final scheme = Theme.of(context).colorScheme;
         final surfaces = context.surfaceTokens;
         final shapes = context.shapeTokens;
+        final expressive = AppExpressivePlanningTokens.maybeOf(context);
         final neo = family == AppThemeFamily.neoBrutalism;
         final neoPlanForeground = tonosForegroundForSurface(
           context,
@@ -115,10 +116,12 @@ void main() {
         );
         final planForeground = neo
             ? neoPlanForeground
-            : Theme.of(context).textTheme.titleMedium?.color;
+            : expressive?.onPage ??
+                  Theme.of(context).textTheme.titleMedium?.color;
         final planSecondary = neo
             ? tonosSecondaryForegroundForSurface(context, surfaces.planCard)
-            : scheme.onSurfaceVariant;
+            : expressive?.onPage ?? scheme.onSurfaceVariant;
+        final activeStatusColor = expressive?.planAccent ?? scheme.primary;
         final archivedStatusColor = neo
             ? neoPlanForeground
             : scheme.onSurfaceVariant;
@@ -133,19 +136,27 @@ void main() {
           tester.widget<Text>(find.text('Archived Plan')).style?.color,
           planForeground,
         );
-        expect(find.text(strings.planManagementVisible), findsOneWidget);
+        if (expressive == null) {
+          expect(find.text(strings.planManagementVisible), findsOneWidget);
+          expect(find.text(strings.planManagementHidden), findsNothing);
+        } else {
+          expect(find.text(strings.planManagementVisible), findsNothing);
+          expect(find.text(strings.planManagementHidden), findsNothing);
+        }
         expect(find.text(strings.planManagementAutomatic), findsOneWidget);
         expect(
           find.byWidgetPredicate((widget) => widget is OutlinedButton),
           findsNWidgets(2),
         );
-        expect(
-          tester
-              .widget<Text>(find.text(strings.planManagementVisible))
-              .style
-              ?.color,
-          planSecondary,
-        );
+        if (expressive == null) {
+          expect(
+            tester
+                .widget<Text>(find.text(strings.planManagementVisible))
+                .style
+                ?.color,
+            planSecondary,
+          );
+        }
         expect(
           tester
               .widget<Text>(find.text(strings.planManagementAutomatic))
@@ -159,14 +170,25 @@ void main() {
             .where((box) {
               final decoration = box.decoration;
               return decoration is BoxDecoration &&
-                  decoration.color == surfaces.planCard;
+                  decoration.color ==
+                      (expressive?.pageCanvas ?? surfaces.planCard);
             })
             .toList();
         expect(planTiles, hasLength(2));
         for (final tile in planTiles) {
           final decoration = tile.decoration as BoxDecoration;
-          expect(decoration.borderRadius, shapes.planCard);
-          expect(decoration.border, Border.all(color: scheme.outlineVariant));
+          expect(
+            decoration.borderRadius,
+            expressive?.rowShape ?? shapes.planCard,
+          );
+          expect(
+            decoration.border,
+            Border.all(
+              color: expressive == null
+                  ? scheme.outlineVariant
+                  : expressive.outline.withValues(alpha: 0.62),
+            ),
+          );
         }
 
         final avatars = tester
@@ -175,10 +197,10 @@ void main() {
         expect(avatars, hasLength(2));
         expect(
           avatars[0].backgroundColor,
-          scheme.primary.withValues(alpha: 0.16),
+          activeStatusColor.withValues(alpha: 0.16),
         );
         expect(avatars[0].child, isA<Icon>());
-        expect((avatars[0].child as Icon).color, scheme.primary);
+        expect((avatars[0].child as Icon).color, activeStatusColor);
         expect(
           avatars[1].backgroundColor,
           archivedStatusColor.withValues(alpha: 0.16),
@@ -274,10 +296,19 @@ void main() {
       final page = find.byType(PlanManagementPage);
       final context = tester.element(page);
       final strings = AppLocalizations.of(context);
+      final expressive = AppExpressivePlanningTokens.maybeOf(context);
+      expect(find.text(strings.planManagementExpressiveIntro), findsOneWidget);
       final scaffold = tester.widget<Scaffold>(
         find.descendant(of: page, matching: find.byType(Scaffold)).first,
       );
       expect(scaffold.backgroundColor, entry.$3.pageCanvas);
+      final appBar = tester.widget<AppBar>(
+        find.descendant(of: page, matching: find.byType(AppBar)).first,
+      );
+      if (expressive != null) {
+        expect(appBar.centerTitle, isFalse);
+        expect(appBar.scrolledUnderElevation, 0);
+      }
 
       final activeHeading = find.text(strings.trainActivePlans);
       final activeCardFinder = find
@@ -285,7 +316,7 @@ void main() {
           .first;
       expect(
         tester.widget<Card>(activeCardFinder).color,
-        entry.$3.planFocalSurface,
+        entry.$3.planManagementActiveSurface,
       );
 
       final activeStatus = tester.widget<CircleAvatar>(
@@ -302,7 +333,6 @@ void main() {
       );
       expect((activeStatus.child! as Icon).color, entry.$3.planAccent);
       expect(find.text(strings.planManagementArchive), findsOneWidget);
-      final expressive = AppExpressivePlanningTokens.maybeOf(context);
       expect(
         find.ancestor(
           of: find.text(strings.planManagementArchive),
@@ -312,11 +342,21 @@ void main() {
       );
 
       final archiveAction = find.text(strings.planManagementArchive);
+      final archiveButton = tester.widget<OutlinedButton>(
+        find.ancestor(of: archiveAction, matching: find.byType(OutlinedButton)),
+      );
+      expect(
+        archiveButton.style?.backgroundColor?.resolve(const <WidgetState>{}),
+        entry.$3.planManagementArchiveActionSurface,
+      );
       await tester.drag(find.byType(ListView), const Offset(0, -300));
       await tester.pumpAndSettle();
       await tester.tap(archiveAction);
       await tester.pumpAndSettle();
       expect(repository.activePlanIds, isEmpty);
+      _expectSectionCount(tester, strings.trainActivePlans, 0);
+      _expectSectionCount(tester, strings.trainArchivedPlans, 2);
+      expect(find.text(strings.planManagementNoActive), findsOneWidget);
 
       await tester.drag(find.byType(ListView), const Offset(0, -800));
       await tester.pumpAndSettle();
@@ -326,16 +366,50 @@ void main() {
           .first;
       expect(
         tester.widget<Card>(archivedCardFinder).color,
-        entry.$3.planSupportSurface,
+        entry.$3.planManagementArchivedSurface,
       );
       expect(
         find.text(strings.planManagementActivate),
         findsAtLeastNWidgets(1),
       );
+      final activateAction = find.text(strings.planManagementActivate).first;
+      final activateButton = tester.widget<OutlinedButton>(
+        find.ancestor(
+          of: activateAction,
+          matching: find.byType(OutlinedButton),
+        ),
+      );
+      expect(
+        activateButton.style?.backgroundColor?.resolve(const <WidgetState>{}),
+        entry.$3.actionPrimary,
+      );
+      await tester.tap(activateAction);
+      await tester.pumpAndSettle();
+      expect(repository.activePlanIds, {1});
+      _expectSectionCount(tester, strings.trainActivePlans, 1);
+      _expectSectionCount(tester, strings.trainArchivedPlans, 1);
+      final remainingActivateAction = find.text(strings.planManagementActivate);
+      await tester.ensureVisible(remainingActivateAction);
+      await tester.tap(remainingActivateAction);
+      await tester.pumpAndSettle();
+      expect(repository.activePlanIds, {1, 2});
+      _expectSectionCount(tester, strings.trainActivePlans, 2);
+      _expectSectionCount(tester, strings.trainArchivedPlans, 0);
+      expect(find.text(strings.planManagementNoArchived), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+}
+
+void _expectSectionCount(WidgetTester tester, String title, int count) {
+  final section = find
+      .ancestor(of: find.text(title), matching: find.byType(Card))
+      .first;
+  expect(
+    find.descendant(of: section, matching: find.text('$count')),
+    findsOneWidget,
+  );
 }
 
 class _PlanManagementRepository extends AppRepository {

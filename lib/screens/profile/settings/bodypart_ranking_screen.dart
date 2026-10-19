@@ -122,6 +122,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final destination = analyticsDestinationTokens(context);
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return AppExpressiveDestinationTheme(
       family: AppExpressiveDestinationFamily.analytics,
@@ -133,7 +134,17 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
                 scrolledUnderElevation: 0,
               )
             : null,
-        bottomNavigationBar: _dirty
+        floatingActionButton: destination != null && _dirty && !keyboardVisible
+            ? AnalyticsRankingSaveFab(
+                label: _isSaving
+                    ? strings.nutritionSaving
+                    : strings.rankingsSave,
+                onPressed: _isSaving ? null : _saveAll,
+                isSaving: _isSaving,
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        bottomNavigationBar: destination == null && _dirty
             ? SettingsSaveBar(
                 label: _isSaving
                     ? strings.nutritionSaving
@@ -236,7 +247,12 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
     return ReorderableListView.builder(
       itemCount: _parts.length,
       onReorder: _onReorder,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 96),
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        analyticsRankingFabScrollClearance,
+      ),
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

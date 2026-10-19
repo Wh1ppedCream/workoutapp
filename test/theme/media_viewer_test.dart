@@ -1,7 +1,10 @@
 import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../test_support.dart';
+
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
@@ -52,21 +55,19 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
-            builder:
-                (context) => Scaffold(
-                  body: TextButton(
-                    onPressed:
-                        () => showMediaImageViewer(
-                          context: context,
-                          file: File('${directory.path}/missing.png'),
-                          imageLabel: 'Image',
-                          zoomHint: 'Pinch to zoom',
-                          closeLabel: 'Close viewer',
-                          footer: const Text('Form guide'),
-                        ),
-                    child: const Text('Open viewer'),
-                  ),
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showMediaImageViewer(
+                  context: context,
+                  file: File('${directory.path}/missing.png'),
+                  imageLabel: 'Image',
+                  zoomHint: 'Pinch to zoom',
+                  closeLabel: 'Close viewer',
+                  footer: const Text('Form guide'),
                 ),
+                child: const Text('Open viewer'),
+              ),
+            ),
           ),
         ),
       );
@@ -109,14 +110,13 @@ void main() {
       await first.up();
       await second.up();
       await tester.pumpAndSettle();
-      Matrix4 viewerTransform() =>
-          tester
-              .widgetList<Transform>(
-                find.descendant(of: viewer, matching: find.byType(Transform)),
-              )
-              .firstWhere((t) => t.transform.getMaxScaleOnAxis() > 1)
-              .transform
-              .clone();
+      Matrix4 viewerTransform() => tester
+          .widgetList<Transform>(
+            find.descendant(of: viewer, matching: find.byType(Transform)),
+          )
+          .firstWhere((t) => t.transform.getMaxScaleOnAxis() > 1)
+          .transform
+          .clone();
       final beforePan = viewerTransform();
       // Clear slop and avoid the parent's vertical scroll recognizer.
       final pan = await tester.startGesture(center, pointer: 3);

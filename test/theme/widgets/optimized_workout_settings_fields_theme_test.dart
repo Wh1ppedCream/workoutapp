@@ -8,6 +8,7 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
+import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -137,7 +138,10 @@ void main() {
                                     StarterWeightIntensity.medium,
                                 initialPreferredBodypartIds: const <int>{},
                                 initialBlacklistedBodypartIds: const <int>{},
-                                bodyParts: const <BodyPart>[],
+                                bodyParts: [
+                                  BodyPart(1, 'Chest'),
+                                  BodyPart(2, 'Upper Back'),
+                                ],
                               ),
                             ),
                           ),
@@ -165,72 +169,181 @@ void main() {
           ),
         );
         expect(scaffold.backgroundColor, planning.pageCanvas);
-        if (brightness == Brightness.dark) {
-          for (final label in [strings.commonCancel, strings.commonReset]) {
-            final labelFinder = find.text(label);
-            expect(labelFinder, findsOneWidget);
-            expect(
-              tester.widget<Text>(labelFinder).style?.color,
-              planning.planFocalForeground,
-            );
-            final surfaceFinder = find
-                .ancestor(of: labelFinder, matching: find.byType(Material))
-                .first;
-            expect(
-              tester.widget<Material>(surfaceFinder).color,
-              planning.planFocalSurface,
-            );
-          }
-        }
-        final cards = tester.widgetList<Card>(find.byType(Card)).toList();
-        expect(cards, hasLength(2));
-        expect(cards[0].color, planning.planFocalSurface);
-        expect(cards[1].color, planning.planSupportSurface);
+        expect(scaffold.appBar, isA<AppBar>());
+        final appBar = scaffold.appBar! as AppBar;
+        expect(appBar.backgroundColor, planning.pageCanvas);
+        expect(appBar.foregroundColor, planning.onPage);
+        expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+        expect(find.byTooltip(strings.commonReset), findsOneWidget);
+        expect(scaffold.bottomNavigationBar, isNull);
         expect(
-          cards.every((card) => card.shape is RoundedRectangleBorder),
-          isTrue,
+          scaffold.floatingActionButtonLocation,
+          FloatingActionButtonLocation.endFloat,
         );
+        final startButton = tester.widget<FloatingActionButton>(
+          find.widgetWithText(FloatingActionButton, strings.commonStartNow),
+        );
+        final saveButton = tester.widget<FloatingActionButton>(
+          find.widgetWithText(FloatingActionButton, strings.commonSave),
+        );
+        expect(
+          tester.widget<Text>(find.text(strings.commonStartNow)).style?.color,
+          planning.actionPrimaryForeground,
+        );
+        expect(
+          tester.widget<Text>(find.text(strings.commonSave)).style?.color,
+          planning.configurationForeground,
+        );
+        expect(startButton.backgroundColor, planning.actionPrimary);
+        expect(
+          saveButton.backgroundColor,
+          brightness == Brightness.dark
+              ? Color.lerp(
+                  planning.configurationSurface,
+                  planning.actionPrimary,
+                  0.16,
+                )
+              : planning.configurationSurface,
+        );
+        expect(saveButton.foregroundColor, planning.configurationForeground);
+        expect(
+          (saveButton.shape as RoundedRectangleBorder).side.color,
+          planning.outline.withValues(
+            alpha: brightness == Brightness.dark ? 0.78 : 0.42,
+          ),
+        );
+        final budgetCard = tester.widget<Card>(find.byType(Card).first);
+        expect(budgetCard.color, planning.planFocalSurface);
+        expect(budgetCard.shape, isA<RoundedRectangleBorder>());
+        await tester.drag(find.byType(ListView), const Offset(0, -500));
+        await tester.pumpAndSettle();
+        final repsHeading = find.text(strings.optimizedRepsWeightsTitle);
+        await tester.ensureVisible(repsHeading);
+        final repsCard = tester.widget<Card>(
+          find.ancestor(of: repsHeading, matching: find.byType(Card)).first,
+        );
+        expect(
+          repsCard.color,
+          brightness == Brightness.dark
+              ? Color.lerp(
+                  planning.planSupportSurface,
+                  planning.planFocalSurface,
+                  0.18,
+                )
+              : planning.planSupportSurface,
+        );
+        expect(repsCard.shape, isA<RoundedRectangleBorder>());
+        expect(repsCard.shape, budgetCard.shape);
         final firstChoice = tester.widget<ChoiceChip>(
           find.byType(ChoiceChip).first,
         );
         expect(firstChoice.selected, isTrue);
         expect(firstChoice.selectedColor, planning.selectedSurface);
         expect(find.byType(TonosFormField), findsNWidgets(4));
-        if (brightness == Brightness.light) {
-          final budgetCard = find.byType(Card).first;
-          final budgetFields = find.descendant(
-            of: budgetCard,
-            matching: find.byType(EditableText),
-          );
-          expect(budgetFields, findsNWidgets(3));
-          final fieldTheme = Theme.of(tester.element(budgetFields.first));
-          expect(
-            fieldTheme.inputDecorationTheme.labelStyle?.color,
-            planning.planFocalForeground,
-          );
-          expect(
-            fieldTheme.inputDecorationTheme.floatingLabelStyle?.color,
-            planning.planFocalForeground,
-          );
-          expect(
-            fieldTheme.inputDecorationTheme.suffixStyle?.color,
-            planning.planFocalForeground,
-          );
-          for (final field in tester.widgetList<EditableText>(budgetFields)) {
-            expect(field.style.color, planning.planFocalForeground);
-          }
+        final budgetCardFinder = find.byType(Card).first;
+        final budgetFields = find.descendant(
+          of: budgetCardFinder,
+          matching: find.byType(EditableText),
+        );
+        expect(budgetFields, findsNWidgets(3));
+        final fieldTheme = Theme.of(tester.element(budgetFields.first));
+        expect(fieldTheme.inputDecorationTheme.filled, isTrue);
+        expect(
+          fieldTheme.inputDecorationTheme.fillColor,
+          planning.configurationSurface,
+        );
+        expect(
+          fieldTheme.inputDecorationTheme.suffixStyle?.color,
+          planning.configurationForeground,
+        );
+        for (final field in tester.widgetList<EditableText>(budgetFields)) {
+          expect(field.style.color, planning.configurationForeground);
         }
-
+        for (final label in [
+          strings.optimizedWorkoutDuration,
+          strings.optimizedMinimumSets,
+          strings.optimizedMaximumSets,
+          strings.optimizedTargetReps,
+        ]) {
+          expect(find.text(label), findsOneWidget);
+        }
         final focusHeading = find.text(strings.optimizedBodypartFocusTitle);
         await tester.drag(find.byType(ListView), const Offset(0, -2000));
         await tester.pumpAndSettle();
-        final focusCard = tester.widget<Card>(
-          find.ancestor(of: focusHeading, matching: find.byType(Card)).first,
-        );
+        await tester.ensureVisible(focusHeading);
+        final focusCardFinder = find
+            .ancestor(of: focusHeading, matching: find.byType(Card))
+            .first;
+        final focusCard = tester.widget<Card>(focusCardFinder);
         expect(focusCard.color, planning.configurationSurface);
         expect(focusCard.shape, isA<RoundedRectangleBorder>());
+        expect(find.text('Preferred'), findsOneWidget);
+        expect(find.text('Avoided'), findsOneWidget);
+        expect(find.text('Neutral'), findsOneWidget);
 
-        await tester.tap(find.widgetWithText(FilledButton, strings.commonSave));
+        final focusChips = find.descendant(
+          of: focusCardFinder,
+          matching: find.byType(RawChip),
+        );
+        final focusChip = tester.widget<RawChip>(focusChips.first);
+        final neutralSurface = brightness == Brightness.light
+            ? Color.lerp(
+                planning.configurationSurface,
+                planning.planSupportSurface,
+                0.28,
+              )
+            : Color.alphaBlend(
+                planning.planFocalSurface.withValues(alpha: 0.22),
+                planning.configurationSurface,
+              );
+        expect(focusChip.backgroundColor, neutralSurface);
+        expect(
+          focusChip.side?.color,
+          brightness == Brightness.light
+              ? planning.outline.withValues(alpha: 0.72)
+              : planning.outline,
+        );
+        expect(
+          focusChip.avatar,
+          isA<Icon>()
+              .having(
+                (icon) => icon.icon,
+                'neutral-state icon',
+                Icons.radio_button_unchecked,
+              )
+              .having((icon) => icon.size, 'indicator size', 16),
+        );
+        final firstFocusChip = focusChips.first;
+        await tester.ensureVisible(firstFocusChip);
+        await tester.tap(firstFocusChip);
+        await tester.pumpAndSettle();
+        var updatedFocusChip = tester.widget<RawChip>(firstFocusChip);
+        expect(updatedFocusChip.selected, isTrue);
+        expect(updatedFocusChip.selectedColor, planning.actionPrimary);
+        expect(updatedFocusChip.showCheckmark, isTrue);
+        expect(
+          (updatedFocusChip.avatar! as Icon).icon,
+          Icons.add_circle_outline,
+        );
+        expect((updatedFocusChip.avatar! as Icon).size, 16);
+        await tester.tap(firstFocusChip);
+        await tester.pumpAndSettle();
+        updatedFocusChip = tester.widget<RawChip>(firstFocusChip);
+        expect(updatedFocusChip.showCheckmark, isFalse);
+        expect((updatedFocusChip.avatar! as Icon).icon, Icons.block);
+        final avoidedColor = pageContext.semanticColors.negative;
+        expect((updatedFocusChip.avatar! as Icon).color, avoidedColor);
+        expect(updatedFocusChip.side?.color, avoidedColor);
+        expect(updatedFocusChip.labelStyle?.color, avoidedColor);
+        expect((updatedFocusChip.avatar! as Icon).size, 16);
+        expect(updatedFocusChip.selectedColor, isNot(planning.actionPrimary));
+        await tester.tap(firstFocusChip);
+        await tester.pumpAndSettle();
+        expect(tester.widget<RawChip>(firstFocusChip).selected, isFalse);
+
+        await tester.tap(
+          find.widgetWithText(FloatingActionButton, strings.commonSave),
+        );
         await tester.pumpAndSettle();
         expect(submitted?.action, OptimizedWorkoutSettingsAction.save);
         expect(submitted?.minutes, 45);
@@ -284,7 +397,11 @@ void main() {
                 initialStarterWeightIntensity: StarterWeightIntensity.medium,
                 initialPreferredBodypartIds: const <int>{},
                 initialBlacklistedBodypartIds: const <int>{},
-                bodyParts: const <BodyPart>[],
+                bodyParts: [
+                  BodyPart(1, 'Chest'),
+                  BodyPart(2, 'Upper Back'),
+                  BodyPart(3, 'Shoulders'),
+                ],
               ),
             ),
           ),
@@ -296,6 +413,15 @@ void main() {
           find.byType(OptimizedWorkoutSettingsPage),
         );
         final strings = AppLocalizations.of(pageContext);
+        final routeTitle = find.text(strings.trainOptimizedSettings);
+        expect(routeTitle, findsOneWidget, reason: '$brightness $layout');
+        final resetAction = find.byTooltip(strings.commonReset);
+        expect(resetAction, findsOneWidget, reason: '$brightness $layout');
+        expect(
+          tester.getRect(routeTitle).overlaps(tester.getRect(resetAction)),
+          isFalse,
+          reason: '$brightness $layout',
+        );
         final durationField = find.byType(EditableText).first;
         await tester.ensureVisible(durationField);
         if (layout.keyboardInset > 0) {
@@ -309,8 +435,29 @@ void main() {
           await tester.pumpAndSettle();
         }
 
-        final start = find.widgetWithText(FilledButton, strings.commonStartNow);
-        final save = find.widgetWithText(FilledButton, strings.commonSave);
+        final scrollable = find.byType(Scrollable).first;
+        await tester.scrollUntilVisible(
+          find.text(strings.optimizedBodypartFocusTitle),
+          300,
+          scrollable: scrollable,
+        );
+        final lastFocusChip = find.byType(RawChip).last;
+        await tester.scrollUntilVisible(
+          lastFocusChip,
+          160,
+          scrollable: scrollable,
+        );
+        await tester.pumpAndSettle();
+        expect(lastFocusChip.hitTestable(), findsOneWidget);
+
+        final start = find.widgetWithText(
+          FloatingActionButton,
+          strings.commonStartNow,
+        );
+        final save = find.widgetWithText(
+          FloatingActionButton,
+          strings.commonSave,
+        );
         expect(
           start.hitTestable(),
           findsOneWidget,
@@ -326,8 +473,24 @@ void main() {
           isFalse,
           reason: '$brightness $layout',
         );
+        final startRect = tester.getRect(start);
+        final saveRect = tester.getRect(save);
+        if (layout.size.width >= 380) {
+          expect(
+            (startRect.center.dy - saveRect.center.dy).abs(),
+            lessThan(1),
+            reason:
+                'wide layout keeps actions side by side: $brightness $layout',
+          );
+        } else {
+          expect(
+            saveRect.top,
+            greaterThanOrEqualTo(startRect.bottom),
+            reason: 'narrow layout stacks actions: $brightness $layout',
+          );
+        }
         expect(
-          tester.getRect(save).bottom,
+          saveRect.bottom,
           lessThanOrEqualTo(layout.size.height - layout.keyboardInset),
           reason: '$brightness $layout',
         );

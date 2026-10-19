@@ -7,8 +7,10 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../theme/expressive_planning_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/tonos_action.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_expressive_workout_shapes.dart';
 import '../theme/widgets/workout_actions.dart';
@@ -37,6 +39,8 @@ class WeightCard extends StatefulWidget {
   final bool forceCollapsed;
   final bool animateExpansion;
   final bool expressiveWorkoutPresentation;
+  final bool expressivePresetDetail;
+  final String? createChangeSetLabel;
 
   /// Supplies a fixture-only unit without requiring the production provider.
   /// When omitted, the user's [UnitPreferenceProvider] remains authoritative.
@@ -65,6 +69,8 @@ class WeightCard extends StatefulWidget {
     this.forceCollapsed = false,
     this.animateExpansion = false,
     this.expressiveWorkoutPresentation = false,
+    this.expressivePresetDetail = false,
+    this.createChangeSetLabel,
     this.previewWeightUnit,
     this.firstSetWeightKey,
     this.firstSetRepsKey,
@@ -312,24 +318,85 @@ class _WeightCardState extends State<WeightCard> {
   Future<void> _handleExerciseMenuAction(String choice) async {
     if (choice == 'remove') {
       final strings = AppLocalizations.of(context);
+      final planning = widget.expressivePresetDetail && _usesExpressiveWorkout
+          ? AppExpressivePlanningTokens.maybeOf(context)
+          : null;
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => TonosDialogFrame(
-          child: AlertDialog(
-            title: Text(strings.weightRemoveExerciseTitle),
-            content: Text(strings.weightRemoveExerciseBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(strings.commonCancel),
+        builder: (ctx) {
+          if (planning == null) {
+            return TonosDialogFrame(
+              child: AlertDialog(
+                title: Text(strings.weightRemoveExerciseTitle),
+                content: Text(strings.weightRemoveExerciseBody),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(strings.commonCancel),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(strings.commonRemove),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(strings.commonRemove),
+            );
+          }
+          final theme = Theme.of(ctx);
+          return TonosDialogFrame(
+            child: AlertDialog(
+              scrollable: true,
+              backgroundColor: planning.configurationSurface,
+              shape: RoundedRectangleBorder(borderRadius: planning.focalShape),
+              titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              title: Text(
+                strings.weightRemoveExerciseTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: planning.configurationForeground,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ],
-          ),
-        ),
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    strings.weightRemoveExerciseBody,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: planning.configurationForeground,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.exercise.name,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: planning.configurationForeground,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: planning.configurationForeground,
+                    side: BorderSide(color: planning.outline),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(strings.commonCancel),
+                ),
+                TonosAction(
+                  label: strings.commonRemove,
+                  variant: TonosActionVariant.destructive,
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => Navigator.pop(ctx, true),
+                ),
+              ],
+            ),
+          );
+        },
       );
       if (!mounted) return;
       if (confirm == true) widget.onDeleteExercise?.call();
@@ -352,6 +419,8 @@ class _WeightCardState extends State<WeightCard> {
     final usesExpressiveWorkout =
         widget.expressiveWorkoutPresentation &&
         context.usesExpressivePresentation;
+    final compactPresetDetail =
+        widget.expressivePresetDetail && usesExpressiveWorkout;
     final expressiveTokens = usesExpressiveWorkout
         ? theme.extension<AppExpressiveTrainTokens>()!
         : null;
@@ -429,7 +498,9 @@ class _WeightCardState extends State<WeightCard> {
             color: tonosForegroundForSurface(context, menuSurface),
           )
         : popupMenuTheme.textStyle;
-    final menuShape = popupMenuTheme.shape;
+    final menuShape = usesExpressiveWorkout
+        ? const RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu)
+        : popupMenuTheme.shape;
     final exerciseMenuStyle = MenuStyle(
       // This matches PopupMenuButton's default M3 placement: aligned to the
       // trailing edge of its trigger and over the trigger's vertical origin.
@@ -539,7 +610,19 @@ class _WeightCardState extends State<WeightCard> {
             // Header
             Container(
               margin: usesExpressiveWorkout
-                  ? EdgeInsets.fromLTRB(8, 8, 8, effectiveCollapsed ? 8 : 6)
+                  ? compactPresetDetail
+                        ? EdgeInsets.fromLTRB(
+                            6,
+                            5,
+                            6,
+                            effectiveCollapsed ? 5 : 3,
+                          )
+                        : EdgeInsets.fromLTRB(
+                            8,
+                            8,
+                            8,
+                            effectiveCollapsed ? 8 : 6,
+                          )
                   : null,
               decoration: usesExpressiveWorkout
                   ? BoxDecoration(
@@ -550,7 +633,9 @@ class _WeightCardState extends State<WeightCard> {
                     )
                   : null,
               padding: usesExpressiveWorkout
-                  ? const EdgeInsets.symmetric(horizontal: 8)
+                  ? EdgeInsets.symmetric(
+                      horizontal: compactPresetDetail ? 6 : 8,
+                    )
                   : null,
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -578,23 +663,17 @@ class _WeightCardState extends State<WeightCard> {
                     children: [
                       Text(
                         we.name,
-                        style:
-                            (usesExpressiveWorkout
-                                    ? theme.textTheme.titleLarge
-                                    : theme.textTheme.titleMedium)
-                                ?.copyWith(
-                                  color: usesExpressiveWorkout
-                                      ? allSetsComplete
-                                            ? workoutCompletedHeaderForeground
-                                            : theme
-                                                  .colorScheme
-                                                  .onPrimaryContainer
-                                      : surfaces.useSemanticWorkoutCardFill
-                                      ? semantic.onWorkoutContainer
-                                      : null,
-                                ),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: usesExpressiveWorkout
+                              ? allSetsComplete
+                                    ? workoutCompletedHeaderForeground
+                                    : theme.colorScheme.onPrimaryContainer
+                              : surfaces.useSemanticWorkoutCardFill
+                              ? semantic.onWorkoutContainer
+                              : null,
+                        ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: compactPresetDetail ? 2 : 4),
                       Row(
                         children: [
                           if (allSetsComplete) ...[
@@ -607,9 +686,12 @@ class _WeightCardState extends State<WeightCard> {
                           ],
                           Flexible(
                             child: Text(
-                              AppLocalizations.of(
-                                context,
-                              ).weightCardSetsDone(completedCount, sets.length),
+                              compactPresetDetail
+                                  ? strings.presetExerciseSetCount(sets.length)
+                                  : strings.weightCardSetsDone(
+                                      completedCount,
+                                      sets.length,
+                                    ),
                               style: theme.textTheme.bodySmall!.copyWith(
                                 color: doneColor,
                                 fontWeight: allSetsComplete
@@ -647,6 +729,9 @@ class _WeightCardState extends State<WeightCard> {
                           MenuItemButton(
                             autofocus: true,
                             onPressed: () => _handleExerciseMenuAction('swap'),
+                            leadingIcon: compactPresetDetail
+                                ? const Icon(Icons.swap_horiz)
+                                : null,
                             child: Text(
                               strings.weightSwapExercise,
                               style: menuTextStyle,
@@ -655,6 +740,19 @@ class _WeightCardState extends State<WeightCard> {
                         MenuItemButton(
                           autofocus: widget.onSwapExercise == null,
                           onPressed: () => _handleExerciseMenuAction('remove'),
+                          style: compactPresetDetail
+                              ? ButtonStyle(
+                                  foregroundColor: WidgetStatePropertyAll(
+                                    theme.colorScheme.error,
+                                  ),
+                                )
+                              : null,
+                          leadingIcon: compactPresetDetail
+                              ? Icon(
+                                  Icons.delete_outline,
+                                  color: theme.colorScheme.error,
+                                )
+                              : null,
                           child: Text(
                             strings.weightRemoveExerciseTitle,
                             style: menuTextStyle,
@@ -663,8 +761,14 @@ class _WeightCardState extends State<WeightCard> {
                         MenuItemButton(
                           onPressed: () =>
                               _handleExerciseMenuAction('changeSet'),
+                          leadingIcon: compactPresetDetail
+                              ? const Icon(Icons.library_add_outlined)
+                              : null,
                           child: Text(
-                            strings.weightMakeChangeSet,
+                            compactPresetDetail
+                                ? widget.createChangeSetLabel ??
+                                      strings.weightMakeChangeSet
+                                : strings.weightMakeChangeSet,
                             style: menuTextStyle,
                           ),
                         ),
@@ -752,724 +856,832 @@ class _WeightCardState extends State<WeightCard> {
               duration: expansionDuration,
               curve: context.motionTokens.standardCurve,
               contentPadding: usesExpressiveWorkout
-                  ? const EdgeInsets.fromLTRB(16, 0, 16, 8)
+                  ? compactPresetDetail
+                        ? const EdgeInsets.fromLTRB(12, 0, 12, 4)
+                        : const EdgeInsets.fromLTRB(16, 0, 16, 8)
                   : EdgeInsets.zero,
-              contentBuilder: (_) => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Divider(
-                    height: usesExpressiveWorkout ? 1 : 16,
-                    color: usesExpressiveWorkout
-                        ? expressiveTokens!.focusSurface.withValues(alpha: 0.3)
-                        : null,
-                  ),
-                  // Sets + ChangeSets
-                  ...List.generate(sets.length, (index) {
-                    final children = <Widget>[];
-                    final isSetComplete = _completedSets.contains(index);
-                    if ((usesInkRecipe || usesExpressiveWorkout) && index > 0) {
-                      children.add(
-                        Divider(
-                          color: usesExpressiveWorkout
-                              ? expressiveTokens!.focusSurface.withValues(
-                                  alpha: 0.24,
-                                )
-                              : surfaces.divider,
-                          height: 1,
-                          thickness: 1,
-                          indent: 12,
-                          endIndent: 12,
-                        ),
-                      );
-                    }
-                    // Parent set row
-                    children.add(
-                      AnimatedContainer(
-                        duration: usesExpressiveWorkout
-                            ? appMotionDuration(
-                                context,
-                                context.motionTokens.quick,
+              contentBuilder: (context) => LayoutBuilder(
+                builder: (context, layoutConstraints) {
+                  final compactRows = layoutConstraints.maxWidth - 24 < 330;
+                  final presetColumnLabels =
+                      compactPresetDetail &&
+                      !readOnly &&
+                      !compactRows &&
+                      MediaQuery.textScalerOf(context).scale(1) <= 1.15;
+                  final localizedLabels =
+                      Localizations.localeOf(context).languageCode != 'en';
+                  final headingSetWidth = localizedLabels
+                      ? (compactRows ? 62.0 : 76.0)
+                      : (compactRows ? 48.0 : 58.0);
+                  final headingRemoveWidth = compactRows ? 34.0 : 40.0;
+                  final headingFieldGap = compactRows ? 10.0 : 14.0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Divider(
+                        height: usesExpressiveWorkout ? 1 : 16,
+                        color: usesExpressiveWorkout
+                            ? expressiveTokens!.focusSurface.withValues(
+                                alpha: 0.3,
                               )
-                            : Duration.zero,
-                        curve: context.motionTokens.standardCurve,
-                        decoration: BoxDecoration(
-                          color: isSetComplete
-                              ? completedSetColor.withValues(
-                                  alpha: surfaces.workoutSetCompleteFill,
-                                )
-                              : usesExpressiveWorkout
-                              ? theme.colorScheme.surfaceContainer
-                              : null,
-                          border: isSetComplete && usesInkRecipe
-                              ? Border(
-                                  top: BorderSide(
-                                    color: semantic.onWorkoutContainer,
-                                    width:
-                                        shapes.workoutCompletedSetBorderWidth,
-                                  ),
-                                  right: BorderSide(
-                                    color: semantic.onWorkoutContainer,
-                                    width:
-                                        shapes.workoutCompletedSetBorderWidth,
-                                  ),
-                                  bottom: BorderSide(
-                                    color: semantic.onWorkoutContainer,
-                                    width:
-                                        shapes.workoutCompletedSetBorderWidth,
-                                  ),
-                                  left: BorderSide(
-                                    color: semantic.onWorkoutContainer,
-                                    width: shapes
-                                        .workoutCompletedSetAccentBorderWidth,
-                                  ),
-                                )
-                              : _isChangeSetMode
-                              ? Border.all(
-                                  color: surfaces.workoutChangeSetOutline,
-                                )
-                              : isSetComplete &&
-                                    surfaces.workoutSetCompleteOutline.a > 0
-                              ? Border.all(
-                                  color: surfaces.workoutSetCompleteOutline,
-                                )
-                              : null,
-                          boxShadow: isSetComplete && usesInkRecipe
-                              ? [
-                                  BoxShadow(
-                                    color: effects.cardShadow,
-                                    blurRadius: effects.cardShadowBlur,
-                                    offset: effects.completedSetShadowOffset,
-                                  ),
-                                ]
-                              : null,
-                          borderRadius: usesExpressiveWorkout
-                              ? TonosExpressiveWorkoutShapes.setRow
-                              : usesInkRecipe
-                              ? shapes.workoutCompletedSet
-                              : shapes.control,
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal:
-                              usesExpressiveWorkout &&
-                                  MediaQuery.sizeOf(context).width <= 330 &&
-                                  MediaQuery.textScalerOf(context).scale(1) >
-                                      1.15
-                              ? 6
-                              : 12,
-                          vertical: usesExpressiveWorkout ? 0 : 10,
-                        ),
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final compact = constraints.maxWidth < 330;
-                            final usesLocalizedLayout =
-                                Localizations.localeOf(context).languageCode !=
-                                'en';
-                            final checkboxWidth = 48.0;
-                            final largeText =
-                                MediaQuery.textScalerOf(context).scale(1) >
-                                1.15;
-                            final reflowLargeExpressiveRow =
-                                usesExpressiveWorkout && compact && largeText;
-                            final setLabelNeedsWrap = reflowLargeExpressiveRow;
-                            final defaultSetLabelWidth = usesLocalizedLayout
-                                ? (compact ? 62.0 : 76.0)
-                                : (compact ? 48.0 : 58.0);
-                            final setLabelWidth = setLabelNeedsWrap
-                                ? (compact ? 68.0 : 76.0)
-                                : defaultSetLabelWidth;
-                            final removeWidth = compact ? 34.0 : 40.0;
-                            final fieldGap = compact ? 10.0 : 14.0;
-                            final stackFields = usesExpressiveWorkout
-                                ? !reflowLargeExpressiveRow &&
-                                      (largeText || constraints.maxWidth < 260)
-                                : largeText;
-
-                            Widget withExpressiveFieldLabel(
-                              String label,
-                              Widget field,
-                              VoidCallback onTapLabel, {
-                              required bool isWeightField,
-                            }) {
-                              if (!usesExpressiveWorkout) return field;
-                              final verticalHitPadding =
-                                  reflowLargeExpressiveRow
-                                  ? EdgeInsets.zero
-                                  : !stackFields
-                                  ? const EdgeInsets.symmetric(vertical: 10)
-                                  : isWeightField
-                                  ? EdgeInsets.only(
-                                      top: 10,
-                                      bottom: fieldGap / 2,
-                                    )
-                                  : EdgeInsets.only(
-                                      top: fieldGap / 2,
-                                      bottom: 10,
-                                    );
-                              return GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                excludeFromSemantics: true,
-                                onTap: onTapLabel,
-                                child: Padding(
-                                  padding: verticalHitPadding,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 3,
-                                        ),
-                                        child: Text(
-                                          label,
-                                          style: workoutFieldLabelStyle,
-                                          maxLines: reflowLargeExpressiveRow
-                                              ? null
-                                              : 2,
-                                          overflow: reflowLargeExpressiveRow
-                                              ? null
-                                              : TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Semantics(label: label, child: field),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            Widget buildWeightField() {
-                              final label = strings.weightLabel(
-                                _weightUnit.shortLabel,
-                              );
-                              final focusNode = usesExpressiveWorkout
-                                  ? index == 0 &&
-                                            widget.firstSetWeightFocusNode !=
-                                                null
-                                        ? widget.firstSetWeightFocusNode!
-                                        : _weightFieldFocusNodes[index]
-                                  : index == 0
-                                  ? widget.firstSetWeightFocusNode
-                                  : null;
-                              final field = TextFormField(
-                                key: index == 0
-                                    ? widget.firstSetWeightKey
-                                    : null,
-                                focusNode: focusNode,
-                                textInputAction:
-                                    index == 0 &&
-                                        widget.onFirstSetWeightSubmitted != null
-                                    ? TextInputAction.next
-                                    : null,
-                                controller: _weightControllers[index],
-                                readOnly: readOnly,
-                                keyboardType: TextInputType.number,
-                                style: Theme.of(context).textTheme.bodyLarge,
-                                decoration: InputDecoration(
-                                  labelText: usesExpressiveWorkout
-                                      ? null
-                                      : label,
-                                  isDense: true,
-                                ),
-                                onChanged: readOnly
-                                    ? null
-                                    : (_) => _updateWeightSet(index),
-                                onFieldSubmitted: index == 0
-                                    ? (_) => widget.onFirstSetWeightSubmitted
-                                          ?.call()
-                                    : null,
-                              );
-                              return withExpressiveFieldLabel(
-                                label,
-                                field,
-                                () => focusNode?.requestFocus(),
-                                isWeightField: true,
-                              );
-                            }
-
-                            Widget buildRepsField() {
-                              final label = strings.weightReps;
-                              final focusNode = usesExpressiveWorkout
-                                  ? index == 0 &&
-                                            widget.firstSetRepsFocusNode != null
-                                        ? widget.firstSetRepsFocusNode!
-                                        : _repsFieldFocusNodes[index]
-                                  : index == 0
-                                  ? widget.firstSetRepsFocusNode
-                                  : null;
-                              final field = TextFormField(
-                                key: index == 0 ? widget.firstSetRepsKey : null,
-                                focusNode: focusNode,
-                                textInputAction:
-                                    index == 0 &&
-                                        widget.onFirstSetRepsSubmitted != null
-                                    ? TextInputAction.done
-                                    : null,
-                                controller: _repsControllers[index],
-                                readOnly: readOnly,
-                                keyboardType: TextInputType.number,
-                                style: Theme.of(context).textTheme.bodyLarge,
-                                decoration: InputDecoration(
-                                  labelText: usesExpressiveWorkout
-                                      ? null
-                                      : label,
-                                  isDense: true,
-                                ),
-                                onChanged: readOnly
-                                    ? null
-                                    : (_) => _updateWeightSet(index),
-                                onFieldSubmitted: index == 0
-                                    ? (_) =>
-                                          widget.onFirstSetRepsSubmitted?.call()
-                                    : null,
-                              );
-                              return withExpressiveFieldLabel(
-                                label,
-                                field,
-                                () => focusNode?.requestFocus(),
-                                isWeightField: false,
-                              );
-                            }
-
-                            final fields = stackFields
-                                ? Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      buildWeightField(),
-                                      if (!usesExpressiveWorkout)
-                                        SizedBox(height: fieldGap),
-                                      buildRepsField(),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      Expanded(child: buildWeightField()),
-                                      SizedBox(width: fieldGap),
-                                      Expanded(child: buildRepsField()),
-                                    ],
-                                  );
-
-                            final completionControl = SizedBox(
-                              width: checkboxWidth,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Checkbox(
-                                  value: _completedSets.contains(index),
-                                  semanticLabel: strings.weightSetLabel(
-                                    index + 1,
-                                  ),
-                                  activeColor: completedCheckboxColor,
-                                  side: usesExpressiveWorkout
-                                      ? BorderSide(
-                                          color:
-                                              expressiveTokens!.actionPrimary,
-                                          width: 1.75,
-                                        )
-                                      : null,
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.padded,
-                                  visualDensity: VisualDensity.standard,
-                                  onChanged: readOnly
-                                      ? null
-                                      : (ok) {
-                                          if (ok == null) return;
-                                          setState(() {
-                                            if (ok) {
-                                              _completedSets.add(index);
-                                              widget.exercise.completedParents
-                                                  .add(index);
-                                            } else {
-                                              _completedSets.remove(index);
-                                              widget.exercise.completedParents
-                                                  .remove(index);
-                                            }
-                                            if (_allSetsComplete(sets)) {
-                                              _isCollapsed = true;
-                                            }
-                                          });
-                                          widget.onValueChanged?.call();
-                                        },
-                                ),
-                              ),
-                            );
-                            final setNumber = SizedBox(
-                              width: setLabelWidth,
-                              child: setLabelNeedsWrap
-                                  ? Text(
-                                      strings.weightSetLabel(index + 1),
-                                      style: workoutSetLabelStyle,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    )
-                                  : usesLocalizedLayout
-                                  ? FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        strings.weightSetLabel(index + 1),
-                                        style: workoutSetLabelStyle,
-                                        maxLines: 1,
-                                      ),
-                                    )
-                                  : Text(
-                                      strings.weightSetLabel(index + 1),
-                                      style: workoutSetLabelStyle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                            );
-                            final removeAction = SizedBox(
-                              width: removeWidth,
-                              child: IconButton(
-                                icon: const Icon(Icons.remove_circle_outline),
-                                tooltip: strings.weightRemoveSetTitle,
-                                style: usesExpressiveWorkout
-                                    ? IconButton.styleFrom(
-                                        foregroundColor:
-                                            expressiveTokens!.actionPrimary,
-                                      )
-                                    : null,
-                                constraints: BoxConstraints.tightFor(
-                                  width: removeWidth,
-                                  height: 40,
-                                ),
-                                padding: EdgeInsets.zero,
-                                onPressed: readOnly
-                                    ? null
-                                    : () async {
-                                        final confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => TonosDialogFrame(
-                                            child: AlertDialog(
-                                              title: Text(
-                                                strings.weightRemoveSetTitle,
-                                              ),
-                                              content: Text(
-                                                strings.weightRemoveSetBody,
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  child: Text(
-                                                    strings.commonCancel,
-                                                  ),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  child: Text(
-                                                    strings.commonRemove,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                        if (!mounted) return;
-                                        if (confirm == true) {
-                                          setState(() {
-                                            sets.removeAt(index);
-                                            _syncFieldFocusNodes(
-                                              _usesExpressiveWorkout
-                                                  ? sets.length
-                                                  : 0,
-                                            );
-                                            _weightControllers
-                                                .removeAt(index)
-                                                .dispose();
-                                            _repsControllers
-                                                .removeAt(index)
-                                                .dispose();
-                                            _removeCompletedSetIndex(index);
-                                            _removeChangeSetsForParentIndex(
-                                              index,
-                                            );
-                                            _isChangeSetMode =
-                                                _cSets.isNotEmpty &&
-                                                _isChangeSetMode;
-                                          });
-                                          widget.onSetDeleted?.call();
-                                          widget.onValueChanged?.call();
-                                        }
-                                      },
-                              ),
-                            );
-
-                            if (reflowLargeExpressiveRow) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    children: [
-                                      completionControl,
-                                      setNumber,
-                                      const Spacer(),
-                                      removeAction,
-                                    ],
-                                  ),
-                                  fields,
-                                ],
-                              );
-                            }
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                completionControl,
-                                setNumber,
-                                const SizedBox(width: 8),
-                                Expanded(child: fields),
-                                SizedBox(width: compact ? 6 : 10),
-                                removeAction,
-                              ],
-                            );
-                          },
-                        ),
+                            : null,
                       ),
-                    );
-
-                    // Boxed ChangeSets UI
-                    if (_isChangeSetMode ||
-                        widget.exercise.changeSets.isNotEmpty) {
-                      final cList = _cSets[index] ?? [];
-                      for (var ci = 0; ci < cList.length; ci++) {
-                        final cset = cList[ci];
-                        children.add(
-                          Transform.scale(
-                            scale: 0.8,
-                            alignment: Alignment.topLeft,
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                left: 32,
-                                bottom: 4,
-                              ),
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: surfaces.workoutChangeSetOutline,
+                      // Sets + ChangeSets
+                      if (presetColumnLabels)
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            12 + 48 + headingSetWidth + 8,
+                            2,
+                            12 + headingRemoveWidth + headingFieldGap,
+                            4,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  strings.weightShortLabel(
+                                    _weightUnit.shortLabel,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    strings.weightChangeSetLabel(ci + 1),
-                                    style: workoutSetLabelStyle,
+                              SizedBox(width: headingFieldGap),
+                              Expanded(
+                                child: Text(
+                                  strings.weightReps,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  const SizedBox(width: 8),
-                                  // Weight
-                                  SizedBox(
-                                    width: 60,
-                                    child: TextFormField(
-                                      readOnly: readOnly,
-                                      keyboardType: TextInputType.number,
-                                      initialValue:
-                                          WeightUnitFormatter.formatInputWeight(
-                                            cset.weight,
-                                            _weightUnit,
-                                          ),
-                                      decoration: InputDecoration(
-                                        labelText: strings.weightShortLabel(
-                                          _weightUnit.shortLabel,
-                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ...List.generate(sets.length, (index) {
+                        final children = <Widget>[];
+                        final isSetComplete = _completedSets.contains(index);
+                        if ((usesInkRecipe || usesExpressiveWorkout) &&
+                            index > 0) {
+                          children.add(
+                            Divider(
+                              color: usesExpressiveWorkout
+                                  ? expressiveTokens!.focusSurface.withValues(
+                                      alpha: 0.24,
+                                    )
+                                  : surfaces.divider,
+                              height: 1,
+                              thickness: 1,
+                              indent: 12,
+                              endIndent: 12,
+                            ),
+                          );
+                        }
+                        // Parent set row
+                        children.add(
+                          AnimatedContainer(
+                            duration: usesExpressiveWorkout
+                                ? appMotionDuration(
+                                    context,
+                                    context.motionTokens.quick,
+                                  )
+                                : Duration.zero,
+                            curve: context.motionTokens.standardCurve,
+                            decoration: BoxDecoration(
+                              color: isSetComplete
+                                  ? completedSetColor.withValues(
+                                      alpha: surfaces.workoutSetCompleteFill,
+                                    )
+                                  : usesExpressiveWorkout
+                                  ? theme.colorScheme.surfaceContainer
+                                  : null,
+                              border: isSetComplete && usesInkRecipe
+                                  ? Border(
+                                      top: BorderSide(
+                                        color: semantic.onWorkoutContainer,
+                                        width: shapes
+                                            .workoutCompletedSetBorderWidth,
                                       ),
-                                      onChanged: readOnly
-                                          ? null
-                                          : (v) {
-                                              final displayValue =
-                                                  double.tryParse(v);
-                                              if (displayValue != null) {
-                                                cset.weight =
-                                                    WeightUnitFormatter.toPounds(
-                                                      displayValue,
-                                                      _weightUnit,
-                                                    );
-                                              }
-                                              widget
-                                                      .exercise
-                                                      .changeSets[index] =
-                                                  List.from(_cSets[index]!);
-                                              widget.onValueChanged?.call();
-                                            },
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Reps
-                                  SizedBox(
-                                    width: 40,
-                                    child: TextFormField(
-                                      readOnly: readOnly,
-                                      keyboardType: TextInputType.number,
-                                      initialValue: cset.reps.toString(),
-                                      decoration: InputDecoration(
-                                        labelText: strings.weightReps,
+                                      right: BorderSide(
+                                        color: semantic.onWorkoutContainer,
+                                        width: shapes
+                                            .workoutCompletedSetBorderWidth,
                                       ),
-                                      onChanged: readOnly
-                                          ? null
-                                          : (v) {
-                                              cset.reps =
-                                                  int.tryParse(v) ?? cset.reps;
-                                              widget
-                                                      .exercise
-                                                      .changeSets[index] =
-                                                  List.from(_cSets[index]!);
-                                              widget.onValueChanged?.call();
-                                            },
-                                    ),
-                                  ),
-                                  if (!readOnly) ...[
-                                    const Spacer(),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.remove_circle_outline,
+                                      bottom: BorderSide(
+                                        color: semantic.onWorkoutContainer,
+                                        width: shapes
+                                            .workoutCompletedSetBorderWidth,
                                       ),
-                                      tooltip:
-                                          strings.weightRemoveChangeSetTitle,
-                                      onPressed: () async {
-                                        final confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (ctx) => TonosDialogFrame(
-                                            child: AlertDialog(
-                                              title: Text(
-                                                strings
-                                                    .weightRemoveChangeSetTitle,
-                                              ),
-                                              content: Text(
-                                                strings
-                                                    .weightRemoveChangeSetBody,
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, false),
-                                                  child: Text(
-                                                    strings.commonCancel,
-                                                  ),
-                                                ),
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(ctx, true),
-                                                  child: Text(
-                                                    strings.commonRemove,
-                                                  ),
-                                                ),
-                                              ],
+                                      left: BorderSide(
+                                        color: semantic.onWorkoutContainer,
+                                        width: shapes
+                                            .workoutCompletedSetAccentBorderWidth,
+                                      ),
+                                    )
+                                  : _isChangeSetMode
+                                  ? Border.all(
+                                      color: surfaces.workoutChangeSetOutline,
+                                    )
+                                  : isSetComplete &&
+                                        surfaces.workoutSetCompleteOutline.a > 0
+                                  ? Border.all(
+                                      color: surfaces.workoutSetCompleteOutline,
+                                    )
+                                  : null,
+                              boxShadow: isSetComplete && usesInkRecipe
+                                  ? [
+                                      BoxShadow(
+                                        color: effects.cardShadow,
+                                        blurRadius: effects.cardShadowBlur,
+                                        offset:
+                                            effects.completedSetShadowOffset,
+                                      ),
+                                    ]
+                                  : null,
+                              borderRadius: usesExpressiveWorkout
+                                  ? TonosExpressiveWorkoutShapes.setRow
+                                  : usesInkRecipe
+                                  ? shapes.workoutCompletedSet
+                                  : shapes.control,
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal:
+                                  usesExpressiveWorkout &&
+                                      MediaQuery.sizeOf(context).width <= 330 &&
+                                      MediaQuery.textScalerOf(context)
+                                              .scale(1) >
+                                          1.15
+                                  ? 6
+                                  : 12,
+                              vertical: usesExpressiveWorkout ? 0 : 10,
+                            ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: compactPresetDetail ? 3 : 6,
+                            ),
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final compact = constraints.maxWidth < 330;
+                                final usesLocalizedLayout =
+                                    Localizations.localeOf(context)
+                                        .languageCode !=
+                                    'en';
+                                final checkboxWidth = 48.0;
+                                final largeText =
+                                    MediaQuery.textScalerOf(context).scale(1) >
+                                    1.15;
+                                final reflowLargeExpressiveRow =
+                                    usesExpressiveWorkout &&
+                                    compact &&
+                                    largeText;
+                                final setLabelNeedsWrap =
+                                    reflowLargeExpressiveRow;
+                                final defaultSetLabelWidth = usesLocalizedLayout
+                                    ? (compact ? 62.0 : 76.0)
+                                    : (compact ? 48.0 : 58.0);
+                                final setLabelWidth = setLabelNeedsWrap
+                                    ? (compact ? 68.0 : 76.0)
+                                    : defaultSetLabelWidth;
+                                final removeWidth = compact ? 34.0 : 40.0;
+                                final fieldGap = compact ? 10.0 : 14.0;
+                                final stackFields = usesExpressiveWorkout
+                                    ? !reflowLargeExpressiveRow &&
+                                          (largeText ||
+                                              constraints.maxWidth < 260)
+                                    : largeText;
+
+                                Widget withExpressiveFieldLabel(
+                                  String label,
+                                  Widget field,
+                                  VoidCallback onTapLabel, {
+                                  required bool isWeightField,
+                                }) {
+                                  if (!usesExpressiveWorkout) return field;
+                                  if (presetColumnLabels) {
+                                    return Semantics(
+                                      label: label,
+                                      child: field,
+                                    );
+                                  }
+                                  final verticalHitPadding =
+                                      reflowLargeExpressiveRow
+                                      ? EdgeInsets.zero
+                                      : !stackFields
+                                      ? const EdgeInsets.symmetric(vertical: 10)
+                                      : isWeightField
+                                      ? EdgeInsets.only(
+                                          top: 10,
+                                          bottom: fieldGap / 2,
+                                        )
+                                      : EdgeInsets.only(
+                                          top: fieldGap / 2,
+                                          bottom: 10,
+                                        );
+                                  return GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    excludeFromSemantics: true,
+                                    onTap: onTapLabel,
+                                    child: Padding(
+                                      padding: verticalHitPadding,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 3,
+                                            ),
+                                            child: Text(
+                                              label,
+                                              style: workoutFieldLabelStyle,
+                                              maxLines: reflowLargeExpressiveRow
+                                                  ? null
+                                                  : 2,
+                                              overflow: reflowLargeExpressiveRow
+                                                  ? null
+                                                  : TextOverflow.ellipsis,
                                             ),
                                           ),
-                                        );
-                                        if (!mounted) return;
-                                        if (confirm == true) {
-                                          setState(() {
-                                            _cSets[index]!.removeAt(ci);
-                                            if (_cSets[index]!.isEmpty) {
-                                              _cSets.remove(index);
-                                              widget.exercise.changeSets.remove(
-                                                index,
-                                              );
-                                            } else {
-                                              widget
-                                                      .exercise
-                                                      .changeSets[index] =
-                                                  List.from(_cSets[index]!);
-                                            }
-                                          });
-                                          widget.onValueChanged?.call();
-                                        }
-                                      },
+                                          Semantics(label: label, child: field),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                    }
+                                  );
+                                }
 
-                    // "Add CSet" button
-                    if (!readOnly && _isChangeSetMode) {
-                      children.add(
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 16, bottom: 4),
-                            child: WorkoutAddChangeSetAction(
-                              label: strings.weightAddChangeSet,
-                              onTap: () {
-                                setState(() {
-                                  _cSets.putIfAbsent(index, () => []);
-                                  _cSets[index]!.add(
-                                    ExerciseSet(
-                                      weight: sets[index].weight,
-                                      reps: sets[index].reps,
+                                Widget buildWeightField() {
+                                  final label = strings.weightLabel(
+                                    _weightUnit.shortLabel,
+                                  );
+                                  final focusNode = usesExpressiveWorkout
+                                      ? index == 0 &&
+                                                widget.firstSetWeightFocusNode !=
+                                                    null
+                                            ? widget.firstSetWeightFocusNode!
+                                            : _weightFieldFocusNodes[index]
+                                      : index == 0
+                                      ? widget.firstSetWeightFocusNode
+                                      : null;
+                                  final field = TextFormField(
+                                    key: index == 0
+                                        ? widget.firstSetWeightKey
+                                        : null,
+                                    focusNode: focusNode,
+                                    textInputAction:
+                                        index == 0 &&
+                                            widget.onFirstSetWeightSubmitted !=
+                                                null
+                                        ? TextInputAction.next
+                                        : null,
+                                    controller: _weightControllers[index],
+                                    readOnly: readOnly,
+                                    keyboardType: TextInputType.number,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge,
+                                    decoration: InputDecoration(
+                                      labelText: usesExpressiveWorkout
+                                          ? null
+                                          : label,
+                                      isDense: true,
                                     ),
+                                    onChanged: readOnly
+                                        ? null
+                                        : (_) => _updateWeightSet(index),
+                                    onFieldSubmitted: index == 0
+                                        ? (_) => widget
+                                              .onFirstSetWeightSubmitted
+                                              ?.call()
+                                        : null,
                                   );
-                                  widget.exercise.changeSets[index] = List.from(
-                                    _cSets[index]!,
+                                  return withExpressiveFieldLabel(
+                                    label,
+                                    field,
+                                    () => focusNode?.requestFocus(),
+                                    isWeightField: true,
                                   );
-                                });
-                                widget.onValueChanged?.call();
+                                }
+
+                                Widget buildRepsField() {
+                                  final label = strings.weightReps;
+                                  final focusNode = usesExpressiveWorkout
+                                      ? index == 0 &&
+                                                widget.firstSetRepsFocusNode !=
+                                                    null
+                                            ? widget.firstSetRepsFocusNode!
+                                            : _repsFieldFocusNodes[index]
+                                      : index == 0
+                                      ? widget.firstSetRepsFocusNode
+                                      : null;
+                                  final field = TextFormField(
+                                    key: index == 0
+                                        ? widget.firstSetRepsKey
+                                        : null,
+                                    focusNode: focusNode,
+                                    textInputAction:
+                                        index == 0 &&
+                                            widget.onFirstSetRepsSubmitted !=
+                                                null
+                                        ? TextInputAction.done
+                                        : null,
+                                    controller: _repsControllers[index],
+                                    readOnly: readOnly,
+                                    keyboardType: TextInputType.number,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge,
+                                    decoration: InputDecoration(
+                                      labelText: usesExpressiveWorkout
+                                          ? null
+                                          : label,
+                                      isDense: true,
+                                    ),
+                                    onChanged: readOnly
+                                        ? null
+                                        : (_) => _updateWeightSet(index),
+                                    onFieldSubmitted: index == 0
+                                        ? (_) => widget.onFirstSetRepsSubmitted
+                                              ?.call()
+                                        : null,
+                                  );
+                                  return withExpressiveFieldLabel(
+                                    label,
+                                    field,
+                                    () => focusNode?.requestFocus(),
+                                    isWeightField: false,
+                                  );
+                                }
+
+                                final fields = stackFields
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          buildWeightField(),
+                                          if (!usesExpressiveWorkout)
+                                            SizedBox(height: fieldGap),
+                                          buildRepsField(),
+                                        ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          Expanded(child: buildWeightField()),
+                                          SizedBox(width: fieldGap),
+                                          Expanded(child: buildRepsField()),
+                                        ],
+                                      );
+
+                                final completionControl = SizedBox(
+                                  width: checkboxWidth,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Checkbox(
+                                      value: _completedSets.contains(index),
+                                      semanticLabel: strings.weightSetLabel(
+                                        index + 1,
+                                      ),
+                                      activeColor: completedCheckboxColor,
+                                      side: usesExpressiveWorkout
+                                          ? BorderSide(
+                                              color: expressiveTokens!
+                                                  .actionPrimary,
+                                              width: 1.75,
+                                            )
+                                          : null,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.padded,
+                                      visualDensity: VisualDensity.standard,
+                                      onChanged: readOnly
+                                          ? null
+                                          : (ok) {
+                                              if (ok == null) return;
+                                              setState(() {
+                                                if (ok) {
+                                                  _completedSets.add(index);
+                                                  widget
+                                                      .exercise
+                                                      .completedParents
+                                                      .add(index);
+                                                } else {
+                                                  _completedSets.remove(index);
+                                                  widget
+                                                      .exercise
+                                                      .completedParents
+                                                      .remove(index);
+                                                }
+                                                if (_allSetsComplete(sets)) {
+                                                  _isCollapsed = true;
+                                                }
+                                              });
+                                              widget.onValueChanged?.call();
+                                            },
+                                    ),
+                                  ),
+                                );
+                                final setNumber = SizedBox(
+                                  width: setLabelWidth,
+                                  child: setLabelNeedsWrap
+                                      ? Text(
+                                          strings.weightSetLabel(index + 1),
+                                          style: workoutSetLabelStyle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        )
+                                      : usesLocalizedLayout
+                                      ? FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            strings.weightSetLabel(index + 1),
+                                            style: workoutSetLabelStyle,
+                                            maxLines: 1,
+                                          ),
+                                        )
+                                      : Text(
+                                          strings.weightSetLabel(index + 1),
+                                          style: workoutSetLabelStyle,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                );
+                                final removeAction = SizedBox(
+                                  width: removeWidth,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                    tooltip: strings.weightRemoveSetTitle,
+                                    style: usesExpressiveWorkout
+                                        ? IconButton.styleFrom(
+                                            foregroundColor:
+                                                expressiveTokens!.actionPrimary,
+                                          )
+                                        : null,
+                                    constraints: BoxConstraints.tightFor(
+                                      width: removeWidth,
+                                      height: 40,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    onPressed: readOnly
+                                        ? null
+                                        : () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => TonosDialogFrame(
+                                                child: AlertDialog(
+                                                  title: Text(
+                                                    strings
+                                                        .weightRemoveSetTitle,
+                                                  ),
+                                                  content: Text(
+                                                    strings.weightRemoveSetBody,
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      child: Text(
+                                                        strings.commonCancel,
+                                                      ),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      child: Text(
+                                                        strings.commonRemove,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                            if (!mounted) return;
+                                            if (confirm == true) {
+                                              setState(() {
+                                                sets.removeAt(index);
+                                                _syncFieldFocusNodes(
+                                                  _usesExpressiveWorkout
+                                                      ? sets.length
+                                                      : 0,
+                                                );
+                                                _weightControllers
+                                                    .removeAt(index)
+                                                    .dispose();
+                                                _repsControllers
+                                                    .removeAt(index)
+                                                    .dispose();
+                                                _removeCompletedSetIndex(index);
+                                                _removeChangeSetsForParentIndex(
+                                                  index,
+                                                );
+                                                _isChangeSetMode =
+                                                    _cSets.isNotEmpty &&
+                                                    _isChangeSetMode;
+                                              });
+                                              widget.onSetDeleted?.call();
+                                              widget.onValueChanged?.call();
+                                            }
+                                          },
+                                  ),
+                                );
+
+                                if (reflowLargeExpressiveRow) {
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          completionControl,
+                                          setNumber,
+                                          const Spacer(),
+                                          removeAction,
+                                        ],
+                                      ),
+                                      fields,
+                                    ],
+                                  );
+                                }
+
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    completionControl,
+                                    setNumber,
+                                    const SizedBox(width: 8),
+                                    Expanded(child: fields),
+                                    SizedBox(width: compact ? 6 : 10),
+                                    removeAction,
+                                  ],
+                                );
                               },
                             ),
                           ),
-                        ),
-                      );
-                    }
+                        );
 
-                    return Column(children: children);
-                  }),
-
-                  // Add Set
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      key: widget.addSetKey,
-                      style: surfaces.useSemanticWorkoutCardFill
-                          ? TextButton.styleFrom(
-                              foregroundColor: semantic.onWorkoutContainer,
-                            )
-                          : null,
-                      onPressed: readOnly
-                          ? null
-                          : () {
-                              setState(() {
-                                final last = sets.isNotEmpty
-                                    ? sets.last
-                                    : ExerciseSet();
-                                sets.add(
-                                  ExerciseSet(
-                                    weight: last.weight,
-                                    reps: last.reps,
+                        // Boxed ChangeSets UI
+                        if (_isChangeSetMode ||
+                            widget.exercise.changeSets.isNotEmpty) {
+                          final cList = _cSets[index] ?? [];
+                          for (var ci = 0; ci < cList.length; ci++) {
+                            final cset = cList[ci];
+                            children.add(
+                              Transform.scale(
+                                scale: 0.8,
+                                alignment: Alignment.topLeft,
+                                child: Container(
+                                  margin: const EdgeInsets.only(
+                                    left: 32,
+                                    bottom: 4,
                                   ),
-                                );
-                                _syncFieldFocusNodes(
-                                  _usesExpressiveWorkout ? sets.length : 0,
-                                );
-                                _weightControllers.add(
-                                  TextEditingController(
-                                    text: WeightUnitFormatter.formatInputWeight(
-                                      last.weight,
-                                      _weightUnit,
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: surfaces.workoutChangeSetOutline,
                                     ),
                                   ),
-                                );
-                                _repsControllers.add(
-                                  TextEditingController(
-                                    text: last.reps.toString(),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        strings.weightChangeSetLabel(ci + 1),
+                                        style: workoutSetLabelStyle,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Weight
+                                      SizedBox(
+                                        width: 60,
+                                        child: TextFormField(
+                                          readOnly: readOnly,
+                                          keyboardType: TextInputType.number,
+                                          initialValue:
+                                              WeightUnitFormatter.formatInputWeight(
+                                                cset.weight,
+                                                _weightUnit,
+                                              ),
+                                          decoration: InputDecoration(
+                                            labelText: strings.weightShortLabel(
+                                              _weightUnit.shortLabel,
+                                            ),
+                                          ),
+                                          onChanged: readOnly
+                                              ? null
+                                              : (v) {
+                                                  final displayValue =
+                                                      double.tryParse(v);
+                                                  if (displayValue != null) {
+                                                    cset.weight =
+                                                        WeightUnitFormatter.toPounds(
+                                                          displayValue,
+                                                          _weightUnit,
+                                                        );
+                                                  }
+                                                  widget
+                                                          .exercise
+                                                          .changeSets[index] =
+                                                      List.from(_cSets[index]!);
+                                                  widget.onValueChanged?.call();
+                                                },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Reps
+                                      SizedBox(
+                                        width: 40,
+                                        child: TextFormField(
+                                          readOnly: readOnly,
+                                          keyboardType: TextInputType.number,
+                                          initialValue: cset.reps.toString(),
+                                          decoration: InputDecoration(
+                                            labelText: strings.weightReps,
+                                          ),
+                                          onChanged: readOnly
+                                              ? null
+                                              : (v) {
+                                                  cset.reps =
+                                                      int.tryParse(v) ??
+                                                      cset.reps;
+                                                  widget
+                                                          .exercise
+                                                          .changeSets[index] =
+                                                      List.from(_cSets[index]!);
+                                                  widget.onValueChanged?.call();
+                                                },
+                                        ),
+                                      ),
+                                      if (!readOnly) ...[
+                                        const Spacer(),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                          ),
+                                          tooltip: strings
+                                              .weightRemoveChangeSetTitle,
+                                          onPressed: () async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (ctx) => TonosDialogFrame(
+                                                child: AlertDialog(
+                                                  title: Text(
+                                                    strings
+                                                        .weightRemoveChangeSetTitle,
+                                                  ),
+                                                  content: Text(
+                                                    strings
+                                                        .weightRemoveChangeSetBody,
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            false,
+                                                          ),
+                                                      child: Text(
+                                                        strings.commonCancel,
+                                                      ),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                            ctx,
+                                                            true,
+                                                          ),
+                                                      child: Text(
+                                                        strings.commonRemove,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                            if (!mounted) return;
+                                            if (confirm == true) {
+                                              setState(() {
+                                                _cSets[index]!.removeAt(ci);
+                                                if (_cSets[index]!.isEmpty) {
+                                                  _cSets.remove(index);
+                                                  widget.exercise.changeSets
+                                                      .remove(index);
+                                                } else {
+                                                  widget
+                                                          .exercise
+                                                          .changeSets[index] =
+                                                      List.from(_cSets[index]!);
+                                                }
+                                              });
+                                              widget.onValueChanged?.call();
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                );
-                                _isCollapsed = false;
-                              });
-                              widget.onSetAdded?.call();
-                            },
-                      icon: const Icon(Icons.add),
-                      label: Text(strings.weightAddSet),
-                    ),
-                  ),
-                ],
+                                ),
+                              ),
+                            );
+                          }
+                        }
+
+                        // "Add CSet" button
+                        if (!readOnly && _isChangeSetMode) {
+                          children.add(
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  bottom: 4,
+                                ),
+                                child: WorkoutAddChangeSetAction(
+                                  label: strings.weightAddChangeSet,
+                                  onTap: () {
+                                    setState(() {
+                                      _cSets.putIfAbsent(index, () => []);
+                                      _cSets[index]!.add(
+                                        ExerciseSet(
+                                          weight: sets[index].weight,
+                                          reps: sets[index].reps,
+                                        ),
+                                      );
+                                      widget.exercise.changeSets[index] =
+                                          List.from(_cSets[index]!);
+                                    });
+                                    widget.onValueChanged?.call();
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return Column(children: children);
+                      }),
+
+                      // Add Set
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          key: widget.addSetKey,
+                          style: surfaces.useSemanticWorkoutCardFill
+                              ? TextButton.styleFrom(
+                                  foregroundColor: semantic.onWorkoutContainer,
+                                )
+                              : null,
+                          onPressed: readOnly
+                              ? null
+                              : () {
+                                  setState(() {
+                                    final last = sets.isNotEmpty
+                                        ? sets.last
+                                        : ExerciseSet();
+                                    sets.add(
+                                      ExerciseSet(
+                                        weight: last.weight,
+                                        reps: last.reps,
+                                      ),
+                                    );
+                                    _syncFieldFocusNodes(
+                                      _usesExpressiveWorkout ? sets.length : 0,
+                                    );
+                                    _weightControllers.add(
+                                      TextEditingController(
+                                        text:
+                                            WeightUnitFormatter.formatInputWeight(
+                                              last.weight,
+                                              _weightUnit,
+                                            ),
+                                      ),
+                                    );
+                                    _repsControllers.add(
+                                      TextEditingController(
+                                        text: last.reps.toString(),
+                                      ),
+                                    );
+                                    _isCollapsed = false;
+                                  });
+                                  widget.onSetAdded?.call();
+                                },
+                          icon: const Icon(Icons.add),
+                          label: Text(strings.weightAddSet),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -1497,7 +1709,9 @@ class _WeightCardState extends State<WeightCard> {
       curve: context.motionTokens.standardCurve,
       child: cardContent,
       builder: (context, borderRadius, child) => Card(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: compactPresetDetail
+            ? EdgeInsets.zero
+            : const EdgeInsets.only(bottom: 16),
         shape: RoundedRectangleBorder(borderRadius: borderRadius),
         color: cardColor,
         child: child,

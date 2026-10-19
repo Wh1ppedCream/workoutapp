@@ -1,6 +1,7 @@
 // File: lib/screens/exercise/exercise_catalog_page.dart
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -64,6 +65,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   final _searchTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_search');
   final _filterTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_filter');
   final _listTutorialKey = GlobalKey(debugLabel: 'exercise_catalog_list');
+  final _searchController = TextEditingController();
+  final _resultsScrollController = ScrollController();
   final _catalogAddTutorialKey = GlobalKey(
     debugLabel: 'exercise_catalog_add_selection',
   );
@@ -83,6 +86,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
 
   // Filter dialog state
   bool _useProfileFilter = true;
+  bool _filtersApplied = false;
   int? _dialogProfileId;
   String _filterEquipment = _allFilter;
   String _filterArea = _allFilter;
@@ -110,7 +114,35 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _searchController.dispose();
+    _resultsScrollController.dispose();
     super.dispose();
+  }
+
+  bool get _usesExpressiveCatalog =>
+      widget.expressiveCatalogPresentation &&
+      context.usesExpressivePresentation;
+
+  bool get _hasActiveFilters =>
+      (!_usesExpressiveCatalog || _filtersApplied) &&
+      ((_useProfileFilter && _dialogProfileId != null) ||
+          _filterEquipment != _allFilter ||
+          _filterArea != _allFilter ||
+          _filterMuscle != _allFilter);
+
+  int get _activeFilterCount => !_hasActiveFilters
+      ? 0
+      : (_useProfileFilter && _dialogProfileId != null ? 1 : 0) +
+            (_filterEquipment != _allFilter ? 1 : 0) +
+            (_filterArea != _allFilter ? 1 : 0) +
+            (_filterMuscle != _allFilter ? 1 : 0);
+
+  void _resetResultsToStart() {
+    if (!_usesExpressiveCatalog) return;
+    if (_resultsScrollController.hasClients &&
+        _resultsScrollController.position.pixels != 0) {
+      _resultsScrollController.jumpTo(0);
+    }
   }
 
   /// Loads catalog definitions plus the filter option lists needed by the page.
@@ -262,7 +294,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     List<Equipment> nextEquipmentOptions;
 
     // 1) Workspace profile subset-of filter
-    if (_useProfileFilter && _dialogProfileId != null) {
+    if ((!_usesExpressiveCatalog || _filtersApplied) &&
+        _useProfileFilter &&
+        _dialogProfileId != null) {
       final allowedEquipment = await _equipmentForProfile(_dialogProfileId!);
       if (generation != _filterGeneration || !mounted) return;
       final allowedList = allowedEquipment
@@ -312,7 +346,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     }
 
     // 5) Search filter
-    final q = _searchQuery.toLowerCase();
+    final q = _searchQuery.trim().toLowerCase();
     filtered = filtered
         .where((d) => q.isEmpty || d.name.toLowerCase().contains(q))
         .toList();
@@ -327,6 +361,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   }
 
   void _onSearchChanged(String q) {
+    final searchMeaningfullyChanged =
+        q.trim().toLowerCase() != _searchQuery.trim().toLowerCase();
+    if (searchMeaningfullyChanged) _resetResultsToStart();
     setState(() {
       _searchQuery = q;
     });
@@ -334,6 +371,34 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     _searchDebounce = Timer(const Duration(milliseconds: 250), () {
       _applyAllFilters(showLoading: false);
     });
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    if (_searchQuery.isNotEmpty || _searchController.text.isNotEmpty) {
+      _resetResultsToStart();
+    }
+    _searchController.clear();
+    setState(() => _searchQuery = '');
+    unawaited(_applyAllFilters(showLoading: false));
+  }
+
+  void _resetFilters() {
+    final filtersWereApplied = _hasActiveFilters;
+    if (filtersWereApplied) _resetResultsToStart();
+    if (_usesExpressiveCatalog) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+    _searchDebounce?.cancel();
+    setState(() {
+      _useProfileFilter = false;
+      _filtersApplied = false;
+      _dialogProfileId = null;
+      _filterEquipment = _allFilter;
+      _filterArea = _allFilter;
+      _filterMuscle = _allFilter;
+    });
+    unawaited(_applyAllFilters(showLoading: false));
   }
 
   void _openFilterDialog() {
@@ -351,6 +416,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 theme.brightness,
               )
         : null;
+    if (usesExpressive) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
     final expressiveTokens =
         destination ??
         AppExpressiveDestinationTokens.forFamily(
@@ -359,12 +427,12 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         );
     final isDarkNeo = usesInkRecipe && theme.brightness == Brightness.dark;
     final expressiveFieldSurface = usesExpressive
-        ? expressiveTokens.surfaceAccent
+        ? theme.colorScheme.surfaceContainerHighest
         : surfaces.settingsInput;
     final fieldForeground = usesInkRecipe
         ? tonosForegroundForSurface(context, surfaces.settingsInput)
         : usesExpressive
-        ? expressiveTokens.onSurfaceAccent
+        ? theme.colorScheme.onSurface
         : null;
     final fieldTextStyle = usesInkRecipe || usesExpressive
         ? (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
@@ -372,7 +440,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           )
         : null;
     final filterMenuSurface = usesExpressive
-        ? expressiveFieldSurface
+        ? theme.colorScheme.surfaceContainerHigh
         : theme.popupMenuTheme.color ?? theme.colorScheme.surfaceContainer;
     final filterMenuTextStyle = isDarkNeo
         ? (theme.textTheme.bodyLarge ?? const TextStyle()).copyWith(
@@ -389,6 +457,52 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         overflow: usesExpressive ? null : TextOverflow.ellipsis,
         style: style,
       );
+    }
+
+    Widget filterMenuOption(
+      Widget child, {
+      required bool selected,
+      bool addBottomPadding = false,
+    }) {
+      if (!usesExpressive) {
+        return filterMenuTextStyle == null
+            ? child
+            : DefaultTextStyle.merge(style: filterMenuTextStyle, child: child);
+      }
+      final foreground = selected
+          ? expressiveTokens.onSurfaceSelected
+          : theme.colorScheme.onSurface;
+      final option = Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: selected
+            ? BoxDecoration(
+                color: expressiveTokens.surfaceSelected,
+                borderRadius: BorderRadius.circular(10),
+              )
+            : null,
+        child: Row(
+          children: [
+            Expanded(
+              child: DefaultTextStyle.merge(
+                style: (theme.textTheme.bodyLarge ?? const TextStyle())
+                    .copyWith(
+                      color: foreground,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                child: child,
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.check_rounded, size: 18, color: foreground),
+            ],
+          ],
+        ),
+      );
+      return addBottomPadding
+          ? Padding(padding: const EdgeInsets.only(bottom: 4), child: option)
+          : option;
     }
 
     Widget localizedFilterName(
@@ -409,16 +523,35 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       labelText: usesExpressive ? null : label,
       filled: usesExpressive,
       fillColor: usesExpressive ? expressiveFieldSurface : null,
+      isDense: usesExpressive,
+      contentPadding: usesExpressive
+          ? const EdgeInsets.symmetric(horizontal: 14, vertical: 11)
+          : null,
       border: usesExpressive
           ? OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 0.8,
+              ),
             )
           : null,
       enabledBorder: usesExpressive
           ? OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
+              borderSide: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 0.8,
+              ),
+            )
+          : null,
+      focusedBorder: usesExpressive
+          ? OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: expressiveTokens.outlineAccent,
+                width: 1.5,
+              ),
             )
           : null,
     );
@@ -429,17 +562,79 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
     String eq = _filterEquipment;
     String area = _filterArea;
     String muscle = _filterMuscle;
+    List<Equipment> dialogEquipmentOptions = _equipmentOptions;
 
     void saveFilters(BuildContext dialogContext) {
+      final filtersChanged =
+          !_filtersApplied ||
+          _useProfileFilter != useProfile ||
+          _dialogProfileId != chosenProfile ||
+          _filterEquipment != eq ||
+          _filterArea != area ||
+          _filterMuscle != muscle;
       setState(() {
         _useProfileFilter = useProfile;
+        _filtersApplied = true;
         _dialogProfileId = chosenProfile;
         _filterEquipment = eq;
         _filterArea = area;
         _filterMuscle = muscle;
       });
       Navigator.of(dialogContext).pop();
+      if (filtersChanged) _resetResultsToStart();
       _applyAllFilters();
+    }
+
+    Future<void> resetDraftFilters(
+      BuildContext dialogContext,
+      StateSetter setDialogState,
+    ) async {
+      setDialogState(() {
+        useProfile = false;
+        chosenProfile = null;
+        eq = _allFilter;
+        area = _allFilter;
+        muscle = _allFilter;
+      });
+      final allEquipment = await _allEquipment();
+      if (!dialogContext.mounted) return;
+      setDialogState(() => dialogEquipmentOptions = allEquipment);
+    }
+
+    Future<void> updateProfileFilter(
+      BuildContext dialogContext,
+      StateSetter setDialogState,
+      bool enabled,
+    ) async {
+      setDialogState(() => useProfile = enabled);
+      final nextEquipment = enabled && chosenProfile != null
+          ? await _equipmentForProfile(chosenProfile!)
+          : await _allEquipment();
+      if (!dialogContext.mounted) return;
+      setDialogState(() {
+        dialogEquipmentOptions = nextEquipment;
+        if (!nextEquipment.any((item) => item.name == eq)) {
+          eq = _allFilter;
+        }
+      });
+    }
+
+    Future<void> updateChosenProfile(
+      BuildContext dialogContext,
+      StateSetter setDialogState,
+      int? profileId,
+    ) async {
+      setDialogState(() => chosenProfile = profileId);
+      final nextEquipment = profileId == null
+          ? await _allEquipment()
+          : await _equipmentForProfile(profileId);
+      if (!dialogContext.mounted) return;
+      setDialogState(() {
+        dialogEquipmentOptions = nextEquipment;
+        if (!nextEquipment.any((item) => item.name == eq)) {
+          eq = _allFilter;
+        }
+      });
     }
 
     Widget expressiveSelector(
@@ -452,7 +647,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 4),
+            padding: const EdgeInsets.only(left: 2, bottom: 3),
             child: Text(
               label,
               style: theme.textTheme.labelMedium?.copyWith(
@@ -470,9 +665,29 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
+          final mediaQuery = MediaQuery.of(ctx);
+          final screenSize = mediaQuery.size;
+          final availableMenuHeight = math.max(
+            0.0,
+            screenSize.height -
+                mediaQuery.padding.vertical -
+                mediaQuery.viewInsets.vertical -
+                24,
+          );
+          final preferredMenuHeight = (56 * 5 * mediaQuery.textScaler.scale(1))
+              .clamp(240.0, 440.0)
+              .toDouble();
+          final filterMenuMaxHeight = usesExpressive
+              ? math.min(availableMenuHeight, preferredMenuHeight)
+              : null;
+          final filterMenuBorderRadius = usesExpressive
+              ? BorderRadius.circular(20)
+              : null;
           final profileField = DropdownButtonFormField<int>(
             isExpanded: true,
             itemHeight: usesExpressive ? null : kMinInteractiveDimension,
+            menuMaxHeight: filterMenuMaxHeight,
+            borderRadius: filterMenuBorderRadius,
             style: fieldTextStyle,
             iconEnabledColor: fieldForeground,
             dropdownColor: usesExpressive || isDarkNeo
@@ -484,7 +699,10 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 .map(
                   (p) => DropdownMenuItem(
                     value: p.id!,
-                    child: filterText(p.name, filterMenuTextStyle),
+                    child: filterMenuOption(
+                      filterText(p.name, null),
+                      selected: p.id == chosenProfile,
+                    ),
                   ),
                 )
                 .toList(),
@@ -492,12 +710,14 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 .map((p) => filterText(p.name, fieldTextStyle))
                 .toList(),
             onChanged: useProfile
-                ? (value) => setDialogState(() => chosenProfile = value)
+                ? (value) => updateChosenProfile(ctx, setDialogState, value)
                 : null,
           );
           final equipmentField = DropdownButtonFormField<String>(
             isExpanded: true,
             itemHeight: usesExpressive ? null : kMinInteractiveDimension,
+            menuMaxHeight: filterMenuMaxHeight,
+            borderRadius: filterMenuBorderRadius,
             style: fieldTextStyle,
             iconEnabledColor: fieldForeground,
             dropdownColor: usesExpressive || isDarkNeo
@@ -508,24 +728,32 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
             items: [
               DropdownMenuItem<String>(
                 value: _allFilter,
-                child: filterText(strings.commonAll, filterMenuTextStyle),
+                child: filterMenuOption(
+                  filterText(strings.commonAll, null),
+                  selected: eq == _allFilter,
+                  addBottomPadding: true,
+                ),
               ),
-              ..._equipmentOptions.map(
+              ...dialogEquipmentOptions.map(
                 (equipment) => DropdownMenuItem<String>(
                   value: equipment.name,
-                  child: localizedFilterName(
-                    CatalogEntityDisplayName(
-                      catalogId: equipment.catalogId,
-                      canonicalName: equipment.name,
+                  child: filterMenuOption(
+                    localizedFilterName(
+                      CatalogEntityDisplayName(
+                        catalogId: equipment.catalogId,
+                        canonicalName: equipment.name,
+                      ),
+                      null,
                     ),
-                    filterMenuTextStyle,
+                    selected: eq == equipment.name,
+                    addBottomPadding: true,
                   ),
                 ),
               ),
             ],
             selectedItemBuilder: (_) => [
               filterText(strings.commonAll, fieldTextStyle),
-              ..._equipmentOptions.map(
+              ...dialogEquipmentOptions.map(
                 (equipment) => localizedFilterName(
                   CatalogEntityDisplayName(
                     catalogId: equipment.catalogId,
@@ -540,6 +768,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           final areaField = DropdownButtonFormField<String>(
             isExpanded: true,
             itemHeight: usesExpressive ? null : kMinInteractiveDimension,
+            menuMaxHeight: filterMenuMaxHeight,
+            borderRadius: filterMenuBorderRadius,
             style: fieldTextStyle,
             iconEnabledColor: fieldForeground,
             dropdownColor: usesExpressive || isDarkNeo
@@ -551,11 +781,15 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 .map(
                   (name) => DropdownMenuItem(
                     value: name,
-                    child: filterText(
-                      name == _allFilter
-                          ? strings.commonAll
-                          : localizedBodyPartName(context, name),
-                      filterMenuTextStyle,
+                    child: filterMenuOption(
+                      filterText(
+                        name == _allFilter
+                            ? strings.commonAll
+                            : localizedBodyPartName(context, name),
+                        null,
+                      ),
+                      selected: area == name,
+                      addBottomPadding: true,
                     ),
                   ),
                 )
@@ -575,6 +809,8 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           final muscleField = DropdownButtonFormField<String>(
             isExpanded: true,
             itemHeight: usesExpressive ? null : kMinInteractiveDimension,
+            menuMaxHeight: filterMenuMaxHeight,
+            borderRadius: filterMenuBorderRadius,
             style: fieldTextStyle,
             iconEnabledColor: fieldForeground,
             dropdownColor: usesExpressive || isDarkNeo
@@ -585,17 +821,25 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
             items: [
               DropdownMenuItem<String>(
                 value: _allFilter,
-                child: filterText(strings.commonAll, filterMenuTextStyle),
+                child: filterMenuOption(
+                  filterText(strings.commonAll, null),
+                  selected: muscle == _allFilter,
+                  addBottomPadding: true,
+                ),
               ),
               ..._muscleOptions.map(
                 (item) => DropdownMenuItem<String>(
                   value: item.name,
-                  child: localizedFilterName(
-                    CatalogEntityDisplayName(
-                      catalogId: item.catalogId,
-                      canonicalName: item.name,
+                  child: filterMenuOption(
+                    localizedFilterName(
+                      CatalogEntityDisplayName(
+                        catalogId: item.catalogId,
+                        canonicalName: item.name,
+                      ),
+                      null,
                     ),
-                    filterMenuTextStyle,
+                    selected: muscle == item.name,
+                    addBottomPadding: true,
                   ),
                 ),
               ),
@@ -618,73 +862,68 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
             key: const ValueKey('expressive-catalog-filter-dialog'),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Material(
-                  color: expressiveTokens.surfaceSecondary,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(22),
-                      topRight: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(22),
-                    ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  visualDensity: const VisualDensity(vertical: -2),
+                  title: Text(strings.catalogUseWorkspaceProfile),
+                  subtitle: Text(
+                    usesExpressive
+                        ? strings.catalogExpressiveWorkspaceProfileDescription
+                        : strings.catalogWorkspaceProfileDescription,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(strings.catalogUseWorkspaceProfile),
-                          value: useProfile,
-                          onChanged: (value) =>
-                              setDialogState(() => useProfile = value),
-                        ),
-                        const SizedBox(height: 8),
-                        expressiveSelector(
-                          strings.catalogWorkspaceProfile,
-                          profileField,
-                          foreground: expressiveTokens.onSurfaceSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
+                  value: useProfile,
+                  onChanged: (value) =>
+                      updateProfileFilter(ctx, setDialogState, value),
                 ),
-                const SizedBox(height: 12),
-                Material(
-                  color: expressiveTokens.surfaceSelected,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      topRight: Radius.circular(22),
-                      bottomLeft: Radius.circular(22),
-                      bottomRight: Radius.circular(12),
-                    ),
+                if (useProfile) ...[
+                  const SizedBox(height: 4),
+                  expressiveSelector(
+                    strings.catalogWorkspaceProfile,
+                    profileField,
+                    foreground: theme.colorScheme.onSurfaceVariant,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      children: [
-                        expressiveSelector(
-                          strings.catalogEquipment,
-                          equipmentField,
-                          foreground: expressiveTokens.onSurfaceSelected,
-                        ),
-                        const SizedBox(height: 10),
-                        expressiveSelector(
-                          strings.catalogFocusArea,
-                          areaField,
-                          foreground: expressiveTokens.onSurfaceSelected,
-                        ),
-                        const SizedBox(height: 10),
-                        expressiveSelector(
-                          strings.catalogSpecificMuscle,
-                          muscleField,
-                          foreground: expressiveTokens.onSurfaceSelected,
-                        ),
-                      ],
+                ],
+                const SizedBox(height: 2),
+                Divider(color: theme.colorScheme.outlineVariant, height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.filter_alt_outlined,
+                      size: 18,
+                      color: expressiveTokens.outlineAccent,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        strings.catalogExpressiveFiltersCombined,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                expressiveSelector(
+                  strings.catalogEquipment,
+                  equipmentField,
+                  foreground: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 6),
+                expressiveSelector(
+                  strings.catalogBodyPartFilter,
+                  areaField,
+                  foreground: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 6),
+                expressiveSelector(
+                  strings.catalogMuscleFilter,
+                  muscleField,
+                  foreground: theme.colorScheme.onSurfaceVariant,
                 ),
               ],
             ),
@@ -712,17 +951,23 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  strings.catalogSelectedFilters,
+                  strings.catalogFilters,
                   style: theme.textTheme.titleLarge?.copyWith(
-                    color: expressiveTokens.onSurfaceTertiary,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           );
+          final hasDraftFilters =
+              useProfile ||
+              eq != _allFilter ||
+              area != _allFilter ||
+              muscle != _allFilter;
           final expressiveActions = Wrap(
             alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -730,6 +975,16 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(strings.commonCancel),
               ),
+              if (hasDraftFilters)
+                TextButton(
+                  key: const ValueKey('expressive-catalog-reset-all'),
+                  onPressed: () =>
+                      unawaited(resetDraftFilters(ctx, setDialogState)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  child: Text(strings.catalogResetAllFilters),
+                ),
               FilledButton(
                 onPressed: () => saveFilters(ctx),
                 style: FilledButton.styleFrom(
@@ -744,10 +999,20 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                     ),
                   ),
                 ),
-                child: Text(strings.commonSave),
+                child: Text(strings.catalogApplyFilters),
               ),
             ],
           );
+          final usableDialogHeight = math.max(
+            0.0,
+            screenSize.height -
+                mediaQuery.padding.vertical -
+                mediaQuery.viewInsets.vertical -
+                24,
+          );
+          final maxDialogHeight = math
+              .min(usableDialogHeight, screenSize.height * 0.84)
+              .toDouble();
           return TonosDialogFrame(
             styleFormControls: true,
             child: usesExpressive
@@ -755,11 +1020,15 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                     key: const ValueKey('expressive-catalog-filter-surface'),
                     insetPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 24,
+                      vertical: 12,
                     ),
-                    backgroundColor: expressiveTokens.surfaceTertiary,
-                    surfaceTintColor: expressiveTokens.surfaceTertiary,
-                    shape: const RoundedRectangleBorder(
+                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                    surfaceTintColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 0.8,
+                      ),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(18),
@@ -770,17 +1039,17 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         maxWidth: 520,
-                        maxHeight: MediaQuery.sizeOf(ctx).height * 0.82,
+                        maxHeight: maxDialogHeight,
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                        padding: const EdgeInsets.fromLTRB(18, 14, 18, 8),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             expressiveTitle,
-                            const SizedBox(height: 16),
-                            Flexible(child: expressiveFilterContent),
                             const SizedBox(height: 8),
+                            Flexible(child: expressiveFilterContent),
+                            const SizedBox(height: 3),
                             expressiveActions,
                           ],
                         ),
@@ -835,6 +1104,9 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       expressiveCatalogPresentation:
           widget.expressiveCatalogPresentation &&
           context.usesExpressivePresentation,
+      catalogBrowserDetailRefinement:
+          widget.expressiveCatalogPresentation &&
+          context.usesExpressivePresentation,
     );
   }
 
@@ -859,10 +1131,18 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
           backgroundColor: destination?.pageCanvas,
           appBar: AppBar(
             title: Text(strings.catalogPageTitle),
-            centerTitle: true,
-            backgroundColor: destination?.surfacePrimary,
-            foregroundColor: destination?.onSurfacePrimary,
-            surfaceTintColor: destination?.surfacePrimary,
+            centerTitle: !usesExpressive,
+            backgroundColor: destination?.pageCanvas,
+            foregroundColor: destination?.supportingForeground,
+            surfaceTintColor: destination?.pageCanvas,
+            elevation: usesExpressive ? 0 : null,
+            scrolledUnderElevation: usesExpressive ? 0 : null,
+            titleTextStyle: usesExpressive
+                ? theme.textTheme.titleLarge?.copyWith(
+                    color: destination!.supportingForeground,
+                    fontWeight: FontWeight.w700,
+                  )
+                : null,
           ),
           body: Padding(
             padding: EdgeInsets.all(usesExpressive ? 12 : 16),
@@ -875,14 +1155,15 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
                     destination: destination!,
                     searchTutorialKey: _searchTutorialKey,
                     filterTutorialKey: _filterTutorialKey,
+                    searchController: _searchController,
+                    clearSearchLabel: strings.catalogClearSearch,
+                    onClearSearch: _clearSearch,
                     onSearchChanged: _onSearchChanged,
                     onFilterPressed: _openFilterDialog,
                     searchLabel: strings.catalogSearchExercises,
                     filterLabel: strings.catalogFilters,
-                    filterActive:
-                        _filterEquipment != _allFilter ||
-                        _filterArea != _allFilter ||
-                        _filterMuscle != _allFilter,
+                    filterActive: _hasActiveFilters,
+                    activeFilterCount: _activeFilterCount,
                   )
                 else
                   Row(
@@ -989,6 +1270,34 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       );
     }
     if (_displayedDefs.isEmpty) {
+      if (usesExpressive) {
+        final hasQuery = _searchQuery.trim().isNotEmpty;
+        final hasFilters = _hasActiveFilters;
+        if (_allDefs.isEmpty) {
+          return _buildExpressiveEmptyState(
+            title: strings.catalogNoExercisesAvailable,
+            body: strings.catalogNoExercisesAvailableBody,
+            onClearSearch: hasQuery ? _clearSearch : null,
+            onResetFilters: hasFilters ? _resetFilters : null,
+          );
+        }
+
+        return _buildExpressiveEmptyState(
+          title: hasFilters && hasQuery
+              ? strings.catalogNoCombinedMatches
+              : hasFilters
+              ? strings.catalogNoFilteredMatches
+              : strings.catalogNoSearchMatches,
+          body: hasQuery && hasFilters
+              ? strings.catalogNoCombinedMatchesBody
+              : hasQuery
+              ? strings.catalogNoSearchMatchesBody
+              : strings.catalogNoFilteredMatchesBody,
+          onClearSearch: hasQuery ? _clearSearch : null,
+          onResetFilters: hasFilters ? _resetFilters : null,
+          onEditFilters: hasFilters ? _openFilterDialog : null,
+        );
+      }
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -1006,6 +1315,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       );
     }
     return ListView.builder(
+      controller: _resultsScrollController,
       padding: EdgeInsets.zero,
       itemCount: _displayedDefs.length,
       itemBuilder: (_, i) {
@@ -1033,6 +1343,180 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       },
     );
   }
+
+  Widget _buildExpressiveEmptyState({
+    required String title,
+    required String body,
+    VoidCallback? onClearSearch,
+    VoidCallback? onResetFilters,
+    VoidCallback? onEditFilters,
+  }) {
+    final tokens =
+        Theme.of(context).extension<AppExpressiveDestinationTokens>() ??
+        AppExpressiveDestinationTokens.forFamily(
+          AppExpressiveDestinationFamily.catalog,
+          Theme.of(context).brightness,
+        );
+    final textTheme = Theme.of(context).textTheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minHeight = constraints.hasBoundedHeight
+            ? (constraints.maxHeight - 16)
+                  .clamp(0.0, double.infinity)
+                  .toDouble()
+            : 0.0;
+        final clearSearchIsPrimary =
+            onClearSearch != null && onResetFilters == null;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Material(
+                  color: tokens.surfaceAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 34,
+                          color: tokens.onSurfaceAccent,
+                        ),
+                        const SizedBox(height: 10),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style: textTheme.titleMedium?.copyWith(
+                              color: tokens.onSurfaceAccent,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          body,
+                          textAlign: TextAlign.center,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: tokens.onSurfaceAccent.withValues(
+                              alpha: 0.84,
+                            ),
+                          ),
+                        ),
+                        if (onClearSearch != null ||
+                            onResetFilters != null ||
+                            onEditFilters != null) ...[
+                          const SizedBox(height: 16),
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (onClearSearch != null)
+                                clearSearchIsPrimary
+                                    ? FilledButton.icon(
+                                        onPressed: onClearSearch,
+                                        icon: const Icon(Icons.close_rounded),
+                                        label: Text(
+                                          AppLocalizations.of(context)
+                                              .catalogClearSearch,
+                                        ),
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: tokens.actionPrimary,
+                                          foregroundColor:
+                                              tokens.onActionPrimary,
+                                          minimumSize: const Size(48, 48),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : OutlinedButton.icon(
+                                        onPressed: onClearSearch,
+                                        icon: const Icon(Icons.close_rounded),
+                                        label: Text(
+                                          AppLocalizations.of(context)
+                                              .catalogClearSearch,
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor:
+                                              tokens.onSurfaceAccent,
+                                          minimumSize: const Size(48, 48),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                              if (onEditFilters != null)
+                                OutlinedButton.icon(
+                                  onPressed: onEditFilters,
+                                  icon: const Icon(Icons.tune_rounded),
+                                  label: Text(
+                                    AppLocalizations.of(context)
+                                        .catalogEditFilters,
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: tokens.onSurfaceAccent,
+                                    side: BorderSide(
+                                      color: tokens.outlineAccent.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                    ),
+                                    minimumSize: const Size(48, 48),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                              if (onResetFilters != null)
+                                FilledButton.icon(
+                                  onPressed: onResetFilters,
+                                  icon: const Icon(Icons.restart_alt_rounded),
+                                  label: Text(
+                                    AppLocalizations.of(context)
+                                        .catalogResetFilters,
+                                  ),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: tokens.actionPrimary,
+                                    foregroundColor: tokens.onActionPrimary,
+                                    minimumSize: const Size(48, 48),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _ExpressiveCatalogSearchPanel extends StatelessWidget {
@@ -1041,34 +1525,47 @@ class _ExpressiveCatalogSearchPanel extends StatelessWidget {
     required this.destination,
     required this.searchTutorialKey,
     required this.filterTutorialKey,
+    required this.searchController,
+    required this.clearSearchLabel,
+    required this.onClearSearch,
     required this.onSearchChanged,
     required this.onFilterPressed,
     required this.searchLabel,
     required this.filterLabel,
     required this.filterActive,
+    required this.activeFilterCount,
   });
 
   final AppExpressiveDestinationTokens destination;
   final Key searchTutorialKey;
   final Key filterTutorialKey;
+  final TextEditingController searchController;
+  final String clearSearchLabel;
+  final VoidCallback onClearSearch;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onFilterPressed;
   final String searchLabel;
   final String filterLabel;
   final bool filterActive;
+  final int activeFilterCount;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final toolbarSurface = Color.lerp(
+      destination.surfaceAccent,
+      theme.colorScheme.surface,
+      isDark ? 0.82 : 0.46,
+    )!;
+    final fieldSurface = Color.lerp(
+      destination.surfaceAccent,
+      theme.colorScheme.surface,
+      isDark ? 0.60 : 0.82,
+    )!;
     return Material(
-      color: destination.surfaceAccent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(12),
-          bottomLeft: Radius.circular(12),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
+      color: toolbarSurface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(6),
         child: Row(
@@ -1078,44 +1575,47 @@ class _ExpressiveCatalogSearchPanel extends StatelessWidget {
               child: KeyedSubtree(
                 key: searchTutorialKey,
                 child: TextField(
+                  controller: searchController,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: destination.onSurfaceAccent,
+                  ),
                   decoration: InputDecoration(
                     hintText: searchLabel,
+                    suffixIcon: searchController.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: onClearSearch,
+                            tooltip: clearSearchLabel,
+                            style: IconButton.styleFrom(
+                              foregroundColor: destination.onSurfaceAccent,
+                            ),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
                     prefixIcon: Icon(
                       Icons.search,
                       color: destination.onSurfaceAccent,
                     ),
                     filled: true,
-                    fillColor: destination.surfaceSelected,
+                    fillColor: fieldSurface,
                     hintStyle: TextStyle(
-                      color: destination.onSurfaceSelected.withValues(
+                      color: destination.onSurfaceAccent.withValues(
                         alpha: 0.72,
                       ),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(11),
-                        bottomLeft: Radius.circular(11),
-                        bottomRight: Radius.circular(16),
-                      ),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(11),
-                        bottomLeft: Radius.circular(11),
-                        bottomRight: Radius.circular(16),
-                      ),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(11),
-                        bottomLeft: Radius.circular(11),
-                        bottomRight: Radius.circular(16),
-                      ),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
                         color: destination.outlineAccent,
                         width: 2,
@@ -1135,22 +1635,34 @@ class _ExpressiveCatalogSearchPanel extends StatelessWidget {
                 onPressed: onFilterPressed,
                 style: IconButton.styleFrom(
                   backgroundColor: filterActive
-                      ? destination.surfaceSecondary
-                      : destination.actionPrimary,
+                      ? destination.surfaceSelected
+                      : fieldSurface,
                   foregroundColor: filterActive
-                      ? destination.onSurfaceSecondary
-                      : destination.onActionPrimary,
+                      ? destination.onSurfaceSelected
+                      : destination.onSurfaceAccent,
                   minimumSize: const Size(48, 48),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(11),
-                      bottomLeft: Radius.circular(11),
-                      bottomRight: Radius.circular(16),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                icon: const Icon(Icons.filter_list),
+                icon: Badge(
+                  isLabelVisible: activeFilterCount > 0,
+                  alignment: AlignmentDirectional.topEnd,
+                  offset: const Offset(8, -8),
+                  backgroundColor: destination.actionPrimary,
+                  textColor: destination.onActionPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 2,
+                    vertical: 1,
+                  ),
+                  textStyle: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    height: 1,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  label: Text('$activeFilterCount'),
+                  child: const Icon(Icons.filter_list),
+                ),
               ),
             ),
           ],
@@ -1186,8 +1698,19 @@ class _ExerciseCatalogBar extends StatelessWidget {
     final effects = context.effectTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressive = expressive && context.usesExpressivePresentation;
-    final equipment = definition.equipmentList
+    final allEquipmentItems = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
+        .toList(growable: false);
+    final primaryEquipment = allEquipmentItems
+        .where((item) => item.id == definition.equipmentId)
+        .toList(growable: false);
+    final otherEquipment = allEquipmentItems
+        .where((item) => item.id != definition.equipmentId)
+        .toList(growable: false);
+    final equipmentItems = usesExpressive
+        ? [...primaryEquipment, ...otherEquipment]
+        : allEquipmentItems;
+    final equipment = equipmentItems
         .map(
           (item) => CatalogEntityDisplayName(
             catalogId: item.catalogId,
@@ -1256,14 +1779,19 @@ class _ExerciseCatalogBar extends StatelessWidget {
           );
       final rowSurface = selected
           ? expressiveDestination.surfaceSelected
-          : expressiveDestination.surfaceAccent;
+          : theme.brightness == Brightness.light
+          ? Color.lerp(
+              const Color(0xFFAFB5ED),
+              expressiveDestination.pageCanvas,
+              0.04,
+            )!
+          : Color.lerp(
+              expressiveDestination.surfaceAccent,
+              colorScheme.surface,
+              0.30,
+            )!;
       final rowShape = RoundedRectangleBorder(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(10),
-          bottomLeft: Radius.circular(10),
-          bottomRight: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.circular(20),
         side: selected
             ? BorderSide(color: expressiveDestination.outlineAccent, width: 2)
             : BorderSide.none,
@@ -1283,7 +1811,7 @@ class _ExerciseCatalogBar extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 10,
+                  vertical: 8,
                 ),
                 child: _buildContent(
                   context,
@@ -1351,8 +1879,8 @@ class _ExerciseCatalogBar extends StatelessWidget {
             children: [
               LocalizedExerciseName(
                 definition: definition,
-                maxLines: usesExpressive ? null : 2,
-                overflow: usesExpressive ? null : TextOverflow.ellipsis,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: foreground,
                   fontWeight: FontWeight.w800,
@@ -1362,19 +1890,27 @@ class _ExerciseCatalogBar extends StatelessWidget {
                 const SizedBox(height: 3),
                 LocalizedCatalogEntityNamesBuilder(
                   entities: equipment,
-                  builder: (context, names) => Text(
-                    names.join(', '),
-                    maxLines: usesExpressive ? null : 1,
-                    overflow: usesExpressive ? null : TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: foregroundSurface == null
-                          ? colorScheme.onSurfaceVariant
-                          : tonosSecondaryForegroundForSurface(
-                              context,
-                              foregroundSurface,
-                            ),
-                    ),
-                  ),
+                  builder: (context, names) {
+                    final label = names.join(', ');
+                    final text = Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: usesExpressive
+                            ? foreground.withValues(alpha: 0.78)
+                            : foregroundSurface == null
+                            ? colorScheme.onSurfaceVariant
+                            : tonosSecondaryForegroundForSurface(
+                                context,
+                                foregroundSurface,
+                              ),
+                      ),
+                    );
+                    return usesExpressive
+                        ? Tooltip(message: label, child: text)
+                        : text;
+                  },
                 ),
               ],
             ],
@@ -1408,16 +1944,11 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaRadius = framed
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(8),
-            bottomLeft: Radius.circular(8),
-            bottomRight: Radius.circular(18),
-          )
+        ? BorderRadius.circular(12)
         : Theme.of(context).shapeTokens.exerciseCatalogMedia;
     Widget media = ExerciseMediaThumbnail(
       definition: definition,
-      size: 64,
+      size: framed ? 60 : 64,
       borderRadius: mediaRadius,
       padding: EdgeInsets.zero,
       framed: false,
@@ -1425,8 +1956,8 @@ class _ExerciseInfoMediaButton extends StatelessWidget {
       onTap: onTap,
     );
     if (framed) {
-      // Preserve the artwork's neutral contrast while joining its shape to
-      // the row; the separate media outline is intentionally removed.
+      // A consistent neutral frame keeps artwork and fallback heatmaps legible
+      // without changing their media loading or tap behavior.
       media = Material(
         color: context.surfaceTokens.mediaPlaceholder,
         shape: RoundedRectangleBorder(borderRadius: mediaRadius),

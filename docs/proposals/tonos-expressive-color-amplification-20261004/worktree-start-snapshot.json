@@ -1,0 +1,114 @@
+{
+  "CapturedUtc": "2026-10-04T05:14:18.5143644Z",
+  "Branch": "feature/classic-m3e",
+  "Head": "66aa899fc497eafed78268eae7ddce345b74b919",
+  "Upstream": "origin/feature/classic-m3e",
+  "Tracked": [
+    {
+      "Path": "lib/screens/exercise/auto_preset_flow_screen.dart",
+      "Hash": "C37DEBC9F57E24F1342DDD28353521D16328E3429665AF8BCFF6DBDA2583E053"
+    },
+    {
+      "Path": "lib/screens/exercise/exercise_catalog_page.dart",
+      "Hash": "DFB11268BD9DF4725CB7627FB783B456D1F992630D26345476DEE783C87D230B"
+    },
+    {
+      "Path": "lib/screens/exercise/train_page.dart",
+      "Hash": "00C6B222C24A0F22AE9942166917A8194A20830349F2EF9C7606E749035366A7"
+    },
+    {
+      "Path": "lib/screens/nutrition/food_customization_page.dart",
+      "Hash": "7B9D05B1FA771EA99B3DF15C43D1F3B5CC01047D8070448CF1578D31D20AAC28"
+    },
+    {
+      "Path": "lib/screens/onboarding_flow.dart",
+      "Hash": "5EEB88D897ABBD1CF54C7BAA57754A311C4CE1A30EBB1C7237841B6D04945CF7"
+    },
+    {
+      "Path": "lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart",
+      "Hash": "2A1AB878CAE167A6C0CAC24D0A7A6474B399DF317E7AAE4B4FE4DF934336B852"
+    },
+    {
+      "Path": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "Hash": "36EAF079013894870323CB8163E09916DDA61E46F0CFC2C7A312EDD822382941"
+    },
+    {
+      "Path": "lib/screens/profile/settings/user_information_settings_page.dart",
+      "Hash": "83BCF7333E6782FB45B519E8CD22154743B526E13B706A0941C3FCDE1FCB60B4"
+    },
+    {
+      "Path": "lib/screens/profile/settings/volume_boundaries_screen.dart",
+      "Hash": "E4863A139A2A82D688AF5CECBFA3C0CB77B6A3B7FEFBB02C144EFF22DB0FD124"
+    },
+    {
+      "Path": "lib/services/active_plan_store.dart",
+      "Hash": "5C764666BD64FCEFFA1994EE3BC24F0406FC1815EBFF79C987ECDD1BCA2D0D15"
+    },
+    {
+      "Path": "lib/services/diagnostics_service.dart",
+      "Hash": "F75DABC17F0B610E021A4B3EC3062E044E593475F13DCB44B2482A5D32728B8B"
+    },
+    {
+      "Path": "lib/theme/expressive_theme.dart",
+      "Hash": "CB3CB905BEFE35CE8D35DF58B69452A945878C54563D8E0A5B73217A4ED040AF"
+    },
+    {
+      "Path": "lib/theme/neo_brutalism_pilot_gallery.dart",
+      "Hash": "6107CBA564B8E0851CBA40877402861734B959732182E5D8DD74EB16442AF617"
+    },
+    {
+      "Path": "lib/theme/theme_lab_page.dart",
+      "Hash": "D181EE2AAB794BB1599A78068C13D55841209A9790BC79D23E810DB8D3103E82"
+    },
+    {
+      "Path": "lib/widgets/health_trends_section.dart",
+      "Hash": "932A9D643C2ED503382867593249027FC037AA88E249AE430C4011A527ED3A9F"
+    },
+    {
+      "Path": "lib/widgets/seven_day_focus_card.dart",
+      "Hash": "65C1EAECC7EDF5E0A7269628E0ACF4DA7EADC86F07AEC8FC7DF1395F5DED10EE"
+    },
+    {
+      "Path": "lib/widgets/stretch_search_dialog.dart",
+      "Hash": "991D7243015A7E72C865EEFD4D41CAF46B1FD21538B127FB762C8AF4B12A0910"
+    },
+    {
+      "Path": "lib/widgets/weight_card.dart",
+      "Hash": "0380F352C0450FE30D740788E2EFAD9E490269A22FB43D3A4E2C8DB7896FA87B"
+    },
+    {
+      "Path": "test/expressive_active_workout_compact_scale_test.dart",
+      "Hash": "251AB4B9B026B14781FB71141B8F409AF8D4B5D0EE1F88CE4B20E45E28B0592F"
+    },
+    {
+      "Path": "test/expressive_seven_day_focus_amplification_test.dart",
+      "Hash": "F2524F422344F8906007136B1CC8F696B3E0CFC91592E9E42750C4F64B6B3120"
+    },
+    {
+      "Path": "test/expressive_train_presentation_test.dart",
+      "Hash": "7D7D1327509910823AA7B8C28E652DD870ACBD4A6D2154FEFCB520E6BF5CE746"
+    }
+  ],
+  "UntrackedGroups": [
+    {
+      "Group": "android/build",
+      "Count": 1
+    },
+    {
+      "Group": "docs/proposals",
+      "Count": 184
+    },
+    {
+      "Group": "flutter_06.png",
+      "Count": 1
+    },
+    {
+      "Group": "incoming/",
+      "Count": 1
+    },
+    {
+      "Group": "tmp/",
+      "Count": 1
+    }
+  ]
+}

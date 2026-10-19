@@ -32,6 +32,77 @@ void main() {
   ];
 
   for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive browser clears search and resets filters at 320 dp, '
+      '${brightness.name}, 2x text',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(320, 780));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await _pumpEmptyStateBrowser(tester, brightness);
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(ExerciseCatalogPage)),
+        );
+        final search = find.byType(TextField).first;
+
+        await tester.tap(find.byTooltip(strings.catalogFilters));
+        await _settle(tester);
+        final workspaceProfileSwitch = find.descendant(
+          of: find.byType(SwitchListTile),
+          matching: find.byType(Switch),
+        );
+        await tester.ensureVisible(workspaceProfileSwitch);
+        await tester.tap(workspaceProfileSwitch);
+        await _settle(tester);
+        await tester.ensureVisible(find.text(strings.catalogApplyFilters));
+        await tester.tap(find.text(strings.catalogApplyFilters));
+        await _settle(tester);
+
+        await tester.enterText(search, 'not a matching exercise');
+        await _settle(tester);
+        expect(find.text(strings.catalogNoSearchMatches), findsOneWidget);
+        expect(find.text(strings.catalogNoFilteredMatches), findsNothing);
+        expect(find.text(strings.catalogClearSearch), findsOneWidget);
+        await tester.ensureVisible(find.text(strings.catalogClearSearch));
+        await tester.tap(find.text(strings.catalogClearSearch));
+        await _settle(tester);
+        expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+        expect(find.text('Goblet Squat'), findsOneWidget);
+
+        await _selectUnmatchedArea(tester, strings);
+        expect(find.text(strings.catalogNoFilteredMatches), findsOneWidget);
+        expect(find.text(strings.catalogResetFilters), findsOneWidget);
+        expect(find.text(strings.catalogClearSearch), findsNothing);
+
+        await tester.enterText(search, 'not a matching exercise');
+        await _settle(tester);
+        expect(find.text(strings.catalogNoCombinedMatchesBody), findsOneWidget);
+        expect(find.text(strings.catalogClearSearch), findsOneWidget);
+        expect(find.text(strings.catalogResetFilters), findsOneWidget);
+        for (final action in [
+          find.text(strings.catalogClearSearch),
+          find.text(strings.catalogResetFilters),
+        ]) {
+          final bounds = tester.getRect(action);
+          expect(bounds.left, greaterThanOrEqualTo(0));
+          expect(bounds.right, lessThanOrEqualTo(320));
+        }
+
+        await tester.ensureVisible(find.text(strings.catalogClearSearch));
+        await tester.tap(find.text(strings.catalogClearSearch));
+        await _settle(tester);
+        expect(find.text(strings.catalogNoFilteredMatches), findsOneWidget);
+        expect(find.text('Goblet Squat'), findsNothing);
+        await tester.ensureVisible(find.text(strings.catalogResetFilters));
+        await tester.tap(find.text(strings.catalogResetFilters));
+        await _settle(tester);
+        expect(find.text('Goblet Squat'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
     for (final viewport in browserDetailViewports) {
       testWidgets('Expressive browser and detail fit ${viewport.label} in '
           '${brightness.name}', (tester) async {
@@ -68,9 +139,8 @@ void main() {
               localizationsDelegates: tonosLocalizationDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: const TextScaler.linear(1.3),
-                ),
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(1.3)),
                 child: child!,
               ),
               home: const ExerciseCatalogPage(
@@ -111,7 +181,7 @@ void main() {
         );
         expect(filterDialog, findsOneWidget);
         final cancel = find.text(strings.commonCancel);
-        final save = find.text(strings.commonSave);
+        final save = find.text(strings.catalogApplyFilters);
         await tester.ensureVisible(cancel);
         await tester.ensureVisible(save);
         for (final action in [cancel, save]) {
@@ -145,6 +215,18 @@ void main() {
         expect(shellRect.right, lessThanOrEqualTo(pageBounds.right));
         expect(shellRect.bottom, lessThanOrEqualTo(pageBounds.bottom));
         expect(find.text('Goblet Squat'), findsWidgets);
+        expect(
+          find.byKey(
+            const ValueKey('exercise-detail-expressive-media-preview'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(
+            const ValueKey('exercise-detail-expressive-heatmap-overlay'),
+          ),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
 
         await tester.pumpWidget(const SizedBox.shrink());
@@ -231,7 +313,9 @@ void main() {
           (tester
                       .widget<DecoratedBox>(
                         find.byKey(
-                          const ValueKey('exercise-detail-expressive-header'),
+                          const ValueKey(
+                            'exercise-detail-expressive-title-pill',
+                          ),
                         ),
                       )
                       .decoration
@@ -347,16 +431,52 @@ void main() {
           expect(segmentTops[1], lessThan(segmentTops[2]));
         }
         expect(find.byTooltip(strings.commonClose), findsOneWidget);
+        final headerRect = tester.getRect(
+          find.byKey(const ValueKey('exercise-detail-expressive-header')),
+        );
+        final titleRect = tester.getRect(
+          find.byKey(const ValueKey('exercise-detail-expressive-title-pill')),
+        );
+        expect(
+          titleRect.top,
+          greaterThanOrEqualTo(headerRect.top),
+          reason: 'Scaled title must not be clipped above its header',
+        );
+        expect(
+          titleRect.bottom,
+          lessThanOrEqualTo(headerRect.bottom),
+          reason: 'Scaled title must not be clipped below its header',
+        );
         expect(find.text(strings.exerciseDetailFormGuide), findsOneWidget);
         expect(find.text(strings.catalogEquipment), findsOneWidget);
-        expect(find.text(strings.exerciseDetailTargetAnatomy), findsOneWidget);
+        expect(
+          find.byKey(
+            const ValueKey('exercise-detail-expressive-heatmap-overlay'),
+          ),
+          findsOneWidget,
+        );
+        final heatmapSemantics = tester.ensureSemantics();
+        try {
+          expect(
+            find.bySemanticsLabel(strings.exerciseDetailOpenHeatmap),
+            findsOneWidget,
+          );
+        } finally {
+          heatmapSemantics.dispose();
+        }
         expect(tester.takeException(), isNull);
 
-        final equipmentHeading = find.text(strings.catalogEquipment);
+        final equipmentHeading = find.text(strings.catalogEquipment).last;
         await tester.ensureVisible(equipmentHeading);
         await tester.tap(equipmentHeading);
         await _settle(tester);
-        expect(find.text('Dumbbell'), findsNWidgets(2));
+        expect(
+          find.descendant(
+            of: find.byType(ExerciseDetailSheet),
+            matching: find.text('Dumbbell'),
+          ),
+          findsOneWidget,
+        );
 
         await tester.tap(find.text(strings.exerciseDetailTabMetrics));
         await _settle(tester);
@@ -428,11 +548,11 @@ void main() {
           expect(bestWeight, findsOneWidget);
           expect(estimatedOneRm, findsOneWidget);
           for (final label in [bestWeight, estimatedOneRm]) {
-            final text = tester.widget<Text>(label);
             final paragraph = tester.renderObject<RenderParagraph>(label);
-            expect(text.maxLines, isNull);
-            expect(text.overflow, isNull);
             expect(paragraph.didExceedMaxLines, isFalse);
+            final bounds = tester.getRect(label);
+            expect(bounds.left, greaterThanOrEqualTo(0));
+            expect(bounds.right, lessThanOrEqualTo(320));
           }
           expect(
             tester.getRect(bestWeight).bottom,
@@ -447,6 +567,66 @@ void main() {
       });
     }
   }
+}
+
+Future<void> _pumpEmptyStateBrowser(
+  WidgetTester tester,
+  Brightness brightness,
+) async {
+  SharedPreferences.setMockInitialValues({
+    'guided_tutorial_completed.exercise_catalog_v1': true,
+  });
+  final repository = _CatalogDetailRepository();
+  final profile = SelectedProfile(repository: repository)
+    ..currentProfile = _CatalogDetailDatabase.profiles.first;
+  final units = UnitPreferenceProvider();
+  addTearDown(profile.dispose);
+  addTearDown(units.dispose);
+  await units.ready;
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        Provider<AppRepository>.value(value: repository),
+        ChangeNotifierProvider<SelectedProfile>.value(value: profile),
+        ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+      ],
+      child: MaterialApp(
+        theme: brightness == Brightness.dark
+            ? ExpressiveThemeDefinition.dark()
+            : ExpressiveThemeDefinition.light(),
+        themeAnimationDuration: Duration.zero,
+        localizationsDelegates: tonosLocalizationDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: const ExerciseCatalogPage(expressiveCatalogPresentation: true),
+      ),
+    ),
+  );
+  await _settle(tester);
+}
+
+Future<void> _selectUnmatchedArea(
+  WidgetTester tester,
+  AppLocalizations strings,
+) async {
+  await tester.tap(find.byTooltip(strings.catalogFilters));
+  await _settle(tester);
+  final areaField = find.byType(DropdownButtonFormField<String>).at(1);
+  await tester.ensureVisible(areaField);
+  await tester.tap(areaField);
+  await _settle(tester);
+  final unmatchedArea = find.text('Unmatched region').last;
+  await tester.ensureVisible(unmatchedArea);
+  await tester.tap(unmatchedArea);
+  await _settle(tester);
+  final save = find.text(strings.catalogApplyFilters);
+  await tester.ensureVisible(save);
+  await tester.tap(save);
+  await _settle(tester);
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -563,6 +743,7 @@ class _CatalogDetailDatabase implements DatabaseHelper {
   @override
   Future<List<BodyPart>> fetchAllBodyParts() async => [
     _CatalogDetailRepository._chest,
+    BodyPart(2, 'Unmatched region'),
   ];
 
   @override

@@ -1,5 +1,6 @@
 // File: lib/screens/profile/settings/flow_methods_page.dart
 
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
@@ -22,11 +23,89 @@ import '../../../widgets/settings_tiles.dart';
 /// Same enum as in auto_preset_flow_screen.dart
 enum AddSetMode { explicit, copy }
 
+enum _CopySetSource { last, first, specific }
+
 Widget _addSetModeOptions(
   BuildContext context, {
   required AddSetMode selected,
   required ValueChanged<AddSetMode> onChanged,
+  bool expressiveSelectionGroup = false,
 }) {
+  final strings = AppLocalizations.of(context);
+  if (expressiveSelectionGroup) {
+    final theme = Theme.of(context);
+    final tokens = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      theme.brightness,
+    );
+    final outline = tokens.outlineAccent.withValues(alpha: 0.38);
+    Widget segment(AddSetMode value, String label, String keyName) {
+      final isSelected = selected == value;
+      final foreground = isSelected
+          ? tokens.onSurfaceSelected
+          : tokens.onSurfaceTertiary;
+      return Expanded(
+        child: Semantics(
+          key: ValueKey<String>(keyName),
+          button: true,
+          selected: isSelected,
+          inMutuallyExclusiveGroup: true,
+          label: label,
+          onTap: () => onChanged(value),
+          child: ExcludeSemantics(
+            child: Material(
+              color: isSelected ? tokens.surfaceSelected : Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(
+                  color: isSelected ? tokens.actionPrimary : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => onChanged(value),
+                child: SizedBox(
+                  height: 48,
+                  child: Center(
+                    child: Text(
+                      label,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: foreground,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.surfaceTertiary,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: outline),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          segment(
+            AddSetMode.explicit,
+            strings.flowExplicit,
+            'plan-rule-add-set-explicit',
+          ),
+          segment(AddSetMode.copy, strings.rulesCopy, 'plan-rule-add-set-copy'),
+        ],
+      ),
+    );
+  }
+
   Radio<AddSetMode> option(AddSetMode value) => Radio<AddSetMode>(
     value: value,
     groupValue: selected,
@@ -35,7 +114,6 @@ Widget _addSetModeOptions(
     },
   );
 
-  final strings = AppLocalizations.of(context);
   Widget choice(AddSetMode value, String label) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -607,6 +685,9 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       ),
       trailing: PopupMenuButton<_RuleAction>(
         tooltip: strings.rulesOptionsTooltip,
+        shape: expressive
+            ? RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu)
+            : null,
         onSelected: (action) {
           if (action == _RuleAction.edit) {
             onEdit();
@@ -1623,6 +1704,8 @@ class _FlowMethodsChoiceField<T> extends StatefulWidget {
     required this.label,
     required this.onChanged,
     required this.nonExpressiveButton,
+    this.planRuleStyle = false,
+    this.scrollFieldIntoUpperArea = false,
   });
 
   final String title;
@@ -1631,6 +1714,8 @@ class _FlowMethodsChoiceField<T> extends StatefulWidget {
   final String Function(T value) label;
   final ValueChanged<T?>? onChanged;
   final Widget Function() nonExpressiveButton;
+  final bool planRuleStyle;
+  final bool scrollFieldIntoUpperArea;
 
   @override
   State<_FlowMethodsChoiceField<T>> createState() =>
@@ -1644,6 +1729,68 @@ class _FlowMethodsChoiceFieldState<T>
   bool _menuOpen = false;
   bool _fieldWidthMeasurementScheduled = false;
   double? _fieldWidth;
+  double? _menuHeight;
+  double _menuOffset = 0;
+
+  Rect? _globalBounds(GlobalKey? key) {
+    final renderObject = key?.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return null;
+    return renderObject.localToGlobal(Offset.zero) & renderObject.size;
+  }
+
+  Future<void> _toggleMenu(MenuController controller) async {
+    if (controller.isOpen) {
+      controller.close();
+      return;
+    }
+    if (!widget.planRuleStyle) {
+      controller.open();
+      return;
+    }
+
+    if (widget.scrollFieldIntoUpperArea) {
+      final fieldContext = _fieldKey.currentContext;
+      if (fieldContext != null) {
+        await Scrollable.ensureVisible(
+          fieldContext,
+          alignment: 0.2,
+          duration: Duration.zero,
+        );
+        await WidgetsBinding.instance.endOfFrame;
+      }
+      if (!mounted) return;
+    }
+
+    final field = _globalBounds(_fieldKey);
+    if (field == null) return;
+    final media = MediaQuery.of(context);
+    final bottom =
+        media.size.height - media.padding.bottom - media.viewInsets.bottom - 12;
+    final below = math.max(0.0, bottom - field.bottom - 4);
+    final style = Theme.of(context).textTheme.bodyLarge!
+        .copyWith(fontWeight: FontWeight.w600);
+    var desiredHeight = 14.0;
+    for (final value in widget.values) {
+      final painter = TextPainter(
+        text: TextSpan(text: widget.label(value), style: style),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 2,
+      )..layout(maxWidth: math.max(1, field.width - 72));
+      desiredHeight += math.max(48.0, painter.height + 8);
+      painter.dispose();
+    }
+    final height = math.min(desiredHeight, below);
+    setState(() {
+      _fieldWidth = field.width;
+      _menuHeight = height;
+      _menuOffset = 4;
+    });
+    // MenuAnchor reads the new bounds before its overlay is inserted.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) controller.open();
+    });
+  }
 
   double? _renderedFieldWidth() {
     final renderObject = _fieldKey.currentContext?.findRenderObject();
@@ -1721,13 +1868,16 @@ class _FlowMethodsChoiceFieldState<T>
         dialogMaxWidth - 48,
       ),
     );
-    final menuMaxHeight = math.max(
+    final viewportMenuMaxHeight = math.max(
       0.0,
       screenSize.height -
           mediaQuery.padding.vertical -
           mediaQuery.viewInsets.vertical -
           dialogInsets.vertical * 2,
     );
+    final menuMaxHeight = widget.planRuleStyle
+        ? math.min(_menuHeight ?? 206, viewportMenuMaxHeight)
+        : viewportMenuMaxHeight;
     _scheduleFieldWidthMeasurement();
     final width = _fieldWidth ?? fallbackWidth;
 
@@ -1737,6 +1887,7 @@ class _FlowMethodsChoiceFieldState<T>
       consumeOutsideTap: true,
       crossAxisUnconstrained: false,
       childFocusNode: _focusNode,
+      alignmentOffset: Offset(0, widget.planRuleStyle ? _menuOffset : 0),
       onOpen: () {
         final fieldWidth = _renderedFieldWidth();
         if (mounted) {
@@ -1755,7 +1906,12 @@ class _FlowMethodsChoiceFieldState<T>
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         elevation: const WidgetStatePropertyAll(2),
         side: WidgetStatePropertyAll(
-          BorderSide(color: tokens.outlineAccent, width: 1),
+          BorderSide(
+            color: widget.planRuleStyle
+                ? tokens.outlineAccent.withValues(alpha: 0.5)
+                : tokens.outlineAccent,
+            width: 1,
+          ),
         ),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -1781,19 +1937,13 @@ class _FlowMethodsChoiceFieldState<T>
           expanded: _menuOpen,
           label: widget.title,
           value: valueLabel,
-          onTap: enabled
-              ? () => controller.isOpen ? controller.close() : controller.open()
-              : null,
+          onTap: enabled ? () => unawaited(_toggleMenu(controller)) : null,
           child: ExcludeSemantics(
             child: InkWell(
               focusNode: _focusNode,
               canRequestFocus: enabled,
               borderRadius: fieldRadius,
-              onTap: enabled
-                  ? () => controller.isOpen
-                        ? controller.close()
-                        : controller.open()
-                  : null,
+              onTap: enabled ? () => unawaited(_toggleMenu(controller)) : null,
               child: NotificationListener<SizeChangedLayoutNotification>(
                 onNotification: (_) {
                   _scheduleFieldWidthMeasurement();
@@ -1803,9 +1953,12 @@ class _FlowMethodsChoiceFieldState<T>
                   child: InputDecorator(
                     key: _fieldKey,
                     decoration: InputDecoration(
-                      labelText: widget.title,
+                      labelText: widget.planRuleStyle ? null : widget.title,
+                      enabled: enabled,
                       suffixIcon: Icon(
-                        Icons.arrow_drop_down,
+                        widget.planRuleStyle && _menuOpen
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down,
                         color: tokens.supportingForeground,
                       ),
                     ),
@@ -1854,6 +2007,9 @@ class _FlowMethodsChoiceFieldState<T>
             foregroundColor: WidgetStatePropertyAll(foreground),
             backgroundColor: WidgetStatePropertyAll(background),
             minimumSize: const WidgetStatePropertyAll(Size(0, 48)),
+            tapTargetSize: widget.planRuleStyle
+                ? MaterialTapTargetSize.shrinkWrap
+                : null,
             padding: const WidgetStatePropertyAll(
               EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             ),
@@ -1865,11 +2021,22 @@ class _FlowMethodsChoiceFieldState<T>
             textStyle: WidgetStatePropertyAll(
               Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: foreground,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: selected && !widget.planRuleStyle
+                    ? FontWeight.w800
+                    : FontWeight.w600,
               ),
             ),
           ),
-          trailingIcon: selected ? Icon(Icons.check, color: foreground) : null,
+          trailingIcon: widget.planRuleStyle
+              ? SizedBox(
+                  width: 20,
+                  child: selected
+                      ? Icon(Icons.check, size: 18, color: foreground)
+                      : null,
+                )
+              : selected
+              ? Icon(Icons.check, color: foreground)
+              : null,
           child: SizedBox(
             width: double.infinity,
             child: Text(
@@ -1901,6 +2068,7 @@ class AddPresetMethodDialog extends StatefulWidget {
 class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
   AppRepository get _repo => context.read<AppRepository>();
 
+  bool _nameEdited = false;
   late TextEditingController _nameCtl;
   late MethodType _type;
   late String _sign;
@@ -1910,6 +2078,13 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
   late TextEditingController _weightCtl;
   late TextEditingController _repsCtl;
   late TextEditingController _copyIndexCtl;
+  late TextEditingController _copySetNumberCtl;
+  late _CopySetSource _copySource;
+  bool _copyNumberEdited = false;
+
+  int? get _copySetNumber => int.tryParse(_copySetNumberCtl.text.trim());
+
+  bool get _copySetNumberIsValid => (_copySetNumber ?? 0) >= 1;
 
   @override
   void initState() {
@@ -1928,6 +2103,15 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
     _copyIndexCtl = TextEditingController(
       text: ex?.params['copyFromSetIndex']?.toString() ?? '-1',
     );
+    final copyIndex = (ex?.params['copyFromSetIndex'] as num?)?.toInt() ?? -1;
+    _copySource = copyIndex < 0
+        ? _CopySetSource.last
+        : copyIndex == 0
+        ? _CopySetSource.first
+        : _CopySetSource.specific;
+    _copySetNumberCtl = TextEditingController(
+      text: copyIndex >= 0 ? '${copyIndex + 1}' : '',
+    );
   }
 
   @override
@@ -1938,6 +2122,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
     _weightCtl.dispose();
     _repsCtl.dispose();
     _copyIndexCtl.dispose();
+    _copySetNumberCtl.dispose();
     super.dispose();
   }
 
@@ -1946,6 +2131,7 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
     final isEdit = widget.existing != null;
     final strings = AppLocalizations.of(context);
     final expressive = context.usesExpressivePresentation;
+    if (expressive) return _buildExpressiveDialog(strings);
     final fieldGap = expressive ? 8.0 : 12.0;
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2062,58 +2248,353 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(strings.commonCancel),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            final name = _nameCtl.text.trim();
-            if (name.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(strings.rulesNameRequired)),
-              );
-              return;
-            }
-            final params = <String, dynamic>{};
-            switch (_type) {
-              case MethodType.weight:
-                params['sign'] = _sign;
-                params['factor'] = double.tryParse(_factorCtl.text) ?? 1.0;
-                break;
-              case MethodType.rep:
-                params['sign'] = _sign;
-                params['amount'] = int.tryParse(_amountCtl.text) ?? 0;
-                break;
-              case MethodType.addSet:
-                if (_addMode == AddSetMode.explicit) {
-                  params['weight'] = double.tryParse(_weightCtl.text) ?? 0.0;
-                  params['reps'] = int.tryParse(_repsCtl.text) ?? 0;
-                } else {
-                  params['copyFromSetIndex'] =
-                      int.tryParse(_copyIndexCtl.text) ?? -1;
-                }
-                break;
-              case MethodType.delSet:
-                break;
-            }
-            await _repo.upsertFlowMethod(
-              presetId: widget.presetId,
-              name: name,
-              type: _type,
-              params: params,
-            );
-            if (!context.mounted) return;
-            Navigator.pop(
-              context,
-              FlowMethod(
-                id: -1,
-                presetId: widget.presetId,
-                name: name,
-                type: _type,
-                params: params,
-              ),
-            );
-          },
-          child: Text(strings.commonSave),
-        ),
+        ElevatedButton(onPressed: _save, child: Text(strings.commonSave)),
       ],
+    );
+  }
+
+  Widget _buildExpressiveDialog(AppLocalizations strings) {
+    final theme = Theme.of(context);
+    final tokens = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      theme.brightness,
+    );
+    final fieldSurface = Color.alphaBlend(
+      tokens.pageCanvas.withValues(alpha: 0.5),
+      tokens.surfaceTertiary,
+    );
+    final outline = tokens.outlineAccent.withValues(alpha: 0.45);
+    const radius = BorderRadius.all(Radius.circular(18));
+    OutlineInputBorder border(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: radius,
+          borderSide: BorderSide(color: color, width: width),
+        );
+    final inputTheme = theme.inputDecorationTheme.copyWith(
+      filled: true,
+      fillColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.disabled)
+            ? tokens.surfaceTertiary
+            : fieldSurface,
+      ),
+      constraints: const BoxConstraints(minHeight: 52),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: border(outline),
+      enabledBorder: border(outline),
+      focusedBorder: border(tokens.actionPrimary, 2),
+      disabledBorder: border(tokens.outlineAccent.withValues(alpha: 0.22)),
+      errorBorder: border(theme.colorScheme.error),
+      focusedErrorBorder: border(theme.colorScheme.error, 2),
+      errorMaxLines: 3,
+    );
+    Widget field(String label, Widget child) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: tokens.onSurfaceTertiary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        child,
+      ],
+    );
+    Widget numberField(
+      String label,
+      TextEditingController controller, {
+      bool decimal = false,
+      String? helperText,
+      String? errorText,
+      ValueChanged<String>? onChanged,
+    }) => field(
+      label,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TonosField(
+            controller: controller,
+            semanticLabel: label,
+            keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+            textInputAction: TextInputAction.done,
+            errorText: errorText,
+            onChanged: onChanged,
+          ),
+          if (helperText != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: tokens.supportingForeground,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+    Widget operationField() => field(
+      strings.rulesOperationLabel,
+      _FlowMethodsChoiceField<String>(
+        title: strings.rulesOperationLabel,
+        values: const ['+', '-'],
+        value: _sign,
+        label: (value) => value == '+'
+            ? '+  ${strings.commonAdd}'
+            : '−  ${strings.rulesOperationSubtract}',
+        onChanged: (value) {
+          if (value != null) setState(() => _sign = value);
+        },
+        planRuleStyle: true,
+        scrollFieldIntoUpperArea: true,
+        nonExpressiveButton: () => const SizedBox.shrink(),
+      ),
+    );
+    final disabledSurface = Color.alphaBlend(
+      tokens.actionPrimary.withValues(alpha: 0.12),
+      tokens.surfaceTertiary,
+    );
+    final disabledForeground = Color.alphaBlend(
+      tokens.onSurfaceTertiary.withValues(alpha: 0.6),
+      disabledSurface,
+    );
+    final nameIsEmpty = _nameCtl.text.trim().isEmpty;
+    final copyNumberIsInvalid =
+        _type == MethodType.addSet &&
+        _addMode == AddSetMode.copy &&
+        _copySource == _CopySetSource.specific &&
+        !_copySetNumberIsValid;
+
+    return Theme(
+      data: theme.copyWith(inputDecorationTheme: inputTheme),
+      child: AlertDialog(
+        scrollable: true,
+        constraints: const BoxConstraints(maxWidth: 440),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        actionsOverflowButtonSpacing: 8,
+        title: Text(
+          widget.existing == null
+              ? strings.rulesAddPlanTitle
+              : strings.rulesEditPlan,
+        ),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              field(
+                strings.commonName,
+                TonosField(
+                  controller: _nameCtl,
+                  semanticLabel: strings.commonName,
+                  textInputAction: TextInputAction.next,
+                  errorText: _nameEdited && nameIsEmpty
+                      ? strings.rulesNameRequired
+                      : null,
+                  onChanged: (_) => setState(() => _nameEdited = true),
+                ),
+              ),
+              const SizedBox(height: 16),
+              field(
+                strings.rulesRuleTypeLabel,
+                _FlowMethodsChoiceField<MethodType>(
+                  title: strings.rulesRuleTypeLabel,
+                  values: MethodType.values,
+                  value: _type,
+                  label: (value) => _methodTypeLabel(value, strings),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _type = value);
+                  },
+                  planRuleStyle: true,
+                  nonExpressiveButton: () => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (_type == MethodType.weight) ...[
+                operationField(),
+                const SizedBox(height: 16),
+                numberField(
+                  strings.flowFactor,
+                  _factorCtl,
+                  decimal: true,
+                  helperText: strings.rulesFactorHelper,
+                ),
+              ] else if (_type == MethodType.rep) ...[
+                operationField(),
+                const SizedBox(height: 16),
+                numberField(
+                  strings.flowAmount,
+                  _amountCtl,
+                  helperText: strings.rulesAmountHelper,
+                ),
+              ] else if (_type == MethodType.addSet) ...[
+                _addSetModeOptions(
+                  context,
+                  selected: _addMode,
+                  onChanged: (value) => setState(() => _addMode = value),
+                  expressiveSelectionGroup: true,
+                ),
+                const SizedBox(height: 16),
+                if (_addMode == AddSetMode.explicit) ...[
+                  numberField(strings.flowWeight, _weightCtl, decimal: true),
+                  const SizedBox(height: 16),
+                  numberField(strings.flowReps, _repsCtl),
+                ] else ...[
+                  field(
+                    strings.rulesCopyFromLabel,
+                    _FlowMethodsChoiceField<_CopySetSource>(
+                      title: strings.rulesCopyFromLabel,
+                      values: _CopySetSource.values,
+                      value: _copySource,
+                      label: (value) => switch (value) {
+                        _CopySetSource.last => strings.rulesCopyFromLastSet,
+                        _CopySetSource.first => strings.rulesCopyFromFirstSet,
+                        _CopySetSource.specific =>
+                          strings.rulesCopyFromSpecificSet,
+                      },
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _copySource = value);
+                        }
+                      },
+                      planRuleStyle: true,
+                      scrollFieldIntoUpperArea: true,
+                      nonExpressiveButton: () => const SizedBox.shrink(),
+                    ),
+                  ),
+                  if (_copySource == _CopySetSource.specific) ...[
+                    const SizedBox(height: 16),
+                    numberField(
+                      strings.rulesCopySetNumberLabel,
+                      _copySetNumberCtl,
+                      helperText: strings.rulesCopySpecificHelper,
+                      errorText: _copyNumberEdited && copyNumberIsInvalid
+                          ? strings.rulesCopySetNumberInvalid
+                          : null,
+                      onChanged: (_) =>
+                          setState(() => _copyNumberEdited = true),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      _copySource == _CopySetSource.last
+                          ? strings.rulesCopyFromLastHelper
+                          : strings.rulesCopyFromFirstHelper,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: tokens.supportingForeground,
+                      ),
+                    ),
+                  ],
+                ],
+              ] else
+                Text(
+                  strings.rulesDeleteLastSetBody,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.onSurfaceTertiary,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: tokens.onSurfaceTertiary,
+              side: BorderSide(color: outline),
+              minimumSize: const Size(88, 48),
+              shape: const RoundedRectangleBorder(
+                borderRadius: ExpressiveTrainShapes.compactControl,
+              ),
+            ),
+            child: Text(strings.commonCancel),
+          ),
+          FilledButton(
+            onPressed: nameIsEmpty || copyNumberIsInvalid ? null : _save,
+            style: FilledButton.styleFrom(
+              backgroundColor: tokens.actionPrimary,
+              foregroundColor: tokens.onActionPrimary,
+              disabledBackgroundColor: disabledSurface,
+              disabledForegroundColor: disabledForeground,
+              minimumSize: const Size(88, 48),
+              shape: const RoundedRectangleBorder(
+                borderRadius: ExpressiveTrainShapes.compactControl,
+              ),
+            ),
+            child: Text(strings.commonSave),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    final strings = AppLocalizations.of(context);
+    final navigator = Navigator.of(context);
+    final name = _nameCtl.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.rulesNameRequired)));
+      return;
+    }
+    final expressiveCopy =
+        context.usesExpressivePresentation &&
+        _type == MethodType.addSet &&
+        _addMode == AddSetMode.copy;
+    if (expressiveCopy &&
+        _copySource == _CopySetSource.specific &&
+        !_copySetNumberIsValid) {
+      setState(() => _copyNumberEdited = true);
+      return;
+    }
+    final params = <String, dynamic>{};
+    switch (_type) {
+      case MethodType.weight:
+        params['sign'] = _sign;
+        params['factor'] = double.tryParse(_factorCtl.text) ?? 1.0;
+        break;
+      case MethodType.rep:
+        params['sign'] = _sign;
+        params['amount'] = int.tryParse(_amountCtl.text) ?? 0;
+        break;
+      case MethodType.addSet:
+        if (_addMode == AddSetMode.explicit) {
+          params['weight'] = double.tryParse(_weightCtl.text) ?? 0.0;
+          params['reps'] = int.tryParse(_repsCtl.text) ?? 0;
+        } else {
+          params['copyFromSetIndex'] = expressiveCopy
+              ? switch (_copySource) {
+                  _CopySetSource.last => -1,
+                  _CopySetSource.first => 0,
+                  _CopySetSource.specific => _copySetNumber! - 1,
+                }
+              : int.tryParse(_copyIndexCtl.text) ?? -1;
+        }
+        break;
+      case MethodType.delSet:
+        break;
+    }
+    await _repo.upsertFlowMethod(
+      presetId: widget.presetId,
+      name: name,
+      type: _type,
+      params: params,
+    );
+    if (!mounted) return;
+    navigator.pop(
+      FlowMethod(
+        id: -1,
+        presetId: widget.presetId,
+        name: name,
+        type: _type,
+        params: params,
+      ),
     );
   }
 }

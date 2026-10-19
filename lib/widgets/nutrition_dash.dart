@@ -6,6 +6,7 @@ import 'nutrition_text_details.dart';
 import 'meal_plan_add_bar.dart';
 import 'nutrition_circle_details.dart';
 import 'nutrition_bar_details.dart';
+import 'expressive_nutrition_summary.dart';
 
 import '../theme/theme_extensions.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
@@ -58,6 +59,21 @@ class _NutritionDashState extends State<NutritionDash>
     final dataVisualization = context.dataVisualizationTokens;
     final destination = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
+
+    if (context.usesExpressivePresentation &&
+        destination?.family == AppExpressiveDestinationFamily.nutrition) {
+      return ExpressiveNutritionSummary(
+        caloriesConsumed: widget.caloriesConsumed,
+        calorieGoal: widget.calorieGoal,
+        proteinConsumed: widget.proteinConsumed,
+        proteinTarget: widget.proteinTarget,
+        carbConsumed: widget.carbConsumed,
+        carbTarget: widget.carbTarget,
+        fatConsumed: widget.fatConsumed,
+        fatTarget: widget.fatTarget,
+        scale: s,
+      );
+    }
 
     final detailWidgets = <Widget>[
       NutritionCircleDetails(

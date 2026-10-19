@@ -4,6 +4,15 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/session_record_badge_models.dart';
 import '../theme/theme_extensions.dart';
 
+/// Returns the amber accent used by Catalog all-time record badges.
+Color catalogBrowserAllTimeBadgeAccent(BuildContext context) {
+  final theme = Theme.of(context);
+  final color = context.dataVisualizationTokens.recordAllTime;
+  return theme.brightness == Brightness.light
+      ? Color.lerp(color, theme.colorScheme.onSurface, 0.62)!
+      : color;
+}
+
 /// Compact first-completion badge shared by workout record lists.
 class FirstRecordBadge extends StatelessWidget {
   final bool compact;
@@ -46,6 +55,7 @@ class _RecordBadgeVisual extends StatelessWidget {
   final double? width;
   final TextAlign textAlign;
   final int? maxLines;
+  final bool catalogBrowserRefinement;
 
   const _RecordBadgeVisual({
     required this.label,
@@ -59,24 +69,27 @@ class _RecordBadgeVisual extends StatelessWidget {
     this.width,
     this.textAlign = TextAlign.start,
     this.maxLines,
+    this.catalogBrowserRefinement = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final shapes = context.shapeTokens;
     final fill = color.withValues(alpha: fillOpacity);
-    final foreground =
-        context.usesNeoPresentation && foregroundSurface != null
-            ? tonosForegroundForSurface(
-              context,
-              fill,
-              parentSurface: foregroundSurface,
-            )
-            : color;
+    final foreground = context.usesNeoPresentation && foregroundSurface != null
+        ? tonosForegroundForSurface(
+            context,
+            fill,
+            parentSurface: foregroundSurface,
+          )
+        : color;
     final preservesClassicDensity =
         context.usesClassicPresentation &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     return Container(
+      key: catalogBrowserRefinement
+          ? const ValueKey('exercise-detail-catalog-record-badge')
+          : null,
       width: width,
       padding: compact ? compactPadding : regularPadding,
       decoration: BoxDecoration(
@@ -90,10 +103,11 @@ class _RecordBadgeVisual extends StatelessWidget {
         textAlign: textAlign,
         style: TextStyle(
           color: foreground,
-          fontSize:
-              preservesClassicDensity
-                  ? (compact ? 7.5 : 9)
-                  : (compact ? 10 : 12),
+          fontSize: preservesClassicDensity
+              ? (compact ? 7.5 : 9)
+              : catalogBrowserRefinement
+              ? (compact ? 8 : 9)
+              : (compact ? 10 : 12),
           height: compact ? 1 : null,
           fontWeight: FontWeight.w800,
         ),
@@ -109,6 +123,7 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
   final double? width;
   final TextAlign textAlign;
   final Color? foregroundSurface;
+  final bool catalogBrowserRefinement;
 
   const WorkoutRecordBadgeChip({
     super.key,
@@ -117,31 +132,42 @@ class WorkoutRecordBadgeChip extends StatelessWidget {
     this.width,
     this.textAlign = TextAlign.start,
     this.foregroundSurface,
+    this.catalogBrowserRefinement = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final dataVisualization = context.dataVisualizationTokens;
-    final color =
-        badge.tier == WorkoutRecordBadgeTier.allTime
-            ? dataVisualization.recordAllTime
-            : dataVisualization.recordMonthly;
+    final color = badge.tier == WorkoutRecordBadgeTier.allTime
+        ? dataVisualization.recordAllTime
+        : dataVisualization.recordMonthly;
     final strings = AppLocalizations.of(context);
     final surfaces = context.surfaceTokens;
+    final catalogLightAmber =
+        catalogBrowserRefinement &&
+        Theme.of(context).brightness == Brightness.light &&
+        badge.tier == WorkoutRecordBadgeTier.allTime;
+    final badgeColor = catalogLightAmber
+        ? catalogBrowserAllTimeBadgeAccent(context)
+        : color;
     return _RecordBadgeVisual(
-      label:
-          badge.type == WorkoutRecordBadgeType.repBest
-              ? strings.recordRepBest(badge.reps ?? 0)
-              : strings.recordVolumeBest,
-      color: color,
-      fillOpacity: surfaces.recordBadgeFill,
+      label: badge.type == WorkoutRecordBadgeType.repBest
+          ? strings.recordRepBest(badge.reps ?? 0)
+          : strings.recordVolumeBest,
+      color: badgeColor,
+      fillOpacity: catalogLightAmber ? 0.22 : surfaces.recordBadgeFill,
       borderOpacity: surfaces.recordBadgeBorder,
       compact: compact,
       foregroundSurface: foregroundSurface,
-      compactPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      compactPadding: EdgeInsets.symmetric(
+        horizontal: catalogBrowserRefinement ? 2 : 4,
+        vertical: 0,
+      ),
       regularPadding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       width: width,
       textAlign: textAlign,
+      maxLines: catalogBrowserRefinement ? 1 : null,
+      catalogBrowserRefinement: catalogBrowserRefinement,
     );
   }
 }
@@ -195,10 +221,12 @@ class WorkoutRecordBadgeStack extends StatelessWidget {
 /// Explains green monthly and gold all-time record badges when needed.
 class WorkoutRecordBadgeLegend extends StatelessWidget {
   final EdgeInsetsGeometry padding;
+  final Color? allTimeColorOverride;
 
   const WorkoutRecordBadgeLegend({
     super.key,
     this.padding = const EdgeInsets.fromLTRB(16, 0, 16, 6),
+    this.allTimeColorOverride,
   });
 
   @override
@@ -219,25 +247,26 @@ class WorkoutRecordBadgeLegend extends StatelessWidget {
         style: textStyle?.copyWith(color: dataVisualization.recordMonthly),
       ),
       _LegendItem(
-        color: dataVisualization.recordAllTime,
+        color: allTimeColorOverride ?? dataVisualization.recordAllTime,
         label: strings.recordAllTime,
-        style: textStyle?.copyWith(color: dataVisualization.recordAllTime),
+        style: textStyle?.copyWith(
+          color: allTimeColorOverride ?? dataVisualization.recordAllTime,
+        ),
       ),
     ];
     return Padding(
       padding: padding,
-      child:
-          preservesClassicDensity
-              ? Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [children[0], const SizedBox(width: 18), children[1]],
-              )
-              : Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 18,
-                runSpacing: 6,
-                children: children,
-              ),
+      child: preservesClassicDensity
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [children[0], const SizedBox(width: 18), children[1]],
+            )
+          : Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 18,
+              runSpacing: 6,
+              children: children,
+            ),
     );
   }
 }

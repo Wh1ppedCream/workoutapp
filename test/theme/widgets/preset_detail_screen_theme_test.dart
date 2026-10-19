@@ -48,14 +48,22 @@ void main() {
       unorderedEquals(<String>['decoration', 'geometry', 'text_style']),
     );
     final findings = report.findings.where((f) => f.ruleId == rule.id).toList();
-    expect(findings, hasLength(9));
+    expect(findings, hasLength(12));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
+    final pending = report.findings
+        .where(
+          (finding) =>
+              finding.file == rule.pattern && finding.status == 'pending',
+        )
+        .toList();
     expect(
-      report.findings.where(
-        (finding) =>
-            finding.file == rule.pattern && finding.status == 'pending',
-      ),
+      pending,
       isEmpty,
+      reason: pending
+          .map(
+            (finding) => '${finding.line} ${finding.kind}: ${finding.snippet}',
+          )
+          .join('\n'),
     );
   });
 
@@ -119,6 +127,73 @@ void main() {
     final theme = brightness == Brightness.light
         ? ExpressiveThemeDefinition.light()
         : ExpressiveThemeDefinition.dark();
+    testWidgets(
+      'Expressive ${brightness.name} preset overflow stays themed and anchored',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(430, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues(<String, Object>{});
+
+        final repository = _PresetRepository();
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider(
+                create: (_) => PresetSession(1, repository: repository),
+              ),
+            ],
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PresetDetailScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final planning = AppExpressivePlanningTokens.maybeOf(
+          tester.element(find.byType(PresetDetailScreen)),
+        )!;
+        final menuButton = tester.widget<PopupMenuButton<String>>(
+          find.byType(PopupMenuButton<String>),
+        );
+        final expectedShape = RoundedRectangleBorder(
+          borderRadius: planning.supportShape,
+        );
+        expect(menuButton.color, planning.planSupportSurface);
+        expect(menuButton.surfaceTintColor, Colors.transparent);
+        expect(menuButton.shape, expectedShape);
+
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        final deleteLabel = AppLocalizations.of(
+          tester.element(find.byType(PresetDetailScreen)),
+        ).planDeletePreset;
+        final deleteItem = find.text(deleteLabel);
+        expect(deleteItem, findsOneWidget);
+        final menuSurfaceFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is Material &&
+              widget.type == MaterialType.card &&
+              widget.color == planning.planSupportSurface,
+        );
+        expect(menuSurfaceFinder, findsOneWidget);
+        final menuSurface = tester.widget<Material>(menuSurfaceFinder);
+        expect(menuSurface.shape, expectedShape);
+        expect(tester.getRect(deleteItem).right, lessThanOrEqualTo(430));
+        expect(tester.getRect(deleteItem).bottom, lessThanOrEqualTo(900));
+
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+        expect(deleteItem, findsNothing);
+        expect(find.byType(PresetDetailScreen), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets(
       'Expressive ${brightness.name} plan detail styling and edit toggle',
       (tester) async {
@@ -198,6 +273,14 @@ void main() {
           find.byType(AddExerciseFab),
         );
         expect(addExerciseFab.expressiveWorkoutPresentation, isTrue);
+        expect(
+          addExerciseFab.semanticLabel,
+          AppLocalizations.of(pageContext).planAddExercise,
+        );
+        final editIcon = tester.widget<IconButton>(
+          find.byKey(AppTestKeys.planEdit),
+        );
+        expect((editIcon.icon as Icon).color, planning.actionPrimary);
         _expectExpressivePresetExerciseCard(tester, readOnly: false);
 
         await tester.tap(find.byKey(AppTestKeys.planEdit));
@@ -213,7 +296,7 @@ void main() {
             final decoration = widget.decoration! as BoxDecoration;
             return decoration.color == planning.planFocalSurface &&
                 decoration.borderRadius == planning.focalShape &&
-                decoration.border?.top.color == planning.outline;
+                decoration.border == null;
           }),
           findsOneWidget,
         );
@@ -223,6 +306,12 @@ void main() {
               .surfaceContainerLow,
           planning.planSupportSurface,
         );
+        expect(
+          tester
+              .widget<PresetInfoCard>(find.byType(PresetInfoCard))
+              .compactExpressive,
+          isTrue,
+        );
         await tester.ensureVisible(find.byType(WeightCard));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 350));
@@ -230,7 +319,110 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets(
+      'Expressive ${brightness.name} preset delete cancellation names the plan and keeps it',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(430, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        SharedPreferences.setMockInitialValues(<String, Object>{
+          'guided_tutorial_completed.${TutorialIds.planDetail}': true,
+        });
+
+        final repository = _PresetRepository();
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider(
+                create: (_) => PresetSession(1, repository: repository),
+              ),
+            ],
+            child: MaterialApp(
+              theme: theme,
+              themeAnimationDuration: Duration.zero,
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PresetDetailScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(PresetDetailScreen)),
+        );
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(strings.planDeletePreset));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PopupMenuItem<String>), findsNothing);
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('New Plan'), findsWidgets);
+        expect(find.text(strings.commonDelete), findsOneWidget);
+        expect(find.text(strings.commonCancel), findsOneWidget);
+
+        await tester.tap(find.text(strings.commonCancel));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.byType(PresetDetailScreen), findsOneWidget);
+        expect(repository.deleteCalls, 0);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
+
+  testWidgets('Expressive preset edit labels set fields once per exercise', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(430, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'guided_tutorial_completed.${TutorialIds.planDetail}': true,
+    });
+
+    final repository = _PresetRepository(withExercise: true);
+    final units = UnitPreferenceProvider();
+    addTearDown(units.dispose);
+    await units.ready;
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: repository),
+          ChangeNotifierProvider<UnitPreferenceProvider>.value(value: units),
+          ChangeNotifierProvider(
+            create: (_) => PresetSession(1, repository: repository),
+          ),
+        ],
+        child: MaterialApp(
+          theme: ExpressiveThemeDefinition.light(),
+          themeAnimationDuration: Duration.zero,
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const PresetDetailScreen(startInEditingMode: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(PresetDetailScreen)),
+    );
+    expect(
+      find.text(strings.weightShortLabel(units.weightUnit.shortLabel)),
+      findsOneWidget,
+    );
+    expect(find.text(strings.weightReps), findsOneWidget);
+    expect(find.text(strings.presetExerciseSetCount(1)), findsOneWidget);
+    final card = tester.widget<WeightCard>(find.byType(WeightCard));
+    expect(card.expressivePresetDetail, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('Preset detail is reachable across layouts', (tester) async {
     const layouts = <({Size size, double scale, double keyboardInset})>[
@@ -304,10 +496,12 @@ void _expectExpressivePresetExerciseCard(
 }) {
   final exerciseCard = tester.widget<ExerciseCard>(find.byType(ExerciseCard));
   expect(exerciseCard.expressiveWorkoutPresentation, isTrue);
+  expect(exerciseCard.expressivePresetDetail, isTrue);
   expect(exerciseCard.readOnlyMode, readOnly);
 
   final weightCard = tester.widget<WeightCard>(find.byType(WeightCard));
   expect(weightCard.expressiveWorkoutPresentation, isTrue);
+  expect(weightCard.expressivePresetDetail, isTrue);
   expect(weightCard.readOnlyMode, readOnly);
 
   final outerCard = tester.widget<Card>(
@@ -362,6 +556,12 @@ class _PresetRepository extends AppRepository {
   _PresetRepository({this.withExercise = false});
 
   final bool withExercise;
+  int deleteCalls = 0;
+
+  @override
+  Future<void> deletePreset(int presetId) async {
+    deleteCalls++;
+  }
 
   @override
   Future<PresetDefinition?> fetchPresetById(int presetId) async =>

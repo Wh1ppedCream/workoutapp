@@ -7,6 +7,8 @@ import '../../../widgets/settings_tiles.dart';
 
 enum AnalyticsSurfaceRole { primary, secondary, tertiary, accent, selected }
 
+const double analyticsRankingFabScrollClearance = 80;
+
 AppExpressiveDestinationTokens? analyticsDestinationTokens(
   BuildContext context,
 ) {
@@ -83,6 +85,46 @@ class AnalyticsZone extends StatelessWidget {
           child: child,
         ),
       ),
+    );
+  }
+}
+
+/// Compact shared save action used only by Expressive ranking screens.
+class AnalyticsRankingSaveFab extends StatelessWidget {
+  const AnalyticsRankingSaveFab({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    required this.isSaving,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isSaving;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return FloatingActionButton.extended(
+      key: const ValueKey('analytics-ranking-save-fab-button'),
+      heroTag: null,
+      tooltip: label,
+      onPressed: onPressed,
+      backgroundColor: colors.primary,
+      foregroundColor: colors.onPrimary,
+      elevation: 6,
+      shape: const StadiumBorder(),
+      icon: isSaving
+          ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                color: colors.onPrimary,
+                strokeWidth: 2,
+              ),
+            )
+          : const Icon(Icons.save),
+      label: Text(label),
     );
   }
 }

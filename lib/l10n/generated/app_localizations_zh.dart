@@ -10,6 +10,70 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get nutritionSummaryTitle => '每日营养';
+
+  @override
+  String get nutritionRingView => '圆环视图';
+
+  @override
+  String get nutritionBarView => '条形视图';
+
+  @override
+  String get nutritionSummaryView => '摘要视图';
+
+  @override
+  String nutritionGoalComparison(int target, String unit) {
+    return '目标 $target $unit';
+  }
+
+  @override
+  String nutritionUnsetGoal(String unit) {
+    return '$unit · 未设置目标';
+  }
+
+  @override
+  String nutritionGoalSemantics(
+    String nutrient,
+    int consumed,
+    int target,
+    String unit,
+  ) {
+    return '$nutrient：已摄入 $consumed $unit，目标为 $target $unit。';
+  }
+
+  @override
+  String nutritionUnsetGoalSemantics(
+    String nutrient,
+    int consumed,
+    String unit,
+  ) {
+    return '$nutrient：已摄入 $consumed $unit。未设置每日目标。';
+  }
+
+  @override
+  String get nutritionPantryLogAction => '食材记录';
+
+  @override
+  String get nutritionAddMealAction => '添加餐食';
+
+  @override
+  String get nutritionPlanMealAction => '计划餐食';
+
+  @override
+  String get nutritionActionUnavailable => '暂不可用';
+
+  @override
+  String nutritionActionUnavailableHint(String action) {
+    return '$action暂不可用。';
+  }
+
+  @override
+  String get nutritionUnitGrams => '克';
+
+  @override
+  String get nutritionUnitCalories => '千卡';
+
+  @override
   String onboardingBodyWeightPerWeek(String percent) {
     return '每周体重的 $percent%';
   }
@@ -865,6 +929,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get catalogTargetAnatomyTitle => '目标解剖部位';
 
   @override
+  String get catalogAnatomyHistorySubtitle => '已完成训练中的组数分配积分';
+
+  @override
   String get catalogBodyparts => '身体部位';
 
   @override
@@ -1164,6 +1231,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get planManagementIntro => '选择哪些计划在训练概览中随时可用。归档计划仍会保存，且可随时启用。';
 
   @override
+  String get planManagementExpressiveIntro => '让计划在训练页保持启用，或先归档以备日后使用；随时可恢复。';
+
+  @override
   String get planManagementActiveSubtitle => '显示在训练概览中。';
 
   @override
@@ -1239,6 +1309,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get planDeleteConfirmation => '确定要删除此计划吗？';
 
   @override
+  String presetBarDeleteTitle(String planName) {
+    return '删除“$planName”？';
+  }
+
+  @override
+  String get presetBarDeleteBody => '此计划将被永久删除。此操作无法撤销。';
+
+  @override
   String get commonCancel => '取消';
 
   @override
@@ -1305,8 +1383,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get optimizedRepsWeightsTitle => '重复次数和重量';
 
   @override
-  String get optimizedRepsWeightsDescription =>
-      '可用时会使用基于历史记录的力量估算；“轻松”和“中等”比“困难”降低得更多。新动作会使用保守的起始估算。';
+  String get optimizedRepsWeightsDescription => '可用时会使用基于历史记录的力量估算。';
 
   @override
   String get optimizedRepPattern => '重复次数模式';
@@ -1408,7 +1485,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get generateIntroTitle => '制定您的计划周';
+  String get generateIntroTitle => '制定您的训练周';
 
   @override
   String get generateIntroBody => '使用您的档案、重点和限制来创建一个计划或均衡计划组合。';
@@ -1436,7 +1513,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String generateSetupSummary(String plans, String minutes, String sets) {
-    return '$plans 个计划，$minutes 分钟，最多 $sets 组';
+    return '$plans 个计划 · $minutes 分钟 · 每个动作最多 $sets 组';
   }
 
   @override
@@ -1446,7 +1523,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generateSessionLengthHelp => '按每组 3 分钟加每个动作 5 分钟估算。';
 
   @override
-  String get generatePlansToCreate => '要创建的计划数';
+  String get generatePlansToCreate => '计划数量';
 
   @override
   String generatePlansToCreateHelp(int maxPlans) {
@@ -1455,6 +1532,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unitPlans => '计划';
+
+  @override
+  String generatePlanUnit(int count) {
+    return '计划';
+  }
 
   @override
   String get generateMaxSetsPerExercise => '每个动作最多训练组数';
@@ -1466,14 +1548,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String generateFocusSummary(int preferred, int avoided, String history) {
-    return '$preferred 个优先，$avoided 个避免，$history 7 天历史';
+    return '$preferred 个优先 · $avoided 个避免 · 训练历史$history';
   }
 
   @override
-  String get generateHistoryUsing => '正在使用';
+  String generateFocusCountsSummary(int preferred, int avoided) {
+    return '$preferred 个优先 · $avoided 个避免';
+  }
 
   @override
-  String get generateHistoryNotUsing => '未使用';
+  String get generateRecentTrainingOnSummary => '最近训练：已开启';
+
+  @override
+  String get generateRecentTrainingOffSummary => '最近训练：已关闭';
+
+  @override
+  String get generateFocusNeutral => '中性';
+
+  @override
+  String get generateFocusPreferred => '优先';
+
+  @override
+  String get generateFocusAvoided => '避免';
+
+  @override
+  String get generateHistoryUsing => '已开启';
+
+  @override
+  String get generateHistoryNotUsing => '已关闭';
 
   @override
   String get generateUseRecentTraining => '使用近期训练';
@@ -2320,6 +2422,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get catalogFilters => '筛选条件';
 
   @override
+  String get catalogApplyFilters => '应用筛选条件';
+
+  @override
+  String get catalogResetAllFilters => '全部重置';
+
+  @override
+  String get catalogWorkspaceProfileDescription => '将结果限制为此档案中的器械。';
+
+  @override
+  String get catalogFiltersCombined => '筛选条件会组合使用以缩小结果范围。';
+
+  @override
+  String get catalogExpressiveWorkspaceProfileDescription =>
+      '将结果限制为此档案中的器械，并应用其他已选筛选条件。';
+
+  @override
+  String get catalogExpressiveFiltersCombined => '练习必须符合所有已选筛选条件。';
+
+  @override
   String get catalogGuideFiltersBody => '按健身房档案、器械、身体部位或肌肉筛选，可快速缩小目录范围。';
 
   @override
@@ -2347,6 +2468,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get catalogSpecificMuscle => '特定肌肉';
 
   @override
+  String get catalogBodyPartFilter => '身体部位';
+
+  @override
+  String get catalogMuscleFilter => '肌肉';
+
+  @override
   String get catalogPageTitle => '动作目录';
 
   @override
@@ -2354,6 +2481,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get catalogNoMatches => '没有动作符合筛选条件。';
+
+  @override
+  String get catalogNoSearchMatches => '未找到动作';
+
+  @override
+  String get catalogNoCombinedMatches => '没有动作符合搜索内容和筛选条件';
+
+  @override
+  String get catalogNoSearchMatchesBody => '试试其他动作名称，或清除搜索。';
+
+  @override
+  String get catalogNoFilteredMatches => '没有动作符合这些筛选条件';
+
+  @override
+  String get catalogNoFilteredMatchesBody => '调整筛选条件，或重置筛选以浏览所有动作。';
+
+  @override
+  String get catalogNoCombinedMatchesBody => '试试其他动作名称、清除搜索或重置筛选。';
+
+  @override
+  String get catalogClearSearch => '清除搜索';
+
+  @override
+  String get catalogResetFilters => '重置筛选';
+
+  @override
+  String get catalogEditFilters => '编辑筛选条件';
+
+  @override
+  String get catalogNoExercisesAvailable => '暂无可用动作';
+
+  @override
+  String get catalogNoExercisesAvailableBody => '动作定义可用后会显示在这里。';
 
   @override
   String get catalogOpenExerciseInfo => '打开动作信息';
@@ -2438,6 +2598,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseDetailZoomHint => '双指捏合或拖动以缩放';
 
   @override
+  String get exerciseDetailZoomPanHint => '双指捏合缩放 · 拖动平移';
+
+  @override
   String get exerciseDetailLoadingBestLifts => '正在加载最佳举重记录';
 
   @override
@@ -2483,7 +2646,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String exerciseDetailRanges(int count) {
-    return '$count 个范围';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个重复次数范围',
+      one: '1 个重复次数范围',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2491,6 +2660,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get exerciseDetailNoHistory => '此动作暂无历史记录。';
+
+  @override
+  String get exerciseDetailNoHistoryBody => '完成包含此动作的训练后，这里会显示表现趋势和训练记录。';
 
   @override
   String get exerciseDetailPerformanceTrend => '表现趋势';
@@ -2553,6 +2725,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exerciseDetailNoChartData => '尚无可绘制图表的已完成训练组记录。';
 
   @override
+  String get exerciseDetailNoChartDataBody => '完成此动作的可追踪训练组后，即可查看表现趋势。';
+
+  @override
   String get exerciseDetailWeightAbbreviation => '重量';
 
   @override
@@ -2591,6 +2766,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get weeklySetsTitle => '每周训练组概览';
 
   @override
+  String get weeklySetsLastSevenDays => '最近 7 天';
+
+  @override
+  String get weeklySetsExplanationBody =>
+      '已完成的训练组会根据每个动作的分配权重计入相关肌肉和身体部位，因此总数可能是小数。这些加权训练组积分并非对总训练组数进行拆分，因此各部位的合计可能与已完成训练组数不同。绿色行表示处于有效训练量下限与可恢复上限之间；红色行表示超过上限。低于下限或未设置范围的行保持中性色。';
+
+  @override
   String get weeklySetsLoadError => '无法加载您的每周训练概览。';
 
   @override
@@ -2616,6 +2798,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String weeklySetsCount(String count) {
+    return '$count 组';
+  }
+
+  @override
+  String weeklySetsSingleCount(String count) {
     return '$count 组';
   }
 
@@ -3314,6 +3501,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get anatomyLoadFailed => '无法加载解剖部位筛选条件。';
 
   @override
+  String get anatomySearchBodyParts => '搜索身体部位';
+
+  @override
   String get anatomySearchLabel => '搜索身体部位或肌肉';
 
   @override
@@ -3377,6 +3567,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get anatomyDoneSevenDaysCompact => '已完成 · 7 天';
+
+  @override
   String get anatomyDoneLastSevenDays => '已完成（7 天）';
 
   @override
@@ -3389,6 +3582,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get anatomyRecommended => '建议';
+
+  @override
+  String get anatomyRecommendedWeeklyCompact => '每周建议';
 
   @override
   String get anatomyNotSet => '未设置';
@@ -3740,6 +3936,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mappingNoLinkedMuscles => '尚未关联肌肉。点击编辑以添加。';
 
   @override
+  String get mappingSearchMuscles => '搜索肌肉';
+
+  @override
+  String get mappingSelectedOnly => '仅显示已选';
+
+  @override
+  String mappingSelectedCount(int count) {
+    return '已选 $count 项';
+  }
+
+  @override
+  String get mappingNoFilteredMuscles => '没有肌肉符合当前筛选条件。';
+
+  @override
   String get volumeMaintenance => '维持';
 
   @override
@@ -3822,6 +4032,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nutritionTodayRecords => '今日记录';
+
+  @override
+  String get nutritionNoGoalSet => '未设置目标';
+
+  @override
+  String get nutritionNoFoodLogged => '当天没有记录食物';
+
+  @override
+  String get nutritionTapToAddFirstEntry => '点按 + 添加第一条记录';
+
+  @override
+  String get nutritionAddEntryActionLabel => '添加食物或测量记录';
+
+  @override
+  String get nutritionOptionalTargetsHint => '所有营养目标均为可选项。留空即可不设置该目标。';
 
   @override
   String get nutritionGoalsMenu => '营养目标';
@@ -4508,6 +4733,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get weightMakeChangeSet => '创建变更组';
 
   @override
+  String get presetCreateChangeSet => '创建变更组';
+
+  @override
+  String get planAddExercise => '添加动作';
+
+  @override
+  String presetExerciseSetCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# 组',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String weightSetLabel(int number) {
     return '第 $number 组';
   }
@@ -4596,6 +4837,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get swapBodypartsHit => '训练到的身体部位';
 
   @override
+  String get swapBodyPartsWorked => '训练的身体部位';
+
+  @override
   String swapMatch(int percent) {
     return '匹配度 $percent%';
   }
@@ -4646,6 +4890,15 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get premadeDescription =>
       '将教练、健身达人和应用精选的训练方案复制到您自己的计划中。添加后，您可以像编辑其他计划一样编辑它们。';
+
+  @override
+  String get premadeExpressiveDescription => '浏览现成的训练计划。添加任意计划即可自定义。';
+
+  @override
+  String get premadeBuiltinPlansTitle => 'Tonos 计划';
+
+  @override
+  String get premadeEquipmentFilterLabel => '匹配我的健身房器械';
 
   @override
   String get premadeDiscarding => '正在放弃……';
@@ -4728,6 +4981,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get healthTrendsTitle => '健康趋势';
+
+  @override
+  String get healthTrackedMetrics => '已跟踪的指标';
 
   @override
   String get healthMetric => '指标';
@@ -4951,6 +5207,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get exerciseEditorTitle => '动作编辑器';
+
+  @override
+  String get exerciseEditorHeroDescription => '查看并更新动作详情。';
 
   @override
   String get exerciseEditorLoadFailed => '无法加载动作定义。';
@@ -5355,6 +5614,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get premadeEquipmentFits => '计划已适配当前档案的器械。';
 
   @override
+  String get premadeExpressiveEquipmentSelectProfile => '选择健身房档案以按器械筛选计划。';
+
+  @override
+  String get premadeExpressiveEquipmentAll => '显示所有计划，包括需要其他器械的计划。';
+
+  @override
+  String get premadeExpressiveEquipmentChecking => '正在检查器械兼容性……';
+
+  @override
+  String get premadeExpressiveEquipmentMissing => '请在当前健身房档案中添加器械以筛选计划。';
+
+  @override
+  String get premadeExpressiveEquipmentNoMatches => '没有计划与当前健身房器械匹配。';
+
+  @override
+  String get premadeExpressiveEquipmentCompatible => '仅显示与当前健身房档案器械匹配的计划。';
+
+  @override
+  String get premadeExpressiveOneHour => '1 小时';
+
+  @override
+  String get premadeExpressiveTwoHours => '2 小时';
+
+  @override
   String get premadeOneHour => '1 小时';
 
   @override
@@ -5362,7 +5645,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String premadePlansAvailable(int count) {
-    return '有 $count 个计划可用';
+    return '$count 个计划可用';
   }
 
   @override
@@ -5389,6 +5672,22 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String premadeSwappedCount(int count) {
     return '已替换 $count 个';
+  }
+
+  @override
+  String premadeExpressivePlansAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '有 $count 个计划可用',
+      zero: '暂无可用计划',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String premadeExpressivePlansCount(int count) {
+    return '$count 个计划';
   }
 
   @override
@@ -5703,7 +6002,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
-    return '当前关联了 $count 个身体部位。';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '当前关联了 $count 个身体部位。',
+      one: '当前关联了 1 个身体部位。',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exerciseEditorSelectedCount(int count) {
+    return '已选 $count 项';
   }
 
   @override
@@ -5875,6 +6185,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get exerciseEditorMediaRemoteUrl => '远程 URL';
+
+  @override
+  String get exerciseEditorMediaUrlRequired => '请输入远程 URL。';
 
   @override
   String get exerciseEditorMediaThumbnailUrl => '缩略图 URL';
@@ -6108,6 +6421,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get healthRecords => '记录';
 
   @override
+  String healthRecordCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 条记录',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presetEstimatedTime => '预计时间';
 
   @override
@@ -6331,6 +6654,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diagnosticsClearHistoryBody => '删除本地保存的所有同步诊断条目。';
 
   @override
+  String get diagnosticsShowAllHistory => '显示全部历史记录';
+
+  @override
+  String get diagnosticsShowLessHistory => '收起';
+
+  @override
   String get diagnosticsHistoryCleared => '同步诊断历史已清除。';
 
   @override
@@ -6350,6 +6679,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagnosticsSyncFailed => '失败';
+
+  @override
+  String get diagnosticsSyncSkipped => '已跳过';
 
   @override
   String diagnosticsSyncEventTitle(String operation, String outcome) {
@@ -6381,11 +6713,11 @@ class AppLocalizationsZh extends AppLocalizations {
       '除非您自行导出备份，否则训练、营养、身体指标和个人资料记录只保存在此设备的应用数据库中。';
 
   @override
-  String get diagnosticsDeletionTitle => '删除诊断和应用数据';
+  String get diagnosticsDeletionTitle => '如何删除您的数据';
 
   @override
   String get diagnosticsDeletionBody =>
-      '清除上方同步历史并关闭匿名诊断，以请求删除此安装发送的报告。在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据库和缓存。';
+      '在设备设置中清除 Tonos 存储或卸载 Tonos，即可删除本地数据。要请求删除此安装发送的报告，请关闭匿名诊断。这不会清除本地同步历史；请在上方单独清除。';
 
   @override
   String get diagnosticsSendTestReport => '发送受控诊断事件';
@@ -6404,7 +6736,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diagnosticsDeleteSharedBody =>
-      '请求删除此安装可证明已发送的报告。提供商的恢复历史可能会将已删除行保留最多 30 天。';
+      '仅请求删除此安装可证明已发送的报告。共享功能仍会开启；提供商恢复历史可能额外保留已删除行最多 30 天。';
+
+  @override
+  String get diagnosticsDeleteSharedConfirmBody =>
+      '此操作仅请求删除此安装持有回执、可证明已发送的报告。它不会关闭后续共享、清除本地同步历史或删除本地应用数据库。要停止后续报告，请关闭共享；同步历史需单独清除。报告会在 14 天后过期，提供商恢复历史可能额外保留已删除行最多 30 天。若先清除 Tonos 存储，也会删除请求删除所需的回执。';
 
   @override
   String get diagnosticsSharedDeleted => '已请求删除已共享的诊断信息。';
@@ -6517,6 +6853,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String premadePlanQuickDescription(String duration, String planName) {
+    return '$duration$planName训练';
+  }
+
+  @override
   String get rulesPageSubtitleExpressive => '创建可重复使用的规则，用于重量、次数和组数的进阶。';
 
   @override
@@ -6554,4 +6895,44 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rulesPlanOnlySubtitleExpressive => '仅适用于此计划的规则。';
+
+  @override
+  String get rulesCopyIndexHelper =>
+      '−1 复制当前可用的最后一组，包括先前规则添加的组。0 = 第一组，1 = 第二组。';
+
+  @override
+  String get rulesFactorHelper => '按此系数调整已配置的重量增量；1 表示使用完整增量。';
+
+  @override
+  String get rulesAmountHelper => '每个目标组要增加或减少的次数。';
+
+  @override
+  String get rulesOperationSubtract => '减去';
+
+  @override
+  String get rulesCopyFromLabel => '复制来源';
+
+  @override
+  String get rulesCopyFromLastSet => '最后一组';
+
+  @override
+  String get rulesCopyFromFirstSet => '第一组';
+
+  @override
+  String get rulesCopyFromSpecificSet => '指定组…';
+
+  @override
+  String get rulesCopyFromLastHelper => '复制最后一组的重量和次数，包括先前规则添加的组。';
+
+  @override
+  String get rulesCopyFromFirstHelper => '复制第一组当前的重量和次数。';
+
+  @override
+  String get rulesCopySetNumberLabel => '组号';
+
+  @override
+  String get rulesCopySpecificHelper => '复制该组的重量和次数。如果该组不存在，则复制最后一个可用的组。';
+
+  @override
+  String get rulesCopySetNumberInvalid => '请输入大于或等于 1 的整数组号。';
 }

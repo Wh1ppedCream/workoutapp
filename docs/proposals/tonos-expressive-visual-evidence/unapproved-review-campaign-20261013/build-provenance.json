@@ -1,0 +1,2027 @@
+{
+  "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+  "branch": "feature/expressive-visual-polish",
+  "workingTree": "dirty; APK built from the current working tree for capture; pre-existing user changes preserved",
+  "device": "28021FDH200228",
+  "package": "com.tonos.expressivepreview",
+  "packageVersionCode": 6,
+  "packageVersionName": "1.0.1",
+  "packageLastUpdateTimeLocal": "2026-10-13 20:03:17",
+  "previewDatabase": "tonos_expressive_preview.db",
+  "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+  "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+  "buildArtifactSha256": "AE90C230905A9BC99E84AC7FD8AF998CD7EF03D171D95A3D2B04700A1844BAAE",
+  "buildArtifactBytes": 233708464,
+  "buildArtifactModifiedLocal": "2026-10-13 20:02:46",
+  "installedApkMatchesBuildArtifact": true,
+  "buildEntrypoint": "Temporary lib/dev/review_gallery_preview_main_20261013.dart used for the installed APK; removed after install.",
+  "buildCommand": "Not available in the current shell history; not reconstructed.",
+  "sourceTreeProvenanceLimit": "The installed APK matches the retained app-debug.apk hash. Relevant dirty source files are hashed under visualRefreshes, but the complete dirty working-tree snapshot used by the temporary entrypoint cannot be reconstructed. Treat the commit SHA as the base revision, not proof of the exact capture source.",
+  "campaignRebuild": true,
+  "captureTimeRangeLocal": "2026-10-13 01:25:26 through 2026-10-13 20:45:15 America/Toronto",
+  "previewRestoreReport": "preview-restore-verification.json",
+  "pageSpecificRefresh": {
+    "capturedAtRangeLocal": "2026-10-13T18:31:51-04:00 through 2026-10-13T18:34:28-04:00",
+    "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "Dirty; the preview was built from the current working tree and pre-existing unrelated changes were preserved.",
+    "page": "Custom Plan Generation / Preset Generation QA",
+    "navigationPath": "Train → Plans → Generate Custom Plans",
+    "deviceId": "28021FDH200228",
+    "package": "com.tonos.expressivepreview",
+    "packageVersionCode": 6,
+    "packageVersionName": "1.0.1",
+    "packageLastUpdateTimeLocal": "2026-10-13 18:29:26",
+    "apkApplicationId": "com.tonos.expressivepreview",
+    "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+    "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+    "buildArtifactSha256": "F9B4AEF498D110DF15922F230D17896F8219820981C5928506A6ADED9CEF01AD",
+    "buildArtifactBytes": 197454516,
+    "buildArtifactModifiedLocal": "2026-10-13T18:28:58-04:00",
+    "installedApkMatchesBuildArtifact": "Installed in place from this artifact; adb install -r succeeded after APK application ID verification.",
+    "refreshMethod": "Debug APK rebuilt with pinned Flutter SDK, then installed in place. No uninstall, app-data clear, fixture reset, normal preview startup, or app action that writes plans was performed.",
+    "buildEntrypoint": "Temporary lib/dev/generate_plans_safe_preview_main.dart; screen-only route with in-memory sample body parts and in-memory tutorial completion state; deleted after install.",
+    "buildCommand": "flutter build apk --debug --no-pub --target lib/dev/generate_plans_safe_preview_main.dart --dart-define=TONOS_EXPRESSIVE_PREVIEW=true --dart-define=TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true --dart-define=TONOS_ANDROID_INTERNAL_BUILD=false --dart-define=TONOS_DATABASE_NAME=tonos_expressive_preview.db --dart-define=TONOS_PREVIEW_SHOW_CONTROLS=true",
+    "sourceFilesSha256": {
+      "lib/screens/exercise/preset_generation_qa.dart": "679E0C4E6604F594DA55ECE7B37AEA0EFA41731834D49BB62D848626821831F8",
+      "lib/widgets/bodypart_focus_chips.dart": "FE7F57AD7B25572F28BFF42719434FCD0F581D37F335BC3C213924F3BEF5BE78",
+      "lib/l10n/app_bn.arb": "F2CE6F033C6292FE0F3F76AA789B0D1AA16BE67404BDD4C90A64178915102EBB",
+      "lib/l10n/app_en.arb": "0A132BE5C1AFD7F399D05827A2722D6D9E6002DE933AE99CD769BC059BBC0907",
+      "lib/l10n/app_es.arb": "D37E1D85668E048B087C9C688EFC44819AD4B3711536A2AE4932C9873225B4E8",
+      "lib/l10n/app_fr.arb": "0B5583F52674C49F24E2FE2C1625B5EF1E2CBEF3AB388401D312E6DC89E32BD7",
+      "lib/l10n/app_fr_CA.arb": "1F175D49A705FBC04C8F6F5B3E7AFC4A62411FB1D64C9BCDEE32D938D32C9673",
+      "lib/l10n/app_hi.arb": "00DC51915C3556EB16D3780308649BB754852C67431B5EAC1CE1386370334ACB",
+      "lib/l10n/app_zh.arb": "E271AC0D074D89850B6AE49AEF1A5DDB3D45628AD899239796EAB9474198B9DA",
+      "lib/l10n/generated/app_localizations.dart": "FA41BB212DC81881F07A16005774F6B85542E9AD74E84707541BFCCCCC4E8FD2",
+      "lib/l10n/generated/app_localizations_bn.dart": "2D5A128D0A968FE65C7105E2E82AAFB60E63155803A21BDF400E4C5DF7B9069B",
+      "lib/l10n/generated/app_localizations_en.dart": "CC56C040457E3F6CF366625222FA209016ECC4F3DD445839C7756ED39C4A958F",
+      "lib/l10n/generated/app_localizations_es.dart": "203AF8496FDC473C52E2E679B4A1BC3420A13860D698329437631EF614677091",
+      "lib/l10n/generated/app_localizations_fr.dart": "C5EEF0F8C4C5415D3B462E16BD69700D89F8BC702270C12AB717855238281DAA",
+      "lib/l10n/generated/app_localizations_hi.dart": "EB8B890DDA0AAF28E3704881C0CD3AAF47A0D8021B3E15F46FE7A59AEBD63479",
+      "lib/l10n/generated/app_localizations_zh.dart": "8CBE3853B37D832732CBF1850DCA9549D824B34C3715F932F0D52C5E4A45411B"
+    },
+    "focusedTestFilesSha256": {
+      "test/theme/widgets/preset_generation_qa_responsive_test.dart": "CC6D43F1A91DB0BF1ED8B1D6BD70EEAA4D1B3C2DD5C123783285745B94DCE1A0",
+      "test/theme/widgets/bodypart_focus_chips_expressive_test.dart": "F18B58F8D2C0D029909023C067F57BACE129B57E4B26D8AAE08FB2A1D2841AFA"
+    },
+    "formatCheck": "Passed for four touched Dart files.",
+    "focusedTests": "Passed: 5 tests across preset_generation_qa_responsive_test.dart and bodypart_focus_chips_expressive_test.dart.",
+    "scopedAnalysis": "No errors; two informational deprecation diagnostics for RadioListTile.groupValue and onChanged in preset_generation_qa.dart.",
+    "capturedScreenshotIds": [
+      "12-generation-setup-dark",
+      "12-generation-workout-settings-dark-expanded",
+      "12-generation-training-focus-dark-expanded",
+      "12-generation-reps-weights-dark-expanded",
+      "12-generation-reps-weights-dark-lower",
+      "12-generation-set-allocation-dark-expanded",
+      "12-generation-setup-light",
+      "12-generation-workout-settings-light-expanded",
+      "12-generation-training-focus-light-expanded",
+      "12-generation-reps-weights-light-expanded",
+      "12-generation-reps-weights-light-lower",
+      "12-generation-set-allocation-light-expanded"
+    ],
+    "captures": [
+      {
+        "id": "12-generation-setup-dark",
+        "capturedAt": "2026-10-13T18:31:51-04:00",
+        "png": "pages/12-plan-generation/dark/01-setup-top.png",
+        "pngSha256": "BC74EBBB125E4268123A50928154B0B9A98479875513907F5FE51F215959EF01",
+        "pngBytes": 229397,
+        "uiHierarchy": "pages/12-plan-generation/dark/01-setup-top.xml",
+        "uiSha256": "ABAEAF2E5FE182C0FDDDE10C8532E0799538B7B1ABBBC0AD92BA62CF6AC73F6C"
+      },
+      {
+        "id": "12-generation-workout-settings-dark-expanded",
+        "capturedAt": "2026-10-13T18:32:01-04:00",
+        "png": "pages/12-plan-generation/dark/02-workout-setup-expanded.png",
+        "pngSha256": "942C63A12006C44E62CEFCB48852803EE2B35383ED5D0C81BC39808E8EF8FC86",
+        "pngBytes": 253075,
+        "uiHierarchy": "pages/12-plan-generation/dark/02-workout-setup-expanded.xml",
+        "uiSha256": "1ADCC2104B7383AF275A381BD904B1C3BAD4C4D56FB2A1565A0C589606F6C1AC"
+      },
+      {
+        "id": "12-generation-training-focus-dark-expanded",
+        "capturedAt": "2026-10-13T18:32:17-04:00",
+        "png": "pages/12-plan-generation/dark/03-training-focus-expanded.png",
+        "pngSha256": "5573D2B6B9BCEF968AA17E7F2764129759102041FDD36B27BF4AAFD816B83668",
+        "pngBytes": 275671,
+        "uiHierarchy": "pages/12-plan-generation/dark/03-training-focus-expanded.xml",
+        "uiSha256": "1A51BE24731584A5ADA9B8322293A52D7EAF087A7754C673917DBE8E048D180D"
+      },
+      {
+        "id": "12-generation-reps-weights-dark-expanded",
+        "capturedAt": "2026-10-13T18:32:34-04:00",
+        "png": "pages/12-plan-generation/dark/04-reps-weights-expanded.png",
+        "pngSha256": "E3FCD885AD527CB02F24BCE6BAC03D1179B15724719F321BAF1D4A3049F4A17F",
+        "pngBytes": 288995,
+        "uiHierarchy": "pages/12-plan-generation/dark/04-reps-weights-expanded.xml",
+        "uiSha256": "5DA71F798E18769EFF2341B29C808C71B138F4F8E8F501A57C4B9B389CA86857"
+      },
+      {
+        "id": "12-generation-reps-weights-dark-lower",
+        "capturedAt": "2026-10-13T18:32:39-04:00",
+        "png": "pages/12-plan-generation/dark/05-reps-weights-lower.png",
+        "pngSha256": "A09283C1B517FC1EA7646C6A7DA61833CA748DB74C1AB9073E05B705A6F9AD4D",
+        "pngBytes": 236174,
+        "uiHierarchy": "pages/12-plan-generation/dark/05-reps-weights-lower.xml",
+        "uiSha256": "7C8FE33D77E79AB4702453A172E10BF88882180DCD085B03A8970ED1215FBB28"
+      },
+      {
+        "id": "12-generation-set-allocation-dark-expanded",
+        "capturedAt": "2026-10-13T18:32:58-04:00",
+        "png": "pages/12-plan-generation/dark/06-set-allocation-expanded.png",
+        "pngSha256": "2F5A46B2080B127164411307A263EFF1B69E4458777E65DFF78DB08BDE358E15",
+        "pngBytes": 295729,
+        "uiHierarchy": "pages/12-plan-generation/dark/06-set-allocation-expanded.xml",
+        "uiSha256": "6B61E8CD0D60486412BE1E9B08FB0CCA5AD4E421D88EA78F30EDF0148A9CCC47"
+      },
+      {
+        "id": "12-generation-setup-light",
+        "capturedAt": "2026-10-13T18:33:22-04:00",
+        "png": "pages/12-plan-generation/light/01-setup-top.png",
+        "pngSha256": "516F8BEE52CD1B410DBD4EBF1008B1A43DFCC853663A48FC7960A126372F8484",
+        "pngBytes": 239857,
+        "uiHierarchy": "pages/12-plan-generation/light/01-setup-top.xml",
+        "uiSha256": "ABAEAF2E5FE182C0FDDDE10C8532E0799538B7B1ABBBC0AD92BA62CF6AC73F6C"
+      },
+      {
+        "id": "12-generation-workout-settings-light-expanded",
+        "capturedAt": "2026-10-13T18:33:32-04:00",
+        "png": "pages/12-plan-generation/light/02-workout-setup-expanded.png",
+        "pngSha256": "ED4473A78157203D8C90BF6B0FA23650757A0854755F2293C28C97D964983C66",
+        "pngBytes": 261876,
+        "uiHierarchy": "pages/12-plan-generation/light/02-workout-setup-expanded.xml",
+        "uiSha256": "1ADCC2104B7383AF275A381BD904B1C3BAD4C4D56FB2A1565A0C589606F6C1AC"
+      },
+      {
+        "id": "12-generation-training-focus-light-expanded",
+        "capturedAt": "2026-10-13T18:33:48-04:00",
+        "png": "pages/12-plan-generation/light/03-training-focus-expanded.png",
+        "pngSha256": "15DA18DC223B036278D7F0B3845FA4920CC165D0154D9E62E9F7053F3061B769",
+        "pngBytes": 285728,
+        "uiHierarchy": "pages/12-plan-generation/light/03-training-focus-expanded.xml",
+        "uiSha256": "1A51BE24731584A5ADA9B8322293A52D7EAF087A7754C673917DBE8E048D180D"
+      },
+      {
+        "id": "12-generation-reps-weights-light-expanded",
+        "capturedAt": "2026-10-13T18:34:04-04:00",
+        "png": "pages/12-plan-generation/light/04-reps-weights-expanded.png",
+        "pngSha256": "FF0841E7615185C073C568A9C03414A42859D0F67C655C5DCDAC7F5558BB5F07",
+        "pngBytes": 298487,
+        "uiHierarchy": "pages/12-plan-generation/light/04-reps-weights-expanded.xml",
+        "uiSha256": "5DA71F798E18769EFF2341B29C808C71B138F4F8E8F501A57C4B9B389CA86857"
+      },
+      {
+        "id": "12-generation-reps-weights-light-lower",
+        "capturedAt": "2026-10-13T18:34:09-04:00",
+        "png": "pages/12-plan-generation/light/05-reps-weights-lower.png",
+        "pngSha256": "D4A66DB61EA0A79843A387F5BB38CA04111DD4914E2B631478D5CF6AEE435B0C",
+        "pngBytes": 244113,
+        "uiHierarchy": "pages/12-plan-generation/light/05-reps-weights-lower.xml",
+        "uiSha256": "7C8FE33D77E79AB4702453A172E10BF88882180DCD085B03A8970ED1215FBB28"
+      },
+      {
+        "id": "12-generation-set-allocation-light-expanded",
+        "capturedAt": "2026-10-13T18:34:28-04:00",
+        "png": "pages/12-plan-generation/light/06-set-allocation-expanded.png",
+        "pngSha256": "C6DB1CC90219FD709F3C4BCD8C278357AF010C8FBDFE47EFF675D375DB5CF87B",
+        "pngBytes": 304474,
+        "uiHierarchy": "pages/12-plan-generation/light/06-set-allocation-expanded.xml",
+        "uiSha256": "6B61E8CD0D60486412BE1E9B08FB0CCA5AD4E421D88EA78F30EDF0148A9CCC47"
+      }
+    ],
+    "previewDataBeforeRefresh": {
+      "databases/tonos_expressive_preview.db": {
+        "sha256": "5cf85295a98ae2572d3c4c0c829f16295aed2074a13aec6a9a271c7562571d07",
+        "bytes": 1527808
+      },
+      "databases/tonos_expressive_preview.db-wal": {
+        "sha256": "b0ab57186652498b761f8c53c031930883b49f1dced3f09627863861e495dc78",
+        "bytes": 135992
+      },
+      "databases/tonos_expressive_preview.db-shm": {
+        "sha256": "9652cebdf2b9db8e91094cf687d7f3e07412908c6e72387918723f6049a1632e",
+        "bytes": 32768
+      },
+      "shared_prefs/FlutterSharedPreferences.xml": {
+        "sha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+        "bytes": 10728
+      }
+    },
+    "previewDataAfterRefresh": {
+      "databases/tonos_expressive_preview.db": {
+        "sha256": "5cf85295a98ae2572d3c4c0c829f16295aed2074a13aec6a9a271c7562571d07",
+        "bytes": 1527808
+      },
+      "databases/tonos_expressive_preview.db-wal": {
+        "sha256": "b0ab57186652498b761f8c53c031930883b49f1dced3f09627863861e495dc78",
+        "bytes": 135992
+      },
+      "databases/tonos_expressive_preview.db-shm": {
+        "sha256": "9652cebdf2b9db8e91094cf687d7f3e07412908c6e72387918723f6049a1632e",
+        "bytes": 32768
+      },
+      "shared_prefs/FlutterSharedPreferences.xml": {
+        "sha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+        "bytes": 10728
+      }
+    },
+    "previewDataNote": "The database, WAL/SHM, and SharedPreferences hashes matched before install and after capture; no restore from an older snapshot was required.",
+    "previewDataRestoredFromPreCaptureSnapshot": false,
+    "androidNightModeBeforeAndAfter": "yes (dark); temporarily set to no for light captures, then restored to yes.",
+    "generateAction": "Not pressed; generated output remains unverified because pressing Generate persists plans."
+  },
+  "visualRefreshes": [
+    {
+      "capturedAtRangeLocal": "2026-10-13 20:05:17 through 2026-10-13 20:45:15 America/Toronto",
+      "capturedScreenshotCount": 75,
+      "refreshedFamilies": {
+        "Exercise Catalog / Exercise Browser": 8,
+        "Selected Bodypart and Muscle Details": 14,
+        "Exercise Details sheets (Browser, Anatomy, Plan Detail callers)": 21,
+        "Gym Profile / Equipment": 10,
+        "Dashboard": 4,
+        "Custom Plan Generation / Preset Generation QA": 12,
+        "Health Trend Entry Actions": 6
+      },
+      "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+      "branch": "feature/expressive-visual-polish",
+      "workingTree": "Dirty; current source was built in place; existing user changes were preserved.",
+      "deviceId": "28021FDH200228",
+      "package": "com.tonos.expressivepreview",
+      "database": "tonos_expressive_preview.db",
+      "packageVersionCode": 6,
+      "packageVersionName": "1.0.1",
+      "packageLastUpdateTimeLocal": "2026-10-13 20:03:17",
+      "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+      "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+      "buildArtifactSha256": "AE90C230905A9BC99E84AC7FD8AF998CD7EF03D171D95A3D2B04700A1844BAAE",
+      "buildArtifactBytes": 233708464,
+      "buildArtifactModifiedLocal": "2026-10-13 20:02:46",
+      "buildCommand": "Not retained; not reconstructed.",
+      "buildEntrypoint": "Temporary lib/dev/review_gallery_preview_main_20261013.dart; full route shell with ExpressivePreviewSafety.verifyBeforeDataAccess(); fixture preparation/seeding skipped; temporary file removed after install.",
+      "installMethod": "In-place update of com.tonos.expressivepreview; no uninstall or app-data clear.",
+      "dataSafety": "No fixture reset or reseed. After capture the package was force-stopped and the four pre-capture files below were restored and read back with matching SHA-256 hashes. The app was not relaunched after restoration.",
+      "preRefreshSnapshotDirectory": "C:/Users/talh7/AppData/Local/Temp/tonos-gallery-refresh-20261013",
+      "preRefreshSnapshotFiles": {
+        "databases/tonos_expressive_preview.db": {
+          "sha256": "5cf85295a98ae2572d3c4c0c829f16295aed2074a13aec6a9a271c7562571d07",
+          "bytes": 1527808
+        },
+        "databases/tonos_expressive_preview.db-wal": {
+          "sha256": "b0ab57186652498b761f8c53c031930883b49f1dced3f09627863861e495dc78",
+          "bytes": 135992
+        },
+        "databases/tonos_expressive_preview.db-shm": {
+          "sha256": "f0d3f9d8a28600c27622544f3fa35bdab4f16899554d5c14eee1ab1b355502ea",
+          "bytes": 32768
+        },
+        "shared_prefs/FlutterSharedPreferences.xml": {
+          "sha256": "e0e5672ac80502d6771849e0633514d2ec843213f8f18d4bf2336d3961d1f4c8",
+          "bytes": 10728
+        }
+      },
+      "additionalUnchangedPreference": {
+        "path": "shared_prefs/com.google.mlkit.internal.xml",
+        "sha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+        "bytes": 154
+      },
+      "relevantSourceFilesSha256": {
+        "lib/widgets/bodypart_focus_chips.dart": "FE7F57AD7B25572F28BFF42719434FCD0F581D37F335BC3C213924F3BEF5BE78",
+        "lib/screens/exercise/preset_generation_qa.dart": "679E0C4E6604F594DA55ECE7B37AEA0EFA41731834D49BB62D848626821831F8",
+        "lib/widgets/exercise_detail_sheet.dart": "BC79AA431DA7CA21551BAEAD2CC57318D72BDF0DCD2D14D32C431EF907BA34C8",
+        "lib/screens/exercise/gym_profile_screen.dart": "B03B28B7C0261EDAE49C8A25E6665A707031648C94C7E1F5F8283E88527D7880",
+        "lib/widgets/health_trends_section.dart": "588ADF5485962347665D3A612D58C0C74EE955967B882DD7ECF58A4CABD8719E",
+        "lib/widgets/drawers.dart": "3B8BE08F47CEF32EFD19753DEBF78E759EFEBFF539CFB5EB4880849470539C6B",
+        "lib/widgets/exercise_media_thumbnail.dart": "64CFD3F526E37D1FCD38D347E34DA9168B86788EE8749F257BB45D6D08445F47",
+        "lib/l10n/app_en.arb": "A704702AA3CB341DA532FD1EB60CACEC02BA9735E9C9CA6A9AEC6FA192DCBE9A",
+        "lib/l10n/app_es.arb": "4F9590E2515607C54A7F2E74BBA1526F8AADECAA2B8513C87E887BB8C5156216",
+        "lib/l10n/app_fr.arb": "C67935BCA57148B5F4487D95C41D65843E8D4E9024C5A7DDEF03E3CC2C1BA6D3",
+        "lib/l10n/app_fr_CA.arb": "40F4AD6B60015C8E7AADF72FC47C375F1EFF0800C1BCFF4F959F4D3BB4B47C7F",
+        "lib/l10n/app_bn.arb": "BE7253097B0A1FB23EC67756F9EDC314E425D093F7FB5A13D3FDA3605DC9A2AE",
+        "lib/l10n/app_hi.arb": "72CA9F84ABCBC7AB58E11CEF936D96B2F64B44121803D7879CA19F3E930B62FC",
+        "lib/l10n/app_zh.arb": "6717625273C2712E4EABA03C1DD2EF74E1EDA73AA59572C429DEF03B6DF831C8",
+        "lib/l10n/generated/app_localizations.dart": "C6388BC9E01ACEB40B4B90E0EF2F5D4A40A4D701C3B996C1676787676C5419B8",
+        "lib/l10n/generated/app_localizations_en.dart": "66CFB475118203F8638E5359EF439EB6C1EA6F2718585BCE19EF7AB7E9EF67CB",
+        "lib/l10n/generated/app_localizations_es.dart": "B949F8F19995163FE01C9A293A58918F33A96137B224365745A6C92D0E8FB213",
+        "lib/l10n/generated/app_localizations_fr.dart": "2606AEEACF0FBAFDC75D8FA38E4D6E5DF854BC814236D213409BCFFC3D47DF0C",
+        "lib/l10n/generated/app_localizations_bn.dart": "8ED716E63EE05CC7879191D8F48045E33C285B7F317D61D3A8D92F352C01D2F1",
+        "lib/l10n/generated/app_localizations_hi.dart": "B9D5A7CDE5D362213BC2A3808A42DC92E30E8E34ED3F8CEFDCD9852544D007DD",
+        "lib/l10n/generated/app_localizations_zh.dart": "429B3B300498B1D18C2E1C1728CFB72E9CB9A70B486C3D8AC7269B59F2BDCAA7"
+      }
+    },
+    {
+      "capturedAtRangeLocal": "2026-10-13T22:44:13-04:00 through 2026-10-13T23:13:03-04:00 (America/Toronto)",
+      "capturedScreenshotCount": 71,
+      "refreshedFamilies": {
+        "Selected Muscle Detail — Biceps": 1,
+        "Exercise Catalog / Exercise Browser": 8,
+        "Exercise Catalog Filters": 19,
+        "Catalog Exercise Details Sheet — Browser caller": 9,
+        "Exercise Media Viewer — Catalog caller": 2,
+        "Catalog Exercise Details Sheet — Anatomy caller": 6,
+        "Selected Muscle Detail — Biceps Brachii": 4,
+        "Analytics Dashboard / Weekly Sets": 4,
+        "Custom Plan Generation / Preset Generation QA": 12,
+        "Non-Catalog Exercise Details — Plan Detail Caller": 6
+      },
+      "manifestIdsAndFileHashes": "screenshot-manifest.json",
+      "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+      "branch": "feature/expressive-visual-polish",
+      "workingTree": "Dirty; current relevant working-tree sources were built; unrelated user changes preserved.",
+      "deviceId": "28021FDH200228",
+      "device": "Pixel 7",
+      "deviceResolution": "1080x2400",
+      "package": "com.tonos.expressivepreview",
+      "database": "tonos_expressive_preview.db",
+      "packageVersionCode": 6,
+      "packageVersionName": "1.0.1",
+      "packageLastUpdateTimeLocal": "2026-10-13 22:42:18",
+      "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+      "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+      "buildArtifactSha256": "3736B0CC868D3F82E536DEB636172E70DA64261DEA8B9015419B865CA76FBA22",
+      "installedBaseApkSha256": "3736B0CC868D3F82E536DEB636172E70DA64261DEA8B9015419B865CA76FBA22",
+      "installedApkMatchesBuildArtifact": true,
+      "buildArtifactBytes": 233744739,
+      "buildArtifactModifiedLocal": "2026-10-13 22:41:40",
+      "buildCommand": "$env:TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD = 'true'; E:/tools/flutter_sdks/3.47.5/flutter/bin/flutter.bat build apk --debug --no-pub --target lib/dev/gallery_preview_safe_main_20261013.dart --dart-define=TONOS_EXPRESSIVE_PREVIEW=true --dart-define=TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true --dart-define=TONOS_ANDROID_INTERNAL_BUILD=false --dart-define=TONOS_DATABASE_NAME=tonos_expressive_preview.db --dart-define=TONOS_PREVIEW_SHOW_CONTROLS=true",
+      "buildEntrypoint": "Temporary lib/dev/gallery_preview_safe_main_20261013.dart: ExpressivePreviewSafety.verifyBeforeDataAccess(), AppRepository(), buildTonosApp with TonosPreviewPresentation; intentionally bypassed normal preview fixture setup and runTonosApp diagnostics startup; removed after install.",
+      "installMethod": "adb install -r in place; no uninstall, clear-data, reseed, or database replacement before capture.",
+      "previewWasLaunchedForCapture": true,
+      "postCapturePackageState": "Force-stopped; not relaunched after restore.",
+      "relevantSourceFilesSha256": {
+        "assets/exercises.json": "09EFBFC8D8ADAA36E729AC5F8F05FD8145730DCEE7DE4F2D9CFAE623B30A6029",
+        "lib/screens/exercise/analytics_dashboard_screen.dart": "4A537112079FAB60E9B54AA51A0C396730E0D84F716B5F4578CB4135B13117E7",
+        "lib/screens/exercise/exercise_catalog_page.dart": "8092E8E488E05E59B492FD9C6DDC1F2736282716C6689BDBD87B92DE7570E362",
+        "lib/screens/exercise/preset_generation_qa.dart": "CC3ABB61D8BFC1BC047EAC64FE76FBACD29A8C11CD79680AC48606E8239C8EF5",
+        "lib/widgets/exercise_detail_sheet.dart": "B6D22590F1854EB9333B9BDAA47E8133C9AD3D4F8EB8163124F36535037B2D38",
+        "lib/theme/widgets/media_viewer_image.dart": "4D2DD797008B2C682B9969C1EC1ABF01AB8206E3F7546AAA7A778A4AC07EB7CC",
+        "lib/widgets/exercise_media_thumbnail.dart": "64CFD3F526E37D1FCD38D347E34DA9168B86788EE8749F257BB45D6D08445F47"
+      },
+      "preInstallPreviewSnapshotDirectory": "C:/Users/talh7/AppData/Local/Temp/tonos-gallery-refresh-20261013-late-pass",
+      "preInstallSnapshotSavedAtLocal": "2026-10-13T22:36:19.800388-04:00",
+      "restoredPreviewFiles": [
+        {
+          "path": "databases/tonos_expressive_preview.db",
+          "sha256": "09e4206478f7f26e4b7354eee53c9ffccfe709ad3e871a0d16bb7530bbbe9b73",
+          "bytes": 1527808,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-wal",
+          "sha256": "3f2b8feddb4f4a161cfc5a8f3360ed94d8feeb1259cf80e3c20c1fb4dbffe8bb",
+          "bytes": 135992,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-shm",
+          "sha256": "833bf70950ec62ac30da7f31026ee2154b4a550bb7f44d42039ef1c1ef9dcec0",
+          "bytes": 32768,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/FlutterSharedPreferences.xml",
+          "sha256": "2491c4f95f81eceea0939cfe588086ad43e4220ce283dc580b24ab3f05611b81",
+          "bytes": 11287,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/com.google.mlkit.internal.xml",
+          "sha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+          "bytes": 154,
+          "matchesSnapshot": true
+        }
+      ],
+      "restoreCompletedAtLocal": "2026-10-13T23:17:18-04:00",
+      "restoreVerification": "All five saved DB/WAL/SHM/preferences files were read back from app-private storage and matched their pre-install snapshot hashes exactly.",
+      "unverifiedHistoricalCaptures": "Six existing manifest records remain verified:false; none was promoted or used as proof. Approval classifications were unchanged."
+    },
+    {
+      "capturedAtRangeLocal": "2026-10-14T02:26:45-04:00 through 2026-10-14T03:02:48-04:00",
+      "capturedScreenshotCount": 102,
+      "refreshedFamilies": {
+        "Selected Muscle Detail â€” Biceps": 1,
+        "Exercise Catalog / Exercise Browser": 8,
+        "Exercise Catalog Filters": 19,
+        "Catalog Exercise Details Sheet â€” Browser caller": 9,
+        "Selected Bodypart Detail â€” Chest": 7,
+        "Catalog Exercise Details Sheet â€” Anatomy caller": 6,
+        "Selected Muscle Detail â€” Adductor Brevis": 2,
+        "Selected Muscle Detail â€” Biceps Brachii": 4,
+        "Plan Management": 4,
+        "Optimized Workout Settings": 4,
+        "Gym Profile / Equipment": 10,
+        "Analytics Dashboard / Weekly Sets": 4,
+        "Custom Plan Generation / Preset Generation QA": 12,
+        "Non-Catalog Exercise Details â€” Plan Detail Caller": 6,
+        "Health Trend Entry Actions": 6
+      },
+      "manifestIdsAndFileHashes": [
+        {
+          "id": "03-muscle-biceps-light-top",
+          "pngSha256": "C032CA285636231E9758D4985495AFCFF88C72765EE1C4E59ED26F3EFBCD20DB",
+          "uiHierarchySha256": "A9E79F2AD5104FDB3D012EB26F353B04B7468F41ED7E7649619AB08464E0BF73"
+        },
+        {
+          "id": "01-browser-top-dark",
+          "pngSha256": "B8604AE3E852D7888E2B8EB5F0A562ED0B4773688D30BBA067F40753AA493DB0",
+          "uiHierarchySha256": "1004B5972B140775414664CF389F0EAFFA5BE74BCE99505DE6F7406ACC503EED"
+        },
+        {
+          "id": "01-browser-lower-dark",
+          "pngSha256": "480E3D48F8B007A8A26FA7F4FCF68DA5C02078CA6745074D877897265D71B377",
+          "uiHierarchySha256": "44140C6FD34F4973EDC0B75D59FC7E769439DB7B53B0572BACE1DE47BB069C2C"
+        },
+        {
+          "id": "01-browser-search-results-dark",
+          "pngSha256": "255B364E902DD7D2C9D9816232545D6623B60FC779C26407C0A840589F46705E",
+          "uiHierarchySha256": "B99BE8584ADE99C162BDB2BE66DF649FFAE5F7F57D5ED925D89A3C2B3BFBA3ED"
+        },
+        {
+          "id": "01-browser-search-empty-dark",
+          "pngSha256": "C780F08281FD801B4F521A896913CF41C4D973A432C936F852DBFD77D72F6A71",
+          "uiHierarchySha256": "AF77AC545F27DABFF99C04E05B09BDBAD3EE976B54E5B8AE80AE298D9ABB0BAA"
+        },
+        {
+          "id": "01-browser-filter-sheet-dark",
+          "pngSha256": "5CF121387667C826449DBCB37A335DF4524810E28E5923103D1F289EC6F18633",
+          "uiHierarchySha256": "3E91BFF394DC220DC34C58653886239F34C43D7F7CD064494876B0238D282FCA"
+        },
+        {
+          "id": "01-browser-equipment-menu-dark",
+          "pngSha256": "1A0016EC41A7113713A8F621035BDF1DDC5F0546AE02A449249EF317E33410A3",
+          "uiHierarchySha256": "D188F2427CFCA4AE19F197CD3598C27FCB393CE3A085FD3E891DA2F6BEAC08E1"
+        },
+        {
+          "id": "catalog-browser-detail-tab-dark",
+          "pngSha256": "5D6A0D82BE52B4649CF73F9A7DD07EBFA5FD6384A1C42CCDD03338D7E9A521F9",
+          "uiHierarchySha256": "35C6D439B3DD453F4D0152710B992D639D1CB1EBEFF875CA832E883326F66BD3"
+        },
+        {
+          "id": "catalog-browser-metrics-tab-dark-actual",
+          "pngSha256": "A447A9D359AE4CB9B035B44A386BEE7F8E154131E926464362D4D01371672961",
+          "uiHierarchySha256": "ACE84295C4D6A85D5CD78F90457A97FBAD2097500E96AB8473B54E6ECCFD3BFD"
+        },
+        {
+          "id": "catalog-browser-records-tab-dark-actual",
+          "pngSha256": "DB9DF960826AE4F0BBBC5060516F455E43C5038A1DFB690F0827E07125E4C00B",
+          "uiHierarchySha256": "0E8D289934C404420A833849BEBCDDADC42D74FF719917DCD363461B04AF8BAF"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-dark-actual",
+          "pngSha256": "26B6F34FF4970D67F2FED32A69D61A500C8D80C7F7D6069884EFEA8AC2B79005",
+          "uiHierarchySha256": "CBB5D918727696C62C996C5FB2CC6A50CDC2E757F5D4A64B705617D3E34E485F"
+        },
+        {
+          "id": "01-browser-top-light",
+          "pngSha256": "21BE90E77E6ABB1310527FF793FBAD897A82FC33E0AC624D07FF4A2221FCDCBE",
+          "uiHierarchySha256": "78F1521145E636E9A46DE5967CDA8D192200CB735256A4B302D988D05AE8EEFE"
+        },
+        {
+          "id": "01-browser-lower-light",
+          "pngSha256": "03CC30BFA132648BCDC793F881C1F50D76F8CE7850CDC5676446B453DADA36DE",
+          "uiHierarchySha256": "1BC9A44AFCFACACD6A3348EAFA33ED530456B3A0AE722C0CD8D22AD7658FDBD3"
+        },
+        {
+          "id": "01-browser-search-results-light",
+          "pngSha256": "B961AAC5398E6701B6B4E92C243138E00AFF7088530DBEF6BBE93C3690484857",
+          "uiHierarchySha256": "B99BE8584ADE99C162BDB2BE66DF649FFAE5F7F57D5ED925D89A3C2B3BFBA3ED"
+        },
+        {
+          "id": "01-browser-search-empty-light",
+          "pngSha256": "DFABED7D1947702EF92EAD2ABD1D4CD9F1DE59469736DEFB7B2A550EAB308B07",
+          "uiHierarchySha256": "AF77AC545F27DABFF99C04E05B09BDBAD3EE976B54E5B8AE80AE298D9ABB0BAA"
+        },
+        {
+          "id": "01-browser-filter-sheet-light",
+          "pngSha256": "05F108347E96CD433FF59B6380C5F5CAE822C16194E09F3065E924C2F15E4028",
+          "uiHierarchySha256": "3E91BFF394DC220DC34C58653886239F34C43D7F7CD064494876B0238D282FCA"
+        },
+        {
+          "id": "01-browser-equipment-menu-light",
+          "pngSha256": "53E223F1CEF3385BB7D09C31D2EB636EEFC655F7095FE510413FA2DE88DF9CA1",
+          "uiHierarchySha256": "789CD78AF5F1345A29977117665C78451D80BF1B883A135CE96630DFCDA3FCFF"
+        },
+        {
+          "id": "01-browser-focus-menu-light",
+          "pngSha256": "D02813F1736AC54B9F8AF9B0DF482ACDB04686A2994FD1CD4B6B7945BD326FA6",
+          "uiHierarchySha256": "D2424CA939A77770C34C29FCFF4E3D3B9B53BAB44A97D68B896D7D7B1268035A"
+        },
+        {
+          "id": "01-browser-muscle-menu-light",
+          "pngSha256": "D74ACA0AB9CE73A8C2B2EFD6A3FEC5C566EE54034BD095D091072D836C34BC9F",
+          "uiHierarchySha256": "7034D3F95A90FA16DA38328E8420BF0C7AA781DC90DBEF7B671CE62458FEB0BE"
+        },
+        {
+          "id": "01-browser-filter-selected-light",
+          "pngSha256": "F68A7ED4B656B143C43C7DAD7A60CA659BF0B9F5BD757990A03F698DC74521C5",
+          "uiHierarchySha256": "E480AF3198503470F5CB3EE05F60204714A980DB1B78832F5988A340539353CE"
+        },
+        {
+          "id": "01-browser-filter-applied-results-light",
+          "pngSha256": "9610F7D72543117E837CD66853A29387539D2BA1125F2747BABA18C1EF38E39A",
+          "uiHierarchySha256": "6B5AAEF83BBF3393490F48969187BFF90851BDAA2421BDDEBDE4D7ACF8B48878"
+        },
+        {
+          "id": "01-browser-filter-reset-dialog-light",
+          "pngSha256": "2CE5EC106E68B8596B151A8747BA5273E6E4C21DB9A134E7E1382B4229E1DBCD",
+          "uiHierarchySha256": "05C0BB7E786D6B034A6269B6E1736E5BE10027C16D1DC792F0252497CC831706"
+        },
+        {
+          "id": "01-browser-filter-reset-results-light",
+          "pngSha256": "C45CD86C1DF2C460AB554195B3A2C940D4AE7A4DF950D4D6F9FA4866088638BE",
+          "uiHierarchySha256": "1004B5972B140775414664CF389F0EAFFA5BE74BCE99505DE6F7406ACC503EED"
+        },
+        {
+          "id": "02-bodypart-chest-lower-dark-verified",
+          "pngSha256": "718619CED18BDD0CBB20AB9466904BABA8FB18D5E1B432B33BDCECDCEDD59FF8",
+          "uiHierarchySha256": "C7790AC0E30A57BEC0028E67B5CD9992FB65E705C276C36BC2396F6E174F4D59"
+        },
+        {
+          "id": "02-bodypart-chest-top-dark",
+          "pngSha256": "DFB07F104C3395BCFEC86C51A72B208DF4BDEA09984FB99E887756E4AD7DF174",
+          "uiHierarchySha256": "AC81699E90FB9328427F9A5D14C01D7293E19A40340E9F9444BC961CAA0FE530"
+        },
+        {
+          "id": "catalog-details-anatomy-dark",
+          "pngSha256": "5ACB4DF837F6102619C5C71A57D739E018557794BD4C9C008A107F9D2B99D460",
+          "uiHierarchySha256": "49021E3B86B923EF287D8E65FC87261A7F5AB6588E54BEEC98EEBE1F90A372A6"
+        },
+        {
+          "id": "catalog-details-anatomy-metrics-dark",
+          "pngSha256": "D5754FFBA67B6EB5757E7A4F312FD48E1630B0E2EE19873D02C9EF0949359B07",
+          "uiHierarchySha256": "F46D38379B26B50ADA40D11212D0C732172C81143EC0C7D4797FBB9A7A6645E5"
+        },
+        {
+          "id": "catalog-details-anatomy-records-dark",
+          "pngSha256": "706F4BAF22EE1EF4CA1C69A96ABA238C4A6E70DFD0A8142FB625E8231BD748D0",
+          "uiHierarchySha256": "32765648E345EE93E00B59B26BFB52ADF5D7C78E3200B2A9FE92D657A1C28709"
+        },
+        {
+          "id": "03-muscle-adductor-top-dark",
+          "pngSha256": "AC0EC7CE6695AEBA056D3DEEB1BC3BEE9D3EB04B28DD688441D03B6C98A051CF",
+          "uiHierarchySha256": "78F9FE6494B0E50055468B2BB7346050DEE36332804BFBCAC31566CCAE469F88"
+        },
+        {
+          "id": "03-muscle-biceps-top-dark",
+          "pngSha256": "CE65A7DD6C2B02F98F1CEEAD53048B9ACE318F41F590AE8D2FE44DA9F5FA6124",
+          "uiHierarchySha256": "A9E79F2AD5104FDB3D012EB26F353B04B7468F41ED7E7649619AB08464E0BF73"
+        },
+        {
+          "id": "03-muscle-biceps-lower-dark",
+          "pngSha256": "4080B90FAF9027F59915C42359F8031065E3FAED2E493E959D3859C621B4918B",
+          "uiHierarchySha256": "3175B6D90091A731953C3B102C3158343E9E995FBFD86B418E9C3968D043D8C4"
+        },
+        {
+          "id": "03-muscle-adductor-top-light",
+          "pngSha256": "87F2D90E8259D4CA957FC9EE04D7D82165A70DD5FB6D6E2576DA7B68BE1C850E",
+          "uiHierarchySha256": "78F9FE6494B0E50055468B2BB7346050DEE36332804BFBCAC31566CCAE469F88"
+        },
+        {
+          "id": "03-muscle-biceps-top-light",
+          "pngSha256": "C032CA285636231E9758D4985495AFCFF88C72765EE1C4E59ED26F3EFBCD20DB",
+          "uiHierarchySha256": "A9E79F2AD5104FDB3D012EB26F353B04B7468F41ED7E7649619AB08464E0BF73"
+        },
+        {
+          "id": "03-muscle-biceps-lower-light",
+          "pngSha256": "5350B0BF21675C4C991A2591E650DE3AB7A87C8F4090935929250466086E29CC",
+          "uiHierarchySha256": "3175B6D90091A731953C3B102C3158343E9E995FBFD86B418E9C3968D043D8C4"
+        },
+        {
+          "id": "02-bodypart-chest-lower-light",
+          "pngSha256": "6D8B9B85DF83067FCD808E2DB1565F0E248AF4EABD115EF45D733DAEC5F91791",
+          "uiHierarchySha256": "4F5BA51C849073143878392F254607508200F29632E5611283A4203258E6C2C2"
+        },
+        {
+          "id": "02-bodypart-chest-top-light",
+          "pngSha256": "736639E12B6AB4FAC880118917D88494C759EE22E8B52FBEB8805977EF626B7A",
+          "uiHierarchySha256": "AC81699E90FB9328427F9A5D14C01D7293E19A40340E9F9444BC961CAA0FE530"
+        },
+        {
+          "id": "02-bodypart-recommendation-light",
+          "pngSha256": "4B9BBDBB85DC8735F78CED88595AE5EDC1AB0B48B51CCAD6E8E23FF29A3DBE3A",
+          "uiHierarchySha256": "F945FE92B5FE666C634B4065492EBC3CDDB34C4ACE45AE9700290F89CC75DD31"
+        },
+        {
+          "id": "catalog-details-anatomy-light",
+          "pngSha256": "B8330D6345A91C10D0CD491E7C6DEE0581704D431550DE577FE8D183EABE1A3E",
+          "uiHierarchySha256": "607F6BBDA7116C37E38584AF3614F94B0E293C63B11226BAD3AAD367C24A0896"
+        },
+        {
+          "id": "catalog-details-anatomy-metrics-light",
+          "pngSha256": "822204F2407D97196FA9694AA5B15FA08AB2FC5C54BE2E53E58C5667DEB7D5DA",
+          "uiHierarchySha256": "A0B3AEABEAFC775789E2795F6F284D78CCE8A517C5E70289D6E3DDA2071061AA"
+        },
+        {
+          "id": "catalog-details-anatomy-records-light",
+          "pngSha256": "320CCC23D228F4513DA758D3F99597233ABD8C4889C13C7C2F6E6F1258986E91",
+          "uiHierarchySha256": "F3F5103059AE7B426C2B857949B6A02EFD196A9A0B72E39BFB8F1424B8477D4B"
+        },
+        {
+          "id": "catalog-details-browser-light",
+          "pngSha256": "931CD5D3030AA6B85EA4594EBA3D19E66063581BD463E664BF4EACFD4D11EA8A",
+          "uiHierarchySha256": "35C6D439B3DD453F4D0152710B992D639D1CB1EBEFF875CA832E883326F66BD3"
+        },
+        {
+          "id": "catalog-browser-metrics-light",
+          "pngSha256": "CD2D825450D30F5477B110DF4FED3E85575B3D1B51FE3CA2E7D841BE2E512BE7",
+          "uiHierarchySha256": "ACE84295C4D6A85D5CD78F90457A97FBAD2097500E96AB8473B54E6ECCFD3BFD"
+        },
+        {
+          "id": "catalog-browser-records-light",
+          "pngSha256": "2DEB01972D5D2CBD231556BCB19D85E74BEEDD14C4DEBAAC19939E56CAA8FBCB",
+          "uiHierarchySha256": "0E8D289934C404420A833849BEBCDDADC42D74FF719917DCD363461B04AF8BAF"
+        },
+        {
+          "id": "04-plan-management-top-light",
+          "pngSha256": "01656EFD53D9FAC51AE73F485A57A81FA2B5E20216589D495E3FD05C39EC685A",
+          "uiHierarchySha256": "7E124D6BE00407801BEEDFB1F47448005C428BF690175186A1D20BA6189B931D"
+        },
+        {
+          "id": "04-plan-management-lower-light",
+          "pngSha256": "4C952F960EF535515289D3532F104330199C1B58658F8C480643AB58858AB811",
+          "uiHierarchySha256": "F71CDF6AE870A8A6C107C7E09BFC644CBBA0CAF7FB8BE4A49BDF390DAE9A07B9"
+        },
+        {
+          "id": "04-plan-management-top-dark",
+          "pngSha256": "DF83AFC7280BA205330EF472661F5E3F877271919A4734D1CBB4499C64AAFFA1",
+          "uiHierarchySha256": "7E124D6BE00407801BEEDFB1F47448005C428BF690175186A1D20BA6189B931D"
+        },
+        {
+          "id": "04-plan-management-lower-dark",
+          "pngSha256": "1CAAC15698E3F60FBCE78B445C37712F7A72F34F5CC2291C535B3CEECB76CDAD",
+          "uiHierarchySha256": "F71CDF6AE870A8A6C107C7E09BFC644CBBA0CAF7FB8BE4A49BDF390DAE9A07B9"
+        },
+        {
+          "id": "07-optimized-settings-top-dark",
+          "pngSha256": "3D1EC67074E7D507FAA7E676764BD3D775511DC87CD167C5FF54FCFA5FC1690F",
+          "uiHierarchySha256": "A4C9CA5EC739E1C1446815142F49D6C895C2E86E20C3DB51AEC09CF168336632"
+        },
+        {
+          "id": "07-optimized-settings-lower-dark",
+          "pngSha256": "25264EDA25B563D985F258FDCFAE008EB3CBD047CB55D6CE35AFBA44227FDA2B",
+          "uiHierarchySha256": "7054B9BA93018D536C3775565CC68A706BFAFEF6DFCD1F30FB2CC9CF4490B3D6"
+        },
+        {
+          "id": "07-optimized-settings-top-light",
+          "pngSha256": "AE9C7945B2179C651DACA9B772F5CD3DD4397CA8A57B14CFAC6ED73DE3D91B68",
+          "uiHierarchySha256": "A4C9CA5EC739E1C1446815142F49D6C895C2E86E20C3DB51AEC09CF168336632"
+        },
+        {
+          "id": "07-optimized-settings-lower-light",
+          "pngSha256": "AB359BB390DF250F36B8A8A236617499BC10A316273038D5D870FED99BF5A906",
+          "uiHierarchySha256": "7054B9BA93018D536C3775565CC68A706BFAFEF6DFCD1F30FB2CC9CF4490B3D6"
+        },
+        {
+          "id": "08-gym-profile-menu-light",
+          "pngSha256": "CD5E7624C34620EA5667BEFE6ED49A5776628F4C01785333373A844984FA4CD6",
+          "uiHierarchySha256": "7A601782E5B51C01C1EDE0F8E502117ABC41B7624B7757DD61B7CB4FB389A1CE"
+        },
+        {
+          "id": "08-gym-profile-equipment-edit-light",
+          "pngSha256": "515B5A64FCB716D15AE2BDD0A4D2EB2BD595FF79B63F1B74C92AD31C19AB3D21",
+          "uiHierarchySha256": "A04491F70281304E86D53ACECBDF0CE998B1DC5DB1F4EBA9F91D2CAF6265CFD8"
+        },
+        {
+          "id": "08-gym-profile-equipment-lower-light",
+          "pngSha256": "ABDF1E11D089BF99C7BA7FDDCEF43C879CF403AD2783C0B87FDB1E0467231D06",
+          "uiHierarchySha256": "73EC307DA8E0F952D91248D07D2365C0D418F3F808001B75011138C9BBE66662"
+        },
+        {
+          "id": "11-analytics-bodyparts-light",
+          "pngSha256": "253A3C7068D894EB678F897060A612CF16D55575846A586B06723D65354BEC1B",
+          "uiHierarchySha256": "E779AFBBF7DB798BC3E20E0B4925CC2AEA0467B48919B289379BA39749373BE5"
+        },
+        {
+          "id": "11-analytics-muscles-light",
+          "pngSha256": "173A63DBFC53F08839EE682D5C171CFFC7C29DB6AFB7BCB4C8AE256198121D2C",
+          "uiHierarchySha256": "734586BAC11FA82DC842BA06848007C466AA18C549D256651F33D3E89F54DA43"
+        },
+        {
+          "id": "11-analytics-bodyparts-dark",
+          "pngSha256": "E511E7D5A0E6E83B3C07E27153B6A1BE1FE1DE8AAA04C8A9476D9EBFD35C748F",
+          "uiHierarchySha256": "E779AFBBF7DB798BC3E20E0B4925CC2AEA0467B48919B289379BA39749373BE5"
+        },
+        {
+          "id": "11-analytics-muscles-dark",
+          "pngSha256": "D35C2EAF8129C233C921B1DE663A4C2D65537454B8A05D6A2273569F9176E053",
+          "uiHierarchySha256": "734586BAC11FA82DC842BA06848007C466AA18C549D256651F33D3E89F54DA43"
+        },
+        {
+          "id": "08-gym-profile-top-dark",
+          "pngSha256": "22F4D4889E638F20A2C36C58D1C9AA3210B48EFA3D2997611A34EAE2D0606599",
+          "uiHierarchySha256": "B0C08527E55C2E16725D4D250995291CB4F45EDC58C7DFDF6223CAA0F350F7CB"
+        },
+        {
+          "id": "08-gym-profile-menu-dark",
+          "pngSha256": "A079A9327A510A5731C70EC60D206602B288E6EBFA887590D18255ADAFA2FA26",
+          "uiHierarchySha256": "7A601782E5B51C01C1EDE0F8E502117ABC41B7624B7757DD61B7CB4FB389A1CE"
+        },
+        {
+          "id": "08-gym-profile-equipment-edit-dark",
+          "pngSha256": "F8B4FE88D53339551DC5886447C26C7CAB3D9B0A53486EA80141BBF1E5C179A2",
+          "uiHierarchySha256": "A04491F70281304E86D53ACECBDF0CE998B1DC5DB1F4EBA9F91D2CAF6265CFD8"
+        },
+        {
+          "id": "08-gym-profile-equipment-lower-dark",
+          "pngSha256": "6B3DF9B22942A6FA390AED8D62A4017F0D805FE70E350FF4FEB49BC8D1AC491C",
+          "uiHierarchySha256": "73EC307DA8E0F952D91248D07D2365C0D418F3F808001B75011138C9BBE66662"
+        },
+        {
+          "id": "08-gym-profile-discard-dark",
+          "pngSha256": "B119268C0E0D66684ADD188B755A3D5EAAECA6A5FEB3C58136653F48ADB36617",
+          "uiHierarchySha256": "1A9F1FE4D745A0F583192272CB0C50E883361AAA5098AF7D8FCB2E4C09BAB6F4"
+        },
+        {
+          "id": "12-generation-setup-dark",
+          "pngSha256": "89FA4915955D4EC57CB8952899EC05BCD4D6454A8079D90131A9A19D123C83F4",
+          "uiHierarchySha256": "C9FA2CF424028DB0A00C574A7C90B63A273083D4BB0F59EB5C87A124BDB8ABFA"
+        },
+        {
+          "id": "12-generation-workout-settings-dark-expanded",
+          "pngSha256": "B4033E4EE0034610673FCD26F5E5F6EC0806D663D40D004321FFDA217ADE8B1F",
+          "uiHierarchySha256": "A264F5812FA96EFD5D8E050FFF30C4860EF14006555CFEBDD291AC124C7DC206"
+        },
+        {
+          "id": "12-generation-training-focus-dark-expanded",
+          "pngSha256": "667F9C31543A7AEE100BA3D13393BEB373CCC700E360AC8F29595D74809A6B7B",
+          "uiHierarchySha256": "BFA56B04B378283418D69A3CFF6BF01084B7F95FDA447BD93A62E866F7956EE4"
+        },
+        {
+          "id": "12-generation-reps-weights-dark-expanded",
+          "pngSha256": "CF5B43D7A2067AE37121156098D8757EE65D40333F08256DD4AE986D1A03DB00",
+          "uiHierarchySha256": "05CB116138D1041A826933B5A4A107A6356C13DFC0BCDB68AF3290A05DDBB4F5"
+        },
+        {
+          "id": "12-generation-reps-weights-dark-lower",
+          "pngSha256": "B3F176DF8994DD0E6D6859390D4EBBA848C3EBCB0E78B4C4EE3E5EA09C0E583B",
+          "uiHierarchySha256": "DA0BA1110F89E27F798D4949DBD2CE602C6DB8554AF56FB5226DD2E0E050D4C4"
+        },
+        {
+          "id": "12-generation-set-allocation-dark-expanded",
+          "pngSha256": "707ABDE4C93BF5AD6B831AD1CAE39E194FA853C31E6BF4A96B09A4E62840C12E",
+          "uiHierarchySha256": "B310283DC08FEEF953DB3C6F3633FAE6EC94948B5302EE26B7C4BC9BE7E05411"
+        },
+        {
+          "id": "12-generation-setup-light",
+          "pngSha256": "11E6D40568D695E15FAF9D049EA4AE5D1E04C5986E234B3F9B4589E51FE9FB8C",
+          "uiHierarchySha256": "46B8E542414B6A6FE766931EEC209A091039A2AE6FC846315847AA1B038861E2"
+        },
+        {
+          "id": "12-generation-workout-settings-light-expanded",
+          "pngSha256": "9832F44D17BD5A5CC4234BEE40CEA31AFFBA2789FFD80F73141B66B0BC7C989C",
+          "uiHierarchySha256": "E3F2C57EB11D2B4796C099E7BD6222765FE9F31A2B079BBB92B3319A3C4EDF02"
+        },
+        {
+          "id": "12-generation-training-focus-light-expanded",
+          "pngSha256": "CFC02671E977410C75ADB66C2948A86B7333A92CAF23E5E0A3F5F1A3953C931E",
+          "uiHierarchySha256": "6947A73721DEFEB14937226E2CECC67547328C871E512F726CD91603DC0FF0F2"
+        },
+        {
+          "id": "12-generation-reps-weights-light-expanded",
+          "pngSha256": "EF524F2F46E78DF78E995C7341F3EC661650C638647616CE8C47C61E2A42BF12",
+          "uiHierarchySha256": "FEDD9619672931AFE6CBAC16515597FCF26D23DC33434697105F708557FEF2BB"
+        },
+        {
+          "id": "12-generation-reps-weights-light-lower",
+          "pngSha256": "3DC8C8027E26DE9C3B07FF173C79E1D4AB8BDFC046DA92A1251862BCC3923464",
+          "uiHierarchySha256": "4CF0488735FFFE194AFC91DB956C8EE8772D3310B4005255B225B8B8243014A1"
+        },
+        {
+          "id": "12-generation-set-allocation-light-expanded",
+          "pngSha256": "3579ACACA004D434B0006B97677BF3B81881D69D238EED0CD7C4461E31919800",
+          "uiHierarchySha256": "8A435E7932A7C1893311D623505EFB14BAFA04E722D6D8ED25B4FAC0A9EBA73D"
+        },
+        {
+          "id": "08-gym-profile-top-light",
+          "pngSha256": "5209CC9289B4A9AEA181C12407A9ED01D1C58C8B45FB8B825679DFD131910F74",
+          "uiHierarchySha256": "B0C08527E55C2E16725D4D250995291CB4F45EDC58C7DFDF6223CAA0F350F7CB"
+        },
+        {
+          "id": "08-gym-profile-discard-light",
+          "pngSha256": "699D901DF64845B0D5CEF495215F476B174DD435AD5F74F903A683563AD13C35",
+          "uiHierarchySha256": "1A9F1FE4D745A0F583192272CB0C50E883361AAA5098AF7D8FCB2E4C09BAB6F4"
+        },
+        {
+          "id": "02-bodypart-chest-lower-dark-campaign-final",
+          "pngSha256": "718619CED18BDD0CBB20AB9466904BABA8FB18D5E1B432B33BDCECDCEDD59FF8",
+          "uiHierarchySha256": "C7790AC0E30A57BEC0028E67B5CD9992FB65E705C276C36BC2396F6E174F4D59"
+        },
+        {
+          "id": "02-bodypart-recommendation-dark-campaign-final",
+          "pngSha256": "5E651429B82B958B76462CAFA97B489EFB5A07C3CE4119785AC11E8E3DB1D418",
+          "uiHierarchySha256": "F945FE92B5FE666C634B4065492EBC3CDDB34C4ACE45AE9700290F89CC75DD31"
+        },
+        {
+          "id": "01-browser-specific-muscle-menu-dark-campaign",
+          "pngSha256": "EC24265ABDACDC4AA3E71345E36430F38FCABE5826FBB80B65A324D388898EAE",
+          "uiHierarchySha256": "7034D3F95A90FA16DA38328E8420BF0C7AA781DC90DBEF7B671CE62458FEB0BE"
+        },
+        {
+          "id": "01-browser-focus-area-menu-dark-campaign",
+          "pngSha256": "2AAA0223D218DE4A39BBB825A85611CB55A40B137BEA89103E320919649939D6",
+          "uiHierarchySha256": "E0519E02BE831507CFF409082045EF2E4A188F395C3CD66C58B44AF8AC8A4AE9"
+        },
+        {
+          "id": "01-browser-filter-selected-dark-campaign",
+          "pngSha256": "CBA2FC6835CBFF7ACBE2714E0404149411406A8FCC81448E98EC76ACBB26F905",
+          "uiHierarchySha256": "9617CF8FD438CE9C3E35F2A5322E6BA72ED932D52309EE687486E9C4769BFB87"
+        },
+        {
+          "id": "01-browser-filter-applied-results-dark-campaign",
+          "pngSha256": "62C561BC5612500F9835C1F5157B1450FF6BA36571890AB10D1C956424CD1784",
+          "uiHierarchySha256": "7BB9E95ABD1B1B2863312C3654D035DB5CF8980B9FCF24A69B604F7EB8C78DD4"
+        },
+        {
+          "id": "01-browser-filter-no-match-pending-dark",
+          "pngSha256": "43C0F73FAE88A64D6BA7CB8995BE8C45CB8643FCCEFEFECCD12E43C743C13407",
+          "uiHierarchySha256": "5F7C0EA72D903224576F80399DA4D107698C4938599FBCBBBE54F503664B487C"
+        },
+        {
+          "id": "01-browser-filter-empty-dark-campaign",
+          "pngSha256": "95794A10AA1A6C552D01295B15C1424B985ECA81EF6DC079B96135ED58D5FE85",
+          "uiHierarchySha256": "70F05927E3F4D6B916E0B234F59BE5CADB02FF5F5CA3926165AB213775F726F1"
+        },
+        {
+          "id": "01-browser-filter-reset-results-dark-campaign",
+          "pngSha256": "DE54C1A7CC156A6DE4E63197963C7122847A10CEE6CDBBBF4A39E8AEBE24B3FF",
+          "uiHierarchySha256": "1004B5972B140775414664CF389F0EAFFA5BE74BCE99505DE6F7406ACC503EED"
+        },
+        {
+          "id": "01-browser-filter-reset-dialog-dark-campaign",
+          "pngSha256": "A03157AF38F75BBFC6604485B93371A6BFBB022DCCCF1641590D30574B5FF63F",
+          "uiHierarchySha256": "05C0BB7E786D6B034A6269B6E1736E5BE10027C16D1DC792F0252497CC831706"
+        },
+        {
+          "id": "noncatalog-plan-exercise-details-dark",
+          "pngSha256": "DB8F8F150E75F92EC9824022A0B2E281B1708BE4F3B3AA3611839874A426A837",
+          "uiHierarchySha256": "C9BC5D2CF7882DA4CC4BC9242FFF980398C6296E238006EA9AA79BF52152254B"
+        },
+        {
+          "id": "noncatalog-plan-exercise-metrics-dark",
+          "pngSha256": "5D7B236C1D6CD2198FC5E1F816B2C1BD1A7B252479B24F833F454274B2CBAEB8",
+          "uiHierarchySha256": "DDF98FD40F1EFAB5763125A4DDDC6CC26970CAE6201FA8BC8ACE0DA53397BFB7"
+        },
+        {
+          "id": "noncatalog-plan-exercise-records-dark",
+          "pngSha256": "9CE8198CBF5455E06F92B206C76AC84417365FB1587E85B258687FEC2DBAAC3C",
+          "uiHierarchySha256": "FFD0966937CAA764C9DF79755CCF0B8E307C59E4C5626AB379B4B0C23A926C08"
+        },
+        {
+          "id": "noncatalog-plan-exercise-details-light",
+          "pngSha256": "8D11BB1A612747CCC393423176308944560B10D802B617200BB44E94173DFCE0",
+          "uiHierarchySha256": "C9BC5D2CF7882DA4CC4BC9242FFF980398C6296E238006EA9AA79BF52152254B"
+        },
+        {
+          "id": "noncatalog-plan-exercise-metrics-light",
+          "pngSha256": "AFBEC6FE44D597F4DA22F1739E11387C9C4ECA1E5ED5176CF11F9D116C6F0D54",
+          "uiHierarchySha256": "DDF98FD40F1EFAB5763125A4DDDC6CC26970CAE6201FA8BC8ACE0DA53397BFB7"
+        },
+        {
+          "id": "noncatalog-plan-exercise-records-light",
+          "pngSha256": "E7941567D0AB134FE195F9B67E257FD4838A5B86426427CDF0B1FA0BE25A37A7",
+          "uiHierarchySha256": "FFD0966937CAA764C9DF79755CCF0B8E307C59E4C5626AB379B4B0C23A926C08"
+        },
+        {
+          "id": "health-entry-menu-light-campaign",
+          "pngSha256": "0296BE9DEF22230FE5C38E94B217C750BC2EB7987E34AD3BBC80AF8215DC3F43",
+          "uiHierarchySha256": "621F31C3F7D2D64AE60CB644FB24C9D249542986FBC64AFF63DEC18D50458295"
+        },
+        {
+          "id": "health-entry-delete-confirm-light-campaign",
+          "pngSha256": "983705BF53D03453981BF2535235F5F1546AC5F113A174DD88A139BB4B79CA40",
+          "uiHierarchySha256": "41E6D9F4B84B31B2CF4EF542BAFEAFC1C18168376C6738F11FE276046FDD35A1"
+        },
+        {
+          "id": "health-entry-edit-dialog-light-campaign",
+          "pngSha256": "8B1D5A5B75CB503F7C1EEB9F20E4DB3C76EF174F985A020363FB907329DD2449",
+          "uiHierarchySha256": "A32FB4761FC1798167496ABEE759701B54BB422BDD0C230C94A119472EFD1D9C"
+        },
+        {
+          "id": "health-entry-menu-dark-campaign",
+          "pngSha256": "6B21FB0A8C5DC5C36D7D4F0A6285521610B0962534066036EEA432ECD213B0F9",
+          "uiHierarchySha256": "621F31C3F7D2D64AE60CB644FB24C9D249542986FBC64AFF63DEC18D50458295"
+        },
+        {
+          "id": "health-entry-delete-confirm-dark-campaign",
+          "pngSha256": "C7FDB8CEE393FB2992B93D60B90D43DE5ED733043E3A96C359A6334AC01BB31F",
+          "uiHierarchySha256": "41E6D9F4B84B31B2CF4EF542BAFEAFC1C18168376C6738F11FE276046FDD35A1"
+        },
+        {
+          "id": "health-entry-edit-dialog-dark-campaign",
+          "pngSha256": "9E352C64B63C9CBF16428676EFDADBBAB27372E638CE7782C0997B772B1B44AA",
+          "uiHierarchySha256": "A32FB4761FC1798167496ABEE759701B54BB422BDD0C230C94A119472EFD1D9C"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-light-campaign",
+          "pngSha256": "86C0E513AB518980D4A1591DD310F6E0F392AB9C9C88DFA1154E1CA5DAD9A93B",
+          "uiHierarchySha256": "CBB5D918727696C62C996C5FB2CC6A50CDC2E757F5D4A64B705617D3E34E485F"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-light-campaign-verified",
+          "pngSha256": "86C0E513AB518980D4A1591DD310F6E0F392AB9C9C88DFA1154E1CA5DAD9A93B",
+          "uiHierarchySha256": "CBB5D918727696C62C996C5FB2CC6A50CDC2E757F5D4A64B705617D3E34E485F"
+        },
+        {
+          "id": "01-browser-filter-empty-light-campaign",
+          "pngSha256": "4B8F339CEE23E08322D2893A3B20CF2EC14D19083C749B6D67C179936732A01C",
+          "uiHierarchySha256": "70F05927E3F4D6B916E0B234F59BE5CADB02FF5F5CA3926165AB213775F726F1"
+        }
+      ],
+      "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+      "branch": "feature/expressive-visual-polish",
+      "workingTree": "Dirty; built from the current working tree. Only this gallery package and a temporary safe preview entrypoint were changed by this refresh; pre-existing user changes were preserved.",
+      "deviceId": "28021FDH200228",
+      "device": "Google Pixel 7",
+      "deviceResolution": "1080x2400",
+      "package": "com.tonos.expressivepreview",
+      "database": "tonos_expressive_preview.db",
+      "packageVersionCode": 6,
+      "packageVersionName": "1.0.1",
+      "packageLastUpdateTimeLocal": "2026-10-14 02:23:31",
+      "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+      "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+      "buildArtifactSha256": "432E1611464ACC20D148CE89516CC2D4FAE7F951454091C47EB3C3A2154F770A",
+      "installedBaseApkSha256": "432E1611464ACC20D148CE89516CC2D4FAE7F951454091C47EB3C3A2154F770A",
+      "installedApkMatchesBuildArtifact": true,
+      "buildArtifactBytes": 233783441,
+      "buildArtifactModifiedLocal": "2026-10-14T02:23:04-04:00",
+      "buildCommand": "flutter build apk --debug --no-pub --target lib/dev/gallery_refresh_safe_main_20261014.dart --dart-define=TONOS_EXPRESSIVE_PREVIEW=true --dart-define=TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true --dart-define=TONOS_ANDROID_INTERNAL_BUILD=false --dart-define=TONOS_DATABASE_NAME=tonos_expressive_preview.db --dart-define=TONOS_PREVIEW_SHOW_CONTROLS=true",
+      "buildEntrypoint": "Temporary lib/dev/gallery_refresh_safe_main_20261014.dart; runTonosApp used TonosPreviewPresentation and ExpressivePreviewSafety.verifyBeforeDataAccess only. No fixture setup, diagnostics initialization, beforeRunApp, or reset callback; file removed after capture.",
+      "installMethod": "adb install -r in place; application ID verified as com.tonos.expressivepreview; no uninstall or app-data clear.",
+      "previewWasLaunchedForCapture": true,
+      "postCapturePackageState": "Installed and force-stopped after data restoration; not relaunched.",
+      "relevantSourceFilesSha256": {
+        "assets/exercises.json": "85314858EF12B081C2EF5C7B753F88E7ADB36ED980EE1BAF1F96D9F7CFEDEB7E",
+        "assets/exercise_content_localizations.json": "3DCEA04F4412DE3AB4D928680FF4EDE88EEFAD96636057C33AC40B3E18C81A78",
+        "lib/l10n/app_bn.arb": "2FFE2D1C72AAEF3B6F021577262BB6686390DCE8281E88C0685E4DAC9CC5F1E3",
+        "lib/l10n/app_en.arb": "B150DC356BE088C574AD169225FD861FD57DD73B37310FDB0A5B29BF2B42C857",
+        "lib/l10n/app_es.arb": "44A713CFEF90E50BECD8CB612C5A7D46E4BEF6C855707CB63199AE30ED1BB6CA",
+        "lib/l10n/app_fr.arb": "29D02D1E8BEC7485D82FC8AB4492387EA5DAD8AC9FB2F7ABA6BB4A9D8FE02254",
+        "lib/l10n/app_fr_CA.arb": "08EECC625AFD0354568A9A62189CF0081DC76546979E56B8C324CABF4537C665",
+        "lib/l10n/app_hi.arb": "8A9DB0EFF84404BBA82DA5907A40F2EEB3DF06B7135C111ECA1BE97D4756FC00",
+        "lib/l10n/app_zh.arb": "B7DB9F478CFCCD5B8D030A2C1F1D3D9E99623BCCCD8AE89C73300BDA209627D7",
+        "lib/l10n/generated/app_localizations.dart": "308F4FA5847907D96059357F68F46341A1387D936186836C1024138667DB1C5B",
+        "lib/l10n/generated/app_localizations_bn.dart": "A2D65686B6B33A2C9677AB8152176510D41CB3470E5F5A487FAFD85B420F0D90",
+        "lib/l10n/generated/app_localizations_en.dart": "487C53D97B18A6784CB07A1D4A1AF83AF871094C24FCC66BD9CAC2AE43BB5336",
+        "lib/l10n/generated/app_localizations_es.dart": "535A2C2C5274D6049E49A60319B1FDFBE4F1D389864FA80E21F7A342D4AD0809",
+        "lib/l10n/generated/app_localizations_fr.dart": "A6C4521CDC5BD5FFAE374DB78A71E88DDF5C0F874C85BBD58744ABD879F5A971",
+        "lib/l10n/generated/app_localizations_hi.dart": "2856B1827326102E24CEE1EFF1B8E9D65E487A1A27748E314051B0F5E0993F8A",
+        "lib/l10n/generated/app_localizations_zh.dart": "A4FDE20BCD9267FB85AF9606286DB680F3340A863996EEDF834423635690EB41",
+        "lib/screens/exercise/analytics_dashboard_screen.dart": "CF7C289C45CC6E4D0F1E8BFAE4BCD8D99D49D0E83B78E92E203C88CA7429AB59",
+        "lib/screens/exercise/definitions_by_bodypart_page.dart": "AE72D808B32E9E1F0D36BA3F3C072A0830B176B3974A4A596F665D6707F9061A",
+        "lib/screens/exercise/definitions_by_muscle_page.dart": "FFCD4717213AE7BDDEFA37640E5A05ACC29B026F7E46B23D5FC68872895BF799",
+        "lib/screens/exercise/exercise_catalog_page.dart": "3761A58979ABED4C3FF874876779DCE98850843D8E93CDF1C99BC20259054DE6",
+        "lib/screens/exercise/gym_profile_screen.dart": "DB5E4A5067E213B8129431C88A83388B1ACA372796D1F70F6B203A51156512C7",
+        "lib/screens/exercise/muscle_filter_page.dart": "4FA1DED0915B752AFBE971EB313952ADE3F80EF3B91AF826655929BDBBCC8516",
+        "lib/screens/exercise/optimized_workout_settings_page.dart": "E35237413A82D00B809D2AD7A8610ED0A1A2414B51D7BDBFB31E60D90BDB0D09",
+        "lib/screens/exercise/plan_management_page.dart": "6ADABDCC4F514658D57EB89F00ED1724EA98F06C557CF01A6E1A0EB015AB2397",
+        "lib/screens/exercise/preset_generation_qa.dart": "27797256A18F58C94880F6C93B598959764F851AA871587A7EE7A6C69D995564",
+        "lib/screens/exercise/train2_page.dart": "D94701BC2BFFEA909ABD6951EE9049703942BA24C3ACDC94B0CDDBD32D36C609",
+        "lib/widgets/bodypart_focus_chips.dart": "5D1F08223F6BBA8DDF2E0152E3BB28E4EE8465606E4039AAD5809576465E78C6",
+        "lib/widgets/drawers.dart": "CE2B7C7AD07FB4EC07D1D9ECC9B9E93A28A664849A38CF1C2D61474E78A3B3E8",
+        "lib/widgets/exercise_detail_sheet.dart": "252C772190903E87BC22DDB8D6C59455071D6EB02A44EDC75AB8AF6BDC70631E",
+        "lib/widgets/exercise_media_thumbnail.dart": "64CFD3F526E37D1FCD38D347E34DA9168B86788EE8749F257BB45D6D08445F47",
+        "lib/widgets/health_trends_section.dart": "E526FDD17BC2946F679752BE165F62E296FE73EC704E7FB4E4813FAEBA9AC05E",
+        "lib/theme/widgets/media_viewer_image.dart": "4D2DD797008B2C682B9969C1EC1ABF01AB8206E3F7546AAA7A778A4AC07EB7CC"
+      },
+      "preInstallPreviewSnapshotDirectory": "E:/tonos-gallery-refresh-20261014",
+      "preInstallSnapshotSavedAtLocal": "2026-10-14T02:21:30-04:00",
+      "restoredPreviewFiles": [
+        {
+          "path": "databases/tonos_expressive_preview.db",
+          "sha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+          "bytes": 1544192,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-wal",
+          "sha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+          "bytes": 387312,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-shm",
+          "sha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+          "bytes": 32768,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/FlutterSharedPreferences.xml",
+          "sha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+          "bytes": 12126,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/com.google.mlkit.internal.xml",
+          "sha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+          "bytes": 154,
+          "matchesSnapshot": true
+        }
+      ],
+      "restoreCompletedAtLocal": "2026-10-14T03:07:31-04:00",
+      "restoreVerification": "All five database, WAL, SHM, FlutterSharedPreferences, and ML Kit preference files were written back to app-private storage and read back; each byte count and SHA-256 matches the snapshot taken immediately before this refresh.",
+      "previewDataNote": "Preview interactions were limited to navigation, in-memory filter selections, opening/canceling dialogs, and temporary equipment draft changes that were discarded. The app was force-stopped and all five saved files restored exactly. Normal Tonos package/data were not accessed.",
+      "unverifiedHistoricalCaptures": "The six existing records marked verified:false remain unchanged and were not used as current evidence."
+    },
+    {
+      "capturedAtRangeLocal": "2026-10-14T10:11:44-04:00 through 2026-10-14T20:05:17-04:00 America/Toronto",
+      "capturedScreenshotCount": 123,
+      "refreshedFamilies": {
+        "Analytics Dashboard / Weekly Sets": 4,
+        "Catalog Exercise Details Sheet â€” Anatomy caller": 6,
+        "Catalog Exercise Details Sheet â€” Browser caller": 9,
+        "Custom Plan Generation / Preset Generation QA": 12,
+        "Exercise Catalog / Exercise Browser": 8,
+        "Exercise Catalog Filters": 19,
+        "Exercise Media Viewer â€” Catalog caller": 2,
+        "Health Trend Entry Actions": 6,
+        "Non-Catalog Exercise Details â€” Plan Detail Caller": 6,
+        "Optimized Workout Settings": 4,
+        "Plan Management": 4,
+        "Premade Plans": 10,
+        "Preset / Plan Detail": 6,
+        "Preset Detail Overlays": 10,
+        "Selected Bodypart Detail â€” Chest": 7,
+        "Unmapped Expressive Nutrition Routes": 10
+      },
+      "manifestIdsAndFileHashes": [
+        {
+          "id": "05-premade-top-light",
+          "pngSha256": "d76a25389b6730cceeb8803a17d98d2fadc45fbc3a69de4ecb8f637519fa6447",
+          "uiHierarchySha256": "0f6354d8d90e885867817013f9aaec379af7f6826af087f56b17fa96a55cebda"
+        },
+        {
+          "id": "05-premade-expanded-light",
+          "pngSha256": "d76a25389b6730cceeb8803a17d98d2fadc45fbc3a69de4ecb8f637519fa6447",
+          "uiHierarchySha256": "0f6354d8d90e885867817013f9aaec379af7f6826af087f56b17fa96a55cebda"
+        },
+        {
+          "id": "05-premade-duration-two-hour-light-settled-campaign",
+          "pngSha256": "4d02b15a1f42afb8160ab86cbfe96e88c4469148086ac7fc20473fb2012c0164",
+          "uiHierarchySha256": "ab74199023d6130ef05d84d528ba8cf785d9d81191d137654f5313811ed1389f"
+        },
+        {
+          "id": "05-premade-equipment-filter-off-light-settled-campaign",
+          "pngSha256": "5aa3a9396b097056b2f2be58e3c695ea4c0e85f2fd322868c9abb2dac16d0dd0",
+          "uiHierarchySha256": "b931004b3cbdc7425f257c6f22d7b472b9f7bfc7faa638c4b981f80bdb6f01c4"
+        },
+        {
+          "id": "05-premade-plan-previews-light-campaign",
+          "pngSha256": "b321ba43dd8917b3585e4deccccc805757d83ec7443fb5733c62969ca8f4280c",
+          "uiHierarchySha256": "615687a7bff2a72e4d06d9e30600bbe3744eea6abb1e49d34a73bc1638bd3b22"
+        },
+        {
+          "id": "05-premade-top-dark-verified",
+          "pngSha256": "207d147f77ea537c36c06516baacffd4df7d02779e64a916bdb41081f23a1d26",
+          "uiHierarchySha256": "0f6354d8d90e885867817013f9aaec379af7f6826af087f56b17fa96a55cebda"
+        },
+        {
+          "id": "05-premade-two-hour-dark-verified",
+          "pngSha256": "22dc03af7a2a656edbb03020ce5d2b8e197d33c2330f7c95150a7aee11fd4aa4",
+          "uiHierarchySha256": "ab74199023d6130ef05d84d528ba8cf785d9d81191d137654f5313811ed1389f"
+        },
+        {
+          "id": "05-premade-two-hour-dark-second-check",
+          "pngSha256": "22dc03af7a2a656edbb03020ce5d2b8e197d33c2330f7c95150a7aee11fd4aa4",
+          "uiHierarchySha256": "ab74199023d6130ef05d84d528ba8cf785d9d81191d137654f5313811ed1389f"
+        },
+        {
+          "id": "05-premade-profile-equipment-filter-off-dark",
+          "pngSha256": "6f4d80a103f0cb98a6243982a595b1c88263752104538301f04ab21133f2b80c",
+          "uiHierarchySha256": "b931004b3cbdc7425f257c6f22d7b472b9f7bfc7faa638c4b981f80bdb6f01c4"
+        },
+        {
+          "id": "05-premade-plan-previews-dark",
+          "pngSha256": "d68fc867727c1d6c979b66fc43142800e786568de2a83bc61d8eda3d52640cb0",
+          "uiHierarchySha256": "615687a7bff2a72e4d06d9e30600bbe3744eea6abb1e49d34a73bc1638bd3b22"
+        },
+        {
+          "id": "06-preset-detail-top-dark",
+          "pngSha256": "517ef581edb78534860bd45cac5edfba90d66d6f01b8e46ab6ed2638e0c7af52",
+          "uiHierarchySha256": "a58e4ee7b9bf7fb758477f46c9147e01d63d1bdcb6e133f6d99e4b27eae2d07d"
+        },
+        {
+          "id": "06-preset-detail-lower-dark",
+          "pngSha256": "ac777dcadfd4ec42710c255b2c689c16b7bad8513d7ac32d8d00634f3d1281a7",
+          "uiHierarchySha256": "a02e1b30b1f71dc867b136e19bdc1c2747239813b5d8f06218897acbd526070a"
+        },
+        {
+          "id": "06-preset-edit-dark",
+          "pngSha256": "f12912d5744cb292ccb4a230adeb6e5a9acb7bb99c45dd61295e58ab1a0195f0",
+          "uiHierarchySha256": "cdf592e8130ee14c3932c9d802e1075590a84ce1481d60c2bc0777a33ea6e0e7"
+        },
+        {
+          "id": "06-preset-overflow-dark",
+          "pngSha256": "502b62451fc73654181ea54bcdc2027ee86be9530504eb51ba0bc5d04d6dcfbd",
+          "uiHierarchySha256": "2fe8dff387ce19b2fb6e542d05d40db8d69c571b9ddd4798c8fafbd194801d26"
+        },
+        {
+          "id": "preset-delete-confirm-dark-campaign",
+          "pngSha256": "d0e4723d09f8f5beb00016d076da13f20f321f6fe071ebb0a8cc690914fbb65b",
+          "uiHierarchySha256": "0dc8ea85494486c4323a6741ca765fd26bbdbae4cb93e915893d6eb0388159f4"
+        },
+        {
+          "id": "06-preset-exercise-menu-dark",
+          "pngSha256": "4efa7bacb3415550e73ebde2a3975fb67e2f996e70f16c074e1d608f450da355",
+          "uiHierarchySha256": "ffc404cd6f389571bd0c6d9cfc590cdbc9f591390be4bfa524a4cdbd89fd47ad"
+        },
+        {
+          "id": "06-preset-swap-sheet-dark",
+          "pngSha256": "ca741b5e688850177ca03191eead4b26d122c51c905bf0df96599dbd3a5ebc34",
+          "uiHierarchySha256": "e296d276cb36b1c528306ed32eba7039a4e43ff3818d83043f16851af1e63891"
+        },
+        {
+          "id": "preset-add-exercise-picker-dark",
+          "pngSha256": "dd007bc73e218f6d08f1ce69c80a22616dd3de97ab9b7e1cc1160d3ff24407ea",
+          "uiHierarchySha256": "5a7a953f31c63ed7ea644ec937deab95d7d88de35d24d4953ee179a1ad803cde"
+        },
+        {
+          "id": "06-preset-detail-top-light",
+          "pngSha256": "e26b37792160f5ea2dd7fb08d401b7f3b54074e2d67d2263e7052a032071bec8",
+          "uiHierarchySha256": "a58e4ee7b9bf7fb758477f46c9147e01d63d1bdcb6e133f6d99e4b27eae2d07d"
+        },
+        {
+          "id": "06-preset-detail-lower-light",
+          "pngSha256": "ac7805f68d1d1b5f805d0f2a308241aff56dca9eb7be6013e271de18c7a45d8a",
+          "uiHierarchySha256": "f6399c5ba4603716e198413e40f970f92d7838fa9a3c42d3233eea90fa7af266"
+        },
+        {
+          "id": "06-preset-edit-light",
+          "pngSha256": "6bb012870c1723b90987e041ad73b0e11b83dcfc7b9aed7b3ea6745fe6ece15d",
+          "uiHierarchySha256": "cdf592e8130ee14c3932c9d802e1075590a84ce1481d60c2bc0777a33ea6e0e7"
+        },
+        {
+          "id": "06-preset-overflow-light",
+          "pngSha256": "57c6acf858d81be76994d7394ed13e9a734b00e1279510ae4ff55f86425d0b17",
+          "uiHierarchySha256": "2fe8dff387ce19b2fb6e542d05d40db8d69c571b9ddd4798c8fafbd194801d26"
+        },
+        {
+          "id": "preset-delete-confirm-light-campaign",
+          "pngSha256": "4acf25ac3b1e1bf7136dd8f8f0350509e31e14a16092e0a83a9549d3bac29096",
+          "uiHierarchySha256": "0dc8ea85494486c4323a6741ca765fd26bbdbae4cb93e915893d6eb0388159f4"
+        },
+        {
+          "id": "06-preset-exercise-menu-light",
+          "pngSha256": "9902e4361b266ac78438b1da421e7a602a91811b0b86b9817ea76a5d65f533ab",
+          "uiHierarchySha256": "ffc404cd6f389571bd0c6d9cfc590cdbc9f591390be4bfa524a4cdbd89fd47ad"
+        },
+        {
+          "id": "06-preset-swap-sheet-light",
+          "pngSha256": "7a4ca096ae15835caab4120190db59747fa3d2eb3dc1dd214f77e7848c668ce2",
+          "uiHierarchySha256": "e296d276cb36b1c528306ed32eba7039a4e43ff3818d83043f16851af1e63891"
+        },
+        {
+          "id": "preset-add-exercise-picker-light",
+          "pngSha256": "546ea6d4aa69238cf4d28329d0f63082eae6afbed46edf217b9975b28cf17444",
+          "uiHierarchySha256": "5a7a953f31c63ed7ea644ec937deab95d7d88de35d24d4953ee179a1ad803cde"
+        },
+        {
+          "id": "unmapped-todays-records-light-top",
+          "pngSha256": "c4dbe64fbd6877efa4a93512eed60db4a8bb1c5db47607a58f7120c7a74776ba",
+          "uiHierarchySha256": "274c2f9ba22798313d837a726056c56c28edbb4e2d7112f375fb9e73121f14cc"
+        },
+        {
+          "id": "unmapped-todays-records-light-lower",
+          "pngSha256": "c4dbe64fbd6877efa4a93512eed60db4a8bb1c5db47607a58f7120c7a74776ba",
+          "uiHierarchySha256": "274c2f9ba22798313d837a726056c56c28edbb4e2d7112f375fb9e73121f14cc"
+        },
+        {
+          "id": "unmapped-nutrition-settings-light",
+          "pngSha256": "3a24367566399db396dc8d985f59164d5ea757356934ee3bcde710222efc045b",
+          "uiHierarchySha256": "c76df47453b86fe1174c43b4fbbf92efcb983c319d0670d2e0f3040d07ec0015"
+        },
+        {
+          "id": "unmapped-manual-goals-light-top",
+          "pngSha256": "8708c591af3604497a8f332933799bab4097e5a97d6c81e592e553ea751b0d5b",
+          "uiHierarchySha256": "a026aa55c4b1846c393ab26b3639a745988a82d3fd0bb1693d2513bdbf6983a2"
+        },
+        {
+          "id": "unmapped-manual-goals-light-lower",
+          "pngSha256": "c7b615acdecd807a82a7ab21bed1b53c442b763d33ea431321553a2b78cb1baa",
+          "uiHierarchySha256": "f4581a38095c4f508b8ca123640a4d9fd35db16947bffd8997c51f7eb8a09d8c"
+        },
+        {
+          "id": "unmapped-todays-records-dark-top",
+          "pngSha256": "f6ba492a8caaeaa535b25b598499dadfb5c546c81dbb568fe48b7a7932d53593",
+          "uiHierarchySha256": "274c2f9ba22798313d837a726056c56c28edbb4e2d7112f375fb9e73121f14cc"
+        },
+        {
+          "id": "unmapped-todays-records-dark-lower",
+          "pngSha256": "274c711ffb4b3841dada788c6b0f3ddcf7e4bbb30d3904c4a4904ba8d3d60243",
+          "uiHierarchySha256": "274c2f9ba22798313d837a726056c56c28edbb4e2d7112f375fb9e73121f14cc"
+        },
+        {
+          "id": "unmapped-nutrition-settings-dark",
+          "pngSha256": "0eb9a6dfae5bfbd76610e2e3e656d02778006a39f00a9ac3c053a7eed578876a",
+          "uiHierarchySha256": "c76df47453b86fe1174c43b4fbbf92efcb983c319d0670d2e0f3040d07ec0015"
+        },
+        {
+          "id": "unmapped-manual-goals-dark-top",
+          "pngSha256": "b5f71922b0f252d5ca5bab3df78e610970ae20ea8fa9ad3a9d93f35adba1eb98",
+          "uiHierarchySha256": "a026aa55c4b1846c393ab26b3639a745988a82d3fd0bb1693d2513bdbf6983a2"
+        },
+        {
+          "id": "unmapped-manual-goals-dark-lower",
+          "pngSha256": "3524497ff09e9ce2ab357d094cf80d56687964b36c734e477351b970a8c7cb37",
+          "uiHierarchySha256": "f4581a38095c4f508b8ca123640a4d9fd35db16947bffd8997c51f7eb8a09d8c"
+        },
+        {
+          "id": "04-plan-management-top-dark",
+          "pngSha256": "761fa013939e82348d4f4eeccbc58cdfa0db7858820c2f7ecb136727025a4662",
+          "uiHierarchySha256": "7e124d6be00407801beedfb1f47448005c428bf690175186a1d20ba6189b931d"
+        },
+        {
+          "id": "04-plan-management-lower-dark",
+          "pngSha256": "45a5b8c988b5ab02cf0ca0190c4a4dcdbdd116ff7b7b683facf594ac432ddc00",
+          "uiHierarchySha256": "f71cdf6ae870a8a6c107c7e09bfc644cbba0caf7fb8be4a49bdf390dae9a07b9"
+        },
+        {
+          "id": "07-optimized-settings-top-dark",
+          "pngSha256": "20d25cb3ffe752f69605472eaa2580648c120d689ed591fbd6aa8ad61296f70c",
+          "uiHierarchySha256": "a4c9ca5ec739e1c1446815142f49d6c895c2e86e20c3db51aec09cf168336632"
+        },
+        {
+          "id": "07-optimized-settings-lower-dark",
+          "pngSha256": "2c95153b93be1c97ad3e5f21bf2997a6ecc21b179f68776a8426c9c28c04a3d8",
+          "uiHierarchySha256": "0c20696ec0103fd0b3601b8d4ea24c927f13147955a6bd0a8931b901e3c20fab"
+        },
+        {
+          "id": "12-generation-setup-dark",
+          "pngSha256": "b34a8351a89db6008b20a3196cda631cbfb4a3356e24f180aaf4de46f762510f",
+          "uiHierarchySha256": "46b8e542414b6a6fe766931eec209a091039a2ae6fc846315847aa1b038861e2"
+        },
+        {
+          "id": "12-generation-workout-settings-dark-expanded",
+          "pngSha256": "592d904db62632fe9f8f986c21e53459cb68a9472f48c73c107f1dd14110face",
+          "uiHierarchySha256": "e3f2c57eb11d2b4796c099e7bd6222765fe9f31a2b079bbb92b3319a3c4edf02"
+        },
+        {
+          "id": "12-generation-training-focus-dark-expanded",
+          "pngSha256": "b8c6eaea02deefacbb47f568566e5e9742ce3f5c8e19a0f80f575143aab430e4",
+          "uiHierarchySha256": "697e1a52c20e58654660b73de18d6b274410d3651aa6faab19d5aa2bb52e7f95"
+        },
+        {
+          "id": "12-generation-reps-weights-dark-expanded",
+          "pngSha256": "f87cfa379083287780c6f32e5080b0e00642c785bc832893fb6b5ce57ac2bfcf",
+          "uiHierarchySha256": "8bb702e977131de0ef6cbd3580f0a81358e20050bf07f5090230539a407b028f"
+        },
+        {
+          "id": "12-generation-reps-weights-dark-lower",
+          "pngSha256": "cd52812f3baf8cc0b8f30f19a37e660ebe8a6958e09ff85df86c10f1a9f2a1ae",
+          "uiHierarchySha256": "8eca82cdd6cc548fd0f0806a00d301f0500fff7aac5bde50f02b3b432e6aac5c"
+        },
+        {
+          "id": "12-generation-set-allocation-dark-expanded",
+          "pngSha256": "a77fe7ee6df4b4f23db8fa36defb5701523dbb5dc6278bd3ab4e9b15fee4565f",
+          "uiHierarchySha256": "8326aef8730408384f6595d27b63b78467c6bfbe7d6d7cb618ae6bdd371d238f"
+        },
+        {
+          "id": "04-plan-management-top-light",
+          "pngSha256": "cac50870db3973135bf376fb4d0b43e688c7af84e710432e6e4f763cd0972e78",
+          "uiHierarchySha256": "7e124d6be00407801beedfb1f47448005c428bf690175186a1d20ba6189b931d"
+        },
+        {
+          "id": "04-plan-management-lower-light",
+          "pngSha256": "f9afad69fcda887cba52068deb14ec6f465906bf25107003473b401252de0dbb",
+          "uiHierarchySha256": "f71cdf6ae870a8a6c107c7e09bfc644cbba0caf7fb8be4a49bdf390dae9a07b9"
+        },
+        {
+          "id": "07-optimized-settings-top-light",
+          "pngSha256": "353cbe296e699b930147ab0481a72e2c853ba4212f6f17cca117d7e6bf5b01df",
+          "uiHierarchySha256": "a4c9ca5ec739e1c1446815142f49d6c895c2e86e20c3db51aec09cf168336632"
+        },
+        {
+          "id": "07-optimized-settings-lower-light",
+          "pngSha256": "8b27a63e71fdf51035925141bd22155683eb3f48574e0756bfaeb02f55a0a650",
+          "uiHierarchySha256": "0c20696ec0103fd0b3601b8d4ea24c927f13147955a6bd0a8931b901e3c20fab"
+        },
+        {
+          "id": "12-generation-setup-light",
+          "pngSha256": "22a61c84d68496d975bfcaf2280417e46959cc25047cbb7847b2bfbfd470d263",
+          "uiHierarchySha256": "46b8e542414b6a6fe766931eec209a091039a2ae6fc846315847aa1b038861e2"
+        },
+        {
+          "id": "12-generation-workout-settings-light-expanded",
+          "pngSha256": "17907833ef4babed56ee23aab420d408bf165826ca2ed9ff093e283bed25266f",
+          "uiHierarchySha256": "e3f2c57eb11d2b4796c099e7bd6222765fe9f31a2b079bbb92b3319a3c4edf02"
+        },
+        {
+          "id": "12-generation-training-focus-light-expanded",
+          "pngSha256": "6ddc4b29031e83f000941f8373aaa2e2d85f5e4756ed77473c7f37dc0e24684d",
+          "uiHierarchySha256": "697e1a52c20e58654660b73de18d6b274410d3651aa6faab19d5aa2bb52e7f95"
+        },
+        {
+          "id": "12-generation-reps-weights-light-expanded",
+          "pngSha256": "9fc8e03860e956ea81199da35d2432c0c456fd743b142269d4369af1ff654685",
+          "uiHierarchySha256": "8bb702e977131de0ef6cbd3580f0a81358e20050bf07f5090230539a407b028f"
+        },
+        {
+          "id": "12-generation-reps-weights-light-lower",
+          "pngSha256": "bb7c571020afb9427e0dafd8516e2efd93ef73cfcb2c28f51da341053d98d419",
+          "uiHierarchySha256": "8eca82cdd6cc548fd0f0806a00d301f0500fff7aac5bde50f02b3b432e6aac5c"
+        },
+        {
+          "id": "12-generation-set-allocation-light-expanded",
+          "pngSha256": "3c3a58c0a0174e80052527e0988ba71deb6ee408ec0484def9ccbc3521f90a0f",
+          "uiHierarchySha256": "8326aef8730408384f6595d27b63b78467c6bfbe7d6d7cb618ae6bdd371d238f"
+        },
+        {
+          "id": "01-browser-top-light",
+          "pngSha256": "c229b5bc201d4cc4a37d6c28e31da212e1603c40f1d6b10d8fb9eaffcc1fc577",
+          "uiHierarchySha256": "78f1521145e636e9a46de5967cda8d192200cb735256a4b302d988d05ae8eefe"
+        },
+        {
+          "id": "01-browser-lower-light",
+          "pngSha256": "ed142ea02b75db69a8c4ca1c50ee37575731c54d17bec620f1ae441669eeeb60",
+          "uiHierarchySha256": "1356d6f0528f5d1e5bd7453d748d0e28a9b421c905ccfea1f227181bc0afb7dd"
+        },
+        {
+          "id": "01-browser-search-results-light",
+          "pngSha256": "c623d793c3420a267940a28a82123dcd5765bde23b37bdfd99c147a0f51616ca",
+          "uiHierarchySha256": "b99be8584ade99c162bdb2be66df649ffae5f7f57d5ed925d89a3c2b3bfba3ed"
+        },
+        {
+          "id": "01-browser-search-empty-light",
+          "pngSha256": "11501c970eee16b972d274306380fa441646981d7fe7a014c104e806b5a49794",
+          "uiHierarchySha256": "626fb1b6789088d41e0af3989f48e0801aedaf477db3ae83b874e6a6d5840a53"
+        },
+        {
+          "id": "01-browser-filter-sheet-light",
+          "pngSha256": "d9b61193415bd2250c0cb2fbf4511a50b13b3511e3f4dd632e9cb12aba551b5a",
+          "uiHierarchySha256": "3e91bff394dc220dc34c58653886239f34c43d7f7cd064494876b0238d282fca"
+        },
+        {
+          "id": "01-browser-equipment-menu-light",
+          "pngSha256": "b788df312b9d4f246ec395dcb3d03fb34a1809845ec914bade99978b151d6f57",
+          "uiHierarchySha256": "789cd78af5f1345a29977117665c78451d80bf1b883a135ce96630dfcda3fcff"
+        },
+        {
+          "id": "01-browser-focus-menu-light",
+          "pngSha256": "2e7f0b0b9988597dc36205f79fd252f0b121f5142f0ed40d2bf211612db50133",
+          "uiHierarchySha256": "d2424ca939a77770c34c29fcff4e3d3b9b53bab44a97d68b896d7d7b1268035a"
+        },
+        {
+          "id": "01-browser-muscle-menu-light",
+          "pngSha256": "27458348809c3791b5349869f1ddcbbdbbd1b950e5be0f82f49d44c91b3ca01a",
+          "uiHierarchySha256": "7034d3f95a90fa16da38328e8420bf0c7aa781dc90dbef7b671ce62458feb0be"
+        },
+        {
+          "id": "01-browser-filter-selected-light",
+          "pngSha256": "3722886d5494cfc569f0825b0a2244fb9289a0bcdc2cdc5a1b3d8d3c9a839513",
+          "uiHierarchySha256": "e480af3198503470f5cb3ee05f60204714a980db1b78832f5988a340539353ce"
+        },
+        {
+          "id": "01-browser-filter-applied-results-light",
+          "pngSha256": "46e33e12ded99e715c46b44a553aaf93953be3580a7eccedb230b38a34cc2f6a",
+          "uiHierarchySha256": "6b5aaef83bbf3393490f48969187bff90851bdaa2421bddebde4d7acf8b48878"
+        },
+        {
+          "id": "01-browser-filter-reset-dialog-light",
+          "pngSha256": "ecca5393b4eb4af1dedcd1b07f9b9429f0c3074ece6834a7737198603ee76196",
+          "uiHierarchySha256": "af3b00f66af86580a7e041ed9ab86138667be9c4444ff4073d3a97c2485ae9fe"
+        },
+        {
+          "id": "01-browser-filter-reset-results-light",
+          "pngSha256": "f1878b9cd8e10792a727a9a6423acbc337ee33639185a7d6b6317aaf1aca4bfa",
+          "uiHierarchySha256": "c3874b1d245f52f54c953fc3f05594a5065a6d6d186aaa084e1150e090a63df4"
+        },
+        {
+          "id": "01-browser-filter-empty-light-campaign",
+          "pngSha256": "530c2562dba87e08bf4d9af2eca2d9656c7cffb11dd754bf466ca6c5d7edb717",
+          "uiHierarchySha256": "b9d2af7eb9669f96143c299a3ff6a89598f3bfe0c17c1ad611322d45c2e159ea"
+        },
+        {
+          "id": "01-browser-top-dark",
+          "pngSha256": "3966026c84225737c3dbe79ad58f5b884807430a5838696142b3d8542faee10c",
+          "uiHierarchySha256": "1004b5972b140775414664cf389f0eaffa5be74bce99505de6f7406acc503eed"
+        },
+        {
+          "id": "01-browser-lower-dark",
+          "pngSha256": "a905d90127f0929f995853e2f3a1d565c05a6d0e30eda7b96e909a997015674d",
+          "uiHierarchySha256": "7adfef75c1612ec7cd8169246b1cd46e7fcbd50dc16adaed0b807f1ada582352"
+        },
+        {
+          "id": "01-browser-search-results-dark",
+          "pngSha256": "3f81243b9d69b01839621cf9c1fa375112f407dca5e921b5e322d045b0992a38",
+          "uiHierarchySha256": "b99be8584ade99c162bdb2be66df649ffae5f7f57d5ed925d89a3c2b3bfba3ed"
+        },
+        {
+          "id": "01-browser-search-empty-dark",
+          "pngSha256": "9118c019e0de7faf080813e7e16ced0b1f739e7193c750207176af267889fb5b",
+          "uiHierarchySha256": "626fb1b6789088d41e0af3989f48e0801aedaf477db3ae83b874e6a6d5840a53"
+        },
+        {
+          "id": "01-browser-filter-sheet-dark",
+          "pngSha256": "609f3e10944434be692ff61c6f23b59fabe9bccc87d7f576881d17ebcc330bc3",
+          "uiHierarchySha256": "3e91bff394dc220dc34c58653886239f34c43d7f7cd064494876b0238d282fca"
+        },
+        {
+          "id": "01-browser-equipment-menu-dark",
+          "pngSha256": "7bdfe319d71f3320d23bfef3f2b5733e82b13ac4b06e9dd35b03e392a39ac097",
+          "uiHierarchySha256": "789cd78af5f1345a29977117665c78451d80bf1b883a135ce96630dfcda3fcff"
+        },
+        {
+          "id": "01-browser-specific-muscle-menu-dark-campaign",
+          "pngSha256": "fd432b85e29cbb55b686d8f122636fa7dc3d9e8e85cea54257e5e20b7b7d7439",
+          "uiHierarchySha256": "7034d3f95a90fa16da38328e8420bf0c7aa781dc90dbef7b671ce62458feb0be"
+        },
+        {
+          "id": "01-browser-focus-area-menu-dark-campaign",
+          "pngSha256": "85fe30d1ea926e476ff6bd2edcef10d53790334d900f9f71b162052d3408cdeb",
+          "uiHierarchySha256": "d2424ca939a77770c34c29fcff4e3d3b9b53bab44a97d68b896d7d7b1268035a"
+        },
+        {
+          "id": "01-browser-filter-selected-dark-campaign",
+          "pngSha256": "2e34275f4ed27d34b672a177092b4bd4cf153a308fc6602f2545682a9e972886",
+          "uiHierarchySha256": "eaa19e907c3cb8dc1fcc647dc01284fd63c6c143c185947a26377159bba303ad"
+        },
+        {
+          "id": "01-browser-filter-applied-results-dark-campaign",
+          "pngSha256": "7af1e72688a63223b0685f9be86bfbbe56e0e3f60ccd08d8b2eae20743a4e8d2",
+          "uiHierarchySha256": "ffe4c8a0f200ff997cff4b97d5fe58cc1b13e27248c5805ee70734370636dcfd"
+        },
+        {
+          "id": "01-browser-filter-no-match-pending-dark",
+          "pngSha256": "9e926b16ef3e1d742fc4640d7386e0556a0aa3dea504c52fd4d0069bb8850e0e",
+          "uiHierarchySha256": "80a450a1d9354f5276aeffce3a867e4aec6bd9101e6f173ce775c5de8f82a467"
+        },
+        {
+          "id": "01-browser-filter-empty-dark-campaign",
+          "pngSha256": "730a883821eb406d8307d59f31a10b4b262fa5259c76fae4d7b1d493773b7ccb",
+          "uiHierarchySha256": "b9d2af7eb9669f96143c299a3ff6a89598f3bfe0c17c1ad611322d45c2e159ea"
+        },
+        {
+          "id": "01-browser-filter-reset-results-dark-campaign",
+          "pngSha256": "9bbae57089e0223befbb2ee52026b8bcec4a4a2289022e4956fb3ce22eb7e3ea",
+          "uiHierarchySha256": "1004b5972b140775414664cf389f0eaffa5be74bce99505de6f7406acc503eed"
+        },
+        {
+          "id": "01-browser-filter-reset-dialog-dark-campaign",
+          "pngSha256": "945162f3d139e49d751a9874d8fe485d2cff3758ccb92df9f8581ca9b44f52a6",
+          "uiHierarchySha256": "05c0bb7e786d6b034a6269b6e1736e5be10027c16d1dc792f0252497cc831706"
+        },
+        {
+          "id": "catalog-browser-detail-tab-dark",
+          "pngSha256": "61a0ed0627dabcdfcc14e05a8ed645410c8a0b30995e020055946948318e7350",
+          "uiHierarchySha256": "35c6d439b3dd453f4d0152710b992d639d1cb1ebeff875ca832e883326f66bd3"
+        },
+        {
+          "id": "catalog-browser-metrics-tab-dark-actual",
+          "pngSha256": "1172710b12a5666c69e4bae896bdb7d1227de35cbc1564c1ce784432cdc84c16",
+          "uiHierarchySha256": "ace84295c4d6a85d5cd78f90457a97fbad2097500e96ab8473b54e6eccfd3bfd"
+        },
+        {
+          "id": "catalog-browser-records-tab-dark-actual",
+          "pngSha256": "e960b6c8d4969937b8e8817ca55f573f0dde003f5d37e2b3f0851f2057140774",
+          "uiHierarchySha256": "0e8d289934c404420a833849bebcddadc42d74ff719917dcd363461b04af8baf"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-dark-actual",
+          "pngSha256": "43057eed2a172325f80894bb983912ad62f167add42f465ab455779e09e0f6fc",
+          "uiHierarchySha256": "cbb5d918727696c62c996c5fb2cc6a50cdc2e757f5d4a64b705617d3e34e485f"
+        },
+        {
+          "id": "catalog-details-browser-light",
+          "pngSha256": "0d656807542e0439ab170590eff9beac854cbd3d681d2b0c32cd8acc54c821a4",
+          "uiHierarchySha256": "35c6d439b3dd453f4d0152710b992d639d1cb1ebeff875ca832e883326f66bd3"
+        },
+        {
+          "id": "catalog-browser-metrics-light",
+          "pngSha256": "9def79adb1f707563f52243fbab2262e6fd29b136849ac23fc69cee9a034bf1d",
+          "uiHierarchySha256": "ace84295c4d6a85d5cd78f90457a97fbad2097500e96ab8473b54e6eccfd3bfd"
+        },
+        {
+          "id": "catalog-browser-records-light",
+          "pngSha256": "0521f3f1a915047c8195309243194b0ef37bf5c6110651ab65ef440f74aaa38d",
+          "uiHierarchySha256": "0e8d289934c404420a833849bebcddadc42d74ff719917dcd363461b04af8baf"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-light-campaign",
+          "pngSha256": "0a88840cb1c20b8f22893f95e491f1de7771e9d46a4a62d55d01d27b50e978db",
+          "uiHierarchySha256": "cbb5d918727696c62c996c5fb2cc6a50cdc2e757f5d4a64b705617d3e34e485f"
+        },
+        {
+          "id": "catalog-browser-form-guide-expanded-light-campaign-verified",
+          "pngSha256": "0a88840cb1c20b8f22893f95e491f1de7771e9d46a4a62d55d01d27b50e978db",
+          "uiHierarchySha256": "cbb5d918727696c62c996c5fb2cc6a50cdc2e757f5d4a64b705617d3e34e485f"
+        },
+        {
+          "id": "02-bodypart-chest-top-light",
+          "pngSha256": "3e034345a06f3e9d1fe311751b917bd3e3e97e233e955635aa9146581c320f46",
+          "uiHierarchySha256": "68c21df234c1de1a5fd13c82c385632109055643e364e0882eed3a2789e450c4"
+        },
+        {
+          "id": "02-bodypart-chest-lower-light",
+          "pngSha256": "f022e8b9a274066a4b3d94022f52999e9d9d3adacf9d77e6da6717a83369a796",
+          "uiHierarchySha256": "5adc15b8d1bfd86141787dcb0b327c08afb9906aad914eafa6e88f18731ca741"
+        },
+        {
+          "id": "02-bodypart-recommendation-light",
+          "pngSha256": "ff508b82763cd0f359faf4b027eddf5cf89ed3003fb30c3588c0d6faa5b5f932",
+          "uiHierarchySha256": "f945fe92b5fe666c634b4065492ebc3cddb34c4ace45ae9700290f89cc75dd31"
+        },
+        {
+          "id": "02-bodypart-chest-top-dark",
+          "pngSha256": "0e38401d5363023d0b1210e139e5d63552800574b89c738401ac911e3e5f7b7d",
+          "uiHierarchySha256": "68c21df234c1de1a5fd13c82c385632109055643e364e0882eed3a2789e450c4"
+        },
+        {
+          "id": "02-bodypart-chest-lower-dark-verified",
+          "pngSha256": "f864f05b2f8e47c6d68dd7b8ad4c5b5307b38d1fb0d8c9e555a6e21934370b52",
+          "uiHierarchySha256": "0da285b7fe42b745d8e5118bcc91b7fab20c164c530c24c69cd7e783d6207fe7"
+        },
+        {
+          "id": "02-bodypart-chest-lower-dark-campaign-final",
+          "pngSha256": "00dad95cbadbd2f06a9ba5dcb4b71c9d8f86b347e03a39dd0f0de675d0f1f89f",
+          "uiHierarchySha256": "0da285b7fe42b745d8e5118bcc91b7fab20c164c530c24c69cd7e783d6207fe7"
+        },
+        {
+          "id": "02-bodypart-recommendation-dark-campaign-final",
+          "pngSha256": "dd81e48d408944441b7265d314148bd513373a1b98be8c8daf0b60b5869068b1",
+          "uiHierarchySha256": "f945fe92b5fe666c634b4065492ebc3cddb34c4ace45ae9700290f89cc75dd31"
+        },
+        {
+          "id": "catalog-details-anatomy-dark",
+          "pngSha256": "5aa7c7d2bc4602db1670e33bb76e0b8233ae72b02a07a5fc9b66b479af2b9d3a",
+          "uiHierarchySha256": "49021e3b86b923ef287d8e65fc87261a7f5ab6588e54beec98eebe1f90a372a6"
+        },
+        {
+          "id": "catalog-details-anatomy-metrics-dark",
+          "pngSha256": "4d23a3c06e0509d3eafe75c5f43de5dd4de33ced2900a45bf14d63cd3690b83a",
+          "uiHierarchySha256": "f46d38379b26b50ada40d11212d0c732172c81143ec0c7d4797fbb9a7a6645e5"
+        },
+        {
+          "id": "catalog-details-anatomy-records-dark",
+          "pngSha256": "cbcaedf6ad90bd2a873b2480e46cd0592da2de7135fd92f8e167c8e32ba5dab7",
+          "uiHierarchySha256": "32765648e345ee93e00b59b26bfb52adf5d7c78e3200b2a9fe92d657a1c28709"
+        },
+        {
+          "id": "catalog-details-anatomy-light",
+          "pngSha256": "69ada9220fb637057a00642b573491d4673f304a51fc189ffe927c6590f7c2f1",
+          "uiHierarchySha256": "49021e3b86b923ef287d8e65fc87261a7f5ab6588e54beec98eebe1f90a372a6"
+        },
+        {
+          "id": "catalog-details-anatomy-metrics-light",
+          "pngSha256": "bcdeafedb835ca851f2150532153cc69b79117a8d97b0b6a0806748871256e9f",
+          "uiHierarchySha256": "f46d38379b26b50ada40d11212d0c732172c81143ec0c7d4797fbb9a7a6645e5"
+        },
+        {
+          "id": "catalog-details-anatomy-records-light",
+          "pngSha256": "3678398b67a303f85d10d2cf5d8f60b25f799e0b771d86c6ccc58384a1cc786d",
+          "uiHierarchySha256": "32765648e345ee93e00b59b26bfb52adf5d7c78e3200b2a9fe92d657a1c28709"
+        },
+        {
+          "id": "catalog-media-viewer-light",
+          "pngSha256": "8d4edb2a3ba45844716b480ec1176a009523e02b96475837e9d9940f45483bcb",
+          "uiHierarchySha256": "d6c8018dc008174ba1b74f1a19231e6667402bab70786533130f48dca14c94bb"
+        },
+        {
+          "id": "catalog-media-viewer-dark",
+          "pngSha256": "b32b30a5d24d660c840ccae83ad669eae00f5d253839b2209bcbe85d58d51a49",
+          "uiHierarchySha256": "d6c8018dc008174ba1b74f1a19231e6667402bab70786533130f48dca14c94bb"
+        },
+        {
+          "id": "noncatalog-plan-exercise-details-dark",
+          "pngSha256": "8991c09ed11867f0a5bc6d27615f9a224b8d51879af0d3bd79e353868fa9426c",
+          "uiHierarchySha256": "9db430b41abd388f004a04e44c31cd1669a2f80de720a0964da59d4f2b9e1030"
+        },
+        {
+          "id": "noncatalog-plan-exercise-metrics-dark",
+          "pngSha256": "1756a6ec020d12a693472850b41e41a8efd77cb32b100dddb2f30aa94a67c939",
+          "uiHierarchySha256": "6d159ba2b71b3078527485506171da9b4ef259620dbd2365d0c857cc92989a57"
+        },
+        {
+          "id": "noncatalog-plan-exercise-records-dark",
+          "pngSha256": "f5317e4db755739998e54d74ffd7deb9c93408494714910947fc0baed085628f",
+          "uiHierarchySha256": "d86dec6529cd41ef9b16685cbc1e3a9ee052878083f55d857c752b9b3005665b"
+        },
+        {
+          "id": "noncatalog-plan-exercise-details-light",
+          "pngSha256": "d76f5de000d790831cd5b7b77859c3e729ac1cfed94b12643d59531df411dd23",
+          "uiHierarchySha256": "9db430b41abd388f004a04e44c31cd1669a2f80de720a0964da59d4f2b9e1030"
+        },
+        {
+          "id": "noncatalog-plan-exercise-metrics-light",
+          "pngSha256": "1dcc741046d0f53cd80f6747075b492d883a5d06638be2106662f120af923a53",
+          "uiHierarchySha256": "6d159ba2b71b3078527485506171da9b4ef259620dbd2365d0c857cc92989a57"
+        },
+        {
+          "id": "noncatalog-plan-exercise-records-light",
+          "pngSha256": "949c7d2a550b5a6acaafa483072b7c936ff55268219a234f9a2b88f17d47fea9",
+          "uiHierarchySha256": "d86dec6529cd41ef9b16685cbc1e3a9ee052878083f55d857c752b9b3005665b"
+        },
+        {
+          "id": "11-analytics-bodyparts-light",
+          "pngSha256": "3192c368a2aa2ab8d79ca30331a5064a0fbc9374fd3f60673f75bddac73e18f5",
+          "uiHierarchySha256": "c7d825f67eaec08da77c0b0f59aad03c7905c5845ea61a94bec321d7a37dc7d2"
+        },
+        {
+          "id": "11-analytics-muscles-light",
+          "pngSha256": "c5a3160982539a68f6d9f98459a324cb209c7f6bac4dbd9385ddc314f358534b",
+          "uiHierarchySha256": "763de8cf54cf5c0682ff147ce35259fa5679293ee55c9592082e9446303057ec"
+        },
+        {
+          "id": "11-analytics-bodyparts-dark",
+          "pngSha256": "8fb754ee7e954a7bb9b839902394de278df98da549ed08c8515be9e63891b968",
+          "uiHierarchySha256": "c7d825f67eaec08da77c0b0f59aad03c7905c5845ea61a94bec321d7a37dc7d2"
+        },
+        {
+          "id": "11-analytics-muscles-dark",
+          "pngSha256": "942f2963886ee7c6babb717f3b54d78baf686b8e8778388d56bb8a26337a50a3",
+          "uiHierarchySha256": "763de8cf54cf5c0682ff147ce35259fa5679293ee55c9592082e9446303057ec"
+        },
+        {
+          "id": "health-entry-menu-dark-campaign",
+          "pngSha256": "893b4f0d0890d75dcb872b9a46a55bb2d9bd458c35a4cb0b96abc2db9ce97a12",
+          "uiHierarchySha256": "7305ecd559fed40e02dea4c998437008b840e29d9ba097435c89ad561db1c2b9"
+        },
+        {
+          "id": "health-entry-delete-confirm-dark-campaign",
+          "pngSha256": "2158a045a3343c97fc748983912619a9cf3ed67fa77e2cc6aab796932e4c3521",
+          "uiHierarchySha256": "3e78675ceb85fbd46772e6c263a85f696626fe58d1f24e5188d2f1355a57e4a6"
+        },
+        {
+          "id": "health-entry-edit-dialog-dark-campaign",
+          "pngSha256": "7dc219b4df30723c74fa7d8254f3c73074e5faef47c79a8dcbe360d1e55cccd8",
+          "uiHierarchySha256": "a32fb4761fc1798167496abee759701b54bb422bdd0c230c94a119472efd1d9c"
+        },
+        {
+          "id": "health-entry-menu-light-campaign",
+          "pngSha256": "794998d4abcbfb94458337f791f4e1a29b99e394a1d582813818aacdfa302bdc",
+          "uiHierarchySha256": "621f31c3f7d2d64ae60cb644fb24c9d249542986fbc64aff63dec18d50458295"
+        },
+        {
+          "id": "health-entry-delete-confirm-light-campaign",
+          "pngSha256": "249b85bd1287aeb0bf82169f4c5ec1ffb10a1c1be6927cf7d580919920f9179a",
+          "uiHierarchySha256": "41e6d9f4b84b31b2cf4ef542bafeafc1c18168376c6738f11fe276046fdd35a1"
+        },
+        {
+          "id": "health-entry-edit-dialog-light-campaign",
+          "pngSha256": "84768c56186be45ecc5b18a6be0c66502db29e9638115d0dbd021a3875e42ca7",
+          "uiHierarchySha256": "a32fb4761fc1798167496abee759701b54bb422bdd0c230c94a119472efd1d9c"
+        }
+      ],
+      "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+      "branch": "feature/expressive-visual-polish",
+      "workingTree": "Repository was dirty before this task. The safe preview APK was installed at 2026-10-14 10:07:56 America/Toronto and used for captures from 10:11:44 through 20:05:17. Temporary preview source edits and the capture helper were removed; existing user changes were preserved. Campaign evidence and generated gallery files were updated.",
+      "deviceId": "28021FDH200228",
+      "device": "Google Pixel 7",
+      "deviceResolution": "1080x2400",
+      "package": "com.tonos.expressivepreview",
+      "database": "tonos_expressive_preview.db",
+      "packageVersionCode": 6,
+      "packageVersionName": "1.0.1",
+      "packageLastUpdateTimeLocal": "2026-10-14 10:07:56",
+      "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+      "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+      "buildArtifactSha256": "13886e3a276e26776cfcbb57b10f532e83323f65daf86104b391989f9ea9eb80",
+      "installedBaseApkSha256": "13886e3a276e26776cfcbb57b10f532e83323f65daf86104b391989f9ea9eb80",
+      "installedApkMatchesBuildArtifact": true,
+      "buildArtifactBytes": 233817787,
+      "buildArtifactModifiedLocal": "2026-10-14T10:07:26-04:00",
+      "buildEntrypoint": "Temporary lib/dev/gallery_refresh_safe_main_20261014_followup.dart used runTonosApp with TonosPreviewPresentation and ExpressivePreviewSafety.verifyBeforeDataAccess; diagnostics initialization was disabled. The entrypoint and temporary main.dart wrapper patch were removed after build.",
+      "buildCommand": "flutter build apk --debug --no-pub --target lib/dev/gallery_refresh_safe_main_20261014_followup.dart --dart-define=TONOS_EXPRESSIVE_PREVIEW=true --dart-define=TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true --dart-define=TONOS_ANDROID_INTERNAL_BUILD=false --dart-define=TONOS_DATABASE_NAME=tonos_expressive_preview.db --dart-define=TONOS_PREVIEW_SHOW_CONTROLS=true",
+      "installMethod": "adb install -r in place; package identity verified; no uninstall or app-data clear.",
+      "captureMethod": "Reused the already installed current-source safe preview; navigation and capture only. No fixture reseed/reset or Generate action. Destructive/edit dialogs were canceled.",
+      "sourceFilesSha256": {
+        "assets/exercises.json": "85314858ef12b081c2ef5c7b753f88e7adb36ed980ee1baf1f96d9f7cfedeb7e",
+        "assets/exercise_content_localizations.json": "3dcea04f4412de3ab4d928680ff4ede88eefad96636057c33ac40b3e18c81a78",
+        "lib/l10n/app_en.arb": "2e2e0b4e221b491da8d3fea3efd61a125a60161d670a4584e6af6023d517c592",
+        "lib/l10n/generated/app_localizations.dart": "aad9b58b4686c226d9d8a4986f957c1b49162f3d83f2b39c02a4491ed5fd0491",
+        "lib/l10n/generated/app_localizations_en.dart": "81284200b876fd0ac8b3c709d20de275964cff967465f80a8755ea0c6da6d407",
+        "lib/screens/exercise/analytics_dashboard_screen.dart": "cf7c289c45cc6e4d0f1e8bfae4bcd8d99d49d0e83b78e92e203c88ca7429ab59",
+        "lib/screens/exercise/definitions_by_bodypart_page.dart": "ae72d808b32e9e1f0d36ba3f3c072a0830b176b3974a4a596f665d6707f9061a",
+        "lib/screens/exercise/exercise_catalog_page.dart": "3761a58979abed4c3ff874876779dce98850843d8e93cdf1c99bc20259054de6",
+        "lib/screens/exercise/gym_profile_screen.dart": "db5e4a5067e213b8129431c88a83388b1aca372796d1f70f6b203a51156512c7",
+        "lib/screens/exercise/muscle_filter_page.dart": "4fa1ded0915b752afbe971eb313952ade3f80ef3b91af826655929bdbbcc8516",
+        "lib/screens/exercise/optimized_workout_settings_page.dart": "e35237413a82d00b809d2ad7a8610ed0a1a2414b51d7bdbfb31e60d90bdb0d09",
+        "lib/screens/exercise/plan_management_page.dart": "6adabdcc4f514658d57eb89f00ed1724ea98f06c557cf01a6e1a0eb015ab2397",
+        "lib/screens/exercise/premade_plans_page.dart": "89d15d65d404cef7e59657e72606307c2887534b8a76ae3798cd619b3a06932c",
+        "lib/screens/exercise/preset_detail_screen.dart": "eee03ab63f323bc04f8c6e3490087064316825468989d3c1c176f8b2b62975d3",
+        "lib/screens/exercise/preset_generation_qa.dart": "27797256a18f58c94880f6c93b598959764f851aa871587a7ee7a6c69d995564",
+        "lib/screens/nutrition/log_entry_page.dart": "dc546b84b2e7e130b27cb90ad4cb00f064bfd3a13fdb401787a5d81a464966fe",
+        "lib/screens/profile/settings/diet_nutrition_settings_page.dart": "8243263ee552c3ff85b81e0d55535de92aa0de6e69231490b4a2733bdea7a7cf",
+        "lib/screens/profile/settings/goal_manual_entry_page.dart": "3bbe0ec32df90f0965a35a8b17f9b870298bb59bf8597e9466de8a1bee26155b",
+        "lib/theme/widgets/media_viewer_image.dart": "4d2dd797008b2c682b9969c1ec1abf01ab8206e3f7546aaa7a778a4ac07eb7cc",
+        "lib/widgets/add_exercise_fab.dart": "23ab9bcb645bace9ca958a10dc3dc88f33812e818e7be9f41454f85ef82ab140",
+        "lib/widgets/dashboard_sections.dart": "cb9f8ea61dd3dbbeb1382fb671261c76ab94706f705ca0e18a8d38dadd336ea5",
+        "lib/widgets/drawers.dart": "ce2b7c7ad07fb4ec07d1d9ecc9b9e93a28a664849a38cf1c2d61474e78a3b3e8",
+        "lib/widgets/exercise_card.dart": "465ee161df59bed70c13daddf8614fe3a04e5303003d8495aef47ac9ac01a793",
+        "lib/widgets/exercise_detail_sheet.dart": "252c772190903e87bc22ddb8d6c59455071d6eb02a44edc75ab8af6bdc70631e",
+        "lib/widgets/exercise_media_thumbnail.dart": "64cfd3f526e37d1fcd38d347e34da9168b86788ee8749f257bb45d6d08445f47",
+        "lib/widgets/health_trends_section.dart": "e526fdd17bc2946f679752be165f62e296fe73ec704e7fb4e4813faeba9ac05e",
+        "lib/widgets/preset_info_card.dart": "2ea53c6ebaf504aeb176fc5f36d8a7bcc7474b07976a2ac3c47dd22bffc0f430",
+        "lib/widgets/speed_dial_fab.dart": "a02aab929044829780183eb5e478bbc30ce5da2d89fa03b3c390b7562495fd8e",
+        "lib/widgets/swap_exercise_sheet.dart": "c5d0dba33a24a1594bc6550556e1059d4172ac98f77d31fb48d3ce19786bb930",
+        "lib/widgets/weight_card.dart": "da37d16c3a4f3b6eced92c5a4c2b06a7099286fd7559f687f1850e86882fcba6"
+      },
+      "previewDataBeforeRefresh": [
+        {
+          "path": "databases/tonos_expressive_preview.db",
+          "bytes": 1544192,
+          "sha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99"
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-wal",
+          "bytes": 387312,
+          "sha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53"
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-shm",
+          "bytes": 32768,
+          "sha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e"
+        },
+        {
+          "path": "shared_prefs/FlutterSharedPreferences.xml",
+          "bytes": 12126,
+          "sha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac"
+        },
+        {
+          "path": "shared_prefs/com.google.mlkit.internal.xml",
+          "bytes": 154,
+          "sha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02"
+        }
+      ],
+      "previewDataAfterRefresh": [
+        {
+          "path": "databases/tonos_expressive_preview.db",
+          "preRefreshSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+          "restoredSha256": "6641299bf0f890935b09981a652884c377d6ea04101eaa057395cef42f394e99",
+          "preRefreshBytes": 1544192,
+          "restoredBytes": 1544192,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-wal",
+          "preRefreshSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+          "restoredSha256": "59d8562c095c52d74dd3102c684b9d676459b4a12b1f8b8bec4ef3ee6a464e53",
+          "preRefreshBytes": 387312,
+          "restoredBytes": 387312,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "databases/tonos_expressive_preview.db-shm",
+          "preRefreshSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+          "restoredSha256": "266c62fea2a118500b9ebe05b0701bf5f254df38612bbbbe4ff6c0a436e1011e",
+          "preRefreshBytes": 32768,
+          "restoredBytes": 32768,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/FlutterSharedPreferences.xml",
+          "preRefreshSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+          "restoredSha256": "133c34f72a38cb4b18b39453ff4024e936f694585a08b927bf77043725c56aac",
+          "preRefreshBytes": 12126,
+          "restoredBytes": 12126,
+          "matchesSnapshot": true
+        },
+        {
+          "path": "shared_prefs/com.google.mlkit.internal.xml",
+          "preRefreshSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+          "restoredSha256": "db7d9c816deef2a8b9055671ec72b6ea7afcd106560fe2cb38cd467b58187a02",
+          "preRefreshBytes": 154,
+          "restoredBytes": 154,
+          "matchesSnapshot": true
+        }
+      ],
+      "previewRestoreVerification": "All five files were restored after capture and verified by on-device SHA-256 plus saved byte counts against the immediately pre-refresh snapshot. Package remains force-stopped and was not relaunched after restore.",
+      "preInstallPreviewSnapshotDirectory": "E:/tonos-gallery-refresh-20261014-followup-1002",
+      "restoreVerificationDocument": "preview-restore-verification.json#followupVisualRefreshRestore",
+      "sourceTreeProvenanceLimit": "The recorded HEAD is the base revision, not the dirty-source snapshot. Relevant current source and localization files are SHA-256 recorded; a complete source-tree archive was not created.",
+      "prePromotionGalleryBackupDirectory": "E:/tonos-gallery-refresh-20261014-followup-1002/gallery-before-final-promotion",
+      "postRestorePackageState": "Preview remains installed and force-stopped; it was not relaunched after the exact data restore."
+    }
+  ],
+  "targetedGalleryRefresh20261014": {
+    "capturedAtRangeLocal": "2026-10-14T22:14:00-04:00 through 2026-10-14T22:21:55-04:00 America/Toronto",
+    "captureCount": 11,
+    "replacedExistingScreenshotCount": 9,
+    "addedScreenshotCount": 2,
+    "refreshedFamilies": {
+      "Catalog Exercise Details Sheet — Browser caller": 11
+    },
+    "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "dirty",
+    "deviceId": "28021FDH200228",
+    "device": "Pixel 7",
+    "deviceResolution": "1080x2400",
+    "package": "com.tonos.expressivepreview",
+    "database": "tonos_expressive_preview.db",
+    "captureMethod": "ADB screenshot and UIAutomator hierarchy from the already-running Flutter debug preview, whose dirty source had previously been hot-reloaded; no build or reinstall was performed in this gallery-update task.",
+    "sourceFilesSha256": {
+      "lib/widgets/exercise_detail_sheet.dart": "250276b41a34e317af2437312cd3c26068e8a81afa32940b64d4b16e30e0cf6d",
+      "lib/widgets/exercise_definition_info_tile.dart": "b683996018f8aba654379cd295d5d69fa0ccf6932f454c7307f080cbcda88590",
+      "assets/exercises.json": "85314858ef12b081c2ef5c7b753f88e7adb36ed980ee1baf1f96d9f7cfedeb7e"
+    },
+    "previewDataOperations": "No database or preference files were read or modified. Only the in-memory preview theme selector, route navigation, tab selection, scrolling, and accordion expansion were used. Expressive dark mode was restored at completion.",
+    "preOverwriteGalleryBackup": "C:\\Users\\talh7\\AppData\\Local\\Temp\\tonos-catalog-details-gallery-before-refresh",
+    "captureRecords": [
+      {
+        "id": "catalog-browser-detail-tab-dark",
+        "png": "overlays/catalog-details/dark/01-browser-details-tab.png",
+        "uiHierarchy": "overlays/catalog-details/dark/01-browser-details-tab.xml",
+        "capturedAt": "2026-10-14T22:19:17-04:00",
+        "pngSha256": "c7a6530678ba47d5676c44ade796c0f013082c086fb72752fd09369591beb725",
+        "uiHierarchySha256": "436db2a32be447851cf5967b2a9a9e52396e8e04c57635cc9b10a521ba6b2a8f"
+      },
+      {
+        "id": "catalog-browser-metrics-tab-dark-actual",
+        "png": "overlays/catalog-details/dark/05-browser-metrics-tab-actual.png",
+        "uiHierarchy": "overlays/catalog-details/dark/05-browser-metrics-tab-actual.xml",
+        "capturedAt": "2026-10-14T22:19:28-04:00",
+        "pngSha256": "d5d61bba43d428bfcb1bab808ed0d03bc9ed781826c1d77cb5f8b45f90a3e672",
+        "uiHierarchySha256": "1d5762025311a50d4928f57a8bea8c76eccbcaed3dfd7ea173c736da2dbc003f"
+      },
+      {
+        "id": "catalog-browser-records-tab-dark-actual",
+        "png": "overlays/catalog-details/dark/06-browser-records-tab-actual.png",
+        "uiHierarchy": "overlays/catalog-details/dark/06-browser-records-tab-actual.xml",
+        "capturedAt": "2026-10-14T22:19:34-04:00",
+        "pngSha256": "d3e84a81ac6410b4b067c97e2b3f2f0eab940907b94ffc35562bb2dd0246a1be",
+        "uiHierarchySha256": "2efe8a09e53717f70f2ffdaa60160f1ed5125140ddce85e21b3368c2af20fa6f"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-dark-actual",
+        "png": "overlays/catalog-details/dark/07-browser-form-guide-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/dark/07-browser-form-guide-expanded.xml",
+        "capturedAt": "2026-10-14T22:21:17-04:00",
+        "pngSha256": "b8b42eae882fec11e2acf9d43be6f782949d2ea6192ad171b42fa87d5460cca0",
+        "uiHierarchySha256": "05abe0cdab236c486630c8d799c293837b46336bb85a0965b8cbac63f90a8c27"
+      },
+      {
+        "id": "catalog-details-browser-light",
+        "png": "overlays/catalog-details/light/04-browser-details-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/04-browser-details-tab.xml",
+        "capturedAt": "2026-10-14T22:14:00-04:00",
+        "pngSha256": "78cfed12fbea32f6e8eff294962fedb95388196a68976b1f0ff93e032b0083f1",
+        "uiHierarchySha256": "5aff0eaa3aad0d81049202050d42cf24b359e994e7cff911e77d4aa08025af6b"
+      },
+      {
+        "id": "catalog-browser-metrics-light",
+        "png": "overlays/catalog-details/light/05-browser-metrics-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/05-browser-metrics-tab.xml",
+        "capturedAt": "2026-10-14T22:14:16-04:00",
+        "pngSha256": "297f7fca4eaa4829c6f801eac019766f1da21fec75bfd4cd1c78bd2aaf8593ec",
+        "uiHierarchySha256": "7c1180e06d756aab9b3822686f6d598e0c34d804c8827b47e354477bb3c5b44f"
+      },
+      {
+        "id": "catalog-browser-records-light",
+        "png": "overlays/catalog-details/light/06-browser-records-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/06-browser-records-tab.xml",
+        "capturedAt": "2026-10-14T22:14:28-04:00",
+        "pngSha256": "3b4e38c04fef6613b9ef9cf0fca28e57de143021a35d620fd1a3be87dc6bbb9f",
+        "uiHierarchySha256": "c1117c11f11aab42feb02ac9e47e08d71fece6e2a66269fc2b3abed43a712092"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-light-campaign",
+        "png": "overlays/catalog-details/light/07-browser-form-guide-expanded-campaign.png",
+        "uiHierarchy": "overlays/catalog-details/light/07-browser-form-guide-expanded-campaign.xml",
+        "capturedAt": "2026-10-14T22:15:03-04:00",
+        "pngSha256": "1b1ea4d9bbb44e2300cded252af465a43588203309499956ff2bea0a77ba0394",
+        "uiHierarchySha256": "30ea846ff84b13dc02ce38eb2b5488ebe6609b9de8d5e1506b8b8607dcc3fcf3"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-light-campaign-verified",
+        "png": "overlays/catalog-details/light/08-browser-form-guide-expanded-verified.png",
+        "uiHierarchy": "overlays/catalog-details/light/08-browser-form-guide-expanded-verified.xml",
+        "capturedAt": "2026-10-14T22:15:37-04:00",
+        "pngSha256": "03be1bd96f58b7665df8184694ecb6454d2cde72e645ebdda16ab94783998fb2",
+        "uiHierarchySha256": "05abe0cdab236c486630c8d799c293837b46336bb85a0965b8cbac63f90a8c27"
+      },
+      {
+        "id": "catalog-browser-target-anatomy-expanded-dark",
+        "png": "overlays/catalog-details/dark/08-browser-target-anatomy-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/dark/08-browser-target-anatomy-expanded.xml",
+        "capturedAt": "2026-10-14T22:21:55-04:00",
+        "pngSha256": "4da0f0d94d15b64454a036d1ecda25db5eccd20647b6703e97a27bf57b150e83",
+        "uiHierarchySha256": "d8084f9a36e8a69376e338f888cbf6a10747f2d712dc5840e2c4f052725a8f43"
+      },
+      {
+        "id": "catalog-browser-target-anatomy-expanded-light",
+        "png": "overlays/catalog-details/light/09-browser-target-anatomy-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/light/09-browser-target-anatomy-expanded.xml",
+        "capturedAt": "2026-10-14T22:16:09-04:00",
+        "pngSha256": "91b415b58b681fc114816c2a756dddcdca0d2f83aba8b7a52d100ffad3420a25",
+        "uiHierarchySha256": "d8084f9a36e8a69376e338f888cbf6a10747f2d712dc5840e2c4f052725a8f43"
+      }
+    ]
+  },
+  "catalogDetailsRevisionRefresh20261014": {
+    "capturedAtRangeLocal": "2026-10-14T23:31:11-04:00 through 2026-10-14T23:35:47-04:00 America/Toronto",
+    "captureCount": 11,
+    "replacedExistingScreenshotCount": 11,
+    "addedScreenshotCount": 0,
+    "refreshedFamilies": {
+      "Catalog Exercise Details Sheet - Browser caller": 11
+    },
+    "sourceRevision": "9ac12f9f234d2edf1ee0c7a8154c875d3243f51f",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "dirty",
+    "deviceId": "28021FDH200228",
+    "device": "Pixel 7",
+    "deviceResolution": "1080x2400",
+    "package": "com.tonos.expressivepreview",
+    "database": "tonos_expressive_preview.db",
+    "captureMethod": "ADB screenshot and UIAutomator hierarchy from the existing running Flutter debug preview after in-session hot reload; no APK build or reinstall. The preview-only in-memory look/brightness controls were used; Expressive/Curated/Light was restored before handoff.",
+    "sourceFilesSha256": {
+      "lib/widgets/exercise_detail_sheet.dart": "600c198737452641ee11165d10a034f5dfecc00e4f7e15f24b83df9801e5231f",
+      "lib/screens/exercise/exercise_catalog_page.dart": "a2a2b27a4e17de6fb4d151fd9cfbeff69e874d03b6d14456ce2063593ef8c5b8",
+      "lib/widgets/exercise_definition_info_tile.dart": "b683996018f8aba654379cd295d5d69fa0ccf6932f454c7307f080cbcda88590",
+      "assets/exercises.json": "85314858ef12b081c2ef5c7b753f88e7adb36ed980ee1baf1f96d9f7cfedeb7e"
+    },
+    "previewDataOperations": "No database, WAL/SHM, or production data were accessed or modified. The Profile Dark Mode switch was toggled once for investigation and returned to its original off state. The preview-only Expressive/Curated/Dark selector was used for captures and restored to Expressive/Curated/Light; no fixture reset or reseed occurred.",
+    "captureRecords": [
+      {
+        "id": "catalog-details-browser-light",
+        "png": "overlays/catalog-details/light/04-browser-details-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/04-browser-details-tab.xml",
+        "capturedAt": "2026-10-14T23:31:11-04:00",
+        "pngSha256": "528f526c1922842418f07702bdb7db08c7093a5d39370f8caa2208bcb8b9d102",
+        "uiHierarchySha256": "de65a61a1034f84d18572349f297775171414f77aec78ef9f2a2f3dffcd06715"
+      },
+      {
+        "id": "catalog-browser-detail-tab-dark",
+        "png": "overlays/catalog-details/dark/01-browser-details-tab.png",
+        "uiHierarchy": "overlays/catalog-details/dark/01-browser-details-tab.xml",
+        "capturedAt": "2026-10-14T23:34:21-04:00",
+        "pngSha256": "ed92b1f533470113e92a4769e042004df05116bfb952424da4ecf41310dd50f4",
+        "uiHierarchySha256": "de65a61a1034f84d18572349f297775171414f77aec78ef9f2a2f3dffcd06715"
+      },
+      {
+        "id": "catalog-browser-metrics-light",
+        "png": "overlays/catalog-details/light/05-browser-metrics-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/05-browser-metrics-tab.xml",
+        "capturedAt": "2026-10-14T23:31:27-04:00",
+        "pngSha256": "b7a78f423d2497af177676955f674202dd32e56fea97e97610f4f58a2f0155df",
+        "uiHierarchySha256": "e74ca48079bfd451f895bae1210dc295c5af7fe7df8d55ef570cfd8ac5e4fac3"
+      },
+      {
+        "id": "catalog-browser-metrics-tab-dark-actual",
+        "png": "overlays/catalog-details/dark/05-browser-metrics-tab-actual.png",
+        "uiHierarchy": "overlays/catalog-details/dark/05-browser-metrics-tab-actual.xml",
+        "capturedAt": "2026-10-14T23:34:35-04:00",
+        "pngSha256": "a427ca7f6b22cc93535215b18e21d7baf9f42e1d60b963b83f0383bda0559e46",
+        "uiHierarchySha256": "e74ca48079bfd451f895bae1210dc295c5af7fe7df8d55ef570cfd8ac5e4fac3"
+      },
+      {
+        "id": "catalog-browser-records-light",
+        "png": "overlays/catalog-details/light/06-browser-records-tab.png",
+        "uiHierarchy": "overlays/catalog-details/light/06-browser-records-tab.xml",
+        "capturedAt": "2026-10-14T23:31:42-04:00",
+        "pngSha256": "c83fe9b5f41c65f744b04b790868f408859a467c6b819d53785c0acb1644caa3",
+        "uiHierarchySha256": "e7c364bcab71097160d653e33ba837d22af6477abfbbe7b3f6183c512bb9b746"
+      },
+      {
+        "id": "catalog-browser-records-tab-dark-actual",
+        "png": "overlays/catalog-details/dark/06-browser-records-tab-actual.png",
+        "uiHierarchy": "overlays/catalog-details/dark/06-browser-records-tab-actual.xml",
+        "capturedAt": "2026-10-14T23:34:48-04:00",
+        "pngSha256": "8bf79c38f95edbc50ee4176d5140382c1094ac4552ec1c1a5e98c7a5d679d0a5",
+        "uiHierarchySha256": "e7c364bcab71097160d653e33ba837d22af6477abfbbe7b3f6183c512bb9b746"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-light-campaign",
+        "png": "overlays/catalog-details/light/07-browser-form-guide-expanded-campaign.png",
+        "uiHierarchy": "overlays/catalog-details/light/07-browser-form-guide-expanded-campaign.xml",
+        "capturedAt": "2026-10-14T23:32:11-04:00",
+        "pngSha256": "04f1c60503168fe4c8cd259de1bcad73bea45d363b825e26bdd07131c29659d5",
+        "uiHierarchySha256": "2e0cd9bc4ba482e58dad19a716e0b4889584d35b319f9f2f73eb3f84871ba7a3"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-light-campaign-verified",
+        "png": "overlays/catalog-details/light/08-browser-form-guide-expanded-verified.png",
+        "uiHierarchy": "overlays/catalog-details/light/08-browser-form-guide-expanded-verified.xml",
+        "capturedAt": "2026-10-14T23:32:28-04:00",
+        "pngSha256": "86172391858007b33a5c066ebea326be6d689a19730f2c59f427be40e3ce1290",
+        "uiHierarchySha256": "2acd4aab774d0a54ac9423cc88ed7090927565fb37961d39e136ea10906c389d"
+      },
+      {
+        "id": "catalog-browser-form-guide-expanded-dark-actual",
+        "png": "overlays/catalog-details/dark/07-browser-form-guide-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/dark/07-browser-form-guide-expanded.xml",
+        "capturedAt": "2026-10-14T23:35:24-04:00",
+        "pngSha256": "8fce1523aa7bfe88921dbfc841bf7c9f0af5c07754e6f5408cbd2049895992f1",
+        "uiHierarchySha256": "2acd4aab774d0a54ac9423cc88ed7090927565fb37961d39e136ea10906c389d"
+      },
+      {
+        "id": "catalog-browser-target-anatomy-expanded-light",
+        "png": "overlays/catalog-details/light/09-browser-target-anatomy-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/light/09-browser-target-anatomy-expanded.xml",
+        "capturedAt": "2026-10-14T23:33:22-04:00",
+        "pngSha256": "2b2b7f1a8dd48e13d3bc230031005bc4a7cf0f64497752cdf5ff986979f18d83",
+        "uiHierarchySha256": "52ebf98dcdae231cd5ce9a788d66785a0e916af13ea331a6087f69af57cec494"
+      },
+      {
+        "id": "catalog-browser-target-anatomy-expanded-dark",
+        "png": "overlays/catalog-details/dark/08-browser-target-anatomy-expanded.png",
+        "uiHierarchy": "overlays/catalog-details/dark/08-browser-target-anatomy-expanded.xml",
+        "capturedAt": "2026-10-14T23:35:47-04:00",
+        "pngSha256": "f63771a388270984b23f7bc03318f920819b9138035f9d5913f25afc098c9ea3",
+        "uiHierarchySha256": "52ebf98dcdae231cd5ce9a788d66785a0e916af13ea331a6087f69af57cec494"
+      }
+    ]
+  }
+}

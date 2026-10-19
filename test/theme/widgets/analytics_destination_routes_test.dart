@@ -2,6 +2,8 @@ import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/repositories/app_repository.dart';
+import 'package:env_test/screens/exercise/definitions_by_bodypart_page.dart';
+import 'package:env_test/screens/exercise/definitions_by_muscle_page.dart';
 import 'package:env_test/screens/profile/settings/analytics_setting_screen.dart';
 import 'package:env_test/screens/profile/settings/bodypart_muscle_mapping_screen.dart';
 import 'package:env_test/screens/profile/settings/bodypart_ranking_screen.dart';
@@ -14,9 +16,12 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/services/tutorial_state_store.dart';
+import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -90,6 +95,90 @@ void main() {
       }
     }
   });
+
+  testWidgets(
+    'Analytics anatomy drilldowns keep analytics identity without Catalog sheet styling',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues({
+        'guided_tutorial_completed.${TutorialIds.bodypartDetail}': true,
+        'guided_tutorial_completed.${TutorialIds.muscleDetail}': true,
+      });
+
+      final bodyPart = BodyPart(1, 'Chest');
+      final muscle = Muscle(id: 2, name: 'Pectoralis major');
+      final definition = ExerciseDefinition(
+        id: 3,
+        name: 'Cable Press',
+        bodyParts: [bodyPart],
+        muscles: [RankedMuscle(muscle: muscle, rank: 1)],
+        useManualBodyparts: false,
+        multiplyByRating: false,
+      );
+      final repository = _AnalyticsRoutesRepository(
+        bodyPart,
+        muscle,
+        definition,
+      );
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF345B50)),
+        extensions: const [
+          AppThemeIdentity(family: AppThemeFamilyIdentity.expressivePreview),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [Provider<AppRepository>.value(value: repository)],
+          child: MaterialApp(
+            theme: theme,
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: DefinitionsByBodyPartPage(
+              bodyPart: bodyPart,
+              expressiveAnalyticsPresentation: true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      void expectAnalyticsScope() {
+        final scaffold = tester.element(find.byType(Scaffold).last);
+        final tokens = Theme.of(scaffold)
+            .extension<AppExpressiveDestinationTokens>();
+        expect(tokens?.family, AppExpressiveDestinationFamily.analytics);
+        final tile = tester.widget<ExerciseDefinitionInfoTile>(
+          find.byType(ExerciseDefinitionInfoTile).last,
+        );
+        expect(
+          tile.expressiveDestinationFamily,
+          AppExpressiveDestinationFamily.analytics,
+        );
+        expect(tile.expressiveCatalogPresentation, isFalse);
+      }
+
+      expect(find.byType(DefinitionsByBodyPartPage), findsOneWidget);
+      expectAnalyticsScope();
+      await tester.tap(find.byType(ActionChip).first);
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+      expect(find.byType(DefinitionsByMusclePage), findsOneWidget);
+      expectAnalyticsScope();
+
+      await tester.tap(find.byType(ActionChip).first);
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+      expect(find.byType(DefinitionsByBodyPartPage), findsOneWidget);
+      expectAnalyticsScope();
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'Analytics child routes retain controls and scoped palette at compact scale',
@@ -206,6 +295,11 @@ void main() {
         }
 
         await mount(const BodyPartRankingScreen());
+        expect(
+          find.byType(AnalyticsRankingSaveFab),
+          findsNothing,
+          reason: mode,
+        );
         final rankingList = expressive
             ? find.byType(SliverReorderableList, skipOffstage: false)
             : find.byType(ReorderableListView);
@@ -225,25 +319,66 @@ void main() {
         await tester.enterText(visibleBodyPartField, '2');
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
-        expect(
-          find.text(bodyPartStrings.rankingsSave),
-          findsOneWidget,
-          reason: mode,
-        );
-        await tester.tap(find.text(bodyPartStrings.rankingsSave));
-        await tester.pumpAndSettle();
-        expect(
-          repository.bodyPartSaveCalls,
-          greaterThanOrEqualTo(1),
-          reason: mode,
-        );
-        expect(repository.savedBodyPartRanks, {
-          bodyPart.id: 2,
-        }, reason: '$mode saves the edited Body Part rank value');
+        if (expressive) {
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            configuration.keyboardInset > 0 ? findsNothing : findsOneWidget,
+            reason: mode,
+          );
+          expect(
+            tester.widget<Scaffold>(find.byType(Scaffold)).bottomNavigationBar,
+            isNull,
+            reason: '$mode uses a floating save action',
+          );
+        } else {
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            findsNothing,
+            reason: mode,
+          );
+          expect(
+            tester.widget<Scaffold>(find.byType(Scaffold)).bottomNavigationBar,
+            isNotNull,
+            reason: '$mode keeps the existing save bar',
+          );
+        }
+        if (configuration.keyboardInset > 0) {
+          expect(
+            find.text(bodyPartStrings.rankingsSave),
+            findsNothing,
+            reason: '$mode keeps rank fields clear while the keyboard is open',
+          );
+        } else {
+          expect(
+            find.text(bodyPartStrings.rankingsSave),
+            findsOneWidget,
+            reason: mode,
+          );
+          await tester.tap(find.text(bodyPartStrings.rankingsSave));
+          await tester.pumpAndSettle();
+          expect(
+            repository.bodyPartSaveCalls,
+            greaterThanOrEqualTo(1),
+            reason: mode,
+          );
+          expect(repository.savedBodyPartRanks, {
+            bodyPart.id: 2,
+          }, reason: '$mode saves the edited Body Part rank value');
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            findsNothing,
+            reason: mode,
+          );
+        }
         _expectAnalyticsScope(tester, expressive, brightness, mode);
         expect(tester.takeException(), isNull, reason: '$mode body part rank');
 
         await mount(const MuscleRankingScreen());
+        expect(
+          find.byType(AnalyticsRankingSaveFab),
+          findsNothing,
+          reason: mode,
+        );
         final muscleRankingList = expressive
             ? find.byType(SliverReorderableList, skipOffstage: false)
             : find.byType(ReorderableListView);
@@ -263,18 +398,54 @@ void main() {
         await tester.enterText(visibleMuscleField, '2');
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
-        expect(
-          find.text(muscleStrings.rankingsSave),
-          findsOneWidget,
-          reason: mode,
-        );
-        await tester.tap(find.text(muscleStrings.rankingsSave));
-        await tester.pumpAndSettle();
-        expect(
-          repository.muscleSaveCalls,
-          greaterThanOrEqualTo(1),
-          reason: mode,
-        );
+        if (expressive) {
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            configuration.keyboardInset > 0 ? findsNothing : findsOneWidget,
+            reason: mode,
+          );
+          expect(
+            tester.widget<Scaffold>(find.byType(Scaffold)).bottomNavigationBar,
+            isNull,
+            reason: '$mode uses a floating save action',
+          );
+        } else {
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            findsNothing,
+            reason: mode,
+          );
+          expect(
+            tester.widget<Scaffold>(find.byType(Scaffold)).bottomNavigationBar,
+            isNotNull,
+            reason: '$mode keeps the existing save bar',
+          );
+        }
+        if (configuration.keyboardInset > 0) {
+          expect(
+            find.text(muscleStrings.rankingsSave),
+            findsNothing,
+            reason: '$mode keeps rank fields clear while the keyboard is open',
+          );
+        } else {
+          expect(
+            find.text(muscleStrings.rankingsSave),
+            findsOneWidget,
+            reason: mode,
+          );
+          await tester.tap(find.text(muscleStrings.rankingsSave));
+          await tester.pumpAndSettle();
+          expect(
+            repository.muscleSaveCalls,
+            greaterThanOrEqualTo(1),
+            reason: mode,
+          );
+          expect(
+            find.byType(AnalyticsRankingSaveFab),
+            findsNothing,
+            reason: mode,
+          );
+        }
         _expectAnalyticsScope(tester, expressive, brightness, mode);
         expect(tester.takeException(), isNull, reason: '$mode muscle rank');
 
@@ -346,6 +517,30 @@ void main() {
           await tester.pumpAndSettle();
         }
         expect(mappingPicker, findsOneWidget, reason: mode);
+        if (expressive) {
+          expect(find.byType(AppBar), findsNothing, reason: mode);
+          expect(find.text(strings.mappingTitle), findsOneWidget, reason: mode);
+          final linkedHeading = find.text(strings.mappingLinkedMuscles);
+          await tester.scrollUntilVisible(
+            linkedHeading,
+            160,
+            scrollable: find.byType(Scrollable).last,
+          );
+          await tester.pumpAndSettle();
+          final separator = find.byKey(
+            const ValueKey('mapping-section-separator'),
+          );
+          expect(
+            separator,
+            findsOneWidget,
+            reason: '$mode mapping includes the section separator',
+          );
+          expect(
+            tester.getSize(separator).height,
+            12,
+            reason: '$mode mapping zones retain their 12dp separation',
+          );
+        }
         await tester.ensureVisible(mappingPicker);
         await tester.pumpAndSettle();
         if (!expressive) {
@@ -486,11 +681,19 @@ void main() {
         final editorStrings = AppLocalizations.of(
           tester.element(find.byType(ExerciseEditorScreen)),
         );
-        expect(
-          find.byTooltip(editorStrings.exerciseEditorChoose),
-          findsOneWidget,
-          reason: mode,
-        );
+        if (expressive) {
+          expect(
+            find.text(editorStrings.exerciseEditorChoose),
+            findsOneWidget,
+            reason: mode,
+          );
+        } else {
+          expect(
+            find.byTooltip(editorStrings.exerciseEditorChoose),
+            findsOneWidget,
+            reason: mode,
+          );
+        }
         _expectAnalyticsScope(tester, expressive, brightness, mode);
         expect(tester.takeException(), isNull, reason: '$mode editor route');
       }
@@ -542,6 +745,9 @@ class _AnalyticsRoutesRepository extends AppRepository {
   Future<List<Muscle>> fetchAllMusclesFull() async => [muscle];
 
   @override
+  Future<List<Muscle>> fetchAllMuscles() async => [muscle];
+
+  @override
   Future<List<BodyPart>> fetchAllBodyParts() async => [bodyPart];
 
   @override
@@ -577,6 +783,23 @@ class _AnalyticsRoutesRepository extends AppRepository {
   @override
   Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async =>
       [MuscleBodyPart(muscleId: muscle.id, bodyPartId: bodypartId)];
+
+  @override
+  Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) async => [
+    MuscleBodyPart(muscleId: muscleId, bodyPartId: bodyPart.id),
+  ];
+
+  @override
+  Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
+    required DateTime start,
+    required DateTime end,
+  }) async => {bodyPart: 4};
+
+  @override
+  Future<Map<int, double>> fetchSetsPerMuscle({
+    required DateTime start,
+    required DateTime end,
+  }) async => {muscle.id: 4};
 
   @override
   Future<int> setBodyPartRank(int bodypartId, int rank) async {

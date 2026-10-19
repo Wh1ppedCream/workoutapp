@@ -78,6 +78,58 @@ abstract final class OnboardingStyleHarness {
     required ValueChanged<bool> onChanged,
   }) => _SwitchCard(title: title, value: value, onChanged: onChanged);
 
+  static Widget intentTile({
+    required IconData icon,
+    required String title,
+    required String body,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) => _IntentTile(
+    icon: icon,
+    title: title,
+    body: body,
+    value: value,
+    onChanged: onChanged,
+  );
+
+  static Widget gymSpaceTile({
+    required String title,
+    required String subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => _GymSpaceTile(
+    template: _gymSpaceTemplates.first,
+    title: title,
+    subtitle: subtitle,
+    selected: selected,
+    onTap: onTap,
+  );
+
+  static Widget workoutPlanSetupTile({
+    required String title,
+    required String subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => _WorkoutPlanSetupTile(
+    title: title,
+    subtitle: subtitle,
+    icon: Icons.fitness_center,
+    selected: selected,
+    onTap: onTap,
+  );
+
+  static Widget choiceGroup({
+    required String title,
+    required List<String> options,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+  }) => _ChoiceGroup<String>(
+    title: title,
+    options: options,
+    value: value,
+    onChanged: onChanged,
+  );
+
   static Widget bodyFatTile({
     required String label,
     required String assetPath,
@@ -121,6 +173,34 @@ abstract final class OnboardingStyleHarness {
 
   static Widget infoCallout({required IconData icon, required String text}) =>
       _OnboardingInfoCallout(icon: icon, text: text);
+
+  static Widget equipmentSummary({
+    required String heading,
+    required String count,
+    required String description,
+    required List<Widget> content,
+  }) => _OnboardingEquipmentSummary(
+    heading: heading,
+    count: count,
+    description: description,
+    content: content,
+  );
+
+  static Widget skipSetupDialog({
+    required String title,
+    required String body,
+    required String cancelLabel,
+    required String confirmLabel,
+    required VoidCallback onCancel,
+    required VoidCallback onConfirm,
+  }) => _OnboardingSkipSetupDialog(
+    title: title,
+    body: body,
+    cancelLabel: cancelLabel,
+    confirmLabel: confirmLabel,
+    onCancel: onCancel,
+    onConfirm: onConfirm,
+  );
 }
 
 class _OnboardingFlowState extends State<OnboardingFlow> {
@@ -559,21 +639,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
-        return TonosDialogFrame(
-          child: AlertDialog(
-            title: Text(strings.onboardingSkipSetupTitle),
-            content: Text(strings.onboardingSkipSetupBody),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(strings.onboardingCancel),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(strings.onboardingConfirm),
-              ),
-            ],
-          ),
+        return _OnboardingSkipSetupDialog(
+          title: strings.onboardingSkipSetupTitle,
+          body: strings.onboardingSkipSetupBody,
+          cancelLabel: strings.onboardingCancel,
+          confirmLabel: strings.onboardingConfirm,
+          onCancel: () => Navigator.of(dialogContext).pop(false),
+          onConfirm: () => Navigator.of(dialogContext).pop(true),
         );
       },
     );
@@ -1470,77 +1542,61 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface
-                .withValues(alpha: 0.46),
-            borderRadius: context.tutorialTokens.sectionShape,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
+        _OnboardingEquipmentSummary(
+          heading: strings.onboardingIncludedEquipmentTitle,
+          count: LocalizedFormatters.number(
+            selectedEquipment.length,
+            Localizations.localeOf(context),
+            maximumFractionDigits: 0,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      strings.onboardingIncludedEquipmentTitle,
-                      style: Theme.of(context).textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                    ),
-                  ),
+          description: strings.onboardingIncludedEquipmentBody,
+          content: selectedEquipment.isEmpty
+              ? [
                   Text(
-                    LocalizedFormatters.number(
-                      selectedEquipment.length,
-                      Localizations.localeOf(context),
-                      maximumFractionDigits: 0,
-                    ),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    strings.onboardingNoEquipmentSelected,
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: Theme.of(context).colorScheme.error),
+                  ),
+                ]
+              : [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: selectedEquipment.map((equipment) {
+                      final expressive = AppExpressivePlanningTokens.maybeOf(
+                        context,
+                      );
+                      return Chip(
+                        avatar: Icon(
+                          _onboardingEquipmentIcon(equipment.name),
+                          size: 17,
+                          color: expressive?.actionSecondaryForeground,
+                        ),
+                        label: LocalizedCatalogEntityName(
+                          entity: CatalogEntityDisplayName(
+                            catalogId: equipment.catalogId,
+                            canonicalName: equipment.name,
+                          ),
+                        ),
+                        labelStyle: expressive == null
+                            ? null
+                            : TextStyle(
+                                color: expressive.actionSecondaryForeground,
+                              ),
+                        backgroundColor: expressive?.actionSecondary,
+                        side: expressive == null
+                            ? null
+                            : BorderSide(color: expressive.outline),
+                        shape: expressive == null
+                            ? null
+                            : RoundedRectangleBorder(
+                                borderRadius: expressive.rowShape,
+                              ),
+                        visualDensity: VisualDensity.compact,
+                      );
+                    }).toList(),
                   ),
                 ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                strings.onboardingIncludedEquipmentBody,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 14),
-              if (selectedEquipment.isEmpty)
-                Text(
-                  strings.onboardingNoEquipmentSelected,
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: Theme.of(context).colorScheme.error),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: selectedEquipment.map((equipment) {
-                    return Chip(
-                      avatar: Icon(
-                        _onboardingEquipmentIcon(equipment.name),
-                        size: 17,
-                      ),
-                      label: LocalizedCatalogEntityName(
-                        entity: CatalogEntityDisplayName(
-                          catalogId: equipment.catalogId,
-                          canonicalName: equipment.name,
-                        ),
-                      ),
-                      visualDensity: VisualDensity.compact,
-                    );
-                  }).toList(),
-                ),
-            ],
-          ),
         ),
         const SizedBox(height: 14),
         Row(
@@ -2233,40 +2289,58 @@ class _IntentTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final selected = enabled && value;
-    final tileSurface = neo
+    final tileSurface = expressive != null
+        ? (selected
+              ? expressive.selectedSurface
+              : expressive.planSupportSurface)
+        : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
-    final iconColor = neo
+    final expressiveForeground = selected && expressive != null
+        ? _expressiveSelectedForeground(context, expressive)
+        : expressive?.planSupportForeground;
+    final iconColor = expressive != null
+        ? expressiveForeground!
+        : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : enabled
         ? scheme.primary
         : scheme.onSurfaceVariant;
-    final foregroundColor = neo
+    final foregroundColor = expressive != null
+        ? expressiveForeground!
+        : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : enabled
         ? scheme.onSurface
         : scheme.onSurfaceVariant;
-    final secondaryColor = neo
+    final secondaryColor = expressive != null
+        ? expressiveForeground!.withValues(alpha: enabled ? 0.88 : 0.62)
+        : neo
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant.withValues(alpha: enabled ? 1 : 0.78);
-    final borderColor = neo
+    final borderColor = expressive != null
+        ? expressive.outline
+        : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
         ? scheme.primary
         : scheme.outlineVariant;
-    final backgroundColor = neo
+    final backgroundColor = expressive != null
+        ? tileSurface
+        : neo
         ? tileSurface
         : selected
         ? scheme.primary.withValues(alpha: 0.16)
         : scheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
 
     return InkWell(
-      borderRadius: neo
-          ? shapes.settingsInput
-          : context.tutorialTokens.tileShape,
+      borderRadius:
+          expressive?.rowShape ??
+          (neo ? shapes.settingsInput : context.tutorialTokens.tileShape),
       onTap: enabled ? () => onChanged(!value) : null,
       child: AnimatedContainer(
         duration: tutorialMotion(
@@ -2276,12 +2350,16 @@ class _IntentTile extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: neo
-              ? shapes.settingsInput
-              : context.tutorialTokens.tileShape,
+          borderRadius:
+              expressive?.rowShape ??
+              (neo ? shapes.settingsInput : context.tutorialTokens.tileShape),
           border: Border.all(
             color: borderColor,
-            width: neo ? shapes.outlineWidth : 1,
+            width: expressive != null
+                ? 1.5
+                : neo
+                ? shapes.outlineWidth
+                : 1,
           ),
         ),
         child: Row(
@@ -2352,10 +2430,16 @@ class _IntentTile extends StatelessWidget {
               Checkbox(
                 value: value,
                 onChanged: enabled ? (next) => onChanged(next ?? false) : null,
-                fillColor: neo
+                fillColor: expressive != null
+                    ? WidgetStatePropertyAll<Color?>(foregroundColor)
+                    : neo
                     ? WidgetStatePropertyAll<Color?>(foregroundColor)
                     : null,
-                checkColor: neo ? surfaces.dialogChoice : null,
+                checkColor: expressive != null
+                    ? tileSurface
+                    : neo
+                    ? surfaces.dialogChoice
+                    : null,
               ),
           ],
         ),
@@ -2379,24 +2463,39 @@ class _SwitchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
-    final cardSurface = neo ? surfaces.settingsInput : scheme.surface;
-    final cardForeground = neo
+    final cardSurface =
+        expressive?.planSupportSurface ??
+        (neo ? surfaces.settingsInput : scheme.surface);
+    final cardForeground = expressive != null
+        ? expressive.planSupportForeground
+        : neo
         ? tonosForegroundForSurface(context, cardSurface)
         : scheme.onSurface;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: neo ? cardSurface : scheme.surface.withValues(alpha: 0.5),
-        borderRadius: neo
-            ? shapes.settingsInput
-            : context.tutorialTokens.sectionShape,
+        color: expressive != null
+            ? cardSurface
+            : neo
+            ? cardSurface
+            : scheme.surface.withValues(alpha: 0.5),
+        borderRadius:
+            expressive?.rowShape ??
+            (neo ? shapes.settingsInput : context.tutorialTokens.sectionShape),
         border: Border.all(
-          color: neo
+          color: expressive != null
+              ? expressive.outline
+              : neo
               ? tonosOutlineForSurface(context, cardSurface)
               : scheme.outlineVariant.withValues(alpha: 0.7),
-          width: neo ? shapes.outlineWidth : 1,
+          width: expressive != null
+              ? 1.5
+              : neo
+              ? shapes.outlineWidth
+              : 1,
         ),
       ),
       child: Row(
@@ -2405,12 +2504,32 @@ class _SwitchCard extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: neo ? cardForeground : null,
+                color: expressive != null || neo ? cardForeground : null,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          Switch(value: value, onChanged: onChanged),
+          if (expressive == null)
+            Switch(value: value, onChanged: onChanged)
+          else
+            SwitchTheme(
+              data: SwitchThemeData(
+                thumbColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? expressive.actionPrimaryForeground
+                      : expressive.planSupportForeground;
+                }),
+                trackColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? expressive.actionPrimary
+                      : expressive.planSupportSurface;
+                }),
+                trackOutlineColor: WidgetStatePropertyAll<Color?>(
+                  expressive.outline,
+                ),
+              ),
+              child: Switch(value: value, onChanged: onChanged),
+            ),
         ],
       ),
     );
@@ -2436,6 +2555,7 @@ class _ChoiceGroup<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
 
@@ -2457,13 +2577,24 @@ class _ChoiceGroup<T> extends StatelessWidget {
           runSpacing: 8,
           children: options.map((option) {
             final selected = option == value;
-            final chipSurface = neo
+            final chipSurface = expressive != null
+                ? (selected
+                      ? expressive.selectedSurface
+                      : expressive.planSupportSurface)
+                : neo
                 ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
                 : null;
             return ChoiceChip(
               label: Text(
                 labelBuilder?.call(option) ?? '$option',
-                style: neo
+                style: expressive != null
+                    ? TextStyle(
+                        color: selected
+                            ? _expressiveSelectedForeground(context, expressive)
+                            : expressive.planSupportForeground,
+                        fontWeight: FontWeight.w800,
+                      )
+                    : neo
                     ? TextStyle(
                         color: tonosForegroundForSurface(context, chipSurface!),
                         fontWeight: FontWeight.w800,
@@ -2472,9 +2603,14 @@ class _ChoiceGroup<T> extends StatelessWidget {
               ),
               selected: selected,
               onSelected: (_) => onChanged(option),
-              selectedColor: neo ? chipSurface : null,
-              backgroundColor: neo ? chipSurface : null,
-              side: neo
+              selectedColor: expressive != null || neo ? chipSurface : null,
+              backgroundColor: expressive != null || neo ? chipSurface : null,
+              shape: expressive == null
+                  ? null
+                  : RoundedRectangleBorder(borderRadius: expressive.rowShape),
+              side: expressive != null
+                  ? BorderSide(color: expressive.outline, width: 1.5)
+                  : neo
                   ? BorderSide(
                       color: tonosOutlineForSurface(context, chipSurface!),
                       width: shapes.outlineWidth,
@@ -3421,31 +3557,46 @@ class _GymSpaceTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = template.highlighted ? scheme.tertiary : scheme.primary;
-    final tileSurface = neo
+    final tileSurface = expressive != null
+        ? (selected
+              ? expressive.selectedSurface
+              : expressive.planSupportSurface)
+        : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
-    final tileForeground = neo
+    final tileForeground = expressive != null
+        ? (selected
+              ? _expressiveSelectedForeground(context, expressive)
+              : expressive.planSupportForeground)
+        : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : scheme.onSurface;
-    final tileSecondary = neo
+    final tileSecondary = expressive != null
+        ? tileForeground.withValues(alpha: 0.82)
+        : neo
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant;
-    final tileBorder = neo
+    final tileBorder = expressive != null
+        ? expressive.outline
+        : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
         ? accent
         : scheme.outlineVariant;
-    final tileBackground = neo
+    final tileBackground = expressive != null
+        ? tileSurface
+        : neo
         ? tileSurface
         : selected
         ? accent.withValues(alpha: 0.16)
         : scheme.surface.withValues(alpha: 0.46);
-    final tileShape = neo
-        ? shapes.settingsInput
-        : context.tutorialTokens.tileShape;
+    final tileShape =
+        expressive?.rowShape ??
+        (neo ? shapes.settingsInput : context.tutorialTokens.tileShape);
 
     return InkWell(
       onTap: onTap,
@@ -3461,7 +3612,9 @@ class _GymSpaceTile extends StatelessWidget {
           borderRadius: tileShape,
           border: Border.all(
             color: tileBorder,
-            width: neo
+            width: expressive != null
+                ? 1.5
+                : neo
                 ? shapes.outlineWidth
                 : selected
                 ? 2
@@ -3475,12 +3628,23 @@ class _GymSpaceTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
-                borderRadius: neo
+                color: expressive != null
+                    ? expressive.actionSecondary
+                    : (neo ? tileForeground : accent).withValues(alpha: 0.16),
+                borderRadius: expressive != null
+                    ? shapes.control
+                    : neo
                     ? shapes.control
                     : context.tutorialTokens.compactShape,
               ),
-              child: Icon(template.icon, color: neo ? tileForeground : accent),
+              child: Icon(
+                template.icon,
+                color: expressive != null
+                    ? expressive.actionSecondaryForeground
+                    : neo
+                    ? tileForeground
+                    : accent,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -3490,7 +3654,7 @@ class _GymSpaceTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: neo
+                      color: expressive != null || neo
                           ? tileForeground
                           : template.highlighted
                           ? accent
@@ -3513,7 +3677,11 @@ class _GymSpaceTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: neo
+              color: expressive != null
+                  ? (selected
+                        ? _expressiveSelectedForeground(context, expressive)
+                        : tileSecondary)
+                  : neo
                   ? tileForeground
                   : selected
                   ? accent
@@ -3585,31 +3753,46 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final accent = scheme.primary;
-    final tileSurface = neo
+    final tileSurface = expressive != null
+        ? (selected
+              ? expressive.selectedSurface
+              : expressive.planSupportSurface)
+        : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
-    final tileForeground = neo
+    final tileForeground = expressive != null
+        ? (selected
+              ? _expressiveSelectedForeground(context, expressive)
+              : expressive.planSupportForeground)
+        : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : scheme.onSurface;
-    final tileSecondary = neo
+    final tileSecondary = expressive != null
+        ? tileForeground.withValues(alpha: 0.82)
+        : neo
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant;
-    final tileBorder = neo
+    final tileBorder = expressive != null
+        ? expressive.outline
+        : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
         ? accent
         : scheme.outlineVariant;
-    final tileBackground = neo
+    final tileBackground = expressive != null
+        ? tileSurface
+        : neo
         ? tileSurface
         : selected
         ? accent.withValues(alpha: 0.16)
         : scheme.surface.withValues(alpha: 0.46);
-    final tileShape = neo
-        ? shapes.settingsInput
-        : context.tutorialTokens.tileShape;
+    final tileShape =
+        expressive?.rowShape ??
+        (neo ? shapes.settingsInput : context.tutorialTokens.tileShape);
 
     return InkWell(
       onTap: onTap,
@@ -3625,7 +3808,9 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
           borderRadius: tileShape,
           border: Border.all(
             color: tileBorder,
-            width: neo
+            width: expressive != null
+                ? 1.5
+                : neo
                 ? shapes.outlineWidth
                 : selected
                 ? 2
@@ -3638,12 +3823,23 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: (neo ? tileForeground : accent).withValues(alpha: 0.16),
-                borderRadius: neo
+                color: expressive != null
+                    ? expressive.actionSecondary
+                    : (neo ? tileForeground : accent).withValues(alpha: 0.16),
+                borderRadius: expressive != null
+                    ? shapes.control
+                    : neo
                     ? shapes.control
                     : context.tutorialTokens.compactShape,
               ),
-              child: Icon(icon, color: neo ? tileForeground : accent),
+              child: Icon(
+                icon,
+                color: expressive != null
+                    ? expressive.actionSecondaryForeground
+                    : neo
+                    ? tileForeground
+                    : accent,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -3653,7 +3849,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: neo ? tileForeground : null,
+                      color: expressive != null || neo ? tileForeground : null,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -3672,7 +3868,11 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked
                   : Icons.radio_button_unchecked,
-              color: neo
+              color: expressive != null
+                  ? (selected
+                        ? _expressiveSelectedForeground(context, expressive)
+                        : tileSecondary)
+                  : neo
                   ? tileForeground
                   : selected
                   ? accent
@@ -3696,18 +3896,25 @@ class _OnboardingInfoCallout extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
-    final calloutSurface = scheme.primary.withValues(alpha: 0.12);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final calloutSurface =
+        expressive?.configurationSurface ??
+        scheme.primary.withValues(alpha: 0.12);
     final parentSurface = neo
         ? context.surfaceTokens.settingsSection
         : scheme.surface;
-    final iconInk = neo
+    final iconInk = expressive != null
+        ? expressive.configurationForeground
+        : neo
         ? tonosForegroundForSurface(
             context,
             calloutSurface,
             parentSurface: parentSurface,
           )
         : scheme.primary;
-    final messageInk = neo
+    final messageInk = expressive != null
+        ? expressive.configurationForeground
+        : neo
         ? tonosSecondaryForegroundForSurface(
             context,
             calloutSurface,
@@ -3719,8 +3926,12 @@ class _OnboardingInfoCallout extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: calloutSurface,
-        borderRadius: context.tutorialTokens.inputShape,
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.28)),
+        borderRadius:
+            expressive?.supportShape ?? context.tutorialTokens.inputShape,
+        border: Border.all(
+          color: expressive?.outline ?? scheme.primary.withValues(alpha: 0.28),
+          width: expressive == null ? 1 : 1.5,
+        ),
       ),
       child: Row(
         children: [
@@ -3740,6 +3951,153 @@ class _OnboardingInfoCallout extends StatelessWidget {
     );
   }
 }
+
+class _OnboardingEquipmentSummary extends StatelessWidget {
+  final String heading;
+  final String count;
+  final String description;
+  final List<Widget> content;
+
+  const _OnboardingEquipmentSummary({
+    required this.heading,
+    required this.count,
+    required this.description,
+    required this.content,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final surface =
+        expressive?.equipmentSurface ?? scheme.surface.withValues(alpha: 0.46);
+    final foreground = expressive?.equipmentForeground ?? scheme.onSurface;
+    final secondary = expressive != null
+        ? foreground.withValues(alpha: 0.82)
+        : scheme.onSurfaceVariant;
+    final shape =
+        expressive?.supportShape ?? context.tutorialTokens.sectionShape;
+
+    return Container(
+      key: const Key('onboarding-included-equipment'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: shape,
+        border: Border.all(
+          color: expressive?.outline ?? scheme.outlineVariant,
+          width: expressive != null ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  heading,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: expressive != null ? foreground : null,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                count,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: expressive?.equipmentForeground ?? scheme.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: theme.textTheme.bodySmall?.copyWith(color: secondary),
+          ),
+          const SizedBox(height: 14),
+          ...content,
+        ],
+      ),
+    );
+  }
+}
+
+class _OnboardingSkipSetupDialog extends StatelessWidget {
+  final String title;
+  final String body;
+  final String cancelLabel;
+  final String confirmLabel;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _OnboardingSkipSetupDialog({
+    required this.title,
+    required this.body,
+    required this.cancelLabel,
+    required this.confirmLabel,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
+    final dialog = AlertDialog(
+      backgroundColor: expressive?.planFocalSurface,
+      shape: expressive == null
+          ? null
+          : RoundedRectangleBorder(borderRadius: expressive.supportShape),
+      titleTextStyle: expressive == null
+          ? null
+          : theme.textTheme.headlineSmall?.copyWith(
+              color: expressive.planFocalForeground,
+              fontWeight: FontWeight.w900,
+            ),
+      contentTextStyle: expressive == null
+          ? null
+          : theme.textTheme.bodyLarge?.copyWith(
+              color: expressive.planFocalForeground.withValues(alpha: 0.9),
+            ),
+      title: Text(title),
+      content: Text(body),
+      actions: [
+        TextButton(
+          onPressed: onCancel,
+          style: expressive == null
+              ? null
+              : TextButton.styleFrom(
+                  foregroundColor: expressive.planFocalForeground,
+                ),
+          child: Text(cancelLabel),
+        ),
+        FilledButton(
+          onPressed: onConfirm,
+          style: expressive == null
+              ? null
+              : FilledButton.styleFrom(
+                  backgroundColor: expressive.actionSecondary,
+                  foregroundColor: expressive.actionSecondaryForeground,
+                ),
+          child: Text(confirmLabel),
+        ),
+      ],
+    );
+
+    return TonosDialogFrame(child: dialog);
+  }
+}
+
+Color _expressiveSelectedForeground(
+  BuildContext context,
+  AppExpressivePlanningTokens tokens,
+) => Theme.of(context).brightness == Brightness.dark
+    ? tokens.planAccentForeground
+    : tokens.planFocalForeground;
 
 IconData _onboardingEquipmentIcon(String name) {
   final lower = name.toLowerCase();

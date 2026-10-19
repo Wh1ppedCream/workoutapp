@@ -20,6 +20,32 @@ import 'flow_editor_expressive_widgets.dart';
 
 enum AddSetMode { explicit, copy }
 
+class _DialogControllerOwner extends StatefulWidget {
+  const _DialogControllerOwner({
+    required this.controllers,
+    required this.child,
+  });
+
+  final List<TextEditingController> controllers;
+  final Widget child;
+
+  @override
+  State<_DialogControllerOwner> createState() => _DialogControllerOwnerState();
+}
+
+class _DialogControllerOwnerState extends State<_DialogControllerOwner> {
+  @override
+  void dispose() {
+    for (final controller in widget.controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 String _methodTypeLabel(MethodType type, AppLocalizations strings) {
   return switch (type) {
     MethodType.weight => strings.flowMethodWeight,
@@ -765,11 +791,14 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
   Future<void> _showAddMethodDialog() async {
     final strings = AppLocalizations.of(context);
+    final expressive = _usesExpressive;
     final nameCtl = TextEditingController();
     MethodType type = MethodType.weight;
     String sign = '+';
     final factorCtl = TextEditingController(text: '1.0');
     final amountCtl = TextEditingController(text: '0');
+    var nameSubmitted = false;
+    String? nameError;
     AddSetMode addMode = AddSetMode.explicit;
     final weightCtl = TextEditingController(text: '0.0');
     final repsCtl = TextEditingController(text: '0');
@@ -777,124 +806,177 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
 
     final saved = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => TonosDialogFrame(
-          styleFormControls: true,
-          child: AlertDialog(
-            title: Text(strings.flowNewMethod),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TonosField(
-                    controller: nameCtl,
-                    labelText: strings.commonName,
-                  ),
-                  const SizedBox(height: 12),
-                  TonosDialogDropdownButton<MethodType>(
-                    value: type,
-                    isExpanded: true,
-                    onChanged: (v) => setState(() => type = v!),
-                    items: MethodType.values
-                        .map(
-                          (t) => DropdownMenuItem(
-                            value: t,
-                            child: Text(_methodTypeLabel(t, strings)),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                  const SizedBox(height: 12),
-                  if (type == MethodType.weight) ...[
-                    TonosDialogDropdownButton<String>(
-                      value: sign,
-                      isExpanded: false,
-                      onChanged: (v) => setState(() => sign = v!),
-                      items: const [
-                        DropdownMenuItem(value: '+', child: Text('+')),
-                        DropdownMenuItem(value: '-', child: Text('-')),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+      builder: (ctx) => _DialogControllerOwner(
+        controllers: [
+          nameCtl,
+          factorCtl,
+          amountCtl,
+          weightCtl,
+          repsCtl,
+          copyIndexCtl,
+        ],
+        child: StatefulBuilder(
+          builder: (ctx, setState) => TonosDialogFrame(
+            styleFormControls: true,
+            child: AlertDialog(
+              title: Text(strings.flowNewMethod),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     TonosField(
-                      controller: factorCtl,
-                      keyboardType: TextInputType.numberWithOptions(
-                        decimal: true,
+                      controller: nameCtl,
+                      labelText: strings.commonName,
+                      errorText: nameError,
+                      onChanged: (value) => setState(() {
+                        nameError = nameSubmitted && value.trim().isEmpty
+                            ? strings.flowMethodNameRequired
+                            : null;
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    TonosDialogDropdownButton<MethodType>(
+                      value: type,
+                      isExpanded: true,
+                      onChanged: (v) => setState(() => type = v!),
+                      items: MethodType.values
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(_methodTypeLabel(t, strings)),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    if (type == MethodType.weight) ...[
+                      TonosDialogDropdownButton<String>(
+                        value: sign,
+                        isExpanded: false,
+                        onChanged: (v) => setState(() => sign = v!),
+                        items: const [
+                          DropdownMenuItem(value: '+', child: Text('+')),
+                          DropdownMenuItem(value: '-', child: Text('-')),
+                        ],
                       ),
-                      labelText: strings.flowFactor,
-                    ),
-                  ] else if (type == MethodType.rep) ...[
-                    TonosDialogDropdownButton<String>(
-                      value: sign,
-                      isExpanded: false,
-                      onChanged: (v) => setState(() => sign = v!),
-                      items: const [
-                        DropdownMenuItem(value: '+', child: Text('+')),
-                        DropdownMenuItem(value: '-', child: Text('-')),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TonosField(
-                      controller: amountCtl,
-                      keyboardType: TextInputType.number,
-                      labelText: strings.flowAmount,
-                    ),
-                  ] else if (type == MethodType.addSet) ...[
-                    Row(
-                      children: [
-                        Radio<AddSetMode>(
-                          value: AddSetMode.explicit,
-                          groupValue: addMode,
-                          onChanged: (v) => setState(() => addMode = v!),
-                        ),
-                        Text(strings.flowExplicit),
-                        Radio<AddSetMode>(
-                          value: AddSetMode.copy,
-                          groupValue: addMode,
-                          onChanged: (v) => setState(() => addMode = v!),
-                        ),
-                        Text(strings.flowCopyFromSet),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (addMode == AddSetMode.explicit)
+                      const SizedBox(height: 8),
                       TonosField(
-                        controller: weightCtl,
+                        controller: factorCtl,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        labelText: strings.flowWeight,
+                        labelText: strings.flowFactor,
                       ),
-                    if (addMode == AddSetMode.explicit)
+                    ] else if (type == MethodType.rep) ...[
+                      TonosDialogDropdownButton<String>(
+                        value: sign,
+                        isExpanded: false,
+                        onChanged: (v) => setState(() => sign = v!),
+                        items: const [
+                          DropdownMenuItem(value: '+', child: Text('+')),
+                          DropdownMenuItem(value: '-', child: Text('-')),
+                        ],
+                      ),
                       const SizedBox(height: 8),
-                    if (addMode == AddSetMode.explicit)
                       TonosField(
-                        controller: repsCtl,
+                        controller: amountCtl,
                         keyboardType: TextInputType.number,
-                        labelText: strings.flowReps,
+                        labelText: strings.flowAmount,
                       ),
-                    if (addMode == AddSetMode.copy)
-                      TonosField(
-                        controller: copyIndexCtl,
-                        keyboardType: TextInputType.number,
-                        labelText: strings.flowSetIndex,
-                      ),
-                  ] else if (type == MethodType.delSet) ...[
-                    Text(strings.flowDeleteLastSetBody),
+                    ] else if (type == MethodType.addSet) ...[
+                      if (expressive)
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.explicit,
+                                  groupValue: addMode,
+                                  onChanged: (v) =>
+                                      setState(() => addMode = v!),
+                                ),
+                                Expanded(child: Text(strings.flowExplicit)),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Radio<AddSetMode>(
+                                  value: AddSetMode.copy,
+                                  groupValue: addMode,
+                                  onChanged: (v) =>
+                                      setState(() => addMode = v!),
+                                ),
+                                Expanded(child: Text(strings.flowCopyFromSet)),
+                              ],
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Radio<AddSetMode>(
+                              value: AddSetMode.explicit,
+                              groupValue: addMode,
+                              onChanged: (v) => setState(() => addMode = v!),
+                            ),
+                            Text(strings.flowExplicit),
+                            Radio<AddSetMode>(
+                              value: AddSetMode.copy,
+                              groupValue: addMode,
+                              onChanged: (v) => setState(() => addMode = v!),
+                            ),
+                            Text(strings.flowCopyFromSet),
+                          ],
+                        ),
+                      const SizedBox(height: 8),
+                      if (addMode == AddSetMode.explicit)
+                        TonosField(
+                          controller: weightCtl,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          labelText: strings.flowWeight,
+                        ),
+                      if (addMode == AddSetMode.explicit)
+                        const SizedBox(height: 8),
+                      if (addMode == AddSetMode.explicit)
+                        TonosField(
+                          controller: repsCtl,
+                          keyboardType: TextInputType.number,
+                          labelText: strings.flowReps,
+                        ),
+                      if (addMode == AddSetMode.copy)
+                        TonosField(
+                          controller: copyIndexCtl,
+                          keyboardType: TextInputType.number,
+                          labelText: strings.flowSetIndex,
+                        ),
+                    ] else if (type == MethodType.delSet) ...[
+                      Text(strings.flowDeleteLastSetBody),
+                    ],
                   ],
-                ],
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(strings.commonCancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameCtl.text.trim().isEmpty) {
+                      setState(() {
+                        nameSubmitted = true;
+                        nameError = strings.flowMethodNameRequired;
+                      });
+                      return;
+                    }
+                    Navigator.pop(ctx, true);
+                  },
+                  child: Text(strings.commonSave),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(strings.commonCancel),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(strings.commonSave),
-              ),
-            ],
           ),
         ),
       ),
@@ -906,17 +988,6 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     final weight = double.tryParse(weightCtl.text) ?? 0.0;
     final reps = int.tryParse(repsCtl.text) ?? 0;
     final copyIndex = int.tryParse(copyIndexCtl.text) ?? -1;
-    for (final controller in [
-      nameCtl,
-      factorCtl,
-      amountCtl,
-      weightCtl,
-      repsCtl,
-      copyIndexCtl,
-    ]) {
-      controller.dispose();
-    }
-
     if (saved != true || !mounted) return;
 
     Map<String, dynamic> params;
@@ -935,13 +1006,6 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
       case MethodType.delSet:
         params = {};
         break;
-    }
-
-    if (methodName.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(strings.flowMethodNameRequired)));
-      return;
     }
 
     await widget.target.addMethod(

@@ -1,5 +1,5 @@
 ﻿{
-  "revision": 7,
+  "revision": 10,
   "exercises": [
     {
       "name": "Ab Wheel",
@@ -139,7 +139,7 @@
         {"name":"Trapezius (Upper)","rank":6},
         {"name":"Latissimus Dorsi","rank":7}
       ],
-      "setupNotes": "1. Sit or stand tall with the weight at shoulder or chest height.\n2. Set the bar and plates safely before starting.\n3. Brace your stomach and keep your feet planted.",
+      "setupNotes": "1. Lie on the bench with your eyes beneath the bar.\n2. Plant your feet and set your shoulder blades against the bench.\n3. Grip the bar slightly wider than shoulder width.",
       "executionNotes": "1. Press the weight up along a comfortable path.\n2. Stop when your arms are straight without shrugging.\n3. Lower slowly to the start and repeat.",
       "tipsNotes": "- Use a weight you can control.\n- Do not arch your back to finish a rep.\n- Lower the weight if your path changes.",
       "starterLoadProfile": {"type":"bodyweightMultiplier","easy":0.25,"medium":0.35,"hard":0.45,"minimumWeight":45,"roundingIncrement":5,"unitMode":"total","confidence":"medium","note":"Conservative barbell pressing starter estimate."},
@@ -269,7 +269,7 @@
     {
       "name": "Bicep Curl - Cable Machine",
       "rating": 90,
-      "equipment": ["Barbell"],
+      "equipment": ["Cable Machine"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
         {"name":"Biceps Brachii","rank":1},
@@ -309,7 +309,7 @@
     {
       "name": "Bicep Curl - Resistance Band",
       "rating": 50,
-      "equipment": ["Barbell"],
+      "equipment": ["Resistance Band"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
         {"name":"Biceps Brachii","rank":1},
@@ -329,7 +329,7 @@
     {
       "name": "Bicep Curl - Smith Machine",
       "rating": 80,
-      "equipment": ["Barbell"],
+      "equipment": ["Smith Machine"],
       "bodyparts": ["Biceps","Forearms"],
       "muscles": [
         {"name":"Biceps Brachii","rank":1},

@@ -147,9 +147,16 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
   }
 
   Future<void> _pickExercise() async {
+    final useExpressivePicker = context.usesExpressivePresentation;
     final definition = await Navigator.of(context).push<ExerciseDefinition>(
       MaterialPageRoute(
-        builder: (_) => ExerciseCatalogPage(onExercisePicked: (_) {}),
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.catalog,
+          child: ExerciseCatalogPage(
+            onExercisePicked: (_) {},
+            expressiveCatalogPresentation: useExpressivePicker,
+          ),
+        ),
       ),
     );
     if (!mounted || definition == null) return;
@@ -456,7 +463,13 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
             : scheme.onSurfaceVariant);
 
     return Material(
-      color: pickerSurface,
+      // The Expressive picker owns its rounded surface in the decorated child;
+      // a square Material fill behind it creates a visible rectangular halo.
+      color: destination == null ? pickerSurface : Colors.transparent,
+      shape: destination == null
+          ? null
+          : RoundedRectangleBorder(borderRadius: shapes.settingsPicker),
+      clipBehavior: destination == null ? Clip.none : Clip.antiAlias,
       child: InkWell(
         borderRadius: shapes.settingsPicker,
         onTap: _pickExercise,
@@ -465,12 +478,14 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
           decoration: BoxDecoration(
             color: pickerSurface,
             borderRadius: shapes.settingsPicker,
-            border: Border.all(
-              color: neo
-                  ? tonosOutlineForSurface(context, pickerSurface)
-                  : SettingsAccent.advanced.withValues(alpha: 0.42),
-              width: shapes.outlineWidth,
-            ),
+            border: destination == null
+                ? Border.all(
+                    color: neo
+                        ? tonosOutlineForSurface(context, pickerSurface)
+                        : SettingsAccent.advanced.withValues(alpha: 0.42),
+                    width: shapes.outlineWidth,
+                  )
+                : null,
           ),
           child: Row(
             children: [
@@ -575,7 +590,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
           borderRadius: shapes.settingsTabIndicator,
         ),
         labelColor:
-            destination?.onSurfacePrimary ??
+            destination?.onSurfaceSecondary ??
             (neo ? tabForeground : SettingsAccent.advanced),
         unselectedLabelColor: tabSecondary,
         labelStyle: theme.textTheme.labelLarge?.copyWith(
@@ -602,28 +617,50 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
       );
     }
 
+    final expressive = analyticsDestinationTokens(context) != null;
+    final sectionItemCount = expressive ? 2 : 1;
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
-      itemCount: _muscleEntries.length + 1,
+      itemCount: _muscleEntries.length + sectionItemCount,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _AllocationSectionHeader(
+            key: const ValueKey('muscle-credit-section-header'),
             title: _strings.allocationMuscleCredit,
             body: _strings.allocationMuscleCreditBody,
             source: _muscleSource,
+            statusLabel:
+                expressive &&
+                    !_muscleCreditsDirty &&
+                    _muscleSource == ExerciseAllocationSource.legacy
+                ? null
+                : _allocationSectionStatusLabel(
+                    context,
+                    _muscleSource,
+                    hasPendingChanges: _muscleCreditsDirty,
+                    isSaving: _isSavingCredits && _muscleCreditsDirty,
+                  ),
+            hasPendingChanges: _muscleCreditsDirty,
             onReset: _muscleSource == ExerciseAllocationSource.personalOverride
                 ? () => _resetDimension(ExerciseAllocationDimension.muscle)
                 : null,
           );
         }
 
-        final entry = _muscleEntries[index - 1];
+        if (expressive && index == 1) {
+          return _AllocationCreditColumnHeading(
+            width: _expressiveCreditFieldWidth(context),
+          );
+        }
+
+        final entry = _muscleEntries[index - sectionItemCount];
         final muscle = _sel!.muscles
             .firstWhere((ranked) => ranked.muscle.id == entry.muscleId)
             .muscle;
         return _MuscleCreditCard(
           muscle: muscle,
           source: _muscleSource,
+          hasPendingChanges: _muscleCreditsDirty,
           controller: _muscleCreditControllers[entry.muscleId]!,
           onChanged: () =>
               _markCreditsDirty(ExerciseAllocationDimension.muscle),
@@ -648,15 +685,25 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
 
     final entries = _bodyEntries.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    final expressive = analyticsDestinationTokens(context) != null;
+    final sectionItemCount = expressive ? 2 : 1;
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
-      itemCount: entries.length + 1,
+      itemCount: entries.length + sectionItemCount,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _AllocationSectionHeader(
+            key: const ValueKey('bodypart-credit-section-header'),
             title: _strings.allocationBodypartCredit,
             body: _strings.allocationBodypartCreditBody,
             source: _bodyPartSource,
+            statusLabel: _allocationSectionStatusLabel(
+              context,
+              _bodyPartSource,
+              hasPendingChanges: _bodyPartCreditsDirty,
+              isSaving: _isSavingCredits && _bodyPartCreditsDirty,
+            ),
+            hasPendingChanges: _bodyPartCreditsDirty,
             onReset:
                 _bodyPartSource == ExerciseAllocationSource.personalOverride
                 ? () => _resetDimension(ExerciseAllocationDimension.bodyPart)
@@ -664,10 +711,17 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
           );
         }
 
-        final entry = entries[index - 1];
+        if (expressive && index == 1) {
+          return _AllocationCreditColumnHeading(
+            width: _expressiveCreditFieldWidth(context),
+          );
+        }
+
+        final entry = entries[index - sectionItemCount];
         return _BodyPartCreditCard(
           bodyPart: entry.key,
           source: _bodyPartSource,
+          hasPendingChanges: _bodyPartCreditsDirty,
           controller: _bodyPartCreditControllers[entry.key.id]!,
           onChanged: () =>
               _markCreditsDirty(ExerciseAllocationDimension.bodyPart),
@@ -719,12 +773,17 @@ class _AllocationSectionHeader extends StatelessWidget {
   final String title;
   final String body;
   final ExerciseAllocationSource source;
+  final String? statusLabel;
+  final bool hasPendingChanges;
   final VoidCallback? onReset;
 
   const _AllocationSectionHeader({
+    super.key,
     required this.title,
     required this.body,
     required this.source,
+    required this.statusLabel,
+    required this.hasPendingChanges,
     this.onReset,
   });
 
@@ -732,6 +791,11 @@ class _AllocationSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final destination = analyticsDestinationTokens(context);
+    final titleColor =
+        destination != null && theme.brightness == Brightness.light
+        ? destination.onSurfaceSecondary
+        : SettingsAccent.advanced;
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
       child: Column(
@@ -744,7 +808,7 @@ class _AllocationSectionHeader extends StatelessWidget {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: SettingsAccent.advanced,
+                    color: titleColor,
                   ),
                 ),
               ),
@@ -756,14 +820,20 @@ class _AllocationSectionHeader extends StatelessWidget {
                 ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 2, bottom: 4),
-            child: SettingsAccentPill(
-              label: source.localizedLabel(AppLocalizations.of(context)),
-              color: _sourceColor(source),
+          if (statusLabel case final label?)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 4),
+              child: SettingsAccentPill(
+                label: label,
+                color: hasPendingChanges && destination != null
+                    ? SettingsAccent.advanced
+                    : _sourceColor(source),
+              ),
             ),
-          ),
-          const SizedBox(height: 3),
+          if (statusLabel == null)
+            const SizedBox(height: 4)
+          else
+            const SizedBox(height: 3),
           Text(
             body,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -783,9 +853,153 @@ Color _sourceColor(ExerciseAllocationSource source) => switch (source) {
   ExerciseAllocationSource.legacy => SettingsAccent.muted,
 };
 
+String _allocationSectionStatusLabel(
+  BuildContext context,
+  ExerciseAllocationSource source, {
+  required bool hasPendingChanges,
+  required bool isSaving,
+}) {
+  final strings = AppLocalizations.of(context);
+  if (analyticsDestinationTokens(context) == null) {
+    return source.localizedLabel(strings);
+  }
+  if (hasPendingChanges) {
+    return isSaving ? strings.allocationSaving : strings.allocationSaveChanges;
+  }
+  if (analyticsDestinationTokens(context) != null &&
+      source == ExerciseAllocationSource.personalOverride) {
+    return strings.measurementCustom;
+  }
+  return source.localizedLabel(strings);
+}
+
+String? _allocationRowStatus(
+  BuildContext context,
+  ExerciseAllocationSource source, {
+  required bool hasPendingChanges,
+}) {
+  final strings = AppLocalizations.of(context);
+  if (analyticsDestinationTokens(context) == null) {
+    return source.localizedLabel(strings);
+  }
+  if (hasPendingChanges || source == ExerciseAllocationSource.automatic) {
+    return null;
+  }
+  if (source == ExerciseAllocationSource.personalOverride) {
+    return strings.measurementCustom;
+  }
+  return source.localizedLabel(strings);
+}
+
+double _expressiveCreditFieldWidth(BuildContext context) {
+  final fontScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+  return (96 * fontScale).clamp(96.0, 128.0).toDouble();
+}
+
+class _AllocationCreditColumnHeading extends StatelessWidget {
+  final double width;
+
+  const _AllocationCreditColumnHeading({required this.width});
+
+  @override
+  Widget build(BuildContext context) {
+    final destination = analyticsDestinationTokens(context)!;
+    return Padding(
+      padding: const EdgeInsets.only(right: 10, bottom: 6),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          width: width,
+          child: Text(
+            AppLocalizations.of(context).allocationCredit,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: destination.supportingForeground,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AllocationCreditInput extends StatelessWidget {
+  final TextEditingController controller;
+  final String accessibleLabel;
+  final double width;
+  final bool expressive;
+  final ValueChanged<String> onChanged;
+  final Future<void> Function() onSubmitted;
+
+  const _AllocationCreditInput({
+    required this.controller,
+    required this.accessibleLabel,
+    required this.width,
+    required this.expressive,
+    required this.onChanged,
+    required this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final field = SizedBox(
+      width: width,
+      child: TextFormField(
+        controller: controller,
+        textAlign: TextAlign.center,
+        textAlignVertical: expressive ? TextAlignVertical.center : null,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        textInputAction: TextInputAction.done,
+        style: settingsInputTextStyle(context),
+        decoration: expressive
+            ? _expressiveCreditInputDecoration(context)
+            : settingsFieldDecoration(
+                context,
+                label: strings.allocationCredit,
+                isDense: true,
+              ),
+        onChanged: onChanged,
+        onFieldSubmitted: (_) => onSubmitted(),
+      ),
+    );
+    if (!expressive) return field;
+    return MergeSemantics(
+      child: Semantics(label: accessibleLabel, child: field),
+    );
+  }
+}
+
+InputDecoration _expressiveCreditInputDecoration(BuildContext context) {
+  final destination = analyticsDestinationTokens(context)!;
+  final shapes = context.shapeTokens;
+  final enabledBorder = OutlineInputBorder(
+    borderRadius: shapes.settingsField,
+    borderSide: BorderSide(
+      color: destination.outlineAccent.withValues(alpha: 0.62),
+      width: shapes.outlineWidth,
+    ),
+  );
+  return InputDecoration(
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+    border: enabledBorder,
+    enabledBorder: enabledBorder,
+    focusedBorder: OutlineInputBorder(
+      borderRadius: shapes.settingsField,
+      borderSide: BorderSide(
+        color: destination.outlineAccent,
+        width: shapes.focusRingWidth,
+      ),
+    ),
+  );
+}
+
 class _MuscleCreditCard extends StatelessWidget {
   final Muscle muscle;
   final ExerciseAllocationSource source;
+  final bool hasPendingChanges;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final Future<void> Function() onSubmitted;
@@ -793,6 +1007,7 @@ class _MuscleCreditCard extends StatelessWidget {
   const _MuscleCreditCard({
     required this.muscle,
     required this.source,
+    required this.hasPendingChanges,
     required this.controller,
     required this.onChanged,
     required this.onSubmitted,
@@ -806,6 +1021,7 @@ class _MuscleCreditCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
     final destination = analyticsDestinationTokens(context);
+    final expressive = destination != null;
     final cardSurface =
         destination?.surfaceSecondary ??
         (neo
@@ -821,7 +1037,12 @@ class _MuscleCreditCard extends StatelessWidget {
         : scheme.onSurfaceVariant;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      padding: EdgeInsets.fromLTRB(
+        14,
+        expressive ? 10 : 12,
+        10,
+        expressive ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: cardSurface,
         borderRadius: shapes.profileTile,
@@ -866,45 +1087,44 @@ class _MuscleCreditCard extends StatelessWidget {
                     catalogId: muscle.catalogId,
                     canonicalName: muscle.name,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: expressive ? null : 1,
+                  overflow: expressive ? null : TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: cardForeground,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  source.localizedLabel(AppLocalizations.of(context)),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: neo
-                        ? cardSecondary
-                        : source == ExerciseAllocationSource.personalOverride
-                        ? SettingsAccent.advanced
-                        : scheme.onSurfaceVariant,
+                if ((expressive
+                        ? _allocationRowStatus(
+                            context,
+                            source,
+                            hasPendingChanges: hasPendingChanges,
+                          )
+                        : null)
+                    case final status?) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    status,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: expressive
+                          ? cardSecondary
+                          : source == ExerciseAllocationSource.personalOverride
+                          ? SettingsAccent.advanced
+                          : scheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
-          SizedBox(
-            width: 72,
-            child: TextFormField(
-              controller: controller,
-              textAlign: TextAlign.center,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              textInputAction: TextInputAction.done,
-              style: settingsInputTextStyle(context),
-              decoration: settingsFieldDecoration(
-                context,
-                label: AppLocalizations.of(context).allocationCredit,
-                isDense: true,
-              ),
-              onChanged: (_) => onChanged(),
-              onFieldSubmitted: (_) => onSubmitted(),
-            ),
+          _AllocationCreditInput(
+            controller: controller,
+            accessibleLabel:
+                '${muscle.name}, ${AppLocalizations.of(context).allocationCredit}',
+            width: expressive ? _expressiveCreditFieldWidth(context) : 72,
+            expressive: expressive,
+            onChanged: (_) => onChanged(),
+            onSubmitted: onSubmitted,
           ),
         ],
       ),
@@ -915,6 +1135,7 @@ class _MuscleCreditCard extends StatelessWidget {
 class _BodyPartCreditCard extends StatelessWidget {
   final BodyPart bodyPart;
   final ExerciseAllocationSource source;
+  final bool hasPendingChanges;
   final TextEditingController controller;
   final VoidCallback onChanged;
   final Future<void> Function() onSubmitted;
@@ -922,6 +1143,7 @@ class _BodyPartCreditCard extends StatelessWidget {
   const _BodyPartCreditCard({
     required this.bodyPart,
     required this.source,
+    required this.hasPendingChanges,
     required this.controller,
     required this.onChanged,
     required this.onSubmitted,
@@ -935,6 +1157,7 @@ class _BodyPartCreditCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final neo = context.usesNeoPresentation;
     final destination = analyticsDestinationTokens(context);
+    final expressive = destination != null;
     final cardSurface =
         destination?.surfaceTertiary ??
         (neo
@@ -947,7 +1170,10 @@ class _BodyPartCreditCard extends StatelessWidget {
             : scheme.onSurface);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      padding: EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: expressive ? 10 : 13,
+      ),
       decoration: BoxDecoration(
         color: cardSurface,
         borderRadius: shapes.profileTile,
@@ -977,32 +1203,46 @@ class _BodyPartCreditCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              localizedBodyPartName(context, bodyPart.name),
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: cardForeground,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  localizedBodyPartName(context, bodyPart.name),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cardForeground,
+                  ),
+                ),
+                if (_allocationRowStatus(
+                      context,
+                      source,
+                      hasPendingChanges: hasPendingChanges,
+                    )
+                    case final status?) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    status,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: expressive
+                          ? destination.onSurfaceTertiary
+                          : source == ExerciseAllocationSource.personalOverride
+                          ? SettingsAccent.advanced
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          SizedBox(
-            width: 76,
-            child: TextFormField(
-              controller: controller,
-              textAlign: TextAlign.center,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              textInputAction: TextInputAction.done,
-              style: settingsInputTextStyle(context),
-              decoration: settingsFieldDecoration(
-                context,
-                label: AppLocalizations.of(context).allocationCredit,
-                isDense: true,
-              ),
-              onChanged: (_) => onChanged(),
-              onFieldSubmitted: (_) => onSubmitted(),
-            ),
+          _AllocationCreditInput(
+            controller: controller,
+            accessibleLabel:
+                '${localizedBodyPartName(context, bodyPart.name)}, ${AppLocalizations.of(context).allocationCredit}',
+            width: expressive ? _expressiveCreditFieldWidth(context) : 76,
+            expressive: expressive,
+            onChanged: (_) => onChanged(),
+            onSubmitted: onSubmitted,
           ),
         ],
       ),

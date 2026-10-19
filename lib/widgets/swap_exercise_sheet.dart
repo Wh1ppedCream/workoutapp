@@ -3,12 +3,17 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../l10n/safe_failure_localizations.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../services/catalog_entity_localizer.dart';
 import '../services/exercise_equipment_compatibility.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/expressive_planning_tokens.dart';
+import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/widgets/app_expressive_destination_theme.dart';
+import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/workout_actions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
@@ -40,7 +45,7 @@ class SwapExerciseSheet extends StatefulWidget {
 class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   static const int _candidateBuildConcurrency = 4;
 
-  late final Future<_SwapExerciseData> _dataFuture;
+  late Future<_SwapExerciseData> _dataFuture;
   int _selectedIndex = 0;
   _ExerciseSwapEntry? _manualReplacement;
   bool _isLoadingManualReplacement = false;
@@ -53,6 +58,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     super.initState();
     BodyHeatmap.preload();
     _dataFuture = _loadData();
+  }
+
+  void _retryLoad() {
+    setState(() {
+      _dataFuture = _loadData();
+    });
   }
 
   /// Loads the current exercise summary and the top replacement candidates.
@@ -130,8 +141,9 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     ExerciseDefinition definition, {
     bool hydrateDefinition = true,
   }) async {
-    final detailedDefinition =
-        hydrateDefinition ? await _hydrateDefinition(definition) : definition;
+    final detailedDefinition = hydrateDefinition
+        ? await _hydrateDefinition(definition)
+        : definition;
     final bodyPartUnitsFuture = widget.repository.computeBodyPartPercents(
       detailedDefinition.id,
     );
@@ -290,14 +302,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     ExerciseDefinition current,
     ExerciseDefinition candidate,
   ) {
-    final currentNames =
-        current.equipmentList
-            .map((equipment) => equipment.name.toLowerCase())
-            .toSet();
-    final candidateNames =
-        candidate.equipmentList
-            .map((equipment) => equipment.name.toLowerCase())
-            .toSet();
+    final currentNames = current.equipmentList
+        .map((equipment) => equipment.name.toLowerCase())
+        .toSet();
+    final candidateNames = candidate.equipmentList
+        .map((equipment) => equipment.name.toLowerCase())
+        .toSet();
     if (currentNames.isEmpty || candidateNames.isEmpty) return 0.0;
     return currentNames.intersection(candidateNames).isNotEmpty ? 1.0 : 0.0;
   }
@@ -321,15 +331,20 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   Future<void> _browseExerciseCatalog(_ExerciseSwapEntry current) async {
     final picked = await Navigator.of(context).push<ExerciseDefinition>(
       MaterialPageRoute(
-        builder: (_) => ExerciseCatalogPage(onExercisePicked: (_) {}),
+        builder: (_) => AppExpressiveDestinationTheme(
+          family: AppExpressiveDestinationFamily.catalog,
+          child: ExerciseCatalogPage(
+            onExercisePicked: (_) {},
+            expressiveCatalogPresentation: context.usesExpressivePresentation,
+          ),
+        ),
       ),
     );
     if (picked == null || !mounted) return;
 
     if (picked.id == current.definition.id) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(_strings.swapAlreadySelected)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_strings.swapAlreadySelected)));
       return;
     }
 
@@ -368,6 +383,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.9,
@@ -375,6 +391,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Material(
+          color: planning?.pageCanvas,
           elevation: context.effectTokens.swapSheetElevation,
           borderRadius: context.shapeTokens.swapSheet,
           clipBehavior: Clip.antiAlias,
@@ -386,17 +403,45 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
               return Column(
                 children: [
                   _SwapSheetHeader(
-                    isLoading: snapshot.connectionState != ConnectionState.done,
+                    isLoading:
+                        snapshot.connectionState != ConnectionState.done &&
+                        !snapshot.hasError,
                   ),
                   Expanded(
-                    child:
-                        data == null
-                            ? const Center(child: CircularProgressIndicator())
-                            : _buildLoadedContent(
-                              context,
-                              scrollController,
-                              data,
+                    child: snapshot.hasError
+                        ? _SwapLoadError(
+                            error: snapshot.error!,
+                            planning: planning,
+                            onRetry: _retryLoad,
+                          )
+                        : data == null
+                        ? Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Flexible(
+                                    child: Text(
+                                      AppLocalizations.of(context)
+                                          .swapFindingMatches,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          )
+                        : _buildLoadedContent(context, scrollController, data),
                   ),
                 ],
               );
@@ -416,14 +461,51 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     final canFilterForProfile = data.hasProfile;
     final candidates = _filteredCandidates(data);
     final hasCandidates = candidates.isNotEmpty;
-    final selectedIndex =
-        hasCandidates ? _selectedIndex.clamp(0, candidates.length - 1) : 0;
+    final selectedIndex = hasCandidates
+        ? _selectedIndex.clamp(0, candidates.length - 1)
+        : 0;
     final manualReplacementActive = _manualReplacement != null;
     final selected =
         _manualReplacement ??
         (hasCandidates ? candidates[selectedIndex] : null);
     final canCycleRecommendations =
         candidates.length > 1 || (manualReplacementActive && hasCandidates);
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final browseLabel = _isLoadingManualReplacement
+        ? strings.swapLoadingSelected
+        : strings.swapBrowseCatalog;
+    final browseAction = planning == null
+        ? OutlinedButton.icon(
+            onPressed: _isLoadingManualReplacement
+                ? null
+                : () => _browseExerciseCatalog(data.current),
+            icon: _isLoadingManualReplacement
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.search),
+            label: Text(browseLabel),
+          )
+        : FilledButton.tonalIcon(
+            style: FilledButton.styleFrom(
+              backgroundColor: planning.actionSecondary,
+              foregroundColor: planning.actionSecondaryForeground,
+              shape: RoundedRectangleBorder(borderRadius: planning.rowShape),
+            ),
+            onPressed: _isLoadingManualReplacement
+                ? null
+                : () => _browseExerciseCatalog(data.current),
+            icon: _isLoadingManualReplacement
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.search),
+            label: Text(browseLabel),
+          );
 
     return Column(
       children: [
@@ -443,54 +525,43 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                   });
                 },
               ),
-              const SizedBox(height: 12),
-              _ExerciseSwapBox(label: strings.swapCurrent, entry: data.current),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed:
-                    _isLoadingManualReplacement
-                        ? null
-                        : () => _browseExerciseCatalog(data.current),
-                icon:
-                    _isLoadingManualReplacement
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Icon(Icons.search),
-                label: Text(
-                  _isLoadingManualReplacement
-                      ? strings.swapLoadingSelected
-                      : strings.swapBrowseCatalog,
+              const SizedBox(height: 8),
+              _ExerciseSwapBox(
+                label: strings.swapCurrent,
+                entry: data.current,
+                compact: planning != null,
+              ),
+              const SizedBox(height: 8),
+              if (selected == null)
+                _NoReplacementBox(planning: planning)
+              else
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (canCycleRecommendations)
+                      _SwapArrowButton(
+                        icon: Icons.chevron_left,
+                        enabled: true,
+                        onPressed: () => _showPrevious(candidates.length),
+                      ),
+                    Expanded(
+                      child: _ExerciseSwapBox(
+                        label: strings.swapReplacement,
+                        entry: selected,
+                        matchScore: selected.score,
+                        compact: planning != null,
+                      ),
+                    ),
+                    if (canCycleRecommendations)
+                      _SwapArrowButton(
+                        icon: Icons.chevron_right,
+                        enabled: true,
+                        onPressed: () => _showNext(candidates.length),
+                      ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _SwapArrowButton(
-                    icon: Icons.chevron_left,
-                    enabled: canCycleRecommendations,
-                    onPressed: () => _showPrevious(candidates.length),
-                  ),
-                  Expanded(
-                    child:
-                        selected == null
-                            ? const _NoReplacementBox()
-                            : _ExerciseSwapBox(
-                              label: strings.swapReplacement,
-                              entry: selected,
-                              matchScore: selected.score,
-                            ),
-                  ),
-                  _SwapArrowButton(
-                    icon: Icons.chevron_right,
-                    enabled: canCycleRecommendations,
-                    onPressed: () => _showNext(candidates.length),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 8),
+              Align(alignment: Alignment.center, child: browseAction),
             ],
           ),
         ),
@@ -501,7 +572,8 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
             child: Row(
               children: [
                 Expanded(
-                  child: WorkoutSwapAction(
+                  child: _buildSwapAction(
+                    planning: planning,
                     cancel: true,
                     label: strings.commonCancel,
                     onPressed: () => Navigator.pop(context),
@@ -509,12 +581,12 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: WorkoutSwapAction(
+                  child: _buildSwapAction(
+                    planning: planning,
                     label: strings.swapConfirm,
-                    onPressed:
-                        selected == null
-                            ? null
-                            : () => Navigator.pop(context, selected.definition),
+                    onPressed: selected == null
+                        ? null
+                        : () => Navigator.pop(context, selected.definition),
                   ),
                 ),
               ],
@@ -522,6 +594,61 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSwapAction({
+    required AppExpressivePlanningTokens? planning,
+    required String label,
+    required VoidCallback? onPressed,
+    bool cancel = false,
+  }) {
+    if (planning == null) {
+      return WorkoutSwapAction(
+        cancel: cancel,
+        label: label,
+        onPressed: onPressed,
+      );
+    }
+
+    final theme = Theme.of(context);
+    final shape = RoundedRectangleBorder(borderRadius: planning.rowShape);
+    final Widget button = cancel
+        ? OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: planning.configurationForeground,
+              side: BorderSide(color: planning.outline),
+              minimumSize: const Size.fromHeight(48),
+              shape: shape,
+            ),
+            onPressed: onPressed,
+            child: Text(label),
+          )
+        : FilledButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.disabled)
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : planning.actionPrimary,
+              ),
+              foregroundColor: WidgetStateProperty.resolveWith(
+                (states) => states.contains(WidgetState.disabled)
+                    ? theme.disabledColor
+                    : planning.actionPrimaryForeground,
+              ),
+              minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
+              shape: WidgetStatePropertyAll(shape),
+            ),
+            onPressed: onPressed,
+            child: Text(label),
+          );
+    return TonosExpressivePressResponse(
+      enabled: onPressed != null,
+      borderRadius: planning.rowShape,
+      pressedBorderRadius: planning.rowShape,
+      pressedScale: TonosExpressiveMotionTiers.supportingScale,
+      pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+      child: button,
     );
   }
 
@@ -562,8 +689,11 @@ class _SwapSheetHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final theme = Theme.of(context);
+    return Container(
+      color: planning?.planFocalSurface,
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 10),
       child: Row(
         children: [
           Expanded(
@@ -572,22 +702,47 @@ class _SwapSheetHeader extends StatelessWidget {
               children: [
                 Text(
                   strings.swapTitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: planning?.planFocalForeground,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  isLoading
-                      ? strings.swapFindingMatches
-                      : strings.swapChooseReplacement,
-                  style: Theme.of(context).textTheme.bodySmall,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        isLoading
+                            ? strings.swapFindingMatches
+                            : strings.swapChooseReplacement,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: planning?.planFocalForeground,
+                        ),
+                      ),
+                    ),
+                    if (isLoading) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: planning?.planAccent,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
           ),
           IconButton(
             tooltip: strings.commonClose,
+            style: planning == null
+                ? null
+                : IconButton.styleFrom(
+                    foregroundColor: planning.planFocalForeground,
+                  ),
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -624,21 +779,41 @@ class _ExerciseSwapBox extends StatelessWidget {
   final String label;
   final _ExerciseSwapEntry entry;
   final double? matchScore;
+  final bool compact;
 
   const _ExerciseSwapBox({
     required this.label,
     required this.entry,
     this.matchScore,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final fill = planning == null
+        ? null
+        : matchScore == null
+        ? planning.planSupportSurface
+        : planning.configurationSurface;
+    final foreground = planning == null
+        ? theme.colorScheme.onSurface
+        : matchScore == null
+        ? planning.planSupportForeground
+        : planning.configurationForeground;
+    final secondaryForeground =
+        (planning == null ? theme.textTheme.bodySmall?.color : foreground)
+            ?.withValues(alpha: surfaces.swapSecondaryTextOpacity);
 
-    return Card(
+    final card = Card(
+      color: fill,
+      shape: planning == null
+          ? null
+          : RoundedRectangleBorder(borderRadius: planning.supportShape),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(planning == null ? 12 : 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -649,7 +824,7 @@ class _ExerciseSwapBox extends StatelessWidget {
                   child: Text(
                     label,
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
+                      color: planning?.planAccent ?? theme.colorScheme.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -657,49 +832,44 @@ class _ExerciseSwapBox extends StatelessWidget {
                 if (matchScore != null) _MatchBadge(score: matchScore!),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: planning == null ? 8 : 5),
             LocalizedExerciseNameBuilder(
               definition: entry.definition,
-              builder:
-                  (context, name) => LocalizedCatalogEntityNamesBuilder(
-                    entities: entry.equipment,
-                    builder:
-                        (context, equipmentNames) => Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(text: name),
-                              TextSpan(
-                                text:
-                                    '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.textTheme.bodySmall?.color
-                                      ?.withValues(
-                                        alpha:
-                                            context
-                                                .surfaceTokens
-                                                .swapSecondaryTextOpacity,
-                                      ),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+              builder: (context, name) => LocalizedCatalogEntityNamesBuilder(
+                entities: entry.equipment,
+                builder: (context, equipmentNames) => Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: name),
+                      TextSpan(
+                        text:
+                            '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: secondaryForeground,
+                          fontWeight: FontWeight.w500,
                         ),
+                      ),
+                    ],
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: planning == null ? 16 : 8),
             LayoutBuilder(
               builder: (context, constraints) {
                 final maxWidth = constraints.maxWidth;
                 final gap = maxWidth < 330 ? 8.0 : 14.0;
-                final heatmapWidth =
-                    (maxWidth * 0.42).clamp(106.0, 145.0).toDouble();
-                final heatmapSize = heatmapWidth.clamp(100.0, 145.0).toDouble();
+                final heatmapWidth = planning == null
+                    ? (maxWidth * 0.42).clamp(106.0, 145.0).toDouble()
+                    : (maxWidth * 0.32).clamp(84.0, 112.0).toDouble();
+                final heatmapSize = planning == null
+                    ? heatmapWidth.clamp(100.0, 145.0).toDouble()
+                    : heatmapWidth.clamp(84.0, 112.0).toDouble();
                 final heatmap = SizedBox(
                   width: heatmapWidth,
                   height: heatmapSize,
@@ -708,24 +878,30 @@ class _ExerciseSwapBox extends StatelessWidget {
                       frequencyMap: entry.frequencyMap,
                       lowColor: tonosHeatmapLowForSurface(
                         context,
-                        surfaces.card,
+                        fill ?? surfaces.card,
                       ),
                       highColor: tonosHeatmapHighForSurface(
                         context,
-                        surfaces.card,
+                        fill ?? surfaces.card,
                       ),
                       width: heatmapSize,
                       height: heatmapSize,
                     ),
                   ),
                 );
-                final focusList = _BodyPartNameList(hits: entry.bodyPartHits);
+                final focusList = _BodyPartNameList(
+                  hits: entry.bodyPartHits,
+                  compact: compact,
+                  foreground: foreground,
+                );
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     heatmap,
-                    SizedBox(width: gap),
+                    SizedBox(
+                      width: planning == null ? gap : gap.clamp(6.0, 10.0),
+                    ),
                     Expanded(child: focusList),
                   ],
                 );
@@ -735,13 +911,35 @@ class _ExerciseSwapBox extends StatelessWidget {
         ),
       ),
     );
+    if (planning == null) return card;
+    return Theme(
+      data: theme.copyWith(
+        colorScheme: theme.colorScheme.copyWith(
+          surface: fill,
+          onSurface: foreground,
+          onSurfaceVariant: secondaryForeground,
+          primary: planning.planAccent,
+        ),
+        textTheme: theme.textTheme.apply(
+          bodyColor: foreground,
+          displayColor: foreground,
+        ),
+      ),
+      child: card,
+    );
   }
 }
 
 class _BodyPartNameList extends StatelessWidget {
   final List<_BodyPartHit> hits;
+  final bool compact;
+  final Color foreground;
 
-  const _BodyPartNameList({required this.hits});
+  const _BodyPartNameList({
+    required this.hits,
+    required this.compact,
+    required this.foreground,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -753,18 +951,21 @@ class _BodyPartNameList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          strings.swapBodypartsHit,
+          context.usesExpressivePresentation
+              ? strings.swapBodyPartsWorked
+              : strings.swapBodypartsHit,
           style: theme.textTheme.labelMedium?.copyWith(
+            color: foreground,
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: compact ? 3 : 6),
         if (visibleHits.isEmpty)
           Text(strings.swapNoBodypartData, style: theme.textTheme.bodySmall)
         else
           for (final hit in visibleHits)
             Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: EdgeInsets.only(bottom: compact ? 2 : 4),
               child: Row(
                 children: [
                   const WorkoutMatchMarker(),
@@ -775,8 +976,9 @@ class _BodyPartNameList extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
+                        color: foreground,
                         fontSize: 11,
-                        height: 1.1,
+                        height: compact ? 1.0 : 1.1,
                       ),
                     ),
                   ),
@@ -822,34 +1024,122 @@ class _SwapArrowButton extends StatelessWidget {
 }
 
 class _NoReplacementBox extends StatelessWidget {
-  const _NoReplacementBox();
+  final AppExpressivePlanningTokens? planning;
+
+  const _NoReplacementBox({required this.planning});
 
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = planning;
+    final foreground =
+        tokens?.configurationForeground ?? theme.colorScheme.onSurface;
     return Card(
+      color: tokens?.configurationSurface,
+      shape: tokens == null
+          ? null
+          : RoundedRectangleBorder(borderRadius: tokens.supportShape),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(tokens == null ? 24 : 14),
         child: Column(
           children: [
             Icon(
               Icons.search_off,
-              size: 40,
-              color: Theme.of(context).colorScheme.primary,
+              size: tokens == null ? 40 : 28,
+              color: tokens?.planAccent ?? theme.colorScheme.primary,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: tokens == null ? 12 : 6),
             Text(
               strings.swapNoReplacements,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.titleMedium?.copyWith(color: foreground),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: tokens == null ? 8 : 4),
             Text(
               strings.swapNoReplacementsBody,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall?.copyWith(color: foreground),
               textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SwapLoadError extends StatelessWidget {
+  final Object error;
+  final AppExpressivePlanningTokens? planning;
+  final VoidCallback onRetry;
+
+  const _SwapLoadError({
+    required this.error,
+    required this.planning,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = planning;
+    final foreground =
+        tokens?.configurationForeground ?? theme.colorScheme.onSurface;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Card(
+        color: tokens?.configurationSurface,
+        shape: tokens == null
+            ? null
+            : RoundedRectangleBorder(borderRadius: tokens.supportShape),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: tokens?.planAccent ?? theme.colorScheme.error,
+                size: 30,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                strings.safeFailureLoadTitle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                safeFailureMessage(strings, error),
+                style: theme.textTheme.bodySmall?.copyWith(color: foreground),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              if (tokens == null)
+                TextButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(strings.commonRetry),
+                )
+              else
+                FilledButton.tonalIcon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: tokens.actionSecondary,
+                    foregroundColor: tokens.actionSecondaryForeground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: tokens.rowShape,
+                    ),
+                  ),
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(strings.commonRetry),
+                ),
+            ],
+          ),
         ),
       ),
     );

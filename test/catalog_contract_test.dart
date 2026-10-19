@@ -9,25 +9,24 @@ void main() {
     () async {
       final source = await File('assets/exercises.json').readAsString();
       final catalog = jsonDecode(source) as Map<String, dynamic>;
-      final exercises =
-          (catalog['exercises'] as List).cast<Map<String, dynamic>>();
+      final exercises = (catalog['exercises'] as List)
+          .cast<Map<String, dynamic>>();
 
       expect(catalog['revision'], isA<int>());
       expect(catalog['revision'], greaterThanOrEqualTo(1));
       expect(exercises, isNotEmpty);
 
-      final catalogIds =
-          exercises.map((exercise) => exercise['catalogId'] as String).toList();
-      final legacyMediaIds =
-          exercises
-              .map((exercise) => exercise['legacyMediaId'] as int)
-              .toList();
+      final catalogIds = exercises
+          .map((exercise) => exercise['catalogId'] as String)
+          .toList();
+      final legacyMediaIds = exercises
+          .map((exercise) => exercise['legacyMediaId'] as int)
+          .toList();
       expect(catalogIds.toSet(), hasLength(exercises.length));
       expect(legacyMediaIds.toSet(), hasLength(exercises.length));
-      final names =
-          exercises
-              .map((exercise) => (exercise['name'] as String).toLowerCase())
-              .toSet();
+      final names = exercises
+          .map((exercise) => (exercise['name'] as String).toLowerCase())
+          .toSet();
       expect(names, hasLength(exercises.length));
       final aliases = <String>{};
       for (final exercise in exercises) {
@@ -100,11 +99,10 @@ void main() {
             reason: '${exercise['name']} has an invalid muscle rank.',
           );
         }
-        final muscleNames =
-            (exercise['muscles'] as List? ?? const [])
-                .map((muscle) => (muscle as Map)['name'] as String)
-                .map((name) => name.trim().toLowerCase())
-                .toList();
+        final muscleNames = (exercise['muscles'] as List? ?? const [])
+            .map((muscle) => (muscle as Map)['name'] as String)
+            .map((name) => name.trim().toLowerCase())
+            .toList();
         expect(
           muscleNames.toSet(),
           hasLength(muscleNames.length),
@@ -135,4 +133,63 @@ void main() {
       }
     },
   );
+
+  test('named equipment variants have accurate primary equipment', () async {
+    final source = await File('assets/exercises.json').readAsString();
+    final catalog = jsonDecode(source) as Map<String, dynamic>;
+    final exercises = (catalog['exercises'] as List)
+        .cast<Map<String, dynamic>>();
+    Map<String, dynamic> exercise(String name) => exercises.singleWhere(
+      (entry) => entry['name'] == name,
+      orElse: () => throw StateError('Missing exercise "$name".'),
+    );
+
+    expect(
+      (exercise('Bicep Curl - Cable Machine')['equipment'] as List).first,
+      'Cable Machine',
+    );
+    expect(
+      (exercise('Bicep Curl - Resistance Band')['equipment'] as List).first,
+      'Resistance Band',
+    );
+    expect(
+      (exercise('Bicep Curl - Smith Machine')['equipment'] as List).first,
+      'Smith Machine',
+    );
+    expect(
+      (exercise('Bench Press - Barbell')['equipment'] as List).first,
+      'Barbell',
+    );
+    expect(
+      (exercise('Bench Press - Dumbbells')['equipment'] as List).first,
+      'Dumbbell',
+    );
+    expect((exercise('Push-up')['equipment'] as List).first, 'Bodyweight');
+  });
+
+  test('Bench Press - Barbell setup guide describes bench setup', () async {
+    final source = await File('assets/exercises.json').readAsString();
+    final catalog = jsonDecode(source) as Map<String, dynamic>;
+    final exercises = (catalog['exercises'] as List)
+        .cast<Map<String, dynamic>>();
+    final benchPress = exercises.singleWhere(
+      (entry) => entry['catalogId'] == 'tonos.exercise.0007',
+    );
+
+    expect(
+      benchPress['setupNotes'],
+      contains('Lie on the bench with your eyes beneath the bar.'),
+    );
+    expect(benchPress['setupNotes'], isNot(contains('Sit or stand tall')));
+
+    final translations = jsonDecode(
+      await File('assets/exercise_content_localizations.json').readAsString(),
+    ) as Map<String, dynamic>;
+    final spanishSetup =
+        (((translations['locales'] as Map)['es'] as Map)['tonos.exercise.0007']
+                as Map)['setupNotes']
+            as String;
+    expect(spanishSetup, contains('Túmbate en el banco'));
+    expect(spanishSetup, isNot(contains('Siéntate o ponte de pie')));
+  });
 }

@@ -1,0 +1,22 @@
+filename,route,appearance,state,provenance
+muscle-rankings-light.png,Profile > Training > Gym & Workout Settings > Workout Settings > Training Bias > Muscle Rankings,light,default list,current preview APK 2e4a2bd4
+muscle-rankings-dark.png,Profile > Training > Gym & Workout Settings > Workout Settings > Training Bias > Muscle Rankings,dark,default list,current preview APK 2e4a2bd4
+bodypart-muscle-mapping-light.png,Profile > Training > Gym & Workout Settings > Workout Settings > Exercise Definitions > Body Part / Muscle Mapping,light,read-only,current preview APK 2e4a2bd4
+bodypart-muscle-mapping-dark.png,Profile > Training > Gym & Workout Settings > Workout Settings > Exercise Definitions > Body Part / Muscle Mapping,dark,read-only,current preview APK 2e4a2bd4
+exercise-editor-light.png,Profile > Training > Gym & Workout Settings > Workout Settings > Exercise Definitions > Exercise Editor,light,landing,current preview APK 2e4a2bd4
+exercise-editor-dark.png,Profile > Training > Gym & Workout Settings > Workout Settings > Exercise Definitions > Exercise Editor,dark,landing,current preview APK 2e4a2bd4
+exercise-editor-picker-light.png,Exercise Editor > Choose exercise,light,caller-scoped picker,current preview APK 2e4a2bd4
+exercise-editor-picker-dark.png,Exercise Editor > Choose exercise,dark,caller-scoped picker,current preview APK 2e4a2bd4
+weekly-sets-overview-light.png,Train > Overview > Focused Sets > Weekly Sets Overview,light,overview,current preview APK 2e4a2bd4
+weekly-sets-overview-dark.png,Train > Overview > Focused Sets > Weekly Sets Overview,dark,overview,current preview APK 2e4a2bd4
+weekly-sets-bodypart-light.png,Weekly Sets Overview > body-part detail,light,analytics detail,current preview APK 2e4a2bd4
+weekly-sets-bodypart-dark.png,Weekly Sets Overview > body-part detail,dark,analytics detail,current preview APK 2e4a2bd4
+weekly-sets-muscle-light.png,Weekly Sets Overview > muscle detail,light,analytics detail,current preview APK 2e4a2bd4
+weekly-sets-muscle-dark.png,Weekly Sets Overview > muscle detail,dark,analytics detail,current preview APK 2e4a2bd4
+database-settings-light.png,Profile > Data > Database Settings,light,initial viewport,current preview APK 2e4a2bd4
+database-settings-dark.png,Profile > Data > Database Settings,dark,initial viewport,current preview APK 2e4a2bd4
+database-settings-health-path-light.png,Profile > Data > Database Settings,light,scrolled health and full path values,current preview APK 2e4a2bd4
+database-settings-health-path-dark.png,Profile > Data > Database Settings,dark,scrolled health and full path values,current preview APK 2e4a2bd4
+optimized-workout-settings-light.png,Train > Optimize > Optimized Workout Settings,light,default form,current preview APK 2e4a2bd4
+optimized-workout-settings-dark.png,Train > Optimize > Optimized Workout Settings,dark,default form,current preview APK 2e4a2bd4
+volume-boundaries-dark-navigation-probe.png,Profile > Training > Gym & Workout Settings > Workout Settings > Training Bias > Volume Boundaries,dark,diagnostic navigation probe excluded from primary evidence,current preview APK 2e4a2bd4

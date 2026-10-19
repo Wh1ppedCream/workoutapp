@@ -32,12 +32,14 @@ class DefinitionsByMusclePage extends StatefulWidget {
   final Muscle muscle;
   final BodyPart? sourceBodyPart;
   final bool expressiveCatalogPresentation;
+  final bool expressiveAnalyticsPresentation;
 
   const DefinitionsByMusclePage({
     super.key,
     required this.muscle,
     this.sourceBodyPart,
     this.expressiveCatalogPresentation = false,
+    this.expressiveAnalyticsPresentation = false,
   });
 
   @override
@@ -143,9 +145,8 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(
-              context,
-            ).anatomyRecommendedSetsUpdated(displayName),
+            AppLocalizations.of(context)
+                .anatomyRecommendedSetsUpdated(displayName),
           ),
         ),
       );
@@ -206,19 +207,30 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    final expressiveFamily = widget.expressiveAnalyticsPresentation
+        ? AppExpressiveDestinationFamily.analytics
+        : widget.expressiveCatalogPresentation
+        ? AppExpressiveDestinationFamily.catalog
+        : null;
     final expressive =
-        widget.expressiveCatalogPresentation &&
-        context.usesExpressivePresentation;
-    final destinationTokens =
-        expressive
-            ? AppExpressiveDestinationTokens.forFamily(
-              AppExpressiveDestinationFamily.catalog,
-              Theme.of(context).brightness,
-            )
-            : null;
+        expressiveFamily != null && context.usesExpressivePresentation;
+    final compactCatalogDetail =
+        expressive &&
+        expressiveFamily == AppExpressiveDestinationFamily.catalog;
+    final destinationTokens = expressive
+        ? AppExpressiveDestinationTokens.forFamily(
+            expressiveFamily,
+            Theme.of(context).brightness,
+          )
+        : null;
     final page = Scaffold(
       backgroundColor: expressive ? destinationTokens?.pageCanvas : null,
       appBar: AppBar(
+        backgroundColor: compactCatalogDetail
+            ? destinationTokens?.pageCanvas
+            : null,
+        surfaceTintColor: compactCatalogDetail ? Colors.transparent : null,
+        scrolledUnderElevation: compactCatalogDetail ? 0 : null,
         title: LocalizedCatalogEntityNamesBuilder(
           entities: [
             CatalogEntityDisplayName(
@@ -226,12 +238,13 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
               canonicalName: widget.muscle.name,
             ),
           ],
-          builder:
-              (context, names) => Text(
-                strings.anatomyTargetExercises(names.single),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+          builder: (context, names) => Text(
+            compactCatalogDetail
+                ? names.single
+                : strings.anatomyTargetExercises(names.single),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
       body: FutureBuilder<_MusclePageData>(
@@ -260,6 +273,7 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
                     sourceBodyPart: widget.sourceBodyPart,
                     data: data,
                     expressive: expressive,
+                    compactCatalogDetail: compactCatalogDetail,
                     onEditRecommended: () => _editRecommendedSets(data),
                     onBodyPartTap: (bodyPart) {
                       Navigator.of(context).push(
@@ -267,14 +281,20 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
                           builder: (_) {
                             final page = DefinitionsByBodyPartPage(
                               bodyPart: bodyPart,
-                              expressiveCatalogPresentation: expressive,
+                              expressiveCatalogPresentation:
+                                  expressive &&
+                                  expressiveFamily ==
+                                      AppExpressiveDestinationFamily.catalog,
+                              expressiveAnalyticsPresentation:
+                                  expressive &&
+                                  expressiveFamily ==
+                                      AppExpressiveDestinationFamily.analytics,
                             );
                             return expressive
                                 ? AppExpressiveDestinationTheme(
-                                  family:
-                                      AppExpressiveDestinationFamily.catalog,
-                                  child: page,
-                                )
+                                    family: expressiveFamily,
+                                    child: page,
+                                  )
                                 : page;
                           },
                         ),
@@ -291,6 +311,8 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
                   definition: definition,
                   muscleId: widget.muscle.id,
                   expressive: expressive,
+                  expressiveFamily: expressiveFamily,
+                  compactCatalogDetail: compactCatalogDetail,
                 ),
               );
             },
@@ -299,10 +321,7 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
       ),
     );
     return expressive
-        ? AppExpressiveDestinationTheme(
-          family: AppExpressiveDestinationFamily.catalog,
-          child: page,
-        )
+        ? AppExpressiveDestinationTheme(family: expressiveFamily, child: page)
         : page;
   }
 }
@@ -312,6 +331,7 @@ class _MuscleHeader extends StatelessWidget {
   final BodyPart? sourceBodyPart;
   final _MusclePageData data;
   final bool expressive;
+  final bool compactCatalogDetail;
   final VoidCallback onEditRecommended;
   final ValueChanged<BodyPart> onBodyPartTap;
 
@@ -320,6 +340,7 @@ class _MuscleHeader extends StatelessWidget {
     required this.sourceBodyPart,
     required this.data,
     required this.expressive,
+    required this.compactCatalogDetail,
     required this.onEditRecommended,
     required this.onBodyPartTap,
   });
@@ -328,31 +349,51 @@ class _MuscleHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final quietSurface = destinationTokens == null
+        ? theme.colorScheme.surfaceContainerLow
+        : Color.alphaBlend(
+            destinationTokens.surfaceAccent.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.18 : 0.07,
+            ),
+            destinationTokens.pageCanvas,
+          );
+    final heroSurface = compactCatalogDetail
+        ? theme.brightness == Brightness.dark
+              ? const Color(0xFF30243E)
+              : const Color(0xFFE9DDF1)
+        : quietSurface;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: compactCatalogDetail
+          ? const EdgeInsets.fromLTRB(16, 8, 16, 6)
+          : const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TonosThemeReadyCard(
-            color:
-                expressive
-                    ? destinationTokens?.surfaceAccent ??
-                        theme.colorScheme.surfaceContainerLow
-                    : null,
+            color: compactCatalogDetail
+                ? heroSurface
+                : expressive
+                ? destinationTokens?.surfaceAccent ??
+                      theme.colorScheme.surfaceContainerLow
+                : null,
             elevation: expressive ? 0 : null,
-            shape:
-                expressive
-                    ? const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(28),
-                        bottomRight: Radius.circular(12),
-                        bottomLeft: Radius.circular(28),
-                      ),
-                    )
-                    : null,
+            margin: compactCatalogDetail ? EdgeInsets.zero : null,
+            shape: compactCatalogDetail
+                ? const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(18)),
+                  )
+                : expressive
+                ? const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(28),
+                      bottomRight: Radius.circular(12),
+                      bottomLeft: Radius.circular(28),
+                    ),
+                  )
+                : null,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(compactCatalogDetail ? 14 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -360,31 +401,38 @@ class _MuscleHeader extends StatelessWidget {
                     children: [
                       expressive
                           ? CircleAvatar(
-                            radius: 26,
-                            backgroundColor: destinationTokens?.surfaceAccent,
-                            child: Icon(
-                              Icons.fitness_center,
-                              color: destinationTokens?.onSurfaceAccent,
-                              size: 25,
-                            ),
-                          )
+                              radius: compactCatalogDetail ? 20 : 26,
+                              backgroundColor: compactCatalogDetail
+                                  ? Color.alphaBlend(
+                                      destinationTokens!.surfaceSelected
+                                          .withValues(alpha: 0.25),
+                                      quietSurface,
+                                    )
+                                  : destinationTokens?.surfaceAccent,
+                              child: Icon(
+                                Icons.fitness_center,
+                                color: compactCatalogDetail
+                                    ? destinationTokens?.actionPrimary
+                                    : destinationTokens?.onSurfaceAccent,
+                                size: compactCatalogDetail ? 20 : 25,
+                              ),
+                            )
                           : CircleAvatar(
-                            radius: 26,
-                            child: LocalizedCatalogEntityNamesBuilder(
-                              entities: [
-                                CatalogEntityDisplayName(
-                                  catalogId: muscle.catalogId,
-                                  canonicalName: muscle.name,
-                                ),
-                              ],
-                              builder:
-                                  (context, names) => Text(
-                                    _initialFor(names.single),
-                                    style: theme.textTheme.titleLarge,
+                              radius: 26,
+                              child: LocalizedCatalogEntityNamesBuilder(
+                                entities: [
+                                  CatalogEntityDisplayName(
+                                    catalogId: muscle.catalogId,
+                                    canonicalName: muscle.name,
                                   ),
+                                ],
+                                builder: (context, names) => Text(
+                                  _initialFor(names.single),
+                                  style: theme.textTheme.titleLarge,
+                                ),
+                              ),
                             ),
-                          ),
-                      const SizedBox(width: 14),
+                      SizedBox(width: compactCatalogDetail ? 10 : 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,31 +442,45 @@ class _MuscleHeader extends StatelessWidget {
                                 catalogId: muscle.catalogId,
                                 canonicalName: muscle.name,
                               ),
-                              maxLines: expressive ? 2 : 1,
-                              overflow:
-                                  expressive ? null : TextOverflow.ellipsis,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color:
-                                    expressive
-                                        ? destinationTokens?.onSurfaceAccent
-                                        : null,
-                                fontWeight: expressive ? FontWeight.w700 : null,
-                              ),
+                              maxLines: compactCatalogDetail
+                                  ? null
+                                  : expressive
+                                  ? 2
+                                  : 1,
+                              overflow: expressive
+                                  ? null
+                                  : TextOverflow.ellipsis,
+                              style:
+                                  (compactCatalogDetail
+                                          ? theme.textTheme.titleMedium
+                                          : theme.textTheme.titleLarge)
+                                      ?.copyWith(
+                                        color: compactCatalogDetail
+                                            ? theme.colorScheme.onSurface
+                                            : expressive
+                                            ? destinationTokens?.onSurfaceAccent
+                                            : null,
+                                        fontWeight: expressive
+                                            ? FontWeight.w700
+                                            : null,
+                                      ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              AppLocalizations.of(
-                                context,
-                              ).anatomyLinkedExerciseCount(
-                                data.definitions.length,
-                              ),
-                              style:
-                                  expressive
-                                      ? theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                            destinationTokens?.onSurfaceAccent,
-                                      )
-                                      : null,
+                              AppLocalizations.of(context)
+                                  .anatomyLinkedExerciseCount(
+                                    data.definitions.length,
+                                  ),
+                              style: compactCatalogDetail
+                                  ? theme.textTheme.bodySmall?.copyWith(
+                                      color: destinationTokens
+                                          ?.supportingForeground,
+                                    )
+                                  : expressive
+                                  ? theme.textTheme.bodyMedium?.copyWith(
+                                      color: destinationTokens?.onSurfaceAccent,
+                                    )
+                                  : null,
                             ),
                           ],
                         ),
@@ -432,18 +494,23 @@ class _MuscleHeader extends StatelessWidget {
                         localizedBodyPartName(context, sourceBodyPart!.name),
                       ),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            expressive
-                                ? destinationTokens?.onSurfaceAccent
-                                : null,
+                        color: compactCatalogDetail
+                            ? destinationTokens?.supportingForeground
+                            : expressive
+                            ? destinationTokens?.onSurfaceAccent
+                            : null,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 16),
+                  SizedBox(height: compactCatalogDetail ? 12 : 16),
                   if (expressive)
                     _MuscleExpressiveMetricBays(
-                      recentLabel:
-                          AppLocalizations.of(context).anatomySetsLastSevenDays,
+                      recentLabel: compactCatalogDetail
+                          ? AppLocalizations.of(context)
+                                .anatomyDoneSevenDaysCompact
+                          : AppLocalizations.of(context)
+                                .anatomySetsLastSevenDays,
+                      compact: compactCatalogDetail,
                       recentValue: AppLocalizations.of(context).anatomySetUnits(
                         LocalizedFormatters.number(
                           data.recentSetUnits,
@@ -452,8 +519,10 @@ class _MuscleHeader extends StatelessWidget {
                           maximumFractionDigits: 1,
                         ),
                       ),
-                      recommendedLabel:
-                          AppLocalizations.of(context).anatomyRecommended,
+                      recommendedLabel: compactCatalogDetail
+                          ? AppLocalizations.of(context)
+                                .anatomyRecommendedWeeklyCompact
+                          : AppLocalizations.of(context).anatomyRecommended,
                       recommendedValue: _rangeLabel(
                         AppLocalizations.of(context),
                         data.volumeBounds,
@@ -467,10 +536,8 @@ class _MuscleHeader extends StatelessWidget {
                       runSpacing: 10,
                       children: [
                         SetStatChip(
-                          label:
-                              AppLocalizations.of(
-                                context,
-                              ).anatomySetsLastSevenDays,
+                          label: AppLocalizations.of(context)
+                              .anatomySetsLastSevenDays,
                           value: AppLocalizations.of(context).anatomySetUnits(
                             LocalizedFormatters.number(
                               data.recentSetUnits,
@@ -481,8 +548,8 @@ class _MuscleHeader extends StatelessWidget {
                           ),
                         ),
                         SetStatChip(
-                          label:
-                              AppLocalizations.of(context).anatomyRecommended,
+                          label: AppLocalizations.of(context)
+                              .anatomyRecommended,
                           value: _rangeLabel(
                             AppLocalizations.of(context),
                             data.volumeBounds,
@@ -496,53 +563,93 @@ class _MuscleHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context).anatomyRelatedBodyParts,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: expressive ? FontWeight.w700 : null,
-              color:
-                  expressive
-                      ? destinationTokens?.actionPrimary ??
+          SizedBox(height: compactCatalogDetail ? 12 : 16),
+          if (!compactCatalogDetail || data.bodyParts.isNotEmpty)
+            Text(
+              AppLocalizations.of(context).anatomyRelatedBodyParts,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: expressive ? FontWeight.w700 : null,
+                color: expressive
+                    ? destinationTokens?.actionPrimary ??
                           theme.colorScheme.primary
-                      : null,
+                    : null,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          if (data.bodyParts.isEmpty)
+          if (!compactCatalogDetail || data.bodyParts.isNotEmpty)
+            SizedBox(height: compactCatalogDetail ? 4 : 8),
+          if (data.bodyParts.isEmpty && !compactCatalogDetail)
             Text(
               AppLocalizations.of(context).anatomyNoBodyPartLinks,
-              style: theme.textTheme.bodyMedium,
+              style: compactCatalogDetail
+                  ? theme.textTheme.bodySmall?.copyWith(
+                      color: destinationTokens?.supportingForeground,
+                    )
+                  : theme.textTheme.bodyMedium,
             )
-          else
+          else if (data.bodyParts.isNotEmpty)
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children:
-                  data.bodyParts
-                      .map(
-                        (bodyPart) => ActionChip(
-                          label: Text(
-                            localizedBodyPartName(context, bodyPart.name),
-                            maxLines: expressive ? 2 : 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          avatar: const Icon(Icons.accessibility_new, size: 18),
-                          onPressed: () => onBodyPartTap(bodyPart),
-                        ),
-                      )
-                      .toList(),
+              spacing: compactCatalogDetail ? 6 : 8,
+              runSpacing: compactCatalogDetail ? 4 : 8,
+              children: data.bodyParts
+                  .map(
+                    (bodyPart) => ActionChip(
+                      backgroundColor: compactCatalogDetail
+                          ? quietSurface
+                          : null,
+                      labelPadding: compactCatalogDetail
+                          ? const EdgeInsets.symmetric(horizontal: 8)
+                          : null,
+                      padding: compactCatalogDetail ? EdgeInsets.zero : null,
+                      shape: compactCatalogDetail
+                          ? RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            )
+                          : null,
+                      materialTapTargetSize: compactCatalogDetail
+                          ? MaterialTapTargetSize.padded
+                          : null,
+                      side: compactCatalogDetail
+                          ? BorderSide(
+                              color: destinationTokens!.outlineAccent
+                                  .withValues(alpha: 0.18),
+                            )
+                          : null,
+                      label: Text(
+                        localizedBodyPartName(context, bodyPart.name),
+                        maxLines: expressive ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: compactCatalogDetail
+                            ? theme.textTheme.labelMedium?.copyWith(
+                                color: destinationTokens?.supportingForeground,
+                              )
+                            : null,
+                      ),
+                      avatar: Icon(
+                        Icons.accessibility_new,
+                        size: compactCatalogDetail ? 16 : 18,
+                        color: compactCatalogDetail
+                            ? destinationTokens?.supportingForeground
+                            : null,
+                      ),
+                      onPressed: () => onBodyPartTap(bodyPart),
+                    ),
+                  )
+                  .toList(),
             ),
-          const Divider(height: 32),
+          Divider(
+            height: compactCatalogDetail ? 20 : 32,
+            color: compactCatalogDetail
+                ? theme.colorScheme.outlineVariant
+                : null,
+          ),
           Text(
             AppLocalizations.of(context).anatomyExercises,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: expressive ? FontWeight.w700 : null,
-              color:
-                  expressive
-                      ? destinationTokens?.actionPrimary ??
-                          theme.colorScheme.primary
-                      : null,
+              color: expressive
+                  ? destinationTokens?.actionPrimary ??
+                        theme.colorScheme.primary
+                  : null,
             ),
           ),
           if (data.definitions.isEmpty) ...[
@@ -554,12 +661,10 @@ class _MuscleHeader extends StatelessWidget {
                   canonicalName: muscle.name,
                 ),
               ],
-              builder:
-                  (context, names) => Text(
-                    AppLocalizations.of(
-                      context,
-                    ).anatomyNoExercisesFor(names.single),
-                  ),
+              builder: (context, names) => Text(
+                AppLocalizations.of(context)
+                    .anatomyNoExercisesFor(names.single),
+              ),
             ),
           ],
         ],
@@ -598,6 +703,7 @@ class _MuscleExpressiveMetricBays extends StatelessWidget {
     required this.recentValue,
     required this.recommendedLabel,
     required this.recommendedValue,
+    required this.compact,
     required this.onEdit,
   });
 
@@ -605,42 +711,45 @@ class _MuscleExpressiveMetricBays extends StatelessWidget {
   final String recentValue;
   final String recommendedLabel;
   final String recommendedValue;
+  final bool compact;
   final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
-    final tokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
     final first = _MuscleExpressiveMetricBay(
       label: recentLabel,
       value: recentValue,
+      compact: compact,
     );
     final second = _MuscleExpressiveMetricBay(
       label: recommendedLabel,
       value: recommendedValue,
+      compact: compact,
       onEdit: onEdit,
     );
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stacked =
-            constraints.maxWidth < 330 ||
-            MediaQuery.textScalerOf(context).scale(16) > 19;
-        return Container(
-          decoration: BoxDecoration(
-            color: tokens.surfaceSelected,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(8),
-              topRight: Radius.circular(18),
-              bottomRight: Radius.circular(8),
-              bottomLeft: Radius.circular(18),
+        if (!compact) {
+          final tokens = Theme.of(context)
+              .extension<AppExpressiveDestinationTokens>()!;
+          final stacked =
+              constraints.maxWidth < 330 ||
+              MediaQuery.textScalerOf(context).scale(16) > 19;
+          return Container(
+            decoration: BoxDecoration(
+              color: tokens.surfaceSelected,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(18),
+                bottomRight: Radius.circular(8),
+                bottomLeft: Radius.circular(18),
+              ),
+              border: Border.all(
+                color: tokens.outlineAccent.withValues(alpha: 0.35),
+              ),
             ),
-            border: Border.all(
-              color: tokens.outlineAccent.withValues(alpha: 0.35),
-            ),
-          ),
-          child:
-              stacked
-                  ? Column(
+            child: stacked
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       first,
@@ -652,7 +761,7 @@ class _MuscleExpressiveMetricBays extends StatelessWidget {
                       second,
                     ],
                   )
-                  : Row(
+                : Row(
                     children: [
                       Expanded(child: first),
                       Container(
@@ -663,7 +772,26 @@ class _MuscleExpressiveMetricBays extends StatelessWidget {
                       Expanded(child: second),
                     ],
                   ),
-        );
+          );
+        }
+        final stacked =
+            constraints.maxWidth < 290 ||
+            MediaQuery.textScalerOf(context).scale(16) > 22;
+        return stacked
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [first, const SizedBox(height: 8), second],
+              )
+            : IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: first),
+                    const SizedBox(width: 8),
+                    Expanded(child: second),
+                  ],
+                ),
+              );
       },
     );
   }
@@ -673,29 +801,76 @@ class _MuscleExpressiveMetricBay extends StatelessWidget {
   const _MuscleExpressiveMetricBay({
     required this.label,
     required this.value,
+    required this.compact,
     this.onEdit,
   });
 
   final String label;
   final String value;
+  final bool compact;
   final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context) {
-    final tokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>()!;
-    return Padding(
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+    if (!compact) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              maxLines: 2,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: tokens.onSurfaceSelected,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    maxLines: 2,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: tokens.onSurfaceSelected,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (onEdit != null) ...[
+                  const SizedBox(width: 4),
+                  IconTheme.merge(
+                    data: IconThemeData(color: tokens.onSurfaceSelected),
+                    child: RecommendedSetsEditButton(onPressed: onEdit!),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+    final dark = theme.brightness == Brightness.dark;
+    final heroSurface = dark
+        ? const Color(0xFF30243E)
+        : const Color(0xFFE9DDF1);
+    final radius = BorderRadius.circular(14);
+    final content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            maxLines: 2,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: tokens.onSurfaceSelected),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tokens.supportingForeground,
+            ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -703,24 +878,48 @@ class _MuscleExpressiveMetricBay extends StatelessWidget {
               Expanded(
                 child: Text(
                   value,
-                  maxLines: 2,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: tokens.onSurfaceSelected,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               if (onEdit != null) ...[
                 const SizedBox(width: 4),
-                IconTheme.merge(
-                  data: IconThemeData(color: tokens.onSurfaceSelected),
-                  child: RecommendedSetsEditButton(onPressed: onEdit!),
+                Icon(
+                  Icons.edit_outlined,
+                  color: tokens.actionPrimary,
+                  size: 16,
                 ),
               ],
             ],
           ),
         ],
       ),
+    );
+    return Material(
+      color: Color.alphaBlend(
+        tokens.surfaceSelected.withValues(alpha: dark ? 0.22 : 0.30),
+        heroSurface,
+      ),
+      borderRadius: radius,
+      child: onEdit == null
+          ? content
+          : Tooltip(
+              message: AppLocalizations.of(context).recommendedSetsEdit,
+              child: InkWell(
+                onTap: onEdit,
+                borderRadius: radius,
+                child: Semantics(
+                  button: true,
+                  label: AppLocalizations.of(context).recommendedSetsEdit,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: content,
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }
@@ -729,11 +928,15 @@ class _ExerciseDefinitionTile extends StatelessWidget {
   final ExerciseDefinition definition;
   final int muscleId;
   final bool expressive;
+  final AppExpressiveDestinationFamily? expressiveFamily;
+  final bool compactCatalogDetail;
 
   const _ExerciseDefinitionTile({
     required this.definition,
     required this.muscleId,
     required this.expressive,
+    required this.expressiveFamily,
+    required this.compactCatalogDetail,
   });
 
   @override
@@ -745,8 +948,10 @@ class _ExerciseDefinitionTile extends StatelessWidget {
         definition: definition,
         muscleRank: rank,
         expressive: expressive,
+        compactCatalogDetail: compactCatalogDetail,
       ),
-      expressiveCatalogPresentation: expressive,
+      expressiveDestinationFamily: expressive ? expressiveFamily : null,
+      compactExpressivePresentation: compactCatalogDetail,
     );
   }
 
@@ -762,18 +967,20 @@ class _ExerciseMetadata extends StatelessWidget {
   final ExerciseDefinition definition;
   final int muscleRank;
   final bool expressive;
+  final bool compactCatalogDetail;
 
   const _ExerciseMetadata({
     required this.definition,
     required this.muscleRank,
     required this.expressive,
+    required this.compactCatalogDetail,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final destinationTokens =
-        Theme.of(context).extension<AppExpressiveDestinationTokens>();
+    final destinationTokens = Theme.of(context)
+        .extension<AppExpressiveDestinationTokens>();
     final equipmentEntities = definition.equipmentList
         .where((item) => item.name.trim().isNotEmpty)
         .map(
@@ -783,44 +990,70 @@ class _ExerciseMetadata extends StatelessWidget {
           ),
         )
         .toList(growable: false);
-    final equipmentLabel =
-        equipmentEntities.isEmpty
-            ? Text(
-              AppLocalizations.of(context).anatomyNoEquipment,
-              maxLines: expressive ? null : 1,
-              overflow: expressive ? null : TextOverflow.ellipsis,
-              style: TextStyle(
-                color:
-                    expressive
-                        ? destinationTokens?.actionPrimary
-                        : colors.primary,
+    Widget equipmentText(String label) {
+      final text = Text(
+        label,
+        maxLines: compactCatalogDetail
+            ? 2
+            : expressive
+            ? null
+            : 1,
+        overflow: compactCatalogDetail || !expressive
+            ? TextOverflow.ellipsis
+            : null,
+        style: expressive
+            ? Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: destinationTokens?.supportingForeground)
+            : TextStyle(color: colors.primary, fontWeight: FontWeight.w600),
+      );
+      return compactCatalogDetail ? Tooltip(message: label, child: text) : text;
+    }
+
+    final equipmentLabel = equipmentEntities.isEmpty
+        ? equipmentText(AppLocalizations.of(context).anatomyNoEquipment)
+        : LocalizedCatalogEntityNamesBuilder(
+            entities: equipmentEntities,
+            builder: (context, names) => equipmentText(names.join(', ')),
+          );
+    final bodyParts = definition.bodyParts.isEmpty
+        ? AppLocalizations.of(context).anatomyNoBodyPartsListed
+        : definition.bodyParts
+              .map((bodyPart) => localizedBodyPartName(context, bodyPart.name))
+              .join(', ');
+
+    if (compactCatalogDetail) {
+      final strings = AppLocalizations.of(context);
+      final rankLabel =
+          '${strings.rankingsRank} ${LocalizedFormatters.number(muscleRank, Localizations.localeOf(context), maximumFractionDigits: 0)}';
+      return Padding(
+        padding: const EdgeInsets.only(top: 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            equipmentLabel,
+            const SizedBox(height: 3),
+            Text(
+              rankLabel,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: destinationTokens?.actionPrimary,
                 fontWeight: FontWeight.w600,
               ),
-            )
-            : LocalizedCatalogEntityNamesBuilder(
-              entities: equipmentEntities,
-              builder:
-                  (context, names) => Text(
-                    names.join(', '),
-                    maxLines: expressive ? null : 1,
-                    overflow: expressive ? null : TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color:
-                          expressive
-                              ? destinationTokens?.actionPrimary
-                              : colors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-            );
-    final bodyParts =
-        definition.bodyParts.isEmpty
-            ? AppLocalizations.of(context).anatomyNoBodyPartsListed
-            : definition.bodyParts
-                .map(
-                  (bodyPart) => localizedBodyPartName(context, bodyPart.name),
-                )
-                .join(', ');
+            ),
+            const SizedBox(height: 2),
+            Tooltip(
+              message: bodyParts,
+              child: Text(
+                bodyParts,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(color: destinationTokens?.supportingForeground),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
@@ -830,18 +1063,16 @@ class _ExerciseMetadata extends StatelessWidget {
           equipmentLabel,
           const SizedBox(height: 3),
           Text(
-            AppLocalizations.of(
-              context,
-            ).anatomyRankForMuscle(muscleRank, bodyParts),
+            AppLocalizations.of(context)
+                .anatomyRankForMuscle(muscleRank, bodyParts),
             maxLines: expressive ? null : 1,
             overflow: expressive ? null : TextOverflow.ellipsis,
             style: TextStyle(
-              color:
-                  expressive
-                      ? destinationTokens?.supportingForeground
-                      : context.usesNeoPresentation
-                      ? context.semanticColors.positive
-                      : Colors.green.shade600,
+              color: expressive
+                  ? destinationTokens?.supportingForeground
+                  : context.usesNeoPresentation
+                  ? context.semanticColors.positive
+                  : Colors.green.shade600,
               fontWeight: FontWeight.w500,
             ),
           ),

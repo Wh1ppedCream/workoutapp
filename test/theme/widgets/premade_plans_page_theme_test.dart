@@ -200,6 +200,20 @@ void main() {
           final strings = AppLocalizations.of(context);
           final surfaces = context.surfaceTokens;
           final shapes = context.shapeTokens;
+          final isExpressive =
+              AppExpressivePlanningTokens.maybeOf(context) != null;
+          if (isExpressive) {
+            expect(
+              strings.premadeExpressivePlansCount(1),
+              '1 plan',
+              reason: 'Expressive plan counts use singular English wording.',
+            );
+            expect(
+              strings.premadeExpressivePlansCount(2),
+              '2 plans',
+              reason: 'Expressive plan counts use plural English wording.',
+            );
+          }
           final sourceExpansion = find.byType(ExpansionTile).first;
           final sourcePressResponse = find.ancestor(
             of: sourceExpansion,
@@ -211,102 +225,226 @@ void main() {
                 ? findsNothing
                 : findsOneWidget,
           );
-          final durationDecoration = find.byWidgetPredicate(
-            (widget) =>
-                widget is DecoratedBox &&
-                widget.decoration is BoxDecoration &&
-                (widget.decoration as BoxDecoration).color ==
-                    surfaces.planDuration &&
-                (widget.decoration as BoxDecoration).borderRadius ==
-                    shapes.planCard,
-          );
-          expect(durationDecoration, findsOneWidget);
-
-          final durationRow = find
-              .ancestor(
-                of: find.text(strings.premadeOneHour),
-                matching: find.byType(Row),
-              )
-              .first;
-          final durationSwitch = find.descendant(
-            of: durationRow,
-            matching: find.byType(Switch),
-          );
-          expect(durationSwitch, findsOneWidget);
-          expect(tester.widget<Switch>(durationSwitch).value, isFalse);
-          expect(
-            tester.getTopLeft(durationSwitch).dy,
-            greaterThan(
-              tester.getBottomLeft(find.text(strings.premadeDescription)).dy,
-            ),
-            reason: 'At narrow width, the duration control stacks below copy.',
-          );
-          await tester.tap(durationSwitch);
-          await tester.pumpAndSettle();
-          expect(tester.widget<Switch>(durationSwitch).value, isTrue);
-          await tester.tap(durationSwitch);
-          await tester.pumpAndSettle();
-          expect(tester.widget<Switch>(durationSwitch).value, isFalse);
+          if (isExpressive) {
+            final durationSelector = find.byType(SegmentedButton<int>);
+            expect(durationSelector, findsOneWidget);
+            final durationLabel = find.text(strings.optimizedWorkoutDuration);
+            expect(durationLabel, findsOneWidget);
+            expect(
+              tester.widget<SegmentedButton<int>>(durationSelector).selected,
+              {60},
+            );
+            expect(
+              tester.getBottomLeft(durationLabel).dy,
+              lessThan(tester.getTopLeft(durationSelector).dy),
+            );
+            expect(
+              tester.getTopLeft(durationSelector).dy,
+              greaterThan(
+                tester
+                    .getBottomLeft(
+                      find.text(strings.premadeExpressiveDescription),
+                    )
+                    .dy,
+              ),
+              reason: 'Expressive duration selection follows full-width copy.',
+            );
+            final selector = tester.widget<SegmentedButton<int>>(
+              durationSelector,
+            );
+            expect(
+              selector.style!.backgroundColor!.resolve({WidgetState.selected}),
+              AppExpressivePlanningTokens.maybeOf(context)!.actionPrimary,
+            );
+            await tester.tap(find.text(strings.premadeExpressiveTwoHours));
+            await tester.pumpAndSettle();
+            expect(
+              tester.widget<SegmentedButton<int>>(durationSelector).selected,
+              {120},
+            );
+            await tester.tap(find.text(strings.premadeExpressiveOneHour));
+            await tester.pumpAndSettle();
+            expect(
+              tester.widget<SegmentedButton<int>>(durationSelector).selected,
+              {60},
+            );
+            expect(find.text(strings.premadeBuiltinPlansTitle), findsOneWidget);
+          } else {
+            final durationDecoration = find.byWidgetPredicate(
+              (widget) =>
+                  widget is DecoratedBox &&
+                  widget.decoration is BoxDecoration &&
+                  (widget.decoration as BoxDecoration).color ==
+                      surfaces.planDuration &&
+                  (widget.decoration as BoxDecoration).borderRadius ==
+                      shapes.planCard,
+            );
+            expect(durationDecoration, findsOneWidget);
+            final durationRow = find
+                .ancestor(
+                  of: find.text(strings.premadeOneHour),
+                  matching: find.byType(Row),
+                )
+                .first;
+            final durationSwitch = find.descendant(
+              of: durationRow,
+              matching: find.byType(Switch),
+            );
+            expect(durationSwitch, findsOneWidget);
+            expect(tester.widget<Switch>(durationSwitch).value, isFalse);
+            await tester.tap(durationSwitch);
+            await tester.pumpAndSettle();
+            expect(tester.widget<Switch>(durationSwitch).value, isTrue);
+            await tester.tap(durationSwitch);
+            await tester.pumpAndSettle();
+            expect(tester.widget<Switch>(durationSwitch).value, isFalse);
+          }
 
           final group = find.text(targetPlan.planGroupName).first;
           await tester.ensureVisible(group);
           await tester.tap(group);
           await tester.pumpAndSettle();
+          if (isExpressive) {
+            expect(
+              find.byKey(ValueKey(targetPlan.id)),
+              findsNothing,
+              reason: 'Incompatible plans are hidden instead of rewritten.',
+            );
+            final equipmentSwitch = find.byType(Switch);
+            expect(equipmentSwitch, findsOneWidget);
+            await tester.tap(equipmentSwitch);
+            await tester.pumpAndSettle();
+            expect(tester.widget<Switch>(equipmentSwitch).value, isFalse);
+            expect(
+              find.text(strings.premadeExpressiveEquipmentAll),
+              findsOneWidget,
+            );
 
-          final planName = find.text(targetPlan.name).first;
-          await tester.ensureVisible(planName);
-          await tester.tap(planName);
-          await tester.pumpAndSettle();
+            final planCard = find.byKey(ValueKey(targetPlan.id));
+            expect(planCard, findsOneWidget);
+            final planName = find.descendant(
+              of: planCard,
+              matching: find.text(targetPlan.name),
+            );
+            await tester.ensureVisible(planName);
+            await tester.tap(planName);
+            await tester.pumpAndSettle();
+            expect(find.text(strings.premadeProfileSwap), findsNothing);
+            final categoryHeader = tester.widget<DecoratedBox>(
+              find.byKey(
+                ValueKey('premade-category-header-${targetPlan.planGroupName}'),
+              ),
+            );
+            final categoryDecoration =
+                categoryHeader.decoration as BoxDecoration;
+            final expressiveTokens = AppExpressivePlanningTokens.maybeOf(
+              context,
+            )!;
+            expect(
+              categoryDecoration.color,
+              Color.lerp(
+                expressiveTokens.configurationSurface,
+                expressiveTokens.planSupportSurface,
+                0.18,
+              ),
+            );
+            expect(categoryDecoration.borderRadius, expressiveTokens.rowShape);
+            final previewExerciseName = find.descendant(
+              of: planCard,
+              matching: find.text(targetExercise.name),
+            );
+            expect(previewExerciseName, findsOneWidget);
+            final previewDetails = find.descendant(
+              of: planCard,
+              matching: find.byWidgetPredicate(
+                (widget) =>
+                    widget is Text && widget.data?.contains(' × ') == true,
+              ),
+            );
+            expect(previewDetails, findsOneWidget);
+            final previewDetailsText = tester
+                .widget<Text>(previewDetails)
+                .data!;
+            expect(previewDetailsText, contains('${targetExercise.sets}'));
+            expect(previewDetailsText, contains('${targetExercise.reps}'));
+            if (targetExercise.name.toLowerCase().contains(
+              targetExercise.equipment.toLowerCase(),
+            )) {
+              expect(
+                previewDetailsText.toLowerCase(),
+                isNot(contains(targetExercise.equipment.toLowerCase())),
+                reason:
+                    'Equipment already in the exercise name is not repeated.',
+              );
+            }
+            expect(
+              find.byWidgetPredicate(
+                (widget) =>
+                    widget is RichText &&
+                    widget.text.toPlainText().startsWith(targetExercise.name),
+              ),
+              findsOneWidget,
+              reason: 'The plan preview keeps its authored exercise unchanged.',
+            );
+          } else {
+            final planName = find.text(targetPlan.name).first;
+            await tester.ensureVisible(planName);
+            await tester.tap(planName);
+            await tester.pumpAndSettle();
 
-          final swapLabel = find.text(strings.premadeProfileSwap);
-          expect(swapLabel, findsOneWidget);
-          final swapBadge = tester.widget<DecoratedBox>(
-            find.byWidgetPredicate(
-              (widget) =>
-                  widget is DecoratedBox &&
-                  widget.decoration is BoxDecoration &&
-                  (widget.decoration as BoxDecoration).color ==
-                      theme.colorScheme.primaryContainer.withValues(
-                        alpha: surfaces.planSwapBadgeOpacity,
-                      ) &&
-                  (widget.decoration as BoxDecoration).borderRadius ==
-                      shapes.pill,
-            ),
-          );
-          expect(
-            (swapBadge.decoration as BoxDecoration).color,
-            theme.colorScheme.primaryContainer.withValues(
-              alpha: surfaces.planSwapBadgeOpacity,
-            ),
-          );
-          final swapText = tester.widget<Text>(swapLabel);
-          expect(swapText.style?.color, theme.colorScheme.onPrimaryContainer);
-          expect(swapText.style?.fontWeight, FontWeight.w800);
+            final swapLabel = find.text(strings.premadeProfileSwap);
+            expect(swapLabel, findsOneWidget);
+            final swapBadge = tester.widget<DecoratedBox>(
+              find.byWidgetPredicate(
+                (widget) =>
+                    widget is DecoratedBox &&
+                    widget.decoration is BoxDecoration &&
+                    (widget.decoration as BoxDecoration).color ==
+                        theme.colorScheme.primaryContainer.withValues(
+                          alpha: surfaces.planSwapBadgeOpacity,
+                        ) &&
+                    (widget.decoration as BoxDecoration).borderRadius ==
+                        shapes.pill,
+              ),
+            );
+            expect(
+              (swapBadge.decoration as BoxDecoration).color,
+              theme.colorScheme.primaryContainer.withValues(
+                alpha: surfaces.planSwapBadgeOpacity,
+              ),
+            );
+            final swapText = tester.widget<Text>(swapLabel);
+            expect(swapText.style?.color, theme.colorScheme.onPrimaryContainer);
+            expect(swapText.style?.fontWeight, FontWeight.w800);
 
-          final exerciseRowText = tester.widget<RichText>(
-            find.byWidgetPredicate(
-              (widget) =>
-                  widget is RichText &&
-                  widget.text.toPlainText().startsWith(replacementName),
-            ),
-          );
-          final spans = _textSpans(exerciseRowText.text).toList();
-          final nameSpan = spans.firstWhere(
-            (span) => span.text == replacementName,
-          );
-          expect(nameSpan.style?.fontWeight, FontWeight.w700);
-          expect(
-            spans.any((span) => span.style?.color == theme.colorScheme.primary),
-            isTrue,
-            reason: 'Equipment detail keeps the theme primary foreground.',
-          );
-          expect(
-            spans.any(
-              (span) => span.style?.color == theme.colorScheme.onSurfaceVariant,
-            ),
-            isTrue,
-            reason: 'Set/repetition detail keeps the secondary ink role.',
-          );
+            final exerciseRowText = tester.widget<RichText>(
+              find.byWidgetPredicate(
+                (widget) =>
+                    widget is RichText &&
+                    widget.text.toPlainText().startsWith(replacementName),
+              ),
+            );
+            final spans = _textSpans(exerciseRowText.text).toList();
+            final nameSpan = spans.firstWhere(
+              (span) => span.text == replacementName,
+            );
+            expect(nameSpan.style?.fontWeight, FontWeight.w700);
+            expect(
+              spans.any(
+                (span) => span.style?.color == theme.colorScheme.primary,
+              ),
+              isTrue,
+              reason: 'Equipment detail keeps the theme primary foreground.',
+            );
+            expect(
+              spans.any(
+                (span) =>
+                    span.style?.color == theme.colorScheme.onSurfaceVariant,
+              ),
+              isTrue,
+              reason: 'Set/repetition detail keeps the secondary ink role.',
+            );
+          }
 
           expect(tester.takeException(), isNull);
         },
@@ -380,39 +518,41 @@ void main() {
         find.descendant(of: page, matching: find.byType(Scaffold)).first,
       );
       expect(scaffold.backgroundColor, entry.$3.pageCanvas);
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Card && widget.color == entry.$3.equipmentSurface,
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.byWidgetPredicate(
-          (widget) =>
-              widget is Card && widget.color == entry.$3.planFocalSurface,
-        ),
-        findsWidgets,
-      );
-
-      final durationRow = find
+      final filterSurface = entry.$2.brightness == Brightness.dark
+          ? entry.$3.configurationSurface
+          : Color.lerp(entry.$3.equipmentSurface, entry.$3.pageCanvas, 0.14)!;
+      final filterCard = find
           .ancestor(
-            of: find.text(strings.premadeOneHour),
-            matching: find.byType(Row),
+            of: find.text(strings.premadeEquipmentFilterLabel),
+            matching: find.byType(Card),
           )
           .first;
-      final durationSwitch = find.descendant(
-        of: durationRow,
-        matching: find.byType(Switch),
+      expect(tester.widget<Card>(filterCard).color, filterSurface);
+      expect(
+        find.text(strings.premadeExpressiveEquipmentNoMatches),
+        findsOneWidget,
+        reason: 'The visibility filter explains when no plans qualify.',
       );
-      expect(tester.widget<Switch>(durationSwitch).value, isFalse);
-      await tester.tap(durationSwitch);
+
+      final durationSelector = find.byType(SegmentedButton<int>);
+      expect(durationSelector, findsOneWidget);
+      expect(tester.widget<SegmentedButton<int>>(durationSelector).selected, {
+        60,
+      });
+      await tester.tap(find.text(strings.premadeExpressiveTwoHours));
       await tester.pumpAndSettle();
-      expect(tester.widget<Switch>(durationSwitch).value, isTrue);
+      expect(tester.widget<SegmentedButton<int>>(durationSelector).selected, {
+        120,
+      });
+      await tester.tap(find.text(strings.premadeExpressiveOneHour));
+      await tester.pumpAndSettle();
+      expect(tester.widget<SegmentedButton<int>>(durationSelector).selected, {
+        60,
+      });
 
       final equipmentRow = find
           .ancestor(
-            of: find.text(strings.swapFilterProfileEquipment),
+            of: find.text(strings.premadeEquipmentFilterLabel),
             matching: find.byType(Row),
           )
           .first;
@@ -424,7 +564,83 @@ void main() {
       await tester.tap(equipmentSwitch);
       await tester.pumpAndSettle();
       expect(tester.widget<Switch>(equipmentSwitch).value, isFalse);
-      expect(find.text(strings.premadeEquipmentExact), findsOneWidget);
+      expect(find.text(strings.premadeExpressiveEquipmentAll), findsOneWidget);
+      final homemadeSixtyMinutePlanCount = premadeTrainingPlans
+          .where(
+            (plan) =>
+                plan.sourceName == 'Homemade' && plan.durationMinutes == 60,
+          )
+          .length;
+      expect(
+        find.text(
+          strings.premadeExpressivePlansAvailable(homemadeSixtyMinutePlanCount),
+        ),
+        findsOneWidget,
+        reason: 'Available count follows the selected duration and filter.',
+      );
+      final builtInPlansCard = find
+          .ancestor(
+            of: find.text(strings.premadeBuiltinPlansTitle),
+            matching: find.byType(Card),
+          )
+          .first;
+      final homemadeTwoHourPlanCount = premadeTrainingPlans
+          .where(
+            (plan) =>
+                plan.sourceName == 'Homemade' && plan.durationMinutes == 120,
+          )
+          .length;
+      await tester.tap(find.text(strings.premadeExpressiveTwoHours));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: builtInPlansCard,
+          matching: find.text(
+            strings.premadeExpressivePlansAvailable(homemadeTwoHourPlanCount),
+          ),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text(strings.premadeExpressiveOneHour));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: builtInPlansCard,
+          matching: find.text(
+            strings.premadeExpressivePlansAvailable(
+              homemadeSixtyMinutePlanCount,
+            ),
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Card && widget.color == entry.$3.planFocalSurface,
+        ),
+        findsWidgets,
+      );
+      final planGroup = find.text(targetPlan.planGroupName).first;
+      await tester.ensureVisible(planGroup);
+      await tester.drag(find.byType(ListView).first, const Offset(0, -360));
+      await tester.pumpAndSettle();
+      await tester.tap(planGroup);
+      await tester.pumpAndSettle();
+      final planCard = find.byKey(ValueKey(targetPlan.id));
+      expect(planCard, findsOneWidget);
+      expect(
+        tester
+            .widget<Card>(
+              find.descendant(of: planCard, matching: find.byType(Card)).first,
+            )
+            .color,
+        Color.lerp(
+          entry.$3.configurationSurface,
+          entry.$3.planSupportSurface,
+          entry.$2.brightness == Brightness.dark ? 0.18 : 0.22,
+        ),
+      );
 
       final saveButton = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, strings.premadeReviewPlans),
@@ -433,6 +649,95 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });
+  }
+
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive ${brightness.name} premade plan keeps Add beside its title when wide',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.premadePlans}': true,
+        });
+        tester.view.physicalSize = const Size(600, 1200);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final original = _definition(
+          id: 1001,
+          catalogId: targetExercise.catalogId!,
+          name: targetExercise.name,
+          equipment: targetExercise.equipment,
+        );
+        final replacement = _definition(
+          id: 1002,
+          catalogId: 'tonos.exercise.9999',
+          name: replacementName,
+          equipment: 'Dumbbell',
+        );
+        final repository = _PremadePlansRepository(
+          original: original,
+          replacement: replacement,
+        );
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: repository,
+            child: _app(
+              theme,
+              PremadePlansPage(
+                profileId: 1,
+                onPlanAdded: () {},
+                onboardingMode: true,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(PremadePlansPage)),
+        );
+        final equipmentSwitch = find.byType(Switch);
+        expect(tester.widget<Switch>(equipmentSwitch).value, isTrue);
+        await tester.tap(equipmentSwitch);
+        await tester.pumpAndSettle();
+
+        final category = find.text(targetPlan.planGroupName).first;
+        await tester.ensureVisible(category);
+        await tester.tap(category);
+        await tester.pumpAndSettle();
+        final planCard = find.byKey(ValueKey(targetPlan.id));
+        final planTitle = find.descendant(
+          of: planCard,
+          matching: find.text(targetPlan.name),
+        );
+        await tester.ensureVisible(planTitle);
+        await tester.tap(planTitle);
+        await tester.pumpAndSettle();
+
+        final addButton = find.descendant(
+          of: planCard,
+          matching: find.widgetWithText(FilledButton, strings.commonAdd),
+        );
+        expect(addButton, findsOneWidget);
+        final titleRect = tester.getRect(planTitle);
+        final addButtonRect = tester.getRect(addButton);
+        expect(
+          (titleRect.top - addButtonRect.top).abs(),
+          lessThan(8),
+          reason: 'At a roomy width, Add shares the plan title row.',
+        );
+        expect(tester.widget<FilledButton>(addButton).onPressed, isNotNull);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
   testWidgets('Premade plan adapts across layouts', (tester) async {
@@ -499,20 +804,19 @@ void main() {
 
         final page = find.byType(PremadePlansPage);
         final strings = AppLocalizations.of(tester.element(page));
-        final durationLabel = find.text(strings.premadeOneHour);
+        final durationLabel = find.text(strings.premadeExpressiveOneHour);
         await tester.ensureVisible(durationLabel);
-        final durationRow = find.ancestor(
-          of: durationLabel,
-          matching: find.byType(Row),
+        final durationSelector = find.byType(SegmentedButton<int>);
+        expect(
+          durationSelector.hitTestable(),
+          findsOneWidget,
+          reason: '$layout',
         );
-        final durationSwitch = find.descendant(
-          of: durationRow.first,
-          matching: find.byType(Switch),
-        );
-        expect(durationSwitch.hitTestable(), findsOneWidget, reason: '$layout');
-        await tester.tap(durationSwitch);
+        await tester.tap(find.text(strings.premadeExpressiveTwoHours));
         await tester.pumpAndSettle();
-        expect(tester.widget<Switch>(durationSwitch).value, isTrue);
+        expect(tester.widget<SegmentedButton<int>>(durationSelector).selected, {
+          120,
+        });
         expect(tester.takeException(), isNull, reason: '$brightness $layout');
         await tester.pumpWidget(const SizedBox.shrink());
       }

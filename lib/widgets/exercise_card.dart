@@ -23,6 +23,8 @@ class ExerciseCard extends StatelessWidget {
   final bool forceCollapsed;
   final bool animateExpansion;
   final bool expressiveWorkoutPresentation;
+  final bool expressivePresetDetail;
+  final String? createChangeSetLabel;
   final Key? firstSetWeightKey;
   final Key? firstSetRepsKey;
   final Key? addSetKey;
@@ -48,6 +50,8 @@ class ExerciseCard extends StatelessWidget {
     this.forceCollapsed = false,
     this.animateExpansion = false,
     this.expressiveWorkoutPresentation = false,
+    this.expressivePresetDetail = false,
+    this.createChangeSetLabel,
     this.firstSetWeightKey,
     this.firstSetRepsKey,
     this.addSetKey,
@@ -76,6 +80,8 @@ class ExerciseCard extends StatelessWidget {
           forceCollapsed: forceCollapsed,
           animateExpansion: animateExpansion,
           expressiveWorkoutPresentation: expressiveWorkoutPresentation,
+          expressivePresetDetail: expressivePresetDetail,
+          createChangeSetLabel: createChangeSetLabel,
           firstSetWeightKey: firstSetWeightKey,
           firstSetRepsKey: firstSetRepsKey,
           addSetKey: addSetKey,

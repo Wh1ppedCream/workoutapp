@@ -117,6 +117,18 @@ class _LogEntryPageState extends State<LogEntryPage> {
         ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
         : null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final totals = p.totals;
+    String summaryValue(double? consumed, double? target, String unit) {
+      if (p.isLoading || consumed == null) return '— $unit';
+      final amount = consumed.round();
+      if (target == null) {
+        return '$amount $unit';
+      }
+      return '$amount / ${target.round()} $unit';
+    }
+
+    String? goalNote(double? target) =>
+        !p.isLoading && target == null ? strings.nutritionNoGoalSet : null;
 
     // Header stats (from provider)
     final kcal = (p.totals?.kcal ?? 0).round();
@@ -127,6 +139,18 @@ class _LogEntryPageState extends State<LogEntryPage> {
     final proTgt = (p.activeGoal?.proteinG ?? 0).round();
     final carb = (p.totals?.carbsG ?? 0).round();
     final carbTgt = (p.activeGoal?.carbsG ?? 0).round();
+    final kcalValue = expressive
+        ? summaryValue(totals?.kcal, p.activeGoal?.kcalTarget, 'kcal')
+        : '$kcal / $kcalTgt kcal';
+    final proValue = expressive
+        ? summaryValue(totals?.proteinG, p.activeGoal?.proteinG, 'g')
+        : '$pro / $proTgt g';
+    final carbValue = expressive
+        ? summaryValue(totals?.carbsG, p.activeGoal?.carbsG, 'g')
+        : '$carb / $carbTgt g';
+    final fatValue = expressive
+        ? summaryValue(totals?.fatG, p.activeGoal?.fatG, 'g')
+        : '$fat / $fatTgt g';
 
     final date = widget.date;
     final title = MaterialLocalizations.of(context).formatMediumDate(date);
@@ -136,9 +160,8 @@ class _LogEntryPageState extends State<LogEntryPage> {
       appBar: AppBar(
         title: Text(
           title,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: destination?.onSurfacePrimary,
-          ),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(color: destination?.onSurfacePrimary),
         ),
         backgroundColor: destination?.surfacePrimary,
         foregroundColor: destination?.onSurfacePrimary,
@@ -150,357 +173,443 @@ class _LogEntryPageState extends State<LogEntryPage> {
           ),
           child: Column(
             children: [
-          // ── Header stats ─────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: expressive
-                ? LayoutBuilder(
-                    builder: (context, constraints) {
-                      final cardWidth = (constraints.maxWidth - 8) / 2;
-                      final cards = <_MiniStat>[
-                        _MiniStat(
-                          label: strings.nutritionCaloriesLabel,
-                          value: '$kcal / $kcalTgt kcal',
-                          expressive: true,
-                          surface: destination!.surfaceTertiary,
-                          foreground: destination.onSurfaceTertiary,
-                        ),
-                        _MiniStat(
-                          label: strings.nutritionFatLabel,
-                          value: '$fat / $fatTgt g',
-                          expressive: true,
-                          surface: destination.surfaceSecondary,
-                          foreground: destination.onSurfaceSecondary,
-                        ),
-                        _MiniStat(
-                          label: strings.nutritionProteinLabel,
-                          value: '$pro / $proTgt g',
-                          expressive: true,
-                          surface: destination.surfaceAccent,
-                          foreground: destination.onSurfaceAccent,
-                        ),
-                        _MiniStat(
-                          label: strings.nutritionCarbsLabel,
-                          value: '$carb / $carbTgt g',
-                          expressive: true,
-                          surface: destination.surfaceSelected,
-                          foreground: destination.onSurfaceSelected,
-                        ),
-                      ];
-                      return Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
+              // ── Header stats ─────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: expressive
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          for (final card in cards)
-                            SizedBox(width: cardWidth, child: card),
-                        ],
-                      );
-                    },
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: _MiniStat(
-                          label: strings.nutritionCaloriesLabel,
-                          value: '$kcal / $kcalTgt kcal',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _MiniStat(
-                          label: strings.nutritionFatLabel,
-                          value: '$fat / $fatTgt g',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _MiniStat(
-                          label: strings.nutritionProteinLabel,
-                          value: '$pro / $proTgt g',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _MiniStat(
-                          label: strings.nutritionCarbsLabel,
-                          value: '$carb / $carbTgt g',
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-          const Divider(height: 1),
-
-          // ── 24-hr timeline (stacked) ─────────────────────────────────
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, bx) {
-                final totalHeight = 24 * _rowHeight;
-                final chipHeight = expressive && textScale > 1.15
-                    ? math.max(_chipH, 64 * textScale)
-                    : _chipH;
-                final chipWidth = expressive
-                    ? math.max(_chipW, bx.maxWidth - _gutterW - 17)
-                    : _chipW;
-
-                // Hour lines + labels
-                final hourLines = List<Widget>.generate(24, (h) {
-                  final top = h * _rowHeight;
-                  return Positioned(
-                    top: top,
-                    left: 0,
-                    right: 0,
-                    height: _rowHeight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: _gutterW,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              _hourLabel(context, h),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final cardWidth = (constraints.maxWidth - 8) / 2;
+                              final cards = <_MiniStat>[
+                                _MiniStat(
+                                  label: strings.nutritionCaloriesLabel,
+                                  value: kcalValue,
+                                  expressive: true,
+                                  supportingValue: goalNote(
+                                    p.activeGoal?.kcalTarget,
+                                  ),
+                                  surface: destination!.surfaceTertiary,
+                                  foreground: destination.onSurfaceTertiary,
+                                ),
+                                _MiniStat(
+                                  label: strings.nutritionProteinLabel,
+                                  value: proValue,
+                                  expressive: true,
+                                  supportingValue: goalNote(
+                                    p.activeGoal?.proteinG,
+                                  ),
+                                  surface: destination.surfaceAccent,
+                                  foreground: destination.onSurfaceAccent,
+                                ),
+                                _MiniStat(
+                                  label: strings.nutritionCarbsLabel,
+                                  value: carbValue,
+                                  expressive: true,
+                                  supportingValue: goalNote(
+                                    p.activeGoal?.carbsG,
+                                  ),
+                                  surface: destination.surfaceSelected,
+                                  foreground: destination.onSurfaceSelected,
+                                ),
+                                _MiniStat(
+                                  label: strings.nutritionFatLabel,
+                                  value: fatValue,
+                                  expressive: true,
+                                  supportingValue: goalNote(p.activeGoal?.fatG),
+                                  surface: destination.surfaceSecondary,
+                                  foreground: destination.onSurfaceSecondary,
+                                ),
+                              ];
+                              return Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  for (final card in cards)
+                                    SizedBox(width: cardWidth, child: card),
+                                ],
+                              );
+                            },
                           ),
-                        ),
-                        const VerticalDivider(width: 1),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                  color: context.nutritionTokens.logGrid,
-                                  width: 1,
+                          if (!p.isLoading && p.mealsWithItems.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: destination!.surfaceTertiary,
+                                border: Border.all(
+                                  color: destination.outlineAccent.withValues(
+                                    alpha: 0.35,
+                                  ),
+                                ),
+                                borderRadius:
+                                    context.nutritionTokens.compactShape,
+                              ),
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: strings.nutritionNoFoodLogged,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                    ),
+                                    const TextSpan(text: ' · '),
+                                    TextSpan(
+                                      text: strings.nutritionTapToAddFirstEntry,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    ),
+                                  ],
+                                  style: TextStyle(
+                                    color: destination.onSurfaceTertiary,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                });
-
-                // “Now” indicator (only when viewing today)
-                final nowLine = <Widget>[];
-                if (p.isToday) {
-                  final now = DateTime.now();
-                  final minutes = now.hour * 60 + now.minute;
-                  final y = (minutes / (24 * 60)) * totalHeight;
-                  nowLine.add(
-                    Positioned(
-                      top: y,
-                      left: _gutterW + 1,
-                      right: 0,
-                      child: Row(
+                          ],
+                        ],
+                      )
+                    : Row(
                         children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: cs.primary,
-                              shape: BoxShape.circle,
+                          Expanded(
+                            child: _MiniStat(
+                              label: strings.nutritionCaloriesLabel,
+                              value: '$kcal / $kcalTgt kcal',
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: Container(height: 2, color: cs.primary),
+                            child: _MiniStat(
+                              label: strings.nutritionProteinLabel,
+                              value: proValue,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _MiniStat(
+                              label: strings.nutritionCarbsLabel,
+                              value: carbValue,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _MiniStat(
+                              label: strings.nutritionFatLabel,
+                              value: fatValue,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                }
+              ),
+              Divider(
+                height: 1,
+                color: expressive
+                    ? context.nutritionTokens.logGrid.withValues(alpha: 0.5)
+                    : null,
+              ),
 
-                // ── Side-by-side layout with LEFT origin + horizontal scroll per time bucket ──
-                final chips = <Widget>[];
-                const bucketSizeMin = 5; // group items within 5 minutes
-                const innerGap = 8.0; // gap between chips in the row
+              // ── 24-hr timeline (stacked) ─────────────────────────────────
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, bx) {
+                    final totalHeight = 24 * _rowHeight;
+                    final gridLineColor = expressive
+                        ? context.nutritionTokens.logGrid.withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.light
+                                ? 0.45
+                                : 0.6,
+                          )
+                        : context.nutritionTokens.logGrid;
+                    final chipHeight = expressive && textScale > 1.15
+                        ? math.max(_chipH, 64 * textScale)
+                        : _chipH;
+                    final chipWidth = expressive
+                        ? math.max(_chipW, bx.maxWidth - _gutterW - 17)
+                        : _chipW;
 
-                int bucketKeyFor(DateTime stamp) {
-                  final mins = stamp.hour * 60 + stamp.minute;
-                  return mins ~/ bucketSizeMin;
-                }
-
-                // 1) Bucket ALL entries by time bucket (ignore meal for positioning)
-                final buckets = <int, List<DiaryEntryWithItem>>{};
-                for (final row in p.mealsWithItems) {
-                  final e = row.entry;
-                  final stamp = (e.loggedAt ?? date).toLocal();
-                  buckets
-                      .putIfAbsent(
-                        bucketKeyFor(stamp),
-                        () => <DiaryEntryWithItem>[],
-                      )
-                      .add(row);
-                }
-
-                final bucketKeys = buckets.keys.toList()..sort();
-                final useChronologicalDetails =
-                    expressive &&
-                    textScale >= 1.5 &&
-                    bucketKeys.asMap().entries.any((entry) {
-                      if (entry.key == 0) return false;
-                      final previous = bucketKeys[entry.key - 1];
-                      final minutesApart =
-                          (entry.value - previous) * bucketSizeMin;
-                      final verticalGap = (minutesApart / 60) * _rowHeight;
-                      return verticalGap < chipHeight;
-                    });
-
-                String macroSummary(DiaryEntryWithItem row) {
-                  final macros = row.snapshotMacros;
-                  if (macros == null) return '';
-                  return strings.nutritionMacroSummary(
-                    macros.kcal.round(),
-                    macros.proteinG.round(),
-                    macros.carbsG.round(),
-                    macros.fatG.round(),
-                  );
-                }
-
-                final chronologicalRows = p.mealsWithItems.toList()
-                  ..sort((a, b) {
-                    final ta = (a.entry.loggedAt ?? date).toLocal();
-                    final tb = (b.entry.loggedAt ?? date).toLocal();
-                    final comparison = ta.compareTo(tb);
-                    if (comparison != 0) return comparison;
-                    return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
-                  });
-
-                // 2) For each bucket, place a horizontally scrollable row that starts at the LEFT edge
-                buckets.forEach((key, entries) {
-                  // Stable order within the bucket
-                  entries.sort((a, b) {
-                    final ta = (a.entry.loggedAt ?? date).toLocal();
-                    final tb = (b.entry.loggedAt ?? date).toLocal();
-                    final c = ta.compareTo(tb);
-                    if (c != 0) return c;
-                    return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
-                  });
-
-                  final bucketMinutes = key * bucketSizeMin;
-                  final y =
-                      (bucketMinutes / (24 * 60)) * totalHeight -
-                      (chipHeight / 2);
-
-                  if (useChronologicalDetails) {
-                    for (final row in entries) {
-                      final stamp = (row.entry.loggedAt ?? date).toLocal();
-                      final minutes = stamp.hour * 60 + stamp.minute;
-                      final markerY = (minutes / (24 * 60)) * totalHeight - 1;
-                      final time = MaterialLocalizations.of(context)
-                          .formatTimeOfDay(TimeOfDay.fromDateTime(stamp));
-                      chips.add(
-                        Positioned(
-                          top: markerY.clamp(0, totalHeight - 2).toDouble(),
-                          left: _gutterW + 1,
-                          right: 0,
-                          height: 2,
-                          child: Semantics(
-                            label:
-                                '$time, ${row.chipTitle}, ${macroSummary(row)}',
-                            child: IgnorePointer(
-                              child: ColoredBox(
-                                color: _mealFill(row.entry.mealType, cs),
+                    // Hour lines + labels
+                    final hourLines = List<Widget>.generate(24, (h) {
+                      final top = h * _rowHeight;
+                      return Positioned(
+                        top: top,
+                        left: 0,
+                        right: 0,
+                        height: _rowHeight,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(
+                              width: _gutterW,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  _hourLabel(context, h),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
                               ),
                             ),
+                            const VerticalDivider(width: 1),
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: gridLineColor,
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    });
+
+                    // “Now” indicator (only when viewing today)
+                    final nowLine = <Widget>[];
+                    if (p.isToday) {
+                      final now = DateTime.now();
+                      final minutes = now.hour * 60 + now.minute;
+                      final y = (minutes / (24 * 60)) * totalHeight;
+                      nowLine.add(
+                        Positioned(
+                          top: y,
+                          left: _gutterW + 1,
+                          right: 0,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: cs.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Container(height: 2, color: cs.primary),
+                              ),
+                            ],
                           ),
                         ),
                       );
                     }
-                    return;
-                  }
 
-                  chips.add(
-                    Positioned(
-                      top: (y.clamp(
-                        4,
-                        totalHeight - chipHeight - 4,
-                      )).toDouble(),
-                      left: _gutterW + 1,
-                      right: 0,
-                      height: chipHeight,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const ClampingScrollPhysics(),
-                        child: Row(
-                          children: [
-                            for (final row in entries) ...[
-                              SizedBox(
-                                width: chipWidth,
-                                child: _EntryChip(
-                                  // 👇 First line: FOOD / RECIPE NAME
-                                  title: row.chipTitle,
+                    // ── Side-by-side layout with LEFT origin + horizontal scroll per time bucket ──
+                    final chips = <Widget>[];
+                    const bucketSizeMin = 5; // group items within 5 minutes
+                    const innerGap = 8.0; // gap between chips in the row
 
-                                  // Second line: macros (reuse your existing formatter)
-                                  subtitle: macroSummary(row),
+                    int bucketKeyFor(DateTime stamp) {
+                      final mins = stamp.hour * 60 + stamp.minute;
+                      return mins ~/ bucketSizeMin;
+                    }
 
-                                  bg: _mealFill(row.entry.mealType, cs),
-                                  fg: _mealOnFill(row.entry.mealType, cs),
-                                  expressive: expressive,
-                                  onTap: () =>
-                                      _showEntryActions(context, row.entry),
+                    // 1) Bucket ALL entries by time bucket (ignore meal for positioning)
+                    final buckets = <int, List<DiaryEntryWithItem>>{};
+                    for (final row in p.mealsWithItems) {
+                      final e = row.entry;
+                      final stamp = (e.loggedAt ?? date).toLocal();
+                      buckets
+                          .putIfAbsent(
+                            bucketKeyFor(stamp),
+                            () => <DiaryEntryWithItem>[],
+                          )
+                          .add(row);
+                    }
+
+                    final bucketKeys = buckets.keys.toList()..sort();
+                    final useChronologicalDetails =
+                        expressive &&
+                        textScale >= 1.5 &&
+                        bucketKeys.asMap().entries.any((entry) {
+                          if (entry.key == 0) return false;
+                          final previous = bucketKeys[entry.key - 1];
+                          final minutesApart =
+                              (entry.value - previous) * bucketSizeMin;
+                          final verticalGap = (minutesApart / 60) * _rowHeight;
+                          return verticalGap < chipHeight;
+                        });
+
+                    String macroSummary(DiaryEntryWithItem row) {
+                      final macros = row.snapshotMacros;
+                      if (macros == null) return '';
+                      return strings.nutritionMacroSummary(
+                        macros.kcal.round(),
+                        macros.proteinG.round(),
+                        macros.carbsG.round(),
+                        macros.fatG.round(),
+                      );
+                    }
+
+                    final chronologicalRows = p.mealsWithItems.toList()
+                      ..sort((a, b) {
+                        final ta = (a.entry.loggedAt ?? date).toLocal();
+                        final tb = (b.entry.loggedAt ?? date).toLocal();
+                        final comparison = ta.compareTo(tb);
+                        if (comparison != 0) return comparison;
+                        return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
+                      });
+
+                    // 2) For each bucket, place a horizontally scrollable row that starts at the LEFT edge
+                    buckets.forEach((key, entries) {
+                      // Stable order within the bucket
+                      entries.sort((a, b) {
+                        final ta = (a.entry.loggedAt ?? date).toLocal();
+                        final tb = (b.entry.loggedAt ?? date).toLocal();
+                        final c = ta.compareTo(tb);
+                        if (c != 0) return c;
+                        return (a.entry.id ?? 0).compareTo(b.entry.id ?? 0);
+                      });
+
+                      final bucketMinutes = key * bucketSizeMin;
+                      final y =
+                          (bucketMinutes / (24 * 60)) * totalHeight -
+                          (chipHeight / 2);
+
+                      if (useChronologicalDetails) {
+                        for (final row in entries) {
+                          final stamp = (row.entry.loggedAt ?? date).toLocal();
+                          final minutes = stamp.hour * 60 + stamp.minute;
+                          final markerY =
+                              (minutes / (24 * 60)) * totalHeight - 1;
+                          final time = MaterialLocalizations.of(context)
+                              .formatTimeOfDay(TimeOfDay.fromDateTime(stamp));
+                          chips.add(
+                            Positioned(
+                              top: markerY.clamp(0, totalHeight - 2).toDouble(),
+                              left: _gutterW + 1,
+                              right: 0,
+                              height: 2,
+                              child: Semantics(
+                                label:
+                                    '$time, ${row.chipTitle}, ${macroSummary(row)}',
+                                child: IgnorePointer(
+                                  child: ColoredBox(
+                                    color: _mealFill(row.entry.mealType, cs),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: innerGap),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+
+                      chips.add(
+                        Positioned(
+                          top: (y.clamp(
+                            4,
+                            totalHeight - chipHeight - 4,
+                          )).toDouble(),
+                          left: _gutterW + 1,
+                          right: 0,
+                          height: chipHeight,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const ClampingScrollPhysics(),
+                            child: Row(
+                              children: [
+                                for (final row in entries) ...[
+                                  SizedBox(
+                                    width: chipWidth,
+                                    child: _EntryChip(
+                                      // 👇 First line: FOOD / RECIPE NAME
+                                      title: row.chipTitle,
+
+                                      // Second line: macros (reuse your existing formatter)
+                                      subtitle: macroSummary(row),
+
+                                      bg: _mealFill(row.entry.mealType, cs),
+                                      fg: _mealOnFill(row.entry.mealType, cs),
+                                      expressive: expressive,
+                                      onTap: () =>
+                                          _showEntryActions(context, row.entry),
+                                    ),
+                                  ),
+                                  const SizedBox(width: innerGap),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    });
+
+                    final timeline = SizedBox(
+                      height: totalHeight,
+                      child: Stack(
+                        children: [...hourLines, ...nowLine, ...chips],
+                      ),
+                    );
+                    final content = useChronologicalDetails
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              timeline,
+                              const Divider(height: 1),
+                              for (final row in chronologicalRows)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    8,
+                                    8,
+                                    8,
+                                    0,
+                                  ),
+                                  child: _EntryChip(
+                                    title:
+                                        '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime((row.entry.loggedAt ?? date).toLocal()))} · ${row.chipTitle}',
+                                    subtitle: macroSummary(row),
+                                    bg: _mealFill(row.entry.mealType, cs),
+                                    fg: _mealOnFill(row.entry.mealType, cs),
+                                    expressive: true,
+                                    onTap: () =>
+                                        _showEntryActions(context, row.entry),
+                                  ),
+                                ),
                             ],
-                          ],
+                          )
+                        : timeline;
+
+                    return Scrollbar(
+                      controller: _scroll,
+                      child: SingleChildScrollView(
+                        controller: _scroll,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: totalHeight),
+                          child: content,
                         ),
                       ),
-                    ),
-                  );
-                });
-
-                final timeline = SizedBox(
-                  height: totalHeight,
-                  child: Stack(children: [...hourLines, ...nowLine, ...chips]),
-                );
-                final content = useChronologicalDetails
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          timeline,
-                          const Divider(height: 1),
-                          for (final row in chronologicalRows)
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                              child: _EntryChip(
-                                title:
-                                    '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime((row.entry.loggedAt ?? date).toLocal()))} · ${row.chipTitle}',
-                                subtitle: macroSummary(row),
-                                bg: _mealFill(row.entry.mealType, cs),
-                                fg: _mealOnFill(row.entry.mealType, cs),
-                                expressive: true,
-                                onTap: () =>
-                                    _showEntryActions(context, row.entry),
-                              ),
-                            ),
-                        ],
-                      )
-                    : timeline;
-
-                return Scrollbar(
-                  controller: _scroll,
-                  child: SingleChildScrollView(
-                    controller: _scroll,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: totalHeight),
-                      child: content,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
       ),
 
       // Keep your existing SpeedDial without unsupported params
-      floatingActionButton: const SpeedDialFab(),
+      floatingActionButton: SpeedDialFab(
+        toggleTooltip: expressive ? strings.nutritionAddEntryActionLabel : null,
+      ),
     );
   }
 
@@ -551,6 +660,7 @@ class _MiniStat extends StatelessWidget {
   final String label;
   final String value;
   final bool expressive;
+  final String? supportingValue;
   final Color? surface;
   final Color? foreground;
 
@@ -558,6 +668,7 @@ class _MiniStat extends StatelessWidget {
     required this.label,
     required this.value,
     this.expressive = false,
+    this.supportingValue,
     this.surface,
     this.foreground,
   });
@@ -595,6 +706,15 @@ class _MiniStat extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
+            if (supportingValue != null)
+              Text(
+                supportingValue!,
+                softWrap: true,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: foreground?.withValues(alpha: 0.82),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
           ],
         ),
       );

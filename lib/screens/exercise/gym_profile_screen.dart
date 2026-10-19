@@ -87,6 +87,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     super.initState();
     _originalName = widget.profile?.name ?? widget.initialName ?? '';
     _nameController = TextEditingController(text: _originalName);
+    _nameController.addListener(_handleNameChanged);
     _searchController = TextEditingController();
     _searchController.addListener(_handleSearchChanged);
   }
@@ -101,6 +102,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
 
   @override
   void dispose() {
+    _nameController.removeListener(_handleNameChanged);
     _searchController.removeListener(_handleSearchChanged);
     _nameController.dispose();
     _searchController.dispose();
@@ -110,6 +112,8 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
   void _handleSearchChanged() {
     setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
   }
+
+  void _handleNameChanged() => setState(() {});
 
   Future<void> _loadEquipment() async {
     final repo = _repo;
@@ -235,7 +239,9 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
             body: strings.gymProfileTutorialAvailableBody,
           ),
           GuidedTutorialStep(
-            targetKey: _saveTutorialKey,
+            targetKey: _saveTutorialKey.currentContext == null
+                ? _equipmentTutorialKey
+                : _saveTutorialKey,
             icon: Icons.save_outlined,
             title: strings.gymProfileTutorialSaveTitle,
             body: strings.gymProfileTutorialSaveBody,
@@ -260,26 +266,52 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
       return;
     }
 
+    final expressive = AppExpressivePlanningTokens.maybeOf(context) != null;
     final action = await showDialog<_UnsavedGymProfileAction>(
       context: context,
       builder: (dialogContext) => TonosDialogFrame(
         child: AlertDialog(
+          titlePadding: expressive
+              ? const EdgeInsets.fromLTRB(20, 20, 20, 8)
+              : null,
+          contentPadding: expressive
+              ? const EdgeInsets.fromLTRB(20, 0, 20, 8)
+              : null,
+          actionsPadding: expressive
+              ? const EdgeInsets.fromLTRB(12, 0, 16, 12)
+              : null,
+          buttonPadding: expressive
+              ? const EdgeInsets.symmetric(horizontal: 8)
+              : null,
+          actionsOverflowButtonSpacing: expressive ? 4 : null,
           title: Text(AppLocalizations.of(context).gymProfileSaveChangesTitle),
           content: Text(AppLocalizations.of(context).gymProfileSaveChangesBody),
           actions: [
             TextButton(
+              style: expressive
+                  ? TextButton.styleFrom(minimumSize: const Size(44, 44))
+                  : null,
               onPressed: () =>
                   Navigator.of(dialogContext)
                       .pop(_UnsavedGymProfileAction.keepEditing),
               child: Text(AppLocalizations.of(context).gymProfileKeepEditing),
             ),
             TextButton(
+              style: expressive
+                  ? TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      minimumSize: const Size(44, 44),
+                    )
+                  : null,
               onPressed: () =>
                   Navigator.of(dialogContext)
                       .pop(_UnsavedGymProfileAction.discard),
               child: Text(AppLocalizations.of(context).gymProfileDiscard),
             ),
             FilledButton(
+              style: expressive
+                  ? FilledButton.styleFrom(minimumSize: const Size(44, 44))
+                  : null,
               onPressed: () =>
                   Navigator.of(dialogContext)
                       .pop(_UnsavedGymProfileAction.save),
@@ -400,12 +432,43 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
           foregroundColor: planning?.planSupportForeground,
           scrolledUnderElevation: 0,
         ),
+        floatingActionButton:
+            planning != null && !_isLoading && (_hasUnsavedChanges || _isSaving)
+            ? FloatingActionButton.extended(
+                key: _saveTutorialKey,
+                heroTag: 'saveGymProfile',
+                onPressed: _isSaving ? null : _save,
+                backgroundColor: planning.actionPrimary,
+                foregroundColor: planning.actionPrimaryForeground,
+                shape: RoundedRectangleBorder(borderRadius: planning.rowShape),
+                elevation: 3,
+                icon: _isSaving
+                    ? SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: planning.actionPrimaryForeground,
+                        ),
+                      )
+                    : const Icon(Icons.save_outlined),
+                label: Text(
+                  _isSaving ? strings.gymProfileSaving : strings.gymProfileSave,
+                ),
+              )
+            : null,
         body: SafeArea(
           child: Column(
             children: [
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    planning != null && (_hasUnsavedChanges || _isSaving)
+                        ? 104
+                        : 20,
+                  ),
                   children: [
                     KeyedSubtree(
                       key: _profileTutorialKey,
@@ -470,15 +533,16 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
                   ],
                 ),
               ),
-              KeyedSubtree(
-                key: _saveTutorialKey,
-                child: _SaveProfileBar(
-                  isLoading: _isLoading,
-                  isSaving: _isSaving,
-                  onCancel: _attemptClose,
-                  onSave: _save,
+              if (planning == null)
+                KeyedSubtree(
+                  key: _saveTutorialKey,
+                  child: _SaveProfileBar(
+                    isLoading: _isLoading,
+                    isSaving: _isSaving,
+                    onCancel: _attemptClose,
+                    onSave: _save,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -529,9 +593,8 @@ class _ProfileSetupCard extends StatelessWidget {
         (neo
             ? tonosOutlineForSurface(context, cardSurface)
             : scheme.outlineVariant.withValues(alpha: 0.55));
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(planning != null ? 14 : 16),
       decoration: BoxDecoration(
         color: cardSurface,
         borderRadius: planning != null
@@ -596,7 +659,17 @@ class _ProfileSetupCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: planning != null ? 12 : 16),
+          if (planning != null) ...[
+            Text(
+              strings.gymProfileName,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: cardForeground,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
           Form(
             key: formKey,
             child: TextFormField(
@@ -604,13 +677,9 @@ class _ProfileSetupCard extends StatelessWidget {
               textInputAction: TextInputAction.done,
               decoration: planning != null
                   ? InputDecoration(
-                      labelText: strings.gymProfileName,
                       hintText: strings.gymProfileNameHint,
                       filled: true,
                       fillColor: planning.planSupportSurface,
-                      labelStyle: TextStyle(
-                        color: planning.planSupportForeground,
-                      ),
                       hintStyle: TextStyle(
                         color: planning.planSupportForeground.withValues(
                           alpha: 0.72,
@@ -630,6 +699,10 @@ class _ProfileSetupCard extends StatelessWidget {
                           color: planning.planAccent,
                           width: 2,
                         ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
                     )
                   : neo
@@ -672,20 +745,23 @@ class _EquipmentSearchField extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final expressivePalette = planning == null
+        ? null
+        : _GymProfileEquipmentPalette.from(context, planning);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final fieldSurface =
-        planning?.equipmentSurface ??
+        expressivePalette?.sectionSurface ??
         (neo
             ? surfaces.settingsInput
             : scheme.surfaceContainerHighest.withValues(alpha: 0.48));
     final fieldForeground =
-        planning?.equipmentForeground ??
+        expressivePalette?.foreground ??
         (neo
             ? tonosForegroundForSurface(context, fieldSurface)
             : scheme.onSurface);
     final fieldOutline =
-        planning?.outline ??
+        expressivePalette?.outline ??
         (neo
             ? tonosOutlineForSurface(context, fieldSurface)
             : Colors.transparent);
@@ -805,7 +881,9 @@ class _EquipmentSectionHeader extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (planning != null && constraints.maxWidth < 400) {
+        final textScaler = MediaQuery.textScalerOf(context);
+        final requiredWidth = 320 * textScaler.scale(16) / 16;
+        if (planning != null && constraints.maxWidth < requiredWidth) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -837,6 +915,43 @@ class _EquipmentSectionHeader extends StatelessWidget {
   }
 }
 
+class _GymProfileEquipmentPalette {
+  const _GymProfileEquipmentPalette({
+    required this.sectionSurface,
+    required this.thumbnailSurface,
+    required this.foreground,
+    required this.secondaryForeground,
+    required this.outline,
+  });
+
+  final Color sectionSurface;
+  final Color thumbnailSurface;
+  final Color foreground;
+  final Color secondaryForeground;
+  final Color outline;
+
+  factory _GymProfileEquipmentPalette.from(
+    BuildContext context,
+    AppExpressivePlanningTokens tokens,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Color tintedSurface(double opacity) => Color.alphaBlend(
+      tokens.configurationSurface.withValues(alpha: opacity),
+      tokens.pageCanvas,
+    );
+
+    return _GymProfileEquipmentPalette(
+      sectionSurface: tintedSurface(isDark ? 0.8 : 0.38),
+      thumbnailSurface: tintedSurface(isDark ? 0.92 : 0.62),
+      foreground: tokens.configurationForeground,
+      secondaryForeground: tokens.configurationForeground.withValues(
+        alpha: 0.78,
+      ),
+      outline: tokens.outline.withValues(alpha: isDark ? 0.62 : 0.46),
+    );
+  }
+}
+
 class _EquipmentCategorySection extends StatelessWidget {
   final _EquipmentGroup group;
   final Set<int> selectedEquipmentIds;
@@ -861,25 +976,28 @@ class _EquipmentCategorySection extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final expressivePalette = planning == null
+        ? null
+        : _GymProfileEquipmentPalette.from(context, planning);
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final sectionSurface =
-        planning?.equipmentSurface ??
+        expressivePalette?.sectionSurface ??
         (neo
             ? surfaces.settingsSection
             : scheme.surfaceContainerHighest.withValues(alpha: 0.28));
     final sectionForeground =
-        planning?.equipmentForeground ??
+        expressivePalette?.foreground ??
         (neo
             ? tonosForegroundForSurface(context, sectionSurface)
             : scheme.onSurface);
     final sectionSecondary =
-        planning?.equipmentForeground ??
+        expressivePalette?.secondaryForeground ??
         (neo
             ? tonosSecondaryForegroundForSurface(context, sectionSurface)
             : scheme.onSurfaceVariant);
     final sectionOutline =
-        planning?.outline ??
+        expressivePalette?.outline ??
         (neo
             ? tonosOutlineForSurface(context, sectionSurface)
             : scheme.outlineVariant.withValues(alpha: 0.55));
@@ -888,8 +1006,58 @@ class _EquipmentCategorySection extends StatelessWidget {
         .length;
     final allSelected =
         selectedCount == group.items.length && group.items.isNotEmpty;
+    final selectedCountText = strings.gymProfileSelectedCount(
+      selectedCount,
+      group.items.length,
+    );
+    final categoryAction = TextButton(
+      onPressed: onToggleCategory,
+      style: planning != null
+          ? TextButton.styleFrom(foregroundColor: planning.actionPrimary)
+          : neo
+          ? TextButton.styleFrom(foregroundColor: sectionForeground)
+          : null,
+      child: Text(
+        allSelected ? strings.gymProfileClear : strings.gymProfileSelectAll,
+      ),
+    );
+    final categoryHeading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          group.category.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: planning != null || neo ? sectionForeground : null,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          selectedCountText,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(color: sectionSecondary),
+        ),
+      ],
+    );
+    final categoryIcon = Icon(
+      group.category.icon,
+      color: planning != null
+          ? planning.actionPrimary
+          : neo
+          ? sectionForeground
+          : scheme.primary,
+      size: 22,
+    );
+    final expansionIcon = Icon(
+      isExpanded ? Icons.expand_less : Icons.expand_more,
+      color: sectionSecondary,
+    );
 
     return Container(
+      clipBehavior: planning != null ? Clip.antiAlias : Clip.none,
       decoration: BoxDecoration(
         color: sectionSurface,
         borderRadius: planning != null
@@ -905,98 +1073,86 @@ class _EquipmentCategorySection extends StatelessWidget {
       child: Column(
         children: [
           InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+            borderRadius:
+                planning?.supportShape ??
+                const BorderRadius.vertical(top: Radius.circular(22)),
             onTap: onToggleExpanded,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        group.category.icon,
-                        color: planning != null
-                            ? planning.actionPrimary
-                            : neo
-                            ? sectionForeground
-                            : scheme.primary,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          group.category.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: planning != null
-                                ? sectionForeground
-                                : neo
-                                ? sectionForeground
-                                : null,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: sectionSecondary,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final selectedCountLabel = Text(
-                        strings.gymProfileSelectedCount(
-                          selectedCount,
-                          group.items.length,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: sectionSecondary,
-                        ),
-                      );
-                      final selectAllButton = TextButton(
-                        onPressed: onToggleCategory,
-                        style: planning != null
-                            ? TextButton.styleFrom(
-                                foregroundColor: planning.actionPrimary,
-                              )
-                            : neo
-                            ? TextButton.styleFrom(
-                                foregroundColor: sectionForeground,
-                              )
-                            : null,
-                        child: Text(
-                          allSelected
-                              ? strings.gymProfileClear
-                              : strings.gymProfileSelectAll,
-                        ),
-                      );
-                      if (planning != null && constraints.maxWidth < 400) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: planning != null
+                  ? LayoutBuilder(
+                      builder: (context, constraints) {
+                        final textScaler = MediaQuery.textScalerOf(context);
+                        final compact =
+                            constraints.maxWidth < 300 ||
+                            textScaler.scale(16) > 20;
+                        if (compact) {
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  categoryIcon,
+                                  const SizedBox(width: 10),
+                                  Expanded(child: categoryHeading),
+                                  expansionIcon,
+                                ],
+                              ),
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: categoryAction,
+                              ),
+                            ],
+                          );
+                        }
+                        return Row(
                           children: [
-                            selectedCountLabel,
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: selectAllButton,
-                            ),
+                            categoryIcon,
+                            const SizedBox(width: 10),
+                            Expanded(child: categoryHeading),
+                            categoryAction,
+                            expansionIcon,
                           ],
                         );
-                      }
-                      return Row(
-                        children: [
-                          Expanded(child: selectedCountLabel),
-                          selectAllButton,
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
+                      },
+                    )
+                  : Column(
+                      children: [
+                        Row(
+                          children: [
+                            categoryIcon,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                group.category.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: neo ? sectionForeground : null,
+                                ),
+                              ),
+                            ),
+                            expansionIcon,
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                selectedCountText,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: sectionSecondary,
+                                ),
+                              ),
+                            ),
+                            categoryAction,
+                          ],
+                        ),
+                      ],
+                    ),
             ),
           ),
           AnimatedCrossFade(
@@ -1044,26 +1200,28 @@ class _EquipmentTile extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final neo = context.usesNeoPresentation;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    final expressivePalette = planning == null
+        ? null
+        : _GymProfileEquipmentPalette.from(context, planning);
     final surfaces = context.surfaceTokens;
-    final tileSurface = planning != null
-        ? (selected ? planning.selectedSurface : planning.planSupportSurface)
-        : neo
-        ? surfaces.dialogChoice
-        : scheme.surface;
-    final tileForeground = planning != null
-        ? (selected
-              ? planning.actionPrimaryForeground
-              : planning.planSupportForeground)
-        : neo
-        ? tonosForegroundForSurface(context, tileSurface)
-        : scheme.onSurface;
-    final tileSecondary = planning != null
-        ? (selected
-              ? planning.actionPrimaryForeground.withValues(alpha: 0.82)
-              : planning.planSupportForeground.withValues(alpha: 0.82))
-        : neo
-        ? tonosSecondaryForegroundForSurface(context, tileSurface)
-        : scheme.onSurfaceVariant;
+    final tileSurface =
+        expressivePalette?.sectionSurface ??
+        (neo ? surfaces.dialogChoice : scheme.surface);
+    final tileForeground =
+        expressivePalette?.foreground ??
+        (neo
+            ? tonosForegroundForSurface(context, tileSurface)
+            : scheme.onSurface);
+    final tileSecondary =
+        expressivePalette?.secondaryForeground ??
+        (neo
+            ? tonosSecondaryForegroundForSurface(context, tileSurface)
+            : scheme.onSurfaceVariant);
+    final subtitle = planning != null
+        ? (item.name.toLowerCase() == 'none'
+              ? strings.equipmentNoRequirement
+              : null)
+        : _equipmentSubtitleFor(item.name, strings);
 
     return InkWell(
       onTap: () => onChanged(!selected),
@@ -1085,13 +1243,13 @@ class _EquipmentTile extends StatelessWidget {
                         ? surfaces.settingsInput
                         : scheme.primary.withValues(alpha: 0.18))
                   : (planning != null
-                        ? planning.planSupportSurface
+                        ? expressivePalette!.thumbnailSurface
                         : neo
                         ? surfaces.settingsSection
                         : scheme.surface.withValues(alpha: 0.34)),
               borderColor: selected
                   ? (planning != null
-                        ? planning.outline
+                        ? expressivePalette!.outline
                         : neo
                         ? tonosOutlineForSurface(
                             context,
@@ -1099,7 +1257,7 @@ class _EquipmentTile extends StatelessWidget {
                           )
                         : scheme.primary.withValues(alpha: 0.6))
                   : (planning != null
-                        ? planning.outline
+                        ? expressivePalette!.outline
                         : neo
                         ? tonosOutlineForSurface(
                             context,
@@ -1128,24 +1286,28 @@ class _EquipmentTile extends StatelessWidget {
                       catalogId: item.catalogId,
                       canonicalName: item.name,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: planning != null ? null : 1,
+                    overflow: planning != null ? null : TextOverflow.ellipsis,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       color:
-                          planning?.equipmentForeground ??
+                          expressivePalette?.foreground ??
                           (neo ? tileForeground : null),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _equipmentSubtitleFor(item.name, strings),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: planning?.equipmentForeground ?? tileSecondary,
+                  if (subtitle != null && subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      maxLines: planning != null ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            expressivePalette?.secondaryForeground ??
+                            tileSecondary,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

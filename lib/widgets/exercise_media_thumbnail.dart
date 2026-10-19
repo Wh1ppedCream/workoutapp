@@ -23,6 +23,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
   final VoidCallback? onTap;
   final bool framed;
   final Color? heatmapSurface;
+  final Color? frameBorderColor;
 
   const ExerciseMediaThumbnail({
     super.key,
@@ -33,6 +34,7 @@ class ExerciseMediaThumbnail extends StatefulWidget {
     this.onTap,
     this.framed = true,
     this.heatmapSurface,
+    this.frameBorderColor,
   });
 
   @override
@@ -48,6 +50,7 @@ class ExerciseMediaFrame extends StatelessWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(14)),
     this.padding = const EdgeInsets.all(4),
     this.framed = true,
+    this.frameBorderColor,
   });
 
   final Widget child;
@@ -55,6 +58,7 @@ class ExerciseMediaFrame extends StatelessWidget {
   final BorderRadius borderRadius;
   final EdgeInsets padding;
   final bool framed;
+  final Color? frameBorderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +70,9 @@ class ExerciseMediaFrame extends StatelessWidget {
       decoration: BoxDecoration(
         color: framed ? surfaces.mediaPlaceholder : null,
         borderRadius: borderRadius,
-        border: framed ? Border.all(color: surfaces.mediaOutline) : null,
+        border: framed
+            ? Border.all(color: frameBorderColor ?? surfaces.mediaOutline)
+            : null,
       ),
       clipBehavior: Clip.antiAlias,
       child: child,
@@ -200,6 +206,7 @@ class _ExerciseMediaThumbnailState extends State<ExerciseMediaThumbnail> {
       padding: widget.padding,
       borderRadius: widget.borderRadius,
       framed: widget.framed,
+      frameBorderColor: widget.frameBorderColor,
       child: FutureBuilder<_ThumbnailData?>(
         future: _thumbnailFuture,
         builder: (context, snapshot) {

@@ -14,7 +14,6 @@ import 'package:env_test/screens/exercise/definitions_by_muscle_page.dart';
 import 'package:env_test/screens/exercise/muscle_filter_page.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/painting.dart' show TextPainter;
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -150,8 +149,8 @@ void main() {
               reason: 'Long equipment and count metadata must remain visible.',
             );
             final leadTitle = tester.widget<Text>(find.text('Bench Press'));
-            final leadTitleWeight = leadTitle.style?.fontWeight?.index ?? 0;
-            final metadataWeight = metadataText.style?.fontWeight?.index ?? 0;
+            final leadTitleWeight = leadTitle.style?.fontWeight?.value ?? 0;
+            final metadataWeight = metadataText.style?.fontWeight?.value ?? 0;
             expect(leadTitleWeight, greaterThan(metadataWeight));
             expect(tester.takeException(), isNull);
           }
@@ -163,6 +162,12 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(find.text(strings.catalogTargetAnatomyTitle), findsOneWidget);
+          expect(
+            find.text(strings.catalogAnatomyHistorySubtitle),
+            findsNothing,
+            reason:
+                'Catalog Root no longer repeats the Target Anatomy subtitle.',
+          );
           expect(find.text('Chest'), findsOneWidget);
 
           if (viewport.size.width == 320 && textScale == 2) {
@@ -199,6 +204,36 @@ void main() {
               reason:
                   'Anatomy panes should remain side by side at normal size.',
             );
+            expect(find.text(strings.commonName), findsNWidgets(2));
+            expect(
+              find.text(_capitalizeFirst(strings.trainSetsShort)),
+              findsNWidgets(2),
+            );
+            expect(find.text(strings.catalogSetUnits(3)), findsNothing);
+            expect(find.text('3'), findsNWidgets(2));
+
+            final bodyPane = find.byKey(
+              const ValueKey('catalog-bodyparts-summary'),
+            );
+            final musclePane = find.byKey(
+              const ValueKey('catalog-muscles-summary'),
+            );
+            final bodySurface = find
+                .descendant(of: bodyPane, matching: find.byType(Container))
+                .first;
+            final muscleSurface = find
+                .descendant(of: musclePane, matching: find.byType(Container))
+                .first;
+            expect(
+              tester.getSize(bodySurface).height,
+              closeTo(tester.getSize(muscleSurface).height, 0.1),
+              reason: 'Side-by-side anatomy panes should have equal heights.',
+            );
+            final anteriorName = tester.widget<Text>(
+              find.text('Anterior Deltoid'),
+            );
+            expect(anteriorName.maxLines, 1);
+            expect(anteriorName.overflow, TextOverflow.ellipsis);
           }
 
           if (brightness == Brightness.light && textScale == 1) {
@@ -259,76 +294,84 @@ void main() {
   for (final brightness in Brightness.values) {
     for (final textScale in <double>[1, 1.3, 1.5, 2]) {
       for (final viewport in responsiveViewports) {
-        testWidgets(
-          'Expressive anatomy list search stays usable at '
-          '${viewport.label}, ${brightness.name}, ${textScale}x text',
-          (tester) async {
-            await tester.binding.setSurfaceSize(viewport.size);
-            addTearDown(() => tester.binding.setSurfaceSize(null));
-            SharedPreferences.setMockInitialValues({
-              'guided_tutorial_completed.target_anatomy_v1': true,
-            });
-            final repository = _ResponsiveCatalogRepository();
+        testWidgets('Expressive anatomy list search stays usable at '
+            '${viewport.label}, ${brightness.name}, ${textScale}x text', (
+          tester,
+        ) async {
+          await tester.binding.setSurfaceSize(viewport.size);
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+          SharedPreferences.setMockInitialValues({
+            'guided_tutorial_completed.target_anatomy_v1': true,
+          });
+          final repository = _ResponsiveCatalogRepository();
 
-            await tester.pumpWidget(
-              MultiProvider(
-                providers: [Provider<AppRepository>.value(value: repository)],
-                child: MaterialApp(
-                  theme: brightness == Brightness.dark
-                      ? ExpressiveThemeDefinition.dark()
-                      : ExpressiveThemeDefinition.light(),
-                  themeAnimationDuration: Duration.zero,
-                  localizationsDelegates: tonosLocalizationDelegates,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  builder: (context, child) => MediaQuery(
-                    data: MediaQuery.of(context)
-                        .copyWith(textScaler: TextScaler.linear(textScale)),
-                    child: child!,
-                  ),
-                  home: const MuscleFilterPage(
-                    expressiveCatalogPresentation: true,
-                  ),
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [Provider<AppRepository>.value(value: repository)],
+              child: MaterialApp(
+                theme: brightness == Brightness.dark
+                    ? ExpressiveThemeDefinition.dark()
+                    : ExpressiveThemeDefinition.light(),
+                themeAnimationDuration: Duration.zero,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(textScale)),
+                  child: child!,
+                ),
+                home: const MuscleFilterPage(
+                  expressiveCatalogPresentation: true,
                 ),
               ),
-            );
-            await _settle(tester);
+            ),
+          );
+          await _settle(tester);
 
-            final strings = AppLocalizations.of(
-              tester.element(find.byType(MuscleFilterPage)),
-            );
-            expect(find.byType(TextField), findsOneWidget);
-            expect(find.text(strings.anatomyBodyParts), findsOneWidget);
-            expect(find.text(strings.anatomyMuscles), findsOneWidget);
-            expect(find.text('Chest'), findsOneWidget);
-            expect(tester.takeException(), isNull);
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(MuscleFilterPage)),
+          );
+          expect(find.byType(TextField), findsOneWidget);
+          expect(find.text(strings.anatomyBodyParts), findsOneWidget);
+          expect(find.text(strings.anatomyMuscles), findsOneWidget);
+          expect(find.text('Chest'), findsOneWidget);
+          expect(tester.takeException(), isNull);
 
-            final search = find.byType(TextField).first;
-            final decoration = tester.widget<TextField>(search).decoration!;
-            expect(
-              decoration.labelText ?? decoration.label,
-              isNotNull,
-              reason:
-                  'The anatomy search needs a discoverable accessible label.',
-            );
-            await tester.enterText(search, 'leg');
-            await tester.pump();
-            expect(find.text('Chest'), findsNothing);
-            expect(find.text('Legs'), findsOneWidget);
-            expect(tester.takeException(), isNull);
-            // The tutorial's delayed check is scheduled from a data-backed
-            // post-frame callback. Drain it before disposing the route.
-            await tester.pump(const Duration(milliseconds: 600));
-            await tester.pump();
-            await tester.pumpWidget(const SizedBox.shrink());
-          },
-        );
+          final search = find.byType(TextField).first;
+          final decoration = tester.widget<TextField>(search).decoration!;
+          expect(
+            decoration.labelText,
+            isNull,
+            reason: 'Expressive anatomy search uses an inline hint.',
+          );
+          expect(
+            decoration.hintText,
+            strings.anatomySearchBodyParts,
+            reason: 'Bodyparts has a contextual search hint.',
+          );
+          await tester.enterText(search, 'leg');
+          await tester.pump();
+          expect(find.text('Chest'), findsNothing);
+          expect(find.text('Legs'), findsOneWidget);
+          expect(find.byTooltip(strings.catalogClearSearch), findsOneWidget);
+          await tester.tap(find.byTooltip(strings.catalogClearSearch));
+          await tester.pump();
+          expect(find.text('Chest'), findsOneWidget);
+          expect(find.text('Legs'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          // The tutorial's delayed check is scheduled from a data-backed
+          // post-frame callback. Drain it before disposing the route.
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.pump();
+          await tester.pumpWidget(const SizedBox.shrink());
+        });
       }
     }
   }
 
   for (final brightness in Brightness.values) {
     testWidgets(
-      'Expressive anatomy details wrap long metadata at 320 dp and 2x text '
+      'Expressive anatomy details bound long metadata at 320 dp and 2x text '
       'in ${brightness.name}',
       (tester) async {
         await tester.binding.setSurfaceSize(const Size(320, 780));
@@ -371,13 +414,21 @@ void main() {
           ),
         );
         await tester.scrollUntilVisible(
-          find.text('High and Low Pulley'),
+          find.text('Overhead Cable Press'),
           180,
           scrollable: find.byType(Scrollable).first,
         );
-        expect(find.text('High and Low Pulley'), findsOneWidget);
-        await _expectWrappedText(tester, 'High and Low Pulley');
-        await _expectWrappedText(tester, 'Long Head Triceps');
+        await _expectUntruncatedText(tester, 'Overhead Cable Press');
+        await _expectEllipsizedTooltipText(
+          tester,
+          'High and Low Pulley',
+          maxLines: 1,
+        );
+        await _expectEllipsizedTooltipText(
+          tester,
+          'Long Head Triceps',
+          maxLines: 2,
+        );
         expect(tester.takeException(), isNull);
 
         await pumpDetail(
@@ -389,41 +440,69 @@ void main() {
         final strings = AppLocalizations.of(
           tester.element(find.byType(DefinitionsByMusclePage)),
         );
-        final rank = strings.anatomyRankForMuscle(1, 'Upper Chest');
+        expect(find.text(strings.anatomyDoneSevenDaysCompact), findsOneWidget);
+        expect(
+          find.text(strings.anatomyRecommendedWeeklyCompact),
+          findsOneWidget,
+        );
+        final rank = find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.data?.startsWith('${strings.rankingsRank} ') == true,
+        );
         await tester.scrollUntilVisible(
           find.text('Overhead Cable Press'),
           180,
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
-        await _expectWrappedText(tester, 'High and Low Pulley');
-        await _expectWrappedText(tester, rank);
+        expect(rank, findsOneWidget);
+        await _expectUntruncatedText(tester, 'Overhead Cable Press');
+        await _expectEllipsizedTooltipText(
+          tester,
+          'High and Low Pulley',
+          maxLines: 2,
+        );
+        await _expectEllipsizedTooltipText(tester, 'Upper Chest', maxLines: 2);
         expect(tester.takeException(), isNull);
       },
     );
   }
 }
 
-Future<void> _expectWrappedText(WidgetTester tester, String content) async {
-  final finder = find.byWidgetPredicate(
-    (widget) => widget is Text && widget.data?.contains(content) == true,
+Future<void> _expectEllipsizedTooltipText(
+  WidgetTester tester,
+  String content, {
+  required int maxLines,
+}) async {
+  final text = find.descendant(
+    of: find.byTooltip(content),
+    matching: find.byWidgetPredicate(
+      (widget) => widget is Text && widget.data == content,
+    ),
   );
-  final matches = finder.evaluate().toList();
-  expect(matches, isNotEmpty, reason: content);
-  var wrapped = false;
-  for (var index = 0; index < matches.length; index++) {
-    final paragraph = tester.renderObject<RenderParagraph>(finder.at(index));
-    final painter = TextPainter(
-      text: paragraph.text,
-      textDirection: paragraph.textDirection,
-      textScaler: paragraph.textScaler,
-      maxLines: paragraph.maxLines,
-    )..layout(maxWidth: paragraph.size.width);
-    final lines = painter.computeLineMetrics().length;
-    expect(paragraph.didExceedMaxLines, isFalse, reason: content);
-    wrapped = wrapped || lines > 1;
-  }
-  expect(wrapped, isTrue, reason: content);
+  expect(text, findsOneWidget, reason: content);
+  final widget = tester.widget<Text>(text);
+  expect(widget.maxLines, maxLines, reason: content);
+  expect(widget.overflow, TextOverflow.ellipsis, reason: content);
+
+  final tooltip = find.ancestor(of: text, matching: find.byType(Tooltip)).first;
+  expect(tester.widget<Tooltip>(tooltip).message, content, reason: content);
+}
+
+Future<void> _expectUntruncatedText(WidgetTester tester, String content) async {
+  final text = find.byWidgetPredicate(
+    (widget) => widget is Text && widget.data == content,
+  );
+  expect(text, findsOneWidget, reason: content);
+  final widget = tester.widget<Text>(text);
+  expect(widget.maxLines, isNull, reason: content);
+  expect(widget.overflow, isNull, reason: content);
+  expect(
+    tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+    isFalse,
+    reason: content,
+  );
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -435,6 +514,10 @@ Future<void> _settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 700));
   await tester.pump();
 }
+
+String _capitalizeFirst(String value) => value.isEmpty
+    ? value
+    : '${value.substring(0, 1).toUpperCase()}${value.substring(1)}';
 
 class _ResponsiveCatalogRepository extends AppRepository {
   _ResponsiveCatalogRepository() : super(db: _ResponsiveCatalogDatabase());

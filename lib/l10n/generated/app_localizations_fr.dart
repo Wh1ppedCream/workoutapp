@@ -10,6 +10,70 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get nutritionSummaryTitle => 'Nutrition quotidienne';
+
+  @override
+  String get nutritionRingView => 'Vue en anneaux';
+
+  @override
+  String get nutritionBarView => 'Vue en barres';
+
+  @override
+  String get nutritionSummaryView => 'Vue récapitulative';
+
+  @override
+  String nutritionGoalComparison(int target, String unit) {
+    return 'sur $target $unit';
+  }
+
+  @override
+  String nutritionUnsetGoal(String unit) {
+    return '$unit · Aucun objectif';
+  }
+
+  @override
+  String nutritionGoalSemantics(
+    String nutrient,
+    int consumed,
+    int target,
+    String unit,
+  ) {
+    return '$nutrient : $consumed sur $target $unit consommés.';
+  }
+
+  @override
+  String nutritionUnsetGoalSemantics(
+    String nutrient,
+    int consumed,
+    String unit,
+  ) {
+    return '$nutrient : $consumed $unit consommés. Aucun objectif quotidien.';
+  }
+
+  @override
+  String get nutritionPantryLogAction => 'Garde-manger';
+
+  @override
+  String get nutritionAddMealAction => 'Ajouter un repas';
+
+  @override
+  String get nutritionPlanMealAction => 'Planifier un repas';
+
+  @override
+  String get nutritionActionUnavailable => 'Indisponible';
+
+  @override
+  String nutritionActionUnavailableHint(String action) {
+    return '$action n’est pas encore disponible.';
+  }
+
+  @override
+  String get nutritionUnitGrams => 'g';
+
+  @override
+  String get nutritionUnitCalories => 'kcal';
+
+  @override
   String onboardingBodyWeightPerWeek(String percent) {
     return '$percent % du poids corporel/sem.';
   }
@@ -955,6 +1019,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogTargetAnatomyTitle => 'Anatomie ciblée';
 
   @override
+  String get catalogAnatomyHistorySubtitle =>
+      'Crédit de séries attribué dans les entraînements terminés';
+
+  @override
   String get catalogBodyparts => 'Parties du corps';
 
   @override
@@ -1259,6 +1327,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Choisissez les plans à garder à portée de main dans l’aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être réactivés en tout temps.';
 
   @override
+  String get planManagementExpressiveIntro =>
+      'Gardez les plans actifs dans Entraînement ou archivez-les pour plus tard; restaurez-les à tout moment.';
+
+  @override
   String get planManagementActiveSubtitle =>
       'Affichés dans l’aperçu Entraînement.';
 
@@ -1338,6 +1410,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Voulez-vous vraiment supprimer ce plan?';
 
   @override
+  String presetBarDeleteTitle(String planName) {
+    return 'Supprimer « $planName » ?';
+  }
+
+  @override
+  String get presetBarDeleteBody =>
+      'Ce plan sera supprimé définitivement. Cette action est irréversible.';
+
+  @override
   String get commonCancel => 'Annuler';
 
   @override
@@ -1410,7 +1491,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get optimizedRepsWeightsDescription =>
-      'Utilise les estimations de force tirées de l’historique lorsqu’elles sont disponibles. Facile et Moyen sont plus prudents que Difficile. Les nouveaux exercices utilisent des estimations de départ conservatrices.';
+      'Utilise les estimations de force tirées de l’historique lorsqu’elles sont disponibles.';
 
   @override
   String get optimizedRepPattern => 'Structure des répétitions';
@@ -1520,7 +1601,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get generateIntroTitle => 'Créez votre semaine de plans';
+  String get generateIntroTitle => 'Créez votre semaine d’entraînement';
 
   @override
   String get generateIntroBody =>
@@ -1549,7 +1630,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String generateSetupSummary(String plans, String minutes, String sets) {
-    return '$plans plan(s), $minutes min, $sets séries max.';
+    String _temp0 = intl.Intl.selectLogic(plans, {
+      '1': '1 plan',
+      'other': '$plans plans',
+    });
+    return '$_temp0 · $minutes min · $sets séries max./exercice';
   }
 
   @override
@@ -1560,7 +1645,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Estimation : 3 min/série + 5 min/exercice.';
 
   @override
-  String get generatePlansToCreate => 'Plans à créer';
+  String get generatePlansToCreate => 'Nombre de plans';
 
   @override
   String generatePlansToCreateHelp(int maxPlans) {
@@ -1571,7 +1656,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unitPlans => 'plans';
 
   @override
-  String get generateMaxSetsPerExercise => 'Séries maximales par exercice';
+  String generatePlanUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'plans',
+      one: 'plan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get generateMaxSetsPerExercise => 'Séries max. par exercice';
 
   @override
   String generateSetLimitHelp(int minSets, int maxSets) {
@@ -1580,14 +1676,35 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String generateFocusSummary(int preferred, int avoided, String history) {
-    return '$preferred privilégiées, $avoided évitées, historique de 7 jours $history';
+    return '$preferred prioritaires · $avoided évitées · Historique $history';
   }
 
   @override
-  String get generateHistoryUsing => 'utilisé';
+  String generateFocusCountsSummary(int preferred, int avoided) {
+    return '$preferred prioritaires · $avoided évitées';
+  }
 
   @override
-  String get generateHistoryNotUsing => 'non utilisé';
+  String get generateRecentTrainingOnSummary => 'Entraînement récent : actif';
+
+  @override
+  String get generateRecentTrainingOffSummary =>
+      'Entraînement récent : inactif';
+
+  @override
+  String get generateFocusNeutral => 'neutre';
+
+  @override
+  String get generateFocusPreferred => 'préférée';
+
+  @override
+  String get generateFocusAvoided => 'évitée';
+
+  @override
+  String get generateHistoryUsing => 'actif';
+
+  @override
+  String get generateHistoryNotUsing => 'inactif';
 
   @override
   String get generateUseRecentTraining => 'Utiliser l’entraînement récent';
@@ -2528,6 +2645,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogFilters => 'Filtres';
 
   @override
+  String get catalogApplyFilters => 'Appliquer les filtres';
+
+  @override
+  String get catalogResetAllFilters => 'Tout réinitialiser';
+
+  @override
+  String get catalogWorkspaceProfileDescription =>
+      'Limiter les résultats à l’équipement de ce profil.';
+
+  @override
+  String get catalogFiltersCombined =>
+      'Les filtres sont combinés pour affiner les résultats.';
+
+  @override
+  String get catalogExpressiveWorkspaceProfileDescription =>
+      'Limiter les résultats à l’équipement de ce profil ainsi qu’aux autres filtres sélectionnés.';
+
+  @override
+  String get catalogExpressiveFiltersCombined =>
+      'Les exercices doivent correspondre à tous les filtres sélectionnés.';
+
+  @override
   String get catalogGuideFiltersBody =>
       'Filtrez par profil de gym, équipement, partie du corps ou muscle pour restreindre rapidement le catalogue.';
 
@@ -2557,6 +2696,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get catalogSpecificMuscle => 'Muscle précis';
 
   @override
+  String get catalogBodyPartFilter => 'Partie du corps';
+
+  @override
+  String get catalogMuscleFilter => 'Muscle';
+
+  @override
   String get catalogPageTitle => 'Catalogue d’exercices';
 
   @override
@@ -2564,6 +2709,45 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get catalogNoMatches => 'Aucun exercice ne correspond aux filtres.';
+
+  @override
+  String get catalogNoSearchMatches => 'Aucun exercice trouvé';
+
+  @override
+  String get catalogNoCombinedMatches =>
+      'Aucun exercice ne correspond à la recherche et aux filtres';
+
+  @override
+  String get catalogNoSearchMatchesBody =>
+      'Essayez un autre nom d’exercice ou effacez la recherche.';
+
+  @override
+  String get catalogNoFilteredMatches =>
+      'Aucun exercice ne correspond à ces filtres';
+
+  @override
+  String get catalogNoFilteredMatchesBody =>
+      'Modifiez les filtres ou réinitialisez-les pour voir tous les exercices.';
+
+  @override
+  String get catalogNoCombinedMatchesBody =>
+      'Essayez un autre nom d’exercice, effacez la recherche ou réinitialisez les filtres.';
+
+  @override
+  String get catalogClearSearch => 'Effacer la recherche';
+
+  @override
+  String get catalogResetFilters => 'Réinitialiser les filtres';
+
+  @override
+  String get catalogEditFilters => 'Modifier les filtres';
+
+  @override
+  String get catalogNoExercisesAvailable => 'Aucun exercice disponible';
+
+  @override
+  String get catalogNoExercisesAvailableBody =>
+      'Les définitions d’exercices apparaîtront ici dès qu’elles seront disponibles.';
 
   @override
   String get catalogOpenExerciseInfo =>
@@ -2658,6 +2842,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get exerciseDetailZoomHint => 'Pincez ou faites glisser pour zoomer';
 
   @override
+  String get exerciseDetailZoomPanHint =>
+      'Pincez pour zoomer · Faites glisser pour déplacer';
+
+  @override
   String get exerciseDetailLoadingBestLifts =>
       'Chargement des meilleures performances';
 
@@ -2694,7 +2882,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get exerciseDetailTopEstimatedOneRm => 'Meilleur 1RM est.';
+  String get exerciseDetailTopEstimatedOneRm => 'Meilleur 1RM estimé';
 
   @override
   String get exerciseDetailVolumeBest => 'Meilleur volume';
@@ -2708,7 +2896,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String exerciseDetailRanges(int count) {
-    return '$count plages';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plages de répétitions',
+      one: '1 plage de répétitions',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2717,6 +2911,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exerciseDetailNoHistory => 'Aucun historique pour cet exercice.';
+
+  @override
+  String get exerciseDetailNoHistoryBody =>
+      'Effectuez une séance avec cet exercice pour voir ici sa tendance de performance et l’historique des séances.';
 
   @override
   String get exerciseDetailPerformanceTrend => 'Tendance de performance';
@@ -2782,6 +2980,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun record de série terminée à afficher pour le moment.';
 
   @override
+  String get exerciseDetailNoChartDataBody =>
+      'Terminez des séries suivies pour cet exercice afin de voir ses tendances de performance.';
+
+  @override
   String get exerciseDetailWeightAbbreviation => 'Pds';
 
   @override
@@ -2821,6 +3023,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weeklySetsTitle => 'Aperçu hebdomadaire des séries';
 
   @override
+  String get weeklySetsLastSevenDays => 'Les 7 derniers jours';
+
+  @override
+  String get weeklySetsExplanationBody =>
+      'Les séries terminées sont créditées aux muscles et aux parties du corps associés à chaque exercice selon ses pondérations, donc les totaux peuvent être fractionnaires. Ces crédits pondérés ne répartissent pas le total des séries; les totaux anatomiques peuvent donc différer du nombre de séries terminées. Les lignes vertes se situent dans la plage entre le minimum efficace et le maximum récupérable; les rouges dépassent le maximum. Les lignes sous le minimum ou sans limites configurées restent neutres.';
+
+  @override
   String get weeklySetsLoadError =>
       'Impossible de charger votre aperçu hebdomadaire d\'entraînement.';
 
@@ -2849,6 +3058,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String weeklySetsCount(String count) {
     return '$count séries';
+  }
+
+  @override
+  String weeklySetsSingleCount(String count) {
+    return '$count série';
   }
 
   @override
@@ -3607,6 +3821,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible de charger les filtres anatomiques.';
 
   @override
+  String get anatomySearchBodyParts => 'Rechercher des parties du corps';
+
+  @override
   String get anatomySearchLabel =>
       'Rechercher des parties du corps ou des muscles';
 
@@ -3676,6 +3893,9 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get anatomyDoneSevenDaysCompact => 'Fait · 7 jours';
+
+  @override
   String get anatomyDoneLastSevenDays => 'Effectué (7 jours)';
 
   @override
@@ -3688,6 +3908,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get anatomyRecommended => 'Recommandé';
+
+  @override
+  String get anatomyRecommendedWeeklyCompact => 'Recommandé · hebdomadaire';
 
   @override
   String get anatomyNotSet => 'Non défini';
@@ -4065,6 +4288,21 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucun muscle associé pour le moment. Touchez Modifier pour en ajouter.';
 
   @override
+  String get mappingSearchMuscles => 'Rechercher des muscles';
+
+  @override
+  String get mappingSelectedOnly => 'Sélectionnés uniquement';
+
+  @override
+  String mappingSelectedCount(int count) {
+    return '$count sélectionné(s)';
+  }
+
+  @override
+  String get mappingNoFilteredMuscles =>
+      'Aucun muscle ne correspond aux filtres actuels.';
+
+  @override
   String get volumeMaintenance => 'Entretien';
 
   @override
@@ -4151,6 +4389,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nutritionTodayRecords => 'Données du jour';
+
+  @override
+  String get nutritionNoGoalSet => 'Aucun objectif défini';
+
+  @override
+  String get nutritionNoFoodLogged =>
+      'Aucun aliment enregistré pour cette journée';
+
+  @override
+  String get nutritionTapToAddFirstEntry =>
+      'Appuyez sur + pour ajouter votre première entrée';
+
+  @override
+  String get nutritionAddEntryActionLabel => 'Ajouter un aliment ou une mesure';
+
+  @override
+  String get nutritionOptionalTargetsHint =>
+      'Toutes les cibles nutritives sont facultatives. Laissez un champ vide pour ne pas le définir.';
 
   @override
   String get nutritionGoalsMenu => 'Objectifs nutritionnels';
@@ -4867,6 +5123,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get weightMakeChangeSet => 'Creer une serie modifiee';
 
   @override
+  String get presetCreateChangeSet => 'Créer une série modifiée';
+
+  @override
+  String get planAddExercise => 'Ajouter un exercice';
+
+  @override
+  String presetExerciseSetCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# séries',
+      one: '# série',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String weightSetLabel(int number) {
     return 'Serie $number';
   }
@@ -4959,6 +5232,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swapBodypartsHit => 'Parties du corps sollicitees';
 
   @override
+  String get swapBodyPartsWorked => 'Parties du corps travaillées';
+
+  @override
   String swapMatch(int percent) {
     return 'Correspondance : $percent %';
   }
@@ -5011,6 +5287,16 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get premadeDescription =>
       'Copiez des routines creees par des entraineurs, des influenceurs ou Tonos dans vos propres plans. Une fois ajoutees, vous pouvez les modifier comme tout autre plan.';
+
+  @override
+  String get premadeExpressiveDescription =>
+      'Decouvrez des routines pretes a l\'entrainement. Ajoutez un plan pour le personnaliser.';
+
+  @override
+  String get premadeBuiltinPlansTitle => 'Plans Tonos';
+
+  @override
+  String get premadeEquipmentFilterLabel => 'Selon l’équipement de ma salle';
 
   @override
   String get premadeDiscarding => 'Suppression...';
@@ -5102,6 +5388,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get healthTrendsTitle => 'Tendances de sante';
+
+  @override
+  String get healthTrackedMetrics => 'Mesures suivies';
 
   @override
   String get healthMetric => 'Indicateur';
@@ -5353,6 +5642,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exerciseEditorTitle => 'Editeur d\'exercices';
+
+  @override
+  String get exerciseEditorHeroDescription =>
+      'Consultez et mettez à jour les détails d’un exercice.';
 
   @override
   String get exerciseEditorLoadFailed =>
@@ -5782,6 +6075,36 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les plans conviennent deja a l\'equipement du profil actuel.';
 
   @override
+  String get premadeExpressiveEquipmentSelectProfile =>
+      'Choisissez un profil d\'entrainement pour filtrer les plans selon son equipement.';
+
+  @override
+  String get premadeExpressiveEquipmentAll =>
+      'Afficher tous les plans, meme ceux qui necessitent d\'autres equipements.';
+
+  @override
+  String get premadeExpressiveEquipmentChecking =>
+      'Verification de la compatibilite de l\'equipement...';
+
+  @override
+  String get premadeExpressiveEquipmentMissing =>
+      'Ajoutez de l\'equipement a votre profil actif pour filtrer les plans.';
+
+  @override
+  String get premadeExpressiveEquipmentNoMatches =>
+      'Aucun plan ne correspond a l\'equipement de votre profil.';
+
+  @override
+  String get premadeExpressiveEquipmentCompatible =>
+      'Afficher uniquement les plans compatibles avec l\'equipement de votre profil actif.';
+
+  @override
+  String get premadeExpressiveOneHour => '1 heure';
+
+  @override
+  String get premadeExpressiveTwoHours => '2 heures';
+
+  @override
   String get premadeOneHour => '1 h';
 
   @override
@@ -5817,6 +6140,29 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String premadeSwappedCount(int count) {
     return '$count remplace(s)';
+  }
+
+  @override
+  String premadeExpressivePlansAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans disponibles',
+      one: '1 plan disponible',
+      zero: 'Aucun plan disponible',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String premadeExpressivePlansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: '1 plan',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -6159,7 +6505,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
-    return '$count parties du corps sont actuellement associees.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parties du corps sont actuellement associées.',
+      one: '1 partie du corps est actuellement associée.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exerciseEditorSelectedCount(int count) {
+    return '$count sélectionné(s)';
   }
 
   @override
@@ -6342,6 +6699,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get exerciseEditorMediaRemoteUrl => 'URL distante';
+
+  @override
+  String get exerciseEditorMediaUrlRequired => 'Saisissez une URL distante.';
 
   @override
   String get exerciseEditorMediaThumbnailUrl => 'URL de la vignette';
@@ -6592,6 +6952,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get healthRecords => 'Données';
 
   @override
+  String healthRecordCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count relevés',
+      one: '1 relevé',
+      zero: '0 relevé',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presetEstimatedTime => 'Durée estimée';
 
   @override
@@ -6828,6 +7200,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Supprimer tous les diagnostics de synchronisation locaux.';
 
   @override
+  String get diagnosticsShowAllHistory => 'Afficher tout l’historique';
+
+  @override
+  String get diagnosticsShowLessHistory => 'Afficher moins';
+
+  @override
   String get diagnosticsHistoryCleared => 'Historique des diagnostics effacé.';
 
   @override
@@ -6847,6 +7225,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get diagnosticsSyncFailed => 'Échec';
+
+  @override
+  String get diagnosticsSyncSkipped => 'Ignoré';
 
   @override
   String diagnosticsSyncEventTitle(String operation, String outcome) {
@@ -6880,12 +7261,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
 
   @override
-  String get diagnosticsDeletionTitle =>
-      'Supprimer les diagnostics et les données';
+  String get diagnosticsDeletionTitle => 'Comment supprimer vos données';
 
   @override
   String get diagnosticsDeletionBody =>
-      'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, contactez le développeur avec les détails de l’événement dont vous disposez.';
+      'Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer les données locales. Pour demander la suppression des rapports envoyés par cette installation, désactivez les diagnostics anonymes. Cela n’efface pas l’historique local de synchronisation; effacez-le séparément ci-dessus.';
 
   @override
   String get diagnosticsSendTestReport =>
@@ -6908,7 +7288,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get diagnosticsDeleteSharedBody =>
-      'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+      'Demande la suppression des seuls rapports que cette installation peut prouver avoir envoyés. Le partage reste activé; le fournisseur peut conserver les lignes supprimées jusqu’à 30 jours supplémentaires.';
+
+  @override
+  String get diagnosticsDeleteSharedConfirmBody =>
+      'Cette action demande la suppression des seuls rapports associés à un reçu que cette installation peut prouver avoir envoyés. Elle ne désactive pas le partage futur, n’efface pas l’historique local de synchronisation et ne supprime pas la base de données locale de l’application. Désactivez le partage pour arrêter les prochains rapports; effacez l’historique de synchronisation séparément. Les rapports expirent après 14 jours et l’historique de récupération du fournisseur peut conserver les lignes supprimées jusqu’à 30 jours supplémentaires. Effacer le stockage de Tonos au préalable supprime aussi les reçus nécessaires pour demander la suppression.';
 
   @override
   String get diagnosticsSharedDeleted =>
@@ -7032,6 +7416,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String premadePlanQuickDescription(String duration, String planName) {
+    return 'Entraînement $planName de $duration';
+  }
+
+  @override
   String get rulesPageSubtitleExpressive =>
       'Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.';
 
@@ -7071,11 +7460,121 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rulesPlanOnlySubtitleExpressive => 'Règles propres à ce plan.';
+
+  @override
+  String get rulesCopyIndexHelper =>
+      '−1 copie la dernière série disponible, y compris celles ajoutées par des règles précédentes. 0 = première série, 1 = deuxième.';
+
+  @override
+  String get rulesFactorHelper =>
+      'Multiplie l’incrément de poids configuré ; 1 applique l’incrément complet.';
+
+  @override
+  String get rulesAmountHelper =>
+      'Nombre de répétitions à ajouter ou retirer de chaque série ciblée.';
+
+  @override
+  String get rulesOperationSubtract => 'Soustraire';
+
+  @override
+  String get rulesCopyFromLabel => 'Copier depuis';
+
+  @override
+  String get rulesCopyFromLastSet => 'Dernière série';
+
+  @override
+  String get rulesCopyFromFirstSet => 'Première série';
+
+  @override
+  String get rulesCopyFromSpecificSet => 'Série précise…';
+
+  @override
+  String get rulesCopyFromLastHelper =>
+      'Copie le poids et les répétitions de la dernière série, y compris les séries ajoutées par des règles précédentes.';
+
+  @override
+  String get rulesCopyFromFirstHelper =>
+      'Copie le poids et les répétitions actuels de la première série.';
+
+  @override
+  String get rulesCopySetNumberLabel => 'Numéro de série';
+
+  @override
+  String get rulesCopySpecificHelper =>
+      'Copie le poids et les répétitions de cette série. Si elle n’existe pas, copie la dernière série disponible.';
+
+  @override
+  String get rulesCopySetNumberInvalid =>
+      'Saisissez un numéro de série entier supérieur ou égal à 1.';
 }
 
 /// The translations for French, as used in Canada (`fr_CA`).
 class AppLocalizationsFrCa extends AppLocalizationsFr {
   AppLocalizationsFrCa() : super('fr_CA');
+
+  @override
+  String get nutritionSummaryTitle => 'Nutrition quotidienne';
+
+  @override
+  String get nutritionRingView => 'Vue en anneaux';
+
+  @override
+  String get nutritionBarView => 'Vue en barres';
+
+  @override
+  String get nutritionSummaryView => 'Vue récapitulative';
+
+  @override
+  String nutritionGoalComparison(int target, String unit) {
+    return 'sur $target $unit';
+  }
+
+  @override
+  String nutritionUnsetGoal(String unit) {
+    return '$unit · Aucun objectif';
+  }
+
+  @override
+  String nutritionGoalSemantics(
+    String nutrient,
+    int consumed,
+    int target,
+    String unit,
+  ) {
+    return '$nutrient : $consumed sur $target $unit consommés.';
+  }
+
+  @override
+  String nutritionUnsetGoalSemantics(
+    String nutrient,
+    int consumed,
+    String unit,
+  ) {
+    return '$nutrient : $consumed $unit consommés. Aucun objectif quotidien.';
+  }
+
+  @override
+  String get nutritionPantryLogAction => 'Garde-manger';
+
+  @override
+  String get nutritionAddMealAction => 'Ajouter un repas';
+
+  @override
+  String get nutritionPlanMealAction => 'Planifier un repas';
+
+  @override
+  String get nutritionActionUnavailable => 'Indisponible';
+
+  @override
+  String nutritionActionUnavailableHint(String action) {
+    return '$action n’est pas encore disponible.';
+  }
+
+  @override
+  String get nutritionUnitGrams => 'g';
+
+  @override
+  String get nutritionUnitCalories => 'kcal';
 
   @override
   String onboardingBodyWeightPerWeek(String percent) {
@@ -8025,6 +8524,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogTargetAnatomyTitle => 'Anatomie ciblée';
 
   @override
+  String get catalogAnatomyHistorySubtitle =>
+      'Crédit de séries attribué dans les entraînements terminés';
+
+  @override
   String get catalogBodyparts => 'Parties du corps';
 
   @override
@@ -8345,6 +8848,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Choisissez les plans prêts dans votre aperçu Entraînement. Les plans archivés restent enregistrés et peuvent être activés en tout temps.';
 
   @override
+  String get planManagementExpressiveIntro =>
+      'Gardez les plans actifs dans Entraînement ou archivez-les pour plus tard; restaurez-les à tout moment.';
+
+  @override
   String get planManagementActiveSubtitle =>
       'Affichés dans l\'aperçu Entraînement.';
 
@@ -8425,6 +8932,15 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Voulez-vous vraiment supprimer ce plan?';
 
   @override
+  String presetBarDeleteTitle(String planName) {
+    return 'Supprimer « $planName »?';
+  }
+
+  @override
+  String get presetBarDeleteBody =>
+      'Ce plan sera supprimé définitivement. Cette action est irréversible.';
+
+  @override
   String get commonCancel => 'Annuler';
 
   @override
@@ -8497,7 +9013,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get optimizedRepsWeightsDescription =>
-      'Utilise des estimations de force fondées sur l’historique lorsqu’elles sont disponibles. Facile et Moyen réduisent davantage les charges que Difficile. Les nouveaux exercices utilisent des estimations prudentes.';
+      'Utilise des estimations de force fondées sur l’historique lorsqu’elles sont disponibles.';
 
   @override
   String get optimizedRepPattern => 'Modèle de répétitions';
@@ -8607,7 +9123,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
-  String get generateIntroTitle => 'Créez votre semaine de plans';
+  String get generateIntroTitle => 'Créez votre semaine d’entraînement';
 
   @override
   String get generateIntroBody =>
@@ -8636,7 +9152,11 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String generateSetupSummary(String plans, String minutes, String sets) {
-    return '$plans plan(s), $minutes min, $sets séries max.';
+    String _temp0 = intl.Intl.selectLogic(plans, {
+      '1': '1 plan',
+      'other': '$plans plans',
+    });
+    return '$_temp0 · $minutes min · $sets séries max./exercice';
   }
 
   @override
@@ -8647,7 +9167,7 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Estimation : 3 min/série + 5 min/exercice.';
 
   @override
-  String get generatePlansToCreate => 'Plans à créer';
+  String get generatePlansToCreate => 'Nombre de plans';
 
   @override
   String generatePlansToCreateHelp(int maxPlans) {
@@ -8658,7 +9178,18 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get unitPlans => 'plans';
 
   @override
-  String get generateMaxSetsPerExercise => 'Maximum de séries par exercice';
+  String generatePlanUnit(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'plans',
+      one: 'plan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get generateMaxSetsPerExercise => 'Séries max. par exercice';
 
   @override
   String generateSetLimitHelp(int minSets, int maxSets) {
@@ -8667,14 +9198,35 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String generateFocusSummary(int preferred, int avoided, String history) {
-    return '$preferred préférées, $avoided évitées, historique de 7 jours : $history';
+    return '$preferred prioritaires · $avoided évitées · Historique $history';
   }
 
   @override
-  String get generateHistoryUsing => 'utilisé';
+  String generateFocusCountsSummary(int preferred, int avoided) {
+    return '$preferred prioritaires · $avoided évitées';
+  }
 
   @override
-  String get generateHistoryNotUsing => 'non utilisé';
+  String get generateRecentTrainingOnSummary => 'Entraînement récent : actif';
+
+  @override
+  String get generateRecentTrainingOffSummary =>
+      'Entraînement récent : inactif';
+
+  @override
+  String get generateFocusNeutral => 'neutre';
+
+  @override
+  String get generateFocusPreferred => 'préférée';
+
+  @override
+  String get generateFocusAvoided => 'évitée';
+
+  @override
+  String get generateHistoryUsing => 'actif';
+
+  @override
+  String get generateHistoryNotUsing => 'inactif';
 
   @override
   String get generateUseRecentTraining => 'Utiliser l’entraînement récent';
@@ -9616,6 +10168,28 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogFilters => 'Filtres';
 
   @override
+  String get catalogApplyFilters => 'Appliquer les filtres';
+
+  @override
+  String get catalogResetAllFilters => 'Tout réinitialiser';
+
+  @override
+  String get catalogWorkspaceProfileDescription =>
+      'Limiter les résultats à l’équipement de ce profil.';
+
+  @override
+  String get catalogFiltersCombined =>
+      'Les filtres sont combinés pour affiner les résultats.';
+
+  @override
+  String get catalogExpressiveWorkspaceProfileDescription =>
+      'Limiter les résultats à l’équipement de ce profil ainsi qu’aux autres filtres sélectionnés.';
+
+  @override
+  String get catalogExpressiveFiltersCombined =>
+      'Les exercices doivent correspondre à tous les filtres sélectionnés.';
+
+  @override
   String get catalogGuideFiltersBody =>
       'Filtrez par profil de salle, équipement, partie du corps ou muscle pour réduire rapidement le catalogue.';
 
@@ -9645,6 +10219,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get catalogSpecificMuscle => 'Muscle précis';
 
   @override
+  String get catalogBodyPartFilter => 'Partie du corps';
+
+  @override
+  String get catalogMuscleFilter => 'Muscle';
+
+  @override
   String get catalogPageTitle => 'Catalogue d’exercices';
 
   @override
@@ -9652,6 +10232,45 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get catalogNoMatches => 'Aucun exercice ne correspond aux filtres.';
+
+  @override
+  String get catalogNoSearchMatches => 'Aucun exercice trouvé';
+
+  @override
+  String get catalogNoCombinedMatches =>
+      'Aucun exercice ne correspond à la recherche et aux filtres';
+
+  @override
+  String get catalogNoSearchMatchesBody =>
+      'Essayez un autre nom d’exercice ou effacez la recherche.';
+
+  @override
+  String get catalogNoFilteredMatches =>
+      'Aucun exercice ne correspond à ces filtres';
+
+  @override
+  String get catalogNoFilteredMatchesBody =>
+      'Modifiez les filtres ou réinitialisez-les pour voir tous les exercices.';
+
+  @override
+  String get catalogNoCombinedMatchesBody =>
+      'Essayez un autre nom d’exercice, effacez la recherche ou réinitialisez les filtres.';
+
+  @override
+  String get catalogClearSearch => 'Effacer la recherche';
+
+  @override
+  String get catalogResetFilters => 'Réinitialiser les filtres';
+
+  @override
+  String get catalogEditFilters => 'Modifier les filtres';
+
+  @override
+  String get catalogNoExercisesAvailable => 'Aucun exercice disponible';
+
+  @override
+  String get catalogNoExercisesAvailableBody =>
+      'Les définitions d’exercices apparaîtront ici dès qu’elles seront disponibles.';
 
   @override
   String get catalogOpenExerciseInfo =>
@@ -9745,6 +10364,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get exerciseDetailZoomHint => 'Pincez ou faites glisser pour zoomer';
 
   @override
+  String get exerciseDetailZoomPanHint =>
+      'Pincez pour zoomer · Faites glisser pour déplacer';
+
+  @override
   String get exerciseDetailLoadingBestLifts =>
       'Chargement des meilleures levées';
 
@@ -9796,7 +10419,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String exerciseDetailRanges(int count) {
-    return '$count plages';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plages de répétitions',
+      one: '1 plage de répétitions',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -9805,6 +10434,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get exerciseDetailNoHistory => 'Aucun historique pour cet exercice.';
+
+  @override
+  String get exerciseDetailNoHistoryBody =>
+      'Effectuez une séance avec cet exercice pour voir ici sa tendance de performance et l’historique des séances.';
 
   @override
   String get exerciseDetailPerformanceTrend => 'Tendance de performance';
@@ -9870,6 +10503,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Aucun record de série terminée à afficher dans le graphique.';
 
   @override
+  String get exerciseDetailNoChartDataBody =>
+      'Terminez des séries suivies pour cet exercice afin de voir ses tendances de performance.';
+
+  @override
   String get exerciseDetailWeightAbbreviation => 'Poids';
 
   @override
@@ -9909,6 +10546,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weeklySetsTitle => 'Aperçu des séries hebdomadaires';
 
   @override
+  String get weeklySetsLastSevenDays => 'Les 7 derniers jours';
+
+  @override
+  String get weeklySetsExplanationBody =>
+      'Les séries terminées sont créditées aux muscles et aux parties du corps associés à chaque exercice selon ses pondérations, donc les totaux peuvent être fractionnaires. Ces crédits pondérés ne répartissent pas le total des séries; les totaux anatomiques peuvent donc différer du nombre de séries terminées. Les lignes vertes se situent dans la plage entre le minimum efficace et le maximum récupérable; les rouges dépassent le maximum. Les lignes sous le minimum ou sans limites configurées restent neutres.';
+
+  @override
   String get weeklySetsLoadError =>
       'Impossible de charger votre aperçu d’entraînement hebdomadaire.';
 
@@ -9937,6 +10581,11 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String weeklySetsCount(String count) {
     return '$count séries';
+  }
+
+  @override
+  String weeklySetsSingleCount(String count) {
+    return '$count série';
   }
 
   @override
@@ -10690,6 +11339,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Impossible de charger les filtres d’anatomie.';
 
   @override
+  String get anatomySearchBodyParts => 'Rechercher des parties du corps';
+
+  @override
   String get anatomySearchLabel =>
       'Rechercher des parties du corps ou des muscles';
 
@@ -10745,6 +11397,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
+  String get anatomyDoneSevenDaysCompact => 'Fait · 7 jours';
+
+  @override
   String get anatomyDoneLastSevenDays => 'Fait au cours des 7 derniers jours';
 
   @override
@@ -10757,6 +11412,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get anatomyRecommended => 'Recommandé';
+
+  @override
+  String get anatomyRecommendedWeeklyCompact => 'Recommandé · hebdomadaire';
 
   @override
   String get anatomyNotSet => 'Non défini';
@@ -11131,6 +11789,21 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get mappingNoLinkedMuscles => 'Aucun muscle associé pour le moment.';
 
   @override
+  String get mappingSearchMuscles => 'Rechercher des muscles';
+
+  @override
+  String get mappingSelectedOnly => 'Sélectionnés uniquement';
+
+  @override
+  String mappingSelectedCount(int count) {
+    return '$count sélectionné(s)';
+  }
+
+  @override
+  String get mappingNoFilteredMuscles =>
+      'Aucun muscle ne correspond aux filtres actuels.';
+
+  @override
   String get volumeMaintenance => 'Entretien';
 
   @override
@@ -11216,6 +11889,24 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get nutritionTodayRecords => 'Relevés d’aujourd’hui';
+
+  @override
+  String get nutritionNoGoalSet => 'Aucune cible définie';
+
+  @override
+  String get nutritionNoFoodLogged =>
+      'Aucun aliment consigné pour cette journée';
+
+  @override
+  String get nutritionTapToAddFirstEntry =>
+      'Touchez + pour ajouter votre première entrée';
+
+  @override
+  String get nutritionAddEntryActionLabel => 'Ajouter un aliment ou une mesure';
+
+  @override
+  String get nutritionOptionalTargetsHint =>
+      'Toutes les cibles nutritionnelles sont facultatives. Laissez un champ vide pour le laisser non défini.';
 
   @override
   String get nutritionGoalsMenu => 'Objectifs nutritionnels';
@@ -11932,6 +12623,23 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get weightMakeChangeSet => 'Créer une série de remplacement';
 
   @override
+  String get presetCreateChangeSet => 'Créer une série de remplacement';
+
+  @override
+  String get planAddExercise => 'Ajouter un exercice';
+
+  @override
+  String presetExerciseSetCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# séries',
+      one: '# série',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String weightSetLabel(int number) {
     return 'Série $number';
   }
@@ -12024,6 +12732,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get swapBodypartsHit => 'Parties du corps travaillées';
 
   @override
+  String get swapBodyPartsWorked => 'Parties du corps travaillées';
+
+  @override
   String swapMatch(int percent) {
     return 'Correspondance à $percent %';
   }
@@ -12076,6 +12787,16 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get premadeDescription =>
       'Copiez des routines de coachs, d’influenceurs et sélectionnées par l’application dans vos propres plans. Une fois ajoutées, vous pouvez les modifier comme n’importe quel autre plan.';
+
+  @override
+  String get premadeExpressiveDescription =>
+      'Découvrez des routines prêtes à l’emploi. Ajoutez un plan pour le personnaliser.';
+
+  @override
+  String get premadeBuiltinPlansTitle => 'Plans Tonos';
+
+  @override
+  String get premadeEquipmentFilterLabel => 'Selon l’équipement de ma salle';
 
   @override
   String get premadeDiscarding => 'Annulation...';
@@ -12166,6 +12887,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get healthTrendsTitle => 'Tendances santé';
+
+  @override
+  String get healthTrackedMetrics => 'Mesures suivies';
 
   @override
   String get healthMetric => 'Mesure';
@@ -12419,6 +13143,10 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get exerciseEditorTitle => 'Éditeur d’exercices';
+
+  @override
+  String get exerciseEditorHeroDescription =>
+      'Consultez et mettez à jour les détails d’un exercice.';
 
   @override
   String get exerciseEditorLoadFailed =>
@@ -12847,6 +13575,36 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Les plans conviennent déjà à l’équipement du profil actuel.';
 
   @override
+  String get premadeExpressiveEquipmentSelectProfile =>
+      'Sélectionnez un profil de salle pour filtrer les plans selon son équipement.';
+
+  @override
+  String get premadeExpressiveEquipmentAll =>
+      'Afficher tous les plans, même ceux qui nécessitent d’autres équipements.';
+
+  @override
+  String get premadeExpressiveEquipmentChecking =>
+      'Vérification de la compatibilité de l’équipement...';
+
+  @override
+  String get premadeExpressiveEquipmentMissing =>
+      'Ajoutez de l’équipement à votre profil de salle actif pour filtrer les plans.';
+
+  @override
+  String get premadeExpressiveEquipmentNoMatches =>
+      'Aucun plan ne correspond à l’équipement de votre salle.';
+
+  @override
+  String get premadeExpressiveEquipmentCompatible =>
+      'Afficher uniquement les plans compatibles avec l’équipement de votre profil de salle actif.';
+
+  @override
+  String get premadeExpressiveOneHour => '1 heure';
+
+  @override
+  String get premadeExpressiveTwoHours => '2 heures';
+
+  @override
   String get premadeOneHour => '1 h';
 
   @override
@@ -12882,6 +13640,29 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String premadeSwappedCount(int count) {
     return '$count remplacés';
+  }
+
+  @override
+  String premadeExpressivePlansAvailable(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans disponibles',
+      one: '1 plan disponible',
+      zero: 'Aucun plan disponible',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String premadeExpressivePlansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plans',
+      one: '1 plan',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -13224,7 +14005,18 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String exerciseEditorBodypartsAssociated(int count) {
-    return '$count parties du corps sont actuellement associées.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parties du corps sont actuellement associées.',
+      one: '1 partie du corps est actuellement associée.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exerciseEditorSelectedCount(int count) {
+    return '$count sélectionné(s)';
   }
 
   @override
@@ -13408,6 +14200,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get exerciseEditorMediaRemoteUrl => 'URL distante';
+
+  @override
+  String get exerciseEditorMediaUrlRequired => 'Saisissez une URL distante.';
 
   @override
   String get exerciseEditorMediaThumbnailUrl => 'URL de miniature';
@@ -13658,6 +14453,18 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   String get healthRecords => 'Données';
 
   @override
+  String healthRecordCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count relevés',
+      one: '1 relevé',
+      zero: '0 relevé',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presetEstimatedTime => 'Durée estimée';
 
   @override
@@ -13895,6 +14702,12 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
       'Supprimer tous les diagnostics de synchronisation locaux.';
 
   @override
+  String get diagnosticsShowAllHistory => 'Afficher tout l’historique';
+
+  @override
+  String get diagnosticsShowLessHistory => 'Afficher moins';
+
+  @override
   String get diagnosticsHistoryCleared => 'Historique des diagnostics effacé.';
 
   @override
@@ -13914,6 +14727,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get diagnosticsSyncFailed => 'Échec';
+
+  @override
+  String get diagnosticsSyncSkipped => 'Ignoré';
 
   @override
   String diagnosticsSyncEventTitle(String operation, String outcome) {
@@ -13940,19 +14756,18 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get diagnosticsLocalDataTitle =>
-      'Les données de mise en forme restent locales';
+      'Les données d’entraînement restent locales';
 
   @override
   String get diagnosticsLocalDataBody =>
       'Les entraînements, données nutritionnelles, mesures corporelles et profils restent dans la base de données de cet appareil, sauf si vous exportez vous-même une sauvegarde.';
 
   @override
-  String get diagnosticsDeletionTitle =>
-      'Supprimer les diagnostics et les données';
+  String get diagnosticsDeletionTitle => 'Comment supprimer vos données';
 
   @override
   String get diagnosticsDeletionBody =>
-      'Effacez l’historique ci-dessus et désactivez les rapports. Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer la base locale et les caches. Pour supprimer un rapport déjà envoyé, communiquez avec le développeur en fournissant les détails de l’événement dont vous disposez.';
+      'Effacez le stockage de Tonos dans les réglages de l’appareil ou désinstallez l’application pour supprimer les données locales. Pour demander la suppression des rapports envoyés par cette installation, désactivez les diagnostics anonymes. Cela n’efface pas l’historique local de synchronisation; effacez-le séparément ci-dessus.';
 
   @override
   String get diagnosticsSendTestReport =>
@@ -13975,7 +14790,11 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get diagnosticsDeleteSharedBody =>
-      'Demande la suppression des rapports que cette installation peut prouver avoir envoyés. L’historique de récupération du fournisseur peut conserver des lignes supprimées jusqu’à 30 jours.';
+      'Demande la suppression des seuls rapports que cette installation peut prouver avoir envoyés. Le partage reste activé; le fournisseur peut conserver les lignes supprimées jusqu’à 30 jours supplémentaires.';
+
+  @override
+  String get diagnosticsDeleteSharedConfirmBody =>
+      'Cette action demande la suppression des seuls rapports associés à un reçu que cette installation peut prouver avoir envoyés. Elle ne désactive pas le partage futur, n’efface pas l’historique local de synchronisation et ne supprime pas la base de données locale de l’application. Désactivez le partage pour arrêter les prochains rapports; effacez l’historique de synchronisation séparément. Les rapports expirent après 14 jours et l’historique de récupération du fournisseur peut conserver les lignes supprimées jusqu’à 30 jours supplémentaires. Effacer le stockage de Tonos au préalable supprime aussi les reçus nécessaires pour demander la suppression.';
 
   @override
   String get diagnosticsSharedDeleted =>
@@ -14099,6 +14918,11 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   }
 
   @override
+  String premadePlanQuickDescription(String duration, String planName) {
+    return 'Entraînement $planName de $duration';
+  }
+
+  @override
   String get rulesPageSubtitleExpressive =>
       'Créez des règles réutilisables pour la progression du poids, des répétitions et des séries.';
 
@@ -14138,4 +14962,50 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get rulesPlanOnlySubtitleExpressive => 'Règles propres à ce plan.';
+
+  @override
+  String get rulesCopyIndexHelper =>
+      '−1 copie la dernière série disponible, y compris celles ajoutées par des règles précédentes. 0 = première série, 1 = deuxième.';
+
+  @override
+  String get rulesFactorHelper =>
+      'Multiplie l’incrément de poids configuré ; 1 applique l’incrément complet.';
+
+  @override
+  String get rulesAmountHelper =>
+      'Nombre de répétitions à ajouter ou retirer de chaque série ciblée.';
+
+  @override
+  String get rulesOperationSubtract => 'Soustraire';
+
+  @override
+  String get rulesCopyFromLabel => 'Copier depuis';
+
+  @override
+  String get rulesCopyFromLastSet => 'Dernière série';
+
+  @override
+  String get rulesCopyFromFirstSet => 'Première série';
+
+  @override
+  String get rulesCopyFromSpecificSet => 'Série précise…';
+
+  @override
+  String get rulesCopyFromLastHelper =>
+      'Copie le poids et les répétitions de la dernière série, y compris les séries ajoutées par des règles précédentes.';
+
+  @override
+  String get rulesCopyFromFirstHelper =>
+      'Copie le poids et les répétitions actuels de la première série.';
+
+  @override
+  String get rulesCopySetNumberLabel => 'Numéro de série';
+
+  @override
+  String get rulesCopySpecificHelper =>
+      'Copie le poids et les répétitions de cette série. Si elle n’existe pas, copie la dernière série disponible.';
+
+  @override
+  String get rulesCopySetNumberInvalid =>
+      'Saisissez un numéro de série entier supérieur ou égal à 1.';
 }

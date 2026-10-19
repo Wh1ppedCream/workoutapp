@@ -12,6 +12,11 @@ class AppExpressivePlanningTokens {
     required this.planFocalForeground,
     required this.planSupportSurface,
     required this.planSupportForeground,
+    required this.planManagementActiveSurface,
+    required this.planManagementActiveForeground,
+    required this.planManagementArchivedSurface,
+    required this.planManagementArchivedForeground,
+    required this.planManagementArchiveActionSurface,
     required this.equipmentSurface,
     required this.equipmentForeground,
     required this.configurationSurface,
@@ -35,6 +40,11 @@ class AppExpressivePlanningTokens {
   final Color planFocalForeground;
   final Color planSupportSurface;
   final Color planSupportForeground;
+  final Color planManagementActiveSurface;
+  final Color planManagementActiveForeground;
+  final Color planManagementArchivedSurface;
+  final Color planManagementArchivedForeground;
+  final Color planManagementArchiveActionSurface;
   final Color equipmentSurface;
   final Color equipmentForeground;
   final Color configurationSurface;
@@ -67,6 +77,11 @@ class AppExpressivePlanningTokens {
     planFocalForeground: Color(0xFFFFF7FF),
     planSupportSurface: Color(0xFFFFE8D7),
     planSupportForeground: Color(0xFF422B21),
+    planManagementActiveSurface: Color(0xFF56316A),
+    planManagementActiveForeground: Color(0xFFFFF7FF),
+    planManagementArchivedSurface: Color(0xFFFFE8D7),
+    planManagementArchivedForeground: Color(0xFF422B21),
+    planManagementArchiveActionSurface: Color(0xFFCAE9DE),
     equipmentSurface: Color(0xFFFFE4B7),
     equipmentForeground: Color(0xFF402A17),
     configurationSurface: Color(0xFFE1D0FF),
@@ -106,6 +121,11 @@ class AppExpressivePlanningTokens {
     planFocalForeground: Color(0xFFF8ECFF),
     planSupportSurface: Color(0xFF33231F),
     planSupportForeground: Color(0xFFF5E8DF),
+    planManagementActiveSurface: Color(0xFF392A4A),
+    planManagementActiveForeground: Color(0xFFF1E4FF),
+    planManagementArchivedSurface: Color(0xFF33231F),
+    planManagementArchivedForeground: Color(0xFFF5E8DF),
+    planManagementArchiveActionSurface: Color(0xFF1F443F),
     equipmentSurface: Color(0xFF45301D),
     equipmentForeground: Color(0xFFF4E5D2),
     configurationSurface: Color(0xFF392A4A),

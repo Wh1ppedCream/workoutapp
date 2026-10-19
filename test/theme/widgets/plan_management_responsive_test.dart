@@ -10,9 +10,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  const archivedPlanName = 'Archived Review Plan 2026';
+const archivedPlanName = 'Archived Strength and Conditioning Progression Plan';
 
+void main() {
   for (final configuration in <({Size size, double textScale, String label})>[
     (size: const Size(320, 900), textScale: 1, label: '320dp baseline'),
     (size: const Size(320, 900), textScale: 1.5, label: '320dp at 1.5x'),
@@ -65,6 +65,11 @@ void main() {
 
         await tester.drag(find.byType(ListView), const Offset(0, -10000));
         await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(PlanManagementPage)),
+        );
+        await tester.ensureVisible(find.text(strings.trainArchivedPlans));
+        await tester.pumpAndSettle();
         final planLabel = find.text(archivedPlanName);
         expect(planLabel, findsOneWidget);
         await tester.ensureVisible(planLabel);
@@ -95,7 +100,7 @@ class _ResponsivePlanRepository extends AppRepository {
     int? profileId,
   }) async => [
     {'id': 1, 'name': 'Visible Plan', 'is_automatic': 0},
-    {'id': 2, 'name': 'Archived Review Plan 2026', 'is_automatic': 0},
+    {'id': 2, 'name': archivedPlanName, 'is_automatic': 0},
   ];
 
   @override
