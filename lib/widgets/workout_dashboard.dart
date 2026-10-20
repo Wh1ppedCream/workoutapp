@@ -7,7 +7,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../providers/selected_profile.dart';
 import '../providers/active_session.dart';
 import '../screens/exercise/session_screen.dart';
+import '../screens/exercise/train_page.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import 'presets_loaded.dart';
 
 /// A self-contained dashboard widget showing:
@@ -45,25 +47,37 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
     final scheme = theme.colorScheme;
     final profiles = sel.profiles.where((p) => p.id != null).toList();
     final selectedProfileId = sel.currentProfile?.id;
-    final dropdownValue =
-        profiles.any((p) => p.id == selectedProfileId)
-            ? selectedProfileId
-            : null;
+    final dropdownValue = profiles.any((p) => p.id == selectedProfileId)
+        ? selectedProfileId
+        : null;
     final hasActiveWorkout =
         activeSession.isActive && !activeSession.isRestoring;
     final strings = AppLocalizations.of(context);
+    final expressive = context.usesExpressivePresentation;
+    final trainTokens = expressive
+        ? theme.extension<AppExpressiveTrainTokens>()!
+        : null;
 
-    return Container(
-      padding: EdgeInsets.all(16 * s),
-      decoration: BoxDecoration(
-        color: surfaces.dashboardSection,
-        borderRadius: shapes.dashboardSection * s,
-        border: Border.all(color: scheme.outlineVariant),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    Future<void> openWorkout() async {
+      final session = context.read<ActiveSession>();
+      final navigator = Navigator.of(context);
+      if (!hasActiveWorkout) {
+        final started = await session.start();
+        if (!started) return;
+      }
+      if (!mounted) return;
+      await navigator.push(
+        MaterialPageRoute(builder: (_) => const SessionScreen()),
+      );
+      if (!mounted) return;
+      widget.onSessionComplete?.call();
+    }
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!expressive) ...[
           Row(
             children: [
               Container(
@@ -93,102 +107,118 @@ class _WorkoutDashboardState extends State<WorkoutDashboard>
             ],
           ),
           SizedBox(height: 14 * s),
-          // 1️⃣ Profile selector
-          Padding(
-            padding: EdgeInsets.zero,
-            child: DropdownButtonFormField<int>(
-              initialValue: dropdownValue,
-              decoration: InputDecoration(
-                labelText: strings.onboardingSummaryGymProfile,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12 * s,
-                  vertical: 8 * s,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: shapes.settingsInput * s,
-                ),
-              ),
-              items:
-                  profiles
-                      .map(
-                        (p) => DropdownMenuItem<int>(
-                          value: p.id!,
-                          child: Text(
-                            p.name,
-                            style: TextStyle(fontSize: 14 * s),
-                          ),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (newProfileId) async {
-                if (newProfileId == null) return;
-                final newProfile = profiles.firstWhere(
-                  (p) => p.id == newProfileId,
-                );
-                await sel.selectProfile(newProfile);
-                if (!mounted) return;
-                setState(() {});
-              },
-            ),
-          ),
-
-          // 2️⃣ Gym presets list (now delegated)
-          SizedBox(height: 14 * s),
-          Text(
-            strings.trainPlansTab,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 4 * s),
-            child: PresetsLoaded(
-              scale: 0.8 * s,
-              progressiveReveal: true,
-              emptyMessage: strings.dashboardNoSavedPlans,
-              physics: const NeverScrollableScrollPhysics(),
-              onRefresh: () => setState(() {}),
-            ),
-          ),
-
-          SizedBox(height: 6 * s),
-
-          // 3️⃣ Start Workout button
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 15 * s, vertical: 8 * s),
-            child: ElevatedButton(
-              onPressed: () async {
-                final session = context.read<ActiveSession>();
-                final navigator = Navigator.of(context);
-                if (!hasActiveWorkout) {
-                  final started = await session.start();
-                  if (!started) return;
-                }
-                if (!mounted) return;
-                await navigator.push(
-                  MaterialPageRoute(builder: (_) => const SessionScreen()),
-                );
-                if (!mounted) return;
-                widget.onSessionComplete?.call();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: semantic.workoutAction,
-                foregroundColor: semantic.onWorkoutAction,
-                minimumSize: Size.fromHeight(52 * s),
-                shape: RoundedRectangleBorder(
-                  borderRadius: shapes.dashboardAction * s,
-                ),
-              ),
-              child: Text(
-                hasActiveWorkout
-                    ? strings.dashboardResumeWorkout
-                    : strings.trainStartWorkout,
-                style: TextStyle(fontSize: 16 * s, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
         ],
+        // 1️⃣ Profile selector
+        Padding(
+          padding: EdgeInsets.zero,
+          child: DropdownButtonFormField<int>(
+            initialValue: dropdownValue,
+            decoration: InputDecoration(
+              labelText: strings.onboardingSummaryGymProfile,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12 * s,
+                vertical: 8 * s,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: shapes.settingsInput * s,
+              ),
+            ),
+            items: profiles
+                .map(
+                  (p) => DropdownMenuItem<int>(
+                    value: p.id!,
+                    child: Text(p.name, style: TextStyle(fontSize: 14 * s)),
+                  ),
+                )
+                .toList(),
+            onChanged: (newProfileId) async {
+              if (newProfileId == null) return;
+              final newProfile = profiles.firstWhere(
+                (p) => p.id == newProfileId,
+              );
+              await sel.selectProfile(newProfile);
+              if (!mounted) return;
+              setState(() {});
+            },
+          ),
+        ),
+
+        // 2️⃣ Gym presets list (now delegated)
+        SizedBox(height: 14 * s),
+        Text(
+          strings.trainPlansTab,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(top: 4 * s),
+          child: PresetsLoaded(
+            scale: (expressive ? 0.96 : 0.8) * s,
+            useExpressiveTrainPresentation: expressive,
+            expressiveMotionEnabled: TickerMode.valuesOf(context).enabled,
+            progressiveReveal: true,
+            emptyMessage: strings.dashboardNoSavedPlans,
+            physics: const NeverScrollableScrollPhysics(),
+            onRefresh: () => setState(() {}),
+          ),
+        ),
+
+        SizedBox(height: 6 * s),
+
+        // 3️⃣ Start Workout button
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15 * s, vertical: 8 * s),
+          child: expressive
+              ? ExpressiveTrainPlanAction(
+                  label: hasActiveWorkout
+                      ? strings.dashboardResumeWorkout
+                      : strings.trainStartWorkout,
+                  icon: Icons.play_arrow_rounded,
+                  color: trainTokens!.actionPrimary,
+                  foreground: trainTokens.actionPrimaryForeground,
+                  onTap: openWorkout,
+                )
+              : ElevatedButton(
+                  onPressed: openWorkout,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: semantic.workoutAction,
+                    foregroundColor: semantic.onWorkoutAction,
+                    minimumSize: Size.fromHeight(52 * s),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: shapes.dashboardAction * s,
+                    ),
+                  ),
+                  child: Text(
+                    hasActiveWorkout
+                        ? strings.dashboardResumeWorkout
+                        : strings.trainStartWorkout,
+                    style: TextStyle(
+                      fontSize: 16 * s,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+    if (expressive) {
+      return TrainPlanSectionCard(
+        title: hasActiveWorkout
+            ? strings.dashboardWorkoutInProgress
+            : strings.dashboardSectionTrainingTitle,
+        isActive: TickerMode.valuesOf(context).enabled,
+        child: content,
+      );
+    }
+    return Container(
+      padding: EdgeInsets.all(16 * s),
+      decoration: BoxDecoration(
+        color: surfaces.dashboardSection,
+        borderRadius: shapes.dashboardSection * s,
+        border: Border.all(color: scheme.outlineVariant),
       ),
+      child: content,
     );
   }
 }

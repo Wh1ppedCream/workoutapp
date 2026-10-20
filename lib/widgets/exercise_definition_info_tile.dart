@@ -7,6 +7,7 @@ import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_theme_ready.dart';
 import 'exercise_detail_sheet.dart';
+import 'exercise_media_thumbnail.dart';
 import 'localized_exercise_name.dart';
 
 class ExerciseDefinitionInfoTile extends StatelessWidget {
@@ -15,6 +16,8 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
   final bool expressiveCatalogPresentation;
   final AppExpressiveDestinationFamily? expressiveDestinationFamily;
   final bool compactExpressivePresentation;
+  final bool bodypartExercisePreview;
+  final bool muscleExercisePreview;
 
   const ExerciseDefinitionInfoTile({
     super.key,
@@ -23,6 +26,8 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
     this.expressiveCatalogPresentation = false,
     this.expressiveDestinationFamily,
     this.compactExpressivePresentation = false,
+    this.bodypartExercisePreview = false,
+    this.muscleExercisePreview = false,
   });
 
   @override
@@ -155,6 +160,7 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
     final surface = theme.brightness == Brightness.dark
         ? const Color(0xFF382A49)
         : const Color(0xFFDED3EE);
+    final anatomyPreview = bodypartExercisePreview || muscleExercisePreview;
     const shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(16)),
     );
@@ -174,9 +180,11 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
           customBorder: shape,
           onTap: showDetails,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 104),
+            constraints: BoxConstraints(minHeight: anatomyPreview ? 88 : 104),
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
+              padding: anatomyPreview
+                  ? const EdgeInsetsDirectional.fromSTEB(16, 10, 8, 10)
+                  : const EdgeInsetsDirectional.fromSTEB(12, 10, 4, 10),
               child: Row(
                 children: [
                   Expanded(
@@ -191,7 +199,7 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        SizedBox(height: anatomyPreview ? 4 : 3),
                         DefaultTextStyle.merge(
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: tokens.supportingForeground,
@@ -202,17 +210,45 @@ class ExerciseDefinitionInfoTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  IconButton(
-                    tooltip: strings.catalogOpenExerciseInfo,
-                    icon: const Icon(Icons.info_outline, size: 21),
-                    style: IconButton.styleFrom(
-                      foregroundColor: tokens.actionPrimary,
-                      minimumSize: const Size(48, 48),
-                      tapTargetSize: MaterialTapTargetSize.padded,
-                      padding: const EdgeInsets.all(12),
+                  if (anatomyPreview)
+                    Tooltip(
+                      message: strings.catalogOpenExerciseInfo,
+                      excludeFromSemantics: true,
+                      child: Semantics(
+                        button: true,
+                        label: strings.catalogOpenExerciseInfo,
+                        child: Material(
+                          color: context.surfaceTokens.mediaPlaceholder,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: ExerciseMediaThumbnail(
+                            key: ValueKey(
+                              'anatomy-exercise-thumbnail-${definition.id}',
+                            ),
+                            definition: definition,
+                            size: 60,
+                            borderRadius: BorderRadius.circular(12),
+                            padding: EdgeInsets.zero,
+                            framed: false,
+                            onTap: showDetails,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      tooltip: strings.catalogOpenExerciseInfo,
+                      icon: const Icon(Icons.info_outline, size: 21),
+                      style: IconButton.styleFrom(
+                        foregroundColor: tokens.actionPrimary,
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                        padding: const EdgeInsets.all(12),
+                      ),
+                      onPressed: showDetails,
                     ),
-                    onPressed: showDetails,
-                  ),
                 ],
               ),
             ),

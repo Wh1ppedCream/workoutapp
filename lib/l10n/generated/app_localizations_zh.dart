@@ -10,6 +10,65 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get dashboardEditorHelp => '拖动可见组件以调整顺序。点按眼睛图标以隐藏。';
+
+  @override
+  String get dashboardVisibleWidgets => '可见组件';
+
+  @override
+  String get dashboardHiddenWidgets => '隐藏的组件';
+
+  @override
+  String get dashboardHiddenWidgetsHelp => '点按 + 以在仪表板上显示组件。';
+
+  @override
+  String get dashboardNoVisibleWidgets => '从下方隐藏列表中添加一个组件。';
+
+  @override
+  String get dashboardWidgetHidden => '已隐藏';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return '显示$name';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return '隐藏$name';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return '调整$name的顺序';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已隐藏 $count 个组件',
+      zero: '所有组件均已显示',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave => '更改会自动保存。';
+
+  @override
+  String get dashboardRestoreDefaultLayout => '恢复默认布局';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle => '恢复默认布局？';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody => '这将重置组件的顺序和显示状态，仪表板将恢复为默认布局。';
+
+  @override
+  String get dashboardRestoreLayout => '恢复布局';
+
+  @override
   String get nutritionSummaryTitle => '每日营养';
 
   @override

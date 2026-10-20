@@ -1321,7 +1321,7 @@ class _PlansTabState extends State<_PlansTab> {
               key: AppTestKeys.trainPlansList,
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                _PresetSectionCard(
+                TrainPlanSectionCard(
                   title: strings.trainActivePlans,
                   isActive: widget.isActive,
                   onEdit: _openPlanManagement,
@@ -1343,7 +1343,7 @@ class _PlansTabState extends State<_PlansTab> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _PresetSectionCard(
+                TrainPlanSectionCard(
                   title: strings.trainArchivedPlans,
                   isActive: widget.isActive,
                   onEdit: _openPlanManagement,
@@ -1365,10 +1365,10 @@ class _PlansTabState extends State<_PlansTab> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _PremadePlansCard(onOpen: _openPremadePlans),
+                TrainPremadePlansCard(onOpen: _openPremadePlans),
                 const SizedBox(height: 16),
                 if (context.usesExpressivePresentation)
-                  _ExpressivePlanActions(
+                  ExpressiveTrainPlanActions(
                     onGenerate: widget.onGeneratePreset,
                     onCreateManual: widget.onCreatePreset,
                   )
@@ -1395,14 +1395,15 @@ class _PlansTabState extends State<_PlansTab> {
   }
 }
 
-class _PresetSectionCard extends StatelessWidget {
+class TrainPlanSectionCard extends StatelessWidget {
   final String title;
   final bool isActive;
   final VoidCallback? onEdit;
   final bool isArchived;
   final Widget child;
 
-  const _PresetSectionCard({
+  const TrainPlanSectionCard({
+    super.key,
     required this.title,
     required this.isActive,
     this.onEdit,
@@ -1522,10 +1523,10 @@ class _PresetSectionCard extends StatelessWidget {
   }
 }
 
-class _PremadePlansCard extends StatelessWidget {
+class TrainPremadePlansCard extends StatelessWidget {
   final VoidCallback onOpen;
 
-  const _PremadePlansCard({required this.onOpen});
+  const TrainPremadePlansCard({super.key, required this.onOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -1589,7 +1590,7 @@ class _PremadePlansCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: usesExpressiveRecipe
-                ? _ExpressivePlanAction(
+                ? ExpressiveTrainPlanAction(
                     label: strings.trainBrowsePremadePlans,
                     icon: Icons.arrow_forward,
                     color: expressiveTokens!.actionPrimary,
@@ -1696,8 +1697,9 @@ class _ExpressiveTrainSurface extends StatelessWidget {
   }
 }
 
-class _ExpressivePlanActions extends StatelessWidget {
-  const _ExpressivePlanActions({
+class ExpressiveTrainPlanActions extends StatelessWidget {
+  const ExpressiveTrainPlanActions({
+    super.key,
     required this.onGenerate,
     required this.onCreateManual,
   });
@@ -1715,7 +1717,7 @@ class _ExpressivePlanActions extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          _ExpressivePlanAction(
+          ExpressiveTrainPlanAction(
             label: strings.trainGenerateCustomPlans,
             icon: Icons.auto_awesome_outlined,
             color: tokens.actionPrimary,
@@ -1723,7 +1725,7 @@ class _ExpressivePlanActions extends StatelessWidget {
             onTap: onGenerate,
           ),
           const SizedBox(height: 10),
-          _ExpressivePlanAction(
+          ExpressiveTrainPlanAction(
             key: AppTestKeys.trainCreateManualPlan,
             label: strings.trainManuallyAddPlan,
             icon: Icons.edit_note_outlined,
@@ -1738,8 +1740,8 @@ class _ExpressivePlanActions extends StatelessWidget {
   }
 }
 
-class _ExpressivePlanAction extends StatelessWidget {
-  const _ExpressivePlanAction({
+class ExpressiveTrainPlanAction extends StatelessWidget {
+  const ExpressiveTrainPlanAction({
     super.key,
     required this.label,
     required this.icon,

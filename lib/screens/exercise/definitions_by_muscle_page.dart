@@ -55,11 +55,24 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
   );
   late Future<_MusclePageData> _dataFuture;
   bool _tutorialQueued = false;
+  final _exerciseSearchController = TextEditingController();
+  String _exerciseQuery = '';
 
   @override
   void initState() {
     super.initState();
     _dataFuture = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _exerciseSearchController.dispose();
+    super.dispose();
+  }
+
+  void _clearExerciseSearch() {
+    _exerciseSearchController.clear();
+    setState(() => _exerciseQuery = '');
   }
 
   /// Loads all page data together so recommendations, links, and exercise
@@ -258,12 +271,30 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
           }
 
           final data = snapshot.data!;
+          final showExerciseSearch =
+              compactCatalogDetail && data.definitions.length >= 10;
+          final query = _exerciseQuery.trim().toLowerCase();
+          final visibleDefinitions = showExerciseSearch && query.isNotEmpty
+              ? data.definitions
+                    .where(
+                      (definition) =>
+                          definition.name.toLowerCase().contains(query) ||
+                          definition.equipmentList.any(
+                            (equipment) =>
+                                equipment.name.toLowerCase().contains(query),
+                          ),
+                    )
+                    .toList(growable: false)
+              : data.definitions;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _queueTutorial();
           });
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 16),
-            itemCount: data.definitions.length + 1,
+            keyboardDismissBehavior: compactCatalogDetail
+                ? ScrollViewKeyboardDismissBehavior.onDrag
+                : ScrollViewKeyboardDismissBehavior.manual,
+            itemCount: visibleDefinitions.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return KeyedSubtree(
@@ -274,6 +305,15 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
                     data: data,
                     expressive: expressive,
                     compactCatalogDetail: compactCatalogDetail,
+                    exerciseSearch: showExerciseSearch
+                        ? _MuscleExerciseSearch(
+                            controller: _exerciseSearchController,
+                            noMatches: visibleDefinitions.isEmpty,
+                            onChanged: (value) =>
+                                setState(() => _exerciseQuery = value),
+                            onClear: _clearExerciseSearch,
+                          )
+                        : null,
                     onEditRecommended: () => _editRecommendedSets(data),
                     onBodyPartTap: (bodyPart) {
                       Navigator.of(context).push(
@@ -304,12 +344,12 @@ class _DefinitionsByMusclePageState extends State<DefinitionsByMusclePage> {
                 );
               }
 
-              final definition = data.definitions[index - 1];
+              final definition = visibleDefinitions[index - 1];
               return KeyedSubtree(
                 key: index == 1 ? _exerciseListTutorialKey : null,
                 child: _ExerciseDefinitionTile(
                   definition: definition,
-                  muscleId: widget.muscle.id,
+                  muscle: widget.muscle,
                   expressive: expressive,
                   expressiveFamily: expressiveFamily,
                   compactCatalogDetail: compactCatalogDetail,
@@ -332,6 +372,7 @@ class _MuscleHeader extends StatelessWidget {
   final _MusclePageData data;
   final bool expressive;
   final bool compactCatalogDetail;
+  final Widget? exerciseSearch;
   final VoidCallback onEditRecommended;
   final ValueChanged<BodyPart> onBodyPartTap;
 
@@ -341,6 +382,7 @@ class _MuscleHeader extends StatelessWidget {
     required this.data,
     required this.expressive,
     required this.compactCatalogDetail,
+    this.exerciseSearch,
     required this.onEditRecommended,
     required this.onBodyPartTap,
   });
@@ -652,6 +694,10 @@ class _MuscleHeader extends StatelessWidget {
                   : null,
             ),
           ),
+          if (exerciseSearch != null) ...[
+            const SizedBox(height: 12),
+            exerciseSearch!,
+          ],
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
             LocalizedCatalogEntityNamesBuilder(
@@ -924,16 +970,116 @@ class _MuscleExpressiveMetricBay extends StatelessWidget {
   }
 }
 
+class _MuscleExerciseSearch extends StatelessWidget {
+  const _MuscleExerciseSearch({
+    required this.controller,
+    required this.noMatches,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final bool noMatches;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const ValueKey('muscle-exercise-search'),
+          controller: controller,
+          onChanged: onChanged,
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+          textInputAction: TextInputAction.search,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
+          decoration: InputDecoration(
+            hintText: strings.catalogSearchExercises,
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: controller.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: strings.catalogClearSearch,
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHigh,
+            border: border,
+            enabledBorder: border,
+            focusedBorder: border.copyWith(
+              borderSide: BorderSide(color: tokens.outlineAccent, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+          ),
+        ),
+        if (noMatches) ...[
+          const SizedBox(height: 12),
+          Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.catalogNoSearchMatches,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: tokens.onSurfaceSecondary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    strings.catalogNoSearchMatchesBody,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: tokens.onSurfaceSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close_rounded),
+                    label: Text(strings.catalogClearSearch),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ExerciseDefinitionTile extends StatelessWidget {
   final ExerciseDefinition definition;
-  final int muscleId;
+  final Muscle muscle;
   final bool expressive;
   final AppExpressiveDestinationFamily? expressiveFamily;
   final bool compactCatalogDetail;
 
   const _ExerciseDefinitionTile({
     required this.definition,
-    required this.muscleId,
+    required this.muscle,
     required this.expressive,
     required this.expressiveFamily,
     required this.compactCatalogDetail,
@@ -946,18 +1092,20 @@ class _ExerciseDefinitionTile extends StatelessWidget {
       definition: definition,
       subtitle: _ExerciseMetadata(
         definition: definition,
+        muscle: muscle,
         muscleRank: rank,
         expressive: expressive,
         compactCatalogDetail: compactCatalogDetail,
       ),
       expressiveDestinationFamily: expressive ? expressiveFamily : null,
       compactExpressivePresentation: compactCatalogDetail,
+      muscleExercisePreview: compactCatalogDetail,
     );
   }
 
   int _rankForMuscle(ExerciseDefinition definition) {
     for (final ranked in definition.muscles) {
-      if (ranked.muscle.id == muscleId) return ranked.rank;
+      if (ranked.muscle.id == muscle.id) return ranked.rank;
     }
     return 999;
   }
@@ -965,12 +1113,14 @@ class _ExerciseDefinitionTile extends StatelessWidget {
 
 class _ExerciseMetadata extends StatelessWidget {
   final ExerciseDefinition definition;
+  final Muscle muscle;
   final int muscleRank;
   final bool expressive;
   final bool compactCatalogDetail;
 
   const _ExerciseMetadata({
     required this.definition,
+    required this.muscle,
     required this.muscleRank,
     required this.expressive,
     required this.compactCatalogDetail,
@@ -993,17 +1143,19 @@ class _ExerciseMetadata extends StatelessWidget {
     Widget equipmentText(String label) {
       final text = Text(
         label,
-        maxLines: compactCatalogDetail
-            ? 2
-            : expressive
-            ? null
-            : 1,
+        maxLines: compactCatalogDetail || !expressive ? 1 : null,
         overflow: compactCatalogDetail || !expressive
             ? TextOverflow.ellipsis
             : null,
         style: expressive
-            ? Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: destinationTokens?.supportingForeground)
+            ? (compactCatalogDetail
+                      ? Theme.of(context).textTheme.labelSmall
+                      : Theme.of(context).textTheme.bodySmall)
+                  ?.copyWith(
+                    fontSize: compactCatalogDetail ? 10 : null,
+                    color: destinationTokens?.supportingForeground,
+                    fontWeight: compactCatalogDetail ? FontWeight.w400 : null,
+                  )
             : TextStyle(color: colors.primary, fontWeight: FontWeight.w600),
       );
       return compactCatalogDetail ? Tooltip(message: label, child: text) : text;
@@ -1026,28 +1178,65 @@ class _ExerciseMetadata extends StatelessWidget {
       final rankLabel =
           '${strings.rankingsRank} ${LocalizedFormatters.number(muscleRank, Localizations.localeOf(context), maximumFractionDigits: 0)}';
       return Padding(
-        padding: const EdgeInsets.only(top: 3),
+        padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            equipmentLabel,
-            const SizedBox(height: 3),
-            Text(
-              rankLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: destinationTokens?.actionPrimary,
-                fontWeight: FontWeight.w600,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: 2, end: 6),
+                  child: Icon(
+                    Icons.fitness_center,
+                    size: 16,
+                    color: destinationTokens?.supportingForeground,
+                  ),
+                ),
+                Expanded(child: equipmentLabel),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LocalizedCatalogEntityNamesBuilder(
+              entities: [
+                CatalogEntityDisplayName(
+                  catalogId: muscle.catalogId,
+                  canonicalName: muscle.name,
+                ),
+              ],
+              builder: (context, names) => Tooltip(
+                message: strings.anatomyTutorialMuscleExercisesBody,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$rankLabel · ${names.single}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: destinationTokens?.supportingForeground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 6),
             Tooltip(
               message: bodyParts,
               child: Text(
-                bodyParts,
-                maxLines: 2,
+                '${strings.anatomyBodyParts}: $bodyParts',
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: destinationTokens?.supportingForeground),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  color: destinationTokens?.supportingForeground,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ],

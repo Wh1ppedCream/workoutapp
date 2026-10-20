@@ -10,6 +10,70 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get dashboardEditorHelp =>
+      'Drag visible widgets to reorder. Tap the eye to hide.';
+
+  @override
+  String get dashboardVisibleWidgets => 'Visible widgets';
+
+  @override
+  String get dashboardHiddenWidgets => 'Hidden widgets';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'Tap + to show a widget on your dashboard.';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'Add a widget from the hidden list below.';
+
+  @override
+  String get dashboardWidgetHidden => 'Hidden';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return 'Show $name';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return 'Hide $name';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return 'Reorder $name';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hidden widgets',
+      one: '1 hidden widget',
+      zero: 'All widgets are shown',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave => 'Changes save automatically.';
+
+  @override
+  String get dashboardRestoreDefaultLayout => 'Restore default layout';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle => 'Restore default layout?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'This resets widget order and visibility. Your dashboard will return to its default layout.';
+
+  @override
+  String get dashboardRestoreLayout => 'Restore layout';
+
+  @override
   String get nutritionSummaryTitle => 'Daily nutrition';
 
   @override

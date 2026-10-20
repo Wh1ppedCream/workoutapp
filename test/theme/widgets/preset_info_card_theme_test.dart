@@ -4,21 +4,24 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
+import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/widgets/preset_info_card.dart';
+import 'package:env_test/widgets/exercise_card.dart';
+import 'package:env_test/utils/weight_unit_formatter.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode preset summary metrics use owned surface and shape', (
@@ -55,10 +58,9 @@ void main() {
         final surfaces = context.surfaceTokens;
         final shapes = context.shapeTokens;
         final isNeo = family == AppThemeFamily.neoBrutalism;
-        final foreground =
-            isNeo
-                ? tonosForegroundForSurface(context, surfaces.card)
-                : context.semanticColors.strongContent;
+        final foreground = isNeo
+            ? tonosForegroundForSurface(context, surfaces.card)
+            : context.semanticColors.strongContent;
         final secondaryForeground = context.semanticColors.mutedContent;
         final helpText = tester.widget<Text>(
           find.text(AppLocalizations.of(context).presetFocusPreviewHelp),
@@ -74,10 +76,9 @@ void main() {
         );
         expect(metricFinder, findsNWidgets(2));
 
-        final iconColor =
-            isNeo
-                ? tonosForegroundForSurface(context, surfaces.card)
-                : activeTheme.colorScheme.primary;
+        final iconColor = isNeo
+            ? tonosForegroundForSurface(context, surfaces.card)
+            : activeTheme.colorScheme.primary;
         for (final icon in tester.widgetList<Icon>(
           find.descendant(of: metricFinder, matching: find.byType(Icon)),
         )) {
@@ -96,12 +97,12 @@ void main() {
             text.style,
             isLabel
                 ? activeTheme.textTheme.bodySmall?.copyWith(
-                  color: secondaryForeground,
-                )
+                    color: secondaryForeground,
+                  )
                 : activeTheme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: foreground,
-                ),
+                    fontWeight: FontWeight.w700,
+                    color: foreground,
+                  ),
           );
         }
 
@@ -131,6 +132,123 @@ void main() {
       });
     }
   }
+  for (final brightness in Brightness.values) {
+    for (final layout in [
+      (width: 411.0, scale: 1.0),
+      (width: 320.0, scale: 1.0),
+      (width: 320.0, scale: 2.0),
+    ]) {
+      testWidgets(
+        'Expressive ${brightness.name} plan hero preserves planned totals and focus at $layout',
+        (tester) async {
+          await tester.binding.setSurfaceSize(Size(layout.width, 900));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+          SharedPreferences.setMockInitialValues({});
+          final units = UnitPreferenceProvider();
+          await units.ready;
+          addTearDown(units.dispose);
+          final exercise = WeightExercise(
+            name: 'Bench Press - Barbell',
+            equipment: 'Barbell',
+            sets: [
+              ExerciseSet(weight: 50, reps: 10),
+              ExerciseSet(weight: 50, reps: 10),
+            ],
+            changeSets: {
+              0: [ExerciseSet(weight: 25, reps: 8)],
+            },
+          );
+          await tester.pumpWidget(
+            ChangeNotifierProvider.value(
+              value: units,
+              child: MaterialApp(
+                theme: brightness == Brightness.light
+                    ? ExpressiveThemeDefinition.light()
+                    : ExpressiveThemeDefinition.dark(),
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(layout.scale)),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: SingleChildScrollView(
+                    padding: const EdgeInsets.all(19),
+                    child: PresetInfoCard(
+                      repository: _SummaryRepository(),
+                      exercises: [exercise],
+                      cardTypes: const [CardType.weight],
+                      definitionIds: const [1],
+                      compactExpressive: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          final context = tester.element(find.byType(PresetInfoCard));
+          final strings = AppLocalizations.of(context);
+          expect(find.text(strings.durationMinutesCompact(14)), findsOneWidget);
+          expect(
+            find.text(
+              WeightUnitFormatter.formatVolume(
+                1200,
+                units.weightUnit,
+                locale: Localizations.localeOf(context),
+              ),
+            ),
+            findsOneWidget,
+          );
+          // Planned fractional set credit must not appear as zero beside a bar.
+          expect(find.text('0.5'), findsOneWidget);
+          for (final name in _SummaryRepository.focus.keys.map(
+            (part) => part.name,
+          )) {
+            expect(find.text(name), findsOneWidget);
+          }
+
+          final time = tester.getRect(
+            find.byKey(const ValueKey('expressive-preset-time')),
+          );
+          final volume = tester.getRect(
+            find.byKey(const ValueKey('expressive-preset-volume')),
+          );
+          if (layout.scale == 1) {
+            expect(time.top, volume.top);
+            expect(time.height, volume.height);
+            expect(time.right, lessThan(volume.left));
+          } else {
+            expect(time.bottom, lessThan(volume.top));
+          }
+          final focus = find.byKey(
+            const ValueKey('expressive-preset-focused-sets'),
+          );
+          await tester.ensureVisible(focus);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          expect(find.byType(Card), findsNothing);
+        },
+      );
+    }
+  }
 }
 
 class _EmptyRepository extends AppRepository {}
+
+class _SummaryRepository extends AppRepository {
+  static final focus = <BodyPart, double>{
+    BodyPart(1, 'Shoulders'): 1,
+    BodyPart(2, 'Core'): 0.5,
+    BodyPart(3, 'Triceps'): 1 / 6,
+    BodyPart(4, 'Chest'): 0.1,
+    BodyPart(5, 'Upper Back'): 0.05,
+    BodyPart(6, 'Lower Back'): 0.03,
+  };
+
+  @override
+  Future<Map<BodyPart, double>> computeBodyPartPercents(int defId) async =>
+      focus;
+}

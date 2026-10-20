@@ -1,0 +1,7 @@
+Status: provisional only. These files were captured from the pre-final-source profile APK with source manifest SHA-256 841f9af277150b23916353077e8035ca50851eac94943517dc0fd9c8c14c8ea5 and APK SHA-256 0e6de1fccf9b6481c4538e01fac28f3014dbb978a1f25faef411a1993eb27545.
+
+The lead paused device capture because the narrow-width navigation still needs a source correction. Do not use these files as final review evidence; a new APK and capture pass are pending.
+
+Verified review candidates captured: Train > Plans (light), Preset Detail for Active Review 1 (light and dark), and Plan Management (dark, including active and archived labels). Train Overview was not captured: the attempted Overview tab tap left Plans selected in the saved hierarchy, so both Overview-named files were moved to diagnostics/ under an explicit mislabelled filename. Files under diagnostics/ also include one plan overflow-menu screenshot initially mislabeled as Preset Detail.
+
+Normal Tonos packages/data were not touched. Only com.tonos.expressivepreview was installed/launched, using tonos_expressive_preview.db. Pixel 7 display was not changed: 1080x2400, 420 dpi, system text scale 1.15.

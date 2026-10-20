@@ -1,0 +1,15 @@
+HEAD=ab18ed8cab5582c8449e13724afae3c4b74ebeea
+BRANCH=feature/classic-m3e
+SOURCE_MANIFEST_SHA256=533d71c36c843164f33922f822f14c753cb98114c9ec471bfb6354d882fd275c
+MIRROR=E:\tonos-expressive-review-build-20261005-refresh
+COPIED_FILES=1690
+CAPTURE_DIR=docs/proposals/tonos-expressive-major-amplification-20261004/captures/20261005-pixel7/refresh-20261005
+FINAL_SOURCE_MANIFEST_SHA256=841f9af277150b23916353077e8035ca50851eac94943517dc0fd9c8c14c8ea5
+FINAL_MIRROR_MANIFEST_SHA256=841f9af277150b23916353077e8035ca50851eac94943517dc0fd9c8c14c8ea5
+APK_SHA256_PRE_FORMAT=c852f2a731adbb4a830a5dd44484d65a8edcc6d3f139f3498ccd7fd9873d9798
+SYNCED_PATHS=lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart;lib/screens/profile/settings/exercise_analytics_screen.dart;lib/screens/profile/settings/exercise_editor_screen.dart;lib/screens/profile/settings/volume_boundaries_screen.dart;lib/widgets/history_content.dart
+FINAL_APK_SHA256=0e6de1fccf9b6481c4538e01fac28f3014dbb978a1f25faef411a1993eb27545
+PROFILE_APK_PATH=E:\tonos-expressive-review-build-20261005-refresh\build\app\outputs\flutter-apk\app-profile.apk
+BUILD_SOURCE_MANIFEST_SHA256=841f9af277150b23916353077e8035ca50851eac94943517dc0fd9c8c14c8ea5
+BUILD_MODE=profile; TARGET=lib/expressive_preview_main.dart; PACKAGE=com.tonos.expressivepreview; DATABASE=tonos_expressive_preview.db
+DEVICE=28021FDH200228; MODEL=Pixel_7; Flutter=3.47.5; Dart=3.13.4

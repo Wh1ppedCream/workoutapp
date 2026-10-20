@@ -10,6 +10,73 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get dashboardEditorHelp =>
+      'Faites glisser les widgets visibles pour les réorganiser. Touchez l’œil pour les masquer.';
+
+  @override
+  String get dashboardVisibleWidgets => 'Widgets visibles';
+
+  @override
+  String get dashboardHiddenWidgets => 'Widgets masqués';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'Touchez + pour afficher un widget sur le tableau de bord.';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'Ajoutez un widget de la liste des widgets masqués ci-dessous.';
+
+  @override
+  String get dashboardWidgetHidden => 'Masqué';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return 'Afficher $name';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return 'Masquer $name';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return 'Réorganiser $name';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count widgets masqués',
+      one: '1 widget masqué',
+      zero: 'Tous les widgets sont affichés',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave =>
+      'Les modifications sont enregistrées automatiquement.';
+
+  @override
+  String get dashboardRestoreDefaultLayout =>
+      'Rétablir la disposition par défaut';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle =>
+      'Rétablir la disposition par défaut ?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'L’ordre et la visibilité des widgets seront réinitialisés. Le tableau de bord retrouvera sa disposition par défaut.';
+
+  @override
+  String get dashboardRestoreLayout => 'Rétablir la disposition';
+
+  @override
   String get nutritionSummaryTitle => 'Nutrition quotidienne';
 
   @override
@@ -7511,6 +7578,73 @@ class AppLocalizationsFr extends AppLocalizations {
 /// The translations for French, as used in Canada (`fr_CA`).
 class AppLocalizationsFrCa extends AppLocalizationsFr {
   AppLocalizationsFrCa() : super('fr_CA');
+
+  @override
+  String get dashboardEditorHelp =>
+      'Faites glisser les widgets visibles pour les réorganiser. Touchez l’œil pour les masquer.';
+
+  @override
+  String get dashboardVisibleWidgets => 'Widgets visibles';
+
+  @override
+  String get dashboardHiddenWidgets => 'Widgets masqués';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'Touchez + pour afficher un widget sur le tableau de bord.';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'Ajoutez un widget de la liste des widgets masqués ci-dessous.';
+
+  @override
+  String get dashboardWidgetHidden => 'Masqué';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return 'Afficher $name';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return 'Masquer $name';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return 'Réorganiser $name';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count widgets masqués',
+      one: '1 widget masqué',
+      zero: 'Tous les widgets sont affichés',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave =>
+      'Les modifications sont enregistrées automatiquement.';
+
+  @override
+  String get dashboardRestoreDefaultLayout =>
+      'Rétablir la disposition par défaut';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle =>
+      'Rétablir la disposition par défaut ?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'L’ordre et la visibilité des widgets seront réinitialisés. Le tableau de bord retrouvera sa disposition par défaut.';
+
+  @override
+  String get dashboardRestoreLayout => 'Rétablir la disposition';
 
   @override
   String get nutritionSummaryTitle => 'Nutrition quotidienne';

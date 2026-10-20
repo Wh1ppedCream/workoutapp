@@ -23,6 +23,9 @@ class FocusedSetsList extends StatelessWidget {
   final FontWeight titleWeight;
   final ValueListenable<double>? expressiveProgressPhase;
   final bool compact;
+  final bool showFractionalUnits;
+  final bool roundUnits;
+  final double? rowSpacing;
 
   const FocusedSetsList({
     super.key,
@@ -33,6 +36,9 @@ class FocusedSetsList extends StatelessWidget {
     this.titleWeight = FontWeight.w700,
     this.expressiveProgressPhase,
     this.compact = false,
+    this.showFractionalUnits = false,
+    this.roundUnits = false,
+    this.rowSpacing,
   });
 
   @override
@@ -66,18 +72,21 @@ class FocusedSetsList extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(
                 bottom:
-                    (compact
-                        ? 4
-                        : expressiveProgressPhase == null
-                        ? 10
-                        : 8) -
-                    (hit.units == 0.0 ? 2 : 0),
+                    rowSpacing ??
+                    ((compact
+                            ? 4
+                            : expressiveProgressPhase == null
+                            ? 10
+                            : 8) -
+                        (hit.units == 0.0 ? 2 : 0)),
               ),
               child: _FocusedSetRow(
                 hit: hit,
                 maxUnits: maxUnits,
                 expressiveProgressPhase: expressiveProgressPhase,
                 compact: compact,
+                showFractionalUnits: showFractionalUnits,
+                roundUnits: roundUnits,
                 zeroCount: hit.units == 0.0,
               ),
             ),
@@ -91,6 +100,8 @@ class _FocusedSetRow extends StatelessWidget {
   final double maxUnits;
   final ValueListenable<double>? expressiveProgressPhase;
   final bool compact;
+  final bool showFractionalUnits;
+  final bool roundUnits;
   final bool zeroCount;
 
   const _FocusedSetRow({
@@ -98,6 +109,8 @@ class _FocusedSetRow extends StatelessWidget {
     required this.maxUnits,
     required this.expressiveProgressPhase,
     required this.compact,
+    required this.showFractionalUnits,
+    required this.roundUnits,
     required this.zeroCount,
   });
 
@@ -121,9 +134,13 @@ class _FocusedSetRow extends StatelessWidget {
             ),
             Text(
               LocalizedFormatters.number(
-                hit.units.floor(),
+                showFractionalUnits
+                    ? hit.units
+                    : roundUnits
+                    ? hit.units.round()
+                    : hit.units.floor(),
                 Localizations.localeOf(context),
-                maximumFractionDigits: 0,
+                maximumFractionDigits: showFractionalUnits ? 2 : 0,
               ),
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w800,

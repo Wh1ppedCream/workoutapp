@@ -7,7 +7,9 @@ import '../models/models.dart';
 import '../providers/active_session.dart';
 import '../providers/preset_session.dart';
 import '../providers/selected_profile.dart';
+import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../screens/catalog_page.dart';
 import '../screens/exercise/analytics_dashboard_screen.dart';
 import '../screens/exercise/exercise_catalog_page.dart';
 import '../screens/exercise/full_history_screen.dart';
@@ -18,6 +20,7 @@ import '../screens/exercise/preset_detail_screen.dart';
 import '../screens/exercise/preset_generation_qa.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../screens/exercise/session_screen.dart';
+import '../screens/exercise/train_page.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../services/active_plan_store.dart';
 import '../services/catalog_entity_localizer.dart';
@@ -50,22 +53,23 @@ class DashboardHero extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final destinationTokens = theme.extension<AppExpressiveDestinationTokens>();
+    final expressiveEditor = isEditing && context.usesExpressivePresentation;
     final heroSurface =
         destinationTokens?.surfacePrimary ?? surfaces.dashboardHero;
     final heroGradientColors = destinationTokens == null
         ? [dashboardHeroAccent.withValues(alpha: 0.25), surfaces.dashboardHero]
-            : [heroSurface, heroSurface];
+        : [heroSurface, heroSurface];
     final heroForeground =
         destinationTokens?.onSurfacePrimary ??
         (context.usesNeoPresentation
             ? tonosForegroundForSurface(context, surfaces.dashboardHero)
             : null);
     final title = isEditing
-            ? AppLocalizations.of(context).dashboardCustomize
-            : AppLocalizations.of(context).dashboardTitle;
+        ? AppLocalizations.of(context).dashboardCustomize
+        : AppLocalizations.of(context).dashboardTitle;
     final actionTooltip = isEditing
-            ? AppLocalizations.of(context).dashboardDoneCustomizing
-            : AppLocalizations.of(context).dashboardCustomize;
+        ? AppLocalizations.of(context).dashboardDoneCustomizing
+        : AppLocalizations.of(context).dashboardCustomize;
     final icon = Container(
       width: 42,
       height: 42,
@@ -84,15 +88,25 @@ class DashboardHero extends StatelessWidget {
     final editButton = IconButton.filledTonal(
       tooltip: actionTooltip,
       onPressed: onEdit,
+      constraints: expressiveEditor
+          ? const BoxConstraints(minWidth: 48, minHeight: 48)
+          : null,
       icon: Icon(isEditing ? Icons.check : Icons.edit_outlined),
     );
     final titleText = Text(
       title,
       softWrap: true,
-      style: theme.textTheme.headlineSmall?.copyWith(
-        color: heroForeground,
-        fontWeight: FontWeight.w900,
-      ),
+      style:
+          (expressiveEditor
+                  ? theme.textTheme.titleLarge
+                  : theme.textTheme.headlineSmall)
+              ?.copyWith(
+                color: heroForeground,
+                fontWeight: expressiveEditor
+                    ? FontWeight.w800
+                    : FontWeight.w900,
+                height: expressiveEditor ? 1.2 : null,
+              ),
     );
 
     return Container(
@@ -336,6 +350,7 @@ class _DashboardRecentWorkoutsCardState
     extends State<DashboardRecentWorkoutsCard> {
   AppRepository get _repo => context.read<AppRepository>();
   late Future<List<WorkoutSession>> _sessionsFuture;
+  Future<List<WorkoutReportSession>>? _reportSessionsFuture;
 
   @override
   void initState() {
@@ -348,6 +363,7 @@ class _DashboardRecentWorkoutsCardState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.refreshToken != widget.refreshToken) {
       _sessionsFuture = _repo.fetchWorkoutSessions();
+      _reportSessionsFuture = null;
     }
   }
 
@@ -366,6 +382,65 @@ class _DashboardRecentWorkoutsCardState
     return formatCompletedWorkoutDuration(
       AppLocalizations.of(context),
       seconds,
+    );
+  }
+
+  Widget _buildExpressiveRecentSessions(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    _reportSessionsFuture ??= _repo.fetchWorkoutReportSessions();
+    return FutureBuilder<List<WorkoutReportSession>>(
+      future: _reportSessionsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done &&
+            !snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.all(18),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.all(10),
+            child: Text(strings.dashboardRecentWorkoutsFailed),
+          );
+        }
+        final sessions = (snapshot.data ?? const <WorkoutReportSession>[])
+            .reversed
+            .take(3)
+            .toList(growable: false);
+        if (sessions.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+            child: Text(strings.dashboardRecentWorkoutsEmpty),
+          );
+        }
+        return ExpressiveWorkoutHistoryList(
+          sessions: sessions,
+          strings: strings,
+          weightUnit: context.watch<UnitPreferenceProvider>().weightUnit,
+          padding: const EdgeInsets.only(bottom: 8),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          onSessionTap: (session) async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AppExpressiveDestinationTheme(
+                  family: AppExpressiveDestinationFamily.logbook,
+                  child: SessionDetailScreen(
+                    WorkoutSession(
+                      id: session.id,
+                      date: session.date,
+                      calendarDayKey: session.calendarDayKey,
+                      duration: session.durationSeconds,
+                    ),
+                  ),
+                ),
+              ),
+            );
+            if (mounted) widget.onChanged();
+          },
+        );
+      },
     );
   }
 
@@ -413,68 +488,70 @@ class _DashboardRecentWorkoutsCardState
               ),
             ],
           ),
-          FutureBuilder<List<WorkoutSession>>(
-            future: _sessionsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState != ConnectionState.done) {
-                return const Padding(
-                  padding: EdgeInsets.all(18),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (snapshot.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Text(
-                    AppLocalizations.of(context).dashboardRecentWorkoutsFailed,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                );
-              }
-              final sessions = (snapshot.data ?? const <WorkoutSession>[])
-                  .take(3)
-                  .toList(growable: false);
-              if (sessions.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-                  child: Text(
-                    AppLocalizations.of(context).dashboardRecentWorkoutsEmpty,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
+          if (context.usesExpressivePresentation)
+            _buildExpressiveRecentSessions(context)
+          else
+            FutureBuilder<List<WorkoutSession>>(
+              future: _sessionsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      AppLocalizations.of(context)
+                          .dashboardRecentWorkoutsFailed,
+                      style: theme.textTheme.bodySmall,
                     ),
-                  ),
-                );
-              }
-              return Column(
-                children: [
-                  for (var index = 0; index < sessions.length; index++) ...[
-                    _DashboardWorkoutRow(
-                      dateLabel: _dateLabel(context, sessions[index]),
-                      durationLabel: _durationLabel(
-                        context,
-                        sessions[index].duration,
+                  );
+                }
+                final sessions = (snapshot.data ?? const <WorkoutSession>[])
+                    .take(3)
+                    .toList(growable: false);
+                if (sessions.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+                    child: Text(
+                      AppLocalizations.of(context).dashboardRecentWorkoutsEmpty,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                      onOpen: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder:
-                                (_) => AppExpressiveDestinationTheme(
-                                  family:
-                                      AppExpressiveDestinationFamily.logbook,
-                                  child: SessionDetailScreen(sessions[index]),
-                                ),
-                          ),
-                        );
-                        widget.onChanged();
-                      },
                     ),
-                    if (index < sessions.length - 1)
-                      Divider(color: scheme.outlineVariant, height: 1),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var index = 0; index < sessions.length; index++) ...[
+                      _DashboardWorkoutRow(
+                        dateLabel: _dateLabel(context, sessions[index]),
+                        durationLabel: _durationLabel(
+                          context,
+                          sessions[index].duration,
+                        ),
+                        onOpen: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => AppExpressiveDestinationTheme(
+                                family: AppExpressiveDestinationFamily.logbook,
+                                child: SessionDetailScreen(sessions[index]),
+                              ),
+                            ),
+                          );
+                          widget.onChanged();
+                        },
+                      ),
+                      if (index < sessions.length - 1)
+                        Divider(color: scheme.outlineVariant, height: 1),
+                    ],
                   ],
-                ],
-              );
-            },
-          ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -620,8 +697,58 @@ class _DashboardPlanCollectionCardState
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final title = widget.archived
-            ? strings.dashboardArchivedPlans
-            : strings.dashboardActivePlans;
+        ? strings.dashboardArchivedPlans
+        : strings.dashboardActivePlans;
+    if (context.usesExpressivePresentation) {
+      return FutureBuilder<Set<int>>(
+        future: _activePlanIdsFuture,
+        builder: (context, snapshot) {
+          final activeIds = snapshot.data ?? const <int>{};
+          final loading =
+              snapshot.connectionState != ConnectionState.done &&
+              !snapshot.hasData;
+          return TrainPlanSectionCard(
+            title: widget.archived
+                ? strings.trainArchivedPlans
+                : strings.trainActivePlans,
+            isActive: TickerMode.valuesOf(context).enabled,
+            isArchived: widget.archived,
+            onEdit: loading ? null : _openPlanManagement,
+            child: loading
+                ? const SizedBox(
+                    height: 120,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : _profileId == null
+                ? Text(
+                    strings.dashboardSelectProfilePlans,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                : PresetsLoaded(
+                    scale: 0.96,
+                    refreshToken: widget.refreshToken,
+                    presetIds: widget.archived ? null : activeIds,
+                    excludedPresetIds: widget.archived ? activeIds : null,
+                    planActiveState: !widget.archived,
+                    useExpressiveTrainPresentation: true,
+                    expressiveMotionEnabled: TickerMode.valuesOf(context)
+                        .enabled,
+                    progressiveReveal: true,
+                    initialVisibleCount: 3,
+                    revealBatchSize: 5,
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    emptyMessage: widget.archived
+                        ? strings.trainNoArchivedPlans
+                        : strings.trainNoActivePlans,
+                    onRefresh: widget.onChanged,
+                  ),
+          );
+        },
+      );
+    }
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -701,6 +828,27 @@ class DashboardPremadePlansCard extends StatelessWidget {
     final theme = Theme.of(context);
     final strings = AppLocalizations.of(context);
     final profileId = context.watch<SelectedProfile>().currentProfile?.id;
+    if (context.usesExpressivePresentation) {
+      return TrainPremadePlansCard(
+        onOpen: () async {
+          if (profileId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(strings.trainSelectProfileFirst)),
+            );
+            return;
+          }
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => PremadePlansPage(
+                profileId: profileId,
+                onPlanAdded: onChanged,
+              ),
+            ),
+          );
+          onChanged();
+        },
+      );
+    }
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -737,19 +885,19 @@ class DashboardPremadePlansCard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.tonalIcon(
                 onPressed: profileId == null
-                        ? null
-                        : () async {
-                          final navigator = Navigator.of(context);
-                          await navigator.push(
-                            MaterialPageRoute(
-                              builder: (_) => PremadePlansPage(
-                                    profileId: profileId,
-                                    onPlanAdded: onChanged,
-                                  ),
+                    ? null
+                    : () async {
+                        final navigator = Navigator.of(context);
+                        await navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => PremadePlansPage(
+                              profileId: profileId,
+                              onPlanAdded: onChanged,
                             ),
-                          );
-                          onChanged();
-                        },
+                          ),
+                        );
+                        onChanged();
+                      },
                 icon: const Icon(Icons.arrow_forward),
                 label: Text(strings.dashboardBrowsePremadePlans),
               ),
@@ -776,13 +924,13 @@ class DashboardPlanToolsCard extends StatelessWidget {
             ChangeNotifierProvider<ActiveSession>.value(value: activeSession),
                 ChangeNotifierProvider(
               create: (context) => PresetSession(
-                        presetId,
-                        repository: context.read<AppRepository>(),
-                      ),
-                ),
-              ],
-              child: const PresetDetailScreen(),
+                presetId,
+                repository: context.read<AppRepository>(),
+              ),
             ),
+          ],
+          child: const PresetDetailScreen(),
+        ),
       ),
     );
     if (!context.mounted) return;
@@ -862,6 +1010,12 @@ class DashboardPlanToolsCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final strings = AppLocalizations.of(context);
+    if (context.usesExpressivePresentation) {
+      return ExpressiveTrainPlanActions(
+        onGenerate: () => _generatePlans(context),
+        onCreateManual: () => _createManualPlan(context),
+      );
+    }
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -963,22 +1117,51 @@ class _DashboardExerciseCatalogCardState
       future: _usageFuture,
       builder: (context, snapshot) {
         final usages = snapshot.data ?? const <_DashboardExerciseUsage>[];
+        if (context.usesExpressivePresentation) {
+          if (snapshot.connectionState != ConnectionState.done &&
+              !snapshot.hasData) {
+            return const SizedBox(
+              height: 120,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return AppExpressiveDestinationTheme(
+            family: AppExpressiveDestinationFamily.catalog,
+            child: CatalogExerciseSummaryCard(
+              exercises: [
+                for (final usage in usages)
+                  CatalogExerciseUsageSummary(
+                    definition: usage.definition,
+                    useCount: usage.useCount,
+                  ),
+              ],
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AppExpressiveDestinationTheme(
+                    family: AppExpressiveDestinationFamily.catalog,
+                    child: ExerciseCatalogPage(
+                      expressiveCatalogPresentation: true,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap:
-                () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (_) => AppExpressiveDestinationTheme(
-                          family: AppExpressiveDestinationFamily.catalog,
-                          child: ExerciseCatalogPage(
-                            expressiveCatalogPresentation:
-                                context.usesExpressivePresentation,
-                          ),
-                        ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => AppExpressiveDestinationTheme(
+                  family: AppExpressiveDestinationFamily.catalog,
+                  child: ExerciseCatalogPage(
+                    expressiveCatalogPresentation:
+                        context.usesExpressivePresentation,
                   ),
                 ),
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -1101,6 +1284,49 @@ class _DashboardTargetAnatomyCardState
       future: _usageFuture,
       builder: (context, snapshot) {
         final usage = snapshot.data;
+        if (context.usesExpressivePresentation) {
+          if (snapshot.connectionState != ConnectionState.done &&
+              !snapshot.hasData) {
+            return const SizedBox(
+              height: 120,
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          void openLibrary(int index) => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => AppExpressiveDestinationTheme(
+                family: AppExpressiveDestinationFamily.catalog,
+                child: MuscleFilterPage(
+                  initialTabIndex: index,
+                  expressiveCatalogPresentation: true,
+                ),
+              ),
+            ),
+          );
+          return AppExpressiveDestinationTheme(
+            family: AppExpressiveDestinationFamily.catalog,
+            child: CatalogTargetAnatomySummaryCard(
+              bodyParts: [
+                for (final item in usage?.bodyParts ?? <_DashboardFocusUsage>[])
+                  CatalogFocusUsageSummary(
+                    item.name,
+                    item.units,
+                    entity: item.entity,
+                  ),
+              ],
+              muscles: [
+                for (final item in usage?.muscles ?? <_DashboardFocusUsage>[])
+                  CatalogFocusUsageSummary(
+                    item.name,
+                    item.units,
+                    entity: item.entity,
+                  ),
+              ],
+              onBodyPartsTap: () => openLibrary(0),
+              onMusclesTap: () => openLibrary(1),
+            ),
+          );
+        }
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -1129,23 +1355,19 @@ class _DashboardTargetAnatomyCardState
                             items: usage?.bodyParts ?? const [],
                             emptyText: 'No bodypart history yet.',
                             localizeBuiltInBodyPartNames: true,
-                            onTap:
-                                () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => AppExpressiveDestinationTheme(
-                                          family:
-                                              AppExpressiveDestinationFamily
-                                                  .catalog,
-                                          child: MuscleFilterPage(
-                                            initialTabIndex: 0,
-                                            expressiveCatalogPresentation:
-                                                context
-                                                    .usesExpressivePresentation,
-                                          ),
-                                        ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AppExpressiveDestinationTheme(
+                                  family:
+                                      AppExpressiveDestinationFamily.catalog,
+                                  child: MuscleFilterPage(
+                                    initialTabIndex: 0,
+                                    expressiveCatalogPresentation:
+                                        context.usesExpressivePresentation,
                                   ),
                                 ),
+                              ),
+                            ),
                           ),
                         ),
                         const VerticalDivider(width: 25),
@@ -1156,23 +1378,19 @@ class _DashboardTargetAnatomyCardState
                             items: usage?.muscles ?? const [],
                             emptyText: 'No muscle history yet.',
                             localizeBuiltInBodyPartNames: false,
-                            onTap:
-                                () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (_) => AppExpressiveDestinationTheme(
-                                          family:
-                                              AppExpressiveDestinationFamily
-                                                  .catalog,
-                                          child: MuscleFilterPage(
-                                            initialTabIndex: 1,
-                                            expressiveCatalogPresentation:
-                                                context
-                                                    .usesExpressivePresentation,
-                                          ),
-                                        ),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AppExpressiveDestinationTheme(
+                                  family:
+                                      AppExpressiveDestinationFamily.catalog,
+                                  child: MuscleFilterPage(
+                                    initialTabIndex: 1,
+                                    expressiveCatalogPresentation:
+                                        context.usesExpressivePresentation,
                                   ),
                                 ),
+                              ),
+                            ),
                           ),
                         ),
                       ],

@@ -10,6 +10,71 @@ class AppLocalizationsBn extends AppLocalizations {
   AppLocalizationsBn([String locale = 'bn']) : super(locale);
 
   @override
+  String get dashboardEditorHelp =>
+      'দৃশ্যমান উইজেটের ক্রম বদলাতে টানুন। লুকাতে চোখে ট্যাপ করুন।';
+
+  @override
+  String get dashboardVisibleWidgets => 'দৃশ্যমান উইজেট';
+
+  @override
+  String get dashboardHiddenWidgets => 'লুকানো উইজেট';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'ড্যাশবোর্ডে উইজেট দেখাতে + এ ট্যাপ করুন।';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'নিচের লুকানো তালিকা থেকে একটি উইজেট যোগ করুন।';
+
+  @override
+  String get dashboardWidgetHidden => 'লুকানো';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return '$name দেখান';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return '$name লুকান';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return '$name-এর ক্রম বদলান';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি লুকানো উইজেট',
+      one: '1টি লুকানো উইজেট',
+      zero: 'সব উইজেট দেখানো হচ্ছে',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave => 'পরিবর্তন স্বয়ংক্রিয়ভাবে সেভ হয়।';
+
+  @override
+  String get dashboardRestoreDefaultLayout => 'ডিফল্ট লেআউট ফিরিয়ে আনুন';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle =>
+      'ডিফল্ট লেআউট ফিরিয়ে আনবেন?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'এতে উইজেটের ক্রম ও দেখানো বা লুকানোর সেটিং রিসেট হবে। ড্যাশবোর্ড তার ডিফল্ট লেআউটে ফিরে যাবে।';
+
+  @override
+  String get dashboardRestoreLayout => 'লেআউট ফিরিয়ে আনুন';
+
+  @override
   String get nutritionSummaryTitle => 'দৈনিক পুষ্টি';
 
   @override

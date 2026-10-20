@@ -10,6 +10,71 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get dashboardEditorHelp =>
+      'Arrastra los widgets visibles para reordenarlos. Toca el ojo para ocultarlos.';
+
+  @override
+  String get dashboardVisibleWidgets => 'Widgets visibles';
+
+  @override
+  String get dashboardHiddenWidgets => 'Widgets ocultos';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'Toca + para mostrar un widget en el panel.';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'Añade un widget de la lista de ocultos de abajo.';
+
+  @override
+  String get dashboardWidgetHidden => 'Oculto';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return 'Mostrar $name';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return 'Ocultar $name';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return 'Reordenar $name';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count widgets ocultos',
+      one: '1 widget oculto',
+      zero: 'Se muestran todos los widgets',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave => 'Los cambios se guardan automáticamente.';
+
+  @override
+  String get dashboardRestoreDefaultLayout => 'Restaurar diseño predeterminado';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle =>
+      '¿Restaurar el diseño predeterminado?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'Se restablecerán el orden y la visibilidad de los widgets. El panel volverá a su diseño predeterminado.';
+
+  @override
+  String get dashboardRestoreLayout => 'Restaurar diseño';
+
+  @override
   String get nutritionSummaryTitle => 'Nutrición diaria';
 
   @override

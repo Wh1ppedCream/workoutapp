@@ -54,11 +54,24 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
   );
   late Future<_BodyPartPageData> _dataFuture;
   bool _tutorialQueued = false;
+  final _exerciseSearchController = TextEditingController();
+  String _exerciseQuery = '';
 
   @override
   void initState() {
     super.initState();
     _dataFuture = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _exerciseSearchController.dispose();
+    super.dispose();
+  }
+
+  void _clearExerciseSearch() {
+    _exerciseSearchController.clear();
+    setState(() => _exerciseQuery = '');
   }
 
   /// Loads all page data together so the header and exercise list stay
@@ -193,12 +206,21 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
           }
 
           final data = snapshot.data!;
+          final query = _exerciseQuery.trim().toLowerCase();
+          final visibleDefinitions = expressiveCatalogDetail && query.isNotEmpty
+              ? data.definitions
+                    .where(
+                      (definition) =>
+                          definition.name.toLowerCase().contains(query),
+                    )
+                    .toList(growable: false)
+              : data.definitions;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _queueTutorial();
           });
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 16),
-            itemCount: data.definitions.length + 1,
+            itemCount: visibleDefinitions.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return KeyedSubtree(
@@ -208,6 +230,17 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                     data: data,
                     expressive: expressive,
                     compactCatalogDetail: expressiveCatalogDetail,
+                    exerciseSearch: expressiveCatalogDetail
+                        ? _BodypartExerciseSearch(
+                            controller: _exerciseSearchController,
+                            noMatches:
+                                data.definitions.isNotEmpty &&
+                                visibleDefinitions.isEmpty,
+                            onChanged: (value) =>
+                                setState(() => _exerciseQuery = value),
+                            onClear: _clearExerciseSearch,
+                          )
+                        : null,
                     onEditRecommended: () => _editRecommendedSets(data),
                     onMuscleTap: (muscle) {
                       Navigator.of(context).push(
@@ -239,7 +272,7 @@ class _DefinitionsByBodyPartPageState extends State<DefinitionsByBodyPartPage> {
                 );
               }
 
-              final definition = data.definitions[index - 1];
+              final definition = visibleDefinitions[index - 1];
               return KeyedSubtree(
                 key: index == 1 ? _exerciseListTutorialKey : null,
                 child: _ExerciseDefinitionTile(
@@ -298,6 +331,7 @@ class _BodyPartHeader extends StatelessWidget {
   final _BodyPartPageData data;
   final bool expressive;
   final bool compactCatalogDetail;
+  final Widget? exerciseSearch;
   final VoidCallback onEditRecommended;
   final ValueChanged<Muscle> onMuscleTap;
 
@@ -306,6 +340,7 @@ class _BodyPartHeader extends StatelessWidget {
     required this.data,
     required this.expressive,
     required this.compactCatalogDetail,
+    this.exerciseSearch,
     required this.onEditRecommended,
     required this.onMuscleTap,
   });
@@ -418,7 +453,8 @@ class _BodyPartHeader extends StatelessWidget {
                             bodyPartName: bodyPart.name,
                             size: heatmapSize,
                             padding: 2,
-                            lowColor: compactCatalogDetail &&
+                            lowColor:
+                                compactCatalogDetail &&
                                     theme.brightness == Brightness.light
                                 ? const Color(0xFF888A93)
                                 : null,
@@ -601,6 +637,10 @@ class _BodyPartHeader extends StatelessWidget {
                   : null,
             ),
           ),
+          if (exerciseSearch != null) ...[
+            const SizedBox(height: 8),
+            exerciseSearch!,
+          ],
           if (data.definitions.isEmpty) ...[
             const SizedBox(height: 12),
             Text(
@@ -851,6 +891,106 @@ class _BodyPartExpressiveMetricBay extends StatelessWidget {
   }
 }
 
+class _BodypartExerciseSearch extends StatelessWidget {
+  const _BodypartExerciseSearch({
+    required this.controller,
+    required this.noMatches,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final bool noMatches;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide.none,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          key: const ValueKey('bodypart-exercise-search'),
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
+          decoration: InputDecoration(
+            hintText: strings.catalogSearchExercises,
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: controller.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: strings.catalogClearSearch,
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHigh,
+            border: border,
+            enabledBorder: border,
+            focusedBorder: border.copyWith(
+              borderSide: BorderSide(color: tokens.outlineAccent, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+          ),
+        ),
+        if (noMatches) ...[
+          const SizedBox(height: 12),
+          Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.catalogNoSearchMatches,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: tokens.onSurfaceSecondary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    strings.catalogNoSearchMatchesBody,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: tokens.onSurfaceSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close_rounded),
+                    label: Text(strings.catalogClearSearch),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ExerciseDefinitionTile extends StatelessWidget {
   final ExerciseDefinition definition;
   final bool expressive;
@@ -875,6 +1015,7 @@ class _ExerciseDefinitionTile extends StatelessWidget {
       ),
       expressiveDestinationFamily: expressive ? expressiveFamily : null,
       compactExpressivePresentation: compactCatalogDetail,
+      bodypartExercisePreview: compactCatalogDetail,
     );
   }
 }
@@ -896,9 +1037,12 @@ class _ExerciseMetadata extends StatelessWidget {
     final destinationTokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
     final theme = Theme.of(context);
+    final strings = AppLocalizations.of(context);
     final equipmentStyle = compactCatalogDetail
-        ? theme.textTheme.bodySmall?.copyWith(
+        ? theme.textTheme.labelSmall?.copyWith(
+            fontSize: 10,
             color: destinationTokens?.supportingForeground,
+            fontWeight: FontWeight.w400,
           )
         : TextStyle(
             color: expressive
@@ -908,7 +1052,9 @@ class _ExerciseMetadata extends StatelessWidget {
           );
     final muscleStyle = compactCatalogDetail
         ? theme.textTheme.labelSmall?.copyWith(
+            fontSize: 10,
             color: destinationTokens?.supportingForeground,
+            fontWeight: FontWeight.w400,
           )
         : expressive
         ? TextStyle(
@@ -931,17 +1077,14 @@ class _ExerciseMetadata extends StatelessWidget {
         )
         .toList(growable: false);
     final equipmentLabel = equipmentEntities.isEmpty
-        ? Text(
-            AppLocalizations.of(context).anatomyNoEquipment,
-            maxLines: compactCatalogDetail ? 1 : null,
-            overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
-            style: equipmentStyle,
-          )
+        ? Text(strings.anatomyNoEquipment, style: equipmentStyle)
         : LocalizedCatalogEntityNamesBuilder(
             entities: equipmentEntities,
             builder: (context, names) {
               final text = Text(
-                names.join(', '),
+                compactCatalogDetail
+                    ? _previewSummary(context, names, 2)
+                    : names.join(', '),
                 maxLines: compactCatalogDetail ? 1 : null,
                 overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
                 style: equipmentStyle,
@@ -951,34 +1094,45 @@ class _ExerciseMetadata extends StatelessWidget {
                   : text;
             },
           );
-    final muscleEntities =
-        (compactCatalogDetail ? definition.muscles : definition.muscles.take(3))
-            .map(
-              (ranked) => CatalogEntityDisplayName(
-                catalogId: ranked.muscle.catalogId,
-                canonicalName: ranked.muscle.name,
-              ),
-            )
-            .toList(growable: false);
+
+    var muscles = definition.muscles;
+    if (compactCatalogDetail) {
+      // Rank the preview using a copy, retaining source order for equal ranks.
+      // The complete definition and its stored associations stay unchanged.
+      final ranked = muscles.indexed.toList()
+        ..sort((a, b) {
+          final rank = a.$2.rank.compareTo(b.$2.rank);
+          return rank != 0 ? rank : a.$1.compareTo(b.$1);
+        });
+      muscles = ranked.map((entry) => entry.$2).toList(growable: false);
+    }
+    final muscleEntities = (compactCatalogDetail ? muscles : muscles.take(3))
+        .where(
+          (ranked) =>
+              !compactCatalogDetail || ranked.muscle.name.trim().isNotEmpty,
+        )
+        .map(
+          (ranked) => CatalogEntityDisplayName(
+            catalogId: ranked.muscle.catalogId,
+            canonicalName: ranked.muscle.name,
+          ),
+        )
+        .toList(growable: false);
     final muscleLabel = muscleEntities.isEmpty
         ? Text(
-            AppLocalizations.of(context).anatomyNoMusclesListed,
-            maxLines: compactCatalogDetail
-                ? 1
-                : expressive
-                ? null
-                : 1,
-            overflow: compactCatalogDetail || !expressive
-                ? TextOverflow.ellipsis
-                : null,
+            strings.anatomyNoMusclesListed,
+            maxLines: expressive ? null : 1,
+            overflow: expressive ? null : TextOverflow.ellipsis,
             style: muscleStyle,
           )
         : LocalizedCatalogEntityNamesBuilder(
             entities: muscleEntities,
             builder: (context, names) {
               final text = Text(
-                names.join(', '),
-                maxLines: compactCatalogDetail ? 2 : null,
+                compactCatalogDetail
+                    ? _previewSummary(context, names, 3)
+                    : names.join(', '),
+                maxLines: compactCatalogDetail ? 1 : null,
                 overflow: compactCatalogDetail ? TextOverflow.ellipsis : null,
                 style: muscleStyle,
               );
@@ -989,12 +1143,24 @@ class _ExerciseMetadata extends StatelessWidget {
           );
 
     return Padding(
-      padding: EdgeInsets.only(top: compactCatalogDetail ? 2 : 4),
+      padding: EdgeInsets.only(top: compactCatalogDetail ? 0 : 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [equipmentLabel, const SizedBox(height: 3), muscleLabel],
+        children: [
+          equipmentLabel,
+          SizedBox(height: compactCatalogDetail ? 4 : 3),
+          muscleLabel,
+        ],
       ),
     );
+  }
+
+  String _previewSummary(BuildContext context, List<String> names, int limit) {
+    final summary = names.take(limit).join(' · ');
+    final remaining = names.length - limit;
+    return remaining > 0
+        ? '$summary  +${AppLocalizations.of(context).generateMoreNames(remaining)}'
+        : summary;
   }
 }
 

@@ -10,6 +10,70 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get dashboardEditorHelp =>
+      'दिख रहे विजेट का क्रम बदलने के लिए खींचें। छिपाने के लिए आँख पर टैप करें।';
+
+  @override
+  String get dashboardVisibleWidgets => 'दिख रहे विजेट';
+
+  @override
+  String get dashboardHiddenWidgets => 'छिपे हुए विजेट';
+
+  @override
+  String get dashboardHiddenWidgetsHelp =>
+      'डैशबोर्ड पर विजेट दिखाने के लिए + पर टैप करें।';
+
+  @override
+  String get dashboardNoVisibleWidgets =>
+      'नीचे दी गई छिपे हुए विजेट की सूची से कोई विजेट जोड़ें।';
+
+  @override
+  String get dashboardWidgetHidden => 'छिपा हुआ';
+
+  @override
+  String dashboardShowWidget(String name) {
+    return '$name दिखाएँ';
+  }
+
+  @override
+  String dashboardHideWidget(String name) {
+    return '$name छिपाएँ';
+  }
+
+  @override
+  String dashboardReorderWidget(String name) {
+    return '$name का क्रम बदलें';
+  }
+
+  @override
+  String dashboardHiddenWidgetSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count छिपे हुए विजेट',
+      one: '1 छिपा हुआ विजेट',
+      zero: 'सभी विजेट दिखाए गए हैं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardAutosave => 'बदलाव अपने-आप सेव होते हैं।';
+
+  @override
+  String get dashboardRestoreDefaultLayout => 'डिफ़ॉल्ट लेआउट बहाल करें';
+
+  @override
+  String get dashboardRestoreDefaultLayoutTitle => 'डिफ़ॉल्ट लेआउट बहाल करें?';
+
+  @override
+  String get dashboardRestoreDefaultLayoutBody =>
+      'इससे विजेट का क्रम और दिखाने या छिपाने की सेटिंग रीसेट होगी। डैशबोर्ड अपने डिफ़ॉल्ट लेआउट में लौट आएगा।';
+
+  @override
+  String get dashboardRestoreLayout => 'लेआउट बहाल करें';
+
+  @override
   String get nutritionSummaryTitle => 'दैनिक पोषण';
 
   @override

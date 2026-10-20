@@ -11,7 +11,6 @@ import '../providers/nutrition_profile.dart';
 import '../screens/exercise/full_history_screen.dart';
 import '../screens/exercise/session_detail_screen.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
-import '../theme/tokens/app_progress_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_dialog.dart';
@@ -90,26 +89,8 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!context.usesExpressivePresentation) return healthTrends;
 
     return _withExpressiveDestinationTheme(
-      AppExpressiveDestinationFamily.progress,
-      Builder(
-        builder: (context) {
-          final theme = Theme.of(context);
-          final destination = theme
-              .extension<AppExpressiveDestinationTokens>()!;
-          return Theme(
-            data: theme.copyWith(
-              extensions: [
-                for (final extension in theme.extensions.values)
-                  if (extension is! AppProgressColors) extension,
-                context.progressColors.copyWith(
-                  healthCard: destination.surfaceAccent,
-                ),
-              ],
-            ),
-            child: healthTrends,
-          );
-        },
-      ),
+      AppExpressiveDestinationFamily.nutrition,
+      healthTrends,
     );
   }
 
@@ -184,9 +165,32 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildEditableDashboardList(List<String> visibleIds) {
+    final expressive = context.usesExpressivePresentation;
+    final config = context.read<DashboardConfig>();
+    final strings = AppLocalizations.of(context);
+    final hiddenIds = config.widgetOrder
+        .where((id) => !config.isVisible(id))
+        .toList();
     return ReorderableListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
       buildDefaultDragHandles: false,
+      proxyDecorator: expressive
+          ? (child, index, animation) => AnimatedBuilder(
+              animation: animation,
+              child: child,
+              builder: (context, child) => Material(
+                key: const ValueKey('dashboard-drag-proxy'),
+                color: Colors.transparent,
+                borderRadius: context.shapeTokens.dashboardEditor,
+                elevation: MediaQuery.disableAnimationsOf(context)
+                    ? 3
+                    : 3 * Curves.easeOut.transform(animation.value),
+                shadowColor: Theme.of(context).colorScheme.shadow
+                    .withValues(alpha: 0.35),
+                child: child,
+              ),
+            )
+          : null,
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -196,21 +200,65 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 14),
           Text(
-            AppLocalizations.of(context).dashboardReorderHelp,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            expressive
+                ? AppLocalizations.of(context).dashboardEditorHelp
+                : AppLocalizations.of(context).dashboardReorderHelp,
+            style:
+                (expressive
+                        ? Theme.of(context).textTheme.bodySmall
+                        : Theme.of(context).textTheme.bodyMedium)
+                    ?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
           ),
           const SizedBox(height: 12),
+          if (expressive) ...[
+            _buildEditorGroupHeading(
+              strings.dashboardVisibleWidgets,
+              visibleIds.length,
+              key: const ValueKey('dashboard-visible-group'),
+            ),
+            if (visibleIds.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  strings.dashboardNoVisibleWidgets,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+          ],
         ],
       ),
       footer: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: _buildDashboardEditorFooter(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (expressive && hiddenIds.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildEditorGroupHeading(
+                strings.dashboardHiddenWidgets,
+                hiddenIds.length,
+                key: const ValueKey('dashboard-hidden-group'),
+              ),
+              Text(
+                strings.dashboardHiddenWidgetsHelp,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final id in hiddenIds) _buildEditableTile(id, null),
+              const SizedBox(height: 12),
+            ],
+            _buildDashboardEditorFooter(),
+          ],
+        ),
       ),
-      onReorder: (oldIndex, newIndex) {
-        if (newIndex > oldIndex) newIndex -= 1;
-        context.read<DashboardConfig>().reorder(oldIndex, newIndex);
+      onReorderItem: (oldIndex, newIndex) {
+        config.reorder(oldIndex, newIndex);
       },
       children: [
         for (var i = 0; i < visibleIds.length; i++)
@@ -219,36 +267,133 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildEditableTile(String id, int index) {
+  Widget _buildEditorGroupHeading(String title, int count, {required Key key}) {
+    final theme = Theme.of(context);
+    return Padding(
+      key: key,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            MaterialLocalizations.of(context).formatDecimal(count),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditableTile(String id, int? index) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
     final strings = AppLocalizations.of(context);
     final details = dashboardSectionDetails(strings, id);
-    final showFullDescription =
-        context.usesExpressivePresentation &&
-        MediaQuery.textScalerOf(context).scale(1) > 1.15;
+    final expressive = context.usesExpressivePresentation;
+    final visible = context.read<DashboardConfig>().isVisible(id);
+    final hidden = expressive && !visible;
+    final visibilityAction = visible
+        ? strings.dashboardHideWidget(details.title)
+        : strings.dashboardShowWidget(details.title);
+    final title = Text(
+      details.title,
+      style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+    );
+    final canvas = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.dashboard,
+      theme.brightness,
+    ).pageCanvas;
+    final dragHandle = index == null
+        ? null
+        : ReorderableDragStartListener(
+            index: index,
+            child: expressive
+                ? SizedBox(
+                    key: ValueKey('dashboard-reorder-$id'),
+                    width: 56,
+                    height: 56,
+                    child: ColoredBox(
+                      color: Colors.transparent,
+                      child: Icon(
+                        Icons.drag_indicator_rounded,
+                        color: scheme.onSurfaceVariant,
+                        size: 26,
+                      ),
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Icon(
+                      Icons.drag_indicator_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+          );
+    final visibilityButton = IconButton(
+      key: ValueKey('dashboard-visibility-$id'),
+      tooltip: expressive ? visibilityAction : strings.dashboardHideSection,
+      constraints: expressive
+          ? const BoxConstraints(minWidth: 48, minHeight: 48)
+          : null,
+      style: hidden
+          ? IconButton.styleFrom(
+              backgroundColor: scheme.secondaryContainer,
+              shape: RoundedRectangleBorder(
+                borderRadius: shapes.dashboardAction,
+              ),
+            )
+          : null,
+      icon: Icon(
+        hidden ? Icons.add_rounded : Icons.visibility_off_outlined,
+        color: hidden ? scheme.onSecondaryContainer : scheme.error,
+      ),
+      onPressed: () => context.read<DashboardConfig>().toggleVisibility(id),
+    );
     return Container(
       key: ValueKey(id),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: surfaces.dashboardEditor,
+        color: hidden
+            ? Color.lerp(
+                Color.alphaBlend(surfaces.dashboardEditor, canvas),
+                canvas,
+                0.32,
+              )
+            : surfaces.dashboardEditor,
         borderRadius: shapes.dashboardEditor,
-        border: Border.all(color: details.color.withValues(alpha: 0.48)),
+        border: Border.all(
+          color: details.color.withValues(alpha: hidden ? 0.28 : 0.48),
+        ),
       ),
       child: Row(
         children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Icon(
-                Icons.drag_indicator_rounded,
-                color: scheme.onSurfaceVariant,
+          if (dragHandle == null)
+            const SizedBox(width: 16)
+          else if (expressive)
+            Tooltip(
+              message: strings.dashboardReorderWidget(details.title),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.grab,
+                child: dragHandle,
               ),
-            ),
-          ),
+            )
+          else
+            dragHandle,
           Container(
             width: 38,
             height: 38,
@@ -265,19 +410,12 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    details.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  title,
                   const SizedBox(height: 2),
                   Text(
                     details.description,
-                    maxLines: showFullDescription ? null : 2,
-                    overflow: showFullDescription
-                        ? null
-                        : TextOverflow.ellipsis,
+                    maxLines: expressive ? null : 2,
+                    overflow: expressive ? null : TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -286,12 +424,17 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ),
           ),
-          IconButton(
-            tooltip: strings.dashboardHideSection,
-            icon: Icon(Icons.visibility_off_outlined, color: scheme.error),
-            onPressed: () =>
-                context.read<DashboardConfig>().toggleVisibility(id),
-          ),
+          if (expressive)
+            Semantics(
+              label: visibilityAction,
+              button: true,
+              toggled: visible,
+              onTap: () => context.read<DashboardConfig>().toggleVisibility(id),
+              excludeSemantics: true,
+              child: visibilityButton,
+            )
+          else
+            visibilityButton,
           const SizedBox(width: 4),
         ],
       ),
@@ -308,6 +451,68 @@ class _DashboardPageState extends State<DashboardPage> {
         .where((id) => !config.isVisible(id))
         .length;
     final strings = AppLocalizations.of(context);
+    if (context.usesExpressivePresentation) {
+      final destination = AppExpressiveDestinationTokens.forFamily(
+        AppExpressiveDestinationFamily.dashboard,
+        theme.brightness,
+      );
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: surfaces.dashboardSection,
+          borderRadius: shapes.dashboardFooter,
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              strings.dashboardHiddenWidgetSummary(hiddenCount),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.dashboardAutosave,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              key: const ValueKey('dashboard-editor-done'),
+              onPressed: () => setState(() => _isEditing = false),
+              style: FilledButton.styleFrom(
+                backgroundColor: destination.actionPrimary,
+                foregroundColor: destination.onActionPrimary,
+                minimumSize: const Size(48, 48),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: shapes.dashboardAction,
+                ),
+              ),
+              icon: const Icon(Icons.check_rounded),
+              label: Text(strings.commonDone),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              key: const ValueKey('dashboard-restore-defaults'),
+              onPressed: _confirmRestoreDashboardDefaults,
+              style: TextButton.styleFrom(
+                foregroundColor: destination.supportingForeground,
+                minimumSize: const Size(48, 48),
+              ),
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: Text(strings.dashboardRestoreDefaultLayout),
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -340,6 +545,50 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmRestoreDashboardDefaults() async {
+    final strings = AppLocalizations.of(context);
+    final config = context.read<DashboardConfig>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AppExpressiveDestinationTheme(
+        family: AppExpressiveDestinationFamily.dashboard,
+        child: Builder(
+          builder: (dialogContext) {
+            final destination = Theme.of(dialogContext)
+                .extension<AppExpressiveDestinationTokens>()!;
+            return AlertDialog(
+              key: const ValueKey('dashboard-restore-confirmation'),
+              scrollable: true,
+              title: Text(strings.dashboardRestoreDefaultLayoutTitle),
+              content: Text(strings.dashboardRestoreDefaultLayoutBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: destination.onSurfaceTertiary,
+                    minimumSize: const Size(48, 48),
+                  ),
+                  child: Text(strings.commonCancel),
+                ),
+                FilledButton(
+                  key: const ValueKey('dashboard-confirm-restore'),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: destination.actionPrimary,
+                    foregroundColor: destination.onActionPrimary,
+                    minimumSize: const Size(48, 48),
+                  ),
+                  child: Text(strings.dashboardRestoreLayout),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+    if (confirmed == true && mounted) await config.restoreDefaults();
   }
 
   Widget _buildEmptyDashboard() {
@@ -486,9 +735,12 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         );
       case 'recentWorkouts':
-        return DashboardRecentWorkoutsCard(
-          refreshToken: _historyRefreshToken,
-          onChanged: _refreshHistoryWidgets,
+        return _withExpressiveDestinationTheme(
+          AppExpressiveDestinationFamily.logbook,
+          DashboardRecentWorkoutsCard(
+            refreshToken: _historyRefreshToken,
+            onChanged: _refreshHistoryWidgets,
+          ),
         );
       case 'activePlans':
         return DashboardPlanCollectionCard(
@@ -523,7 +775,15 @@ class _DashboardPageState extends State<DashboardPage> {
         id == 'historySummary' ||
         id == 'healthTrends') {
       section = tile;
-    } else if (id == 'weeklyFocus' && context.usesExpressivePresentation) {
+    } else if (context.usesExpressivePresentation &&
+        const {
+          'weeklyFocus',
+          'training',
+          'activePlans',
+          'archivedPlans',
+          'premadePlans',
+          'planTools',
+        }.contains(id)) {
       // Match Train's 880px content width and 16px inner list inset.
       section = Center(
         child: ConstrainedBox(

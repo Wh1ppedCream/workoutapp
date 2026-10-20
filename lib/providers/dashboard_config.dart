@@ -148,24 +148,30 @@ class DashboardConfig extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> reorder(int oldVisibleIndex, int newVisibleIndex) async {
-    // 1. Build the visible‐only list
-    final visible =
-        _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
+  Future<void> reorder(
+    int oldVisibleIndex,
+    int newVisibleIndex, {
+    bool includeHidden = false,
+  }) async {
+    // Existing callers reorder visible sections; the Expressive editor also
+    // keeps hidden sections available in their saved positions.
+    final orderedIds = includeHidden
+        ? List<String>.of(_widgetOrder)
+        : _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
     if (oldVisibleIndex < 0 ||
-        oldVisibleIndex >= visible.length ||
+        oldVisibleIndex >= orderedIds.length ||
         newVisibleIndex < 0) {
       return;
     }
 
-    final movingId = visible.removeAt(oldVisibleIndex);
+    final movingId = orderedIds.removeAt(oldVisibleIndex);
     _widgetOrder.remove(movingId);
 
-    final insertAt = newVisibleIndex.clamp(0, visible.length).toInt();
-    if (insertAt >= visible.length) {
+    final insertAt = newVisibleIndex.clamp(0, orderedIds.length).toInt();
+    if (insertAt >= orderedIds.length) {
       _widgetOrder.add(movingId);
     } else {
-      final pivotId = visible[insertAt];
+      final pivotId = orderedIds[insertAt];
       _widgetOrder.insert(_widgetOrder.indexOf(pivotId), movingId);
     }
 

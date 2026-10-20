@@ -21,6 +21,7 @@ import 'package:env_test/widgets/exercise_detail_sheet.dart';
 import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 import 'package:env_test/widgets/shared_entity_media_thumbnail.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -250,6 +251,605 @@ void main() {
       },
     );
   }
+
+  for (final brightness in Brightness.values) {
+    for (final sample in [
+      (width: 430.0, scale: 1.0),
+      (width: 320.0, scale: 2.0),
+    ]) {
+      testWidgets(
+        'Bodypart exercise previews keep complete ranked summaries at '
+        '${sample.width} dp, ${sample.scale}x in ${brightness.name}',
+        (tester) async {
+          await _prepareAnatomyTest(tester);
+          await tester.binding.setSurfaceSize(Size(sample.width, 1000));
+          final chest = BodyPart(1, 'Chest');
+          final muscles = [
+            Muscle(id: 1, name: 'Anterior Deltoid'),
+            Muscle(id: 2, name: 'Pectoralis Major'),
+            Muscle(id: 3, name: 'Coracobrachialis'),
+            Muscle(id: 4, name: 'Triceps Brachii'),
+          ];
+          final definition = ExerciseDefinition(
+            id: 1,
+            name:
+                'Bench Press - Barbell with a Deliberately Long Variation Name',
+            bodyParts: [chest],
+            equipmentList: [
+              Equipment(1, 'Barbell'),
+              Equipment(2, 'Adjustable Bench'),
+              Equipment(3, 'Weight Plates'),
+            ],
+            muscles: [
+              for (var index = 0; index < muscles.length; index++)
+                RankedMuscle(muscle: muscles[index], rank: [3, 1, 4, 2][index]),
+            ],
+            useManualBodyparts: false,
+            multiplyByRating: false,
+          );
+          final repository = _AnatomyRepository(
+            bodyParts: [chest],
+            muscles: muscles,
+            definitions: [definition],
+          );
+          await _pumpRoute(
+            tester,
+            brightness == Brightness.dark
+                ? ExpressiveThemeDefinition.dark()
+                : ExpressiveThemeDefinition.light(),
+            repository,
+            Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(sample.scale)),
+                child: DefinitionsByBodyPartPage(
+                  bodyPart: chest,
+                  expressiveCatalogPresentation: true,
+                ),
+              ),
+            ),
+          );
+          await tester.scrollUntilVisible(
+            find.byType(ExerciseDefinitionInfoTile),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.pumpAndSettle();
+
+          const equipmentSummary = 'Barbell · Adjustable Bench  +1 more';
+          const muscleSummary =
+              'Pectoralis Major · Triceps Brachii · Anterior Deltoid  +1 more';
+          for (final label in [
+            definition.name,
+            equipmentSummary,
+            muscleSummary,
+          ]) {
+            final text = tester.widget<Text>(find.text(label));
+            final isTitle = label == definition.name;
+            expect(text.maxLines, isTitle ? isNull : 1);
+            expect(text.overflow, isTitle ? isNull : TextOverflow.ellipsis);
+            if (isTitle) {
+              expect(
+                tester
+                    .renderObject<RenderParagraph>(find.text(label))
+                    .didExceedMaxLines,
+                isFalse,
+              );
+            }
+          }
+          expect(
+            find.byTooltip('Barbell, Adjustable Bench, Weight Plates'),
+            findsOneWidget,
+          );
+          expect(
+            find.byTooltip(
+              'Pectoralis Major, Triceps Brachii, Anterior Deltoid, Coracobrachialis',
+            ),
+            findsOneWidget,
+          );
+          final tile = tester.widget<ExerciseDefinitionInfoTile>(
+            find.byType(ExerciseDefinitionInfoTile),
+          );
+          expect(tile.definition, same(definition));
+          expect(tile.bodypartExercisePreview, isTrue);
+          expect(definition.muscles.map((muscle) => muscle.rank), [3, 1, 4, 2]);
+          final info = find.byKey(
+            ValueKey('anatomy-exercise-thumbnail-${definition.id}'),
+          );
+          expect(tester.getSize(info).width, greaterThanOrEqualTo(48));
+          expect(tester.getSize(info).height, greaterThanOrEqualTo(48));
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets(
+      'Bodypart exercise search matches, opens details, and clears in ${brightness.name}',
+      (tester) async {
+        await _prepareAnatomyTest(tester);
+        final chest = BodyPart(1, 'Chest');
+        final legs = BodyPart(2, 'Quads');
+        final repository = _AnatomyRepository(
+          bodyParts: [chest, legs],
+          muscles: const [],
+          definitions: [
+            _definition(id: 1, name: 'Bench Press', bodyPart: chest),
+            _definition(id: 2, name: 'Dip', bodyPart: chest),
+            _definition(id: 3, name: 'Goblet Squat', bodyPart: legs),
+          ],
+        );
+        await _pumpRoute(
+          tester,
+          brightness == Brightness.dark
+              ? ExpressiveThemeDefinition.dark()
+              : ExpressiveThemeDefinition.light(),
+          repository,
+          DefinitionsByBodyPartPage(
+            bodyPart: chest,
+            expressiveCatalogPresentation: true,
+          ),
+        );
+        final search = find.byKey(const ValueKey('bodypart-exercise-search'));
+        final strings = AppLocalizations.of(tester.element(search));
+        await tester.ensureVisible(search);
+        await tester.enterText(search, '  bEnCh  ');
+        await tester.pumpAndSettle();
+        final tile = tester.widget<ExerciseDefinitionInfoTile>(
+          find.byType(ExerciseDefinitionInfoTile),
+        );
+        expect(tile.definition.id, 1);
+        expect(find.text('Dip'), findsNothing);
+        expect(find.text('Goblet Squat'), findsNothing);
+        expect(find.text(strings.anatomyNoEquipment), findsOneWidget);
+        expect(find.text(strings.anatomyNoMusclesListed), findsOneWidget);
+        expect(
+          find.text(strings.anatomyLinkedExerciseCount(2)),
+          findsOneWidget,
+        );
+
+        FocusManager.instance.primaryFocus?.unfocus();
+        final info = find.byKey(const ValueKey('anatomy-exercise-thumbnail-1'));
+        await tester.ensureVisible(info);
+        await tester.tap(info);
+        await tester.pumpAndSettle();
+        expect(find.byType(ExerciseDetailSheet), findsOneWidget);
+        expect(
+          tester
+              .widget<ExerciseDetailSheet>(find.byType(ExerciseDetailSheet))
+              .expressiveCatalogPresentation,
+          isTrue,
+        );
+        Navigator.of(tester.element(find.byType(ExerciseDetailSheet))).pop();
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(search);
+        await tester.enterText(search, 'nothing matches this name');
+        await tester.pumpAndSettle();
+        expect(find.byType(ExerciseDefinitionInfoTile), findsNothing);
+        expect(find.text(strings.catalogNoSearchMatches), findsOneWidget);
+        expect(find.text(strings.catalogNoSearchMatchesBody), findsOneWidget);
+        await tester.tap(find.byTooltip(strings.catalogClearSearch));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+        expect(find.text(strings.catalogNoSearchMatches), findsNothing);
+        expect(find.byType(ExerciseDefinitionInfoTile), findsNWidgets(2));
+        expect(find.text('Goblet Squat'), findsNothing);
+        expect(repository.definitionReadCount, 1);
+        expect(repository.definitions, hasLength(3));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final brightness in Brightness.values) {
+    for (final sample in [
+      (width: 430.0, scale: 1.0),
+      (width: 320.0, scale: 2.0),
+    ]) {
+      testWidgets(
+        'Muscle exercise cards wrap and identify their relationships at '
+        '${sample.width} dp, ${sample.scale}x in ${brightness.name}',
+        (tester) async {
+          await _prepareAnatomyTest(tester);
+          await tester.binding.setSurfaceSize(Size(sample.width, 1200));
+          final muscle = Muscle(id: 1, name: 'Adductor Brevis');
+          final hamstrings = BodyPart(1, 'Hamstrings');
+          final lowerBack = BodyPart(2, 'Lower Back');
+          const equipmentName =
+              'Barbell with Adjustable Safety Supports and Weight Plates';
+          final definition = ExerciseDefinition(
+            id: 1,
+            name: 'Deadlift - Barbell with a Deliberately Long Variation Name',
+            bodyParts: [hamstrings, lowerBack],
+            equipmentList: [Equipment(1, equipmentName)],
+            muscles: [RankedMuscle(muscle: muscle, rank: 4)],
+            useManualBodyparts: false,
+            multiplyByRating: false,
+          );
+          final sparseDefinition = ExerciseDefinition(
+            id: 2,
+            name: 'Z Movement',
+            bodyParts: const [],
+            equipmentList: const [],
+            muscles: [RankedMuscle(muscle: muscle, rank: 6)],
+            useManualBodyparts: false,
+            multiplyByRating: false,
+          );
+          await _pumpRoute(
+            tester,
+            brightness == Brightness.dark
+                ? ExpressiveThemeDefinition.dark()
+                : ExpressiveThemeDefinition.light(),
+            _AnatomyRepository(
+              bodyParts: [hamstrings, lowerBack],
+              muscles: [muscle],
+              definitions: [sparseDefinition, definition],
+            ),
+            Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(sample.scale)),
+                child: DefinitionsByMusclePage(
+                  muscle: muscle,
+                  expressiveCatalogPresentation: true,
+                ),
+              ),
+            ),
+          );
+          await tester.scrollUntilVisible(
+            find.text(definition.name),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.pumpAndSettle();
+          final card = find.widgetWithText(
+            ExerciseDefinitionInfoTile,
+            definition.name,
+          );
+          final cardContext = tester.element(card);
+          final strings = AppLocalizations.of(cardContext);
+          final bodypartsLabel =
+              '${strings.anatomyBodyParts}: '
+              '${localizedBodyPartName(cardContext, hamstrings.name)}, '
+              '${localizedBodyPartName(cardContext, lowerBack.name)}';
+          for (final label in [
+            definition.name,
+            equipmentName,
+            '${strings.rankingsRank} 4 · ${muscle.name}',
+            bodypartsLabel,
+          ]) {
+            final text = find.descendant(of: card, matching: find.text(label));
+            expect(text, findsOneWidget);
+            final singleLine =
+                label == equipmentName || label == bodypartsLabel;
+            expect(tester.widget<Text>(text).maxLines, singleLine ? 1 : isNull);
+            expect(
+              tester.widget<Text>(text).overflow,
+              singleLine ? TextOverflow.ellipsis : isNull,
+            );
+            if (!singleLine) {
+              expect(
+                tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+                isFalse,
+              );
+            }
+          }
+          expect(
+            tester.widget<Text>(find.text(definition.name)).style?.fontWeight,
+            FontWeight.w700,
+          );
+          expect(find.byTooltip(equipmentName), findsOneWidget);
+          final tile = tester.widget<ExerciseDefinitionInfoTile>(card);
+          expect(tile.definition, same(definition));
+          expect(tile.muscleExercisePreview, isTrue);
+          expect(tile.bodypartExercisePreview, isFalse);
+          final info = find.descendant(
+            of: card,
+            matching: find.byKey(
+              ValueKey('anatomy-exercise-thumbnail-${definition.id}'),
+            ),
+          );
+          expect(tester.getSize(info).width, greaterThanOrEqualTo(48));
+          expect(tester.getSize(info).height, greaterThanOrEqualTo(48));
+          expect(
+            find.byKey(const ValueKey('muscle-exercise-search')),
+            findsNothing,
+          );
+          await tester.scrollUntilVisible(
+            find.text(sparseDefinition.name),
+            180,
+            scrollable: find.byType(Scrollable).first,
+          );
+          expect(find.text(strings.anatomyNoEquipment), findsOneWidget);
+          expect(
+            find.text(
+              '${strings.anatomyBodyParts}: ${strings.anatomyNoBodyPartsListed}',
+            ),
+            findsOneWidget,
+          );
+          expect(definition.muscles.single.rank, 4);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets(
+      'Muscle exercise search handles large lists, equipment, empty results, '
+      'and details in ${brightness.name}',
+      (tester) async {
+        await _prepareAnatomyTest(tester);
+        final muscle = Muscle(id: 1, name: 'Biceps Brachii');
+        final unrelatedMuscle = Muscle(id: 2, name: 'Adductor Brevis');
+        final bodypart = BodyPart(1, 'Biceps');
+        final definitions = [
+          for (var index = 0; index < 75; index++)
+            ExerciseDefinition(
+              id: index,
+              name: index < 2 ? 'Cable Curl $index' : 'Dumbbell Curl $index',
+              bodyParts: [bodypart],
+              equipmentList: [
+                Equipment(index, index < 2 ? 'High Pulley' : 'Dumbbell'),
+              ],
+              muscles: [RankedMuscle(muscle: muscle, rank: 7 - index % 7)],
+              useManualBodyparts: false,
+              multiplyByRating: false,
+            ),
+          _definition(
+            id: 100,
+            name: 'Cable Curl Unrelated',
+            bodyPart: bodypart,
+            muscle: unrelatedMuscle,
+            equipment: Equipment(100, 'High Pulley'),
+          ),
+        ];
+        final originalOrder = definitions
+            .map((definition) => definition.id)
+            .toList();
+        final repository = _AnatomyRepository(
+          bodyParts: [bodypart],
+          muscles: [muscle, unrelatedMuscle],
+          definitions: definitions,
+        );
+        await _pumpRoute(
+          tester,
+          brightness == Brightness.dark
+              ? ExpressiveThemeDefinition.dark()
+              : ExpressiveThemeDefinition.light(),
+          repository,
+          DefinitionsByMusclePage(
+            muscle: muscle,
+            expressiveCatalogPresentation: true,
+          ),
+        );
+        final search = find.byKey(const ValueKey('muscle-exercise-search'));
+        final strings = AppLocalizations.of(tester.element(search));
+        await tester.ensureVisible(search);
+        await tester.enterText(search, '  cAbLe cUrL 0  ');
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<ExerciseDefinitionInfoTile>(
+                find.byType(ExerciseDefinitionInfoTile),
+              )
+              .definition
+              .id,
+          0,
+        );
+        await tester.enterText(search, '  pUlLeY  ');
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widgetList<ExerciseDefinitionInfoTile>(
+                find.byType(ExerciseDefinitionInfoTile),
+              )
+              .map((tile) => tile.definition.id),
+          [1, 0],
+        );
+        expect(find.text('Cable Curl Unrelated'), findsNothing);
+        expect(
+          find.text(strings.anatomyLinkedExerciseCount(75)),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .widget<ListView>(find.byType(ListView).first)
+              .keyboardDismissBehavior,
+          ScrollViewKeyboardDismissBehavior.onDrag,
+        );
+
+        await tester.enterText(search, 'no such exercise or equipment');
+        await tester.pumpAndSettle();
+        expect(find.byType(ExerciseDefinitionInfoTile), findsNothing);
+        expect(find.text(strings.catalogNoSearchMatches), findsOneWidget);
+        await tester.tap(
+          find.widgetWithText(TextButton, strings.catalogClearSearch),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+        expect(find.text(strings.catalogNoSearchMatches), findsNothing);
+        expect(find.byType(ExerciseDefinitionInfoTile), findsWidgets);
+        await tester.enterText(search, 'pulley');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip(strings.catalogClearSearch));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+
+        await tester.enterText(search, 'cable curl 0');
+        await tester.pumpAndSettle();
+        await tester.testTextInput.receiveAction(TextInputAction.search);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<EditableText>(
+                find.descendant(
+                  of: search,
+                  matching: find.byType(EditableText),
+                ),
+              )
+              .focusNode
+              .hasFocus,
+          isFalse,
+        );
+        final info = find.byKey(const ValueKey('anatomy-exercise-thumbnail-0'));
+        await tester.ensureVisible(info);
+        await tester.tap(info);
+        await tester.pumpAndSettle();
+        final sheet = tester.widget<ExerciseDetailSheet>(
+          find.byType(ExerciseDetailSheet),
+        );
+        expect(sheet.definition.id, 0);
+        expect(sheet.expressiveCatalogPresentation, isTrue);
+        expect(repository.definitionReadCount, 1);
+        expect(definitions.map((definition) => definition.id), originalOrder);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('Muscle exercise search starts at ten linked exercises', (
+    tester,
+  ) async {
+    await _prepareAnatomyTest(tester);
+    final muscle = Muscle(id: 1, name: 'Biceps Brachii');
+    final bodypart = BodyPart(1, 'Biceps');
+    for (final count in [9, 10]) {
+      await _pumpRoute(
+        tester,
+        ExpressiveThemeDefinition.light(),
+        _AnatomyRepository(
+          bodyParts: [bodypart],
+          muscles: [muscle],
+          definitions: [
+            for (var index = 0; index < count; index++)
+              _definition(
+                id: index,
+                name: 'Curl $index',
+                bodyPart: bodypart,
+                muscle: muscle,
+              ),
+          ],
+        ),
+        DefinitionsByMusclePage(
+          key: ValueKey(count),
+          muscle: muscle,
+          expressiveCatalogPresentation: true,
+        ),
+      );
+      expect(
+        find.byKey(const ValueKey('muscle-exercise-search')),
+        count == 10 ? findsOneWidget : findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('Muscle exercise refinement stays local to Expressive Catalog', (
+    tester,
+  ) async {
+    await _prepareAnatomyTest(tester);
+    final muscle = Muscle(id: 1, name: 'Biceps Brachii');
+    final bodypart = BodyPart(1, 'Biceps');
+    final repository = _AnatomyRepository(
+      bodyParts: [bodypart],
+      muscles: [muscle],
+      definitions: [
+        for (var index = 0; index < 10; index++)
+          _definition(
+            id: index,
+            name: 'Curl $index',
+            bodyPart: bodypart,
+            muscle: muscle,
+          ),
+      ],
+    );
+    for (final sample in [
+      (theme: AppThemeFactory.light(AppThemeFamily.classic), analytics: false),
+      (
+        theme: AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+        analytics: false,
+      ),
+      (theme: ExpressiveThemeDefinition.dark(), analytics: true),
+    ]) {
+      await _pumpRoute(
+        tester,
+        sample.theme,
+        repository,
+        DefinitionsByMusclePage(
+          muscle: muscle,
+          expressiveCatalogPresentation: !sample.analytics,
+          expressiveAnalyticsPresentation: sample.analytics,
+        ),
+      );
+      await tester.scrollUntilVisible(
+        find.byType(ExerciseDefinitionInfoTile).first,
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(
+        find.byKey(const ValueKey('muscle-exercise-search')),
+        findsNothing,
+      );
+      for (final tile in tester.widgetList<ExerciseDefinitionInfoTile>(
+        find.byType(ExerciseDefinitionInfoTile),
+      )) {
+        expect(tile.muscleExercisePreview, isFalse);
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets(
+    'Bodypart exercise refinement stays local to Expressive Catalog',
+    (tester) async {
+      await _prepareAnatomyTest(tester);
+      final chest = BodyPart(1, 'Chest');
+      final repository = _AnatomyRepository(
+        bodyParts: [chest],
+        muscles: const [],
+        definitions: [_definition(id: 1, name: 'Press', bodyPart: chest)],
+      );
+      for (final sample in [
+        (
+          theme: AppThemeFactory.light(AppThemeFamily.classic),
+          analytics: false,
+        ),
+        (
+          theme: AppThemeFactory.dark(AppThemeFamily.neoBrutalism),
+          analytics: false,
+        ),
+        (theme: ExpressiveThemeDefinition.light(), analytics: true),
+      ]) {
+        await _pumpRoute(
+          tester,
+          sample.theme,
+          repository,
+          DefinitionsByBodyPartPage(
+            bodyPart: chest,
+            expressiveCatalogPresentation: !sample.analytics,
+            expressiveAnalyticsPresentation: sample.analytics,
+          ),
+        );
+        await tester.scrollUntilVisible(
+          find.byType(ExerciseDefinitionInfoTile),
+          180,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(
+          find.byKey(const ValueKey('bodypart-exercise-search')),
+          findsNothing,
+        );
+        expect(
+          tester
+              .widget<ExerciseDefinitionInfoTile>(
+                find.byType(ExerciseDefinitionInfoTile),
+              )
+              .bodypartExercisePreview,
+          isFalse,
+        );
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
 
   for (final family in [AppThemeFamily.classic, AppThemeFamily.neoBrutalism]) {
     testWidgets(
@@ -947,6 +1547,7 @@ class _AnatomyRepository extends AppRepository {
   final Map<int, double> muscleSetUnits;
   final VolumeBoundaries? bodyPartBounds;
   final VolumeBoundaries? muscleBounds;
+  int definitionReadCount = 0;
 
   @override
   Future<List<BodyPart>> fetchAllBodyParts() async => bodyParts;
@@ -955,7 +1556,10 @@ class _AnatomyRepository extends AppRepository {
   Future<List<Muscle>> fetchAllMuscles() async => muscles;
 
   @override
-  Future<List<ExerciseDefinition>> lookupDefsDetailed() async => definitions;
+  Future<List<ExerciseDefinition>> lookupDefsDetailed() async {
+    definitionReadCount++;
+    return definitions;
+  }
 
   @override
   Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) async =>
@@ -1008,6 +1612,9 @@ class _AnatomyRepository extends AppRepository {
   @override
   Future<ContentManifest> syncBundledExerciseMediaManifest() async =>
       const ContentManifest(namespace: 'exercise_media', version: 0);
+
+  @override
+  Future<void> ensureExerciseMediaManifestReady() async {}
 
   @override
   Future<ExerciseMediaItem?> fetchPrimaryExerciseMedia(int defId) async => null;

@@ -2023,5 +2023,99 @@
         "uiHierarchySha256": "52ebf98dcdae231cd5ce9a788d66785a0e916af13ea331a6087f69af57cec494"
       }
     ]
+  },
+  "presetPlanDetailGalleryRefresh20261019": {
+    "capturedAtRangeLocal": "2026-10-19T22:47:51-04:00 through 2026-10-19T22:49:23-04:00 America/Toronto",
+    "page": "Preset / Plan Detail",
+    "capturedScreenshotCount": 6,
+    "refreshedFamilies": {
+      "Preset / Plan Detail": 6
+    },
+    "capturedScreenshotIds": [
+      "06-preset-detail-top-light",
+      "06-preset-detail-lower-light",
+      "06-preset-edit-light",
+      "06-preset-detail-top-dark",
+      "06-preset-detail-lower-dark",
+      "06-preset-edit-dark"
+    ],
+    "captures": [
+      {
+        "id": "06-preset-detail-top-light",
+        "capturedAt": "2026-10-19T22:47:51-04:00",
+        "png": "pages/06-preset-detail/light/01-preset-detail-top.png",
+        "pngSha256": "f3bd60c2ad220057a9186799184a0eaec1065059870a217d6fb1f169abf58e9b",
+        "pngBytes": 222892,
+        "uiHierarchy": "pages/06-preset-detail/light/01-preset-detail-top.xml",
+        "uiSha256": "74ab14da2485d35ce9ec9541b5d75ac560ec070a108c1b13d0f583f0275717f7"
+      },
+      {
+        "id": "06-preset-detail-lower-light",
+        "capturedAt": "2026-10-19T22:48:01-04:00",
+        "png": "pages/06-preset-detail/light/02-preset-detail-lower.png",
+        "pngSha256": "38f6890b67d75e982108717648ec561bae5e84b8947ab3a1c3b400f4c567bad5",
+        "pngBytes": 225520,
+        "uiHierarchy": "pages/06-preset-detail/light/02-preset-detail-lower.xml",
+        "uiSha256": "c5bdc6477b2c5fafb485ac40de8ec0e77fd422b61fc1527259277426331db9d9"
+      },
+      {
+        "id": "06-preset-edit-light",
+        "capturedAt": "2026-10-19T22:48:21-04:00",
+        "png": "pages/06-preset-detail/light/03-plan-edit-mode.png",
+        "pngSha256": "499308d27bcfbecf0d94578fa77b67ae369d5aca73226e5b0efba50d923bdae4",
+        "pngBytes": 241762,
+        "uiHierarchy": "pages/06-preset-detail/light/03-plan-edit-mode.xml",
+        "uiSha256": "5e999a868ac20c81eac5f1739ab609766c092e43fcf9668628b714be5ecafa18"
+      },
+      {
+        "id": "06-preset-detail-top-dark",
+        "capturedAt": "2026-10-19T22:49:03-04:00",
+        "png": "pages/06-preset-detail/dark/01-preset-detail-top.png",
+        "pngSha256": "01782b8ec50b29b966efddf828836d6c6f865717fad643dd34f8d09195e13624",
+        "pngBytes": 220001,
+        "uiHierarchy": "pages/06-preset-detail/dark/01-preset-detail-top.xml",
+        "uiSha256": "74ab14da2485d35ce9ec9541b5d75ac560ec070a108c1b13d0f583f0275717f7"
+      },
+      {
+        "id": "06-preset-detail-lower-dark",
+        "capturedAt": "2026-10-19T22:49:12-04:00",
+        "png": "pages/06-preset-detail/dark/02-preset-detail-lower.png",
+        "pngSha256": "6d569feb28f9d8253ec28a04fb23b7b55df6554170c7cec96f6cee0beb3aaeae",
+        "pngBytes": 219974,
+        "uiHierarchy": "pages/06-preset-detail/dark/02-preset-detail-lower.xml",
+        "uiSha256": "c5bdc6477b2c5fafb485ac40de8ec0e77fd422b61fc1527259277426331db9d9"
+      },
+      {
+        "id": "06-preset-edit-dark",
+        "capturedAt": "2026-10-19T22:49:23-04:00",
+        "png": "pages/06-preset-detail/dark/03-plan-edit-mode.png",
+        "pngSha256": "f612c0abce782b79608e97b6c9ea88978c7c4afb2c2f5fe67d35fd7ba42a54aa",
+        "pngBytes": 234466,
+        "uiHierarchy": "pages/06-preset-detail/dark/03-plan-edit-mode.xml",
+        "uiSha256": "5e999a868ac20c81eac5f1739ab609766c092e43fcf9668628b714be5ecafa18"
+      }
+    ],
+    "sourceRevision": "6ac77c2284cd0c5b18419a8c9caf21a458724909",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "Dirty; existing user changes were preserved. HEAD is the base revision, not a complete snapshot of the build source.",
+    "sourceFilesSha256": {
+      "lib/widgets/preset_info_card.dart": "CA72D857A9A4AD83376B6AA39659168648F749AB34E6855395101001E9CD0D87"
+    },
+    "deviceId": "28021FDH200228",
+    "device": "Google Pixel 7",
+    "deviceResolution": "1080x2400",
+    "package": "com.tonos.expressivepreview",
+    "packageVersionCode": 6,
+    "packageVersionName": "1.0.1",
+    "packageLastUpdateTimeLocal": "2026-10-19 22:40:07",
+    "flutterSdk": "E:/tools/flutter_sdks/3.47.5/flutter",
+    "buildArtifact": "E:/projects/env_test/build/app/outputs/flutter-apk/app-debug.apk",
+    "buildArtifactSha256": "7A685D04F2EEB7DA10DB09E7252AFDDE2C2726B36125CB362792BC7EDB840B66",
+    "installedBaseApkSha256": "7A685D04F2EEB7DA10DB09E7252AFDDE2C2726B36125CB362792BC7EDB840B66",
+    "installedApkMatchesBuildArtifact": true,
+    "buildArtifactBytes": 233981639,
+    "buildArtifactModifiedLocal": "2026-10-19T22:39:31-04:00",
+    "captureMethod": "Reused the already-installed Expressive preview; no rebuild or reinstall. Only in-app preview light/dark selection, navigation, scrolling, and opening edit mode without changing values were used. No session start, save, archive, delete, fixture reset, or database mutation was performed.",
+    "sourceTreeProvenanceLimit": "The installed APK matches the retained app-debug.apk artifact and the relevant source file is hashed. The full dirty source snapshot used to build the APK is not available; do not treat HEAD as the exact APK source tree."
   }
 }

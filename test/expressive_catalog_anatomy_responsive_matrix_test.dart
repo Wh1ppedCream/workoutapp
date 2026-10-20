@@ -13,6 +13,7 @@ import 'package:env_test/screens/exercise/definitions_by_bodypart_page.dart';
 import 'package:env_test/screens/exercise/definitions_by_muscle_page.dart';
 import 'package:env_test/screens/exercise/muscle_filter_page.dart';
 import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:material_ui/material_ui.dart';
@@ -419,15 +420,17 @@ void main() {
           scrollable: find.byType(Scrollable).first,
         );
         await _expectUntruncatedText(tester, 'Overhead Cable Press');
-        await _expectEllipsizedTooltipText(
+        await _expectUntruncatedText(
           tester,
           'High and Low Pulley',
-          maxLines: 1,
+          within: find.byType(ExerciseDefinitionInfoTile),
+          singleLine: true,
         );
-        await _expectEllipsizedTooltipText(
+        await _expectUntruncatedText(
           tester,
           'Long Head Triceps',
-          maxLines: 2,
+          within: find.byType(ExerciseDefinitionInfoTile),
+          singleLine: true,
         );
         expect(tester.takeException(), isNull);
 
@@ -458,51 +461,51 @@ void main() {
         await tester.pumpAndSettle();
         expect(rank, findsOneWidget);
         await _expectUntruncatedText(tester, 'Overhead Cable Press');
-        await _expectEllipsizedTooltipText(
+        await _expectUntruncatedText(
           tester,
           'High and Low Pulley',
-          maxLines: 2,
+          within: find.byType(ExerciseDefinitionInfoTile),
+          singleLine: true,
         );
-        await _expectEllipsizedTooltipText(tester, 'Upper Chest', maxLines: 2);
+        await _expectUntruncatedText(
+          tester,
+          '${strings.anatomyBodyParts}: Upper Chest',
+          within: find.byType(ExerciseDefinitionInfoTile),
+          singleLine: true,
+        );
         expect(tester.takeException(), isNull);
       },
     );
   }
 }
 
-Future<void> _expectEllipsizedTooltipText(
+Future<void> _expectUntruncatedText(
   WidgetTester tester,
   String content, {
-  required int maxLines,
+  Finder? within,
+  bool singleLine = false,
 }) async {
-  final text = find.descendant(
-    of: find.byTooltip(content),
-    matching: find.byWidgetPredicate(
-      (widget) => widget is Text && widget.data == content,
-    ),
-  );
-  expect(text, findsOneWidget, reason: content);
-  final widget = tester.widget<Text>(text);
-  expect(widget.maxLines, maxLines, reason: content);
-  expect(widget.overflow, TextOverflow.ellipsis, reason: content);
-
-  final tooltip = find.ancestor(of: text, matching: find.byType(Tooltip)).first;
-  expect(tester.widget<Tooltip>(tooltip).message, content, reason: content);
-}
-
-Future<void> _expectUntruncatedText(WidgetTester tester, String content) async {
-  final text = find.byWidgetPredicate(
+  final matchingText = find.byWidgetPredicate(
     (widget) => widget is Text && widget.data == content,
   );
+  final text = within == null
+      ? matchingText
+      : find.descendant(of: within, matching: matchingText);
   expect(text, findsOneWidget, reason: content);
   final widget = tester.widget<Text>(text);
-  expect(widget.maxLines, isNull, reason: content);
-  expect(widget.overflow, isNull, reason: content);
+  expect(widget.maxLines, singleLine ? 1 : isNull, reason: content);
   expect(
-    tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
-    isFalse,
+    widget.overflow,
+    singleLine ? TextOverflow.ellipsis : isNull,
     reason: content,
   );
+  if (!singleLine) {
+    expect(
+      tester.renderObject<RenderParagraph>(text).didExceedMaxLines,
+      isFalse,
+      reason: content,
+    );
+  }
 }
 
 Future<void> _settle(WidgetTester tester) async {

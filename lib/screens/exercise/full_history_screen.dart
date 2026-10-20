@@ -167,6 +167,38 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
     required WeightUnit weightUnit,
     required Future<void> Function(WorkoutReportSession session) onSessionTap,
   }) {
+    return ExpressiveWorkoutHistoryList(
+      sessions: sessions,
+      strings: strings,
+      weightUnit: weightUnit,
+      onSessionTap: onSessionTap,
+    );
+  }
+}
+
+/// The shared Expressive session groups used by Logbook and Dashboard.
+class ExpressiveWorkoutHistoryList extends StatelessWidget {
+  const ExpressiveWorkoutHistoryList({
+    super.key,
+    required this.sessions,
+    required this.strings,
+    required this.weightUnit,
+    required this.onSessionTap,
+    this.padding = const EdgeInsets.fromLTRB(16, 12, 16, 16),
+    this.shrinkWrap = false,
+    this.physics,
+  });
+
+  final List<WorkoutReportSession> sessions;
+  final AppLocalizations strings;
+  final WeightUnit weightUnit;
+  final Future<void> Function(WorkoutReportSession session) onSessionTap;
+  final EdgeInsetsGeometry padding;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
+
+  @override
+  Widget build(BuildContext context) {
     final groups = _groupSessionsByDay(sessions);
     final destinationTokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
@@ -181,7 +213,9 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
         );
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: padding,
+      shrinkWrap: shrinkWrap,
+      physics: physics,
       itemCount: groups.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, groupIndex) {

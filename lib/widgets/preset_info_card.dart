@@ -5,6 +5,8 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
+import '../theme/expressive_planning_tokens.dart';
+import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_surface.dart';
 import '../utils/async_pool.dart';
@@ -231,6 +233,37 @@ class _PresetInfoCardState extends State<PresetInfoCard>
         final summary = snapshot.data;
         final strings = AppLocalizations.of(context);
 
+        if (compactExpressive) {
+          final planning = AppExpressivePlanningTokens.maybeOf(context)!;
+          return TonosSurface(
+            key: const ValueKey('expressive-preset-summary'),
+            variant: TonosSurfaceVariant.card,
+            color: planning.planFocalSurface,
+            borderRadius: planning.focalShape,
+            outlined: false,
+            elevation: 0,
+            padding: const EdgeInsets.all(14),
+            child: summary == null
+                ? SizedBox(
+                    height: 180,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: planning.planAccent,
+                      ),
+                    ),
+                  )
+                : _ExpressivePresetInfoContent(
+                    summary: summary,
+                    time: _formatMinutes(summary.estimatedMinutes, strings),
+                    volume: WeightUnitFormatter.formatVolume(
+                      summary.totalVolume,
+                      weightUnit,
+                      locale: Localizations.localeOf(context),
+                    ),
+                  ),
+          );
+        }
+
         final content = Padding(
           padding: EdgeInsets.all(compactExpressive ? 12 : 16),
           child: summary == null
@@ -350,6 +383,238 @@ class _PresetInfoCardState extends State<PresetInfoCard>
     final mins = minutes % 60;
     if (mins == 0) return strings.durationHoursCompact(hours);
     return strings.durationHoursMinutesCompact(hours, mins);
+  }
+}
+
+class _ExpressivePresetInfoContent extends StatelessWidget {
+  const _ExpressivePresetInfoContent({
+    required this.summary,
+    required this.time,
+    required this.volume,
+  });
+
+  final _PresetInfoSummary summary;
+  final String time;
+  final String volume;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final planning = AppExpressivePlanningTokens.maybeOf(context)!;
+    final dark = theme.brightness == Brightness.dark;
+    final tokens =
+        theme.extension<AppExpressiveTrainTokens>() ??
+        (dark ? AppExpressiveTrainTokens.dark : AppExpressiveTrainTokens.light);
+    final strings = AppLocalizations.of(context);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final focusTheme = theme.copyWith(
+      colorScheme: theme.colorScheme.copyWith(
+        onSurface: tokens.focusInsetForeground,
+        onSurfaceVariant: tokens.focusInsetForeground,
+      ),
+      textTheme: theme.textTheme.apply(
+        bodyColor: tokens.focusInsetForeground,
+        displayColor: tokens.focusInsetForeground,
+      ),
+      progressIndicatorTheme: theme.progressIndicatorTheme.copyWith(
+        color: tokens.focusWarm,
+        linearTrackColor: tokens.focusInsetForeground.withValues(alpha: 0.16),
+      ),
+    );
+    final focusList = Theme(
+      data: focusTheme,
+      child: Material(
+        key: const ValueKey('expressive-preset-focused-sets'),
+        color: tokens.focusInset,
+        shape: const RoundedRectangleBorder(
+          borderRadius: ExpressiveTrainShapes.focusInset,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FocusedSetsList(
+                hits: summary.bodyPartHits,
+                emptyMessage: strings.presetNoFocusData,
+                titleWeight: FontWeight.w800,
+                compact: true,
+                roundUnits: true,
+                rowSpacing: 3,
+              ),
+              if (summary.bodyPartHits.isEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  strings.presetFocusPreviewHelp,
+                  style: focusTheme.textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final timeTile = _ExpressivePresetMetricTile(
+              key: const ValueKey('expressive-preset-time'),
+              icon: Icons.schedule,
+              label: strings.presetEstimatedTime,
+              value: time,
+              surface: planning.equipmentSurface,
+              foreground: planning.equipmentForeground,
+            );
+            final volumeTile = _ExpressivePresetMetricTile(
+              key: const ValueKey('expressive-preset-volume'),
+              icon: Icons.fitness_center,
+              label: strings.logbookTotalVolume,
+              value: volume,
+              surface: planning.actionSecondary,
+              foreground: planning.actionSecondaryForeground,
+            );
+            if (textScale >= 1.5 || constraints.maxWidth < 240) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [timeTile, const SizedBox(height: 10), volumeTile],
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: timeTile),
+                  const SizedBox(width: 10),
+                  Expanded(child: volumeTile),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final stacked = textScale >= 1.5 || constraints.maxWidth < 240;
+            final heatmapSize = stacked
+                ? constraints.maxWidth.clamp(132.0, 164.0).toDouble()
+                : (constraints.maxWidth - 10) / 2;
+            final heatmapSurface = dark
+                ? tokens.focusInset
+                : Color.lerp(planning.equipmentSurface, Colors.white, 0.35)!;
+            final heatmap = Container(
+              key: const ValueKey('expressive-preset-heatmap'),
+              width: heatmapSize,
+              height: stacked ? heatmapSize : null,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: heatmapSurface,
+                borderRadius: ExpressiveTrainShapes.focusInset,
+              ),
+              child: Center(
+                child: BodyHeatmap(
+                  frequencyMap: summary.frequencyMap,
+                  lowColor: tonosHeatmapLowForSurface(context, heatmapSurface),
+                  highColor: tonosHeatmapHighForSurface(
+                    context,
+                    heatmapSurface,
+                  ),
+                  width: heatmapSize - 12,
+                  height: heatmapSize - 12,
+                ),
+              ),
+            );
+            if (stacked) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: heatmap),
+                  const SizedBox(height: 12),
+                  focusList,
+                ],
+              );
+            }
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: heatmap),
+                  const SizedBox(width: 10),
+                  Expanded(child: focusList),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _ExpressivePresetMetricTile extends StatelessWidget {
+  const _ExpressivePresetMetricTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.surface,
+    required this.foreground,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color surface;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: ExpressiveTrainShapes.focusInset,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 22, color: foreground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: foreground,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

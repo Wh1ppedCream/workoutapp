@@ -107,6 +107,96 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @dashboardEditorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag visible widgets to reorder. Tap the eye to hide.'**
+  String get dashboardEditorHelp;
+
+  /// No description provided for @dashboardVisibleWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible widgets'**
+  String get dashboardVisibleWidgets;
+
+  /// No description provided for @dashboardHiddenWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden widgets'**
+  String get dashboardHiddenWidgets;
+
+  /// No description provided for @dashboardHiddenWidgetsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap + to show a widget on your dashboard.'**
+  String get dashboardHiddenWidgetsHelp;
+
+  /// No description provided for @dashboardNoVisibleWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a widget from the hidden list below.'**
+  String get dashboardNoVisibleWidgets;
+
+  /// No description provided for @dashboardWidgetHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get dashboardWidgetHidden;
+
+  /// No description provided for @dashboardShowWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {name}'**
+  String dashboardShowWidget(String name);
+
+  /// No description provided for @dashboardHideWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide {name}'**
+  String dashboardHideWidget(String name);
+
+  /// No description provided for @dashboardReorderWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder {name}'**
+  String dashboardReorderWidget(String name);
+
+  /// No description provided for @dashboardHiddenWidgetSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{All widgets are shown} =1{1 hidden widget} other{{count} hidden widgets}}'**
+  String dashboardHiddenWidgetSummary(int count);
+
+  /// No description provided for @dashboardAutosave.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes save automatically.'**
+  String get dashboardAutosave;
+
+  /// No description provided for @dashboardRestoreDefaultLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default layout'**
+  String get dashboardRestoreDefaultLayout;
+
+  /// No description provided for @dashboardRestoreDefaultLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default layout?'**
+  String get dashboardRestoreDefaultLayoutTitle;
+
+  /// No description provided for @dashboardRestoreDefaultLayoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This resets widget order and visibility. Your dashboard will return to its default layout.'**
+  String get dashboardRestoreDefaultLayoutBody;
+
+  /// No description provided for @dashboardRestoreLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore layout'**
+  String get dashboardRestoreLayout;
+
   /// No description provided for @nutritionSummaryTitle.
   ///
   /// In en, this message translates to:

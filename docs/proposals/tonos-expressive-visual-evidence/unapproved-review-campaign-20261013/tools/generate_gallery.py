@@ -25,6 +25,8 @@ COVERAGE_CSV = CAMPAIGN / "coverage-matrix.csv"
 # All Expressive detail callers now resolve to the approved shared sheet.
 # The screenshot manifest and local PNG/XML evidence remain preserved.
 APPROVED_REVIEW_GROUPS = {
+    "dashboard",
+    "dashboard configuration",
     "train2",
     "train2 / exercise presets",
     "exercise catalog / exercise browser",
@@ -41,6 +43,10 @@ APPROVED_REVIEW_GROUPS = {
     "premade plan filters",
     "plan-specific flow methods editor",
 }
+
+# Closed for this review pass by the user: no implemented content to adapt.
+# These remain F placeholders, not A-approved finished pages.
+DEFERRED_REVIEW_GROUPS = {"unmapped expressive placeholder screens"}
 
 # Preserve these Premade Plans captures in the manifest and evidence archive,
 # but omit stale or duplicate cards from the active review gallery.
@@ -59,16 +65,18 @@ def excluded_from_unapproved_gallery(item: dict) -> bool:
     if item.get("id") in EXCLUDED_SCREENSHOT_IDS:
         return True
     group = group_of(item).strip().casefold()
-    if group in APPROVED_REVIEW_GROUPS:
+    if group in APPROVED_REVIEW_GROUPS or group in DEFERRED_REVIEW_GROUPS:
         return True
     if group.startswith("train plans") and "archived plan actions" in group:
         return True
     # Older manifest records contain both correctly encoded and mojibake dash
-    # variants, so match these caller-scoped groups by their stable name prefix.
+    # variants, so match approved detail groups by their stable name prefix.
     return group.startswith((
         "catalog exercise details sheet",
         "non-catalog exercise details",
         "exercise media viewer",
+        "selected bodypart detail",
+        "selected muscle detail",
     ))
 
 
@@ -379,9 +387,11 @@ def main() -> None:
         grouped[group_of(record)].append(record)
 
     CONTACT_DIR.mkdir(parents=True, exist_ok=True)
-    # Remove generated sheets for approved or superseded detail presentations.
+    # Remove generated sheets for approved, superseded, or deferred review groups.
     # Keep the original PNG/XML captures and manifest entries as local evidence.
     excluded_contact_sheets = {
+        "dashboard.svg",
+        "dashboard-configuration.svg",
         "train2.svg",
         "train2-exercise-presets.svg",
         "analytics-dashboard-weekly-sets.svg",
@@ -401,6 +411,11 @@ def main() -> None:
         "exercise-media-viewer-catalog-caller.svg",
         "catalog-exercise-details-sheet-anatomy-caller.svg",
         "non-catalog-exercise-details-plan-detail-caller.svg",
+        "selected-bodypart-detail-chest.svg",
+        "selected-muscle-detail-adductor-brevis.svg",
+        "selected-muscle-detail-biceps-brachii.svg",
+        "selected-muscle-detail-biceps.svg",
+        "unmapped-expressive-placeholder-screens.svg",
     }
     for filename in excluded_contact_sheets:
         (CONTACT_DIR / filename).unlink(missing_ok=True)

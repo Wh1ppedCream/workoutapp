@@ -101,10 +101,10 @@ class _CatalogPageState extends State<CatalogPage> {
         .toList();
     final definitions = await repo.lookupDefsDetailedByIds(definitionIds);
     final definitionsById = {for (final def in definitions) def.id: def};
-    final exerciseStats = <_ExerciseUsageSummary>[
+    final exerciseStats = <CatalogExerciseUsageSummary>[
       for (final row in exerciseRows)
         if (definitionsById[(row['definition_id'] as num?)?.toInt()] != null)
-          _ExerciseUsageSummary(
+          CatalogExerciseUsageSummary(
             definition: definitionsById[(row['definition_id'] as num).toInt()]!,
             useCount: ((row['use_count'] as num?) ?? 0).toInt(),
           ),
@@ -118,14 +118,16 @@ class _CatalogPageState extends State<CatalogPage> {
     final bodyPartStats =
         bodyPartSets.entries
             .where((entry) => entry.value > 0)
-            .map((entry) => _FocusUsageSummary(entry.key.name, entry.value))
+            .map(
+              (entry) => CatalogFocusUsageSummary(entry.key.name, entry.value),
+            )
             .toList()
           ..sort((a, b) => b.units.compareTo(a.units));
     final muscleStats =
         muscleSets.entries
             .where((entry) => entry.value > 0 && muscleById[entry.key] != null)
             .map(
-              (entry) => _FocusUsageSummary(
+              (entry) => CatalogFocusUsageSummary(
                 muscleById[entry.key]!.name,
                 entry.value,
                 entity: CatalogEntityDisplayName(
@@ -272,7 +274,7 @@ class _CatalogPageState extends State<CatalogPage> {
                       children: [
                         KeyedSubtree(
                           key: _exerciseCatalogTutorialKey,
-                          child: _ExerciseCatalogCard(
+                          child: CatalogExerciseSummaryCard(
                             exercises: overview.exercises,
                             onTap: _openExerciseCatalog,
                           ),
@@ -282,7 +284,7 @@ class _CatalogPageState extends State<CatalogPage> {
                         ),
                         KeyedSubtree(
                           key: _targetAnatomyTutorialKey,
-                          child: _TargetAnatomyCard(
+                          child: CatalogTargetAnatomySummaryCard(
                             muscles: overview.muscles,
                             bodyParts: overview.bodyParts,
                             onMusclesTap: () => _openFocusLibrary(1),
@@ -302,11 +304,15 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 }
 
-class _ExerciseCatalogCard extends StatelessWidget {
-  final List<_ExerciseUsageSummary> exercises;
+class CatalogExerciseSummaryCard extends StatelessWidget {
+  final List<CatalogExerciseUsageSummary> exercises;
   final VoidCallback onTap;
 
-  const _ExerciseCatalogCard({required this.exercises, required this.onTap});
+  const CatalogExerciseSummaryCard({
+    super.key,
+    required this.exercises,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -423,13 +429,14 @@ class _ExerciseCatalogCard extends StatelessWidget {
   }
 }
 
-class _TargetAnatomyCard extends StatelessWidget {
-  final List<_FocusUsageSummary> muscles;
-  final List<_FocusUsageSummary> bodyParts;
+class CatalogTargetAnatomySummaryCard extends StatelessWidget {
+  final List<CatalogFocusUsageSummary> muscles;
+  final List<CatalogFocusUsageSummary> bodyParts;
   final VoidCallback onMusclesTap;
   final VoidCallback onBodyPartsTap;
 
-  const _TargetAnatomyCard({
+  const CatalogTargetAnatomySummaryCard({
+    super.key,
     required this.muscles,
     required this.bodyParts,
     required this.onMusclesTap,
@@ -691,7 +698,7 @@ class _CatalogCardHeader extends StatelessWidget {
 }
 
 class _ExerciseUsageBar extends StatelessWidget {
-  final _ExerciseUsageSummary summary;
+  final CatalogExerciseUsageSummary summary;
   final bool lead;
 
   const _ExerciseUsageBar({
@@ -857,7 +864,7 @@ class _ExerciseUsageBar extends StatelessWidget {
 class _FocusSummaryPane extends StatelessWidget {
   final String title;
   final IconData icon;
-  final List<_FocusUsageSummary> items;
+  final List<CatalogFocusUsageSummary> items;
   final String emptyText;
   final VoidCallback onTap;
   final bool localizeBuiltInBodyPartNames;
@@ -1025,7 +1032,7 @@ class _FocusSummaryPane extends StatelessWidget {
 }
 
 class _FocusUsageRow extends StatelessWidget {
-  final _FocusUsageSummary summary;
+  final CatalogFocusUsageSummary summary;
   final bool localizeBuiltInBodyPartNames;
 
   const _FocusUsageRow({
@@ -1130,9 +1137,9 @@ class _FocusUsageRow extends StatelessWidget {
 }
 
 class _CatalogOverviewData {
-  final List<_ExerciseUsageSummary> exercises;
-  final List<_FocusUsageSummary> bodyParts;
-  final List<_FocusUsageSummary> muscles;
+  final List<CatalogExerciseUsageSummary> exercises;
+  final List<CatalogFocusUsageSummary> bodyParts;
+  final List<CatalogFocusUsageSummary> muscles;
 
   const _CatalogOverviewData({
     required this.exercises,
@@ -1141,20 +1148,20 @@ class _CatalogOverviewData {
   });
 }
 
-class _ExerciseUsageSummary {
+class CatalogExerciseUsageSummary {
   final ExerciseDefinition definition;
   final int useCount;
 
-  const _ExerciseUsageSummary({
+  const CatalogExerciseUsageSummary({
     required this.definition,
     required this.useCount,
   });
 }
 
-class _FocusUsageSummary {
+class CatalogFocusUsageSummary {
   final String name;
   final double units;
   final CatalogEntityDisplayName? entity;
 
-  const _FocusUsageSummary(this.name, this.units, {this.entity});
+  const CatalogFocusUsageSummary(this.name, this.units, {this.entity});
 }
