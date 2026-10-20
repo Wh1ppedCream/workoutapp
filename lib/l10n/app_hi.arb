@@ -1549,6 +1549,7 @@
   "planRenameTitle": "योजना का नाम बदलें",
   "planSaveFailed": "योजना सहेजी नहीं जा सकी। पिछला संस्करण अपरिवर्तित है। {error}",
   "planSavePreset": "प्रीसेट सहेजें",
+  "planSaveChanges": "बदलाव सहेजें",
   "planStartSession": "सत्र शुरू करें",
   "planTutorialEditBody": "इसका उपयोग योजना का नाम बदलने, व्यायाम पुनः क्रमित करने, व्यायाम जोड़ने, मूवमेंट बदलने और सेट बदलने के लिए करें।",
   "planTutorialEditTitle": "योजना संपादित करें",

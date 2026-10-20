@@ -40,6 +40,8 @@ class WeightCard extends StatefulWidget {
   final bool animateExpansion;
   final bool expressiveWorkoutPresentation;
   final bool expressivePresetDetail;
+  final bool compactExpressivePresetLayout;
+  final Color? expressivePresetOutlineColor;
   final String? createChangeSetLabel;
 
   /// Supplies a fixture-only unit without requiring the production provider.
@@ -70,6 +72,8 @@ class WeightCard extends StatefulWidget {
     this.animateExpansion = false,
     this.expressiveWorkoutPresentation = false,
     this.expressivePresetDetail = false,
+    this.compactExpressivePresetLayout = true,
+    this.expressivePresetOutlineColor,
     this.createChangeSetLabel,
     this.previewWeightUnit,
     this.firstSetWeightKey,
@@ -419,8 +423,10 @@ class _WeightCardState extends State<WeightCard> {
     final usesExpressiveWorkout =
         widget.expressiveWorkoutPresentation &&
         context.usesExpressivePresentation;
-    final compactPresetDetail =
+    final presetDetail =
         widget.expressivePresetDetail && usesExpressiveWorkout;
+    final compactPresetDetail =
+        presetDetail && widget.compactExpressivePresetLayout;
     final expressiveTokens = usesExpressiveWorkout
         ? theme.extension<AppExpressiveTrainTokens>()!
         : null;
@@ -686,7 +692,7 @@ class _WeightCardState extends State<WeightCard> {
                           ],
                           Flexible(
                             child: Text(
-                              compactPresetDetail
+                              presetDetail
                                   ? strings.presetExerciseSetCount(sets.length)
                                   : strings.weightCardSetsDone(
                                       completedCount,
@@ -729,7 +735,7 @@ class _WeightCardState extends State<WeightCard> {
                           MenuItemButton(
                             autofocus: true,
                             onPressed: () => _handleExerciseMenuAction('swap'),
-                            leadingIcon: compactPresetDetail
+                            leadingIcon: presetDetail
                                 ? const Icon(Icons.swap_horiz)
                                 : null,
                             child: Text(
@@ -740,14 +746,14 @@ class _WeightCardState extends State<WeightCard> {
                         MenuItemButton(
                           autofocus: widget.onSwapExercise == null,
                           onPressed: () => _handleExerciseMenuAction('remove'),
-                          style: compactPresetDetail
+                          style: presetDetail
                               ? ButtonStyle(
                                   foregroundColor: WidgetStatePropertyAll(
                                     theme.colorScheme.error,
                                   ),
                                 )
                               : null,
-                          leadingIcon: compactPresetDetail
+                          leadingIcon: presetDetail
                               ? Icon(
                                   Icons.delete_outline,
                                   color: theme.colorScheme.error,
@@ -761,11 +767,11 @@ class _WeightCardState extends State<WeightCard> {
                         MenuItemButton(
                           onPressed: () =>
                               _handleExerciseMenuAction('changeSet'),
-                          leadingIcon: compactPresetDetail
+                          leadingIcon: presetDetail
                               ? const Icon(Icons.library_add_outlined)
                               : null,
                           child: Text(
-                            compactPresetDetail
+                            presetDetail
                                 ? widget.createChangeSetLabel ??
                                       strings.weightMakeChangeSet
                                 : strings.weightMakeChangeSet,
@@ -864,7 +870,7 @@ class _WeightCardState extends State<WeightCard> {
                 builder: (context, layoutConstraints) {
                   final compactRows = layoutConstraints.maxWidth - 24 < 330;
                   final presetColumnLabels =
-                      compactPresetDetail &&
+                      presetDetail &&
                       !readOnly &&
                       !compactRows &&
                       MediaQuery.textScalerOf(context).scale(1) <= 1.15;
@@ -1712,7 +1718,16 @@ class _WeightCardState extends State<WeightCard> {
         margin: compactPresetDetail
             ? EdgeInsets.zero
             : const EdgeInsets.only(bottom: 16),
-        shape: RoundedRectangleBorder(borderRadius: borderRadius),
+        shape: RoundedRectangleBorder(
+          borderRadius: borderRadius,
+          side: widget.expressivePresetOutlineColor == null
+              ? BorderSide.none
+              : BorderSide(
+                  color: widget.expressivePresetOutlineColor!,
+                  width: 3,
+                  strokeAlign: BorderSide.strokeAlignOutside,
+                ),
+        ),
         color: cardColor,
         child: child,
       ),

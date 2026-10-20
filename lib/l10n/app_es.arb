@@ -1430,6 +1430,7 @@
   "planRenameTitle": "Renombrar plan",
   "planSaveFailed": "No se pudo guardar el plan. La versión anterior no ha cambiado. {error}",
   "planSavePreset": "Guardar preajuste",
+  "planSaveChanges": "Guardar cambios",
   "planStartSession": "Iniciar sesión",
   "planTutorialEditBody": "Úsalo para renombrar el plan, reordenar ejercicios, añadir ejercicios, cambiar movimientos y modificar series.",
   "planTutorialEditTitle": "Editar plan",

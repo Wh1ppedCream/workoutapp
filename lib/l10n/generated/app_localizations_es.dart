@@ -2176,6 +2176,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get planSavePreset => 'Guardar preajuste';
 
   @override
+  String get planSaveChanges => 'Guardar cambios';
+
+  @override
   String get planStartSession => 'Iniciar sesión';
 
   @override

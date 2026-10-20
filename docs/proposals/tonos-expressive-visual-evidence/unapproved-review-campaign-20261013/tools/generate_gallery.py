@@ -42,6 +42,9 @@ APPROVED_REVIEW_GROUPS = {
     "premade plans",
     "premade plan filters",
     "plan-specific flow methods editor",
+    "preset / plan detail",
+    "preset detail overlays",
+    "preset detail actions",
 }
 
 # Closed for this review pass by the user: no implemented content to adapt.
@@ -416,6 +419,9 @@ def main() -> None:
         "selected-muscle-detail-biceps-brachii.svg",
         "selected-muscle-detail-biceps.svg",
         "unmapped-expressive-placeholder-screens.svg",
+        "preset-plan-detail.svg",
+        "preset-detail-overlays.svg",
+        "preset-detail-actions.svg",
     }
     for filename in excluded_contact_sheets:
         (CONTACT_DIR / filename).unlink(missing_ok=True)

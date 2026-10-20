@@ -32,7 +32,6 @@ import '../../theme/widgets/tonos_action_depth.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_action.dart';
 import '../../theme/widgets/tonos_expressive_motion.dart';
-import '../../theme/widgets/tonos_surface.dart';
 import 'session_screen.dart';
 import 'auto_preset_flow_screen.dart';
 
@@ -466,7 +465,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     return tonosWithPrimaryActionDepth(context, action, enabled: true);
   }
 
-  Widget _buildExpressiveExerciseSurface(
+  Widget _buildExpressiveExerciseTheme(
     BuildContext context,
     AppExpressivePlanningTokens planning,
     Widget child,
@@ -478,19 +477,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       primaryContainer: planning.planAccent,
       onPrimaryContainer: planning.planAccentForeground,
     );
-    return TonosSurface(
-      variant: TonosSurfaceVariant.panelRaised,
-      color: planning.planFocalSurface,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(3),
-      borderRadius: planning.supportShape,
-      outlined: true,
-      // Keep this constructor tear-off outside the route-style inventory matcher.
-      // ignore: unnecessary_constructor_name
-      child: Theme.new(
-        data: theme.copyWith(colorScheme: colorScheme),
-        child: child,
-      ),
+    return Theme(
+      data: theme.copyWith(colorScheme: colorScheme),
+      child: child,
     );
   }
 
@@ -500,7 +489,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     Widget child,
   ) {
     if (planning == null) return child;
-    return _buildExpressiveExerciseSurface(context, planning, child);
+    return _buildExpressiveExerciseTheme(context, planning, child);
   }
 
   Widget _buildExpressivePresetSummary(
@@ -662,6 +651,47 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final isNamingPlan =
         _showsOnboardingPlanGuide &&
         _onboardingPlanBuilderStep == _OnboardingPlanBuilderStep.namePlan;
+    final addExerciseFab = KeyedSubtree(
+      key: _addExerciseTutorialKey,
+      child: AddExerciseFab(
+        expressiveWorkoutPresentation: context.usesExpressivePresentation,
+        semanticLabel: planning == null ? null : strings.planAddExercise,
+        onCatalogSelectionChanged: _showsOnboardingPlanGuide ? (_) {} : null,
+        onCatalogExerciseAdded: _showsOnboardingPlanGuide
+            ? () {
+                if (!mounted) return;
+                setState(() {
+                  _onboardingPlanBuilderStep =
+                      _OnboardingPlanBuilderStep.configureWeight;
+                });
+              }
+            : null,
+        onCatalogTutorialSkipped: _showsOnboardingPlanGuide
+            ? _skipOnboardingPlanGuide
+            : null,
+        onCatalogClosed: _showsOnboardingPlanGuide
+            ? _syncOnboardingPlanGuideFocus
+            : null,
+        onWeightPicked: (def) async {
+          final equipment = def.equipmentList
+              .map((equipment) => equipment.name)
+              .join(', ');
+          final we = WeightExercise(
+            name: def.name,
+            equipment: equipment,
+            sets: [ExerciseSet()],
+            changeSets: {},
+          );
+          context.read<PresetSession>().addExercise(
+            we,
+            CardType.weight,
+            defId: def.id,
+          );
+        },
+        // TODO(cardio/stretch): add cardio and stretch creation back
+        // after their plan-editing cards are fixed and updated.
+      ),
+    );
 
     return PopScope<PresetDetailResult>(
       // Disable the system back gesture so we can intercept it
@@ -716,6 +746,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         textInputAction: isNamingPlan
                             ? TextInputAction.next
                             : null,
+                        onChanged: (_) =>
+                            context.read<PresetSession>().refresh(),
                         onSubmitted: isNamingPlan
                             ? (_) => _advanceOnboardingPlanGuide(
                                 _OnboardingPlanBuilderStep.namePlan,
@@ -911,6 +943,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                 expressiveWorkoutPresentation:
                                     context.usesExpressivePresentation,
                                 expressivePresetDetail: planning != null,
+                                compactExpressivePresetLayout: false,
+                                expressivePresetOutlineColor:
+                                    planning?.planFocalSurface,
                                 createChangeSetLabel: planning == null
                                     ? null
                                     : strings.presetCreateChangeSet,
@@ -1032,6 +1067,9 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         expressiveWorkoutPresentation:
                             context.usesExpressivePresentation,
                         expressivePresetDetail: planning != null,
+                        compactExpressivePresetLayout: false,
+                        expressivePresetOutlineColor:
+                            planning?.planFocalSurface,
                         initialCompletedParents:
                             preset.exercises[exerciseIndex] is WeightExercise
                             ? (preset.exercises[exerciseIndex]
@@ -1051,7 +1089,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       );
                       final expressiveExerciseCard = planning == null
                           ? exerciseCard
-                          : _buildExpressiveExerciseSurface(
+                          : _buildExpressiveExerciseTheme(
                               context,
                               planning,
                               TonosExpressivePressResponse(
@@ -1070,88 +1108,95 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     },
                   ),
 
+            floatingActionButtonLocation: planning == null
+                ? null
+                : FloatingActionButtonLocation.endFloat,
             floatingActionButton: _isEditing
-                ? KeyedSubtree(
-                    key: _addExerciseTutorialKey,
-                    child: AddExerciseFab(
-                      expressiveWorkoutPresentation:
-                          context.usesExpressivePresentation,
-                      semanticLabel: planning == null
-                          ? null
-                          : strings.planAddExercise,
-                      onCatalogSelectionChanged: _showsOnboardingPlanGuide
-                          ? (_) {}
-                          : null,
-                      onCatalogExerciseAdded: _showsOnboardingPlanGuide
-                          ? () {
-                              if (!mounted) return;
-                              setState(() {
-                                _onboardingPlanBuilderStep =
-                                    _OnboardingPlanBuilderStep.configureWeight;
-                              });
-                            }
-                          : null,
-                      onCatalogTutorialSkipped: _showsOnboardingPlanGuide
-                          ? _skipOnboardingPlanGuide
-                          : null,
-                      onCatalogClosed: _showsOnboardingPlanGuide
-                          ? _syncOnboardingPlanGuideFocus
-                          : null,
-                      onWeightPicked: (def) async {
-                        final equipment = def.equipmentList
-                            .map((equipment) => equipment.name)
-                            .join(', ');
-                        final we = WeightExercise(
-                          name: def.name,
-                          equipment: equipment,
-                          sets: [ExerciseSet()],
-                          changeSets: {},
-                        );
-                        context.read<PresetSession>().addExercise(
-                          we,
-                          CardType.weight,
-                          defId: def.id,
-                        );
-                      },
-                      // TODO(cardio/stretch): add cardio and stretch creation back
-                      // after their plan-editing cards are fixed and updated.
+                ? planning == null
+                      ? addExerciseFab
+                      : Padding(
+                          padding: EdgeInsets.only(bottom: keyboardInset),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              addExerciseFab,
+                              if (preset.hasChanges) ...[
+                                const SizedBox(height: 12),
+                                KeyedSubtree(
+                                  key: _actionTutorialKey,
+                                  child: FloatingActionButton.extended(
+                                    key: AppTestKeys.planSave,
+                                    heroTag: 'presetSaveChanges',
+                                    tooltip: strings.planSaveChanges,
+                                    onPressed: _savePlan,
+                                    backgroundColor: planning.actionPrimary,
+                                    foregroundColor:
+                                        planning.actionPrimaryForeground,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: planning.rowShape,
+                                    ),
+                                    elevation: 3,
+                                    icon: const Icon(Icons.save_outlined),
+                                    label: Text(strings.planSaveChanges),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                : planning == null
+                ? null
+                : FloatingActionButton.extended(
+                    key: AppTestKeys.planStartSession,
+                    heroTag: 'presetStartWorkout',
+                    tooltip: strings.trainStartWorkout,
+                    onPressed: _startPlanSession,
+                    backgroundColor: planning.actionPrimary,
+                    foregroundColor: planning.actionPrimaryForeground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: planning.rowShape,
                     ),
-                  )
-                : null,
+                    elevation: 3,
+                    icon: const Icon(Icons.play_arrow),
+                    label: Text(strings.trainStartWorkout),
+                  ),
 
-            bottomNavigationBar: SafeArea(
-              minimum: EdgeInsets.only(bottom: keyboardInset),
-              child: Container(
-                decoration: planning == null
-                    ? null
-                    : BoxDecoration(
-                        color: planning.planSupportSurface,
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24),
-                        ),
-                        border: Border(
-                          top: BorderSide(color: planning.outline),
+            bottomNavigationBar: planning != null
+                ? null
+                : SafeArea(
+                    minimum: EdgeInsets.only(bottom: keyboardInset),
+                    child: Container(
+                      decoration: planning == null
+                          ? null
+                          : BoxDecoration(
+                              color: planning.planSupportSurface,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                              border: Border(
+                                top: BorderSide(color: planning.outline),
+                              ),
+                            ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: KeyedSubtree(
+                          key: _actionTutorialKey,
+                          child: _isEditing
+                              ? _buildPrimaryAction(
+                                  key: AppTestKeys.planSave,
+                                  onPressed: _savePlan,
+                                  label: strings.planSavePreset,
+                                )
+                              : _buildPrimaryAction(
+                                  key: AppTestKeys.planStartSession,
+                                  onPressed: _startPlanSession,
+                                  label: strings.planStartSession,
+                                ),
                         ),
                       ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: KeyedSubtree(
-                    key: _actionTutorialKey,
-                    child: _isEditing
-                        ? _buildPrimaryAction(
-                            key: AppTestKeys.planSave,
-                            onPressed: _savePlan,
-                            label: strings.planSavePreset,
-                          )
-                        : _buildPrimaryAction(
-                            key: AppTestKeys.planStartSession,
-                            onPressed: _startPlanSession,
-                            label: strings.planStartSession,
-                          ),
+                    ),
                   ),
-                ),
-              ),
-            ),
           ),
           if (onboardingPlanGuideStep != null)
             InteractiveTutorialOverlay(

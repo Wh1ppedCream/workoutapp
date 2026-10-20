@@ -924,6 +924,7 @@
   "planRenameTitle": "重命名计划",
   "planSaveFailed": "无法保存计划。先前版本未更改。{error}",
   "planSavePreset": "保存预设",
+  "planSaveChanges": "保存更改",
   "planStartSession": "开始训练",
   "planTutorialEditBody": "使用此处重命名计划、调整动作顺序、添加动作、替换动作和更改训练组。",
   "planTutorialEditTitle": "编辑计划",

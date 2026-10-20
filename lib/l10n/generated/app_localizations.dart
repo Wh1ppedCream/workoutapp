@@ -3602,6 +3602,12 @@ abstract class AppLocalizations {
   /// **'Save Preset'**
   String get planSavePreset;
 
+  /// No description provided for @planSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get planSaveChanges;
+
   /// No description provided for @planStartSession.
   ///
   /// In en, this message translates to:

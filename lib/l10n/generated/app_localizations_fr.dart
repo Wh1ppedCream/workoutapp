@@ -2182,6 +2182,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get planSavePreset => 'Enregistrer le plan';
 
   @override
+  String get planSaveChanges => 'Enregistrer les modifications';
+
+  @override
   String get planStartSession => 'Commencer la séance';
 
   @override
@@ -9770,6 +9773,9 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get planSavePreset => 'Enregistrer le plan';
+
+  @override
+  String get planSaveChanges => 'Enregistrer les modifications';
 
   @override
   String get planStartSession => 'Commencer la séance';

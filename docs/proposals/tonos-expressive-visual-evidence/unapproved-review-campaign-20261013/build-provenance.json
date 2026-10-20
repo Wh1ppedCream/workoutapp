@@ -2117,5 +2117,75 @@
     "buildArtifactModifiedLocal": "2026-10-19T22:39:31-04:00",
     "captureMethod": "Reused the already-installed Expressive preview; no rebuild or reinstall. Only in-app preview light/dark selection, navigation, scrolling, and opening edit mode without changing values were used. No session start, save, archive, delete, fixture reset, or database mutation was performed.",
     "sourceTreeProvenanceLimit": "The installed APK matches the retained app-debug.apk artifact and the relevant source file is hashed. The full dirty source snapshot used to build the APK is not available; do not treat HEAD as the exact APK source tree."
+  },
+  "presetSwapExerciseGalleryRefresh20261020": {
+    "capturedAtRangeLocal": "2026-10-20T00:56:07-04:00 through 2026-10-20T01:22:42-04:00 America/Toronto",
+    "page": "Plan/Preset Detail — Swap Exercise sheet only",
+    "capturedScreenshotCount": 4,
+    "refreshedFamilies": {
+      "Plan/Preset Detail — Swap Exercise Sheet": 4
+    },
+    "capturedScreenshotIds": [
+      "preset-swap-sheet-current-light-20261020",
+      "preset-swap-sheet-alternate-light-20261020",
+      "preset-swap-sheet-current-dark-20261020",
+      "preset-swap-sheet-alternate-dark-20261020"
+    ],
+    "captures": [
+      {
+        "id": "preset-swap-sheet-current-light-20261020",
+        "capturedAt": "2026-10-20T00:56:07-04:00",
+        "png": "overlays/preset-detail/light/20261020-swap-sheet-primary-light.png",
+        "pngSha256": "616bf66dd8550323cf231a12d6cb0955d25f817de2107c3cee2102c253cc7140",
+        "pngBytes": 225886,
+        "uiHierarchy": "overlays/preset-detail/light/20261020-swap-sheet-primary-light.xml",
+        "uiSha256": "000feaf098d1992282c7a9920f1f809c2d0fe94f4e443b70e5b20f98ad257137"
+      },
+      {
+        "id": "preset-swap-sheet-alternate-light-20261020",
+        "capturedAt": "2026-10-20T00:56:13-04:00",
+        "png": "overlays/preset-detail/light/20261020-swap-sheet-alternate-light.png",
+        "pngSha256": "48016fb714cf2e495bfefe3e95ef7d0e595796ed3c4a2a99b72efbf9df96eb6f",
+        "pngBytes": 229580,
+        "uiHierarchy": "overlays/preset-detail/light/20261020-swap-sheet-alternate-light.xml",
+        "uiSha256": "76b0a1fd2cd44a7969b2de33774eb01c2f8509e5018cb903ece48f0922f7df64"
+      },
+      {
+        "id": "preset-swap-sheet-current-dark-20261020",
+        "capturedAt": "2026-10-20T01:22:38-04:00",
+        "png": "overlays/preset-detail/dark/20261020-swap-sheet-primary-dark.png",
+        "pngSha256": "5f2d686ca467c0652ebb80867b37b66a3516fa3fd800d37382cfa00a942afa8a",
+        "pngBytes": 215919,
+        "uiHierarchy": "overlays/preset-detail/dark/20261020-swap-sheet-primary-dark.xml",
+        "uiSha256": "000feaf098d1992282c7a9920f1f809c2d0fe94f4e443b70e5b20f98ad257137"
+      },
+      {
+        "id": "preset-swap-sheet-alternate-dark-20261020",
+        "capturedAt": "2026-10-20T01:22:42-04:00",
+        "png": "overlays/preset-detail/dark/20261020-swap-sheet-alternate-dark.png",
+        "pngSha256": "205155c2c1c4908cc33dad72e864858f110cf106901b103faec273f8984a528d",
+        "pngBytes": 219024,
+        "uiHierarchy": "overlays/preset-detail/dark/20261020-swap-sheet-alternate-dark.xml",
+        "uiSha256": "76b0a1fd2cd44a7969b2de33774eb01c2f8509e5018cb903ece48f0922f7df64"
+      }
+    ],
+    "sourceRevision": "89a1463699cdd7c180e832270d900e059ddba2e4",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "Dirty; pre-existing user changes preserved. HEAD is the base revision and does not fully fingerprint the APK source snapshot.",
+    "deviceId": "28021FDH200228",
+    "device": "Google Pixel 7",
+    "deviceResolution": "1080x2400",
+    "package": "com.tonos.expressivepreview",
+    "packageVersionCode": 6,
+    "packageVersionName": "1.0.1",
+    "packageLastUpdateTimeLocal": "2026-10-20 00:50:35",
+    "buildArtifact": "E:/projects/env_test/.build/codex_session_fab_20261020/gradle/app/outputs/flutter-apk/app-debug.apk",
+    "buildArtifactSha256": "7951F20CDAB29A1ADCCA316B7B8A74F54611253A0754C4D2AA8C39184926B12C",
+    "installedBaseApkSha256": "7951F20CDAB29A1ADCCA316B7B8A74F54611253A0754C4D2AA8C39184926B12C",
+    "installedApkMatchesBuildArtifact": true,
+    "buildArtifactBytes": 125259627,
+    "buildArtifactModifiedLocal": "2026-10-20T00:50:10-04:00",
+    "captureMethod": "Used the safe in-app preview brightness control, navigated to Active Review 1, opened edit mode, opened the Swap Exercise sheet, and viewed one alternate carousel candidate. Canceled without confirming a swap. Restored the preview to light mode after the dark captures. No plan, workout, database, or fixture data was changed.",
+    "sourceTreeProvenanceLimit": "The installed APK hash matches the retained safe-rebuild artifact. The source tree was dirty; HEAD is a base revision and the full dirty source snapshot used for the APK is unavailable."
   }
 }

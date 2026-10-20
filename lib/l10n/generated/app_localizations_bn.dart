@@ -2134,6 +2134,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get planSavePreset => 'Preset সংরক্ষণ করুন';
 
   @override
+  String get planSaveChanges => 'পরিবর্তন সংরক্ষণ করুন';
+
+  @override
   String get planStartSession => 'সেশন শুরু করুন';
 
   @override

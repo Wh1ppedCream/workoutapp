@@ -832,6 +832,7 @@
   "planProgression": "Progression du plan",
   "planNoExercises": "Aucun exercice dans ce plan.",
   "planSavePreset": "Enregistrer le plan",
+  "planSaveChanges": "Enregistrer les modifications",
   "planStartSession": "Commencer la séance",
   "commonName": "Nom",
   "commonBack": "Retour",

@@ -2127,6 +2127,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get planSavePreset => 'प्रीसेट सहेजें';
 
   @override
+  String get planSaveChanges => 'बदलाव सहेजें';
+
+  @override
   String get planStartSession => 'सत्र शुरू करें';
 
   @override

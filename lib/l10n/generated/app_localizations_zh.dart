@@ -2010,6 +2010,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get planSavePreset => '保存预设';
 
   @override
+  String get planSaveChanges => '保存更改';
+
+  @override
   String get planStartSession => '开始训练';
 
   @override

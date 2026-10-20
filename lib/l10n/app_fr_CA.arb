@@ -544,6 +544,7 @@
   "planProgression": "Progression du plan",
   "planNoExercises": "Aucun exercice dans ce plan.",
   "planSavePreset": "Enregistrer le plan",
+  "planSaveChanges": "Enregistrer les modifications",
   "planStartSession": "Commencer la séance",
   "workoutDetailTitle": "Détail de l'entraînement",
   "workoutDetailStopEditing": "Arrêter la modification",

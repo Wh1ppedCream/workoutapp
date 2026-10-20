@@ -2154,6 +2154,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get planSavePreset => 'Save Preset';
 
   @override
+  String get planSaveChanges => 'Save Changes';
+
+  @override
   String get planStartSession => 'Start Session';
 
   @override
