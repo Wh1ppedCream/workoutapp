@@ -30,18 +30,25 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
 
   DateTime _startDate = DateTime.now();
   bool _saving = false;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
     final profile = context.read<NutritionProfile>();
     final goal = profile.activeGoal;
+    final expressive = context.usesExpressivePresentation;
 
     _startDate = DateTime(profile.day.year, profile.day.month, profile.day.day);
 
     void set(TextEditingController controller, num? value) {
       if (value == null) return;
-      controller.text = value.toString();
+      controller.text =
+          expressive && value.isFinite && value == value.roundToDouble()
+          ? value.toInt().toString()
+          : value.toString();
     }
 
     set(_kcalCtrl, goal?.kcalTarget);
@@ -73,6 +80,27 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
       initialDate: _startDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (pickerContext, child) {
+        if (!context.usesExpressivePresentation) return child!;
+        final theme = Theme.of(pickerContext);
+        final tokens = AppExpressiveDestinationTokens.forFamily(
+          AppExpressiveDestinationFamily.nutrition,
+          theme.brightness,
+        );
+        return Theme(
+          data: theme.copyWith(
+            datePickerTheme: theme.datePickerTheme.copyWith(
+              backgroundColor: tokens.pageCanvas,
+              headerBackgroundColor: tokens.surfacePrimary,
+              headerForegroundColor: tokens.onSurfacePrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked == null || !mounted) return;
     setState(() {
@@ -281,8 +309,34 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
     final tokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>()!;
     final wideFields =
-        MediaQuery.sizeOf(context).width >= 420 &&
+        MediaQuery.sizeOf(context).width >= 380 &&
         MediaQuery.textScalerOf(context).scale(1) <= 1.2;
+    final macrosSurface = Color.lerp(
+      tokens.surfaceSecondary,
+      tokens.pageCanvas,
+      0.4,
+    )!;
+    final additionalSurface = Color.lerp(
+      tokens.surfaceAccent,
+      tokens.pageCanvas,
+      0.4,
+    )!;
+
+    Widget nutrientField(
+      TextEditingController controller,
+      String label, {
+      bool additional = false,
+      bool integerOnly = false,
+    }) => _numField(
+      context,
+      controller,
+      label: label,
+      integerOnly: integerOnly,
+      sectionSurface: additional ? additionalSurface : macrosSurface,
+      sectionForeground: additional
+          ? tokens.onSurfaceAccent
+          : tokens.onSurfaceSecondary,
+    );
 
     Widget fieldPair(Widget first, Widget second) => wideFields
         ? Row(
@@ -300,24 +354,61 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
       extendBodyBehindAppBar: false,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text(strings.nutritionManualGoalsTitle),
+        title: Text(
+          strings.nutritionManualGoalsTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: tokens.onSurfacePrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         backgroundColor: tokens.surfacePrimary,
         foregroundColor: tokens.onSurfacePrimary,
       ),
-      bottomNavigationBar: SettingsSaveBar(
-        label: _saving ? strings.nutritionSaving : strings.nutritionSaveGoals,
-        onPressed: !canSave || _saving ? null : _saveGoals,
-        cancelLabel: strings.commonCancel,
-        onCancel: _saving ? null : () => Navigator.pop(context, false),
-        saveIcon: _saving
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.save),
-        decorated: true,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            filledButtonTheme: FilledButtonThemeData(
+              style: FilledButton.styleFrom(
+                backgroundColor: tokens.actionPrimary,
+                foregroundColor: tokens.onActionPrimary,
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: context.nutritionTokens.portionShape,
+                ),
+              ),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: tokens.supportingForeground,
+                minimumSize: const Size.fromHeight(50),
+                side: BorderSide(color: tokens.outlineAccent),
+                shape: RoundedRectangleBorder(
+                  borderRadius: context.nutritionTokens.portionShape,
+                ),
+              ),
+            ),
+          ),
+          child: SettingsSaveBar(
+            label: _saving
+                ? strings.nutritionSaving
+                : strings.nutritionSaveGoals,
+            onPressed: !canSave || _saving ? null : _saveGoals,
+            cancelLabel: strings.commonCancel,
+            onCancel: _saving ? null : () => Navigator.pop(context, false),
+            saveIcon: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            decorated: false,
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          ),
+        ),
       ),
       body: SafeArea(
         top: false,
@@ -328,26 +419,40 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
-              _ExpressiveGoalSection(
-                title: strings.nutritionStartDate,
-                color: tokens.surfaceTertiary,
-                foreground: tokens.onSurfaceTertiary,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Material(
-                  color: tokens.surfacePrimary,
-                  borderRadius: BorderRadius.circular(14),
+                  color: tokens.surfaceTertiary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: context.nutritionTokens.sectionShape,
+                    side: BorderSide(
+                      color: tokens.onSurfaceTertiary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
                     onTap: _pickStartDate,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
+                        horizontal: 16,
+                        vertical: 14,
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.date_range,
-                            color: tokens.onSurfacePrimary,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: tokens.onSurfaceTertiary.withValues(
+                                alpha: 0.08,
+                              ),
+                              borderRadius:
+                                  context.nutritionTokens.compactShape,
+                            ),
+                            child: Icon(
+                              Icons.calendar_month_outlined,
+                              size: 20,
+                              color: tokens.onSurfaceTertiary,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -355,10 +460,11 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  strings.nutritionGoalStarts,
-                                  style: Theme.of(context).textTheme.labelLarge
+                                  strings.nutritionStartDate,
+                                  style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
-                                        color: tokens.onSurfacePrimary,
+                                        color: tokens.onSurfaceTertiary
+                                            .withValues(alpha: 0.82),
                                       ),
                                 ),
                                 Text(
@@ -366,7 +472,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                                       .formatMediumDate(_startDate),
                                   style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
-                                        color: tokens.onSurfacePrimary,
+                                        color: tokens.onSurfaceTertiary,
                                         fontWeight: FontWeight.w800,
                                       ),
                                 ),
@@ -375,7 +481,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
                           ),
                           Icon(
                             Icons.chevron_right,
-                            color: tokens.onSurfacePrimary,
+                            color: tokens.onSurfaceTertiary,
                           ),
                         ],
                       ),
@@ -385,66 +491,89 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
               ),
               _ExpressiveGoalSection(
                 title: strings.nutritionCaloriesAndMacros,
-                color: tokens.surfaceSecondary,
+                icon: Icons.restaurant_menu,
+                color: macrosSurface,
                 foreground: tokens.onSurfaceSecondary,
                 helperText: strings.nutritionOptionalTargetsHint,
                 child: Column(
                   children: [
-                    _numField(
-                      context,
+                    nutrientField(
                       _kcalCtrl,
-                      label: strings.nutritionCalories,
+                      strings.nutritionCalories,
                       integerOnly: true,
                     ),
                     const SizedBox(height: 12),
-                    fieldPair(
-                      _numField(
-                        context,
-                        _proteinCtrl,
-                        label: strings.nutritionProtein,
-                      ),
-                      _numField(
-                        context,
-                        _carbCtrl,
-                        label: strings.nutritionCarbs,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    fieldPair(
-                      _numField(context, _fatCtrl, label: strings.nutritionFat),
-                      _numField(
-                        context,
-                        _fiberCtrl,
-                        label: strings.nutritionFiber,
-                      ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final fields = [
+                          nutrientField(_proteinCtrl, strings.nutritionProtein),
+                          nutrientField(_carbCtrl, strings.nutritionCarbs),
+                          nutrientField(_fatCtrl, strings.nutritionFat),
+                        ];
+                        if (!wideFields || constraints.maxWidth < 300) {
+                          return Column(
+                            children: [
+                              for (
+                                var index = 0;
+                                index < fields.length;
+                                index++
+                              ) ...[
+                                if (index > 0) const SizedBox(height: 12),
+                                fields[index],
+                              ],
+                            ],
+                          );
+                        }
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (
+                              var index = 0;
+                              index < fields.length;
+                              index++
+                            ) ...[
+                              if (index > 0) const SizedBox(width: 12),
+                              Expanded(child: fields[index]),
+                            ],
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
               _ExpressiveGoalSection(
                 title: strings.nutritionAdditionalNutrients,
-                color: tokens.surfaceAccent,
+                icon: Icons.science_outlined,
+                color: additionalSurface,
                 foreground: tokens.onSurfaceAccent,
                 child: Column(
                   children: [
                     fieldPair(
-                      _numField(
-                        context,
-                        _sugarCtrl,
-                        label: strings.nutritionSugar,
+                      nutrientField(
+                        _fiberCtrl,
+                        strings.nutritionFiber,
+                        additional: true,
                       ),
-                      _numField(
-                        context,
-                        _satFatCtrl,
-                        label: strings.nutritionSatFat,
+                      nutrientField(
+                        _sugarCtrl,
+                        strings.nutritionSugar,
+                        additional: true,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _numField(
-                      context,
-                      _sodiumCtrl,
-                      label: strings.nutritionSodium,
-                      integerOnly: true,
+                    fieldPair(
+                      nutrientField(
+                        _satFatCtrl,
+                        strings.nutritionSatFat,
+                        additional: true,
+                      ),
+                      nutrientField(
+                        _sodiumCtrl,
+                        strings.nutritionSodium,
+                        additional: true,
+                        integerOnly: true,
+                      ),
                     ),
                   ],
                 ),
@@ -461,35 +590,52 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
     TextEditingController controller, {
     required String label,
     bool integerOnly = false,
+    Color? sectionSurface,
+    Color? sectionForeground,
   }) {
     final tokens = context.usesExpressivePresentation
         ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
         : null;
     final inputShape = BorderRadius.circular(14);
+    final fieldInk = sectionForeground ?? tokens?.supportingForeground;
     final expressiveDecoration = tokens == null
         ? null
         : InputDecoration(
             labelText: label,
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+            hintText: '—',
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,
             ),
             filled: true,
-            fillColor: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.surfaceContainerHighest
-                : Theme.of(context).colorScheme.surface,
-            labelStyle: TextStyle(color: tokens.supportingForeground),
-            floatingLabelStyle: TextStyle(color: tokens.outlineAccent),
+            fillColor: Color.lerp(
+              sectionSurface ?? tokens.pageCanvas,
+              tokens.pageCanvas,
+              Theme.of(context).brightness == Brightness.dark ? 0.58 : 0.85,
+            ),
+            hintStyle: TextStyle(
+              color: fieldInk?.withValues(alpha: 0.6),
+              fontWeight: FontWeight.w400,
+            ),
+            labelStyle: TextStyle(color: fieldInk),
+            floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+              (states) => TextStyle(
+                color: states.contains(WidgetState.error)
+                    ? Theme.of(context).colorScheme.error
+                    : states.contains(WidgetState.focused)
+                    ? tokens.actionPrimary
+                    : fieldInk?.withValues(alpha: 0.82),
+              ),
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: inputShape,
-              borderSide: BorderSide(
-                color: tokens.outlineAccent.withValues(alpha: 0.55),
-              ),
+              borderSide: BorderSide(color: fieldInk!.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: inputShape,
-              borderSide: BorderSide(color: tokens.outlineAccent, width: 2),
+              borderSide: BorderSide(color: tokens.actionPrimary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: inputShape,
@@ -515,7 +661,26 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
           : const TextInputType.numberWithOptions(signed: false, decimal: true),
       style: tokens == null
           ? settingsInputTextStyle(context)
-          : TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          : TextStyle(
+              color: fieldInk,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+      textInputAction: tokens == null
+          ? null
+          : identical(controller, _sodiumCtrl)
+          ? TextInputAction.done
+          : TextInputAction.next,
+      onFieldSubmitted: tokens == null
+          ? null
+          : (_) {
+              final scope = FocusScope.of(context);
+              if (identical(controller, _sodiumCtrl)) {
+                scope.unfocus();
+              } else {
+                scope.nextFocus();
+              }
+            },
       decoration:
           expressiveDecoration ??
           settingsFieldDecoration(context, label: label, isDense: true),
@@ -551,6 +716,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
 class _ExpressiveGoalSection extends StatelessWidget {
   const _ExpressiveGoalSection({
     required this.title,
+    required this.icon,
     required this.color,
     required this.foreground,
     required this.child,
@@ -558,6 +724,7 @@ class _ExpressiveGoalSection extends StatelessWidget {
   });
 
   final String title;
+  final IconData icon;
   final Color color;
   final Color foreground;
   final Widget child;
@@ -575,15 +742,30 @@ class _ExpressiveGoalSection extends StatelessWidget {
         bottomRight: Radius.circular(24),
         bottomLeft: Radius.circular(14),
       ),
-      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      border: Border.all(color: foreground.withValues(alpha: 0.18)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall
-              ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: foreground.withValues(alpha: 0.08),
+                borderRadius: context.nutritionTokens.compactShape,
+              ),
+              child: Icon(icon, size: 20, color: foreground),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
         ),
         if (helperText != null) ...[
           const SizedBox(height: 4),

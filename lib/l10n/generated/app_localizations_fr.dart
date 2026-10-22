@@ -10,6 +10,99 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get onboardingNutritionReviewNotice =>
+      'Aperçu uniquement : ces préférences et estimations sont à l’essai. Vos objectifs nutritionnels enregistrés ne sont pas modifiés.';
+
+  @override
+  String get onboardingExampleDailyBudget => 'Budget quotidien d’exemple';
+
+  @override
+  String get onboardingExampleEndDate => 'Date de fin d’exemple';
+
+  @override
+  String get onboardingChooseOptionHint =>
+      'Choisissez une option pour continuer.';
+
+  @override
+  String get onboardingNutritionSetupLaterBody =>
+      'Configurez la nutrition plus tard dans Nutrition.';
+
+  @override
+  String get onboardingWorkoutSetupTitle => 'Configuration de l’entraînement';
+
+  @override
+  String get onboardingEditEquipment => 'Modifier l’équipement';
+
+  @override
+  String get onboardingShowLessEquipment => 'Afficher moins';
+
+  @override
+  String onboardingShowAllEquipment(int count) {
+    return 'Tout afficher ($count)';
+  }
+
+  @override
+  String get onboardingManualPlanShortTitle => 'Créer manuellement';
+
+  @override
+  String get onboardingManualPlanShortBody =>
+      'Créez un plan vierge avec vos exercices.';
+
+  @override
+  String get onboardingPremadePlanShortTitle =>
+      'Parcourir les plans prédéfinis';
+
+  @override
+  String get onboardingPremadePlanShortBody =>
+      'Partez d’un entraînement prêt à l’emploi.';
+
+  @override
+  String get onboardingGeneratePlanShortTitle => 'Générer un plan';
+
+  @override
+  String get onboardingGeneratePlanShortBody =>
+      'Créez des entraînements adaptés à vos objectifs et à votre équipement.';
+
+  @override
+  String get onboardingSkipPlanShortBody =>
+      'Ajoutez des plans plus tard depuis Entraînement.';
+
+  @override
+  String get onboardingGymCustomShortTitle => 'Espace personnalisé';
+
+  @override
+  String get onboardingGymCustomShortBody =>
+      'Choisissez l’équipement disponible.';
+
+  @override
+  String get onboardingGymSkipShortBody =>
+      'Utilisez Général et configurez l’équipement plus tard.';
+
+  @override
+  String get onboardingGymCommercialShortBody =>
+      'Partez de tout l’équipement, puis ajustez.';
+
+  @override
+  String get onboardingGymHomeShortBody =>
+      'Poids libres, bandes, banc et poids du corps.';
+
+  @override
+  String get onboardingGymCalisthenicsShortBody =>
+      'Barres, anneaux, bandes et poids du corps.';
+
+  @override
+  String get onboardingGymPowerliftingShortBody =>
+      'Barre, disques, rack et banc.';
+
+  @override
+  String get onboardingGymFreeWeightsShortBody =>
+      'Haltères, kettlebells, disques et banc.';
+
+  @override
+  String get onboardingPersonalDetailsSkipped =>
+      'Renseignements personnels ignorés';
+
+  @override
   String get dashboardEditorHelp =>
       'Faites glisser les widgets visibles pour les réorganiser. Touchez l’œil pour les masquer.';
 
@@ -4476,10 +4569,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nutritionOptionalTargetsHint =>
-      'Toutes les cibles nutritives sont facultatives. Laissez un champ vide pour ne pas le définir.';
+      'Cibles facultatives. Laissez vide si non définies.';
 
   @override
   String get nutritionGoalsMenu => 'Objectifs nutritionnels';
+
+  @override
+  String get nutritionEditGoals => 'Modifier les objectifs nutritionnels';
+
+  @override
+  String get nutritionNoAdditionalTargets =>
+      'Aucune cible supplémentaire définie';
 
   @override
   String get measurementWeight => 'Poids';
@@ -7581,6 +7681,99 @@ class AppLocalizationsFr extends AppLocalizations {
 /// The translations for French, as used in Canada (`fr_CA`).
 class AppLocalizationsFrCa extends AppLocalizationsFr {
   AppLocalizationsFrCa() : super('fr_CA');
+
+  @override
+  String get onboardingNutritionReviewNotice =>
+      'Aperçu uniquement : ces préférences et estimations sont à l’essai. Vos objectifs nutritionnels enregistrés ne sont pas modifiés.';
+
+  @override
+  String get onboardingExampleDailyBudget => 'Budget quotidien d’exemple';
+
+  @override
+  String get onboardingExampleEndDate => 'Date de fin d’exemple';
+
+  @override
+  String get onboardingChooseOptionHint =>
+      'Choisissez une option pour continuer.';
+
+  @override
+  String get onboardingNutritionSetupLaterBody =>
+      'Configurez la nutrition plus tard dans Nutrition.';
+
+  @override
+  String get onboardingWorkoutSetupTitle => 'Configuration de l’entraînement';
+
+  @override
+  String get onboardingEditEquipment => 'Modifier l’équipement';
+
+  @override
+  String get onboardingShowLessEquipment => 'Afficher moins';
+
+  @override
+  String onboardingShowAllEquipment(int count) {
+    return 'Tout afficher ($count)';
+  }
+
+  @override
+  String get onboardingManualPlanShortTitle => 'Créer manuellement';
+
+  @override
+  String get onboardingManualPlanShortBody =>
+      'Créez un plan vierge avec vos exercices.';
+
+  @override
+  String get onboardingPremadePlanShortTitle =>
+      'Parcourir les plans prédéfinis';
+
+  @override
+  String get onboardingPremadePlanShortBody =>
+      'Partez d’un entraînement prêt à l’emploi.';
+
+  @override
+  String get onboardingGeneratePlanShortTitle => 'Générer un plan';
+
+  @override
+  String get onboardingGeneratePlanShortBody =>
+      'Créez des entraînements adaptés à vos objectifs et à votre équipement.';
+
+  @override
+  String get onboardingSkipPlanShortBody =>
+      'Ajoutez des plans plus tard depuis Entraînement.';
+
+  @override
+  String get onboardingGymCustomShortTitle => 'Espace personnalisé';
+
+  @override
+  String get onboardingGymCustomShortBody =>
+      'Choisissez l’équipement disponible.';
+
+  @override
+  String get onboardingGymSkipShortBody =>
+      'Utilisez Général et configurez l’équipement plus tard.';
+
+  @override
+  String get onboardingGymCommercialShortBody =>
+      'Partez de tout l’équipement, puis ajustez.';
+
+  @override
+  String get onboardingGymHomeShortBody =>
+      'Poids libres, bandes, banc et poids du corps.';
+
+  @override
+  String get onboardingGymCalisthenicsShortBody =>
+      'Barres, anneaux, bandes et poids du corps.';
+
+  @override
+  String get onboardingGymPowerliftingShortBody =>
+      'Barre, disques, rack et banc.';
+
+  @override
+  String get onboardingGymFreeWeightsShortBody =>
+      'Haltères, kettlebells, disques et banc.';
+
+  @override
+  String get onboardingPersonalDetailsSkipped =>
+      'Renseignements personnels ignorés';
 
   @override
   String get dashboardEditorHelp =>
@@ -12046,10 +12239,17 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
 
   @override
   String get nutritionOptionalTargetsHint =>
-      'Toutes les cibles nutritionnelles sont facultatives. Laissez un champ vide pour le laisser non défini.';
+      'Cibles facultatives. Laissez vide si non définies.';
 
   @override
   String get nutritionGoalsMenu => 'Objectifs nutritionnels';
+
+  @override
+  String get nutritionEditGoals => 'Modifier les objectifs nutritionnels';
+
+  @override
+  String get nutritionNoAdditionalTargets =>
+      'Aucune cible supplémentaire définie';
 
   @override
   String get measurementWeight => 'Poids';

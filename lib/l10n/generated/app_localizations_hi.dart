@@ -10,6 +10,94 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get onboardingNutritionReviewNotice =>
+      'केवल प्रीव्यू: इन प्राथमिकताओं और अनुमानों से सेटअप आज़माएँ। आपके सहेजे हुए पोषण लक्ष्य नहीं बदलेंगे।';
+
+  @override
+  String get onboardingExampleDailyBudget => 'दैनिक बजट का उदाहरण';
+
+  @override
+  String get onboardingExampleEndDate => 'समाप्ति तिथि का उदाहरण';
+
+  @override
+  String get onboardingChooseOptionHint => 'जारी रखने के लिए एक विकल्प चुनें।';
+
+  @override
+  String get onboardingNutritionSetupLaterBody =>
+      'बाद में पोषण टैब से पोषण सेट अप करें।';
+
+  @override
+  String get onboardingWorkoutSetupTitle => 'वर्कआउट सेटअप';
+
+  @override
+  String get onboardingEditEquipment => 'उपकरण बदलें';
+
+  @override
+  String get onboardingShowLessEquipment => 'कम दिखाएँ';
+
+  @override
+  String onboardingShowAllEquipment(int count) {
+    return 'सभी $count दिखाएँ';
+  }
+
+  @override
+  String get onboardingManualPlanShortTitle => 'खुद बनाएँ';
+
+  @override
+  String get onboardingManualPlanShortBody =>
+      'अपने व्यायामों के साथ एक नई योजना बनाएँ।';
+
+  @override
+  String get onboardingPremadePlanShortTitle => 'तैयार योजनाएँ देखें';
+
+  @override
+  String get onboardingPremadePlanShortBody => 'तैयार वर्कआउट से शुरू करें।';
+
+  @override
+  String get onboardingGeneratePlanShortTitle => 'योजना जनरेट करें';
+
+  @override
+  String get onboardingGeneratePlanShortBody =>
+      'अपने लक्ष्यों और उपकरणों के अनुसार वर्कआउट बनाएँ।';
+
+  @override
+  String get onboardingSkipPlanShortBody =>
+      'बाद में प्रशिक्षण टैब से योजनाएँ जोड़ें।';
+
+  @override
+  String get onboardingGymCustomShortTitle => 'कस्टम जगह';
+
+  @override
+  String get onboardingGymCustomShortBody => 'अपने पास उपलब्ध उपकरण चुनें।';
+
+  @override
+  String get onboardingGymSkipShortBody =>
+      'सामान्य प्रोफ़ाइल का उपयोग करें, उपकरण बाद में सेट करें।';
+
+  @override
+  String get onboardingGymCommercialShortBody =>
+      'सभी उपकरणों से शुरू करें, फिर बदलें।';
+
+  @override
+  String get onboardingGymHomeShortBody =>
+      'फ्री वेट, बैंड, बेंच और शरीर का वज़न।';
+
+  @override
+  String get onboardingGymCalisthenicsShortBody =>
+      'बार, रिंग, बैंड और शरीर का वज़न।';
+
+  @override
+  String get onboardingGymPowerliftingShortBody =>
+      'बारबेल, प्लेट, रैक और बेंच।';
+
+  @override
+  String get onboardingGymFreeWeightsShortBody =>
+      'डम्बल, केटलबेल, प्लेट और बेंच।';
+
+  @override
+  String get onboardingPersonalDetailsSkipped => 'व्यक्तिगत जानकारी छोड़ी गई';
+
+  @override
   String get dashboardEditorHelp =>
       'दिख रहे विजेट का क्रम बदलने के लिए खींचें। छिपाने के लिए आँख पर टैप करें।';
 
@@ -4375,10 +4463,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get nutritionOptionalTargetsHint =>
-      'सभी पोषक लक्ष्य वैकल्पिक हैं। लक्ष्य खाली रखने के लिए फ़ील्ड खाली छोड़ें।';
+      'सभी लक्ष्य वैकल्पिक हैं। तय न हों तो खाली छोड़ें।';
 
   @override
   String get nutritionGoalsMenu => 'पोषण लक्ष्य';
+
+  @override
+  String get nutritionEditGoals => 'पोषण लक्ष्य बदलें';
+
+  @override
+  String get nutritionNoAdditionalTargets =>
+      'अतिरिक्त लक्ष्य तय नहीं किए गए हैं';
 
   @override
   String get measurementWeight => 'वजन';

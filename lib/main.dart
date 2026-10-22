@@ -492,14 +492,12 @@ class MyApp extends StatelessWidget {
                 ),
               );
             },
-            home: preview != null
-                ? const MainScreen()
-                : !onboardingConf.initialized
+            home: !onboardingConf.initialized
                 ? const _StartupGate()
-                : kDebugMode && _compileTimeThemeLab
+                : preview == null && kDebugMode && _compileTimeThemeLab
                 ? const ThemeLabPage()
                 : onboardingConf.showOnboarding
-                ? const OnboardingFlow()
+                ? OnboardingFlow(reviewMode: preview != null)
                 : const MainScreen(),
             routes: {
               '/main': (_) => const MainScreen(),

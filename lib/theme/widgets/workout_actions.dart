@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../expressive_planning_tokens.dart';
 import '../theme_extensions.dart';
 import '../tokens/app_expressive_train_tokens.dart';
 import 'tonos_action_depth.dart';
@@ -54,10 +55,15 @@ class WorkoutMatchBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = context.semanticColors.swapMatch;
     final surfaces = context.surfaceTokens;
+    final planning = AppExpressivePlanningTokens.maybeOf(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: planning == null
+          ? const EdgeInsets.symmetric(horizontal: 7, vertical: 3)
+          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: surfaces.swapMatchFill),
+        color:
+            planning?.actionSecondary ??
+            accent.withValues(alpha: surfaces.swapMatchFill),
         borderRadius: context.shapeTokens.pill,
         border: Border.all(
           color: accent.withValues(alpha: surfaces.swapMatchBorder),
@@ -66,9 +72,9 @@ class WorkoutMatchBadge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: accent,
-          fontSize: 10,
-          height: 1,
+          color: planning?.actionSecondaryForeground ?? accent,
+          fontSize: planning == null ? 10 : 11,
+          height: planning == null ? 1 : 1.1,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -117,8 +123,12 @@ class WorkoutEquipmentFilter extends StatelessWidget {
     final filterSecondary = usesInkRecipe
         ? tonosSecondaryForegroundForSurface(context, filterSurface)
         : theme.colorScheme.onSurfaceVariant;
+    final expressive = context.usesExpressivePresentation;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: expressive ? 4 : 8,
+      ),
       decoration: BoxDecoration(
         color: filterSurface,
         borderRadius: context.shapeTokens.card,
@@ -134,7 +144,7 @@ class WorkoutEquipmentFilter extends StatelessWidget {
             child: Text(
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: expressive ? FontWeight.w600 : FontWeight.w700,
                 color: enabled ? filterForeground : filterSecondary,
               ),
             ),

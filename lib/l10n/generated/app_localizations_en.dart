@@ -10,6 +10,94 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get onboardingNutritionReviewNotice =>
+      'Preview only: these preferences and estimates are for trying the flow. Your saved nutrition targets are unchanged.';
+
+  @override
+  String get onboardingExampleDailyBudget => 'Example daily budget';
+
+  @override
+  String get onboardingExampleEndDate => 'Example end date';
+
+  @override
+  String get onboardingChooseOptionHint => 'Choose an option to continue.';
+
+  @override
+  String get onboardingNutritionSetupLaterBody =>
+      'Set up nutrition later from Nutrition.';
+
+  @override
+  String get onboardingWorkoutSetupTitle => 'Workout setup';
+
+  @override
+  String get onboardingEditEquipment => 'Edit equipment';
+
+  @override
+  String get onboardingShowLessEquipment => 'Show less';
+
+  @override
+  String onboardingShowAllEquipment(int count) {
+    return 'Show all $count';
+  }
+
+  @override
+  String get onboardingManualPlanShortTitle => 'Create manually';
+
+  @override
+  String get onboardingManualPlanShortBody =>
+      'Build a blank plan with your own exercises.';
+
+  @override
+  String get onboardingPremadePlanShortTitle => 'Browse premade plans';
+
+  @override
+  String get onboardingPremadePlanShortBody =>
+      'Start with a ready-made workout.';
+
+  @override
+  String get onboardingGeneratePlanShortTitle => 'Generate a plan';
+
+  @override
+  String get onboardingGeneratePlanShortBody =>
+      'Create workouts for your goals and equipment.';
+
+  @override
+  String get onboardingSkipPlanShortBody => 'Add plans later from Train.';
+
+  @override
+  String get onboardingGymCustomShortTitle => 'Custom space';
+
+  @override
+  String get onboardingGymCustomShortBody => 'Choose the equipment you have.';
+
+  @override
+  String get onboardingGymSkipShortBody =>
+      'Use General and set up equipment later.';
+
+  @override
+  String get onboardingGymCommercialShortBody =>
+      'Start with all equipment, then adjust.';
+
+  @override
+  String get onboardingGymHomeShortBody =>
+      'Free weights, bands, a bench, and bodyweight.';
+
+  @override
+  String get onboardingGymCalisthenicsShortBody =>
+      'Bars, rings, bands, and bodyweight.';
+
+  @override
+  String get onboardingGymPowerliftingShortBody =>
+      'Barbell, plates, rack, and bench.';
+
+  @override
+  String get onboardingGymFreeWeightsShortBody =>
+      'Dumbbells, kettlebells, plates, and a bench.';
+
+  @override
+  String get onboardingPersonalDetailsSkipped => 'Personal details skipped';
+
+  @override
   String get dashboardEditorHelp =>
       'Drag visible widgets to reorder. Tap the eye to hide.';
 
@@ -4395,10 +4483,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutritionOptionalTargetsHint =>
-      'All nutrient targets are optional. Leave a field blank to keep it unset.';
+      'All targets are optional. Leave blank if unset.';
 
   @override
   String get nutritionGoalsMenu => 'Nutrition Goals';
+
+  @override
+  String get nutritionEditGoals => 'Edit nutrition goals';
+
+  @override
+  String get nutritionNoAdditionalTargets => 'No additional targets set';
 
   @override
   String get measurementWeight => 'Weight';

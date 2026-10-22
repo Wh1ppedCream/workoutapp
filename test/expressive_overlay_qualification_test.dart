@@ -887,6 +887,7 @@ class _PreviewHarness {
     bool reducedMotion = false,
   }) async {
     SharedPreferences.setMockInitialValues({
+      'onboarding_completed': true,
       for (final tutorialId in TutorialIds.all)
         'guided_tutorial_completed.$tutorialId': true,
     });

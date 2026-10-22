@@ -25,6 +25,9 @@ COVERAGE_CSV = CAMPAIGN / "coverage-matrix.csv"
 # All Expressive detail callers now resolve to the approved shared sheet.
 # The screenshot manifest and local PNG/XML evidence remain preserved.
 APPROVED_REVIEW_GROUPS = {
+    "nutrition goals",
+    "nutrition goals and records",
+    "onboarding",
     "dashboard",
     "dashboard configuration",
     "train2",
@@ -45,6 +48,10 @@ APPROVED_REVIEW_GROUPS = {
     "preset / plan detail",
     "preset detail overlays",
     "preset detail actions",
+    "plan/preset detail — swap exercise sheet",
+    "today's records",
+    "today’s records",
+    "calendar records",
 }
 
 # Closed for this review pass by the user: no implemented content to adapt.
@@ -61,11 +68,30 @@ EXCLUDED_SCREENSHOT_IDS = {
     "05-premade-equipment-filter-off-light-campaign",
     "05-premade-expanded-light",
     "05-premade-two-hour-dark-second-check",
+    # These ten nutrition screenshots were replaced by the current 2026-10-20
+    # captures; keep the original records and source files in the archive.
+    "unmapped-todays-records-light-top",
+    "unmapped-todays-records-light-lower",
+    "unmapped-todays-records-dark-top",
+    "unmapped-todays-records-dark-lower",
+    "unmapped-nutrition-settings-light",
+    "unmapped-nutrition-settings-dark",
+    "unmapped-manual-goals-light-top",
+    "unmapped-manual-goals-light-lower",
+    "unmapped-manual-goals-dark-top",
+    "unmapped-manual-goals-dark-lower",
 }
 
 
 def excluded_from_unapproved_gallery(item: dict) -> bool:
     if item.get("id") in EXCLUDED_SCREENSHOT_IDS:
+        return True
+    # Preserve the historical Today's Records aliases in the archive filter.
+    if str(item.get("id", "")).startswith((
+        "nutrition-todays-records-",
+        "unmapped-todays-records-",
+        "alternate-nutrition-todays-records-",
+    )):
         return True
     group = group_of(item).strip().casefold()
     if group in APPROVED_REVIEW_GROUPS or group in DEFERRED_REVIEW_GROUPS:
@@ -116,7 +142,10 @@ def slug(raw: str) -> str:
 
 
 def group_of(record: dict) -> str:
-    return value(record, "group", "page", "route", default="Unmapped")
+    group = value(record, "group", "page", "route", default="Unmapped")
+    # The active group now contains only the two goals pages. Keep the original
+    # capture-time group name unchanged in the source manifest.
+    return "Nutrition Goals" if group == "Nutrition Goals and Records" else group
 
 
 def theme_of(record: dict) -> str:
@@ -284,7 +313,16 @@ def render_gallery(manifest: dict, records: list[dict], coverage: list[dict]) ->
     toc = "".join(
         f'<a href="#{html.escape(slug(group), quote=True)}">{html.escape(group)}</a>'
         for group in sorted(grouped, key=str.casefold)
-    ) or '<span class="muted">No screenshots captured yet.</span>'
+    ) or '<span class="muted">No pending page screenshots.</span>'
+    if not sections:
+        sections.append(
+            '<section class="coverage-panel" id="page-review-complete">'
+            '<h2>No pending page screenshots</h2>'
+            '<p>Approved page screenshots remain archived. Current page approval status and '
+            'shared/caller-specific interaction reviews are recorded in '
+            '<a href="navigation-index.md#related-shared-states">the navigation index</a>.</p><p>'
+            'This does not establish technical or release qualification.</p></section>'
+        )
     campaign = manifest.get("campaign") or {}
     metadata = " · ".join(
         f"{html.escape(str(key))}: {html.escape(str(val))}" for key, val in campaign.items()
@@ -393,6 +431,8 @@ def main() -> None:
     # Remove generated sheets for approved, superseded, or deferred review groups.
     # Keep the original PNG/XML captures and manifest entries as local evidence.
     excluded_contact_sheets = {
+        "nutrition-goals.svg",
+        "onboarding.svg",
         "dashboard.svg",
         "dashboard-configuration.svg",
         "train2.svg",
@@ -422,14 +462,18 @@ def main() -> None:
         "preset-plan-detail.svg",
         "preset-detail-overlays.svg",
         "preset-detail-actions.svg",
+        "plan-preset-detail-swap-exercise-sheet.svg",
+        "unmapped-expressive-nutrition-routes.svg",
+        "nutrition-goals-and-records.svg",
     }
     for filename in excluded_contact_sheets:
         (CONTACT_DIR / filename).unlink(missing_ok=True)
     GALLERY.write_text(render_gallery(manifest, records, coverage), encoding="utf-8")
     matrix_count = write_coverage_matrix(coverage, records)
+    (CONTACT_DIR / "overview.svg").unlink(missing_ok=True)
     if not grouped:
         (CONTACT_DIR / "overview.svg").write_text(
-            svg_contact_sheet("No screenshots captured", []), encoding="utf-8"
+            svg_contact_sheet("No pending page screenshots", []), encoding="utf-8"
         )
     else:
         for group, items in grouped.items():

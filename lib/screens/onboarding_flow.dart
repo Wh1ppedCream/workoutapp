@@ -33,11 +33,38 @@ import 'exercise/preset_generation_qa.dart';
 
 InputDecoration _onboardingInputDecoration(
   BuildContext context, {
-  required String label,
+  required String? label,
   IconData? icon,
   String? hint,
   String? suffixText,
 }) {
+  final expressive = AppExpressivePlanningTokens.maybeOf(context);
+  if (expressive != null) {
+    final border = OutlineInputBorder(
+      borderRadius: context.tutorialTokens.inputShape,
+      borderSide: BorderSide(color: expressive.outline.withValues(alpha: 0.4)),
+    );
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      suffixText: suffixText,
+      prefixIcon: icon == null ? null : Icon(icon),
+      prefixIconColor: expressive.planSupportForeground,
+      labelStyle: TextStyle(color: expressive.planSupportForeground),
+      filled: true,
+      fillColor: Color.lerp(
+        expressive.planSupportSurface,
+        expressive.pageCanvas,
+        0.65,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: border,
+      enabledBorder: border,
+      focusedBorder: border.copyWith(
+        borderSide: BorderSide(color: expressive.actionPrimary, width: 2),
+      ),
+    );
+  }
   return InputDecoration(
     labelText: label,
     hintText: hint,
@@ -50,7 +77,11 @@ InputDecoration _onboardingInputDecoration(
 /// Initial setup flow for basic user details plus optional workout and
 /// nutrition personalization.
 class OnboardingFlow extends StatefulWidget {
-  const OnboardingFlow({super.key});
+  /// Exposes the paused setup pages in the isolated review app.
+  /// Nutrition goal controls remain previews rather than persisted targets.
+  final bool reviewMode;
+
+  const OnboardingFlow({super.key, this.reviewMode = false});
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
@@ -216,6 +247,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _isGymEquipmentLoading = true;
   bool _gymEquipmentLoadFailed = false;
   bool _isFinishing = false;
+  bool _showAllEquipment = false;
   String? _gender;
   DateTime? _dob;
   bool _weighedHeavy = false;
@@ -243,12 +275,12 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   final DateTime _projectedEndDate = DateTime.now().add(
     const Duration(days: 30),
   );
-  double _weeklyRateLbs = 0.7;
   double _weeklyRatePct = 0.5;
-  double _monthlyRateLbs = 2.8;
-  double _monthlyRatePct = 2.0;
+  double get _weeklyRateLbs => _goalWeightValue * _weeklyRatePct / 100;
+  double get _monthlyRateLbs => _weeklyRateLbs * 4;
+  double get _monthlyRatePct => _weeklyRatePct * 4;
 
-  bool get _nutritionOnboardingEnabled => false;
+  bool get _nutritionOnboardingEnabled => widget.reviewMode;
 
   AppLocalizations get _strings => AppLocalizations.of(context);
 
@@ -256,6 +288,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       _useExerciseData &&
       _workoutPlanSetupOption != _WorkoutPlanSetupOption.skip &&
       _onboardingPlanIds.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _useNutritionData = widget.reviewMode;
+    _useExerciseData = widget.reviewMode;
+  }
 
   @override
   void didChangeDependencies() {
@@ -557,6 +596,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     setState(() {
       _selectedGymSpace = template;
+      _showAllEquipment = false;
       _gymProfileNameController.text = _gymSpaceDefaultProfileName(template);
       _selectedGymEquipmentNames = Set<String>.from(equipmentNames);
     });
@@ -754,6 +794,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         builder: (_) => PremadePlansPage(
           profileId: profileId,
           onboardingMode: true,
+          initiallyMatchProfileEquipment: !widget.reviewMode,
           onPlanAdded: () {},
         ),
       ),
@@ -917,9 +958,75 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ? lastPageIndex
         : _currentPage;
     final canAdvance = _canAdvance(pages[safePage]);
+    final actionLabel = _isFinishing
+        ? strings.onboardingFinishing
+        : safePage == lastPageIndex
+        ? strings.onboardingFinishSetup
+        : strings.onboardingNext;
+    final VoidCallback? onAdvance = canAdvance && !_isFinishing
+        ? () {
+            _nextAction();
+          }
+        : null;
+    final nextButton = SizedBox(
+      width: double.infinity,
+      child: FilledButton(
+        style: expressiveTokens == null
+            ? null
+            : FilledButton.styleFrom(
+                backgroundColor: expressiveTokens.actionPrimary,
+                foregroundColor: expressiveTokens.actionPrimaryForeground,
+                minimumSize: const Size.fromHeight(56),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: const StadiumBorder(),
+                textStyle: theme.textTheme.titleMedium?.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+        onPressed: onAdvance,
+        child: Text(actionLabel),
+      ),
+    );
 
     return Scaffold(
       backgroundColor: expressiveTokens?.pageCanvas ?? scheme.surface,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton:
+          expressiveTokens == null || safePage != lastPageIndex
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'onboardingAdvance',
+              tooltip: actionLabel,
+              onPressed: onAdvance,
+              backgroundColor: canAdvance
+                  ? expressiveTokens.actionPrimary
+                  : Color.alphaBlend(
+                      scheme.onSurface.withValues(alpha: 0.12),
+                      expressiveTokens.pageCanvas,
+                    ),
+              foregroundColor: canAdvance
+                  ? expressiveTokens.actionPrimaryForeground
+                  : scheme.onSurface.withValues(alpha: 0.38),
+              shape: RoundedRectangleBorder(
+                borderRadius: expressiveTokens.rowShape,
+              ),
+              elevation: 3,
+              disabledElevation: 0,
+              icon: _isFinishing
+                  ? SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: expressiveTokens.actionPrimaryForeground,
+                      ),
+                    )
+                  : const Icon(Icons.check),
+              label: Text(actionLabel),
+            ),
       body: SafeArea(
         child: Column(
           children: [
@@ -930,61 +1037,81 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 pageCount: pages.length,
                 title: pages[safePage].label,
                 onBack: safePage == 0 ? null : _previousAction,
-                onSkip: () {
-                  _skipOrFinish();
-                },
+                onSkip:
+                    expressiveTokens != null &&
+                        (safePage == lastPageIndex || _isFinishing)
+                    ? null
+                    : () {
+                        _skipOrFinish();
+                      },
                 skipLabel: safePage == lastPageIndex
                     ? strings.onboardingFinish
                     : strings.onboardingSkip,
               ),
             ),
             Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemCount: pages.length,
-                itemBuilder: (_, index) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                    child: pages[index].builder(),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
-              child: Column(
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  _PageDots(count: pages.length, activeIndex: safePage),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      style: expressiveTokens == null
-                          ? null
-                          : FilledButton.styleFrom(
-                              backgroundColor: expressiveTokens.actionPrimary,
-                              foregroundColor:
-                                  expressiveTokens.actionPrimaryForeground,
+                  PageView.builder(
+                    controller: _controller,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (index) =>
+                        setState(() => _currentPage = index),
+                    itemCount: pages.length,
+                    itemBuilder: (_, index) {
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          18,
+                          8,
+                          18,
+                          expressiveTokens != null && index != lastPageIndex
+                              ? 4
+                              : 12,
+                        ),
+                        child: pages[index].builder(),
+                      );
+                    },
+                  ),
+                  if (expressiveTokens != null && safePage != lastPageIndex)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        color: expressiveTokens.pageCanvas,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(36),
+                          ),
+                          side: BorderSide(
+                            color: expressiveTokens.outline.withValues(
+                              alpha: 0.8,
                             ),
-                      onPressed: canAdvance && !_isFinishing
-                          ? () {
-                              _nextAction();
-                            }
-                          : null,
-                      child: Text(
-                        _isFinishing
-                            ? strings.onboardingFinishing
-                            : safePage == lastPageIndex
-                            ? strings.onboardingFinishSetup
-                            : strings.onboardingNext,
+                            width: 1.5,
+                          ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 4),
+                          child: nextButton,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
+            if (expressiveTokens == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+                child: Column(
+                  children: [
+                    _PageDots(count: pages.length, activeIndex: safePage),
+                    const SizedBox(height: 14),
+                    nextButton,
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -996,6 +1123,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     final language = context.watch<LocalePreferenceProvider>().preference;
     final theme = Theme.of(context);
     final neo = context.usesNeoPresentation;
+    final expressive = context.usesExpressivePresentation;
     final surfaces = context.surfaceTokens;
     final cardForeground = neo
         ? tonosForegroundForSurface(context, surfaces.settingsSection)
@@ -1019,13 +1147,19 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         DropdownButtonFormField<AppLanguagePreference>(
           initialValue: language,
           isExpanded: true,
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.language_outlined),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
-          ),
+          decoration: expressive
+              ? _onboardingInputDecoration(
+                  context,
+                  label: null,
+                  icon: Icons.language_outlined,
+                )
+              : InputDecoration(
+                  prefixIcon: const Icon(Icons.language_outlined),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
           items: AppLanguagePreference.values
               .map(
                 (preference) => DropdownMenuItem(
@@ -1165,6 +1299,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildUsageIntentPage() {
     final strings = _strings;
+    final expressive = context.usesExpressivePresentation;
     return _OnboardingCard(
       icon: Icons.tune,
       title: strings.onboardingFocusTitle,
@@ -1172,9 +1307,15 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       children: [
         _IntentTile(
           icon: Icons.restaurant_menu,
-          title: strings.onboardingNutritionDataTitle,
-          body: strings.onboardingNutritionDataPausedBody,
-          value: false,
+          title: expressive
+              ? strings.onboardingIncludedNutrition
+              : strings.onboardingNutritionDataTitle,
+          body: _nutritionOnboardingEnabled
+              ? strings.onboardingNutritionFeatureBody
+              : expressive
+              ? strings.onboardingNutritionSetupLaterBody
+              : strings.onboardingNutritionDataPausedBody,
+          value: _nutritionOnboardingEnabled && _useNutritionData,
           enabled: _nutritionOnboardingEnabled,
           statusLabel: strings.onboardingLater,
           onChanged: (value) => setState(() => _useNutritionData = value),
@@ -1182,7 +1323,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         const SizedBox(height: 12),
         _IntentTile(
           icon: Icons.fitness_center,
-          title: strings.onboardingExerciseDataTitle,
+          title: expressive
+              ? strings.onboardingWorkoutSetupTitle
+              : strings.onboardingExerciseDataTitle,
           body: strings.onboardingExerciseDataBody,
           value: _useExerciseData,
           onChanged: (value) => setState(() => _useExerciseData = value),
@@ -1308,6 +1451,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       title: strings.onboardingNutritionPreferencesTitle,
       subtitle: strings.onboardingNutritionPreferencesSubtitle,
       children: [
+        if (widget.reviewMode) ...[
+          _OnboardingInfoCallout(
+            icon: Icons.info_outline,
+            text: strings.onboardingNutritionReviewNotice,
+          ),
+          const SizedBox(height: 16),
+        ],
         DropdownButtonFormField<String>(
           isExpanded: true,
           initialValue: _preferredDiet,
@@ -1402,13 +1552,22 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       title: strings.onboardingGoalPaceTitle,
       subtitle: strings.onboardingGoalPaceSubtitle,
       children: [
+        if (widget.reviewMode) ...[
+          _OnboardingInfoCallout(
+            icon: Icons.info_outline,
+            text: strings.onboardingNutritionReviewNotice,
+          ),
+          const SizedBox(height: 16),
+        ],
         Row(
           children: [
             Expanded(
               child: _MetricPreviewCard(
                 icon: Icons.local_fire_department_outlined,
                 value: '2025 kcal',
-                label: strings.onboardingInitialDailyBudget,
+                label: widget.reviewMode
+                    ? strings.onboardingExampleDailyBudget
+                    : strings.onboardingInitialDailyBudget,
               ),
             ),
             const SizedBox(width: 12),
@@ -1416,7 +1575,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: _MetricPreviewCard(
                 icon: Icons.event,
                 value: _shortDate(_projectedEndDate),
-                label: strings.onboardingProjectedEndDate,
+                label: widget.reviewMode
+                    ? strings.onboardingExampleEndDate
+                    : strings.onboardingProjectedEndDate,
               ),
             ),
           ],
@@ -1444,12 +1605,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             max: 1.0,
             divisions: 9,
             label: strings.onboardingBodyWeightPerWeek(weeklyRatePct),
-            onChanged: (value) => setState(() {
-              _weeklyRatePct = value;
-              _weeklyRateLbs = _goalWeightValue * value / 100;
-              _monthlyRatePct = value * 4;
-              _monthlyRateLbs = _weeklyRateLbs * 4;
-            }),
+            onChanged: (value) => setState(() => _weeklyRatePct = value),
           ),
         ),
         const SizedBox(height: 12),
@@ -1480,6 +1636,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       icon: Icons.location_on_outlined,
       title: strings.onboardingGymSpaceTitle,
       subtitle: strings.onboardingGymSpaceSubtitle,
+      actionHint:
+          context.usesExpressivePresentation && _selectedGymSpace == null
+          ? strings.onboardingChooseOptionHint
+          : null,
       children: [
         if (_isGymEquipmentLoading)
           const Padding(
@@ -1515,6 +1675,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildGymEquipmentPage() {
     final strings = _strings;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final template = _selectedGymSpace;
     if (template == null || template.skipSetup) {
       return const SizedBox.shrink();
@@ -1550,6 +1711,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
             maximumFractionDigits: 0,
           ),
           description: strings.onboardingIncludedEquipmentBody,
+          action: expressive == null
+              ? null
+              : IconButton.filledTonal(
+                  tooltip: strings.onboardingEditEquipment,
+                  onPressed: _openGymProfileEditor,
+                  style: IconButton.styleFrom(
+                    backgroundColor: expressive.actionSecondary,
+                    foregroundColor: expressive.actionSecondaryForeground,
+                  ),
+                  icon: const Icon(Icons.tune),
+                ),
           content: selectedEquipment.isEmpty
               ? [
                   Text(
@@ -1562,62 +1734,99 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: selectedEquipment.map((equipment) {
-                      final expressive = AppExpressivePlanningTokens.maybeOf(
-                        context,
-                      );
-                      return Chip(
-                        avatar: Icon(
-                          _onboardingEquipmentIcon(equipment.name),
-                          size: 17,
-                          color: expressive?.actionSecondaryForeground,
-                        ),
-                        label: LocalizedCatalogEntityName(
-                          entity: CatalogEntityDisplayName(
-                            catalogId: equipment.catalogId,
-                            canonicalName: equipment.name,
-                          ),
-                        ),
-                        labelStyle: expressive == null
-                            ? null
-                            : TextStyle(
-                                color: expressive.actionSecondaryForeground,
+                    children: selectedEquipment
+                        .take(
+                          expressive == null || _showAllEquipment
+                              ? selectedEquipment.length
+                              : 6,
+                        )
+                        .map((equipment) {
+                          return Chip(
+                            avatar: Icon(
+                              _onboardingEquipmentIcon(equipment.name),
+                              size: 17,
+                              color: expressive?.actionSecondaryForeground,
+                            ),
+                            label: LocalizedCatalogEntityName(
+                              entity: CatalogEntityDisplayName(
+                                catalogId: equipment.catalogId,
+                                canonicalName: equipment.name,
                               ),
-                        backgroundColor: expressive?.actionSecondary,
-                        side: expressive == null
-                            ? null
-                            : BorderSide(color: expressive.outline),
-                        shape: expressive == null
-                            ? null
-                            : RoundedRectangleBorder(
-                                borderRadius: expressive.rowShape,
-                              ),
-                        visualDensity: VisualDensity.compact,
-                      );
-                    }).toList(),
+                            ),
+                            labelStyle: expressive == null
+                                ? null
+                                : TextStyle(
+                                    color: expressive.actionSecondaryForeground,
+                                  ),
+                            backgroundColor: expressive?.actionSecondary,
+                            side: expressive == null
+                                ? null
+                                : BorderSide(
+                                    color: expressive.outline.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                            shape: expressive == null
+                                ? null
+                                : RoundedRectangleBorder(
+                                    borderRadius: expressive.rowShape,
+                                  ),
+                            visualDensity: VisualDensity.compact,
+                          );
+                        })
+                        .toList(),
                   ),
+                  if (expressive != null && selectedEquipment.length > 6)
+                    TextButton.icon(
+                      key: const Key('onboarding-equipment-toggle'),
+                      onPressed: () => setState(
+                        () => _showAllEquipment = !_showAllEquipment,
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: expressive.equipmentForeground,
+                      ),
+                      icon: Icon(
+                        _showAllEquipment
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                      ),
+                      label: Text(
+                        _showAllEquipment
+                            ? strings.onboardingShowLessEquipment
+                            : strings.onboardingShowAllEquipment(
+                                selectedEquipment.length,
+                              ),
+                      ),
+                    ),
                 ],
         ),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _resetGymEquipment,
-                icon: const Icon(Icons.restart_alt),
-                label: Text(strings.onboardingReset),
+        if (expressive != null)
+          TextButton.icon(
+            onPressed: _resetGymEquipment,
+            icon: const Icon(Icons.restart_alt),
+            label: Text(strings.onboardingReset),
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _resetGymEquipment,
+                  icon: const Icon(Icons.restart_alt),
+                  label: Text(strings.onboardingReset),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: _openGymProfileEditor,
-                icon: const Icon(Icons.tune),
-                label: Text(strings.onboardingEditProfile),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: _openGymProfileEditor,
+                  icon: const Icon(Icons.tune),
+                  label: Text(strings.onboardingEditProfile),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }
@@ -1646,6 +1855,10 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       icon: Icons.assignment_outlined,
       title: strings.onboardingWorkoutPlanTitle,
       subtitle: strings.onboardingWorkoutPlanSubtitle,
+      actionHint:
+          context.usesExpressivePresentation && _workoutPlanSetupOption == null
+          ? strings.onboardingChooseOptionHint
+          : null,
       children: [
         _WorkoutPlanSetupTile(
           title: strings.onboardingManualPlanTitle,
@@ -1734,10 +1947,30 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
   Widget _buildSummaryPage() {
     final strings = _strings;
+    final expressive = context.usesExpressivePresentation;
+    final personalDetails = <(String, String)>[
+      (strings.onboardingSummaryName, _nameController.text.trim()),
+      (
+        strings.onboardingSummaryGender,
+        _gender == null ? '' : _genderLabel(_gender!),
+      ),
+      (
+        strings.onboardingSummaryDateOfBirth,
+        _dob == null ? '' : _formatDate(_dob!),
+      ),
+      (strings.onboardingSummaryHeight, _heightController.text.trim()),
+      (strings.onboardingSummaryWeight, _weightController.text.trim()),
+    ];
+    final visibleDetails = personalDetails
+        .where((detail) => !expressive || detail.$2.isNotEmpty)
+        .toList();
     final usesNutrition = _nutritionOnboardingEnabled && _useNutritionData;
     final included = [
       if (usesNutrition) strings.onboardingIncludedNutrition,
-      if (_useExerciseData) strings.onboardingIncludedExercise,
+      if (_useExerciseData)
+        expressive
+            ? strings.onboardingWorkoutSetupTitle
+            : strings.onboardingIncludedExercise,
       if (!usesNutrition && !_useExerciseData)
         strings.onboardingIncludedBasicOnly,
     ];
@@ -1752,42 +1985,32 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           value: included.join(', '),
         ),
         const SizedBox(height: 14),
-        _OnboardingSummarySection(
-          icon: Icons.person_outline,
-          title: strings.onboardingSummaryProfileSection,
-          children: [
-            _SummaryRow(
-              label: strings.onboardingSummaryName,
-              value: _nameController.text.trim(),
-            ),
-            _SummaryRow(
-              label: strings.onboardingSummaryGender,
-              value: _gender == null ? '' : _genderLabel(_gender!),
-            ),
-            _SummaryRow(
-              label: strings.onboardingSummaryDateOfBirth,
-              value: _dob == null ? '' : _formatDate(_dob!),
-            ),
-            _SummaryRow(
-              label: strings.onboardingSummaryHeight,
-              value: _heightController.text.trim(),
-            ),
-            _SummaryRow(
-              label: strings.onboardingSummaryWeight,
-              value: _weightController.text.trim(),
-            ),
-          ],
-        ),
+        if (expressive && visibleDetails.isEmpty)
+          _OnboardingInfoCallout(
+            icon: Icons.person_outline,
+            text: strings.onboardingPersonalDetailsSkipped,
+          )
+        else
+          _OnboardingSummarySection(
+            icon: Icons.person_outline,
+            title: strings.onboardingSummaryProfileSection,
+            children: [
+              for (final (label, value) in visibleDetails)
+                _SummaryRow(label: label, value: value),
+            ],
+          ),
         if (_useExerciseData) ...[
           const SizedBox(height: 12),
           _OnboardingSummarySection(
             icon: Icons.fitness_center_outlined,
             title: strings.onboardingSummaryTrainingSection,
+            prominent: true,
             children: [
-              _SummaryRow(
-                label: strings.onboardingSummaryWorkoutUnits,
-                value: _weightUnitLabel(_selectedWeightUnit),
-              ),
+              if (!expressive)
+                _SummaryRow(
+                  label: strings.onboardingSummaryWorkoutUnits,
+                  value: _weightUnitLabel(_selectedWeightUnit),
+                ),
               _SummaryRow(
                 label: strings.onboardingSummaryGymProfile,
                 value: _selectedGymSpace?.skipSetup ?? true
@@ -1805,6 +2028,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 label: strings.onboardingSummaryWorkoutPlans,
                 value: _workoutPlanSummary(),
               ),
+              if (expressive)
+                _SummaryRow(
+                  label: strings.onboardingSummaryWorkoutUnits,
+                  value: _weightUnitLabel(_selectedWeightUnit),
+                ),
             ],
           ),
         ],
@@ -1832,6 +2060,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               ),
             ],
           ),
+          if (widget.reviewMode) ...[
+            const SizedBox(height: 12),
+            _OnboardingInfoCallout(
+              icon: Icons.info_outline,
+              text: strings.onboardingNutritionReviewNotice,
+            ),
+          ],
         ],
       ],
     );
@@ -1932,7 +2167,7 @@ class _OnboardingHeader extends StatelessWidget {
   final int pageCount;
   final String title;
   final VoidCallback? onBack;
-  final VoidCallback onSkip;
+  final VoidCallback? onSkip;
   final String skipLabel;
 
   const _OnboardingHeader({
@@ -1965,6 +2200,7 @@ class _OnboardingHeader extends StatelessWidget {
             : scheme.onSurfaceVariant);
     final progress = pageCount <= 1 ? 1.0 : (currentPage + 1) / pageCount;
     final usesLocalizedLayout =
+        expressiveTokens != null ||
         Localizations.localeOf(context).languageCode != 'en';
 
     return Column(
@@ -1975,7 +2211,7 @@ class _OnboardingHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(
-                    width: 104,
+                    width: expressiveTokens == null ? 104 : 72,
                     child: onBack == null
                         ? null
                         : Align(
@@ -1999,14 +2235,16 @@ class _OnboardingHeader extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 104,
-                    child: TextButton(
-                      onPressed: onSkip,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(skipLabel, maxLines: 1),
-                      ),
-                    ),
+                    width: expressiveTokens == null ? 104 : 72,
+                    child: onSkip == null
+                        ? null
+                        : TextButton(
+                            onPressed: onSkip,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(skipLabel, maxLines: 1),
+                            ),
+                          ),
                   ),
                 ],
               )
@@ -2042,16 +2280,17 @@ class _OnboardingHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SizedBox(
-                        width: 72,
-                        child: TextButton(
-                          onPressed: onSkip,
-                          child: Text(skipLabel),
+                    if (onSkip != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: SizedBox(
+                          width: 72,
+                          child: TextButton(
+                            onPressed: onSkip,
+                            child: Text(skipLabel),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -2081,12 +2320,14 @@ class _OnboardingCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final String? actionHint;
   final List<Widget> children;
 
   const _OnboardingCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.actionHint,
     required this.children,
   });
 
@@ -2115,6 +2356,7 @@ class _OnboardingCard extends StatelessWidget {
             : scheme.onSurfaceVariant);
 
     return SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: expressiveTokens == null ? 0 : 88),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -2126,23 +2368,19 @@ class _OnboardingCard extends StatelessWidget {
               : context.tutorialTokens.heroShape,
           border: Border.all(
             color:
-                expressiveTokens?.outline ??
+                expressiveTokens?.outline.withValues(alpha: 0.35) ??
                 (neo
                     ? tonosOutlineForSurface(context, cardSurface)
                     : scheme.outlineVariant.withValues(alpha: 0.55)),
-            width: neo
-                ? shapes.outlineWidth
-                : expressiveTokens != null
-                ? 1.5
-                : 1,
+            width: neo ? shapes.outlineWidth : 1,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: expressiveTokens == null ? 56 : 48,
+              height: expressiveTokens == null ? 56 : 48,
               decoration: BoxDecoration(
                 color:
                     expressiveTokens?.planFocalSurface ??
@@ -2159,16 +2397,24 @@ class _OnboardingCard extends StatelessWidget {
                 color:
                     expressiveTokens?.planFocalForeground ??
                     (neo ? cardForeground : scheme.primary),
-                size: 28,
+                size: expressiveTokens == null ? 28 : 24,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: expressiveTokens == null ? 16 : 12),
             Text(
               title,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: expressiveTokens != null || neo ? cardForeground : null,
-                fontWeight: FontWeight.w900,
-              ),
+              style:
+                  (expressiveTokens == null
+                          ? theme.textTheme.headlineSmall
+                          : theme.textTheme.titleLarge)
+                      ?.copyWith(
+                        color: expressiveTokens != null || neo
+                            ? cardForeground
+                            : null,
+                        fontWeight: expressiveTokens == null
+                            ? FontWeight.w900
+                            : FontWeight.w800,
+                      ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -2177,7 +2423,16 @@ class _OnboardingCard extends StatelessWidget {
                 color: expressiveTokens != null || neo ? cardSecondary : null,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: expressiveTokens == null ? 20 : 16),
+            if (actionHint != null) ...[
+              Text(
+                actionHint!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: cardSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             ...children,
           ],
         ),
@@ -2296,7 +2551,11 @@ class _IntentTile extends StatelessWidget {
     final tileSurface = expressive != null
         ? (selected
               ? expressive.selectedSurface
-              : expressive.planSupportSurface)
+              : Color.lerp(
+                  expressive.planSupportSurface,
+                  expressive.pageCanvas,
+                  enabled ? 0.55 : 0.85,
+                )!)
         : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
@@ -2304,14 +2563,14 @@ class _IntentTile extends StatelessWidget {
         ? _expressiveSelectedForeground(context, expressive)
         : expressive?.planSupportForeground;
     final iconColor = expressive != null
-        ? expressiveForeground!
+        ? expressiveForeground!.withValues(alpha: enabled ? 1 : 0.7)
         : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : enabled
         ? scheme.primary
         : scheme.onSurfaceVariant;
     final foregroundColor = expressive != null
-        ? expressiveForeground!
+        ? expressiveForeground!.withValues(alpha: enabled ? 1 : 0.85)
         : neo
         ? tonosForegroundForSurface(context, tileSurface!)
         : enabled
@@ -2323,7 +2582,7 @@ class _IntentTile extends StatelessWidget {
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant.withValues(alpha: enabled ? 1 : 0.78);
     final borderColor = expressive != null
-        ? expressive.outline
+        ? expressive.outline.withValues(alpha: selected ? 1 : 0.4)
         : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
@@ -2356,7 +2615,7 @@ class _IntentTile extends StatelessWidget {
           border: Border.all(
             color: borderColor,
             width: expressive != null
-                ? 1.5
+                ? (selected ? 1.5 : 1)
                 : neo
                 ? shapes.outlineWidth
                 : 1,
@@ -2431,7 +2690,11 @@ class _IntentTile extends StatelessWidget {
                 value: value,
                 onChanged: enabled ? (next) => onChanged(next ?? false) : null,
                 fillColor: expressive != null
-                    ? WidgetStatePropertyAll<Color?>(foregroundColor)
+                    ? WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? foregroundColor
+                            : Colors.transparent,
+                      )
                     : neo
                     ? WidgetStatePropertyAll<Color?>(foregroundColor)
                     : null,
@@ -2440,6 +2703,9 @@ class _IntentTile extends StatelessWidget {
                     : neo
                     ? surfaces.dialogChoice
                     : null,
+                side: expressive == null
+                    ? null
+                    : BorderSide(color: foregroundColor),
               ),
           ],
         ),
@@ -2602,6 +2868,9 @@ class _ChoiceGroup<T> extends StatelessWidget {
                     : null,
               ),
               selected: selected,
+              checkmarkColor: expressive == null
+                  ? null
+                  : _expressiveSelectedForeground(context, expressive),
               onSelected: (_) => onChanged(option),
               selectedColor: expressive != null || neo ? chipSurface : null,
               backgroundColor: expressive != null || neo ? chipSurface : null,
@@ -2609,7 +2878,12 @@ class _ChoiceGroup<T> extends StatelessWidget {
                   ? null
                   : RoundedRectangleBorder(borderRadius: expressive.rowShape),
               side: expressive != null
-                  ? BorderSide(color: expressive.outline, width: 1.5)
+                  ? BorderSide(
+                      color: expressive.outline.withValues(
+                        alpha: selected ? 1 : 0.4,
+                      ),
+                      width: selected ? 1.5 : 1,
+                    )
                   : neo
                   ? BorderSide(
                       color: tonosOutlineForSurface(context, chipSurface!),
@@ -2975,12 +3249,17 @@ class _SummaryRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
     final summarySurface = neo ? surfaces.settingsSection : scheme.surface;
-    final summarySecondary = neo
+    final summarySecondary = expressive != null
+        ? expressive.onPage.withValues(alpha: 0.8)
+        : neo
         ? tonosSecondaryForegroundForSurface(context, summarySurface)
         : scheme.onSurfaceVariant;
-    final summaryForeground = neo
+    final summaryForeground = expressive != null
+        ? expressive.onPage
+        : neo
         ? tonosForegroundForSurface(context, summarySurface)
         : scheme.onSurface;
     final valueText = value.trim().isEmpty ? '-' : value;
@@ -2992,7 +3271,7 @@ class _SummaryRow extends StatelessWidget {
       fontWeight: FontWeight.w700,
     );
     final valueStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: neo ? summaryForeground : null,
+      color: expressive != null || neo ? summaryForeground : null,
       fontWeight: FontWeight.w800,
     );
 
@@ -3035,12 +3314,19 @@ class _OnboardingSummaryCallout extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
-    final calloutSurface = neo ? surfaces.dialogChoice : scheme.surface;
-    final calloutForeground = neo
+    final calloutSurface =
+        expressive?.planFocalSurface ??
+        (neo ? surfaces.dialogChoice : scheme.surface);
+    final calloutForeground = expressive != null
+        ? expressive.planFocalForeground
+        : neo
         ? tonosForegroundForSurface(context, calloutSurface)
         : scheme.onSurface;
-    final calloutSecondary = neo
+    final calloutSecondary = expressive != null
+        ? expressive.planFocalForeground.withValues(alpha: 0.85)
+        : neo
         ? tonosSecondaryForegroundForSurface(context, calloutSurface)
         : scheme.onSurfaceVariant;
     final shapes = context.shapeTokens;
@@ -3048,12 +3334,16 @@ class _OnboardingSummaryCallout extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: neo ? calloutSurface : scheme.primary.withValues(alpha: 0.12),
-        borderRadius: neo
-            ? shapes.settingsInput
-            : context.tutorialTokens.compactShape,
+        color: expressive != null || neo
+            ? calloutSurface
+            : scheme.primary.withValues(alpha: 0.12),
+        borderRadius:
+            expressive?.rowShape ??
+            (neo ? shapes.settingsInput : context.tutorialTokens.compactShape),
         border: Border.all(
-          color: neo
+          color: expressive != null
+              ? expressive.outline.withValues(alpha: 0.3)
+              : neo
               ? tonosOutlineForSurface(context, calloutSurface)
               : scheme.primary.withValues(alpha: 0.3),
           width: neo ? shapes.outlineWidth : 1,
@@ -3064,7 +3354,9 @@ class _OnboardingSummaryCallout extends StatelessWidget {
         children: [
           Icon(
             Icons.auto_awesome_outlined,
-            color: neo ? calloutForeground : scheme.primary,
+            color: expressive != null || neo
+                ? calloutForeground
+                : scheme.primary,
             size: 21,
           ),
           const SizedBox(width: 10),
@@ -3075,7 +3367,9 @@ class _OnboardingSummaryCallout extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: neo ? calloutForeground : scheme.primary,
+                    color: expressive != null || neo
+                        ? calloutForeground
+                        : scheme.primary,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -3099,11 +3393,13 @@ class _OnboardingSummarySection extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<Widget> children;
+  final bool prominent;
 
   const _OnboardingSummarySection({
     required this.icon,
     required this.title,
     required this.children,
+    this.prominent = false,
   });
 
   @override
@@ -3111,9 +3407,22 @@ class _OnboardingSummarySection extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final neo = context.usesNeoPresentation;
+    final expressive = AppExpressivePlanningTokens.maybeOf(context);
     final surfaces = context.surfaceTokens;
-    final sectionSurface = neo ? surfaces.settingsInput : scheme.surface;
-    final sectionForeground = neo
+    final sectionSurface = expressive != null
+        ? (prominent
+              ? expressive.configurationSurface
+              : Color.lerp(
+                  expressive.planSupportSurface,
+                  expressive.pageCanvas,
+                  0.65,
+                )!)
+        : neo
+        ? surfaces.settingsInput
+        : scheme.surface;
+    final sectionForeground = expressive != null
+        ? expressive.onPage
+        : neo
         ? tonosForegroundForSurface(context, sectionSurface)
         : scheme.onSurface;
     final shapes = context.shapeTokens;
@@ -3121,12 +3430,16 @@ class _OnboardingSummarySection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 4),
       decoration: BoxDecoration(
-        color: neo ? sectionSurface : scheme.surface.withValues(alpha: 0.46),
-        borderRadius: neo
-            ? shapes.settingsInput
-            : context.tutorialTokens.inputShape,
+        color: expressive != null || neo
+            ? sectionSurface
+            : scheme.surface.withValues(alpha: 0.46),
+        borderRadius:
+            expressive?.rowShape ??
+            (neo ? shapes.settingsInput : context.tutorialTokens.inputShape),
         border: Border.all(
-          color: neo
+          color: expressive != null
+              ? expressive.outline.withValues(alpha: 0.3)
+              : neo
               ? tonosOutlineForSurface(context, sectionSurface)
               : scheme.outlineVariant.withValues(alpha: 0.6),
           width: neo ? shapes.outlineWidth : 1,
@@ -3139,7 +3452,9 @@ class _OnboardingSummarySection extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: neo ? sectionForeground : scheme.primary,
+                color: expressive != null || neo
+                    ? sectionForeground
+                    : scheme.primary,
                 size: 19,
               ),
               const SizedBox(width: 8),
@@ -3147,7 +3462,7 @@ class _OnboardingSummarySection extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: neo ? sectionForeground : null,
+                    color: expressive != null || neo ? sectionForeground : null,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -3158,7 +3473,9 @@ class _OnboardingSummarySection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Divider(
               height: 1,
-              color: neo
+              color: expressive != null
+                  ? expressive.outline.withValues(alpha: 0.25)
+                  : neo
                   ? tonosOutlineForSurface(context, sectionSurface)
                   : null,
             ),
@@ -3564,7 +3881,11 @@ class _GymSpaceTile extends StatelessWidget {
     final tileSurface = expressive != null
         ? (selected
               ? expressive.selectedSurface
-              : expressive.planSupportSurface)
+              : Color.lerp(
+                  expressive.planSupportSurface,
+                  expressive.pageCanvas,
+                  0.55,
+                )!)
         : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
@@ -3581,7 +3902,7 @@ class _GymSpaceTile extends StatelessWidget {
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant;
     final tileBorder = expressive != null
-        ? expressive.outline
+        ? expressive.outline.withValues(alpha: selected ? 1 : 0.4)
         : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
@@ -3613,7 +3934,7 @@ class _GymSpaceTile extends StatelessWidget {
           border: Border.all(
             color: tileBorder,
             width: expressive != null
-                ? 1.5
+                ? (selected ? 1.5 : 1)
                 : neo
                 ? shapes.outlineWidth
                 : selected
@@ -3760,7 +4081,11 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
     final tileSurface = expressive != null
         ? (selected
               ? expressive.selectedSurface
-              : expressive.planSupportSurface)
+              : Color.lerp(
+                  expressive.planSupportSurface,
+                  expressive.pageCanvas,
+                  0.55,
+                )!)
         : neo
         ? (selected ? surfaces.settingsHero : surfaces.dialogChoice)
         : null;
@@ -3777,7 +4102,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
         ? tonosSecondaryForegroundForSurface(context, tileSurface!)
         : scheme.onSurfaceVariant;
     final tileBorder = expressive != null
-        ? expressive.outline
+        ? expressive.outline.withValues(alpha: selected ? 1 : 0.4)
         : neo
         ? tonosOutlineForSurface(context, tileSurface!)
         : selected
@@ -3809,7 +4134,7 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
           border: Border.all(
             color: tileBorder,
             width: expressive != null
-                ? 1.5
+                ? (selected ? 1.5 : 1)
                 : neo
                 ? shapes.outlineWidth
                 : selected
@@ -3929,8 +4254,10 @@ class _OnboardingInfoCallout extends StatelessWidget {
         borderRadius:
             expressive?.supportShape ?? context.tutorialTokens.inputShape,
         border: Border.all(
-          color: expressive?.outline ?? scheme.primary.withValues(alpha: 0.28),
-          width: expressive == null ? 1 : 1.5,
+          color:
+              expressive?.outline.withValues(alpha: 0.35) ??
+              scheme.primary.withValues(alpha: 0.28),
+          width: 1,
         ),
       ),
       child: Row(
@@ -3957,12 +4284,14 @@ class _OnboardingEquipmentSummary extends StatelessWidget {
   final String count;
   final String description;
   final List<Widget> content;
+  final Widget? action;
 
   const _OnboardingEquipmentSummary({
     required this.heading,
     required this.count,
     required this.description,
     required this.content,
+    this.action,
   });
 
   @override
@@ -3986,8 +4315,10 @@ class _OnboardingEquipmentSummary extends StatelessWidget {
         color: surface,
         borderRadius: shape,
         border: Border.all(
-          color: expressive?.outline ?? scheme.outlineVariant,
-          width: expressive != null ? 1.5 : 1,
+          color:
+              expressive?.outline.withValues(alpha: 0.4) ??
+              scheme.outlineVariant,
+          width: 1,
         ),
       ),
       child: Column(
@@ -4011,6 +4342,7 @@ class _OnboardingEquipmentSummary extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
+              if (action != null) ...[const SizedBox(width: 8), action!],
             ],
           ),
           const SizedBox(height: 4),

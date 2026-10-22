@@ -29,6 +29,7 @@ class PremadePlansPage extends StatefulWidget {
   final VoidCallback onPlanAdded;
   final ValueChanged<int>? onPlanCreated;
   final bool onboardingMode;
+  final bool initiallyMatchProfileEquipment;
 
   const PremadePlansPage({
     super.key,
@@ -36,6 +37,7 @@ class PremadePlansPage extends StatefulWidget {
     required this.onPlanAdded,
     this.onPlanCreated,
     this.onboardingMode = false,
+    this.initiallyMatchProfileEquipment = true,
   });
 
   @override
@@ -68,7 +70,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   bool? _adaptationFilterValue;
   bool? _adaptationExpressive;
   bool _isDiscardingOnboardingPlans = false;
-  bool _filterForProfileEquipment = true;
+  late bool _filterForProfileEquipment;
   var _selectedDurationMinutes = 60;
   bool _tutorialQueued = false;
 
@@ -77,6 +79,7 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
   @override
   void initState() {
     super.initState();
+    _filterForProfileEquipment = widget.initiallyMatchProfileEquipment;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
     });

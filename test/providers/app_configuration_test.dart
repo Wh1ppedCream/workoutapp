@@ -127,6 +127,26 @@ void main() {
       },
     );
 
+    test('onboarding replay persists until setup is completed', () async {
+      SharedPreferences.setMockInitialValues({'onboarding_completed': true});
+      final previousLaunch = OnboardingConfig();
+      await previousLaunch.init();
+      await previousLaunch.setShowOnboarding(true);
+      previousLaunch.dispose();
+
+      final freshLaunch = OnboardingConfig();
+      await freshLaunch.init();
+      expect(freshLaunch.showOnboarding, isTrue);
+      await freshLaunch.markCompleted();
+      freshLaunch.dispose();
+
+      final completedLaunch = OnboardingConfig();
+      await completedLaunch.init();
+      expect(completedLaunch.showOnboarding, isFalse);
+      expect(completedLaunch.completed, isTrue);
+      completedLaunch.dispose();
+    });
+
     test(
       'bottom tabs ignore stale stored values and preserve profile',
       () async {

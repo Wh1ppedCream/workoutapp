@@ -10,6 +10,84 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
+  String get onboardingNutritionReviewNotice =>
+      '仅供预览：这些偏好和估算用于体验设置流程，不会更改已保存的营养目标。';
+
+  @override
+  String get onboardingExampleDailyBudget => '每日热量示例';
+
+  @override
+  String get onboardingExampleEndDate => '结束日期示例';
+
+  @override
+  String get onboardingChooseOptionHint => '请选择一个选项以继续。';
+
+  @override
+  String get onboardingNutritionSetupLaterBody => '稍后可在“营养”中设置。';
+
+  @override
+  String get onboardingWorkoutSetupTitle => '训练设置';
+
+  @override
+  String get onboardingEditEquipment => '编辑器械';
+
+  @override
+  String get onboardingShowLessEquipment => '收起';
+
+  @override
+  String onboardingShowAllEquipment(int count) {
+    return '显示全部 $count 项';
+  }
+
+  @override
+  String get onboardingManualPlanShortTitle => '手动创建';
+
+  @override
+  String get onboardingManualPlanShortBody => '从空白计划开始，添加自己的动作。';
+
+  @override
+  String get onboardingPremadePlanShortTitle => '浏览预设计划';
+
+  @override
+  String get onboardingPremadePlanShortBody => '从现成的训练计划开始。';
+
+  @override
+  String get onboardingGeneratePlanShortTitle => '生成计划';
+
+  @override
+  String get onboardingGeneratePlanShortBody => '根据目标和器械生成训练。';
+
+  @override
+  String get onboardingSkipPlanShortBody => '稍后可在“训练”中添加计划。';
+
+  @override
+  String get onboardingGymCustomShortTitle => '自定义场地';
+
+  @override
+  String get onboardingGymCustomShortBody => '选择已有的器械。';
+
+  @override
+  String get onboardingGymSkipShortBody => '使用“通用”档案，稍后设置器械。';
+
+  @override
+  String get onboardingGymCommercialShortBody => '先包含全部器械，再按需调整。';
+
+  @override
+  String get onboardingGymHomeShortBody => '自由重量、弹力带、训练凳和自重。';
+
+  @override
+  String get onboardingGymCalisthenicsShortBody => '单杠、吊环、弹力带和自重。';
+
+  @override
+  String get onboardingGymPowerliftingShortBody => '杠铃、杠铃片、深蹲架和训练凳。';
+
+  @override
+  String get onboardingGymFreeWeightsShortBody => '哑铃、壶铃、杠铃片和训练凳。';
+
+  @override
+  String get onboardingPersonalDetailsSkipped => '已跳过个人资料';
+
+  @override
   String get dashboardEditorHelp => '拖动可见组件以调整顺序。点按眼睛图标以隐藏。';
 
   @override
@@ -4108,10 +4186,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nutritionAddEntryActionLabel => '添加食物或测量记录';
 
   @override
-  String get nutritionOptionalTargetsHint => '所有营养目标均为可选项。留空即可不设置该目标。';
+  String get nutritionOptionalTargetsHint => '所有目标均为可选项，未设置的请留空。';
 
   @override
   String get nutritionGoalsMenu => '营养目标';
+
+  @override
+  String get nutritionEditGoals => '编辑营养目标';
+
+  @override
+  String get nutritionNoAdditionalTargets => '尚未设置其他营养目标';
 
   @override
   String get measurementWeight => '体重';

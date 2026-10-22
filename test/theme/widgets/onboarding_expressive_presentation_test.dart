@@ -113,7 +113,7 @@ void main() {
         _expectTile(
           tester,
           'Custom space',
-          tokens.planSupportSurface,
+          Color.lerp(tokens.planSupportSurface, tokens.pageCanvas, 0.55)!,
           tokens.rowShape,
         );
         _expectTile(
@@ -166,7 +166,10 @@ void main() {
                 as BoxDecoration;
         expect(calloutDecoration.color, tokens.configurationSurface);
         expect(calloutDecoration.borderRadius, tokens.supportShape);
-        expect(calloutDecoration.border!.top.color, tokens.outline);
+        expect(
+          calloutDecoration.border!.top.color,
+          tokens.outline.withValues(alpha: 0.35),
+        );
       },
     );
 
@@ -224,7 +227,10 @@ void main() {
         final panelDecoration = panel.decoration! as BoxDecoration;
         expect(panelDecoration.color, tokens.equipmentSurface);
         expect(panelDecoration.borderRadius, tokens.supportShape);
-        expect(panelDecoration.border!.top.color, tokens.outline);
+        expect(
+          panelDecoration.border!.top.color,
+          tokens.outline.withValues(alpha: 0.4),
+        );
         expect(
           tester.widget<Text>(find.text('Included equipment')).style?.color,
           tokens.equipmentForeground,

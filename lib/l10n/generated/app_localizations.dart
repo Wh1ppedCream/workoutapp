@@ -107,6 +107,156 @@ abstract class AppLocalizations {
     Locale('zh'),
   ];
 
+  /// No description provided for @onboardingNutritionReviewNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview only: these preferences and estimates are for trying the flow. Your saved nutrition targets are unchanged.'**
+  String get onboardingNutritionReviewNotice;
+
+  /// No description provided for @onboardingExampleDailyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Example daily budget'**
+  String get onboardingExampleDailyBudget;
+
+  /// No description provided for @onboardingExampleEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Example end date'**
+  String get onboardingExampleEndDate;
+
+  /// No description provided for @onboardingChooseOptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an option to continue.'**
+  String get onboardingChooseOptionHint;
+
+  /// No description provided for @onboardingNutritionSetupLaterBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up nutrition later from Nutrition.'**
+  String get onboardingNutritionSetupLaterBody;
+
+  /// No description provided for @onboardingWorkoutSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout setup'**
+  String get onboardingWorkoutSetupTitle;
+
+  /// No description provided for @onboardingEditEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit equipment'**
+  String get onboardingEditEquipment;
+
+  /// No description provided for @onboardingShowLessEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get onboardingShowLessEquipment;
+
+  /// No description provided for @onboardingShowAllEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count}'**
+  String onboardingShowAllEquipment(int count);
+
+  /// No description provided for @onboardingManualPlanShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create manually'**
+  String get onboardingManualPlanShortTitle;
+
+  /// No description provided for @onboardingManualPlanShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a blank plan with your own exercises.'**
+  String get onboardingManualPlanShortBody;
+
+  /// No description provided for @onboardingPremadePlanShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse premade plans'**
+  String get onboardingPremadePlanShortTitle;
+
+  /// No description provided for @onboardingPremadePlanShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a ready-made workout.'**
+  String get onboardingPremadePlanShortBody;
+
+  /// No description provided for @onboardingGeneratePlanShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a plan'**
+  String get onboardingGeneratePlanShortTitle;
+
+  /// No description provided for @onboardingGeneratePlanShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create workouts for your goals and equipment.'**
+  String get onboardingGeneratePlanShortBody;
+
+  /// No description provided for @onboardingSkipPlanShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add plans later from Train.'**
+  String get onboardingSkipPlanShortBody;
+
+  /// No description provided for @onboardingGymCustomShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom space'**
+  String get onboardingGymCustomShortTitle;
+
+  /// No description provided for @onboardingGymCustomShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the equipment you have.'**
+  String get onboardingGymCustomShortBody;
+
+  /// No description provided for @onboardingGymSkipShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use General and set up equipment later.'**
+  String get onboardingGymSkipShortBody;
+
+  /// No description provided for @onboardingGymCommercialShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with all equipment, then adjust.'**
+  String get onboardingGymCommercialShortBody;
+
+  /// No description provided for @onboardingGymHomeShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Free weights, bands, a bench, and bodyweight.'**
+  String get onboardingGymHomeShortBody;
+
+  /// No description provided for @onboardingGymCalisthenicsShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bars, rings, bands, and bodyweight.'**
+  String get onboardingGymCalisthenicsShortBody;
+
+  /// No description provided for @onboardingGymPowerliftingShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Barbell, plates, rack, and bench.'**
+  String get onboardingGymPowerliftingShortBody;
+
+  /// No description provided for @onboardingGymFreeWeightsShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Dumbbells, kettlebells, plates, and a bench.'**
+  String get onboardingGymFreeWeightsShortBody;
+
+  /// No description provided for @onboardingPersonalDetailsSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details skipped'**
+  String get onboardingPersonalDetailsSkipped;
+
   /// No description provided for @dashboardEditorHelp.
   ///
   /// In en, this message translates to:
@@ -7441,7 +7591,7 @@ abstract class AppLocalizations {
   /// No description provided for @nutritionOptionalTargetsHint.
   ///
   /// In en, this message translates to:
-  /// **'All nutrient targets are optional. Leave a field blank to keep it unset.'**
+  /// **'All targets are optional. Leave blank if unset.'**
   String get nutritionOptionalTargetsHint;
 
   /// No description provided for @nutritionGoalsMenu.
@@ -7449,6 +7599,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nutrition Goals'**
   String get nutritionGoalsMenu;
+
+  /// No description provided for @nutritionEditGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit nutrition goals'**
+  String get nutritionEditGoals;
+
+  /// No description provided for @nutritionNoAdditionalTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'No additional targets set'**
+  String get nutritionNoAdditionalTargets;
 
   /// No description provided for @measurementWeight.
   ///

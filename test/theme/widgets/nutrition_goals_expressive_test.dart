@@ -90,9 +90,9 @@ Future<void> _pumpEditor(
   WidgetTester tester, {
   required ThemeData theme,
   bool largeText = false,
+  _GoalRepository? repository,
 }) async {
-  final repository = _GoalRepository();
-  final profile = NutritionProfile(repository: repository);
+  final profile = NutritionProfile(repository: repository ?? _GoalRepository());
   await tester.pumpWidget(
     ChangeNotifierProvider<NutritionProfile>(
       create: (_) => profile,
@@ -120,6 +120,7 @@ Future<void> _pumpEditor(
       ),
     ),
   );
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Open goals'));
   await tester.pumpAndSettle();
 }
@@ -145,17 +146,52 @@ void main() {
     final pageContext = tester.element(find.byType(DietNutritionSettingsPage));
     final strings = AppLocalizations.of(pageContext);
     final destination = Theme.of(
-      tester.element(find.text(strings.nutritionManualGoals)),
+      tester.element(find.text(strings.nutritionEditGoals)),
     ).extension<AppExpressiveDestinationTokens>()!;
     expect(destination.family, AppExpressiveDestinationFamily.nutrition);
-    expect(find.text(strings.nutritionSettingsTitle), findsOneWidget);
-    expect(find.text(strings.nutritionGoals), findsOneWidget);
+    expect(find.text(strings.nutritionGoalsMenu), findsOneWidget);
+    expect(find.text(strings.nutritionCurrentGoals), findsOneWidget);
     expect(find.text(strings.nutritionManualGoalsSubtitle), findsOneWidget);
     expect(find.text(strings.nutritionGoalsSubtitle), findsOneWidget);
     expect(
       tester.widget<Scaffold>(find.byType(Scaffold).last).backgroundColor,
       destination.pageCanvas,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Expressive goal summary distinguishes unset and zero extras', (
+    tester,
+  ) async {
+    final repository = _GoalRepository()
+      ..savedGoal = NutritionGoal(profileId: 1, startDate: DateTime.now());
+    final profile = NutritionProfile(repository: repository);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<NutritionProfile>(
+        create: (_) => profile,
+        child: MaterialApp(
+          theme: ExpressiveThemeDefinition.light(),
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const DietNutritionSettingsPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(DietNutritionSettingsPage)),
+    );
+    expect(find.text(strings.nutritionNoAdditionalTargets), findsOneWidget);
+
+    repository.savedGoal = NutritionGoal(
+      profileId: 1,
+      startDate: DateTime.now(),
+      fiberG: 0,
+    );
+    await profile.reloadDay();
+    await tester.pumpAndSettle();
+    expect(find.text(strings.nutritionNoAdditionalTargets), findsNothing);
+    expect(find.text('0 g'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -314,6 +350,10 @@ void main() {
       final lastField = find.byType(TextFormField).last;
       await tester.ensureVisible(lastField);
       await tester.pumpAndSettle();
+      // Revealing the last section updates the lazy list's extent after the
+      // keyboard resize; reveal again using that settled extent.
+      await tester.ensureVisible(lastField);
+      await tester.pumpAndSettle();
       expect(
         tester.getRect(lastField).bottom,
         lessThan(tester.getRect(find.text(strings.nutritionSaveGoals)).top),
@@ -380,6 +420,55 @@ void main() {
     expect(saved.fiberG, 30);
     expect(saved.sugarG, 35);
     expect(saved.satFatG, 14);
+    expect(saved.sodiumMg, 2000);
+    expect(find.byType(GoalManualEntryPage), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Expressive goal editor preserves existing precision on save', (
+    tester,
+  ) async {
+    final repository = _GoalRepository()
+      ..savedGoal = NutritionGoal(
+        profileId: 1,
+        startDate: DateTime.now(),
+        kcalTarget: 2000,
+        proteinG: 130.5,
+        carbsG: 0,
+        fatG: 80.25,
+        fiberG: 0,
+        satFatG: 10.5,
+        sodiumMg: 2000,
+      );
+    await _pumpEditor(
+      tester,
+      theme: ExpressiveThemeDefinition.light(),
+      repository: repository,
+    );
+    final fields = tester.widgetList<TextFormField>(find.byType(TextFormField));
+    expect(fields.map((field) => field.controller!.text).toList(), [
+      '2000',
+      '130.5',
+      '0',
+      '80.25',
+      '0',
+      '',
+      '10.5',
+      '2000',
+    ]);
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(GoalManualEntryPage)),
+    );
+    await tester.tap(find.text(strings.nutritionSaveGoals));
+    await tester.pumpAndSettle();
+    final saved = repository.savedGoal!;
+    expect(saved.kcalTarget, 2000);
+    expect(saved.proteinG, 130.5);
+    expect(saved.carbsG, 0);
+    expect(saved.fatG, 80.25);
+    expect(saved.fiberG, 0);
+    expect(saved.sugarG, isNull);
+    expect(saved.satFatG, 10.5);
     expect(saved.sodiumMg, 2000);
     expect(find.byType(GoalManualEntryPage), findsNothing);
     expect(tester.takeException(), isNull);

@@ -15,12 +15,14 @@ class SpeedDialFab extends StatefulWidget {
   final Future<void> Function()? onFoodLogged;
   final Future<void> Function()? onMeasurementLogged;
   final String? toggleTooltip;
+  final double actionWidth;
 
   const SpeedDialFab({
     super.key,
     this.onFoodLogged,
     this.onMeasurementLogged,
     this.toggleTooltip,
+    this.actionWidth = 160,
   });
 
   @override
@@ -36,7 +38,7 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
     final strings = AppLocalizations.of(context);
 
     return SizedBox(
-      width: 160,
+      width: widget.actionWidth,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,

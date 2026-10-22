@@ -2187,5 +2187,291 @@
     "buildArtifactModifiedLocal": "2026-10-20T00:50:10-04:00",
     "captureMethod": "Used the safe in-app preview brightness control, navigated to Active Review 1, opened edit mode, opened the Swap Exercise sheet, and viewed one alternate carousel candidate. Canceled without confirming a swap. Restored the preview to light mode after the dark captures. No plan, workout, database, or fixture data was changed.",
     "sourceTreeProvenanceLimit": "The installed APK hash matches the retained safe-rebuild artifact. The source tree was dirty; HEAD is a base revision and the full dirty source snapshot used for the APK is unavailable."
+  },
+  "nutritionOnboardingRefresh20261020": {
+    "capturedAtRangeLocal": "2026-10-20T11:48:40-04:00 through 2026-10-20T11:55:49-04:00",
+    "sourceRevision": "bf53846ca6576d5e12ed9670323b3ab4e9b0e63a",
+    "branch": "feature/expressive-visual-polish",
+    "workingTree": "Dirty; attached Flutter debug session hot-restarted current sources. The commit is the base revision, not a complete snapshot of the dirty Dart source.",
+    "device": "Pixel 7 28021FDH200228",
+    "package": "com.tonos.expressivepreview",
+    "resolution": "1080 x 2400 portrait",
+    "refreshMethod": "Captured from the already running Flutter debug app after hot restart; no APK build or install. Theme brightness was controlled in-memory through TonosPreviewPresentation.",
+    "safePreviewRoute": "ExpressivePreviewSafety.verifyBeforeDataAccess remained active. For onboarding only, the ignored safe preview launcher temporarily pushed OnboardingFlow directly without toggling the saved replay setting. It was restored to NutritionPage and hot-restarted after capture.",
+    "dataSafety": "No fixture reset/reseed, database restore, food entry, goal save, onboarding Finish, profile save, plan creation, or plan handoff was performed. Onboarding selections remained in local unsaved flow state. Today’s Records preview day was empty.",
+    "sourceFilesSha256": {
+      "lib/screens/profile/settings/diet_nutrition_settings_page.dart": "08213934A08EFDFB68A72EEACEF463A8258B95F8929E10D78A30A4E27FB0A2BC",
+      "lib/screens/profile/settings/goal_manual_entry_page.dart": "08A632DB5032DAB0E448003D1699C3EBB5FDB0189E42D512A78ED53F1A69D9CD",
+      "lib/screens/nutrition/log_entry_page.dart": "42B27DFA7FD0D71F3C3F9545105F86A610486C891A5693CE2755B2CCFD2C4C5E",
+      "lib/widgets/speed_dial_fab.dart": "7C93F1774281BF936E361D986834675ADAC43FE11A2EB8398C65EC39F10E5F76",
+      "lib/screens/onboarding_flow.dart": "58A4F56E4862EDC7B36AE786A96BAC355373E7E5C0495869F87AE0C6035EE09D"
+    },
+    "capturedScreenshotCount": 26,
+    "capturedScreenshotIds": [
+      "nutrition-goals-light-20261020",
+      "nutrition-manual-goals-light-top-20261020",
+      "nutrition-manual-goals-light-lower-20261020",
+      "nutrition-todays-records-light-top-20261020",
+      "nutrition-todays-records-light-lower-20261020",
+      "nutrition-goals-dark-20261020",
+      "nutrition-manual-goals-dark-top-20261020",
+      "nutrition-manual-goals-dark-lower-20261020",
+      "nutrition-todays-records-dark-top-20261020",
+      "nutrition-todays-records-dark-lower-20261020",
+      "onboarding-welcome-dark-20261020",
+      "onboarding-basics-dark-20261020",
+      "onboarding-focus-dark-20261020",
+      "onboarding-gym-profile-dark-20261020",
+      "onboarding-equipment-dark-20261020",
+      "onboarding-workout-plan-dark-20261020",
+      "onboarding-workout-plan-lower-dark-20261020",
+      "onboarding-summary-dark-20261020",
+      "onboarding-welcome-light-20261020",
+      "onboarding-basics-light-20261020",
+      "onboarding-focus-light-20261020",
+      "onboarding-gym-profile-light-20261020",
+      "onboarding-equipment-light-20261020",
+      "onboarding-workout-plan-light-20261020",
+      "onboarding-workout-plan-lower-light-20261020",
+      "onboarding-summary-light-20261020"
+    ],
+    "captures": [
+      {
+        "id": "nutrition-goals-light-20261020",
+        "capturedAt": "2026-10-20T11:48:40-04:00",
+        "png": "current-review/nutrition-goals/light/01-goals.png",
+        "pngSha256": "93e4f674763e14b996e69fb0288bb40a3b872d9009c58a98d96cefee550dac78",
+        "pngBytes": 163968,
+        "uiHierarchy": "current-review/nutrition-goals/light/01-goals.xml",
+        "uiSha256": "488f440e733f0bf0081abc3769330d1f1895e231185c7a23fe2f86d1df3b03c6"
+      },
+      {
+        "id": "nutrition-manual-goals-light-top-20261020",
+        "capturedAt": "2026-10-20T11:48:54-04:00",
+        "png": "current-review/manual-nutrition-goals/light/01-top.png",
+        "pngSha256": "fc46db187bcfe7b664a43d38a6295eb4d18ca5446c5e7978e0304dbd06044263",
+        "pngBytes": 184121,
+        "uiHierarchy": "current-review/manual-nutrition-goals/light/01-top.xml",
+        "uiSha256": "f41b9d6540b8a8661462c4f31331e6985910b789d121d1f748059343374b0fee"
+      },
+      {
+        "id": "nutrition-manual-goals-light-lower-20261020",
+        "capturedAt": "2026-10-20T11:48:59-04:00",
+        "png": "current-review/manual-nutrition-goals/light/02-lower.png",
+        "pngSha256": "f782a9e9c6de2aaeed9c8a4b5e10a288ec4670412288ab7be0e952b9af3bc76f",
+        "pngBytes": 178961,
+        "uiHierarchy": "current-review/manual-nutrition-goals/light/02-lower.xml",
+        "uiSha256": "2bbf8e6cc13bccaf692b9cc5342e4481e608a45592520005df6e599e8cdcfb33"
+      },
+      {
+        "id": "nutrition-todays-records-light-top-20261020",
+        "capturedAt": "2026-10-20T11:49:52-04:00",
+        "png": "current-review/todays-records/light/01-top.png",
+        "pngSha256": "214c12c97a5e1eed352d7c832ac4ed46883986e376f38f76b34b0cc9fecadf9b",
+        "pngBytes": 142202,
+        "uiHierarchy": "current-review/todays-records/light/01-top.xml",
+        "uiSha256": "de063ef9eee965791bc0db738c32613f3885e2c407ee281b9c39d5bf39b1e776"
+      },
+      {
+        "id": "nutrition-todays-records-light-lower-20261020",
+        "capturedAt": "2026-10-20T11:49:57-04:00",
+        "png": "current-review/todays-records/light/02-lower.png",
+        "pngSha256": "6f8b561f6c8c126a390f935be28d139de9dac9e3683900b893d1d5104415dd72",
+        "pngBytes": 138737,
+        "uiHierarchy": "current-review/todays-records/light/02-lower.xml",
+        "uiSha256": "07a3d4df61dc6326f92577c5b7d4de7af2883315697f82629c64c2f9a0d56ff2"
+      },
+      {
+        "id": "nutrition-goals-dark-20261020",
+        "capturedAt": "2026-10-20T11:50:35-04:00",
+        "png": "current-review/nutrition-goals/dark/01-goals.png",
+        "pngSha256": "046c0c0abc02daeb4dbfdfdbe86ea64c85052e29a67532734b79ed142adcb744",
+        "pngBytes": 161221,
+        "uiHierarchy": "current-review/nutrition-goals/dark/01-goals.xml",
+        "uiSha256": "488f440e733f0bf0081abc3769330d1f1895e231185c7a23fe2f86d1df3b03c6"
+      },
+      {
+        "id": "nutrition-manual-goals-dark-top-20261020",
+        "capturedAt": "2026-10-20T11:50:41-04:00",
+        "png": "current-review/manual-nutrition-goals/dark/01-top.png",
+        "pngSha256": "112fde102e77e4fecd87a17663d19c85bc0c9c2ce86bf0100f3e2fd02a549450",
+        "pngBytes": 182528,
+        "uiHierarchy": "current-review/manual-nutrition-goals/dark/01-top.xml",
+        "uiSha256": "f41b9d6540b8a8661462c4f31331e6985910b789d121d1f748059343374b0fee"
+      },
+      {
+        "id": "nutrition-manual-goals-dark-lower-20261020",
+        "capturedAt": "2026-10-20T11:50:46-04:00",
+        "png": "current-review/manual-nutrition-goals/dark/02-lower.png",
+        "pngSha256": "a2e71a90c90b9e10af4838c071ba4d45f31934582e9898cadcd8f83491456756",
+        "pngBytes": 177471,
+        "uiHierarchy": "current-review/manual-nutrition-goals/dark/02-lower.xml",
+        "uiSha256": "2bbf8e6cc13bccaf692b9cc5342e4481e608a45592520005df6e599e8cdcfb33"
+      },
+      {
+        "id": "nutrition-todays-records-dark-top-20261020",
+        "capturedAt": "2026-10-20T11:50:59-04:00",
+        "png": "current-review/todays-records/dark/01-top.png",
+        "pngSha256": "147aaf8ce55a39854070e0949cfc4422ac5c448e581d3dae534df627b2991617",
+        "pngBytes": 136402,
+        "uiHierarchy": "current-review/todays-records/dark/01-top.xml",
+        "uiSha256": "64243f0d00808a320ec7ef42cffd774eb80e861823113a88f9a045d04f101748"
+      },
+      {
+        "id": "nutrition-todays-records-dark-lower-20261020",
+        "capturedAt": "2026-10-20T11:51:04-04:00",
+        "png": "current-review/todays-records/dark/02-lower.png",
+        "pngSha256": "60b469f2ed1e0b65cf35ace041c68c79acf6ab343d96515fe6d9f5444acc2cc1",
+        "pngBytes": 133787,
+        "uiHierarchy": "current-review/todays-records/dark/02-lower.xml",
+        "uiSha256": "275e0c535d4fd34218a2e20438141804b11107ff891cc7d60d7bf054cb252d14"
+      },
+      {
+        "id": "onboarding-welcome-dark-20261020",
+        "capturedAt": "2026-10-20T11:51:41-04:00",
+        "png": "current-review/onboarding/dark/01-welcome.png",
+        "pngSha256": "c73b43d52b8d0afba34c64024ca7d61645e196aeed34c58e86291e4fff174e13",
+        "pngBytes": 214577,
+        "uiHierarchy": "current-review/onboarding/dark/01-welcome.xml",
+        "uiSha256": "51676975b29b451fbe518a0faf9b5b1a2f6802e9326f3a22b971350129609d97"
+      },
+      {
+        "id": "onboarding-basics-dark-20261020",
+        "capturedAt": "2026-10-20T11:51:47-04:00",
+        "png": "current-review/onboarding/dark/02-basics.png",
+        "pngSha256": "6d8d64fe2bce01fe1c9bcb6b7794c86d4a45a3819eedb057bf83444f76273946",
+        "pngBytes": 132463,
+        "uiHierarchy": "current-review/onboarding/dark/02-basics.xml",
+        "uiSha256": "e46f7918ed23767e8b5a4ffd60eaf39753f82ca8c025c98eee2873d5dc1ce761"
+      },
+      {
+        "id": "onboarding-focus-dark-20261020",
+        "capturedAt": "2026-10-20T11:51:54-04:00",
+        "png": "current-review/onboarding/dark/03-focus.png",
+        "pngSha256": "7aba513ae94a36b0170d40d7373c0b98e16aa22b4880458a829bdf0cf0841dbd",
+        "pngBytes": 152572,
+        "uiHierarchy": "current-review/onboarding/dark/03-focus.xml",
+        "uiSha256": "602ba3647d238dcfb8621dea6ee83fbb222dd9c612db174204c610cd3a074a21"
+      },
+      {
+        "id": "onboarding-gym-profile-dark-20261020",
+        "capturedAt": "2026-10-20T11:52:35-04:00",
+        "png": "current-review/onboarding/dark/04-gym-profile.png",
+        "pngSha256": "4d1e4061703926f43755490ad2c35326dc816cab927cd94d1d58f74efb9c2402",
+        "pngBytes": 214214,
+        "uiHierarchy": "current-review/onboarding/dark/04-gym-profile.xml",
+        "uiSha256": "6bb82edb1eb6d12fa5699969e7670c56800847aacd3722f59e1027dcea3d456f"
+      },
+      {
+        "id": "onboarding-equipment-dark-20261020",
+        "capturedAt": "2026-10-20T11:53:01-04:00",
+        "png": "current-review/onboarding/dark/05-equipment.png",
+        "pngSha256": "92f5050d6cc2942fafb40878bd93f827af1886ada51c3ee8ae92e895990b915f",
+        "pngBytes": 189882,
+        "uiHierarchy": "current-review/onboarding/dark/05-equipment.xml",
+        "uiSha256": "d36a917ca980b6d589ffefc9537f0b093b76eb867d500da6dc9db23ab5d77b09"
+      },
+      {
+        "id": "onboarding-workout-plan-dark-20261020",
+        "capturedAt": "2026-10-20T11:53:23-04:00",
+        "png": "current-review/onboarding/dark/06-workout-plan.png",
+        "pngSha256": "f25c052740865d133e527d84890c0e8d25e2a7072ecf0ab258fd47feca7ea4df",
+        "pngBytes": 221559,
+        "uiHierarchy": "current-review/onboarding/dark/06-workout-plan.xml",
+        "uiSha256": "ac00f3c1a761d44d6426fa8e6134f4bb606934909f918304283f0bcccf3ee446"
+      },
+      {
+        "id": "onboarding-workout-plan-lower-dark-20261020",
+        "capturedAt": "2026-10-20T11:54:07-04:00",
+        "png": "current-review/onboarding/dark/07-workout-plan-lower.png",
+        "pngSha256": "c61ccff9ac8885e2542c5c1f85edb798b596bfbcf929755b9a4aae8b3be33e3e",
+        "pngBytes": 237009,
+        "uiHierarchy": "current-review/onboarding/dark/07-workout-plan-lower.xml",
+        "uiSha256": "c0aa26889a4a318890a15a16e190946feee357df530dbc87bc06516b7928b5c7"
+      },
+      {
+        "id": "onboarding-summary-dark-20261020",
+        "capturedAt": "2026-10-20T11:54:17-04:00",
+        "png": "current-review/onboarding/dark/08-summary.png",
+        "pngSha256": "2c4123b7b309eb75214865c68cc8fdebda7008a4f527ee666fa182aee2afe48f",
+        "pngBytes": 126467,
+        "uiHierarchy": "current-review/onboarding/dark/08-summary.xml",
+        "uiSha256": "e9d6756d3e9ee936216b0082ff9d905664c0055d138174be3a7491f318ec0f60"
+      },
+      {
+        "id": "onboarding-welcome-light-20261020",
+        "capturedAt": "2026-10-20T11:54:55-04:00",
+        "png": "current-review/onboarding/light/01-welcome.png",
+        "pngSha256": "c2b446cbce2dad8a8e9d854b91b93a49ff14079578c3576471a301bb9ffa4a8f",
+        "pngBytes": 217087,
+        "uiHierarchy": "current-review/onboarding/light/01-welcome.xml",
+        "uiSha256": "51676975b29b451fbe518a0faf9b5b1a2f6802e9326f3a22b971350129609d97"
+      },
+      {
+        "id": "onboarding-basics-light-20261020",
+        "capturedAt": "2026-10-20T11:55:01-04:00",
+        "png": "current-review/onboarding/light/02-basics.png",
+        "pngSha256": "7766ad271f7d300964d20f3a5d719a0519b8db4e1d5ae6b51a98bdb1523d7d4b",
+        "pngBytes": 135017,
+        "uiHierarchy": "current-review/onboarding/light/02-basics.xml",
+        "uiSha256": "e46f7918ed23767e8b5a4ffd60eaf39753f82ca8c025c98eee2873d5dc1ce761"
+      },
+      {
+        "id": "onboarding-focus-light-20261020",
+        "capturedAt": "2026-10-20T11:55:08-04:00",
+        "png": "current-review/onboarding/light/03-focus.png",
+        "pngSha256": "3bca179fef2d7bb25a4b62f4316f38247d4545ed909cea4ea08e37224a5cbd98",
+        "pngBytes": 153572,
+        "uiHierarchy": "current-review/onboarding/light/03-focus.xml",
+        "uiSha256": "602ba3647d238dcfb8621dea6ee83fbb222dd9c612db174204c610cd3a074a21"
+      },
+      {
+        "id": "onboarding-gym-profile-light-20261020",
+        "capturedAt": "2026-10-20T11:55:21-04:00",
+        "png": "current-review/onboarding/light/04-gym-profile.png",
+        "pngSha256": "67489a93d038c9a9ee46aa4f30e5e70954396fa95d8248330c622aaf715d79d2",
+        "pngBytes": 214178,
+        "uiHierarchy": "current-review/onboarding/light/04-gym-profile.xml",
+        "uiSha256": "6bb82edb1eb6d12fa5699969e7670c56800847aacd3722f59e1027dcea3d456f"
+      },
+      {
+        "id": "onboarding-equipment-light-20261020",
+        "capturedAt": "2026-10-20T11:55:28-04:00",
+        "png": "current-review/onboarding/light/05-equipment.png",
+        "pngSha256": "b48b3dd0cebd8e6a6088dfa6394f71281966098a71a163f460a3e78bb60f23a9",
+        "pngBytes": 192300,
+        "uiHierarchy": "current-review/onboarding/light/05-equipment.xml",
+        "uiSha256": "d36a917ca980b6d589ffefc9537f0b093b76eb867d500da6dc9db23ab5d77b09"
+      },
+      {
+        "id": "onboarding-workout-plan-light-20261020",
+        "capturedAt": "2026-10-20T11:55:35-04:00",
+        "png": "current-review/onboarding/light/06-workout-plan.png",
+        "pngSha256": "807a65b094ef043246ef76f8e5b0a0812b094f33e2178ab6e5c506ed3c3acb7f",
+        "pngBytes": 220496,
+        "uiHierarchy": "current-review/onboarding/light/06-workout-plan.xml",
+        "uiSha256": "ac00f3c1a761d44d6426fa8e6134f4bb606934909f918304283f0bcccf3ee446"
+      },
+      {
+        "id": "onboarding-workout-plan-lower-light-20261020",
+        "capturedAt": "2026-10-20T11:55:40-04:00",
+        "png": "current-review/onboarding/light/07-workout-plan-lower.png",
+        "pngSha256": "4a7df1c21f275abdade65a7b078ab81116a49531b201ba677263fec6f1816fb6",
+        "pngBytes": 235497,
+        "uiHierarchy": "current-review/onboarding/light/07-workout-plan-lower.xml",
+        "uiSha256": "c0aa26889a4a318890a15a16e190946feee357df530dbc87bc06516b7928b5c7"
+      },
+      {
+        "id": "onboarding-summary-light-20261020",
+        "capturedAt": "2026-10-20T11:55:49-04:00",
+        "png": "current-review/onboarding/light/08-summary.png",
+        "pngSha256": "4cd47027a8697b60f74345689748593c8ceb3be3cdc43be08cf31389a89d449f",
+        "pngBytes": 128286,
+        "uiHierarchy": "current-review/onboarding/light/08-summary.xml",
+        "uiSha256": "e9d6756d3e9ee936216b0082ff9d905664c0055d138174be3a7491f318ec0f60"
+      }
+    ],
+    "reviewScope": "Nutrition Goals, Manual Nutrition Goals, Today’s Records and the seven-step onboarding flow (Welcome, Basics, Focus, Gym Profile, Equipment, Workout Plan, Summary). Workout Plan has top and lower screenshots. Every view has light/dark coverage. Finish/persistence and plan handoff outcomes remain unverified.",
+    "safePreviewLauncherRestoredSha256": "5FB88EA9571AC434353471595651B00D34585C239DB9199B1ABAEBC472708EC8"
   }
 }

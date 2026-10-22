@@ -10,6 +10,7 @@ import 'package:env_test/dev/expressive_preview_fixtures.dart';
 import 'package:env_test/expressive_preview_main.dart' as preview_entry;
 import 'package:env_test/main.dart'
     show
+        MainScreen,
         MyApp,
         buildTonosApp,
         hasRequiredPreviewIdentityGuard,
@@ -18,7 +19,10 @@ import 'package:env_test/main.dart'
         shouldCaptureTonosStartupDiagnostic,
         showExpressivePreviewStartupFailure;
 import 'package:env_test/models/models.dart';
+import 'package:env_test/providers/onboarding_provider.dart';
+import 'package:env_test/providers/theme_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
+import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
@@ -183,6 +187,48 @@ void main() {
         const MyApp(previewPresentation: null).previewPresentation,
         isNull,
       );
+    },
+  );
+
+  testWidgets(
+    'Expressive preview honors persisted onboarding replay on fresh startup',
+    (tester) async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'onboarding_completed': true,
+        'sentinel': 'keep',
+      });
+      final previousLaunch = OnboardingConfig();
+      await previousLaunch.init();
+      await previousLaunch.setShowOnboarding(true);
+      previousLaunch.dispose();
+
+      final presentation = TonosPreviewPresentation()..setReducedMotion(true);
+      final themeProvider = await ThemeProvider.load();
+      await tester.pumpWidget(
+        buildTonosApp(
+          repo: _OnboardingStartupRepository(),
+          closeRepositoryOnDispose: false,
+          themeProvider: themeProvider,
+          previewPresentation: presentation,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OnboardingFlow), findsOneWidget);
+      expect(find.byType(MainScreen), findsNothing);
+      expect(
+        Theme.of(tester.element(find.byType(OnboardingFlow)))
+            .usesExpressivePresentation,
+        isTrue,
+      );
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getBool('onboarding_completed'), isFalse);
+      expect(preferences.getString('sentinel'), 'keep');
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      presentation.dispose();
+      themeProvider.dispose();
     },
   );
 
@@ -449,6 +495,18 @@ ExerciseDefinition _definition(int id, {required bool hydrated}) {
     useManualBodyparts: false,
     multiplyByRating: false,
   );
+}
+
+class _OnboardingStartupRepository extends AppRepository {
+  @override
+  Future<List<Equipment>> fetchAllEquipment() async => const [];
+
+  @override
+  Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
+
+  @override
+  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>
+      const [];
 }
 
 class _FixtureRepository extends AppRepository {

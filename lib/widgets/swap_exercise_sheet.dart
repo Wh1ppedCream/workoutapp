@@ -386,7 +386,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
     final planning = AppExpressivePlanningTokens.maybeOf(context);
     return DraggableScrollableSheet(
       expand: false,
-      initialChildSize: 0.9,
+      initialChildSize: planning == null ? 0.9 : 0.94,
       minChildSize: 0.6,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
@@ -404,6 +404,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                 children: [
                   _SwapSheetHeader(
                     isLoading:
+                        planning == null &&
                         snapshot.connectionState != ConnectionState.done &&
                         !snapshot.hasError,
                   ),
@@ -415,34 +416,46 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                             onRetry: _retryLoad,
                           )
                         : data == null
-                        ? Align(
-                            alignment: Alignment.topCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                        ? planning != null
+                              ? _buildExpressiveLoading(
+                                  scrollController,
+                                  planning,
+                                )
+                              : Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      20,
+                                      20,
+                                      0,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Flexible(
+                                          child: Text(
+                                            AppLocalizations.of(context)
+                                                .swapFindingMatches,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Flexible(
-                                    child: Text(
-                                      AppLocalizations.of(context)
-                                          .swapFindingMatches,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
+                                )
                         : _buildLoadedContent(context, scrollController, data),
                   ),
+                  if (planning != null && (data == null || snapshot.hasError))
+                    _buildSwapFooter(planning: planning, selected: null),
                 ],
               );
             },
@@ -451,6 +464,44 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       },
     );
   }
+
+  Widget _buildExpressiveLoading(
+    ScrollController scrollController,
+    AppExpressivePlanningTokens planning,
+  ) => LayoutBuilder(
+    builder: (context, constraints) => SingleChildScrollView(
+      controller: scrollController,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: planning.actionPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  _strings.swapFindingMatches,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: planning.onPage),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 
   Widget _buildLoadedContent(
     BuildContext context,
@@ -560,40 +611,65 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                       ),
                   ],
                 ),
+              if (planning != null &&
+                  !manualReplacementActive &&
+                  candidates.length > 1)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      '${selectedIndex + 1} / ${candidates.length}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: planning.configurationForeground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 8),
               Align(alignment: Alignment.center, child: browseAction),
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildSwapAction(
-                    planning: planning,
-                    cancel: true,
-                    label: strings.commonCancel,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildSwapAction(
-                    planning: planning,
-                    label: strings.swapConfirm,
-                    onPressed: selected == null
-                        ? null
-                        : () => Navigator.pop(context, selected.definition),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        _buildSwapFooter(planning: planning, selected: selected),
       ],
+    );
+  }
+
+  Widget _buildSwapFooter({
+    required AppExpressivePlanningTokens? planning,
+    required _ExerciseSwapEntry? selected,
+  }) {
+    final strings = _strings;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildSwapAction(
+                planning: planning,
+                cancel: true,
+                label: strings.commonCancel,
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSwapAction(
+                planning: planning,
+                label: strings.swapConfirm,
+                onPressed: selected == null
+                    ? null
+                    : () => Navigator.pop(context, selected.definition),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -821,14 +897,43 @@ class _ExerciseSwapBox extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: Text(
-                    label,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: planning?.planAccent ?? theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: planning == null
+                      ? Text(
+                          label,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        )
+                      : Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: matchScore == null
+                                  ? planning.planAccent
+                                  : planning.actionPrimary,
+                              borderRadius: context.shapeTokens.pill,
+                            ),
+                            child: Text(
+                              label,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: matchScore == null
+                                    ? planning.planAccentForeground
+                                    : planning.actionPrimaryForeground,
+                                fontSize: 11,
+                                height: 1.2,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
+                if (planning != null && matchScore != null)
+                  const SizedBox(width: 8),
                 if (matchScore != null) _MatchBadge(score: matchScore!),
               ],
             ),
@@ -837,26 +942,62 @@ class _ExerciseSwapBox extends StatelessWidget {
               definition: entry.definition,
               builder: (context, name) => LocalizedCatalogEntityNamesBuilder(
                 entities: entry.equipment,
-                builder: (context, equipmentNames) => Text.rich(
-                  TextSpan(
+                builder: (context, equipmentNames) {
+                  final equipmentLabel = equipmentNames.isEmpty
+                      ? AppLocalizations.of(context).swapNoEquipment
+                      : equipmentNames.join(', ');
+                  final equipmentStyle = theme.textTheme.bodySmall?.copyWith(
+                    color: secondaryForeground,
+                    fontSize: planning == null ? null : 11,
+                    fontWeight: FontWeight.w500,
+                  );
+                  final nameStyle = theme.textTheme.titleSmall?.copyWith(
+                    color: planning == null ? null : foreground,
+                    fontSize: planning == null ? null : 15,
+                    fontWeight: FontWeight.w800,
+                  );
+                  final inlineSpan = TextSpan(
                     children: [
                       TextSpan(text: name),
                       TextSpan(
-                        text:
-                            '  •  ${equipmentNames.isEmpty ? AppLocalizations.of(context).swapNoEquipment : equipmentNames.join(', ')}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: secondaryForeground,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        text: '  •  $equipmentLabel',
+                        style: equipmentStyle,
                       ),
                     ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                  );
+                  final inlineLabel = Text.rich(
+                    inlineSpan,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: nameStyle,
+                  );
+                  if (planning == null) return inlineLabel;
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      final painter = TextPainter(
+                        text: TextSpan(
+                          style: nameStyle,
+                          children: [inlineSpan],
+                        ),
+                        textDirection: Directionality.of(context),
+                        textScaler: MediaQuery.textScalerOf(context),
+                        locale: Localizations.maybeLocaleOf(context),
+                        maxLines: 1,
+                      )..layout(maxWidth: constraints.maxWidth);
+                      final fitsInline = !painter.didExceedMaxLines;
+                      painter.dispose();
+                      if (fitsInline) return inlineLabel;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: nameStyle),
+                          const SizedBox(height: 2),
+                          Text(equipmentLabel, style: equipmentStyle),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
             SizedBox(height: planning == null ? 16 : 8),
@@ -866,7 +1007,9 @@ class _ExerciseSwapBox extends StatelessWidget {
                 final gap = maxWidth < 330 ? 8.0 : 14.0;
                 final heatmapWidth = planning == null
                     ? (maxWidth * 0.42).clamp(106.0, 145.0).toDouble()
-                    : (maxWidth * 0.32).clamp(84.0, 112.0).toDouble();
+                    : (MediaQuery.sizeOf(context).width * 0.24)
+                          .clamp(80.0, 100.0)
+                          .toDouble();
                 final heatmapSize = planning == null
                     ? heatmapWidth.clamp(100.0, 145.0).toDouble()
                     : heatmapWidth.clamp(84.0, 112.0).toDouble();
@@ -894,15 +1037,47 @@ class _ExerciseSwapBox extends StatelessWidget {
                   compact: compact,
                   foreground: foreground,
                 );
+                final focusPanel = planning == null
+                    ? focusList
+                    : FractionallySizedBox(
+                        widthFactor: 0.85,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color.lerp(fill, planning.pageCanvas, 0.16),
+                            borderRadius: planning.rowShape,
+                            border: Border.all(color: planning.outline),
+                          ),
+                          child: focusList,
+                        ),
+                      );
+
+                if (planning != null &&
+                    maxWidth <
+                        220 * MediaQuery.textScalerOf(context).scale(1)) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(child: heatmap),
+                      const SizedBox(height: 8),
+                      focusPanel,
+                    ],
+                  );
+                }
 
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: planning == null
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.center,
                   children: [
                     heatmap,
                     SizedBox(
                       width: planning == null ? gap : gap.clamp(6.0, 10.0),
                     ),
-                    Expanded(child: focusList),
+                    Expanded(child: focusPanel),
                   ],
                 );
               },
@@ -945,6 +1120,7 @@ class _BodyPartNameList extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final expressive = context.usesExpressivePresentation;
     final visibleHits = hits.take(8).toList();
 
     return Column(
@@ -956,16 +1132,19 @@ class _BodyPartNameList extends StatelessWidget {
               : strings.swapBodypartsHit,
           style: theme.textTheme.labelMedium?.copyWith(
             color: foreground,
-            fontWeight: FontWeight.w700,
+            fontSize: expressive ? 11 : null,
+            fontWeight: expressive ? FontWeight.w600 : FontWeight.w700,
           ),
         ),
-        SizedBox(height: compact ? 3 : 6),
+        SizedBox(height: expressive ? 5 : (compact ? 3 : 6)),
         if (visibleHits.isEmpty)
           Text(strings.swapNoBodypartData, style: theme.textTheme.bodySmall)
         else
           for (final hit in visibleHits)
             Padding(
-              padding: EdgeInsets.only(bottom: compact ? 2 : 4),
+              padding: EdgeInsets.only(
+                bottom: expressive ? 3 : (compact ? 2 : 4),
+              ),
               child: Row(
                 children: [
                   const WorkoutMatchMarker(),
@@ -973,12 +1152,12 @@ class _BodyPartNameList extends StatelessWidget {
                   Expanded(
                     child: Text(
                       hit.name,
-                      maxLines: 1,
+                      maxLines: expressive ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: foreground,
                         fontSize: 11,
-                        height: compact ? 1.0 : 1.1,
+                        height: expressive ? 1.15 : (compact ? 1.0 : 1.1),
                       ),
                     ),
                   ),
@@ -1017,6 +1196,14 @@ class _SwapArrowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton.filledTonal(
+      style: context.usesExpressivePresentation
+          ? IconButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(40, 48),
+              maximumSize: const Size(40, 48),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            )
+          : null,
       icon: Icon(icon),
       onPressed: enabled ? onPressed : null,
     );
