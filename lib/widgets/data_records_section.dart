@@ -12,15 +12,17 @@ import '../utils/localized_formatters.dart';
 /// A calendar‐style grid plus summary for “Data & Records”.
 class DataRecordsSection extends StatelessWidget {
   final EdgeInsetsGeometry padding;
+  final DateTime? referenceDate;
 
   const DataRecordsSection({
     super.key,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.referenceDate,
   });
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
+    final today = referenceDate ?? DateTime.now();
     final theme = Theme.of(context);
     final surfaces = context.surfaceTokens;
     final dataVisualization = context.dataVisualizationTokens;
@@ -38,13 +40,11 @@ class DataRecordsSection extends StatelessWidget {
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
 
-    final monday = today.subtract(
-      Duration(days: today.weekday - DateTime.monday),
-    );
+    final firstDate = DateTime(today.year, today.month, today.day - 27);
     final dayLabels = List.generate(
       DateTime.daysPerWeek,
       (index) => LocalizedFormatters.weekdayNarrow(
-        monday.add(Duration(days: index)),
+        DateTime(firstDate.year, firstDate.month, firstDate.day + index),
         locale,
       ),
     );
@@ -79,7 +79,11 @@ class DataRecordsSection extends StatelessWidget {
         mainAxisSpacing: 8,
         childAspectRatio: 1,
         children: List.generate(28, (i) {
-          final date = today.subtract(Duration(days: 27 - i));
+          final date = DateTime(
+            firstDate.year,
+            firstDate.month,
+            firstDate.day + i,
+          );
           final isToday =
               date.year == today.year &&
               date.month == today.month &&

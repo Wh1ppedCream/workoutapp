@@ -247,6 +247,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _isGymEquipmentLoading = true;
   bool _gymEquipmentLoadFailed = false;
   bool _isFinishing = false;
+  bool _advancing = false;
   bool _showAllEquipment = false;
   String? _gender;
   DateTime? _dob;
@@ -723,6 +724,25 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Future<void> _nextAction() async {
+    if (_advancing || _isFinishing) return;
+    setState(() => _advancing = true);
+    try {
+      await _advanceToNextStep();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _strings.onboardingFinishError(safeFailureMessage(_strings, error)),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _advancing = false);
+    }
+  }
+
+  Future<void> _advanceToNextStep() async {
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
     final currentIndex = _currentPage >= pages.length
@@ -910,6 +930,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _previousAction() {
+    if (_advancing || _isFinishing) return;
     if (_currentPage <= 0) return;
     _goToPage(_currentPage - 1);
   }
@@ -931,6 +952,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Future<void> _skipOrFinish() async {
+    if (_advancing || _isFinishing) return;
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
@@ -963,7 +985,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         : safePage == lastPageIndex
         ? strings.onboardingFinishSetup
         : strings.onboardingNext;
-    final VoidCallback? onAdvance = canAdvance && !_isFinishing
+    final VoidCallback? onAdvance = canAdvance && !_isFinishing && !_advancing
         ? () {
             _nextAction();
           }
@@ -1036,10 +1058,13 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 currentPage: safePage,
                 pageCount: pages.length,
                 title: pages[safePage].label,
-                onBack: safePage == 0 ? null : _previousAction,
+                onBack: safePage == 0 || _advancing || _isFinishing
+                    ? null
+                    : _previousAction,
                 onSkip:
-                    expressiveTokens != null &&
-                        (safePage == lastPageIndex || _isFinishing)
+                    _advancing ||
+                        _isFinishing ||
+                        (expressiveTokens != null && safePage == lastPageIndex)
                     ? null
                     : () {
                         _skipOrFinish();
@@ -1053,25 +1078,28 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  PageView.builder(
-                    controller: _controller,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (index) =>
-                        setState(() => _currentPage = index),
-                    itemCount: pages.length,
-                    itemBuilder: (_, index) {
-                      return Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          18,
-                          8,
-                          18,
-                          expressiveTokens != null && index != lastPageIndex
-                              ? 4
-                              : 12,
-                        ),
-                        child: pages[index].builder(),
-                      );
-                    },
+                  IgnorePointer(
+                    ignoring: _advancing || _isFinishing,
+                    child: PageView.builder(
+                      controller: _controller,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      itemCount: pages.length,
+                      itemBuilder: (_, index) {
+                        return Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            18,
+                            8,
+                            18,
+                            expressiveTokens != null && index != lastPageIndex
+                                ? 4
+                                : 12,
+                          ),
+                          child: pages[index].builder(),
+                        );
+                      },
+                    ),
                   ),
                   if (expressiveTokens != null && safePage != lastPageIndex)
                     Positioned(

@@ -11,6 +11,7 @@ import 'package:env_test/services/active_plan_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/presets_loaded.dart';
 import 'package:provider/provider.dart';
@@ -69,16 +70,18 @@ void main() {
             strings.trainActivePlans,
             theme: theme,
             usesInkRecipe: usesInkRecipe,
-            expectedStyleColor:
-                usesInkRecipe ? surfaceInk : theme.textTheme.titleLarge?.color,
+            expectedStyleColor: usesInkRecipe
+                ? surfaceInk
+                : theme.textTheme.titleLarge?.color,
           );
           _expectPanelText(
             tester,
             strings.trainSelectProfileForPlans,
             theme: theme,
             usesInkRecipe: usesInkRecipe,
-            expectedStyleColor:
-                usesInkRecipe ? surfaceInk : theme.colorScheme.onSurfaceVariant,
+            expectedStyleColor: usesInkRecipe
+                ? surfaceInk
+                : theme.colorScheme.onSurfaceVariant,
           );
 
           await tester.tap(find.byKey(AppTestKeys.trainPlansTab));
@@ -95,10 +98,9 @@ void main() {
               title,
               theme: theme,
               usesInkRecipe: usesInkRecipe,
-              expectedStyleColor:
-                  usesInkRecipe
-                      ? surfaceInk
-                      : theme.textTheme.titleLarge?.color,
+              expectedStyleColor: usesInkRecipe
+                  ? surfaceInk
+                  : theme.textTheme.titleLarge?.color,
             );
           }
           expect(tester.takeException(), isNull);
@@ -283,12 +285,11 @@ void main() {
           expect(showMoreFinder, findsOneWidget);
           final showMore = tester.widget<OutlinedButton>(showMoreFinder);
           final style = showMore.style!;
-          final expectedShape =
-              BorderRadius.lerp(
-                BorderRadius.zero,
-                theme.shapeTokens.card,
-                0.8,
-              )!;
+          final expectedShape = BorderRadius.lerp(
+            BorderRadius.zero,
+            theme.shapeTokens.card,
+            0.8,
+          )!;
           expect(
             style.foregroundColor?.resolve(const <WidgetState>{}),
             theme.colorScheme.primary,
@@ -304,9 +305,9 @@ void main() {
             reason: '${family.name} ${theme.brightness} outline',
           );
           expect(
-            (style.shape?.resolve(const <WidgetState>{})
-                    as RoundedRectangleBorder)
-                .borderRadius,
+            (style.shape?.resolve(
+              const <WidgetState>{},
+            ) as RoundedRectangleBorder).borderRadius,
             expectedShape,
             reason: '${family.name} ${theme.brightness} scaled shape',
           );
@@ -336,6 +337,36 @@ void _expectSplitWorkoutBar(
 ) {
   final startButton = find.byKey(AppTestKeys.trainStartWorkout);
   expect(startButton, findsOneWidget);
+  if (theme.usesExpressivePresentation) {
+    final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+    for (final (label, surface, foreground) in [
+      (
+        strings.trainStartWorkout,
+        tokens.actionPrimary,
+        tokens.actionPrimaryForeground,
+      ),
+      (
+        strings.trainOptimize,
+        tokens.actionSecondary,
+        tokens.actionSecondaryForeground,
+      ),
+    ]) {
+      final text = find.text(label);
+      expect(tester.widget<Text>(text).style?.color, foreground);
+      expect(
+        find.ancestor(
+          of: text,
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Material && widget.color == surface,
+          ),
+        ),
+        findsOneWidget,
+      );
+    }
+    expect(tester.widget<InkWell>(startButton).onTap, isNotNull);
+    expect(find.byTooltip(strings.trainOptimizedSettings), findsOneWidget);
+    return;
+  }
   final frame = find.ancestor(
     of: startButton,
     matching: find.byWidgetPredicate(
@@ -427,14 +458,12 @@ void _expectSplitWorkoutBar(
   );
   expect(startInkWell.onTap, isNotNull);
 
-  final optimizeAction =
-      theme.usesNeoPresentation
-          ? theme.surfaceTokens.optimizedAction
-          : theme.colorScheme.primaryContainer;
-  final optimizeForeground =
-      theme.usesNeoPresentation
-          ? theme.colorScheme.onSecondaryContainer
-          : theme.colorScheme.onPrimaryContainer;
+  final optimizeAction = theme.usesNeoPresentation
+      ? theme.surfaceTokens.optimizedAction
+      : theme.colorScheme.primaryContainer;
+  final optimizeForeground = theme.usesNeoPresentation
+      ? theme.colorScheme.onSecondaryContainer
+      : theme.colorScheme.onPrimaryContainer;
   final optimizeLabel = find.text(strings.trainOptimize);
   final optimizeText = tester.widget<Text>(optimizeLabel);
   expect(optimizeText.style?.color, optimizeForeground);
@@ -478,8 +507,9 @@ void _expectPanelText(
   expect(finder, findsOneWidget, reason: label);
   final element = tester.element(finder);
   final scopedTheme = Theme.of(element);
-  final expectedInk =
-      usesInkRecipe ? theme.colorScheme.onPrimaryContainer : null;
+  final expectedInk = usesInkRecipe
+      ? theme.colorScheme.onPrimaryContainer
+      : null;
 
   expect(
     scopedTheme.colorScheme.onSurface,

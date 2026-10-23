@@ -21,10 +21,10 @@ void main() {
       path: 'lib/widgets/exercise_detail_sheet.dart',
       rationale: 'Catalog Expressive destination wrapping',
       kindCounts: const {
-        'color': 8,
-        'color_transform': 24,
-        'decoration': 30,
-        'geometry': 47,
+        'color': 12,
+        'color_transform': 29,
+        'decoration': 36,
+        'geometry': 57,
         'text_style': 1,
       },
     );
@@ -35,12 +35,12 @@ void main() {
       path: 'lib/screens/exercise/preset_generation_qa.dart',
       rationale: 'Classic baseline',
       kindCounts: const {
-        'color': 2,
-        'color_transform': 1,
-        'decoration': 8,
-        'geometry': 7,
+        'color': 3,
+        'color_transform': 3,
+        'decoration': 7,
+        'geometry': 15,
         'gradient': 1,
-        'text_style': 12,
+        'text_style': 11,
       },
     );
   });

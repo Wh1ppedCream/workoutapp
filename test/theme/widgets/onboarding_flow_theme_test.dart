@@ -11,7 +11,9 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../test_support.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,183 +22,208 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
-      testWidgets('$mode onboarding route retains its theme roles', (
-        tester,
-      ) async {
-        await _pumpOnboarding(
+      // Expressive has dedicated interaction/presentation assertions below.
+      if (family != AppThemeFamily.expressive) {
+        testWidgets('$mode onboarding route retains its theme roles', (
           tester,
-          theme: theme,
-          size: const Size(390, 844),
-          textScale: 1.25,
-        );
-        final strings = await AppLocalizations.delegate.load(
-          const Locale('en'),
-        );
+        ) async {
+          await _pumpOnboarding(
+            tester,
+            theme: theme,
+            size: const Size(390, 844),
+            textScale: 1.25,
+          );
+          final strings = await AppLocalizations.delegate.load(
+            const Locale('en'),
+          );
 
-        expect(find.text(strings.onboardingWelcomeTitle), findsOneWidget);
-        _expectLanguageField(tester, theme);
-        _expectPageDots(tester, family, theme);
-        _expectCardSurface(
+          expect(find.text(strings.onboardingWelcomeTitle), findsOneWidget);
+          _expectLanguageField(tester, theme);
+          _expectPageDots(tester, family, theme);
+          _expectCardSurface(
+            tester,
+            family,
+            theme,
+            strings.onboardingWelcomeTitle,
+          );
+          _expectNoFlutterException(tester, 'welcome');
+
+          await _advance(tester, strings.onboardingNext);
+          expect(find.text(strings.onboardingBasicsTitle), findsOneWidget);
+          expect(find.byType(TextField), findsNWidgets(3));
+          final nameField = tester.widget<TextField>(
+            find.byType(TextField).first,
+          );
+          final nameDecoration = nameField.decoration!;
+          final nameContext = tester.element(find.byType(TextField).first);
+          expect(nameDecoration.labelText, strings.onboardingNameLabel);
+          expect(
+            (nameDecoration.prefixIcon! as Icon).icon,
+            Icons.person_outline,
+          );
+          expect(
+            (nameDecoration.border! as OutlineInputBorder).borderRadius,
+            family == AppThemeFamily.neoBrutalism
+                ? nameContext.shapeTokens.settingsField
+                : nameContext.tutorialTokens.inputShape,
+          );
+          expect(
+            nameDecoration.fillColor,
+            family == AppThemeFamily.neoBrutalism
+                ? nameContext.surfaceTokens.settingsInput
+                : isNull,
+          );
+          await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'kg'));
+          _expectChoiceChipSurface(tester, family, theme, 'kg', selected: true);
+          _expectChoiceChipSurface(
+            tester,
+            family,
+            theme,
+            'lbs',
+            selected: false,
+          );
+          _expectNoFlutterException(tester, 'personal information');
+
+          await _advance(tester, strings.onboardingNext);
+          expect(find.text(strings.onboardingFocusTitle), findsOneWidget);
+          final nutritionIntent = find.text(
+            strings.onboardingNutritionDataTitle,
+          );
+          _expectIntentTile(
+            tester,
+            family,
+            theme,
+            nutritionIntent,
+            enabled: false,
+            selected: false,
+            statusLabel: strings.onboardingLater,
+          );
+          final exerciseIntent = find.text(strings.onboardingExerciseDataTitle);
+          _expectIntentTile(
+            tester,
+            family,
+            theme,
+            exerciseIntent,
+            enabled: true,
+            selected: false,
+          );
+          await _tapVisible(tester, exerciseIntent);
+          _expectIntentTile(
+            tester,
+            family,
+            theme,
+            exerciseIntent,
+            enabled: true,
+            selected: true,
+          );
+          _expectNoFlutterException(tester, 'usage intent selection');
+
+          await _advance(tester, strings.onboardingNext);
+          expect(find.text(strings.onboardingGymSpaceTitle), findsOneWidget);
+          await tester.pumpAndSettle();
+          final homeGym = find.text(strings.onboardingGymHomeTitle);
+          _expectGymSpaceTile(tester, family, theme, homeGym, selected: false);
+          await _tapVisible(tester, homeGym);
+          _expectGymSpaceTile(tester, family, theme, homeGym, selected: true);
+          await _advance(tester, strings.onboardingNext);
+
+          expect(
+            find.text(strings.onboardingReviewWorkoutSpaceTitle),
+            findsOneWidget,
+          );
+          expect(find.byType(TextField), findsOneWidget);
+          final profileNameFinder = find.byType(TextField);
+          final profileNameField = tester.widget<TextField>(profileNameFinder);
+          final profileNameDecoration = profileNameField.decoration!;
+          expect(
+            profileNameDecoration.labelText,
+            strings.onboardingProfileNameLabel,
+          );
+          expect(
+            (profileNameDecoration.prefixIcon! as Icon).icon,
+            Icons.edit_outlined,
+          );
+          expect(
+            (profileNameDecoration.border! as OutlineInputBorder).borderRadius,
+            tester.element(profileNameFinder).tutorialTokens.inputShape,
+          );
+          _expectEmptyEquipmentSummary(tester, theme, strings);
+          _expectNoFlutterException(tester, 'workout-space equipment');
+
+          await tester.tap(
+            findTonosTooltip(strings.onboardingPreviousStepTooltip),
+          );
+          await tester.pumpAndSettle();
+          final skipGym = find.text(strings.onboardingGymSkipTitle);
+          _expectGymSpaceTile(tester, family, theme, skipGym, selected: false);
+          await _tapVisible(tester, skipGym);
+          _expectGymSpaceTile(tester, family, theme, skipGym, selected: true);
+          await _advance(tester, strings.onboardingNext);
+
+          expect(find.text(strings.onboardingWorkoutPlanTitle), findsOneWidget);
+          final skipPlan = find.text(strings.onboardingSkipPlanTitle);
+          _expectWorkoutPlanTile(
+            tester,
+            family,
+            theme,
+            skipPlan,
+            selected: false,
+          );
+          await _tapVisible(tester, skipPlan);
+          _expectWorkoutPlanTile(
+            tester,
+            family,
+            theme,
+            skipPlan,
+            selected: true,
+          );
+          await _advance(tester, strings.onboardingNext);
+
+          expect(find.text(strings.onboardingReadyTitle), findsOneWidget);
+          expect(
+            find.text(strings.onboardingSummaryProfileSection),
+            findsOneWidget,
+          );
+          _expectSummarySurfaces(tester, family, theme, strings);
+          _expectNoFlutterException(tester, 'onboarding summary');
+        });
+      }
+      // Expressive has dedicated interaction/presentation assertions below.
+      if (family != AppThemeFamily.expressive) {
+        testWidgets('$mode onboarding renders the equipment-load error role', (
           tester,
-          family,
-          theme,
-          strings.onboardingWelcomeTitle,
-        );
-        _expectNoFlutterException(tester, 'welcome');
+        ) async {
+          await _pumpOnboarding(
+            tester,
+            theme: theme,
+            size: const Size(390, 844),
+            repository: _FailingOnboardingThemeRepository(),
+          );
+          final strings = await AppLocalizations.delegate.load(
+            const Locale('en'),
+          );
 
-        await _advance(tester, strings.onboardingNext);
-        expect(find.text(strings.onboardingBasicsTitle), findsOneWidget);
-        expect(find.byType(TextField), findsNWidgets(3));
-        final nameField = tester.widget<TextField>(
-          find.byType(TextField).first,
-        );
-        final nameDecoration = nameField.decoration!;
-        final nameContext = tester.element(find.byType(TextField).first);
-        expect(nameDecoration.labelText, strings.onboardingNameLabel);
-        expect((nameDecoration.prefixIcon! as Icon).icon, Icons.person_outline);
-        expect(
-          (nameDecoration.border! as OutlineInputBorder).borderRadius,
-          family == AppThemeFamily.neoBrutalism
-              ? nameContext.shapeTokens.settingsField
-              : nameContext.tutorialTokens.inputShape,
-        );
-        expect(
-          nameDecoration.fillColor,
-          family == AppThemeFamily.neoBrutalism
-              ? nameContext.surfaceTokens.settingsInput
-              : isNull,
-        );
-        await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'kg'));
-        _expectChoiceChipSurface(tester, family, theme, 'kg', selected: true);
-        _expectChoiceChipSurface(tester, family, theme, 'lbs', selected: false);
-        _expectNoFlutterException(tester, 'personal information');
+          await _advance(tester, strings.onboardingNext);
+          await _advance(tester, strings.onboardingNext);
+          await _tapVisible(
+            tester,
+            find.text(strings.onboardingExerciseDataTitle),
+          );
+          await _advance(tester, strings.onboardingNext);
 
-        await _advance(tester, strings.onboardingNext);
-        expect(find.text(strings.onboardingFocusTitle), findsOneWidget);
-        final nutritionIntent = find.text(strings.onboardingNutritionDataTitle);
-        _expectIntentTile(
-          tester,
-          family,
-          theme,
-          nutritionIntent,
-          enabled: false,
-          selected: false,
-          statusLabel: strings.onboardingLater,
-        );
-        final exerciseIntent = find.text(strings.onboardingExerciseDataTitle);
-        _expectIntentTile(
-          tester,
-          family,
-          theme,
-          exerciseIntent,
-          enabled: true,
-          selected: false,
-        );
-        await _tapVisible(tester, exerciseIntent);
-        _expectIntentTile(
-          tester,
-          family,
-          theme,
-          exerciseIntent,
-          enabled: true,
-          selected: true,
-        );
-        _expectNoFlutterException(tester, 'usage intent selection');
-
-        await _advance(tester, strings.onboardingNext);
-        expect(find.text(strings.onboardingGymSpaceTitle), findsOneWidget);
-        await tester.pumpAndSettle();
-        final homeGym = find.text(strings.onboardingGymHomeTitle);
-        _expectGymSpaceTile(tester, family, theme, homeGym, selected: false);
-        await _tapVisible(tester, homeGym);
-        _expectGymSpaceTile(tester, family, theme, homeGym, selected: true);
-        await _advance(tester, strings.onboardingNext);
-
-        expect(
-          find.text(strings.onboardingReviewWorkoutSpaceTitle),
-          findsOneWidget,
-        );
-        expect(find.byType(TextField), findsOneWidget);
-        final profileNameFinder = find.byType(TextField);
-        final profileNameField = tester.widget<TextField>(profileNameFinder);
-        final profileNameDecoration = profileNameField.decoration!;
-        expect(
-          profileNameDecoration.labelText,
-          strings.onboardingProfileNameLabel,
-        );
-        expect(
-          (profileNameDecoration.prefixIcon! as Icon).icon,
-          Icons.edit_outlined,
-        );
-        expect(
-          (profileNameDecoration.border! as OutlineInputBorder).borderRadius,
-          tester.element(profileNameFinder).tutorialTokens.inputShape,
-        );
-        _expectEmptyEquipmentSummary(tester, theme, strings);
-        _expectNoFlutterException(tester, 'workout-space equipment');
-
-        await tester.tap(findTonosTooltip(strings.onboardingPreviousStepTooltip));
-        await tester.pumpAndSettle();
-        final skipGym = find.text(strings.onboardingGymSkipTitle);
-        _expectGymSpaceTile(tester, family, theme, skipGym, selected: false);
-        await _tapVisible(tester, skipGym);
-        _expectGymSpaceTile(tester, family, theme, skipGym, selected: true);
-        await _advance(tester, strings.onboardingNext);
-
-        expect(find.text(strings.onboardingWorkoutPlanTitle), findsOneWidget);
-        final skipPlan = find.text(strings.onboardingSkipPlanTitle);
-        _expectWorkoutPlanTile(
-          tester,
-          family,
-          theme,
-          skipPlan,
-          selected: false,
-        );
-        await _tapVisible(tester, skipPlan);
-        _expectWorkoutPlanTile(tester, family, theme, skipPlan, selected: true);
-        await _advance(tester, strings.onboardingNext);
-
-        expect(find.text(strings.onboardingReadyTitle), findsOneWidget);
-        expect(
-          find.text(strings.onboardingSummaryProfileSection),
-          findsOneWidget,
-        );
-        _expectSummarySurfaces(tester, family, theme, strings);
-        _expectNoFlutterException(tester, 'onboarding summary');
-      });
-
-      testWidgets('$mode onboarding renders the equipment-load error role', (
-        tester,
-      ) async {
-        await _pumpOnboarding(
-          tester,
-          theme: theme,
-          size: const Size(390, 844),
-          repository: _FailingOnboardingThemeRepository(),
-        );
-        final strings = await AppLocalizations.delegate.load(
-          const Locale('en'),
-        );
-
-        await _advance(tester, strings.onboardingNext);
-        await _advance(tester, strings.onboardingNext);
-        await _tapVisible(
-          tester,
-          find.text(strings.onboardingExerciseDataTitle),
-        );
-        await _advance(tester, strings.onboardingNext);
-
-        expect(find.text(strings.onboardingEquipmentLoadError), findsOneWidget);
-        _expectEquipmentLoadError(tester, theme, strings);
-        _expectNoFlutterException(tester, 'gym-equipment load error');
-      });
-
+          expect(
+            find.text(strings.onboardingEquipmentLoadError),
+            findsOneWidget,
+          );
+          _expectEquipmentLoadError(tester, theme, strings);
+          _expectNoFlutterException(tester, 'gym-equipment load error');
+        });
+      }
       testWidgets('$mode onboarding reflows at large text scale', (
         tester,
       ) async {
@@ -292,34 +319,35 @@ void main() {
     }
   }
 
-  testWidgets('Expressive onboarding keeps Next above a compact keyboard inset', (
-    tester,
-  ) async {
-    const size = Size(320, 780);
-    const keyboardInset = 280.0;
-    await _pumpOnboarding(
-      tester,
-      theme: ExpressiveThemeDefinition.light(),
-      size: size,
-      textScale: 2,
-      viewInsets: const EdgeInsets.only(bottom: keyboardInset),
-      disableAnimations: true,
-    );
-    final strings = await AppLocalizations.delegate.load(const Locale('en'));
-    await tester.tap(find.text(strings.onboardingNext));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'Expressive onboarding keeps Next above a compact keyboard inset',
+    (tester) async {
+      const size = Size(320, 780);
+      const keyboardInset = 280.0;
+      await _pumpOnboarding(
+        tester,
+        theme: ExpressiveThemeDefinition.light(),
+        size: size,
+        textScale: 2,
+        viewInsets: const EdgeInsets.only(bottom: keyboardInset),
+        disableAnimations: true,
+      );
+      final strings = await AppLocalizations.delegate.load(const Locale('en'));
+      await tester.tap(find.text(strings.onboardingNext));
+      await tester.pumpAndSettle();
 
-    final nameField = find.byType(TextField).first;
-    await tester.ensureVisible(nameField);
-    await tester.tap(nameField);
-    await tester.enterText(nameField, 'Alex');
-    final availableBottom = size.height - keyboardInset;
-    final nameRect = tester.getRect(nameField);
-    final nextRect = tester.getRect(find.text(strings.onboardingNext));
-    expect(nameRect.bottom, lessThanOrEqualTo(availableBottom));
-    expect(nextRect.bottom, lessThanOrEqualTo(availableBottom));
-    expect(tester.takeException(), isNull);
-  });
+      final nameField = find.byType(TextField).first;
+      await tester.ensureVisible(nameField);
+      await tester.tap(nameField);
+      await tester.enterText(nameField, 'Alex');
+      final availableBottom = size.height - keyboardInset;
+      final nameRect = tester.getRect(nameField);
+      final nextRect = tester.getRect(find.text(strings.onboardingNext));
+      expect(nameRect.bottom, lessThanOrEqualTo(availableBottom));
+      expect(nextRect.bottom, lessThanOrEqualTo(availableBottom));
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
 
 Future<void> _pumpOnboarding(
@@ -398,18 +426,16 @@ void _expectCardSurface(
     of: find.text(title),
     matching: find.byType(SingleChildScrollView),
   );
-  final cardContainer =
-      find
-          .descendant(of: cardScroll.first, matching: find.byType(Container))
-          .first;
+  final cardContainer = find
+      .descendant(of: cardScroll.first, matching: find.byType(Container))
+      .first;
   final decoration = tester.widget<Container>(cardContainer).decoration;
   expect(decoration, isA<BoxDecoration>());
 
   final cardContext = tester.element(cardScroll.first);
-  final expectedColor =
-      family == AppThemeFamily.neoBrutalism
-          ? theme.surfaceTokens.settingsSection
-          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.34);
+  final expectedColor = family == AppThemeFamily.neoBrutalism
+      ? theme.surfaceTokens.settingsSection
+      : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.34);
   final cardDecoration = decoration! as BoxDecoration;
   expect(cardDecoration.color, expectedColor);
   expect(
@@ -421,14 +447,12 @@ void _expectCardSurface(
   expect(
     cardDecoration.border!.top,
     BorderSide(
-      color:
-          family == AppThemeFamily.neoBrutalism
-              ? tonosOutlineForSurface(cardContext, expectedColor)
-              : theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
-      width:
-          family == AppThemeFamily.neoBrutalism
-              ? cardContext.shapeTokens.outlineWidth
-              : 1,
+      color: family == AppThemeFamily.neoBrutalism
+          ? tonosOutlineForSurface(cardContext, expectedColor)
+          : theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+      width: family == AppThemeFamily.neoBrutalism
+          ? cardContext.shapeTokens.outlineWidth
+          : 1,
     ),
   );
 
@@ -474,15 +498,13 @@ void _expectPageDots(
   AppThemeFamily family,
   ThemeData theme,
 ) {
-  final dots =
-      tester
-          .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
-          .where(
-            (dot) =>
-                dot.constraints?.minHeight == 7 &&
-                dot.constraints?.maxHeight == 7,
-          )
-          .toList();
+  final dots = tester
+      .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+      .where(
+        (dot) =>
+            dot.constraints?.minHeight == 7 && dot.constraints?.maxHeight == 7,
+      )
+      .toList();
   expect(dots, hasLength(4));
 
   final activeDot = dots.singleWhere(
@@ -514,24 +536,21 @@ void _expectIntentTile(
   );
   final context = tester.element(tileFinder.first);
   final neo = family == AppThemeFamily.neoBrutalism;
-  final surface =
-      neo
-          ? (selected
-              ? context.surfaceTokens.settingsHero
-              : context.surfaceTokens.dialogChoice)
-          : null;
-  final expectedBackground =
-      neo
-          ? surface
-          : selected
-          ? theme.colorScheme.primary.withValues(alpha: 0.16)
-          : theme.colorScheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
-  final expectedBorder =
-      neo
-          ? tonosOutlineForSurface(context, surface!)
-          : selected
-          ? theme.colorScheme.primary
-          : theme.colorScheme.outlineVariant;
+  final surface = neo
+      ? (selected
+            ? context.surfaceTokens.settingsHero
+            : context.surfaceTokens.dialogChoice)
+      : null;
+  final expectedBackground = neo
+      ? surface
+      : selected
+      ? theme.colorScheme.primary.withValues(alpha: 0.16)
+      : theme.colorScheme.surface.withValues(alpha: enabled ? 0.5 : 0.28);
+  final expectedBorder = neo
+      ? tonosOutlineForSurface(context, surface!)
+      : selected
+      ? theme.colorScheme.primary
+      : theme.colorScheme.outlineVariant;
   final decoration =
       tester.widget<AnimatedContainer>(tileFinder.first).decoration!
           as BoxDecoration;
@@ -546,15 +565,15 @@ void _expectIntentTile(
     neo ? context.shapeTokens.settingsInput : context.tutorialTokens.tileShape,
   );
 
-  final expectedForeground =
-      neo
-          ? tonosForegroundForSurface(context, surface!)
-          : enabled
-          ? theme.colorScheme.onSurface
-          : theme.colorScheme.onSurfaceVariant;
+  final expectedForeground = neo
+      ? tonosForegroundForSurface(context, surface!)
+      : enabled
+      ? theme.colorScheme.onSurface
+      : theme.colorScheme.onSurfaceVariant;
   expect(tester.widget<Text>(label).style?.color, expectedForeground);
-  final inkWell =
-      find.ancestor(of: label, matching: find.byType(InkWell)).first;
+  final inkWell = find
+      .ancestor(of: label, matching: find.byType(InkWell))
+      .first;
   expect(tester.widget<InkWell>(inkWell).onTap, enabled ? isNotNull : isNull);
 
   final checkbox = find.descendant(
@@ -571,14 +590,14 @@ void _expectIntentTile(
       matching: find.text(statusLabel!),
     );
     expect(status, findsOneWidget);
-    final statusContainer =
-        find.ancestor(of: status, matching: find.byType(Container)).first;
+    final statusContainer = find
+        .ancestor(of: status, matching: find.byType(Container))
+        .first;
     final statusDecoration =
         tester.widget<Container>(statusContainer).decoration! as BoxDecoration;
-    final statusSurface =
-        neo
-            ? context.surfaceTokens.settingsInput
-            : theme.colorScheme.surfaceContainerHighest;
+    final statusSurface = neo
+        ? context.surfaceTokens.settingsInput
+        : theme.colorScheme.surfaceContainerHighest;
     expect(statusDecoration.color, statusSurface);
     expect(
       statusDecoration.border!.top.color,
@@ -606,18 +625,16 @@ void _expectGymSpaceTile(
   );
   final context = tester.element(tileFinder.first);
   final neo = family == AppThemeFamily.neoBrutalism;
-  final surface =
-      neo
-          ? (selected
-              ? context.surfaceTokens.settingsHero
-              : context.surfaceTokens.dialogChoice)
-          : null;
-  final expectedColor =
-      neo
-          ? surface
-          : selected
-          ? theme.colorScheme.primary.withValues(alpha: 0.16)
-          : theme.colorScheme.surface.withValues(alpha: 0.46);
+  final surface = neo
+      ? (selected
+            ? context.surfaceTokens.settingsHero
+            : context.surfaceTokens.dialogChoice)
+      : null;
+  final expectedColor = neo
+      ? surface
+      : selected
+      ? theme.colorScheme.primary.withValues(alpha: 0.16)
+      : theme.colorScheme.surface.withValues(alpha: 0.46);
   final decoration =
       tester.widget<AnimatedContainer>(tileFinder.first).decoration!
           as BoxDecoration;
@@ -635,16 +652,17 @@ void _expectGymSpaceTile(
     neo ? context.shapeTokens.outlineWidth : (selected ? 2 : 1),
   );
 
-  final tileIcon =
-      find.descendant(of: tileFinder.first, matching: find.byType(Icon)).first;
-  final iconContainer =
-      find.ancestor(of: tileIcon, matching: find.byType(Container)).first;
+  final tileIcon = find
+      .descendant(of: tileFinder.first, matching: find.byType(Icon))
+      .first;
+  final iconContainer = find
+      .ancestor(of: tileIcon, matching: find.byType(Container))
+      .first;
   final iconDecoration =
       tester.widget<Container>(iconContainer).decoration! as BoxDecoration;
-  final foreground =
-      neo
-          ? tonosForegroundForSurface(context, surface!)
-          : theme.colorScheme.primary;
+  final foreground = neo
+      ? tonosForegroundForSurface(context, surface!)
+      : theme.colorScheme.primary;
   expect(iconDecoration.color, foreground.withValues(alpha: 0.16));
 }
 
@@ -654,8 +672,9 @@ void _expectEmptyEquipmentSummary(
   AppLocalizations strings,
 ) {
   final title = find.text(strings.onboardingIncludedEquipmentTitle);
-  final panelFinder =
-      find.ancestor(of: title, matching: find.byType(Container)).first;
+  final panelFinder = find
+      .ancestor(of: title, matching: find.byType(Container))
+      .first;
   final context = tester.element(panelFinder);
   final decoration =
       tester.widget<Container>(panelFinder).decoration! as BoxDecoration;
@@ -678,12 +697,11 @@ void _expectWorkoutPlanTile(
   );
   final context = tester.element(tileFinder.first);
   final neo = family == AppThemeFamily.neoBrutalism;
-  final surface =
-      neo
-          ? (selected
-              ? context.surfaceTokens.settingsHero
-              : context.surfaceTokens.dialogChoice)
-          : null;
+  final surface = neo
+      ? (selected
+            ? context.surfaceTokens.settingsHero
+            : context.surfaceTokens.dialogChoice)
+      : null;
   final decoration =
       tester.widget<AnimatedContainer>(tileFinder.first).decoration!
           as BoxDecoration;
@@ -708,16 +726,17 @@ void _expectWorkoutPlanTile(
     neo ? context.shapeTokens.outlineWidth : (selected ? 2 : 1),
   );
 
-  final tileIcon =
-      find.descendant(of: tileFinder.first, matching: find.byType(Icon)).first;
-  final iconContainer =
-      find.ancestor(of: tileIcon, matching: find.byType(Container)).first;
+  final tileIcon = find
+      .descendant(of: tileFinder.first, matching: find.byType(Icon))
+      .first;
+  final iconContainer = find
+      .ancestor(of: tileIcon, matching: find.byType(Container))
+      .first;
   final iconDecoration =
       tester.widget<Container>(iconContainer).decoration! as BoxDecoration;
-  final foreground =
-      neo
-          ? tonosForegroundForSurface(context, surface!)
-          : theme.colorScheme.primary;
+  final foreground = neo
+      ? tonosForegroundForSurface(context, surface!)
+      : theme.colorScheme.primary;
   expect(iconDecoration.color, foreground.withValues(alpha: 0.16));
   expect(
     iconDecoration.borderRadius,
@@ -732,8 +751,9 @@ void _expectSummarySurfaces(
   AppLocalizations strings,
 ) {
   final calloutLabel = find.text(strings.onboardingSummaryIncluded);
-  final callout =
-      find.ancestor(of: calloutLabel, matching: find.byType(Container)).first;
+  final callout = find
+      .ancestor(of: calloutLabel, matching: find.byType(Container))
+      .first;
   final context = tester.element(callout);
   final neo = family == AppThemeFamily.neoBrutalism;
   final calloutSurface = neo ? context.surfaceTokens.dialogChoice : null;
@@ -751,8 +771,9 @@ void _expectSummarySurfaces(
   );
 
   final sectionTitle = find.text(strings.onboardingSummaryProfileSection);
-  final section =
-      find.ancestor(of: sectionTitle, matching: find.byType(Container)).first;
+  final section = find
+      .ancestor(of: sectionTitle, matching: find.byType(Container))
+      .first;
   final sectionDecoration =
       tester.widget<Container>(section).decoration! as BoxDecoration;
   final sectionSurface = neo ? context.surfaceTokens.settingsInput : null;
@@ -774,8 +795,9 @@ void _expectEquipmentLoadError(
   AppLocalizations strings,
 ) {
   final errorLabel = find.text(strings.onboardingEquipmentLoadError);
-  final errorContainer =
-      find.ancestor(of: errorLabel, matching: find.byType(Container)).first;
+  final errorContainer = find
+      .ancestor(of: errorLabel, matching: find.byType(Container))
+      .first;
   final context = tester.element(errorContainer);
   final decoration =
       tester.widget<Container>(errorContainer).decoration! as BoxDecoration;
@@ -802,10 +824,9 @@ void _expectChoiceChipSurface(
   );
 
   if (family == AppThemeFamily.neoBrutalism) {
-    final surface =
-        selected
-            ? theme.surfaceTokens.settingsHero
-            : theme.surfaceTokens.dialogChoice;
+    final surface = selected
+        ? theme.surfaceTokens.settingsHero
+        : theme.surfaceTokens.dialogChoice;
     expect(chip.selectedColor, surface);
     expect(chip.backgroundColor, surface);
     expect(

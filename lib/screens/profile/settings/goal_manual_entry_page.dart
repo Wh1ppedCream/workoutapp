@@ -687,7 +687,7 @@ class _GoalManualEntryPageState extends State<GoalManualEntryPage> {
       validator: (value) {
         if (value == null || value.trim().isEmpty) return null;
         final parsed = num.tryParse(value);
-        if (parsed == null) {
+        if (parsed == null || !parsed.isFinite) {
           return AppLocalizations.of(context).nutritionEnterNumber;
         }
         if (parsed < 0) {

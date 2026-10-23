@@ -90,6 +90,25 @@ class VolumeBoundaries {
     required this.maxRecoverable,
   });
 
+  bool get isValid =>
+      [
+        maintenance,
+        minEffective,
+        maxAdaptive,
+        maxRecoverable,
+      ].every((value) => value.isFinite && value >= 0) &&
+      maintenance <= minEffective &&
+      minEffective <= maxAdaptive &&
+      maxAdaptive <= maxRecoverable;
+
+  void validate() {
+    if (!isValid) {
+      throw ArgumentError(
+        'Volume boundaries must be finite, nonnegative, and ordered',
+      );
+    }
+  }
+
   /// NEW: decode from either muscle or bodypart boundaries table
   factory VolumeBoundaries.fromMap(Map<String, dynamic> m) {
     final keyId = m.containsKey('muscle_id') ? 'muscle_id' : 'bodypart_id';

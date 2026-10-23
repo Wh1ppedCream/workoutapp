@@ -948,6 +948,7 @@ Future<bool> _foodExists(int foodId) async {
   // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> setGoals(NutritionGoal goal) async {
+    goal.validateTargets();
     await db.transaction((txn) async {
       // Close any open goal overlapping this start
       await txn.update(

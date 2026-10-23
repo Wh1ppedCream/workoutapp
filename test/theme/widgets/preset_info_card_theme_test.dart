@@ -13,6 +13,7 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/widgets/preset_info_card.dart';
+import 'package:env_test/widgets/focused_sets_list.dart';
 import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/utils/weight_unit_formatter.dart';
 
@@ -202,8 +203,20 @@ void main() {
             ),
             findsOneWidget,
           );
-          // Planned fractional set credit must not appear as zero beside a bar.
-          expect(find.text('0.5'), findsOneWidget);
+          // The approved hero rounds labels while retaining fractional bar data.
+          expect(find.text('0.5'), findsNothing);
+          final focusList = find.byType(FocusedSetsList);
+          final focusWidget = tester.widget<FocusedSetsList>(focusList);
+          expect(focusWidget.roundUnits, isTrue);
+          expect(focusWidget.hits[2].units, closeTo(0.5, 0.0001));
+          final countLabels = tester
+              .widgetList<Text>(
+                find.descendant(of: focusList, matching: find.byType(Text)),
+              )
+              .map((text) => text.data)
+              .whereType<String>()
+              .where((text) => RegExp(r'^\d+$').hasMatch(text));
+          expect(countLabels, ['3', '2', '1', '0', '0', '0']);
           for (final name in _SummaryRepository.focus.keys.map(
             (part) => part.name,
           )) {

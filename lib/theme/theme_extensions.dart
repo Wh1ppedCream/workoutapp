@@ -17,6 +17,8 @@ import 'tokens/app_media_tokens.dart';
 import 'tokens/app_progress_colors.dart';
 import 'tokens/app_tutorial_tokens.dart';
 
+// Keep the established internal Expressive identity so all approved destination
+// scopes use the same presentation when selected through regular settings.
 enum AppThemeFamilyIdentity { classic, neoBrutalism, expressivePreview }
 
 @immutable

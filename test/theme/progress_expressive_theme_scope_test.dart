@@ -102,13 +102,18 @@ void main() {
           AppExpressiveDestinationFamily.progress,
           theme.brightness,
         );
-        expect(theme.extension<AppProgressColors>()!.healthCard,
-            destination.surfaceAccent);
+        expect(
+          theme.extension<AppProgressColors>()!.healthCard,
+          destination.surfaceAccent,
+        );
         if (theme.brightness == Brightness.dark) {
           expect(destination.surfaceAccent, const Color(0xFF572C43));
         }
         expect(
-          _contrastRatio(destination.onSurfaceAccent, destination.surfaceAccent),
+          _contrastRatio(
+            destination.onSurfaceAccent,
+            destination.surfaceAccent,
+          ),
           greaterThanOrEqualTo(4.5),
         );
         expect(
@@ -133,7 +138,10 @@ void main() {
   );
 
   test('Classic and Neo Progress roles retain their family recipes', () {
-    for (final family in AppThemeFamily.values) {
+    for (final family in [
+      AppThemeFamily.classic,
+      AppThemeFamily.neoBrutalism,
+    ]) {
       for (final theme in <ThemeData>[
         AppThemeFactory.light(family),
         AppThemeFactory.dark(family),

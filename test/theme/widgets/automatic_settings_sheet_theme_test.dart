@@ -25,10 +25,9 @@ void main() {
           await tester.binding.setSurfaceSize(const Size(430, 900));
           addTearDown(() => tester.binding.setSurfaceSize(null));
 
-          final theme =
-              brightness == Brightness.light
-                  ? AppThemeFactory.light(family)
-                  : AppThemeFactory.dark(family);
+          final theme = brightness == Brightness.light
+              ? AppThemeFactory.light(family)
+              : AppThemeFactory.dark(family);
           final repository = _PresetRepository();
           final preset = PresetSession(1, repository: repository);
           await preset.ready;
@@ -61,14 +60,12 @@ void main() {
                     builder: (context) {
                       return Center(
                         child: ElevatedButton(
-                          onPressed:
-                              () => showModalBottomSheet<void>(
-                                context: context,
-                                isScrollControlled: true,
-                                builder:
-                                    (_) =>
-                                        AutomaticSettingsSheet(preset: preset),
-                              ),
+                          onPressed: () => showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) =>
+                                AutomaticSettingsSheet(preset: preset),
+                          ),
                           child: const Text('Open automatic settings'),
                         ),
                       );
@@ -82,8 +79,9 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(find.byType(TonosField), findsNWidgets(5));
-          final fields =
-              tester.widgetList<TextField>(find.byType(TextField)).toList();
+          final fields = tester
+              .widgetList<TextField>(find.byType(TextField))
+              .toList();
           expect(fields, hasLength(5));
           final strings = AppLocalizations.of(
             tester.element(find.byType(AutomaticSettingsSheet)),
@@ -131,10 +129,9 @@ void main() {
             ),
             findsOneWidget,
           );
-          final decorators =
-              tester
-                  .widgetList<InputDecorator>(find.byType(InputDecorator))
-                  .toList();
+          final decorators = tester
+              .widgetList<InputDecorator>(find.byType(InputDecorator))
+              .toList();
           expect(decorators, hasLength(fields.length));
           for (final decorator in decorators) {
             expect(
@@ -316,9 +313,8 @@ Future<void> _expectAutomaticControlStates(
       );
       expect(
         widget.activeColor == inheritedRadioColor,
-        family == AppThemeFamily.classic,
-        reason:
-            'The route keeps primary ink when the Neo radio theme resolves purple.',
+        family != AppThemeFamily.neoBrutalism,
+        reason: 'The route keeps primary ink when the Neo radio theme resolves purple.',
       );
       final tile = find.ancestor(
         of: control,
@@ -425,15 +421,14 @@ void _expectResolvedControl(
   Finder? semanticsTarget,
 }) {
   final painter = _toggleablePainter(tester, control);
-  final active =
-      !isCheckbox && routeRadioPrimary
-          ? theme.colorScheme.primary
-          : _expectedControlColor(
-            theme,
-            isCheckbox: isCheckbox,
-            selected: true,
-            focused: focused,
-          );
+  final active = !isCheckbox && routeRadioPrimary
+      ? theme.colorScheme.primary
+      : _expectedControlColor(
+          theme,
+          isCheckbox: isCheckbox,
+          selected: true,
+          focused: focused,
+        );
   if (isCheckbox) {
     expect(
       theme.colorScheme.primary,
@@ -454,8 +449,9 @@ void _expectResolvedControl(
   if (focused) {
     expect(painter.reactionFocusFade.value, greaterThan(0));
   }
-  final semantics =
-      tester.getSemantics(semanticsTarget ?? control).getSemanticsData();
+  final semantics = tester
+      .getSemantics(semanticsTarget ?? control)
+      .getSemanticsData();
   expect(semantics.hasFlag(SemanticsFlag.isEnabled), isTrue);
   expect(
     semantics.hasFlag(SemanticsFlag.isChecked),
@@ -474,10 +470,9 @@ Color _expectedControlColor(
     if (selected) WidgetState.selected,
     if (focused) WidgetState.focused,
   };
-  final themedColor =
-      isCheckbox
-          ? theme.checkboxTheme.fillColor?.resolve(states)
-          : theme.radioTheme.fillColor?.resolve(states);
+  final themedColor = isCheckbox
+      ? theme.checkboxTheme.fillColor?.resolve(states)
+      : theme.radioTheme.fillColor?.resolve(states);
   if (themedColor != null) return themedColor;
   if (isCheckbox) {
     return selected ? theme.colorScheme.primary : Colors.transparent;

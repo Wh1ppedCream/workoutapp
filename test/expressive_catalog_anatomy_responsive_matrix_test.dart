@@ -655,6 +655,14 @@ class _ResponsiveCatalogDatabase implements DatabaseHelper {
 class _ResponsiveDetailRepository extends AppRepository {
   _ResponsiveDetailRepository() : super(db: _ResponsiveDetailDatabase());
 
+  @override
+  Future<void> ensureExerciseMediaManifestReady() async {}
+
+  @override
+  Future<ExerciseMediaItem?> fetchPrimaryExerciseMedia(
+    int definitionId,
+  ) async => null;
+
   static final bodyPart = BodyPart(1, 'Upper Chest');
   static final muscle = Muscle(id: 1, name: 'Long Head Triceps');
   static final equipment = Equipment(1, 'High and Low Pulley');

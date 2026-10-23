@@ -7,6 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/disposable_benchmark_guard.dart';
 
 import 'package:env_test/dev/expressive_preview_fixtures.dart';
 import 'package:env_test/dev/expressive_preview_safety.dart';
@@ -34,6 +37,15 @@ import 'package:env_test/widgets/seven_day_focus_card.dart';
 import 'package:env_test/widgets/weight_card.dart';
 
 const _timingFlushDelay = Duration(seconds: 2);
+const _disposableDevice = bool.fromEnvironment('TONOS_DISPOSABLE_DEVICE');
+const _disposableMarker = 'tonos.profile_benchmark.disposable';
+const _benchmarkTabs = <TabItem>[
+  TabItem.train,
+  TabItem.catalog,
+  TabItem.history,
+  TabItem.measurementsTrends,
+  TabItem.profile,
+];
 const _idleObservationDuration = Duration(seconds: 3);
 const _rapidSelectionCadence = Duration(milliseconds: 80);
 const _measuredCyclesPerBatch = 6;
@@ -76,6 +88,16 @@ void main() {
       startupCheckpoint('identity guard started');
       await ExpressivePreviewSafety.verifyBeforeDataAccess();
       startupCheckpoint('identity guard completed');
+      final preferences = await SharedPreferences.getInstance();
+      requireDisposableBenchmarkInstallation(
+        explicitlyDisposable: _disposableDevice,
+        markedDisposable: preferences.getBool(_disposableMarker) ?? false,
+        preferenceKeys: preferences.getKeys(),
+      );
+      await preferences.setBool(_disposableMarker, true);
+      final tabs = _benchmarkTabs.map((tab) => tab.toString()).toList();
+      await preferences.setStringList('navBarOrder', tabs);
+      await preferences.setStringList('navBarEnabled', tabs);
       final themeProvider = await ThemeProvider.load();
       startupCheckpoint('theme provider loaded');
       final repository = AppRepository();
@@ -105,7 +127,10 @@ void main() {
         expect(find.byType(MainScreen), findsOneWidget);
         expect(find.byType(TrainPage), findsOneWidget);
         final trainContext = tester.element(find.byType(TrainPage));
-        expect(trainContext.read<NavBarConfig>().items, hasLength(5));
+        expect(
+          trainContext.read<NavBarConfig>().items,
+          orderedEquals(_benchmarkTabs),
+        );
         expect(fixtures.profileId, greaterThan(0));
         expect(
           await repository.loadActiveWorkoutDraft(),
@@ -295,7 +320,10 @@ void main() {
         );
         expect(find.byType(CatalogPage), findsNothing);
         expect(find.byKey(AppTestKeys.trainOverviewTab), findsOneWidget);
-        expect(finalTrainContext.read<NavBarConfig>().items, hasLength(5));
+        expect(
+          finalTrainContext.read<NavBarConfig>().items,
+          orderedEquals(_benchmarkTabs),
+        );
         expect(tester.takeException(), isNull);
 
         final functionalFlows = await _exerciseFunctionalPreviewFlows(

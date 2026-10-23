@@ -1,5 +1,6 @@
 // File: lib/providers/nutrition_profile.dart
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../repositories/app_repository.dart';
@@ -11,6 +12,9 @@ import '../services/safe_failure.dart';
 class NutritionProfile extends ChangeNotifier {
   final AppRepository _repo;
   late final FoodCatalogRepository _catalog;
+  final int? initialProfileId;
+  NutritionProfile? _parentScope;
+  late final Future<void> ready;
 
   // Profile state (still backed by gym_profiles in DB)
   List<GymProfile> profiles = [];
@@ -18,7 +22,7 @@ class NutritionProfile extends ChangeNotifier {
 
   // Day scope (clamped to local day)
   static DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
-  DateTime day = _dayOnly(DateTime.now());
+  DateTime day;
 
   // Data for the day
   DayTotals? totals;
@@ -54,15 +58,28 @@ class NutritionProfile extends ChangeNotifier {
   // Debounced coalescer for bursty updates
   Timer? _reloadDebounce;
 
-  NutritionProfile({required AppRepository repository}) : _repo = repository {
+  NutritionProfile({
+    required AppRepository repository,
+    DateTime? initialDay,
+    this.initialProfileId,
+  }) : _repo = repository,
+       day = _dayOnly(initialDay ?? DateTime.now()) {
     _catalog = _repo.foodCatalog;
-    _init();
+    ready = _init();
   }
 
   // Convenience
   int? get profileId => current?.id;
   bool get isToday => day.isAtSameMomentAs(_dayOnly(DateTime.now()));
   int get reloadSequence => _reloadSeq;
+
+  /// Historical records own their date without changing the root summary or
+  /// another records route. Writes still refresh the caller's current day.
+  NutritionProfile createDayScope(DateTime date) => NutritionProfile(
+    repository: _repo,
+    initialDay: date,
+    initialProfileId: profileId,
+  ).._parentScope = this;
 
   @override
   void dispose() {
@@ -71,19 +88,32 @@ class NutritionProfile extends ChangeNotifier {
     _midnightTimer?.cancel();
     _reloadDebounce?.cancel();
     super.dispose();
+    _parentScope?._requestReload();
   }
 
   Future<void> _init() async {
     try {
       // Seed core nutrient catalog on first run (idempotent).
       await _repo.seedNutrientsIfEmpty();
+      if (_disposed) return;
+
+      final parent = _parentScope;
+      if (parent != null) {
+        await parent.ready;
+        if (_disposed) return;
+        profiles = List.of(parent.profiles);
+        current = parent.current;
+      }
 
       await _loadProfilesIfNeeded();
+      if (_disposed) return;
 
       // Warm favorites cache (best-effort; errors are non-fatal)
       await _refreshFavoritesSafe();
+      if (_disposed) return;
 
       await reloadDay(); // loads totals/goal/meals for [day]
+      if (_disposed) return;
       _scheduleMidnightTick();
     } catch (e) {
       error = SafeFailure.classify(e);
@@ -100,6 +130,7 @@ class NutritionProfile extends ChangeNotifier {
     if (profiles.isNotEmpty && current != null) return;
 
     profiles = await _repo.fetchAllProfiles();
+    if (_disposed) return;
     if (profiles.isEmpty) {
       final id = await _repo.createProfile('General');
       profiles = await _repo.fetchAllProfiles();
@@ -108,7 +139,10 @@ class NutritionProfile extends ChangeNotifier {
         orElse: () => profiles.first,
       );
     } else {
-      current = profiles.first;
+      current = profiles.firstWhere(
+        (profile) => profile.id == initialProfileId,
+        orElse: () => profiles.first,
+      );
     }
   }
 
@@ -216,7 +250,9 @@ class NutritionProfile extends ChangeNotifier {
       totals = results[0] as DayTotals;
       activeGoal = results[1] as NutritionGoal?;
 
-      final rows = results[2] as List<DiaryEntryWithItem>;
+      final rows = List<DiaryEntryWithItem>.of(
+        results[2] as List<DiaryEntryWithItem>,
+      );
       rows.sort((a, b) => _compareMeals(a.entry, b.entry)); // reuse your sorter
       _meals = rows;
 
@@ -235,6 +271,7 @@ class NutritionProfile extends ChangeNotifier {
   // Debounced reload helper: coalesce bursty writes into one refresh.
   void _requestReload({Duration delay = const Duration(milliseconds: 80)}) {
     if (_disposed) return;
+    _parentScope?._requestReload(delay: delay);
     _reloadDebounce?.cancel();
     _reloadDebounce = Timer(delay, () {
       if (_disposed) return;
@@ -482,6 +519,7 @@ class NutritionProfile extends ChangeNotifier {
     if (profileId == null) return false;
     try {
       error = null;
+      goal.validateTargets();
       await _repo.setGoals(goal);
       return true;
     } catch (e) {

@@ -4,6 +4,7 @@ import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -29,10 +30,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets(
@@ -148,13 +148,9 @@ void main() {
             _expectBodyFatTile(tester, theme, firstFinder, selected: true);
             _expectBodyFatTile(tester, theme, secondFinder, selected: false);
 
-            final overlayFinder =
-                find
-                    .ancestor(
-                      of: secondFinder,
-                      matching: find.byType(Container),
-                    )
-                    .first;
+            final overlayFinder = find
+                .ancestor(of: secondFinder, matching: find.byType(Container))
+                .first;
             final overlayColor = tester.widget<Container>(overlayFinder).color!;
             expect(overlayColor, Colors.black.withValues(alpha: 0.58));
             expect(_resolvedTextColor(tester, secondFinder), Colors.white);
@@ -169,13 +165,9 @@ void main() {
 
             final fallbackIcon = find.byIcon(Icons.image_not_supported);
             expect(fallbackIcon, findsOneWidget);
-            final fallbackContainer =
-                find
-                    .ancestor(
-                      of: fallbackIcon,
-                      matching: find.byType(Container),
-                    )
-                    .first;
+            final fallbackContainer = find
+                .ancestor(of: fallbackIcon, matching: find.byType(Container))
+                .first;
             expect(
               tester.widget<Container>(fallbackContainer).color,
               theme.colorScheme.surfaceContainerHighest,
@@ -184,8 +176,9 @@ void main() {
                 tester.widget<Icon>(fallbackIcon).color ??
                 theme.iconTheme.color ??
                 theme.colorScheme.onSurface;
-            final fallbackBackground =
-                tester.widget<Container>(fallbackContainer).color!;
+            final fallbackBackground = tester
+                .widget<Container>(fallbackContainer)
+                .color!;
             expect(
               _contrastRatio(
                 Color.alphaBlend(fallbackIconColor, fallbackBackground),
@@ -195,10 +188,9 @@ void main() {
               reason: 'The missing-image indicator must remain visible.',
             );
 
-            final tileInkWell =
-                find
-                    .ancestor(of: secondFinder, matching: find.byType(InkWell))
-                    .first;
+            final tileInkWell = find
+                .ancestor(of: secondFinder, matching: find.byType(InkWell))
+                .first;
             final tileSemantics = tester.getSemantics(tileInkWell);
             expect(
               tileSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
@@ -206,13 +198,12 @@ void main() {
             );
             expect(tileSemantics.label, contains(secondLabel));
 
-            final secondTile =
-                find
-                    .ancestor(
-                      of: secondFinder,
-                      matching: find.byType(AnimatedContainer),
-                    )
-                    .first;
+            final secondTile = find
+                .ancestor(
+                  of: secondFinder,
+                  matching: find.byType(AnimatedContainer),
+                )
+                .first;
             final context = tester.element(secondFinder);
             expect(
               tester.widget<AnimatedContainer>(secondTile).duration,
@@ -237,13 +228,12 @@ void main() {
               size: const Size(390, 844),
               disableAnimations: true,
             );
-            final reducedMotionTile =
-                find
-                    .ancestor(
-                      of: find.text(firstLabel),
-                      matching: find.byType(AnimatedContainer),
-                    )
-                    .first;
+            final reducedMotionTile = find
+                .ancestor(
+                  of: find.text(firstLabel),
+                  matching: find.byType(AnimatedContainer),
+                )
+                .first;
             expect(
               tester.widget<AnimatedContainer>(reducedMotionTile).duration,
               Duration.zero,
@@ -309,13 +299,9 @@ void main() {
           theme,
           initialValueFinder,
           cardTitle,
-          expectedShape:
-              family == AppThemeFamily.neoBrutalism
-                  ? tester.element(initialValueFinder).shapeTokens.settingsInput
-                  : tester
-                      .element(initialValueFinder)
-                      .tutorialTokens
-                      .sectionShape,
+          expectedShape: family == AppThemeFamily.neoBrutalism
+              ? tester.element(initialValueFinder).shapeTokens.settingsInput
+              : tester.element(initialValueFinder).tutorialTokens.sectionShape,
           neoSurface: theme.surfaceTokens.dialogChoice,
           classicColor: theme.colorScheme.primary.withValues(alpha: 0.14),
           neo: family == AppThemeFamily.neoBrutalism,
@@ -327,26 +313,24 @@ void main() {
           tester,
           initialValueFinder,
           metricBackground,
-          expectedForeground:
-              family == AppThemeFamily.neoBrutalism
-                  ? tonosForegroundForSurface(
-                    tester.element(initialValueFinder),
-                    theme.surfaceTokens.dialogChoice,
-                  )
-                  : theme.colorScheme.onSurface,
+          expectedForeground: family == AppThemeFamily.neoBrutalism
+              ? tonosForegroundForSurface(
+                  tester.element(initialValueFinder),
+                  theme.surfaceTokens.dialogChoice,
+                )
+              : theme.colorScheme.onSurface,
           resolvedForeground: metricValueColor,
         );
         _expectTextContrast(
           tester,
           initialLabelFinder,
           metricBackground,
-          expectedForeground:
-              family == AppThemeFamily.neoBrutalism
-                  ? tonosSecondaryForegroundForSurface(
-                    tester.element(initialLabelFinder),
-                    theme.surfaceTokens.dialogChoice,
-                  )
-                  : theme.colorScheme.onSurfaceVariant,
+          expectedForeground: family == AppThemeFamily.neoBrutalism
+              ? tonosSecondaryForegroundForSurface(
+                  tester.element(initialLabelFinder),
+                  theme.surfaceTokens.dialogChoice,
+                )
+              : theme.colorScheme.onSurfaceVariant,
           resolvedForeground: metricLabelColor,
         );
         expect(dateValueFinder, findsOneWidget);
@@ -357,13 +341,9 @@ void main() {
           theme,
           weightTitleFinder,
           cardTitle,
-          expectedShape:
-              family == AppThemeFamily.neoBrutalism
-                  ? tester.element(weightTitleFinder).shapeTokens.settingsInput
-                  : tester
-                      .element(weightTitleFinder)
-                      .tutorialTokens
-                      .sectionShape,
+          expectedShape: family == AppThemeFamily.neoBrutalism
+              ? tester.element(weightTitleFinder).shapeTokens.settingsInput
+              : tester.element(weightTitleFinder).tutorialTokens.sectionShape,
           neoSurface: theme.surfaceTokens.settingsSection,
           classicColor: theme.colorScheme.surface.withValues(alpha: 0.52),
           neo: family == AppThemeFamily.neoBrutalism,
@@ -377,27 +357,24 @@ void main() {
             tester,
             finder,
             sliderBackground,
-            expectedForeground:
-                family == AppThemeFamily.neoBrutalism
-                    ? tonosForegroundForSurface(
-                      tester.element(finder),
-                      theme.surfaceTokens.settingsSection,
-                    )
-                    : finder == weightTitleFinder
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.primary,
+            expectedForeground: family == AppThemeFamily.neoBrutalism
+                ? tonosForegroundForSurface(
+                    tester.element(finder),
+                    theme.surfaceTokens.settingsSection,
+                  )
+                : finder == weightTitleFinder
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.primary,
           );
         }
         expect(rateTitleFinder, findsOneWidget);
         expect(rateValueFinder, findsOneWidget);
-        final ratePanelFinder =
-            find
-                .ancestor(of: rateTitleFinder, matching: find.byType(Container))
-                .first;
-        final rateSliderFinder =
-            find
-                .descendant(of: ratePanelFinder, matching: find.byType(Slider))
-                .first;
+        final ratePanelFinder = find
+            .ancestor(of: rateTitleFinder, matching: find.byType(Container))
+            .first;
+        final rateSliderFinder = find
+            .descendant(of: ratePanelFinder, matching: find.byType(Slider))
+            .first;
         expect(rateSliderFinder, findsOneWidget);
         expect(tester.widget<Slider>(rateSliderFinder).onChanged, isNotNull);
         await tester.ensureVisible(rateSliderFinder);
@@ -412,16 +389,18 @@ void main() {
         final initialRate = tester.widget<Slider>(rateSliderFinder).value;
         await tester.drag(rateSliderFinder, const Offset(36, 0));
         await tester.pumpAndSettle();
-        final valueBeforeKeyboard =
-            tester.widget<Slider>(rateSliderFinder).value;
+        final valueBeforeKeyboard = tester
+            .widget<Slider>(rateSliderFinder)
+            .value;
         expect(valueBeforeKeyboard, greaterThan(initialRate));
         rateFocusNode.requestFocus();
         await tester.pumpAndSettle();
         expect(rateFocusNode.hasPrimaryFocus, isTrue);
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
         await tester.pumpAndSettle();
-        final valueAfterKeyboard =
-            tester.widget<Slider>(rateSliderFinder).value;
+        final valueAfterKeyboard = tester
+            .widget<Slider>(rateSliderFinder)
+            .value;
         expect(valueAfterKeyboard, greaterThan(valueBeforeKeyboard));
         final updatedRateValueFinder = find.text(
           strings.onboardingBodyWeightPerWeek(
@@ -438,13 +417,12 @@ void main() {
           tester,
           updatedRateValueFinder,
           sliderBackground,
-          expectedForeground:
-              family == AppThemeFamily.neoBrutalism
-                  ? tonosForegroundForSurface(
-                    tester.element(updatedRateValueFinder),
-                    theme.surfaceTokens.settingsSection,
-                  )
-                  : theme.colorScheme.primary,
+          expectedForeground: family == AppThemeFamily.neoBrutalism
+              ? tonosForegroundForSurface(
+                  tester.element(updatedRateValueFinder),
+                  theme.surfaceTokens.settingsSection,
+                )
+              : theme.colorScheme.primary,
         );
 
         final weeklyBackground = _expectOwnedSurface(
@@ -452,10 +430,9 @@ void main() {
           theme,
           weeklyFinder,
           cardTitle,
-          expectedShape:
-              family == AppThemeFamily.neoBrutalism
-                  ? tester.element(weeklyFinder).shapeTokens.settingsInput
-                  : tester.element(weeklyFinder).tutorialTokens.inputShape,
+          expectedShape: family == AppThemeFamily.neoBrutalism
+              ? tester.element(weeklyFinder).shapeTokens.settingsInput
+              : tester.element(weeklyFinder).tutorialTokens.inputShape,
           neoSurface: theme.surfaceTokens.dialogChoice,
           classicColor: theme.colorScheme.surface.withValues(alpha: 0.52),
           neo: family == AppThemeFamily.neoBrutalism,
@@ -469,20 +446,19 @@ void main() {
             tester,
             finder,
             weeklyBackground,
-            expectedForeground:
-                family == AppThemeFamily.neoBrutalism
-                    ? finder == weeklyFinder
-                        ? tonosForegroundForSurface(
+            expectedForeground: family == AppThemeFamily.neoBrutalism
+                ? finder == weeklyFinder
+                      ? tonosForegroundForSurface(
                           tester.element(finder),
                           theme.surfaceTokens.dialogChoice,
                         )
-                        : tonosSecondaryForegroundForSurface(
+                      : tonosSecondaryForegroundForSurface(
                           tester.element(finder),
                           theme.surfaceTokens.dialogChoice,
                         )
-                    : finder == weeklyFinder
-                    ? theme.colorScheme.onSurface
-                    : theme.colorScheme.onSurfaceVariant,
+                : finder == weeklyFinder
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurfaceVariant,
           );
         }
         expect(monthlyFinder, findsOneWidget);
@@ -589,7 +565,9 @@ Future<void> _pumpHost(
       },
       home: Scaffold(
         backgroundColor: theme.colorScheme.surface,
-        body: Center(child: SizedBox(width: size.width, child: body)),
+        body: Center(
+          child: SizedBox(width: size.width, child: body),
+        ),
       ),
     ),
   );
@@ -651,73 +629,72 @@ Widget _goalCard({
   var currentRate = 0.5;
 
   return StatefulBuilder(
-    builder:
-        (context, setState) => OnboardingStyleHarness.card(
-          icon: Icons.flag_outlined,
-          title: strings.onboardingGoalPaceTitle,
-          subtitle: strings.onboardingGoalPaceSubtitle,
+    builder: (context, setState) => OnboardingStyleHarness.card(
+      icon: Icons.flag_outlined,
+      title: strings.onboardingGoalPaceTitle,
+      subtitle: strings.onboardingGoalPaceSubtitle,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: OnboardingStyleHarness.metricPreviewCard(
-                    icon: Icons.local_fire_department_outlined,
-                    value: metricValue,
-                    label: metricLabel,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OnboardingStyleHarness.metricPreviewCard(
-                    icon: Icons.event,
-                    value: secondMetricValue,
-                    label: secondMetricLabel,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            _goalSliderPanel(
-              title: strings.onboardingTargetWeight,
-              valueLabel: '${currentWeight.round()} lbs',
-              value: currentWeight,
-              min: 100,
-              max: 250,
-              onChanged: (value) => setState(() => currentWeight = value),
-            ),
-            const SizedBox(height: 16),
-            _goalSliderPanel(
-              title: strings.onboardingTargetGoalRate,
-              valueLabel: strings.onboardingBodyWeightPerWeek(
-                currentRate.toStringAsFixed(1),
+            Expanded(
+              child: OnboardingStyleHarness.metricPreviewCard(
+                icon: Icons.local_fire_department_outlined,
+                value: metricValue,
+                label: metricLabel,
               ),
-              value: currentRate,
-              min: 0.1,
-              max: 1,
-              divisions: 9,
-              focusNode: rateFocusNode,
-              onChanged: (value) => setState(() => currentRate = value),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OnboardingStyleHarness.miniStat(
-                    label: strings.onboardingPerWeek,
-                    value: weeklyValue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OnboardingStyleHarness.miniStat(
-                    label: strings.onboardingPerMonth,
-                    value: monthlyValue,
-                  ),
-                ),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: OnboardingStyleHarness.metricPreviewCard(
+                icon: Icons.event,
+                value: secondMetricValue,
+                label: secondMetricLabel,
+              ),
             ),
           ],
         ),
+        const SizedBox(height: 22),
+        _goalSliderPanel(
+          title: strings.onboardingTargetWeight,
+          valueLabel: '${currentWeight.round()} lbs',
+          value: currentWeight,
+          min: 100,
+          max: 250,
+          onChanged: (value) => setState(() => currentWeight = value),
+        ),
+        const SizedBox(height: 16),
+        _goalSliderPanel(
+          title: strings.onboardingTargetGoalRate,
+          valueLabel: strings.onboardingBodyWeightPerWeek(
+            currentRate.toStringAsFixed(1),
+          ),
+          value: currentRate,
+          min: 0.1,
+          max: 1,
+          divisions: 9,
+          focusNode: rateFocusNode,
+          onChanged: (value) => setState(() => currentRate = value),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OnboardingStyleHarness.miniStat(
+                label: strings.onboardingPerWeek,
+                value: weeklyValue,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OnboardingStyleHarness.miniStat(
+                label: strings.onboardingPerMonth,
+                value: monthlyValue,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
   );
 }
 
@@ -748,10 +725,9 @@ void _expectSliderHeader(
   String title, {
   required bool stacked,
 }) {
-  final headerFinder =
-      find
-          .ancestor(of: find.text(title), matching: find.byType(LayoutBuilder))
-          .first;
+  final headerFinder = find
+      .ancestor(of: find.text(title), matching: find.byType(LayoutBuilder))
+      .first;
   expect(
     find.descendant(of: headerFinder, matching: find.byType(Row)),
     stacked ? findsNothing : findsOneWidget,
@@ -769,27 +745,33 @@ void _expectSwitchCardSurface(
 ) {
   final context = tester.element(titleFinder);
   final neo = context.usesNeoPresentation;
-  final surface =
-      neo ? context.surfaceTokens.settingsInput : theme.colorScheme.surface;
-  final cardFinder =
-      find.ancestor(of: titleFinder, matching: find.byType(Container)).first;
+  final expressive = AppExpressivePlanningTokens.maybeOf(context);
+  final surface = neo
+      ? context.surfaceTokens.settingsInput
+      : theme.colorScheme.surface;
+  final cardFinder = find
+      .ancestor(of: titleFinder, matching: find.byType(Container))
+      .first;
   final decoration =
       tester.widget<Container>(cardFinder).decoration! as BoxDecoration;
   expect(
     decoration.color,
-    neo ? surface : theme.colorScheme.surface.withValues(alpha: 0.5),
+    expressive?.planSupportSurface ??
+        (neo ? surface : theme.colorScheme.surface.withValues(alpha: 0.5)),
   );
   expect(
     decoration.borderRadius,
-    neo
-        ? context.shapeTokens.settingsInput
-        : context.tutorialTokens.sectionShape,
+    expressive?.rowShape ??
+        (neo
+            ? context.shapeTokens.settingsInput
+            : context.tutorialTokens.sectionShape),
   );
   expect(
     decoration.border!.top.color,
-    neo
-        ? tonosOutlineForSurface(context, surface)
-        : theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+    expressive?.outline ??
+        (neo
+            ? tonosOutlineForSurface(context, surface)
+            : theme.colorScheme.outlineVariant.withValues(alpha: 0.7)),
   );
 }
 
@@ -799,6 +781,8 @@ Color _switchForeground(
   Finder titleFinder,
 ) {
   final context = tester.element(titleFinder);
+  final expressive = AppExpressivePlanningTokens.maybeOf(context);
+  if (expressive != null) return expressive.planSupportForeground;
   return context.usesNeoPresentation
       ? tonosForegroundForSurface(context, context.surfaceTokens.settingsInput)
       : theme.colorScheme.onSurface;
@@ -811,10 +795,9 @@ void _expectBodyFatTile(
   required bool selected,
 }) {
   final context = tester.element(labelFinder);
-  final tileFinder =
-      find
-          .ancestor(of: labelFinder, matching: find.byType(AnimatedContainer))
-          .first;
+  final tileFinder = find
+      .ancestor(of: labelFinder, matching: find.byType(AnimatedContainer))
+      .first;
   final tile = tester.widget<AnimatedContainer>(tileFinder);
   final decoration = tile.decoration! as BoxDecoration;
   expect(decoration.borderRadius, context.tutorialTokens.inputShape);
@@ -837,8 +820,9 @@ Color _expectOwnedSurface(
   required bool neo,
   required BorderSide? classicBorder,
 }) {
-  final containerFinder =
-      find.ancestor(of: childFinder, matching: find.byType(Container)).first;
+  final containerFinder = find
+      .ancestor(of: childFinder, matching: find.byType(Container))
+      .first;
   final decoration =
       tester.widget<Container>(containerFinder).decoration! as BoxDecoration;
   final childContext = tester.element(childFinder);
@@ -864,21 +848,22 @@ Color _effectivePanelBackground(
   String cardTitle,
   ThemeData theme,
 ) {
-  final panelFinder =
-      find.ancestor(of: childFinder, matching: find.byType(Container)).first;
+  final panelFinder = find
+      .ancestor(of: childFinder, matching: find.byType(Container))
+      .first;
   final panelDecoration =
       tester.widget<Container>(panelFinder).decoration! as BoxDecoration;
   final panelColor = panelDecoration.color!;
 
-  final cardScroll =
-      find
-          .ancestor(
-            of: find.text(cardTitle),
-            matching: find.byType(SingleChildScrollView),
-          )
-          .first;
-  final cardContainer =
-      find.descendant(of: cardScroll, matching: find.byType(Container)).first;
+  final cardScroll = find
+      .ancestor(
+        of: find.text(cardTitle),
+        matching: find.byType(SingleChildScrollView),
+      )
+      .first;
+  final cardContainer = find
+      .descendant(of: cardScroll, matching: find.byType(Container))
+      .first;
   final cardDecoration =
       tester.widget<Container>(cardContainer).decoration! as BoxDecoration;
   final cardColor = cardDecoration.color!;

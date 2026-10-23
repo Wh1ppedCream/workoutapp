@@ -125,5 +125,6 @@ class DebugThemeFamilyControl extends StatelessWidget {
   String _familyLabel(AppThemeFamily family) => switch (family) {
     AppThemeFamily.classic => 'Classic',
     AppThemeFamily.neoBrutalism => 'Neo-Brutalism',
+    AppThemeFamily.expressive => 'Expressive',
   };
 }

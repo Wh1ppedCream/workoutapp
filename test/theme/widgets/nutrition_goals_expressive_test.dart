@@ -227,7 +227,7 @@ void main() {
       expect(find.text(strings.nutritionCarbsLabel), findsOneWidget);
       expect(
         find.text(
-          '${strings.nutritionNoFoodLogged} · ${strings.nutritionTapToAddFirstEntry}',
+          '${strings.nutritionNoFoodLogged}\n${strings.nutritionTapToAddFirstEntry}',
         ),
         findsOneWidget,
       );
@@ -236,18 +236,27 @@ void main() {
         find.byTooltip(strings.nutritionAddEntryActionLabel),
         findsOneWidget,
       );
+      Finder statCard(String label) => find.ancestor(
+        of: find.text(label),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Container && widget.constraints?.minHeight == 52,
+        ),
+      );
       final calories = tester.getTopLeft(
-        find.text(strings.nutritionCaloriesLabel),
+        statCard(strings.nutritionCaloriesLabel),
       );
       final protein = tester.getTopLeft(
-        find.text(strings.nutritionProteinLabel),
+        statCard(strings.nutritionProteinLabel),
       );
-      final carbs = tester.getTopLeft(find.text(strings.nutritionCarbsLabel));
-      final fat = tester.getTopLeft(find.text(strings.nutritionFatLabel));
+      final carbs = tester.getTopLeft(statCard(strings.nutritionCarbsLabel));
+      final fat = tester.getTopLeft(statCard(strings.nutritionFatLabel));
       expect(protein.dx, greaterThan(calories.dx));
       expect(protein.dy, closeTo(calories.dy, 1));
-      expect(carbs.dy, greaterThan(protein.dy));
+      expect(carbs.dy, closeTo(protein.dy, 1));
+      expect(carbs.dx, greaterThan(protein.dx));
       expect(fat.dx, greaterThan(carbs.dx));
+      expect(fat.dy, closeTo(carbs.dy, 1));
       expect(
         find.byWidgetPredicate(
           (widget) => widget is Positioned && widget.height == 64,

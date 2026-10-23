@@ -233,12 +233,29 @@ enlarged-text checks complete without visual defects or functional regressions.
 
 Run the Android core-flow suite on a connected device:
 
+Use a disposable emulator or dedicated test installation. This suite clears
+preferences and recreates its explicitly named integration database. Do not
+install it over the active review app or target the user's current Pixel.
+
 ```powershell
 flutter test integration_test\core_flows_test.dart `
   -d <android-device-id> `
   --dart-define=TONOS_INTEGRATION_TEST=true `
   --dart-define=TONOS_DATABASE_NAME=tonos_integration_test.db
 ```
+
+## Expressive profile benchmark isolation
+
+`integration_test/expressive_preview_device_test.dart` remains a physical-device
+profile benchmark, separate from the debug core-flow test. Use a dedicated,
+fresh test installation with the existing preview package/database identity
+flags and `TONOS_DISPOSABLE_DEVICE=true`. Check the target's installed package
+before installing: do not replace the active `com.tonos.expressivepreview`
+review installation. The benchmark now refuses nonempty, unmarked preferences
+before creating fixtures and records a marker only in a disposable installation.
+It pins the measured tab identities and order instead of assuming any existing
+five-tab user configuration. Reruns are allowed on that marked installation.
+An emulator/debug run does not qualify physical-device frame performance.
 
 ## Neo internal Android release candidate
 

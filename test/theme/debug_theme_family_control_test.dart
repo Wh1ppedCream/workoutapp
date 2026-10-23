@@ -29,17 +29,16 @@ void main() {
         value: provider,
         child: MaterialApp(
           theme: AppThemeFactory.light(AppThemeFamily.classic),
-          builder:
-              (context, child) => Stack(
-                children: [
-                  child!,
-                  const Positioned(
-                    top: 0,
-                    right: 48,
-                    child: SafeArea(child: DebugThemeFamilyControl()),
-                  ),
-                ],
+          builder: (context, child) => Stack(
+            children: [
+              child!,
+              const Positioned(
+                top: 0,
+                right: 48,
+                child: SafeArea(child: DebugThemeFamilyControl()),
               ),
+            ],
+          ),
           home: const Scaffold(),
         ),
       ),
@@ -55,6 +54,10 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.byKey(const ValueKey('debug-theme-family-control')));
     await tester.pumpAndSettle();
+    expect(provider.family, AppThemeFamily.expressive);
+    expect(preferences.getString('theme_family'), 'expressive');
+    await tester.tap(find.byKey(const ValueKey('debug-theme-family-control')));
+    await tester.pumpAndSettle();
     expect(provider.family, AppThemeFamily.classic);
     expect(preferences.getString('theme_family'), 'classic');
     expect(tester.takeException(), isNull);
@@ -62,32 +65,39 @@ void main() {
     provider.dispose();
   });
 
-  testWidgets('hides the family switcher when experimental families are off', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final provider = ThemeProvider(
-      capabilities: const AppThemeCapabilities(
-        experimentalThemesEnabled: false,
-        isReleaseMode: false,
-      ),
-    );
-    await provider.ready;
-
-    await tester.pumpWidget(
-      ChangeNotifierProvider<ThemeProvider>.value(
-        value: provider,
-        child: MaterialApp(
-          theme: AppThemeFactory.light(AppThemeFamily.classic),
-          home: const Scaffold(body: DebugThemeFamilyControl()),
+  testWidgets(
+    'keeps stable Expressive available when experimental themes are off',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final provider = ThemeProvider(
+        capabilities: const AppThemeCapabilities(
+          experimentalThemesEnabled: false,
+          isReleaseMode: false,
         ),
-      ),
-    );
+      );
+      await provider.ready;
 
-    expect(
-      find.byKey(const ValueKey('debug-theme-family-control')),
-      findsNothing,
-    );
-    provider.dispose();
-  });
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ThemeProvider>.value(
+          value: provider,
+          child: MaterialApp(
+            theme: AppThemeFactory.light(AppThemeFamily.classic),
+            home: const Scaffold(body: DebugThemeFamilyControl()),
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('debug-theme-family-control')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('debug-theme-family-control')),
+      );
+      await tester.pumpAndSettle();
+      expect(provider.family, AppThemeFamily.expressive);
+      await tester.pumpWidget(const SizedBox.shrink());
+      provider.dispose();
+    },
+  );
 }

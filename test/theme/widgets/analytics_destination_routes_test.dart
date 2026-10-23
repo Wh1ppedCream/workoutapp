@@ -226,7 +226,7 @@ void main() {
                 (
                   family: family,
                   brightness: brightness,
-                  expressive: false,
+                  expressive: family == AppThemeFamily.expressive,
                   size: const Size(390, 844),
                   textScale: 1,
                   keyboardInset: 0,
@@ -248,7 +248,7 @@ void main() {
         final brightness = configuration.brightness;
         final expressive = configuration.expressive;
         await tester.binding.setSurfaceSize(configuration.size);
-        final theme = expressive
+        final theme = family == null
             ? ThemeData(
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF345B50),
@@ -261,8 +261,8 @@ void main() {
                 ],
               )
             : brightness == Brightness.light
-            ? AppThemeFactory.light(family!)
-            : AppThemeFactory.dark(family!);
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final mode = expressive
             ? 'expressive ${brightness.name} ${configuration.size.width}dp '
                   '${configuration.textScale}x'
@@ -507,7 +507,9 @@ void main() {
         final strings = AppLocalizations.of(
           tester.element(find.byType(BodyPartMuscleMappingScreen)),
         );
-        final mappingPicker = find.byType(DropdownButtonFormField<BodyPart>);
+        final mappingPicker = expressive
+            ? find.byKey(const ValueKey('mapping-body-part-choice'))
+            : find.byType(DropdownButtonFormField<BodyPart>);
         for (
           var attempt = 0;
           expressive && attempt < 8 && mappingPicker.evaluate().isEmpty;
@@ -655,7 +657,8 @@ void main() {
           await tester.tap(visibleCreditField);
           await tester.enterText(visibleCreditField, '1.25');
           await tester.pumpAndSettle();
-          final save = find.text(
+          final save = find.widgetWithText(
+            FloatingActionButton,
             AppLocalizations.of(
               tester.element(find.byType(ExerciseAnalyticsScreen)),
             ).allocationSaveChanges,
@@ -682,11 +685,17 @@ void main() {
           tester.element(find.byType(ExerciseEditorScreen)),
         );
         if (expressive) {
-          expect(
-            find.text(editorStrings.exerciseEditorChoose),
-            findsOneWidget,
-            reason: mode,
+          final choose = find.widgetWithText(
+            FilledButton,
+            editorStrings.exerciseEditorChooseCatalog,
           );
+          await tester.scrollUntilVisible(
+            choose,
+            160,
+            scrollable: find.byType(Scrollable).first,
+          );
+          await tester.pumpAndSettle();
+          expect(choose.hitTestable(), findsOneWidget, reason: mode);
         } else {
           expect(
             find.byTooltip(editorStrings.exerciseEditorChoose),

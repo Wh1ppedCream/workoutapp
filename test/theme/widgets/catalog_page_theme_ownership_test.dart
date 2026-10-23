@@ -10,6 +10,7 @@ import 'package:env_test/screens/catalog_page.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/widgets/exercise_media_thumbnail.dart';
 import 'package:material_ui/material_ui.dart';
@@ -70,6 +71,32 @@ void main() {
         expect(shapes.catalogFocusPane, BorderRadius.circular(isNeo ? 4 : 16));
 
         expect(find.text('Bench Press'), findsOneWidget);
+        if (context.usesExpressivePresentation) {
+          final lead = find.byKey(
+            const ValueKey('catalog-exercise-usage-lead-row'),
+          );
+          final row = tester.widget<Container>(lead);
+          final rowContext = tester.element(lead);
+          final destination = Theme.of(rowContext)
+              .extension<AppExpressiveDestinationTokens>()!;
+          final decoration = row.decoration! as BoxDecoration;
+          expect(destination.family, AppExpressiveDestinationFamily.catalog);
+          expect(decoration.color, destination.surfaceAccent);
+          expect(
+            decoration.border!.top.color,
+            destination.outlineAccent.withValues(alpha: 0.35),
+          );
+          expect(
+            row.padding,
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          );
+          expect(find.byType(CatalogExerciseSummaryCard), findsOneWidget);
+          expect(find.byType(CatalogTargetAnatomySummaryCard), findsOneWidget);
+          expect(find.byType(TonosSurface), findsNWidgets(2));
+          expect(find.byType(ExerciseMediaFrame), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          return;
+        }
         expect(
           find.byType(TonosSurface),
           isNeo ? findsNWidgets(2) : findsNothing,

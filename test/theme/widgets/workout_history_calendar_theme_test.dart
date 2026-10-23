@@ -23,7 +23,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  for (final family in AppThemeFamily.values) {
+  // Legacy calendar recipes; dedicated Expressive cases below verify its
+  // selector, period summaries, semantics, responsive states and navigation.
+  for (final family in const [
+    AppThemeFamily.classic,
+    AppThemeFamily.neoBrutalism,
+  ]) {
     for (final brightness in Brightness.values) {
       final theme = brightness == Brightness.light
           ? AppThemeFactory.light(family)

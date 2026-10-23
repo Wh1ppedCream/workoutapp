@@ -5,6 +5,7 @@ import 'package:env_test/screens/onboarding_flow.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,10 +15,9 @@ void main() {
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets(
@@ -38,9 +38,8 @@ void main() {
               theme: theme,
               locale: const Locale('en'),
               builder: (context, child) {
-                final mediaQuery = MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: const TextScaler.linear(2));
+                final mediaQuery = MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(2));
                 return MediaQuery(data: mediaQuery, child: child!);
               },
               home: Scaffold(
@@ -104,6 +103,12 @@ void _expectRenderedCallout(
   required Color scaffoldSurface,
 }) {
   final textFinder = find.text(text);
+  final expressive = AppExpressivePlanningTokens.maybeOf(
+    tester.element(textFinder),
+  );
+  final expectedFill =
+      expressive?.configurationSurface ??
+      theme.colorScheme.primary.withValues(alpha: 0.12);
   final decorationAncestors = find.ancestor(
     of: textFinder,
     matching: find.byType(DecoratedBox),
@@ -114,9 +119,7 @@ void _expectRenderedCallout(
     decorationAncestors,
   );
   final calloutBox = paintedBoxes.singleWhere(
-    (box) =>
-        (box.decoration as BoxDecoration).color ==
-        theme.colorScheme.primary.withValues(alpha: 0.12),
+    (box) => (box.decoration as BoxDecoration).color == expectedFill,
   );
   final cardBox = paintedBoxes.singleWhere(
     (box) => !identical(box, calloutBox),
@@ -125,19 +128,17 @@ void _expectRenderedCallout(
   final cardDecoration = cardBox.decoration as BoxDecoration;
   final calloutContext = tester.element(textFinder);
 
-  expect(
-    calloutDecoration.color,
-    theme.colorScheme.primary.withValues(alpha: 0.12),
-  );
+  expect(calloutDecoration.color, expectedFill);
   expect(
     calloutDecoration.borderRadius,
-    calloutContext.tutorialTokens.inputShape,
+    expressive?.supportShape ?? calloutContext.tutorialTokens.inputShape,
   );
   final calloutBorder = calloutDecoration.border! as Border;
   expect(calloutBorder.top.width, 1);
   expect(
     calloutBorder.top.color,
-    theme.colorScheme.primary.withValues(alpha: 0.28),
+    expressive?.outline.withValues(alpha: 0.35) ??
+        theme.colorScheme.primary.withValues(alpha: 0.28),
   );
 
   final cardFill = cardDecoration.color;
@@ -174,13 +175,14 @@ void _expectRenderedCallout(
   expect(messageForeground, isNotNull);
   expect(
     messageForeground,
-    calloutContext.surfaceDecorationTokens.panel.outlined
-        ? tonosSecondaryForegroundForSurface(
-          calloutContext,
-          calloutFill,
-          parentSurface: renderedCardSurface,
-        )
-        : theme.colorScheme.onSurfaceVariant,
+    expressive?.configurationForeground ??
+        (calloutContext.surfaceDecorationTokens.panel.outlined
+            ? tonosSecondaryForegroundForSurface(
+                calloutContext,
+                calloutFill,
+                parentSurface: renderedCardSurface,
+              )
+            : theme.colorScheme.onSurfaceVariant),
   );
   final renderedMessageForeground = Color.alphaBlend(
     messageForeground!,
@@ -199,34 +201,33 @@ void _expectRenderedCallout(
   );
 
   final iconFinder = find.descendant(
-    of:
-        find
-            .ancestor(of: textFinder, matching: find.byType(DecoratedBox))
-            .first,
+    of: find
+        .ancestor(of: textFinder, matching: find.byType(DecoratedBox))
+        .first,
     matching: find.byWidgetPredicate(
       (widget) => widget is Icon && widget.icon == Icons.check_circle_outline,
     ),
   );
   expect(iconFinder, findsOneWidget);
-  final iconParagraph =
-      tester
-          .renderObjectList<RenderParagraph>(
-            find.descendant(of: iconFinder, matching: find.byType(RichText)),
-          )
-          .single;
+  final iconParagraph = tester
+      .renderObjectList<RenderParagraph>(
+        find.descendant(of: iconFinder, matching: find.byType(RichText)),
+      )
+      .single;
   final iconForeground = _effectiveForeground(
     iconParagraph,
     DefaultTextStyle.of(tester.element(iconFinder)).style,
   );
   expect(iconForeground, isNotNull);
   final Color expectedIconForeground =
-      calloutContext.surfaceDecorationTokens.panel.outlined
+      expressive?.configurationForeground ??
+      (calloutContext.surfaceDecorationTokens.panel.outlined
           ? tonosForegroundForSurface(
-            calloutContext,
-            calloutFill,
-            parentSurface: renderedCardSurface,
-          )
-          : theme.colorScheme.primary;
+              calloutContext,
+              calloutFill,
+              parentSurface: renderedCardSurface,
+            )
+          : theme.colorScheme.primary);
   expect(iconForeground, expectedIconForeground);
   final renderedIconForeground = Color.alphaBlend(
     iconForeground!,

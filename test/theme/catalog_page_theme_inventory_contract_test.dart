@@ -36,18 +36,21 @@ void main() {
       root: Directory('lib'),
       inventory: inventory,
     );
-    final findings =
-        report.findings.where((finding) => finding.ruleId == rule!.id).toList();
-    expect(findings, hasLength(15));
+    final findings = report.findings
+        .where((finding) => finding.ruleId == rule!.id)
+        .toList();
+    expect(findings, hasLength(17));
     expect(
       findings.map((finding) => finding.kind),
       unorderedEquals(<String>[
         'color_transform',
         'color_transform',
         'color_transform',
+        'color_transform',
         'decoration',
         'decoration',
         'decoration',
+        'geometry',
         'geometry',
         'geometry',
         'geometry',
@@ -61,7 +64,7 @@ void main() {
     );
     expect(
       findings.where((finding) => finding.kind == 'color_transform'),
-      hasLength(3),
+      hasLength(4),
     );
     expect(
       findings.where((finding) => finding.kind == 'decoration'),
@@ -69,7 +72,7 @@ void main() {
     );
     expect(
       findings.where((finding) => finding.kind == 'geometry'),
-      hasLength(8),
+      hasLength(9),
     );
     expect(findings.where((finding) => finding.kind == 'shadow'), hasLength(1));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));

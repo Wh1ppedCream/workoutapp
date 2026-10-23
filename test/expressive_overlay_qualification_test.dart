@@ -872,11 +872,17 @@ void _expectSelectedFlag(Tristate actual, bool selected, String label) {
 }
 
 class _PreviewHarness {
-  _PreviewHarness(this.repository, this.presentation, this.themeProvider);
+  _PreviewHarness(
+    this.repository,
+    this.presentation,
+    this.themeProvider,
+    this.tester,
+  );
 
   final _QualificationRepository repository;
   final TonosPreviewPresentation presentation;
   final ThemeProvider themeProvider;
+  final WidgetTester tester;
 
   static Future<_PreviewHarness> create(
     WidgetTester tester, {
@@ -912,10 +918,23 @@ class _PreviewHarness {
       look: look,
       reducedMotion: reducedMotion,
     );
-    return _PreviewHarness(repository, presentation, themeProvider);
+    for (
+      var frame = 0;
+      frame < 20 && find.byType(TrainPage).evaluate().isEmpty;
+      frame++
+    ) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(TrainPage), findsOneWidget);
+    // Train's delayed tutorial gate is scheduled only after provider loading.
+    await tester.pump(const Duration(milliseconds: 750));
+    await tester.pump();
+    return _PreviewHarness(repository, presentation, themeProvider, tester);
   }
 
-  void dispose() {
+  Future<void> dispose() async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 750));
     presentation.dispose();
     themeProvider.dispose();
   }

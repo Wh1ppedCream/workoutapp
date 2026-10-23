@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/widgets/tonos_train_tabs.dart';
 
 void main() {
@@ -110,12 +111,11 @@ void main() {
 
     final tabs = find.byType(TonosTrainTabs);
     expect(tester.getSize(tabs).height, 88);
-    final labels =
-        tester
-            .widgetList<Text>(
-              find.descendant(of: tabs, matching: find.byType(Text)),
-            )
-            .toList();
+    final labels = tester
+        .widgetList<Text>(
+          find.descendant(of: tabs, matching: find.byType(Text)),
+        )
+        .toList();
     expect(labels, hasLength(2));
     expect(
       labels.every(
@@ -142,20 +142,18 @@ void main() {
         MaterialApp(
           theme: theme,
           home: StatefulBuilder(
-            builder:
-                (context, setState) => Scaffold(
-                  body: TonosTrainTabs(
-                    overviewLabel: 'Overview',
-                    plansLabel: 'Plans',
-                    overviewKey: const ValueKey('overview-tab'),
-                    plansKey: const ValueKey('plans-tab'),
-                    selectedIndex: selectedIndex,
-                    onChanged:
-                        (index) => setState(() {
-                          selectedIndex = index;
-                        }),
-                  ),
-                ),
+            builder: (context, setState) => Scaffold(
+              body: TonosTrainTabs(
+                overviewLabel: 'Overview',
+                plansLabel: 'Plans',
+                overviewKey: const ValueKey('overview-tab'),
+                plansKey: const ValueKey('plans-tab'),
+                selectedIndex: selectedIndex,
+                onChanged: (index) => setState(() {
+                  selectedIndex = index;
+                }),
+              ),
+            ),
           ),
         ),
       );
@@ -196,10 +194,9 @@ void main() {
       testWidgets(
         '${family.name} ${brightness.name} Train tabs resolve theme-owned shapes',
         (tester) async {
-          final theme =
-              brightness == Brightness.light
-                  ? AppThemeFactory.light(family)
-                  : AppThemeFactory.dark(family);
+          final theme = brightness == Brightness.light
+              ? AppThemeFactory.light(family)
+              : AppThemeFactory.dark(family);
           await tester.pumpWidget(
             MaterialApp(
               theme: theme,
@@ -220,6 +217,23 @@ void main() {
           final effects = context.effectTokens;
           final usesNeoRecipe = context.usesNeoPresentation;
           final usesClassicRecipe = context.usesClassicPresentation;
+          if (context.usesExpressivePresentation) {
+            final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+            final frameFinder = find.byKey(
+              const ValueKey('tonos-train-tabs-frame'),
+            );
+            final frame = tester.widget<Container>(frameFinder);
+            final decoration = frame.decoration! as BoxDecoration;
+            expect(decoration.color, tokens.selectorTrack);
+            expect(decoration.borderRadius, ExpressiveTrainShapes.selector);
+            expect(tester.getSize(frameFinder).height, 56);
+            expect(TonosTrainTabs.toolbarHeight(context), 64);
+            expect(find.byType(SegmentedButton<int>), findsNothing);
+            expect(find.text('Overview'), findsOneWidget);
+            expect(find.text('Plans'), findsOneWidget);
+            expect(tester.takeException(), isNull);
+            return;
+          }
           expect(usesNeoRecipe || usesClassicRecipe, isTrue);
           final usesInkRecipe = usesNeoRecipe;
           final expectedHeight = usesInkRecipe ? 48.0 : 44.0;
@@ -243,8 +257,8 @@ void main() {
             usesInkRecipe
                 ? context.cs.secondaryContainer
                 : surfaces.panelRaised.withValues(
-                  alpha: surfaces.trainTabSurfaceOpacity,
-                ),
+                    alpha: surfaces.trainTabSurfaceOpacity,
+                  ),
           );
           expect(
             decoration.borderRadius,
@@ -265,15 +279,14 @@ void main() {
             expect(decoration.boxShadow, isNull);
           }
 
-          final buttons =
-              tester
-                  .widgetList<Material>(
-                    find.descendant(
-                      of: find.byType(TonosTrainTabs),
-                      matching: find.byType(Material),
-                    ),
-                  )
-                  .toList();
+          final buttons = tester
+              .widgetList<Material>(
+                find.descendant(
+                  of: find.byType(TonosTrainTabs),
+                  matching: find.byType(Material),
+                ),
+              )
+              .toList();
           expect(buttons, hasLength(2));
           for (var index = 0; index < buttons.length; index++) {
             final isSelected = index == 1;

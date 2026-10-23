@@ -5,6 +5,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../tools/theme_style_ratchet.dart';
 
+String _dartExecutable() {
+  // The Flutter SDK used to start this suite may differ from PATH's Dart SDK.
+  final flutterRoot = Platform.environment['FLUTTER_ROOT'];
+  if (flutterRoot != null) {
+    final executable = File(
+      '$flutterRoot/bin/cache/dart-sdk/bin/'
+      '${Platform.isWindows ? 'dart.exe' : 'dart'}',
+    );
+    if (executable.existsSync()) return executable.path;
+  }
+  return 'dart';
+}
+
 void main() {
   test('production manifest retains exact qualified scopes', () {
     final manifest = jsonDecode(
@@ -45,22 +58,26 @@ void main() {
     final dataRecordsApprovals =
         (dataRecordsScope['approvals'] as List<dynamic>)
             .cast<Map<String, dynamic>>();
-    expect(dataRecordsApprovals, hasLength(9));
+    expect(dataRecordsApprovals, hasLength(13));
     expect(
       {
         for (final approval in dataRecordsApprovals)
           approval['fingerprint']: approval['count'],
       },
       {
+        '0a36c96fbb480dfd7b8ca334513a79abb6119e29d2fc71b6121e8f1531f17407': 1,
         '11ead75329a5f7ba629ad1550e99b3641fabc4e957a0f76efa659920f36f564f': 1,
-        '1cf5fa259126054327a3ecd006fad4a99afc3de122cc5224922c8d8e435adce7': 1,
-        '3aeaf49868b340b3d3d68b475e2d18bb4fcdfd35b18906bf685583c5cdb60f23': 1,
-        '42ad97fd0c17bb28e297844a614644d8e034b283255eb7c4a3add8dacf7e99d4': 2,
-        '5bb58bfa504cc1d5eb0210a8b10b2c74204f18e37d776867125156847fc93edf': 1,
-        '96307d05652af3c069e7c15a04d96135b0a463295a7f2ab0608f0de0d5793227': 1,
-        'acb3263f6faec3bd0578931310ba08f097405f5971de7496952df6314ed75ab1': 1,
-        'd9308d8df55d2eb124b654664013611f25915f6e7b8c14d56384af1b7d36d5c9': 1,
-        'e7e8fe6c59d5aff692604fa548f02de37c4856722a59d5b21a72b57f1ac769e1': 1,
+        '23c5f308f1d008f75579d85d6a63f400f22f0a5057988e5f412b7570a2b90308': 1,
+        '343fff5cfee3f07f211069c8a4b6a3c31bb53d42d2f7bc7d3b23a6d7ac09c293': 1,
+        '488134aa16b6186243a5cde2c2f0ef5ca019925056f74b23dd69579d2eb0fa32': 1,
+        '71b968c453ffe1441349b434e54b5853c9d8794e3bbb39ad05d7bd4553eed757': 1,
+        '8aba2571482fa33e6b6b60727247952b009a882ddcdd0ee7ac86fae4320f97eb': 1,
+        'a00b426cb6f76fa7f7653360d5be447c40adb5bc7866f98caa961f726b65cacd': 1,
+        'a2e680cf061375f026a9c69d9df322e7b67d9d064ec4da49a2819ff03c921e5a': 1,
+        'b52242beb353bdff93aba8ab3179056bd8dbf7b58bd0a777b26e4931546936cf': 1,
+        'b99c913c75aad86e985cd04da75f97dd5872c5d6de171997a87e9f13f40ccb3c': 1,
+        'be0a08a6f7742885267a6defb381c87c018ac989ef092b626ddd69b78bf4ddec': 1,
+        'dd5f2846cf541e2ee8c005bf13c2603d7f8460e7d8e984ff2a71a6f937c23d4a': 1,
       },
     );
     expect(
@@ -110,21 +127,21 @@ void main() {
       {
         '0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a': 1,
         '200cb37f2955432a9ce1d7e5ffac2aaaf07904aa7b56288a3997bc5e7f8856d9': 1,
+        '265b89721f98078f6f7075f2ef7e77d359f1ecda8173aa0761434edb7c386d64': 2,
         '2de734f63ecf28d7a0ed5e7f2dfd2f0d9184f310efb972f2ceee2fbeaac21239': 1,
         '2ed06ab145c2f3dd7bc98cac9fed47ce3c35e5d0ccae3280b7573547c6b371ea': 1,
         '45d21e426dc9356e0063e987bcc1f2143b87a4997abb068a13c4e1da70c5baaf': 1,
+        '4afc5db0983f7a19fd730602d48ff7c6031f866816dfc32820aa3370b1ce1d8d': 1,
+        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
         '73d044eee9eb451d4267a9aceb5afb59da566cb43ec44d8aecf32259c05fa0f8': 1,
         '77eaf73ee6fa579a9398863ae0fb61d61157f443de0b558dfd244cf14b0f2772': 1,
         '92d4cc98d360ce548fc0efe13bc47bc1fe41bda8521363877bd779f2a08d433a': 1,
         '96ee44c35eeeed933d184b41f687d36cf8f95ef617c486331d3900eec265b3cc': 1,
-        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
-        '804a603bd906bbd1d08900ec8e4f67b8a6a9d8d0c2584924214cd813bd7615cc': 1,
-        '8b81cbe8367b5ab7cd509ac3020bb3ee2009e47ada5cc1e6d243695aec063d3d': 2,
         'a3ab52916ab3234372277904efa5812b770f6ac85d6fc86323b9398e18cd49b8': 1,
         'a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b': 1,
         'a5e4ca6fe65f2d15bf6b626f177ed3eb66a2f06c4081ee293fbd3b1e51d1fb96': 2,
-        'd52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3': 1,
         'd1ec04069cf6108cf9aaaf9502e4380ee4cdb38c4406508ec6a52317b2264013': 1,
+        'd52fd99be097bae6d2f1e36362adebeae023df1f4a26c72dec444c42515250e3': 1,
       },
     );
     expect(
@@ -138,35 +155,38 @@ void main() {
     );
     final navigationApprovals = (navigationScope['approvals'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    expect(navigationApprovals, hasLength(22));
+    expect(navigationApprovals, hasLength(25));
     expect(
       {
         for (final approval in navigationApprovals)
           approval['fingerprint']: approval['count'],
       },
       {
-        '03258464a568390e832ec2cffafcab101bafa3e9ca5ae605b0d6dfc7c21bcb72': 1,
         '0a7365d68272b8817d4c84a36b6d23f75edab387f67398f6019ce46f74e7817a': 1,
         '0d3601f1da4df264c2aef6eea19f0d4ec9b58ab3e317636c4899a9fa1e6368ed': 1,
         '14547d142c719736f56b7d3720acbc57a76d2cab26fcfbc84647e018dfef3f13': 1,
+        '15827ea07dd5177cf704998cdf72061b2daa9cc0c7d1636d09acd63857f21f32': 1,
         '1a02edd38f5a7cbdca6c845fea770194fe16d96816ed81a824420eca77283791': 1,
-        '1e38447340beb12fd339f9cdbd547a47a3ded3c580a4c1c8d22c7197717ad434': 1,
+        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
+        '4e98c5eae21435cac90c939a5f8fec07aefdaa52e26e1c3484805cc6b0005940': 1,
+        '56baf6e489f5eb28656b3401c09c6f94d20b80ed9f7c26f414a566ccf6cdfcd0': 1,
         '64ab63cb8a1c8856ec7f396c1829562f5823e198ca272bfa25f3e7b6e32897ef': 1,
         '657d2f1738bc0e8c38f4f6a8ef73b0677c2b46aeabdf4aa4f1364b02e9b59e18': 1,
         '6e935861fcb507bebb821426e90e2ad6f971d6eda62dd2c5b1cb5df21856e7b4': 1,
-        '4c32b6d3c064fd0315a2b16f8c9fea77dfbbecb4ef7847d2cd95f643403bf40f': 2,
-        '5311ac0142412882084a2ea9bbd49f86ab2386f2a9d7005c9181a67f90d271b3': 1,
+        '815efddc551662dfe5a74faa16f155f30f7ebd1a426ade39a2682cdfba4b72bc': 1,
         '83b6681bc565f7c7d87035728f59e5020ada10e3619376a578b2b6ae534178f4': 1,
-        'a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b': 1,
+        '97d4bb30f4093b10823dc572c0d1ac710533437f866559cd45069a8ab30fae97': 3,
         '9a4a9476c4b12075d4c557127a78c485bf07207d7736a122a877199595521c69': 1,
-        '9a4c72b2818e67aa56940cf6b2f0ad73037787556f6453c2f5e53ba66226898c': 3,
         '9b587dc1a09a54ff64331ff81ad911c56b10d82f645ff4c8565372024455eab3': 1,
         '9d05d1c99125b8d1630d7ccd97bb5de8a049a63c3fd4416bb0504d5a358329e6': 1,
-        'b80259cfcf6344f1ae14a7ce2307f0065bd488df4752091d2f1e17119b34d676': 3,
+        'a4ec3c13f5a8e7454a2e10415db7672ae9a425ee38f1f5786c6a4e348507941b': 1,
+        'ad273c49cc35093acd0c2ee7dbe40107e24038403ba1a6be2732b9ed2beb1cfc': 1,
         'c52be0033ea57248051d9176a33f1e9852c22272b83dcfe6cc34a15a9134a59f': 1,
+        'd509ffc66e86bd99f719ba1b3c31d49d847fd0f64e4217d8f029ca3685090dab': 3,
         'd838425677fe39c04540f6bc06cb4ae2b2f75d856ae6a3c06032d2f094eb8741': 1,
+        'db7d7657610fed6889c8c45807e46689db7dcd980a20496a8be514c496988f6d': 1,
         'de6514ef2cda78f80265b8149ea6391b6776dcec693e2747067f2220d59385ba': 1,
-        'e1d7e645cb0d557ce03446482b7d0988ad24900233e1aa164e3e974f9bab6e45': 1,
+        'f9e41c9ddfff9d131f3855b64a37bf19c057aab438e4bc0d81c7fae1037304cd': 1,
       },
     );
     expect(
@@ -278,13 +298,26 @@ void main() {
     final exerciseInfoApprovals =
         (exerciseInfoScope['approvals'] as List<dynamic>)
             .cast<Map<String, dynamic>>();
-    expect(exerciseInfoApprovals, hasLength(1));
+    expect(exerciseInfoApprovals, hasLength(12));
     expect(
       {
         for (final approval in exerciseInfoApprovals)
           approval['fingerprint']: approval['count'],
       },
-      {'50ab6b853cf46e7e5a0455cb489b8cad5a697e15cf360f716b8a60f851b8e227': 1},
+      {
+        '087a939a2c9bbfd9f1e80d36f95d8931fa379bb710b8dd293667440fbbe099b6': 1,
+        '1621aab86eaec60fc057deb6ba3739d507d8a57873b8ceede6202f17571ea6e8': 2,
+        '3167a07b2b07362d0083258d33b4282a79565ea82214af905359d20409f950ae': 5,
+        '572a8ec9c40321c94c11a86ad0c2e662a7eab708e7ee590368ae83e13d442875': 1,
+        '6294ebe745d293289203b0c89004500501e3c13aece56ccff789c447b168fa5a': 1,
+        '93e60998b79033cf4fa421cebab5b027989e39d73b88bfb9f7d96368c2bc3dfd': 1,
+        'b66d112ffac67a412e7f3f7ebc78b8a3bef531a8a12caf28045f59dd52aa52d3': 1,
+        'c9da3ee6d9bc04b83d62e1807dad73538a42271c35a678b1ce91af0e9eb2d60c': 2,
+        'e86e6571ec0b49492e3a2c470102fdd7c63c5d9a301c948f234381db7be38849': 1,
+        'f0a6bfcd254c693816246701d990d35bf1c5ba1ea8806d5f5c03a4a3eaf931e4': 1,
+        'f4deb129fecdaaae0650a5ef08422128ee5e5a96ee84e9f07608c78b9d03c9fa': 2,
+        'fd7563fd498c6dc40ca50d85c3b9f629b46f0d88c65ef540a67b90cf0b47de9f': 1,
+      },
     );
     final setStatScope = files.cast<Map<String, dynamic>>().singleWhere(
       (file) => file['path'] == 'lib/widgets/set_stat_chip.dart',
@@ -425,18 +458,25 @@ void main() {
     final bodypartFocusApprovals =
         (bodypartFocusScope['approvals'] as List<dynamic>)
             .cast<Map<String, dynamic>>();
-    expect(bodypartFocusApprovals, hasLength(6));
+    expect(bodypartFocusApprovals, hasLength(13));
     expect(
       {
         for (final approval in bodypartFocusApprovals)
           approval['fingerprint']: approval['count'],
       },
       {
-        '560d0babcccb4b59d70cb10aff1591d17058df10af8b60c9762d38c48d47de6d': 2,
-        '66012b7fec4a4c2ae10b7baf6f5107a1fbf5eb15f9303aa0147a19dba2c194c1': 1,
-        '8fd4a725ef130da9b7ed66ec8d44c166dcc7ca696d4910c84b5844d7798c3f93': 1,
-        'b381477fa2d5c5bebdda57dd5f0c1184b2244bc9443098e3397acd598c7f7e94': 1,
-        'd2f521b65022202eab9f02851635ae690b1dd1681374c272828ec536cb5f4242': 1,
+        '11942bf03d4cb0526813b50527c8a6102d1529484a2b29258e0d746d7ecb9575': 1,
+        '2539db31cc8f18e48c6a09e38461d28cad7380ae0e6278a9674b69733cef421f': 1,
+        '3bd4ad747a8e127ffd77be0b1c564475c2072a2ba4502ae25da25a55304fad8a': 1,
+        '4f5523afdb2430d4f52545358bc935922c1dc52b854851237b186d6d32fcf162': 1,
+        '633db70f88b3d380a6832601a1a590c8d0d7a29163db5bbfa404b2a32d1dfb1a': 1,
+        '8974126e8939dea3c59f9c5b7e80aa684527a1aad8e73d4908f7f1d0c2b4daa4': 1,
+        '8a8eb82d41d80c1f2287ade6dcc3a24eb9dcd3a2cff5b4721973f0f1661c6105': 1,
+        '8c241d4a6db687137e396293db5a869894151c4cf525627934df367ed6904813': 1,
+        '9eacd65631f161e1fc97de33a5a3ed8b4bacff1dde3fcbf3cef5cae6ae5a86c3': 1,
+        'bb704cea34971731c464114a492bb52220dcb8c327ccb0ab94156bfa1ac992c1': 1,
+        'cb6a1939f9881438641c968960ab2d9409144335415e368441d7b8a7e8594665': 2,
+        'd7d477c08b69b118a6cf729776bb28c0ac12a6ebb02b76c50b9ee6432fb40ea1': 1,
         'eaa62c0622cfbefd44eeab710fd5cf18e9731de377c5b1a3865e9e7649b3cdcd': 1,
       },
     );
@@ -445,17 +485,28 @@ void main() {
     );
     final presetInfoApprovals = (presetInfoScope['approvals'] as List<dynamic>)
         .cast<Map<String, dynamic>>();
-    expect(presetInfoApprovals, hasLength(4));
+    expect(presetInfoApprovals, hasLength(15));
     expect(
       {
         for (final approval in presetInfoApprovals)
           approval['fingerprint']: approval['count'],
       },
       {
+        '11a65547ad47665b127f824811dea4f89cfd62308ecfb6332cbc803b1b4728df': 1,
+        '1dd0b1d91eaa0a238be90771e6de74fffac7fa8b1ad06a6f50302e1e0c97cc3c': 1,
+        '2901e67ac5eb80806f10d5c90f8f4ea3981daaff6f2a9ee62b70b2b530b4d130': 1,
         '3466d571d6462b44c625266035e181fa6013f488f65b82a520984cb59a7875f7': 1,
-        '651d278f2226b480a95e2a6f37789a9126e0387dda75051d3c08f2dca32bb45d': 1,
-        '23cfd97f904231ffda1ec1e0d345646dcd388a71234cfbe5844f15ad8af9a4ee': 1,
+        '713a2844d5505e1dd6ca5520db062f7a8aea24b2c1058f49cbb846ee7ce3c8f8': 1,
+        '9150e8114c7abf9f73df6929feeef142d83b3550cbb33cd179eb9177a8e29c7d': 1,
+        'a696b6a9d0e1b8e28c3f36bcaab4bdd94d390401bb3a5a70b5f4fa602b14161b': 1,
+        'b273f50bf0714887d0c4a7a5bbc83dcea41ee5859a6f37860ac0495ea0bcd2d9': 1,
+        'c034c9c6808f3cf619140d15cfbfc95c68005f435bd1cffb0b56ef6668980504': 1,
+        'e37085d0d0ce7b9a45f15520dc37018fe24832ad64fd1ec34b6d805c491bba58': 1,
+        'f4de7b1b35c2cbbdef7d0434edb0da7497193f0d72df4227d94955382427fba8': 1,
         'f8de1519ee4d0293ed24411bf7a6569df2ec78567d83f571b3f9475aaf61f676': 1,
+        'fa2fb7580d11fc932e19d0a35e3e177949bd811bff50059e9c1b81c22392ce22': 1,
+        'fd8e5dd3c4b0070c9dcf7cea2acd674c76eb398cb1ac61d8bc70d06c26f1f162': 1,
+        'ff9eb2bcc08a5161a72e191b92fd2266e0967c8ecde7ee82cda2b0aa5bf6ffed': 1,
       },
     );
     final cardioScope = files.cast<Map<String, dynamic>>().singleWhere(
@@ -545,7 +596,7 @@ void main() {
         }),
       );
       Future<ProcessResult> run({bool report = false}) => Process.run(
-        'dart',
+        _dartExecutable(),
         [
           '--packages=$packages',
           script,
@@ -586,11 +637,11 @@ void main() {
         manifest.writeAsStringSync(
           jsonEncode({'schemaVersion': 1, 'files': []}),
         );
-        Future<ProcessResult> run(List<String> args) => Process.run('dart', [
-          'run',
-          'tools/theme_style_ratchet.dart',
-          ...args,
-        ], runInShell: Platform.isWindows);
+        Future<ProcessResult> run(List<String> args) => Process.run(
+          _dartExecutable(),
+          ['run', 'tools/theme_style_ratchet.dart', ...args],
+          runInShell: Platform.isWindows,
+        );
         final valid = await run([manifest.path]);
         expect(valid.exitCode, 0, reason: '${valid.stderr}');
         expect(jsonDecode(valid.stdout as String)['protectedFileCount'], 0);

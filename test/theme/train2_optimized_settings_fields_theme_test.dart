@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../test_support.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
@@ -15,15 +17,15 @@ import 'package:env_test/services/active_plan_store.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/widgets/tonos_train_tabs.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Train2 optimized settings use shared form fields', (
@@ -72,23 +74,34 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final toggle = tester.widget<ToggleButtons>(find.byType(ToggleButtons));
-        expect(toggle.borderRadius, theme.shapeTokens.trainTab);
-        expect(toggle.borderColor, Colors.transparent);
-        expect(toggle.selectedBorderColor, Colors.transparent);
-        expect(toggle.fillColor, theme.colorScheme.primary);
-        expect(toggle.selectedColor, theme.colorScheme.onPrimary);
+        if (family == AppThemeFamily.expressive) {
+          final tabs = tester.widget<TonosTrainTabs>(
+            find.byType(TonosTrainTabs),
+          );
+          expect(tabs.compact, isTrue);
+          expect(tabs.selectedIndex, 0);
+          expect(find.byType(ToggleButtons), findsNothing);
+        } else {
+          final toggle = tester.widget<ToggleButtons>(
+            find.byType(ToggleButtons),
+          );
+          expect(toggle.borderRadius, theme.shapeTokens.trainTab);
+          expect(toggle.borderColor, Colors.transparent);
+          expect(toggle.selectedBorderColor, Colors.transparent);
+          expect(toggle.fillColor, theme.colorScheme.primary);
+          expect(toggle.selectedColor, theme.colorScheme.onPrimary);
 
-        final selectorFrame = find.byWidgetPredicate((widget) {
-          if (widget is! Container || widget.decoration is! BoxDecoration) {
-            return false;
-          }
-          final decoration = widget.decoration! as BoxDecoration;
-          return decoration.color ==
-                  theme.colorScheme.surfaceContainerHighest &&
-              decoration.borderRadius == theme.shapeTokens.trainTab;
-        });
-        expect(selectorFrame, findsOneWidget);
+          final selectorFrame = find.byWidgetPredicate((widget) {
+            if (widget is! Container || widget.decoration is! BoxDecoration) {
+              return false;
+            }
+            final decoration = widget.decoration! as BoxDecoration;
+            return decoration.color ==
+                    theme.colorScheme.surfaceContainerHighest &&
+                decoration.borderRadius == theme.shapeTokens.trainTab;
+          });
+          expect(selectorFrame, findsOneWidget);
+        }
 
         final strings = AppLocalizations.of(
           tester.element(find.byType(Train2Page)),
@@ -96,9 +109,26 @@ void main() {
         final presetHeading = tester.widget<Text>(
           find.text(strings.trainExercisePresets),
         );
-        expect(presetHeading.style?.fontSize, 24);
-        expect(presetHeading.style?.fontWeight, FontWeight.bold);
-        expect(presetHeading.style?.color, isNull);
+        expect(
+          presetHeading.style?.fontSize,
+          family == AppThemeFamily.expressive
+              ? Theme.of(
+                  tester.element(find.text(strings.trainExercisePresets)),
+                ).textTheme.titleLarge?.fontSize
+              : 24,
+        );
+        expect(
+          presetHeading.style?.fontWeight,
+          family == AppThemeFamily.expressive
+              ? FontWeight.w800
+              : FontWeight.bold,
+        );
+        expect(
+          presetHeading.style?.color,
+          family == AppThemeFamily.expressive
+              ? theme.colorScheme.onSurface
+              : isNull,
+        );
 
         final profileMonogram = tester.widget<Text>(find.text('P'));
         expect(

@@ -15,6 +15,12 @@ enum AppThemeFamily {
   neoBrutalism(
     code: 'neo_brutalism',
     supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},
+  ),
+
+  /// The approved Tonos Expressive appearance, in light and dark.
+  expressive(
+    code: 'expressive',
+    supportedBrightnesses: <Brightness>{Brightness.light, Brightness.dark},
   );
 
   const AppThemeFamily({

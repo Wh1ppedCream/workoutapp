@@ -11,10 +11,9 @@ import 'package:env_test/widgets/session_complete_sheet.dart';
 void main() {
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.dark
-              ? AppThemeFactory.dark(family)
-              : AppThemeFactory.light(family);
+      final theme = brightness == Brightness.dark
+          ? AppThemeFactory.dark(family)
+          : AppThemeFactory.light(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode completion presentation resolves token recipes', (
@@ -47,14 +46,12 @@ void main() {
         final shapes = context.shapeTokens;
         final semantic = context.semanticColors;
         final accent = _exerciseAccent('Bench Press', theme.colorScheme);
-        final cardFill =
-            isNeo
-                ? surfaces.card
-                : accent.withValues(alpha: surfaces.completionExerciseFill);
-        final cardBorder =
-            isNeo
-                ? tonosOutlineForSurface(context, surfaces.card)
-                : accent.withValues(alpha: surfaces.completionExerciseBorder);
+        final cardFill = isNeo
+            ? surfaces.card
+            : accent.withValues(alpha: surfaces.completionExerciseFill);
+        final cardBorder = isNeo
+            ? tonosOutlineForSurface(context, surfaces.card)
+            : accent.withValues(alpha: surfaces.completionExerciseBorder);
         final cardFinder = find.byType(WorkoutCompletionExerciseCard);
         final card = tester.widget<Container>(
           find
@@ -84,6 +81,10 @@ void main() {
             text.style!.color,
             isNeo
                 ? tonosSecondaryForegroundForSurface(context, surfaces.card)
+                : context.usesExpressivePresentation
+                ? Theme.of(tester.element(estimatedMaxTexts.first))
+                      .colorScheme
+                      .onSurfaceVariant
                 : isNull,
           );
         }
@@ -172,18 +173,14 @@ void main() {
         for (var index = 0; index < metrics.length; index++) {
           final metric = tester.widget<Container>(metricFinder.at(index));
           final decoration = metric.decoration! as BoxDecoration;
-          final expectedFill =
-              isNeo
-                  ? surfaces.card
-                  : metrics[index].withValues(
-                    alpha: surfaces.completionMetricFill,
-                  );
-          final expectedBorder =
-              isNeo
-                  ? tonosOutlineForSurface(context, surfaces.card)
-                  : metrics[index].withValues(
-                    alpha: surfaces.completionMetricBorder,
-                  );
+          final expectedFill = isNeo
+              ? surfaces.card
+              : metrics[index].withValues(alpha: surfaces.completionMetricFill);
+          final expectedBorder = isNeo
+              ? tonosOutlineForSurface(context, surfaces.card)
+              : metrics[index].withValues(
+                  alpha: surfaces.completionMetricBorder,
+                );
           expect(decoration.color, expectedFill);
           expect(decoration.borderRadius, shapes.control);
           expect(decoration.border!.top.color, expectedBorder);
@@ -200,10 +197,10 @@ void main() {
             icon.color,
             isNeo
                 ? tonosForegroundForSurface(
-                  context,
-                  surfaces.card,
-                  parentSurface: surfaces.sheet,
-                )
+                    context,
+                    surfaces.card,
+                    parentSurface: surfaces.sheet,
+                  )
                 : metrics[index],
           );
         }

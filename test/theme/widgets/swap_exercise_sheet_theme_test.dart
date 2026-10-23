@@ -119,7 +119,30 @@ void main() {
           for (final line in equipmentLines) {
             final equipmentSpan = _findSpan(line.textSpan!, 'Barbell');
             expect(equipmentSpan, isNotNull);
-            expect(equipmentSpan!.style?.color, expectedColor);
+            if (theme.usesExpressivePresentation) {
+              final planning = AppExpressivePlanningTokens.maybeOf(
+                tester.element(find.byWidget(line)),
+              )!;
+              final card = tester.widget<Card>(
+                find
+                    .ancestor(
+                      of: find.byWidget(line),
+                      matching: find.byType(Card),
+                    )
+                    .first,
+              );
+              final foreground = card.color == planning.planSupportSurface
+                  ? planning.planSupportForeground
+                  : planning.configurationForeground;
+              expect(
+                equipmentSpan!.style?.color,
+                foreground.withValues(
+                  alpha: theme.surfaceTokens.swapSecondaryTextOpacity,
+                ),
+              );
+            } else {
+              expect(equipmentSpan!.style?.color, expectedColor);
+            }
           }
           expect(tester.takeException(), isNull);
         },

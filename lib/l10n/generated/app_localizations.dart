@@ -782,6 +782,18 @@ abstract class AppLocalizations {
   /// **'Bold colors, ink outlines, and hard shadows.'**
   String get themeFamilyNeoBrutalismDescription;
 
+  /// No description provided for @themeFamilyExpressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Expressive'**
+  String get themeFamilyExpressive;
+
+  /// No description provided for @themeFamilyExpressiveDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Colorful cards, expressive shapes, and soft surfaces.'**
+  String get themeFamilyExpressiveDescription;
+
   /// No description provided for @displaySettingsTitle.
   ///
   /// In en, this message translates to:

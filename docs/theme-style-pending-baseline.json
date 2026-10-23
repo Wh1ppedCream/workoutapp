@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "reviewedOn": "2026-10-22",
+  "purpose": "Regression baseline for existing report-only qualification debt. These findings remain pending, not migrated or visually unapproved. New or changed debt requires explicit review.",
+  "candidateCount": 641,
+  "files": {
+    "lib/screens/dashboard_page.dart": {
+      "countsByKind": {
+        "color": 2
+      },
+      "snippetDigest": "7f3ce1b96f083f9dd604fd6d2743968b80c180d805091c9da098ab45214ea837"
+    },
+    "lib/screens/exercise/definitions_by_bodypart_page.dart": {
+      "countsByKind": {
+        "color_literal": 5,
+        "color_literal_candidate": 5,
+        "color_transform": 3,
+        "decoration": 2,
+        "geometry": 11
+      },
+      "snippetDigest": "151bb83bc2f1bc7065aef9f88651e1c54bda82e5a4e28c3e20c864fbd7bb9866"
+    },
+    "lib/screens/exercise/definitions_by_muscle_page.dart": {
+      "countsByKind": {
+        "color_literal": 4,
+        "color_literal_candidate": 4,
+        "color_transform": 4,
+        "decoration": 3,
+        "geometry": 13
+      },
+      "snippetDigest": "5d0a5ebbffb5d1cb0a366e8f581c9f9e26228893707b2bb11f64575b812f187f"
+    },
+    "lib/screens/exercise/exercise_catalog_page.dart": {
+      "countsByKind": {
+        "color_literal": 1,
+        "color_literal_candidate": 1
+      },
+      "snippetDigest": "386593bca354cf52fd9c4354beea0254a81fbaf9c889828f1ce2a10938d778bc"
+    },
+    "lib/screens/exercise/flow_editor_expressive_widgets.dart": {
+      "countsByKind": {
+        "color": 1,
+        "color_transform": 2,
+        "component_style": 1,
+        "geometry": 5
+      },
+      "snippetDigest": "c7771c9f679c87e8c97be98422f9d1c790a606dc799f9e9cb79af0833c77e801"
+    },
+    "lib/screens/exercise/full_history_screen.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "geometry": 4
+      },
+      "snippetDigest": "4b0cd98e8b6eb51e110fcf075ecd42bc22fb390becdefeffa10fefa74732a4ed"
+    },
+    "lib/screens/exercise/optimized_workout_settings_page.dart": {
+      "countsByKind": {
+        "color": 4,
+        "color_transform": 6,
+        "decoration": 1,
+        "geometry": 14,
+        "local_theme": 2,
+        "text_style": 3
+      },
+      "snippetDigest": "b9eb1f9658d14a98faf7739def0205368e4b5cfa5a6755e501f8f027a4aeb382"
+    },
+    "lib/screens/exercise/premade_plans_page.dart": {
+      "countsByKind": {
+        "component_style": 4
+      },
+      "snippetDigest": "c13942fcededd2ca68e196ca3d27c798eb74c2c702a13142cb360399369fe9f3"
+    },
+    "lib/screens/exercise/preset_detail_screen.dart": {
+      "countsByKind": {
+        "local_theme": 1
+      },
+      "snippetDigest": "7d581d6dfef85cb4229579d51aebb278d8802c0e99af43b169aac344653c8ccf"
+    },
+    "lib/screens/exercise/session_detail_screen.dart": {
+      "countsByKind": {
+        "color": 2,
+        "color_transform": 2,
+        "geometry": 6,
+        "local_theme": 2,
+        "text_style": 2
+      },
+      "snippetDigest": "73daa929ab4b0213ce0b245911274376aa476adc18c3ee267ef95a568ee4b979"
+    },
+    "lib/screens/exercise/train2_page.dart": {
+      "countsByKind": {
+        "geometry": 5
+      },
+      "snippetDigest": "fb7839e39231940a79080324b4fa7132e66cfb0bf36a8038e122f44827fea496"
+    },
+    "lib/screens/measurement_trends_page.dart": {
+      "countsByKind": {
+        "local_theme": 1
+      },
+      "snippetDigest": "7768fde7350595fabdfc0bed1179c7526f8be57e2f78e417583cc871b65f55fe"
+    },
+    "lib/screens/nutrition/food_customization_page.dart": {
+      "countsByKind": {
+        "color_transform": 1,
+        "local_theme": 1
+      },
+      "snippetDigest": "dacfa60c45ca8ceca54f78e18c34f9f47607155aef25096bd79ba570fa90827b"
+    },
+    "lib/screens/nutrition/log_entry_page.dart": {
+      "countsByKind": {
+        "color": 1,
+        "local_theme": 1
+      },
+      "snippetDigest": "528f2da026e0d58466803f5f99df637cf3d6ce03c603f996a2d521945704db3a"
+    },
+    "lib/screens/nutrition/measured_items_page.dart": {
+      "countsByKind": {
+        "local_theme": 1
+      },
+      "snippetDigest": "103324b607c7db5f8f47fcff2ea3c7520246d0dc9e7023d8f6290f0b05c38098"
+    },
+    "lib/screens/onboarding_flow.dart": {
+      "countsByKind": {
+        "color": 1,
+        "color_transform": 9,
+        "component_style": 3,
+        "decoration": 1,
+        "geometry": 9,
+        "text_style": 2
+      },
+      "snippetDigest": "ba1049e97ff3b1e37dfa5ea7ae424afda6584d40c02afb6ea20b3dbf22b42fef"
+    },
+    "lib/screens/profile/settings/analytics_destination_surfaces.dart": {
+      "countsByKind": {
+        "color_transform": 3,
+        "decoration": 5,
+        "geometry": 10,
+        "text_style": 3
+      },
+      "snippetDigest": "e6800b6a32fcedb47db2ad642503be361f9a1a3ac90c1a77f993f60cfe3620a1"
+    },
+    "lib/screens/profile/settings/analytics_setting_screen.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 1,
+        "geometry": 3
+      },
+      "snippetDigest": "e9b6ce9db761810aeef3ae73c3d9aab7fb1b82b651e593824c83ccaea93fe412"
+    },
+    "lib/screens/profile/settings/bodypart_muscle_mapping_screen.dart": {
+      "countsByKind": {
+        "color": 1,
+        "color_transform": 7,
+        "component_style": 1,
+        "decoration": 2,
+        "geometry": 14,
+        "text_style": 2
+      },
+      "snippetDigest": "62c2c8fd5b5b9e06f74070656bc8bf534f818fb3028818ee71229303e510ddcd"
+    },
+    "lib/screens/profile/settings/bodypart_ranking_screen.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 4,
+        "geometry": 4,
+        "text_style": 1
+      },
+      "snippetDigest": "7fe7da11c077f9c5f4fad5a17f931a822c4385d7c63779b6db404e034823332f"
+    },
+    "lib/screens/profile/settings/database_settings_page.dart": {
+      "countsByKind": {
+        "color_transform": 3,
+        "geometry": 4,
+        "local_theme": 1,
+        "text_style": 3
+      },
+      "snippetDigest": "70a942a811f70cf7028179c404fdd3178b7e7db1be74193778e6ebb9f0896e7a"
+    },
+    "lib/screens/profile/settings/diagnostics_settings_page.dart": {
+      "countsByKind": {
+        "color_literal": 10,
+        "color_literal_candidate": 10,
+        "color_transform": 3,
+        "decoration": 2,
+        "geometry": 2
+      },
+      "snippetDigest": "27d07fdc4976a7d3fc441b96a2e4d0a9ef2caf6ea7dafdd8af4701cede6fb50a"
+    },
+    "lib/screens/profile/settings/diet_nutrition_settings_page.dart": {
+      "countsByKind": {
+        "color_transform": 4,
+        "decoration": 3,
+        "geometry": 3,
+        "text_style": 1
+      },
+      "snippetDigest": "c7bae6bdf7a848322754b6dddc7516ad309c9071329fc0e63187eb790fdc7237"
+    },
+    "lib/screens/profile/settings/exercise_editor_screen.dart": {
+      "countsByKind": {
+        "color": 19,
+        "color_literal": 31,
+        "color_literal_candidate": 31,
+        "color_transform": 11,
+        "component_style": 1,
+        "decoration": 7,
+        "geometry": 30,
+        "local_theme": 2
+      },
+      "snippetDigest": "c2db620d9c3f7edd50e09fec083ea57d7465baa521cfaa8c5f78752fce6b1467"
+    },
+    "lib/screens/profile/settings/flow_methods_page.dart": {
+      "countsByKind": {
+        "color": 3,
+        "component_style": 1,
+        "local_theme": 1
+      },
+      "snippetDigest": "c54f13415842307677a00b510754568e46f567f153c81335fae43f91bad7a5de"
+    },
+    "lib/screens/profile/settings/goal_manual_entry_page.dart": {
+      "countsByKind": {
+        "color_transform": 9,
+        "decoration": 4,
+        "geometry": 14,
+        "local_theme": 2,
+        "text_style": 4
+      },
+      "snippetDigest": "b8a2d549693ffb432275c9cacde12f6bfc072eb6878093740b8c7d66fdfa161c"
+    },
+    "lib/screens/profile/settings/measurements_trends_settings_page.dart": {
+      "countsByKind": {
+        "color_transform": 1
+      },
+      "snippetDigest": "f7315ff1ecc8c1758c4ab3fe50b2d1bde50d1c097c082ed12a272b1d635bfaf9"
+    },
+    "lib/screens/profile/settings/muscle_ranking_screen.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 4,
+        "geometry": 4,
+        "text_style": 1
+      },
+      "snippetDigest": "7fe7da11c077f9c5f4fad5a17f931a822c4385d7c63779b6db404e034823332f"
+    },
+    "lib/screens/profile/settings/nav_bar_settings_page.dart": {
+      "countsByKind": {
+        "component_style": 2,
+        "geometry": 3
+      },
+      "snippetDigest": "3ff8d6668b7e93bf3e513877ba8518015012c9ae4ab7b3fdd9691729b5bea958"
+    },
+    "lib/screens/profile/settings/profile_expressive_selection.dart": {
+      "countsByKind": {
+        "color_transform": 1
+      },
+      "snippetDigest": "3fcef965344ed5f6f14fbb5266e1150c7a048210757791b096fc16cf1d63871b"
+    },
+    "lib/screens/profile/settings/profile_page.dart": {
+      "countsByKind": {
+        "color_transform": 5,
+        "decoration": 3,
+        "geometry": 2,
+        "local_theme": 1
+      },
+      "snippetDigest": "c8eb3be132ad4b08d70cc6e1e0a744e9cc048e459adf1fe17876b820ed22ce36"
+    },
+    "lib/screens/profile/settings/tutorials_settings_page.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 2,
+        "geometry": 3,
+        "local_theme": 1
+      },
+      "snippetDigest": "a3bbbaea5dbc89afc0f554b5ef5e6d13a0d4bda9c5b2619aa3cf5ac820d1938e"
+    },
+    "lib/screens/profile/settings/ui_appearance_settings_page.dart": {
+      "countsByKind": {
+        "local_theme": 3
+      },
+      "snippetDigest": "09f37cb38915706b09f8e1778018df8fe53cda775350c23a38766151b4339ec6"
+    },
+    "lib/screens/profile/settings/user_information_settings_page.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 1,
+        "geometry": 5,
+        "local_theme": 1,
+        "text_style": 5
+      },
+      "snippetDigest": "85e5da5eed3cdabbd8a5108221c09bddbaac54325089f307cf8e79cdab1ca8e8"
+    },
+    "lib/screens/profile/settings/volume_boundaries_screen.dart": {
+      "countsByKind": {
+        "color": 2,
+        "color_transform": 5,
+        "component_style": 1,
+        "decoration": 3,
+        "geometry": 13,
+        "text_style": 3
+      },
+      "snippetDigest": "e655da3ae982832cb82220e52eea6651498aa7a99815a85de95c6415029ae1a0"
+    },
+    "lib/widgets/bodypart_focus_chips.dart": {
+      "countsByKind": {
+        "color_transform": 2
+      },
+      "snippetDigest": "2e6a33338e129b5be237a66a742e691d0ec75ae6dfc09dd31309833510e33b17"
+    },
+    "lib/widgets/current_metrics_section.dart": {
+      "countsByKind": {
+        "color_transform": 6,
+        "decoration": 3,
+        "geometry": 6
+      },
+      "snippetDigest": "f2dfd62c710dcf9ab65dfa99327817473c6132ef90716b17703ea71445163156"
+    },
+    "lib/widgets/exercise_definition_info_tile.dart": {
+      "countsByKind": {
+        "color_literal": 2,
+        "color_literal_candidate": 2,
+        "color_transform": 1,
+        "geometry": 8
+      },
+      "snippetDigest": "0cfd2176a566e95e59199b694f41ef7df7de947e610f4fa3f1b5ee81b4f959bf"
+    },
+    "lib/widgets/expressive_nutrition_summary.dart": {
+      "countsByKind": {
+        "color": 1,
+        "color_literal": 7,
+        "color_literal_candidate": 7,
+        "color_transform": 5,
+        "decoration": 4,
+        "geometry": 9
+      },
+      "snippetDigest": "847bb7efa470ada90ce5bcfaa9fca9254358b65395bb2226e10e1a6335f43bde"
+    },
+    "lib/widgets/health_trends_section.dart": {
+      "countsByKind": {
+        "component_style": 6,
+        "local_theme": 7
+      },
+      "snippetDigest": "fa9efb26d99561b07ae45b8cb596155e8e734a0938e85bca9c1cb18bb9a8ce05"
+    },
+    "lib/widgets/meal_plan_add_bar.dart": {
+      "countsByKind": {
+        "color_transform": 2,
+        "decoration": 1,
+        "geometry": 8,
+        "text_style": 2
+      },
+      "snippetDigest": "4ca5597a2ae1415b1dc699c49edf5dfb6eb0b68cbd4f2ab7db3fc4fa77c7f43e"
+    },
+    "lib/widgets/preset_bar.dart": {
+      "countsByKind": {
+        "color": 2,
+        "color_transform": 8,
+        "decoration": 2,
+        "geometry": 6
+      },
+      "snippetDigest": "d38fc93de1bbe1099b07fa3031d4f450b9eb9f2a147d2b520236128daa9083bb"
+    },
+    "lib/widgets/preset_info_card.dart": {
+      "countsByKind": {
+        "color": 1,
+        "color_transform": 1,
+        "local_theme": 1
+      },
+      "snippetDigest": "e78b0314de80ce33919bf7e2b269536c2d0b63c64e966f8a66573528daae2adb"
+    },
+    "lib/widgets/settings_tiles.dart": {
+      "countsByKind": {
+        "component_style": 5
+      },
+      "snippetDigest": "877f123eeaebf41bae718626e61cf4271ae6ba18bbc43ae8590f4288ba069302"
+    },
+    "lib/widgets/weight_card.dart": {
+      "countsByKind": {
+        "component_style": 1
+      },
+      "snippetDigest": "5c582c74bade3621445c43119074613f7824c9dfe0b178eb5f198a25f9461b4c"
+    },
+    "lib/widgets/workout_history_calendar.dart": {
+      "countsByKind": {
+        "color_literal": 1,
+        "color_literal_candidate": 1
+      },
+      "snippetDigest": "35df4b24bebef3edc0546d9131184d7fb0ced941d78d08d3cb7a165b1c87aad8"
+    }
+  }
+}

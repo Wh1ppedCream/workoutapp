@@ -6,6 +6,7 @@ import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/widgets/tonos_bottom_navigation_bar.dart';
 
 void main() {
@@ -22,10 +23,9 @@ void main() {
         (tester) async {
           final semanticsHandle = tester.ensureSemantics();
           try {
-            final theme =
-                brightness == Brightness.light
-                    ? AppThemeFactory.light(family)
-                    : AppThemeFactory.dark(family);
+            final theme = brightness == Brightness.light
+                ? AppThemeFactory.light(family)
+                : AppThemeFactory.dark(family);
             await tester.pumpWidget(
               MaterialApp(
                 theme: theme,
@@ -39,14 +39,12 @@ void main() {
               ),
             );
 
-            final train =
-                tester
-                    .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
-                    .getSemanticsData();
-            final catalog =
-                tester
-                    .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
-                    .getSemanticsData();
+            final train = tester
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
+                .getSemanticsData();
+            final catalog = tester
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
+                .getSemanticsData();
             expect(train.hasAction(SemanticsAction.tap), isTrue);
             expect(train.hasFlag(SemanticsFlag.isSelected), isTrue);
             expect(catalog.hasAction(SemanticsAction.tap), isTrue);
@@ -64,10 +62,9 @@ void main() {
       testWidgets(
         '${family.name} ${brightness.name} navigation preserves its theme owner',
         (tester) async {
-          final theme =
-              brightness == Brightness.light
-                  ? AppThemeFactory.light(family)
-                  : AppThemeFactory.dark(family);
+          final theme = brightness == Brightness.light
+              ? AppThemeFactory.light(family)
+              : AppThemeFactory.dark(family);
           var selectedIndex = 0;
           await tester.pumpWidget(
             MaterialApp(
@@ -84,6 +81,21 @@ void main() {
 
           final context = tester.element(find.byType(TonosBottomNavigationBar));
           final usesInkRecipe = context.usesNeoPresentation;
+          if (context.usesExpressivePresentation) {
+            final frame = tester.widget<DecoratedBox>(
+              find.byKey(const ValueKey('tonos-expressive-navigation-frame')),
+            );
+            final decoration = frame.decoration as BoxDecoration;
+            final tokens = theme.extension<AppExpressiveTrainTokens>()!;
+            expect(decoration.color, tokens.navigationSurface);
+            expect(decoration.borderRadius, ExpressiveTrainShapes.navigation);
+            expect(find.byType(BottomNavigationBar), findsNothing);
+            await tester.tap(find.text('Catalog'));
+            await tester.pump();
+            expect(selectedIndex, 1);
+            expect(tester.takeException(), isNull);
+            return;
+          }
           final navigation = tester.widget<BottomNavigationBar>(
             find.byType(BottomNavigationBar),
           );
@@ -208,30 +220,29 @@ void main() {
           home: MediaQuery(
             data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
             child: StatefulBuilder(
-              builder:
-                  (context, setState) => Scaffold(
-                    bottomNavigationBar: TonosBottomNavigationBar(
-                      items: [
-                        BottomNavigationBarItem(
-                          icon: scaleProbeIcon(Icons.fitness_center),
-                          label: 'Train',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: scaleProbeIcon(Icons.menu_book),
-                          label: 'Catalog',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: scaleProbeIcon(Icons.history),
-                          label: 'Logbook',
-                        ),
-                      ],
-                      currentIndex: selectedIndex,
-                      onTap: (index) {
-                        tappedIndexes.add(index);
-                        setState(() => selectedIndex = index);
-                      },
+              builder: (context, setState) => Scaffold(
+                bottomNavigationBar: TonosBottomNavigationBar(
+                  items: [
+                    BottomNavigationBarItem(
+                      icon: scaleProbeIcon(Icons.fitness_center),
+                      label: 'Train',
                     ),
-                  ),
+                    BottomNavigationBarItem(
+                      icon: scaleProbeIcon(Icons.menu_book),
+                      label: 'Catalog',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: scaleProbeIcon(Icons.history),
+                      label: 'Logbook',
+                    ),
+                  ],
+                  currentIndex: selectedIndex,
+                  onTap: (index) {
+                    tappedIndexes.add(index);
+                    setState(() => selectedIndex = index);
+                  },
+                ),
+              ),
             ),
           ),
         ),

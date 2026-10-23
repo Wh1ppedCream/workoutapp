@@ -178,11 +178,11 @@ void main() {
           );
           expect(
             focusExpansion.tilePadding,
-            const EdgeInsets.fromLTRB(16, 7, 16, 7),
+            const EdgeInsets.fromLTRB(6, 7, 6, 7),
           );
           expect(
             focusExpansion.childrenPadding,
-            const EdgeInsets.fromLTRB(16, 5, 16, 10),
+            const EdgeInsets.fromLTRB(6, 5, 6, 10),
           );
           expect(
             find.text(

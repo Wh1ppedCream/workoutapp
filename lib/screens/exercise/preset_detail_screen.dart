@@ -86,6 +86,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   );
   final _actionTutorialKey = GlobalKey(debugLabel: 'plan_detail_action');
   bool _isEditing = false;
+  bool _changingEditMode = false;
   bool _collapseWeightCardsForReorder = false;
   bool _tutorialQueued = false;
   bool _onboardingPlanGuideSkipped = false;
@@ -144,7 +145,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   }
 
   Future<bool> _onWillPop() async {
-    if (!_isEditing || !context.read<PresetSession>().hasChanges) return true;
+    if (!context.read<PresetSession>().hasChanges) return true;
     final strings = AppLocalizations.of(context);
     final discard = await showDialog<bool>(
       context: context,
@@ -398,6 +399,36 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _toggleEditing() async {
+    if (_changingEditMode) return;
+    final preset = context.read<PresetSession>();
+    if (_isEditing && preset.hasChanges) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      _changingEditMode = true;
+      try {
+        if (!await _onWillPop() || !mounted) return;
+        await preset.discardChanges();
+        if (!mounted) return;
+        _nameController.text = preset.presetName;
+      } catch (error) {
+        if (!mounted) return;
+        final strings = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${strings.safeFailureLoadTitle}: ${safeFailureMessage(strings, error)}',
+            ),
+          ),
+        );
+        return;
+      } finally {
+        _changingEditMode = false;
+      }
+    }
+    if (!mounted) return;
+    setState(() => _isEditing = !_isEditing);
   }
 
   Future<void> _startPlanSession() async {
@@ -769,7 +800,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           ? planning?.actionPrimary ?? semantic.editingActive
                           : semantic.editingInactive,
                     ),
-                    onPressed: () => setState(() => _isEditing = !_isEditing),
+                    onPressed: _toggleEditing,
                   ),
                 ),
                 // Overflow menu replacing delete icon

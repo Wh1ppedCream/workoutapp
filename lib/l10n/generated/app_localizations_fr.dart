@@ -461,6 +461,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Couleurs vives, contours à l’encre et ombres nettes.';
 
   @override
+  String get themeFamilyExpressive => 'Expressif';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'Des cartes colorées, des formes expressives et des surfaces douces.';
+
+  @override
   String get displaySettingsTitle => 'Affichage';
 
   @override
@@ -8132,6 +8139,13 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get themeFamilyNeoBrutalismDescription =>
       'Couleurs vives, contours à l’encre et ombres nettes.';
+
+  @override
+  String get themeFamilyExpressive => 'Expressif';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'Des cartes colorées, des formes expressives et des surfaces douces.';
 
   @override
   String get displaySettingsTitle => 'Affichage';

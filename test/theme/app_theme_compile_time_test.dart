@@ -33,6 +33,11 @@ void main() {
     expect(capabilities.isReleaseMode, isTrue);
     expect(capabilities.neoReleaseEnabled, _expectedNeoRelease);
     expect(capabilities.isAvailable(AppThemeFamily.classic), isTrue);
+    expect(capabilities.isAvailable(AppThemeFamily.expressive), isTrue);
+    expect(
+      capabilities.resolve(AppThemeFamily.expressive),
+      AppThemeFamily.expressive,
+    );
     expect(
       capabilities.isAvailable(AppThemeFamily.neoBrutalism),
       _expectedNeoRelease,

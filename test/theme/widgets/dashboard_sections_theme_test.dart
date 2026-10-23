@@ -2,6 +2,7 @@ import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/active_session.dart';
+import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/repositories/content_repository.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
@@ -9,9 +10,12 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/dashboard_section_palette.dart';
 import 'package:env_test/widgets/dashboard_sections.dart';
+import 'package:env_test/screens/catalog_page.dart';
+import 'package:env_test/screens/exercise/full_history_screen.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   for (final family in AppThemeFamily.values) {
@@ -24,6 +28,7 @@ void main() {
       testWidgets('$mode dashboard section widgets resolve existing recipes', (
         tester,
       ) async {
+        SharedPreferences.setMockInitialValues(<String, Object>{});
         final repository = _DashboardSectionsRepository();
         final session = ActiveSession(
           repository: repository,
@@ -31,12 +36,18 @@ void main() {
         );
         addTearDown(session.dispose);
         await session.ready;
+        final units = UnitPreferenceProvider();
+        addTearDown(units.dispose);
+        await units.ready;
 
         await tester.pumpWidget(
           MultiProvider(
             providers: [
               ChangeNotifierProvider<ActiveSession>.value(value: session),
               Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
             ],
             child: MaterialApp(
               theme: theme,
@@ -148,6 +159,16 @@ void main() {
         expect(recentDecoration.borderRadius, shapes.dashboardSection);
         expect(recentDecoration.border!.top.color, scheme.outlineVariant);
 
+        if (theme.usesExpressivePresentation) {
+          expect(find.byType(ExpressiveWorkoutHistoryList), findsOneWidget);
+          expect(find.byType(CatalogExerciseSummaryCard), findsOneWidget);
+          expect(find.byType(CatalogTargetAnatomySummaryCard), findsOneWidget);
+          expect(find.text('Barbell Squat'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox.shrink());
+          return;
+        }
+
         expect(
           find.byWidgetPredicate(
             (widget) =>
@@ -223,6 +244,21 @@ class _DashboardSectionsRepository extends AppRepository {
   @override
   Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>
       const [];
+
+  @override
+  Future<List<WorkoutReportSession>> fetchWorkoutReportSessions({
+    DateTime? start,
+    DateTime? end,
+  }) async => [
+    WorkoutReportSession(
+      id: 5,
+      date: DateTime(2026, 10, 22),
+      durationSeconds: 120,
+      totalVolume: 1200,
+      exerciseCount: 1,
+      setCount: 3,
+    ),
+  ];
 
   @override
   Future<List<WorkoutSession>> fetchWorkoutSessions() async => [

@@ -9,6 +9,8 @@ import 'package:env_test/services/workout_exit_preferences.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../tools/theme_style_inventory.dart';
+import '../theme_inventory_assertions.dart';
 
 void main() {
   test('navigation and gym settings have exact scoped inventory ownership', () {
@@ -29,7 +32,7 @@ void main() {
     const expected = <String, (String, int, List<String>)>{
       'navigation-settings-theme-recipes': (
         'lib/screens/profile/settings/nav_bar_settings_page.dart',
-        8,
+        14,
         ['color', 'color_transform', 'decoration', 'local_theme'],
       ),
       'gym-exercise-settings-dialog-ink': (
@@ -48,10 +51,9 @@ void main() {
       expect(rule.status, 'migrated');
       expect(rule.kinds, unorderedEquals(entry.value.$3));
 
-      final findings =
-          report.findings
-              .where((finding) => finding.ruleId == rule.id)
-              .toList();
+      final findings = report.findings
+          .where((finding) => finding.ruleId == rule.id)
+          .toList();
       expect(findings, hasLength(entry.value.$2), reason: entry.key);
       expect(
         findings.map((finding) => finding.status),
@@ -64,15 +66,15 @@ void main() {
         );
         expect(
           findings.where((finding) => finding.kind == 'color_transform'),
-          hasLength(4),
+          hasLength(7),
         );
         expect(
           findings.where((finding) => finding.kind == 'decoration'),
-          hasLength(1),
+          hasLength(3),
         );
         expect(
           findings.where((finding) => finding.kind == 'local_theme'),
-          hasLength(2),
+          hasLength(3),
         );
       }
       if (entry.key == 'gym-exercise-settings-dialog-ink') {
@@ -85,23 +87,15 @@ void main() {
           hasLength(1),
         );
       }
-      expect(
-        report.findings.where(
-          (finding) =>
-              finding.file == rule.pattern && finding.status == 'pending',
-        ),
-        isEmpty,
-        reason: rule.pattern,
-      );
+      expectPendingStyleBacklog(report, file: rule.pattern);
     }
   });
 
   for (final family in AppThemeFamily.values) {
     for (final brightness in Brightness.values) {
-      final theme =
-          brightness == Brightness.light
-              ? AppThemeFactory.light(family)
-              : AppThemeFactory.dark(family);
+      final theme = brightness == Brightness.light
+          ? AppThemeFactory.light(family)
+          : AppThemeFactory.dark(family);
       final mode = '${family.code} ${brightness.name}';
 
       testWidgets('$mode Navigation Settings retains Material ownership', (
@@ -134,23 +128,61 @@ void main() {
 
         final context = tester.element(find.byType(NavBarSettingsPage));
         final shapes = context.shapeTokens;
-        final badges =
-            tester.widgetList<Container>(find.byType(Container)).where((
-              container,
-            ) {
+        final badges = tester
+            .widgetList<Container>(find.byType(Container))
+            .where((container) {
               final decoration = container.decoration;
               return decoration is BoxDecoration &&
                   container.child is Icon &&
                   decoration.color != null &&
-                  decoration.borderRadius == shapes.settingsAction;
-            }).toList();
+                  decoration.borderRadius ==
+                      (context.usesExpressivePresentation
+                          ? ExpressiveTrainShapes.focusInset
+                          : shapes.settingsAction);
+            })
+            .toList();
         expect(badges, isNotEmpty);
         for (final badge in badges) {
           final decoration = badge.decoration as BoxDecoration;
-          expect(decoration.borderRadius, shapes.settingsAction);
+          expect(
+            decoration.borderRadius,
+            context.usesExpressivePresentation
+                ? ExpressiveTrainShapes.focusInset
+                : shapes.settingsAction,
+          );
           expect(badge.child, isA<Icon>());
           final iconColor = (badge.child as Icon).color!;
-          expect(decoration.color, iconColor.withValues(alpha: 0.16));
+          if (context.usesExpressivePresentation) {
+            final tokens = AppExpressiveDestinationTokens.forFamily(
+              AppExpressiveDestinationFamily.profile,
+              theme.brightness,
+            );
+            final active = find
+                .ancestor(
+                  of: find.byWidget(badge),
+                  matching: find.byWidgetPredicate(
+                    (widget) =>
+                        widget.key is ValueKey<String> &&
+                        (widget.key! as ValueKey<String>).value.startsWith(
+                          'active-',
+                        ),
+                  ),
+                )
+                .evaluate()
+                .isNotEmpty;
+            expect(
+              decoration.color,
+              active
+                  ? tokens.surfaceSelected
+                  : context.surfaceTokens.settingsSection,
+            );
+            expect(
+              iconColor,
+              active ? tokens.onSurfaceSelected : tokens.supportingForeground,
+            );
+          } else {
+            expect(decoration.color, iconColor.withValues(alpha: 0.16));
+          }
         }
 
         final reorderable = tester.widget<ReorderableListView>(
@@ -193,14 +225,34 @@ void main() {
 
         final context = tester.element(find.byType(TonosDialogFrame));
         final neo = family == AppThemeFamily.neoBrutalism;
-        final expectedInk = neo ? context.cs.onPrimaryContainer : null;
+        final expectedInk = neo
+            ? context.cs.onPrimaryContainer
+            : context.usesExpressivePresentation
+            ? context.cs.onSurface
+            : null;
         final choices = tester.widgetList<RadioListTile<WorkoutExitBehavior>>(
           find.byType(RadioListTile<WorkoutExitBehavior>),
         );
         expect(choices, hasLength(WorkoutExitBehavior.values.length));
         for (final choice in choices) {
-          expect((choice.title! as Text).style?.color, expectedInk);
-          expect((choice.subtitle! as Text).style?.color, expectedInk);
+          if (family == AppThemeFamily.expressive) {
+            final tokens = AppExpressiveDestinationTokens.forFamily(
+              AppExpressiveDestinationFamily.profile,
+              theme.brightness,
+            );
+            final ink = choice.value == choice.groupValue
+                ? tokens.onSurfaceSelected
+                : tokens.onSurfacePrimary;
+            expect((choice.title! as Text).style?.color, ink);
+            expect(
+              (choice.subtitle! as Text).style?.color,
+              ink.withValues(alpha: 0.78),
+            );
+            expect(choice.onChanged, isNotNull);
+          } else {
+            expect((choice.title! as Text).style?.color, expectedInk);
+            expect((choice.subtitle! as Text).style?.color, expectedInk);
+          }
         }
         expect(tester.takeException(), isNull, reason: mode);
         await tester.pumpWidget(const SizedBox.shrink());

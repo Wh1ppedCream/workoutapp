@@ -3099,7 +3099,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
         : null;
     final variationMenuHighlight = expressiveLibrary
         ? Color.alphaBlend(
-            profileTokens!.surfaceSelected.withValues(
+            profileTokens.surfaceSelected.withValues(
               alpha: theme.brightness == Brightness.dark ? 0.72 : 0.48,
             ),
             dialogSurface,
@@ -3358,7 +3358,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                     return Theme(
                       data: _profileMeasurementDialogTheme(
                         context,
-                        profileTokens!,
+                        profileTokens,
                       ).copyWith(focusColor: variationMenuHighlight),
                       child: dropdown,
                     );

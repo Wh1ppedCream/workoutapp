@@ -212,11 +212,13 @@ void main() {
             .where((box) {
               final decoration = box.decoration;
               return decoration is BoxDecoration &&
-                  decoration.color == scheme.primaryContainer &&
-                  decoration.borderRadius == shapes.pill;
+                  decoration.color ==
+                      (expressive?.planAccent ?? scheme.primaryContainer) &&
+                  decoration.borderRadius ==
+                      (expressive?.rowShape ?? shapes.pill);
             })
             .toList();
-        expect(countPills, hasLength(2));
+        expect(countPills, hasLength(expressive == null ? 2 : 4));
         final countTexts = tester.widgetList<Text>(
           find.descendant(
             of: find.byWidgetPredicate((widget) {
@@ -225,8 +227,10 @@ void main() {
                 return false;
               }
               final decoration = widget.decoration as BoxDecoration;
-              return decoration.color == scheme.primaryContainer &&
-                  decoration.borderRadius == shapes.pill;
+              return decoration.color ==
+                      (expressive?.planAccent ?? scheme.primaryContainer) &&
+                  decoration.borderRadius ==
+                      (expressive?.rowShape ?? shapes.pill);
             }),
             matching: find.byType(Text),
           ),
@@ -234,7 +238,10 @@ void main() {
         expect(countTexts, hasLength(2));
         for (final text in countTexts) {
           expect(text.data, '1');
-          expect(text.style?.color, scheme.onPrimaryContainer);
+          expect(
+            text.style?.color,
+            expressive?.planAccentForeground ?? scheme.onPrimaryContainer,
+          );
           expect(text.style?.fontWeight, FontWeight.w900);
         }
 

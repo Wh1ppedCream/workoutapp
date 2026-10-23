@@ -73,6 +73,9 @@ class PresetSession extends ChangeNotifier {
   bool _hasChanges = false;
   bool get hasChanges => _hasChanges;
 
+  /// Discard only in-memory edits; the persisted preset remains untouched.
+  Future<void> discardChanges() => _loadPreset();
+
   PresetSession(this.presetId, {required AppRepository repository})
     : _repo = repository {
     ready = _loadPreset();

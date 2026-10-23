@@ -160,10 +160,11 @@ void main() {
     presentation.dispose();
   });
 
-  test('persisted theme families still contain only Classic and Neo', () {
+  test('persisted theme families include the approved Expressive theme', () {
     expect(AppThemeFamily.values.toSet(), <AppThemeFamily>{
       AppThemeFamily.classic,
       AppThemeFamily.neoBrutalism,
+      AppThemeFamily.expressive,
     });
   });
 

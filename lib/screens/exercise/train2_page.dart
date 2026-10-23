@@ -539,6 +539,8 @@ class _Train2PageState extends State<Train2Page> {
   }
 
   Future<void> _createManualPreset(SelectedProfile sel) async {
+    await sel.ready;
+    if (!mounted) return;
     final profileId = sel.currentProfile?.id;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     if (!mounted) return;
@@ -870,6 +872,8 @@ class _Train2PageState extends State<Train2Page> {
           label: AppLocalizations.of(context).trainAddPlan,
           color: dataVisualization.tertiarySeries,
           onTap: () async {
+            await sel.ready;
+            if (!mounted) return;
             final strings = AppLocalizations.of(context);
             final profileId = sel.currentProfile?.id;
             final existing = await _repo.fetchAllPresetsRaw(

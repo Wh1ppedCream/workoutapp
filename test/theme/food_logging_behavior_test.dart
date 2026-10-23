@@ -9,10 +9,13 @@ import 'package:env_test/screens/nutrition/food_logging_page.dart';
 import 'package:env_test/screens/nutrition/log_entry_page.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
+import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../test_support.dart';
+
 import 'package:provider/provider.dart';
 
 class _CatalogSource implements FoodCatalogSource {
@@ -184,14 +187,12 @@ List<TextSpan> _descendantTextSpans(InlineSpan span) {
 double _contrastRatio(Color foreground, Color background) {
   final foregroundLuminance = foreground.computeLuminance();
   final backgroundLuminance = background.computeLuminance();
-  final lighter =
-      foregroundLuminance > backgroundLuminance
-          ? foregroundLuminance
-          : backgroundLuminance;
-  final darker =
-      foregroundLuminance > backgroundLuminance
-          ? backgroundLuminance
-          : foregroundLuminance;
+  final lighter = foregroundLuminance > backgroundLuminance
+      ? foregroundLuminance
+      : backgroundLuminance;
+  final darker = foregroundLuminance > backgroundLuminance
+      ? backgroundLuminance
+      : foregroundLuminance;
   return (lighter + 0.05) / (darker + 0.05);
 }
 
@@ -217,6 +218,50 @@ Future<void> _pumpPage(
 }
 
 void main() {
+  testWidgets('food logging from historical records keeps its scoped day', (
+    tester,
+  ) async {
+    final repository = _FakeRepository(_food(), []);
+    final parent = NutritionProfile(repository: repository);
+    final historical = DateTime(2020, 1, 2);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<AppRepository>.value(value: repository),
+          ChangeNotifierProvider<NutritionProfile>(create: (_) => parent),
+        ],
+        child: MaterialApp(
+          theme: ExpressiveThemeDefinition.light(),
+          localizationsDelegates: tonosLocalizationDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: LogEntryPage(date: historical),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is FloatingActionButton && widget.heroTag == 'toggle',
+      ),
+    );
+    await tester.pumpAndSettle();
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(LogEntryPage)),
+    );
+    await tester.tap(find.text(strings.speedDialLogFood));
+    await tester.pumpAndSettle();
+    final logger = tester
+        .element(find.byType(FoodLoggingPage))
+        .read<NutritionProfile>();
+    expect(logger.day, historical);
+    expect(identical(logger, parent), isFalse);
+    expect(parent.isToday, isTrue);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(parent.isToday, isTrue);
+  });
+
   final themes = <String, ThemeData>{
     'Classic light': ClassicThemeDefinition.light(),
     'Classic dark': ClassicThemeDefinition.dark(),
@@ -297,20 +342,23 @@ void main() {
         findsOneWidget,
       );
       expect(profile.error, isNull);
-      expect(profile.day, date);
-      expect(profile.mealsWithItems.map((row) => row.itemName), [
+      final recordsProfile = tester
+          .element(find.byType(Scaffold).last)
+          .read<NutritionProfile>();
+      expect(profile.isToday, isTrue);
+      expect(recordsProfile.day, date);
+      expect(recordsProfile.mealsWithItems.map((row) => row.itemName), [
         'Saved oats',
         'Saved lunch',
         'Saved dinner',
         'Saved snack',
       ]);
 
-      final decorations =
-          tester
-              .widgetList<Container>(find.byType(Container))
-              .map((container) => container.decoration)
-              .whereType<BoxDecoration>()
-              .toList();
+      final decorations = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((container) => container.decoration)
+          .whereType<BoxDecoration>()
+          .toList();
       final miniStatCards = decorations.where(
         (decoration) =>
             decoration.borderRadius == nutrition.quantityShape &&
@@ -332,17 +380,16 @@ void main() {
         scheme.secondaryContainer,
         scheme.errorContainer,
       };
-      final chipMaterials =
-          tester
-              .widgetList<Material>(find.byType(Material))
-              .where(
-                (material) =>
-                    chipColors.contains(material.color) &&
-                    material.shape is RoundedRectangleBorder &&
-                    (material.shape! as RoundedRectangleBorder).borderRadius ==
-                        nutrition.sectionShape,
-              )
-              .toList();
+      final chipMaterials = tester
+          .widgetList<Material>(find.byType(Material))
+          .where(
+            (material) =>
+                chipColors.contains(material.color) &&
+                material.shape is RoundedRectangleBorder &&
+                (material.shape! as RoundedRectangleBorder).borderRadius ==
+                    nutrition.sectionShape,
+          )
+          .toList();
       expect(chipMaterials, hasLength(4));
       expect(
         chipMaterials.map((material) => material.color),
@@ -448,12 +495,11 @@ void main() {
       bool hasBorderColor(BoxDecoration decoration, Color color) =>
           decoration.border is Border &&
           (decoration.border! as Border).top.color == color;
-      List<BoxDecoration> currentDecorations() =>
-          tester
-              .widgetList<Container>(find.byType(Container))
-              .map((container) => container.decoration)
-              .whereType<BoxDecoration>()
-              .toList();
+      List<BoxDecoration> currentDecorations() => tester
+          .widgetList<Container>(find.byType(Container))
+          .map((container) => container.decoration)
+          .whereType<BoxDecoration>()
+          .toList();
 
       final statCards = currentDecorations().where(
         (decoration) =>
@@ -522,13 +568,14 @@ void main() {
         scheme.secondary.withValues(alpha: 0.55),
         scheme.error.withValues(alpha: 0.45),
       };
-      final lineCards =
-          tester.widgetList<Card>(find.byType(Card)).where((card) {
-            final shape = card.shape;
-            return shape is RoundedRectangleBorder &&
-                shape.borderRadius == nutrition.sectionShape &&
-                expectedMealBorders.contains(shape.side.color);
-          }).toList();
+      final lineCards = tester.widgetList<Card>(find.byType(Card)).where((
+        card,
+      ) {
+        final shape = card.shape;
+        return shape is RoundedRectangleBorder &&
+            shape.borderRadius == nutrition.sectionShape &&
+            expectedMealBorders.contains(shape.side.color);
+      }).toList();
       expect(lineCards, hasLength(4));
       expect(
         lineCards
@@ -544,15 +591,14 @@ void main() {
       );
       expect(quantityButtons.length, greaterThanOrEqualTo(8));
 
-      final logButtonFinder =
-          find
-              .ancestor(
-                of: find.text(strings.foodAddAllToDiary),
-                matching: find.byWidgetPredicate(
-                  (widget) => widget is ElevatedButton,
-                ),
-              )
-              .first;
+      final logButtonFinder = find
+          .ancestor(
+            of: find.text(strings.foodAddAllToDiary),
+            matching: find.byWidgetPredicate(
+              (widget) => widget is ElevatedButton,
+            ),
+          )
+          .first;
       final logButton = tester.widget<ElevatedButton>(logButtonFinder);
       final logStyle = logButton.style!;
       expect(
@@ -645,11 +691,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(profile.mealsWithItems.map((row) => row.itemName).toList(), [
-        'Breakfast first',
-        'Breakfast later',
-        'Dinner',
-      ]);
+      final recordsProfile = tester
+          .element(find.byType(Scaffold).last)
+          .read<NutritionProfile>();
+      expect(
+        recordsProfile.mealsWithItems.map((row) => row.itemName).toList(),
+        ['Breakfast first', 'Breakfast later', 'Dinner'],
+      );
       Finder chipWithTitle(String title) => find.byWidgetPredicate((widget) {
         return widget is RichText &&
             widget.text.toPlainText().startsWith('$title\n');

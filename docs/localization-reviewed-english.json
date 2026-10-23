@@ -7,7 +7,10 @@
     "es": {
       "approved": {
         "appTitle": "Tonos is the product name.",
-        "musclePercentLabel": "The percent sign is a universal symbol."
+        "musclePercentLabel": "The percent sign is a universal symbol.",
+        "generateFocusNeutral": "Neutral is also the Spanish adjective for the unselected focus state.",
+        "nutritionUnitCalories": "kcal is the standard kilocalorie symbol.",
+        "nutritionUnitGrams": "g is the SI gram symbol."
       },
       "existingSameEnglish": [
         "dashboardManual",
@@ -54,7 +57,12 @@
     "fr": {
       "approved": {
         "appTitle": "Tonos is the product name.",
-        "musclePercentLabel": "The percent sign is a universal symbol."
+        "musclePercentLabel": "The percent sign is a universal symbol.",
+        "catalogMuscleFilter": "Muscle is the French noun used by this filter.",
+        "generatePlanUnit": "French uses plan and plans for these plural forms.",
+        "nutritionUnitCalories": "kcal is the standard kilocalorie symbol.",
+        "nutritionUnitGrams": "g is the SI gram symbol.",
+        "premadeExpressivePlansCount": "French uses the same number plus plan or plans for these plural forms."
       },
       "existingSameEnglish": [
         "allocationCredit",
@@ -129,7 +137,12 @@
     "fr_CA": {
       "approved": {
         "appTitle": "Tonos is the product name.",
-        "musclePercentLabel": "The percent sign is a universal symbol."
+        "musclePercentLabel": "The percent sign is a universal symbol.",
+        "catalogMuscleFilter": "Muscle is the French noun used by this filter.",
+        "generatePlanUnit": "French uses plan and plans for these plural forms.",
+        "nutritionUnitCalories": "kcal is the standard kilocalorie symbol.",
+        "nutritionUnitGrams": "g is the SI gram symbol.",
+        "premadeExpressivePlansCount": "French uses the same number plus plan or plans for these plural forms."
       },
       "existingSameEnglish": [
         "anatomyMuscles",

@@ -166,14 +166,32 @@ class WorkoutAddChangeSetAction extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-    decoration: BoxDecoration(
-      border: Border.all(color: context.semanticColors.workoutAddChangeSet),
-      borderRadius: context.shapeTokens.workoutAddChangeSet,
-    ),
-    child: GestureDetector(onTap: onTap, child: Text(label)),
-  );
+  Widget build(BuildContext context) {
+    if (!context.usesExpressivePresentation) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: context.semanticColors.workoutAddChangeSet),
+          borderRadius: context.shapeTokens.workoutAddChangeSet,
+        ),
+        child: GestureDetector(onTap: onTap, child: Text(label)),
+      );
+    }
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: DefaultTextStyle.of(context).style.color,
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        side: BorderSide(color: context.semanticColors.workoutAddChangeSet),
+        shape: RoundedRectangleBorder(
+          borderRadius: context.shapeTokens.workoutAddChangeSet,
+        ),
+        textStyle: DefaultTextStyle.of(context).style,
+      ),
+      child: Text(label),
+    );
+  }
 }
 
 /// Save/discard recipes for the completed-work exit dialog.

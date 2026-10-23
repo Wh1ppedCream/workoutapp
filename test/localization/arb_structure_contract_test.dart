@@ -13,18 +13,26 @@ const _localeFiles = <String, String>{
   'hi': 'app_hi.arb',
 };
 
+// These existing unit labels have no singular/plural spelling change. English
+// uses count only to choose the suffix, while the numeric field shows the value.
+// Pin both the English selector and each invariant translation so this cannot
+// exempt a missing interpolated value in another message.
+const _invariantPlanUnits = <String, String>{'bn': 'পরিকল্পনা', 'zh': '计划'};
+
 void main() {
   test('ARB files keep message keys and runtime placeholders aligned', () {
     final english = _readArb(_localeFiles['en']!);
-    final messageKeys =
-        english.keys.where((key) => !key.startsWith('@')).toSet();
+    final messageKeys = english.keys
+        .where((key) => !key.startsWith('@'))
+        .toSet();
 
     expect(messageKeys, isNotEmpty);
 
     for (final entry in _localeFiles.entries) {
       final locale = _readArb(entry.value);
-      final localeMessageKeys =
-          locale.keys.where((key) => !key.startsWith('@')).toSet();
+      final localeMessageKeys = locale.keys
+          .where((key) => !key.startsWith('@'))
+          .toSet();
       expect(
         localeMessageKeys,
         unorderedEquals(messageKeys),
@@ -37,6 +45,14 @@ void main() {
         expect(message.trim(), isNotEmpty, reason: '${entry.value}/$key');
         final metadata = english['@$key'];
         if (metadata is! Map || metadata['placeholders'] is! Map) continue;
+
+        final invariantPlanUnit = _invariantPlanUnits[entry.key];
+        if (key == 'generatePlanUnit' && invariantPlanUnit != null) {
+          expect(english[key], '{count, plural, =1{plan} other{plans}}');
+          expect(message, invariantPlanUnit);
+          expect((metadata['placeholders'] as Map).keys, ['count']);
+          continue;
+        }
 
         final placeholders = (metadata['placeholders'] as Map).keys;
         for (final placeholder in placeholders) {

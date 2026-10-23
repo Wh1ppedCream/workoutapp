@@ -74,11 +74,17 @@ void main() {
           ),
         );
         final decoration = bar.decoration! as BoxDecoration;
-        expect(decoration.color, surfaces.planActionBar);
+        final planning = AppExpressivePlanningTokens.maybeOf(context);
+        expect(
+          decoration.color,
+          planning?.actionSecondary ?? surfaces.planActionBar,
+        );
         expect(
           (decoration.border! as Border).top,
           BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            color:
+                planning?.outline ??
+                theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
           ),
         );
 
@@ -214,17 +220,26 @@ void main() {
               reason: 'Expressive plan counts use plural English wording.',
             );
           }
-          final sourceExpansion = find.byType(ExpansionTile).first;
+          if (isExpressive) {
+            // This deliberately incomplete equipment fixture has no compatible
+            // complete plans. Expressive hides them until filtering is off.
+            expect(find.byType(ExpansionTile), findsNothing);
+            await tester.tap(find.byType(Switch));
+            await tester.pumpAndSettle();
+          }
+          final sourceExpansion = isExpressive
+              ? find
+                    .ancestor(
+                      of: find.text(strings.premadeBuiltinPlansTitle),
+                      matching: find.byType(ExpansionTile),
+                    )
+                    .first
+              : find.byType(ExpansionTile).first;
           final sourcePressResponse = find.ancestor(
             of: sourceExpansion,
             matching: find.byType(TonosExpressivePressResponse),
           );
-          expect(
-            sourcePressResponse,
-            AppExpressivePlanningTokens.maybeOf(context) == null
-                ? findsNothing
-                : findsOneWidget,
-          );
+          expect(sourcePressResponse.evaluate().toList(), isEmpty);
           if (isExpressive) {
             final durationSelector = find.byType(SegmentedButton<int>);
             expect(durationSelector, findsOneWidget);
@@ -238,16 +253,18 @@ void main() {
               tester.getBottomLeft(durationLabel).dy,
               lessThan(tester.getTopLeft(durationSelector).dy),
             );
+            final inlineDuration = find
+                .ancestor(of: durationSelector, matching: find.byType(AppBar))
+                .evaluate()
+                .isNotEmpty;
+            final introTop = tester
+                .getTopLeft(find.text(strings.premadeExpressiveDescription))
+                .dy;
             expect(
               tester.getTopLeft(durationSelector).dy,
-              greaterThan(
-                tester
-                    .getBottomLeft(
-                      find.text(strings.premadeExpressiveDescription),
-                    )
-                    .dy,
-              ),
-              reason: 'Expressive duration selection follows full-width copy.',
+              inlineDuration ? lessThan(introTop) : greaterThan(introTop),
+              reason:
+                  'The selector follows the approved narrow-toolbar fallback.',
             );
             final selector = tester.widget<SegmentedButton<int>>(
               durationSelector,
@@ -305,15 +322,7 @@ void main() {
           await tester.tap(group);
           await tester.pumpAndSettle();
           if (isExpressive) {
-            expect(
-              find.byKey(ValueKey(targetPlan.id)),
-              findsNothing,
-              reason: 'Incompatible plans are hidden instead of rewritten.',
-            );
             final equipmentSwitch = find.byType(Switch);
-            expect(equipmentSwitch, findsOneWidget);
-            await tester.tap(equipmentSwitch);
-            await tester.pumpAndSettle();
             expect(tester.widget<Switch>(equipmentSwitch).value, isFalse);
             expect(
               find.text(strings.premadeExpressiveEquipmentAll),
@@ -355,7 +364,12 @@ void main() {
             );
             expect(previewExerciseName, findsOneWidget);
             final previewDetails = find.descendant(
-              of: planCard,
+              of: find
+                  .ancestor(
+                    of: previewExerciseName,
+                    matching: find.byType(Column),
+                  )
+                  .first,
               matching: find.byWidgetPredicate(
                 (widget) =>
                     widget is Text && widget.data?.contains(' × ') == true,

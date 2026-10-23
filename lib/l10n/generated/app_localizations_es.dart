@@ -455,6 +455,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Colores intensos, contornos de tinta y sombras marcadas.';
 
   @override
+  String get themeFamilyExpressive => 'Expresivo';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'Tarjetas coloridas, formas expresivas y superficies suaves.';
+
+  @override
   String get displaySettingsTitle => 'Pantalla';
 
   @override

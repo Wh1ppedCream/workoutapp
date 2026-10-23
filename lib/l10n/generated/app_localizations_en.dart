@@ -451,6 +451,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bold colors, ink outlines, and hard shadows.';
 
   @override
+  String get themeFamilyExpressive => 'Expressive';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'Colorful cards, expressive shapes, and soft surfaces.';
+
+  @override
   String get displaySettingsTitle => 'Display';
 
   @override

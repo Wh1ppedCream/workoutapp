@@ -749,7 +749,12 @@ void main() {
     );
   });
 
-  for (final family in AppThemeFamily.values) {
+  // These legacy recipe assertions cover Classic/Neo. The dedicated
+  // Expressive interaction and responsive cases below cover its approved UI.
+  for (final family in const [
+    AppThemeFamily.classic,
+    AppThemeFamily.neoBrutalism,
+  ]) {
     for (final brightness in Brightness.values) {
       final theme = brightness == Brightness.light
           ? AppThemeFactory.light(family)

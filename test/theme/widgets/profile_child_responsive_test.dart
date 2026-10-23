@@ -13,7 +13,7 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets(
-    'Expressive add-set rule options wrap at compact large text and keep dialog actions above the keyboard',
+    'Expressive add-set segments fit compact large text and keep actions above the keyboard',
     (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -78,15 +78,21 @@ void main() {
         final dialog = find.byType(AlertDialog).last;
         final strings = AppLocalizations.of(tester.element(dialog));
         expect(
-          find.descendant(of: dialog, matching: find.byType(Radio<AddSetMode>)),
-          findsNWidgets(2),
+          find.descendant(
+            of: dialog,
+            matching: find.byKey(const ValueKey('plan-rule-add-set-explicit')),
+          ),
+          findsOneWidget,
           reason: '$locale / $width dp / $scale×',
         );
         expect(
-          find.descendant(of: dialog, matching: find.byType(Wrap)),
+          find.descendant(
+            of: dialog,
+            matching: find.byKey(const ValueKey('plan-rule-add-set-copy')),
+          ),
           findsOneWidget,
           reason:
-              'Expressive set choices wrap at $locale / $width dp / $scale×',
+              'Expressive set choices remain available at $locale / $width dp / $scale×',
         );
         expect(
           tester.takeException(),

@@ -31,9 +31,11 @@ void main() {
           ];
       for (final configuration in configurations) {
         final brightness = configuration.brightness;
-        final expressive = configuration.family == null;
+        final expressive =
+            configuration.family == null ||
+            configuration.family == AppThemeFamily.expressive;
         final repository = _AnalyticsSelectorRepository();
-        final theme = expressive
+        final theme = configuration.family == null
             ? ThemeData(
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF345B50),

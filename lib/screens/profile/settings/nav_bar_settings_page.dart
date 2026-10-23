@@ -25,6 +25,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   late List<TabItem> _inactiveTabs;
   late List<TabItem> _savedActiveTabs;
   late List<TabItem> _savedInactiveTabs;
+  bool _saving = false;
 
   bool get _hasUnsavedChanges =>
       !_sameTabOrder(_activeTabs, _savedActiveTabs) ||
@@ -45,6 +46,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   }
 
   void _onReorder(int oldIndex, int newIndex) {
+    if (_saving) return;
     setState(() {
       if (newIndex > oldIndex) newIndex--;
       final tab = _activeTabs.removeAt(oldIndex);
@@ -53,6 +55,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
   }
 
   void _toggleTab(TabItem tab, bool enable) {
+    if (_saving) return;
     setState(() {
       if (enable) {
         _inactiveTabs.remove(tab);
@@ -65,7 +68,8 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_saving) return;
     final strings = AppLocalizations.of(context);
     if (_activeTabs.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,20 +80,32 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
 
     final newOrder = [..._activeTabs, ..._inactiveTabs];
     final newEnabled = _activeTabs.toSet();
-    context.read<NavBarConfig>().update(
-      newOrder: newOrder,
-      newEnabled: newEnabled,
-    );
-    setState(() {
-      _activeTabs = newOrder.where((tab) => newEnabled.contains(tab)).toList();
-      _inactiveTabs = newOrder
-          .where((tab) => !newEnabled.contains(tab))
-          .toList();
-      _savedActiveTabs = List.of(_activeTabs);
-      _savedInactiveTabs = List.of(_inactiveTabs);
-    });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(strings.navEditorSavedMessage)));
+    setState(() => _saving = true);
+    try {
+      await context.read<NavBarConfig>().update(
+        newOrder: newOrder,
+        newEnabled: newEnabled,
+      );
+      if (!mounted) return;
+      setState(() {
+        _activeTabs = newOrder
+            .where((tab) => newEnabled.contains(tab))
+            .toList();
+        _inactiveTabs = newOrder
+            .where((tab) => !newEnabled.contains(tab))
+            .toList();
+        _savedActiveTabs = List.of(_activeTabs);
+        _savedInactiveTabs = List.of(_inactiveTabs);
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.navEditorSavedMessage)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(strings.safeFailureSaveTitle)));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -128,14 +144,14 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
           : SettingsSaveBar(
               buttonKey: AppTestKeys.navigationSave,
               label: strings.navEditorSave,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
               decorated: false,
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
             ),
       floatingActionButton: isProfileExpressive && _hasUnsavedChanges
           ? FloatingActionButton.extended(
               key: AppTestKeys.navigationSave,
-              onPressed: _save,
+              onPressed: _saving ? null : _save,
               backgroundColor: destination!.actionPrimary,
               foregroundColor: destination.onActionPrimary,
               icon: const Icon(Icons.save_outlined),

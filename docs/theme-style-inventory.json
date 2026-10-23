@@ -77,6 +77,18 @@
   ],
   "pathRules": [
     {
+      "id": "swap-expressive-comparison-decorations",
+      "pattern": "lib/widgets/swap_exercise_sheet.dart",
+      "kinds": [
+        "decoration"
+      ],
+      "sourcePattern": "BoxDecoration\\(\\s*color:\\s*(?:matchScore\\s*==\\s*null|Color\\.lerp\\(fill,\\s*planning\\.pageCanvas,\\s*0\\.16\\))",
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Approved Expressive comparison badge and inset focus panel",
+      "rationale": "The two source-limited decorations use existing planning accent roles and a 0.16 blend of their parent fill with the planning canvas. The Expressive swap sheet interaction, comparison and compact-layout tests cover their presentation. This records the approved implementation without widening the shared secondary-ink rule or qualifying other callers."
+    },
+    {
       "id": "anatomy-bodypart-detail-recipes",
       "pattern": "lib/screens/exercise/definitions_by_bodypart_page.dart",
       "kinds": [
@@ -87,18 +99,6 @@
       "status": "migrated",
       "target": "ColorScheme primary ink, semantic positive ink, and transparent heatmap fallback",
       "rationale": "A four-mode production-route contract renders both empty and populated exercise metadata branches, pins equipment labels to ColorScheme.primary and positive labels to the existing Classic green / Neo semantic-positive recipe, and verifies the detail heatmap remains transparent. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
-    },
-    {
-      "id": "anatomy-bodypart-expressive-header-shape",
-      "pattern": "lib/screens/exercise/definitions_by_bodypart_page.dart",
-      "kinds": [
-        "geometry"
-      ],
-      "classification": "structural_theme",
-      "status": "migrated",
-      "target": "Expressive body-part header mixed-corner shape",
-      "rationale": "The body-part detail header opts into the Catalog destination surface and uses a role-specific mixed-corner shape only for the Expressive presentation. This source-scoped rule records those two shape expressions without classifying other route geometry. Device visual acceptance remains separate.",
-      "sourcePattern": "shape:\\s*expressive\\s*\\?\\s*const RoundedRectangleBorder\\([\\s\\S]*?\\)\\s*:\\s*null"
     },
     {
       "id": "anatomy-bodypart-responsive-metric-bay",
@@ -125,18 +125,6 @@
       "status": "migrated",
       "target": "ColorScheme primary ink and semantic positive rank labels",
       "rationale": "A four-mode production-route contract exercises both empty and populated equipment metadata plus the rendered rank label, confirming equipment uses ColorScheme.primary and rank ink retains the existing Classic green / Neo semantic-positive recipe. This exact kind-limited rule records current ownership only; device visual acceptance remains separate."
-    },
-    {
-      "id": "anatomy-muscle-expressive-header-shape",
-      "pattern": "lib/screens/exercise/definitions_by_muscle_page.dart",
-      "kinds": [
-        "geometry"
-      ],
-      "classification": "structural_theme",
-      "status": "migrated",
-      "target": "Expressive muscle header mixed-corner shape",
-      "rationale": "The muscle detail header opts into the Catalog destination surface and uses a role-specific mixed-corner shape only for the Expressive presentation. This source-scoped rule records those two shape expressions without classifying other route geometry. Device visual acceptance remains separate.",
-      "sourcePattern": "shape:\\s*expressive\\s*\\?\\s*const RoundedRectangleBorder\\([\\s\\S]*?\\)\\s*:\\s*null"
     },
     {
       "id": "anatomy-muscle-responsive-metric-bay",
@@ -592,7 +580,8 @@
       "classification": "structural_theme",
       "status": "migrated",
       "target": "Exercise Editor TabBar divider and its route-owned container recipe",
-      "rationale": "The sole current color candidate in this file is the intentional transparent TabBar divider inside the bordered tab container. The four-mode production route contract asserts the divider, indicator, labels, and route-owned shape. This exact-file, single-kind rule qualifies only that current color finding; all other route findings remain in their pending review scope."
+      "rationale": "The sole current color candidate in this file is the intentional transparent TabBar divider inside the bordered tab container. The four-mode production route contract asserts the divider, indicator, labels, and route-owned shape. This exact-file, single-kind rule qualifies only that current color finding; all other route findings remain in their pending review scope.",
+      "sourcePattern": "dividerColor:\\s*Colors\\.transparent"
     },
     {
       "id": "exercise-editor-dialog-label-ownership",
@@ -1277,7 +1266,8 @@
       "classification": "stable_category_data",
       "status": "allowlisted",
       "target": "Circular measurement-series marker with theme-aware category color",
-      "rationale": "The one decoration candidate is MetricItem's 8px circular series marker. Its fixed circular encoding is intentionally shared across theme families while the supplied category color retains the Classic palette or resolves through Neo AppDataVisualizationTokens. The four-mode rendered-color regression pins all five categories; the inventory contract pins this rule to exactly one decoration so unrelated styling cannot silently enter the allowlist."
+      "rationale": "The one decoration candidate is MetricItem's 8px circular series marker. Its fixed circular encoding is intentionally shared across theme families while the supplied category color retains the Classic palette or resolves through Neo AppDataVisualizationTokens. The four-mode rendered-color regression pins all five categories; the inventory contract pins this rule to exactly one decoration so unrelated styling cannot silently enter the allowlist.",
+      "sourcePattern": "BoxDecoration\\(color:\\s*color,\\s*shape:\\s*BoxShape\\.circle\\)"
     },
     {
       "id": "exercise-progress-chart-recipes",
@@ -1788,7 +1778,8 @@
         "lib/widgets/swap_exercise_sheet.dart",
         "lib/widgets/exercise_definition_info_tile.dart",
         "lib/widgets/past_sessions_list.dart",
-        "lib/widgets/preset_info_card.dart"
+        "lib/widgets/preset_info_card.dart",
+        "lib/screens/exercise/flow_editor_expressive_widgets.dart"
       ],
       "target": "Tonos surface/action recipes plus exercise-specific semantic and data-visualization roles",
       "rationale": "These non-overlapping exercise routes and supporting widgets currently contain pending findings outside the six original queues. Queue membership assigns a review owner only; it does not classify any style as migrated or approve visual behavior."
@@ -1799,7 +1790,8 @@
       "patterns": [
         "lib/screens/nutrition/**",
         "lib/widgets/meal_plan_add_bar.dart",
-        "lib/widgets/nutrition_text_details.dart"
+        "lib/widgets/nutrition_text_details.dart",
+        "lib/widgets/expressive_nutrition_summary.dart"
       ],
       "target": "Tonos form/surface primitives and nutrition semantic roles",
       "rationale": "This disjoint route family groups nutrition entry, customization, and scanning findings for focused review. Queue membership is triage only and does not exempt or migrate findings."
@@ -1812,7 +1804,9 @@
         "lib/widgets/current_metrics_section.dart",
         "lib/widgets/workout_dashboard.dart",
         "lib/widgets/data_records_section.dart",
-        "lib/widgets/seven_day_focus_card.dart"
+        "lib/widgets/seven_day_focus_card.dart",
+        "lib/screens/exercise/full_history_screen.dart",
+        "lib/screens/measurement_trends_page.dart"
       ],
       "target": "Tonos surfaces plus semantic measurement and progress roles",
       "rationale": "These history and measurement summaries need one owner for inherited theme behavior and data-versus-structure separation. Queue membership does not constitute route qualification."

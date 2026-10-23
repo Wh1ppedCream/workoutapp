@@ -12,28 +12,38 @@ String _section(String source, String start, String end) {
 }
 
 void main() {
-  test('Session history route preserves an active destination scope', () {
-    final source = File('lib/widgets/exercise_detail_sheet.dart')
-        .readAsStringSync();
-    final historyRoute = _section(
-      source,
-      'Future<void> _openHistorySession(',
-      'Future<_LoadedExerciseMedia?> _loadPrimaryMedia()',
-    );
+  test(
+    'Session history uses Logbook in Expressive and preserves other scopes',
+    () {
+      final source = File('lib/widgets/exercise_detail_sheet.dart')
+          .readAsStringSync();
+      final historyRoute = _section(
+        source,
+        'Future<void> _openHistorySession(',
+        'Future<_LoadedExerciseMedia?> _loadPrimaryMedia()',
+      );
 
-    expect(
-      historyRoute,
-      contains('final destinationFamily = _destinationTokens?.family;'),
-    );
-    expect(
-      historyRoute,
-      contains('if (destinationFamily == null) return detail;'),
-    );
-    expect(historyRoute, contains('AppExpressiveDestinationTheme('));
-    expect(historyRoute, contains('family: destinationFamily'));
-  });
+      expect(
+        historyRoute,
+        contains(
+          'final destinationFamily = context.usesExpressivePresentation',
+        ),
+      );
+      expect(
+        historyRoute,
+        contains('? AppExpressiveDestinationFamily.logbook'),
+      );
+      expect(historyRoute, contains(': _destinationTokens?.family'));
+      expect(
+        historyRoute,
+        contains('if (destinationFamily == null) return detail;'),
+      );
+      expect(historyRoute, contains('AppExpressiveDestinationTheme('));
+      expect(historyRoute, contains('family: destinationFamily'));
+    },
+  );
 
-  test('Catalog detail styling is explicit and opt-in', () {
+  test('Approved detail styling is shared by every Expressive caller', () {
     final source = File('lib/widgets/exercise_detail_sheet.dart')
         .readAsStringSync();
     final sheetApi = _section(
@@ -85,9 +95,28 @@ void main() {
     expect(sheetApi, contains('bool expressiveCatalogPresentation = false'));
     expect(
       sheetApi,
-      contains('expressiveCatalogPresentation: expressiveCatalogPresentation'),
+      contains('expressiveCatalogPresentation: useCatalogPresentation'),
     );
-    expect(detailTab, contains('_buildFormGuideCard(def)'));
+    expect(
+      sheetApi,
+      contains('final expressive = context.usesExpressivePresentation'),
+    );
+    expect(
+      sheetApi,
+      contains(
+        'final useCatalogPresentation = expressive || expressiveCatalogPresentation',
+      ),
+    );
+    expect(
+      sheetApi,
+      contains(
+        'final useApprovedDetails = expressive || catalogBrowserDetailRefinement',
+      ),
+    );
+    expect(
+      detailTab,
+      contains('_buildFormGuideCard(def, catalogCompact: catalogRefinement)'),
+    );
     expect(detailTab, contains('_buildEquipmentCard(def)'));
     expect(detailTab, contains('_buildTargetAnatomyCard(def)'));
     expect(detailCards, contains('expressive ? expressiveContainer'));
@@ -112,10 +141,7 @@ void main() {
       recordsTab,
       contains('final expressive = _usesExpressiveCatalogSheet'),
     );
-    expect(
-      recordsTab,
-      contains('_buildExpressiveRecordTrendModule(records, weightUnit)'),
-    );
+    expect(recordsTab, contains('_buildExpressiveRecordTrendModule('));
     expect(
       RegExp(r'if\s*\(hasSetRecordBadges\)\s*if\s*\(expressive\)')
           .hasMatch(recordBadgeLegend),
@@ -125,9 +151,10 @@ void main() {
       recordBadgeLegend,
       contains('exercise-detail-expressive-record-badge-legend'),
     );
+    expect(recordBadgeLegend, contains('child: WorkoutRecordBadgeLegend'));
     expect(
       recordBadgeLegend,
-      contains('child: const WorkoutRecordBadgeLegend'),
+      contains('allTimeColorOverride: catalogLightAllTimeAccent'),
     );
     expect(recordBadgeLegend, contains('padding: EdgeInsets.zero'));
     expect(

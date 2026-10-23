@@ -4,7 +4,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 
 void main() {
   group('AppThemeCapabilities', () {
-    test('Classic remains available in release builds', () {
+    test('Classic and Expressive remain available in release builds', () {
       const capabilities = AppThemeCapabilities(
         experimentalThemesEnabled: true,
         isReleaseMode: true,
@@ -13,9 +13,10 @@ void main() {
       expect(capabilities.isAvailable(AppThemeFamily.classic), isTrue);
       expect(capabilities.availableFamilies, <AppThemeFamily>[
         AppThemeFamily.classic,
+        AppThemeFamily.expressive,
       ]);
       expect(capabilities.isCodeAvailable('classic'), isTrue);
-      expect(capabilities.isCodeAvailable('expressive'), isFalse);
+      expect(capabilities.isCodeAvailable('expressive'), isTrue);
       expect(
         capabilities.resolve(AppThemeFamily.classic),
         AppThemeFamily.classic,
@@ -50,6 +51,7 @@ void main() {
       expect(developmentCapabilities.availableFamilies, <AppThemeFamily>[
         AppThemeFamily.classic,
         AppThemeFamily.neoBrutalism,
+        AppThemeFamily.expressive,
       ]);
       expect(
         disabledCapabilities.isAvailable(AppThemeFamily.neoBrutalism),
@@ -71,7 +73,7 @@ void main() {
       expect(capabilities.isCodeAvailable('neo_brutalism'), isFalse);
     });
 
-    test('explicit Neo release opt-in exposes both families', () {
+    test('explicit Neo release opt-in exposes all three families', () {
       const capabilities = AppThemeCapabilities(
         experimentalThemesEnabled: false,
         isReleaseMode: true,
@@ -81,13 +83,14 @@ void main() {
       expect(capabilities.availableFamilies, <AppThemeFamily>[
         AppThemeFamily.classic,
         AppThemeFamily.neoBrutalism,
+        AppThemeFamily.expressive,
       ]);
       expect(capabilities.isCodeAvailable('neo_brutalism'), isTrue);
       expect(
         capabilities.resolve(AppThemeFamily.neoBrutalism),
         AppThemeFamily.neoBrutalism,
       );
-      expect(capabilities.isCodeAvailable('expressive'), isFalse);
+      expect(capabilities.isCodeAvailable('expressive'), isTrue);
     });
 
     test('release opt-in does not bypass disabled development themes', () {
@@ -99,6 +102,7 @@ void main() {
 
       expect(capabilities.availableFamilies, <AppThemeFamily>[
         AppThemeFamily.classic,
+        AppThemeFamily.expressive,
       ]);
     });
   });

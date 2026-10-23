@@ -27,6 +27,8 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   AppRepository get _repo => context.read<AppRepository>();
   List<Muscle> _muscles = [];
   Map<int, int> _ranks = {};
+  final Map<int, String> _rankDrafts = {};
+  int _editRevision = 0;
   bool _isLoading = true;
   bool _isSaving = false;
   bool _dirty = false;
@@ -77,7 +79,10 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   }
 
   void _onReorder(int oldIndex, int newIndex) {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
+      _rankDrafts.clear();
+      _editRevision++;
       if (newIndex > oldIndex) newIndex -= 1;
       final muscle = _muscles.removeAt(oldIndex);
       _muscles.insert(newIndex, muscle);
@@ -87,15 +92,38 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
   }
 
   Future<void> _saveAll() async {
+    if (_isSaving) return;
+    final parsedDrafts = <int, int>{};
+    for (final entry in _rankDrafts.entries) {
+      final value = int.tryParse(entry.value.trim());
+      if (value == null || value < 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).volumeInvalidNumbers),
+          ),
+        );
+        return;
+      }
+      parsedDrafts[entry.key] = value;
+    }
+    _ranks.addAll(parsedDrafts);
+    final savedDrafts = Map<int, String>.of(_rankDrafts);
+    final savedRevision = _editRevision;
     setState(() => _isSaving = true);
     try {
-      for (var entry in _ranks.entries) {
+      for (var entry in _ranks.entries.toList()) {
         await _repo.setMuscleRank(entry.key, entry.value);
       }
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _dirty = false;
+        for (final entry in savedDrafts.entries) {
+          if (_rankDrafts[entry.key] == entry.value) {
+            _rankDrafts.remove(entry.key);
+          }
+        }
+        _dirty = _rankDrafts.isNotEmpty || _editRevision != savedRevision;
+        _sortByRank();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -304,9 +332,19 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
                 ),
                 rank: rank,
                 rankLabel: strings.rankingsRank,
+                draft: _rankDrafts[muscle.id],
+                onRankChanged: (value) => setState(() {
+                  _editRevision++;
+                  _rankDrafts[muscle.id] = value;
+                  _dirty = true;
+                }),
                 onRankSubmitted: (value) {
+                  final parsed = int.tryParse(value.trim());
+                  if (parsed == null || parsed < 0) return;
                   setState(() {
-                    _ranks[muscle.id] = int.tryParse(value) ?? rank;
+                    _ranks[muscle.id] = parsed;
+                    _editRevision++;
+                    _rankDrafts.remove(muscle.id);
                     _sortByRank();
                     _dirty = true;
                   });
@@ -349,7 +387,9 @@ class _ExpressiveMuscleRankingRow extends StatefulWidget {
     required this.name,
     required this.rank,
     required this.rankLabel,
+    required this.onRankChanged,
     required this.onRankSubmitted,
+    this.draft,
   });
 
   final int index;
@@ -357,6 +397,8 @@ class _ExpressiveMuscleRankingRow extends StatefulWidget {
   final Widget name;
   final int rank;
   final String rankLabel;
+  final ValueChanged<String> onRankChanged;
+  final String? draft;
   final ValueChanged<String> onRankSubmitted;
 
   @override
@@ -379,12 +421,11 @@ class _ExpressiveMuscleRankingRowState
   @override
   void didUpdateWidget(covariant _ExpressiveMuscleRankingRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.rank != widget.rank) {
+    final text = widget.draft ?? widget.rank.toString();
+    if (!_rankFocusNode.hasFocus && _rankController.text != text) {
       _rankController.value = TextEditingValue(
-        text: widget.rank.toString(),
-        selection: TextSelection.collapsed(
-          offset: widget.rank.toString().length,
-        ),
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
       );
     }
   }
@@ -461,6 +502,7 @@ class _ExpressiveMuscleRankingRowState
                       disabledBorder: InputBorder.none,
                     ),
                     onFieldSubmitted: widgetData.onRankSubmitted,
+                    onChanged: widgetData.onRankChanged,
                   ),
                 ),
               ),

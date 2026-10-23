@@ -29,13 +29,13 @@ void main() {
       final cases = <(AppThemeFamily?, Brightness, bool)>[
         for (final family in AppThemeFamily.values)
           for (final brightness in Brightness.values)
-            (family, brightness, false),
+            (family, brightness, family == AppThemeFamily.expressive),
         for (final brightness in Brightness.values) (null, brightness, true),
       ];
 
       for (final (family, brightness, expressive) in cases) {
         final repository = _EditorPresentationRepository();
-        final theme = expressive
+        final theme = family == null
             ? ThemeData(
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF345B50),
@@ -48,8 +48,8 @@ void main() {
                 ],
               )
             : brightness == Brightness.light
-            ? AppThemeFactory.light(family!)
-            : AppThemeFactory.dark(family!);
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final mode = expressive
             ? 'Expressive ${brightness.name}'
             : '${family!.code} ${brightness.name}';
@@ -466,7 +466,7 @@ void main() {
       final cases = <(AppThemeFamily?, Brightness, bool)>[
         for (final family in AppThemeFamily.values)
           for (final brightness in Brightness.values)
-            (family, brightness, false),
+            (family, brightness, family == AppThemeFamily.expressive),
         for (final brightness in Brightness.values) (null, brightness, true),
       ];
 
@@ -479,7 +479,7 @@ void main() {
             createdAt: DateTime.utc(2026),
           );
         addTearDown(profile.dispose);
-        final theme = expressive
+        final theme = family == null
             ? ThemeData(
                 colorScheme: ColorScheme.fromSeed(
                   seedColor: const Color(0xFF345B50),
@@ -492,8 +492,8 @@ void main() {
                 ],
               )
             : brightness == Brightness.light
-            ? AppThemeFactory.light(family!)
-            : AppThemeFactory.dark(family!);
+            ? AppThemeFactory.light(family)
+            : AppThemeFactory.dark(family);
         final mode = expressive
             ? 'Expressive ${brightness.name}'
             : '${family!.code} ${brightness.name}';

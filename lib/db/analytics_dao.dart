@@ -1,6 +1,7 @@
 // File: lib/db/analytics_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import '../models/models.dart';
 
 /// Data Access Object for analytics‐related tables:
@@ -52,17 +53,26 @@ class AnalyticsDao {
     );
   }
 
-  static VolumeBoundaries _volumeBoundariesFromRow(
+  static VolumeBoundaries? _volumeBoundariesFromRow(
     Map<String, Object?> row,
     String idColumn,
   ) {
-    return VolumeBoundaries(
+    for (final key in [
+      'maintenance_volume',
+      'min_effective_volume',
+      'max_adaptive_volume',
+      'max_recoverable_volume',
+    ]) {
+      if (row[key] is! num) return null;
+    }
+    final bounds = VolumeBoundaries(
       id: row[idColumn] as int,
       maintenance: (row['maintenance_volume'] as num).toDouble(),
       minEffective: (row['min_effective_volume'] as num).toDouble(),
       maxAdaptive: (row['max_adaptive_volume'] as num).toDouble(),
       maxRecoverable: (row['max_recoverable_volume'] as num).toDouble(),
     );
+    return bounds.isValid ? bounds : null;
   }
 
   static Map<String, Object?> _volumeBoundaryValues(
@@ -70,6 +80,7 @@ class AnalyticsDao {
     int id,
     VolumeBoundaries bounds,
   ) {
+    bounds.validate();
     return {
       idColumn: id,
       'maintenance_volume': bounds.maintenance,

@@ -680,10 +680,62 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
     final localizedPlansFuture = _localizedPlansFuture ??= _loadLocalizedPlans(
       Localizations.localeOf(context),
     );
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final scaler = MediaQuery.textScalerOf(context);
+    final responsiveDuration =
+        expressive != null && (viewportWidth < 360 || scaler.scale(14) > 17);
+    final durationWidth = math.min(320.0, math.max(1.0, viewportWidth - 32));
+    double textHeight(String label, TextStyle? style, double width) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+      )..layout(maxWidth: width);
+      final height = painter.height;
+      painter.dispose();
+      return height;
+    }
+
+    final durationLabelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: expressive?.configurationForeground,
+      fontWeight: FontWeight.w800,
+    );
+    final durationLineHeight = math.max(
+      textHeight(
+        strings.premadeExpressiveOneHour,
+        Theme.of(context).textTheme.labelLarge,
+        math.max(1, durationWidth / 2 - 24),
+      ),
+      textHeight(
+        strings.premadeExpressiveTwoHours,
+        Theme.of(context).textTheme.labelLarge,
+        math.max(1, durationWidth / 2 - 24),
+      ),
+    );
+    final responsiveDurationHeight =
+        textHeight(
+          strings.optimizedWorkoutDuration,
+          durationLabelStyle,
+          durationWidth,
+        ) +
+        math.max(48.0, durationLineHeight + 28) +
+        13;
     final content = Scaffold(
       backgroundColor: expressive?.pageCanvas,
       appBar: AppBar(
-        toolbarHeight: expressive == null ? null : 76,
+        toolbarHeight: expressive == null
+            ? null
+            : responsiveDuration
+            ? math.max(
+                56,
+                textHeight(
+                      strings.premadePlansTitle,
+                      Theme.of(context).textTheme.titleLarge,
+                      math.max(1, viewportWidth - 72),
+                    ) +
+                    16,
+              )
+            : 76,
         titleSpacing: expressive == null ? NavigationToolbar.kMiddleSpacing : 0,
         title: Text(
           strings.premadePlansTitle,
@@ -692,7 +744,43 @@ class _PremadePlansPageState extends State<PremadePlansPage> {
         ),
         backgroundColor: expressive?.pageCanvas,
         foregroundColor: expressive?.onPage,
-        actions: expressive == null
+        bottom: responsiveDuration
+            ? PreferredSize(
+                preferredSize: Size.fromHeight(responsiveDurationHeight),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: SizedBox(
+                      width: durationWidth,
+                      child: KeyedSubtree(
+                        key: _durationTutorialKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              strings.optimizedWorkoutDuration,
+                              style: durationLabelStyle,
+                            ),
+                            const SizedBox(height: 1),
+                            _PremadeDurationSwitch(
+                              fillWidth: true,
+                              durationMinutes: _selectedDurationMinutes,
+                              onChanged: (minutes) => setState(() {
+                                _selectedDurationMinutes = minutes;
+                                _adaptationFuture = null;
+                              }),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : null,
+        actions: expressive == null || responsiveDuration
             ? null
             : [
                 KeyedSubtree(
@@ -1339,10 +1427,12 @@ class _PremadeDurationHeader extends StatelessWidget {
 class _PremadeDurationSwitch extends StatelessWidget {
   final int durationMinutes;
   final ValueChanged<int> onChanged;
+  final bool fillWidth;
 
   const _PremadeDurationSwitch({
     required this.durationMinutes,
     required this.onChanged,
+    this.fillWidth = false,
   });
 
   @override
@@ -1363,6 +1453,7 @@ class _PremadeDurationSwitch extends StatelessWidget {
       return ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 320),
         child: SegmentedButton<int>(
+          expandedInsets: fillWidth ? EdgeInsets.zero : null,
           segments: [
             ButtonSegment<int>(
               value: 60,

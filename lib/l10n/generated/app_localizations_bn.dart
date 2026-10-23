@@ -430,6 +430,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'উজ্জ্বল রং, গাঢ় আউটলাইন এবং কঠিন ছায়া।';
 
   @override
+  String get themeFamilyExpressive => 'এক্সপ্রেসিভ';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'রঙিন কার্ড, অভিব্যক্তিপূর্ণ আকার এবং কোমল পৃষ্ঠ।';
+
+  @override
   String get displaySettingsTitle => 'প্রদর্শন';
 
   @override

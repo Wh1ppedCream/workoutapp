@@ -37,6 +37,9 @@ class _BodyPartMuscleMappingScreenState
   Set<int>? _originalLinked;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isLoadingMappings = false;
+  int _mappingRequest = 0;
+  SafeFailure? _mappingFailure;
   bool _editing = false;
   bool _selectedMusclesOnly = false;
   String _muscleSearchQuery = '';
@@ -86,15 +89,37 @@ class _BodyPartMuscleMappingScreenState
   }
 
   Future<void> _loadMappings(int bodyPartId) async {
-    final rows = await _repo.fetchMusclesForBodyPart(bodyPartId);
-    if (!mounted) return;
+    final request = ++_mappingRequest;
     setState(() {
-      _linkedMuscleIds = rows.map((r) => r.muscleId).toSet();
+      _isLoadingMappings = true;
+      _mappingFailure = null;
+      _linkedMuscleIds = {};
     });
+    try {
+      final rows = await _repo.fetchMusclesForBodyPart(bodyPartId);
+      if (!mounted ||
+          request != _mappingRequest ||
+          _selectedBodyPart?.id != bodyPartId) {
+        return;
+      }
+      setState(() => _linkedMuscleIds = rows.map((r) => r.muscleId).toSet());
+    } catch (error) {
+      if (!mounted || request != _mappingRequest) return;
+      setState(() => _mappingFailure = SafeFailure.classify(error));
+    } finally {
+      if (mounted && request == _mappingRequest) {
+        setState(() => _isLoadingMappings = false);
+      }
+    }
   }
 
   Future<void> _saveMappings() async {
-    if (_selectedBodyPart == null || _originalLinked == null) return;
+    if (_selectedBodyPart == null ||
+        _originalLinked == null ||
+        _isLoadingMappings ||
+        _isSaving) {
+      return;
+    }
     setState(() => _isSaving = true);
     try {
       final bodyPartId = _selectedBodyPart!.id;
@@ -134,6 +159,11 @@ class _BodyPartMuscleMappingScreenState
   }
 
   void _startEditing() {
+    if (_isLoadingMappings ||
+        _mappingFailure != null ||
+        _selectedBodyPart == null) {
+      return;
+    }
     setState(() {
       _editing = true;
       _originalLinked = Set<int>.from(_linkedMuscleIds);
@@ -195,7 +225,13 @@ class _BodyPartMuscleMappingScreenState
               )
             : null,
         body: SafeArea(child: _buildBody()),
-        floatingActionButton: (!_editing && !_isLoading && _failure == null)
+        floatingActionButton:
+            (!_editing &&
+                !_isLoading &&
+                _failure == null &&
+                !_isLoadingMappings &&
+                _mappingFailure == null &&
+                _selectedBodyPart != null)
             ? FloatingActionButton.extended(
                 onPressed: _startEditing,
                 backgroundColor: destination?.actionPrimary,
@@ -334,7 +370,17 @@ class _BodyPartMuscleMappingScreenState
             subtitle: _editing
                 ? '${strings.mappingChooseLinkedSubtitle} · ${strings.mappingSelectedCount(_linkedMuscleIds.length)}'
                 : strings.mappingLinkedCount(linkedMuscles.length),
-            children: _editing
+            children: _isLoadingMappings
+                ? [const Center(child: CircularProgressIndicator())]
+                : _mappingFailure != null
+                ? [
+                    SafeErrorView(
+                      title: strings.safeFailureLoadTitle,
+                      failure: _mappingFailure!,
+                      onRetry: () => _loadMappings(_selectedBodyPart!.id),
+                    ),
+                  ]
+                : _editing
                 ? _editableMuscleTiles()
                 : _readOnlyMuscleTiles(linkedMuscles),
           ),

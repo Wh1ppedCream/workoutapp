@@ -894,6 +894,7 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
 String _familyLabel(AppThemeFamily family) => switch (family) {
   AppThemeFamily.classic => 'Classic',
   AppThemeFamily.neoBrutalism => 'Neo-Brutalism',
+  AppThemeFamily.expressive => 'Expressive',
 };
 
 String _localeLabel(Locale locale) => locale.toLanguageTag();

@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app_theme_family.dart';
 import 'classic_theme.dart';
+import 'expressive_theme.dart';
 import 'neo_brutalism_theme.dart';
 
 /// Cached theme lookup boundary for all theme families.
@@ -14,14 +15,18 @@ abstract final class AppThemeFactory {
   static final ThemeData _neoBrutalismLight =
       NeoBrutalismThemeDefinition.light();
   static final ThemeData _neoBrutalismDark = NeoBrutalismThemeDefinition.dark();
+  static final ThemeData _expressiveLight = ExpressiveThemeDefinition.light();
+  static final ThemeData _expressiveDark = ExpressiveThemeDefinition.dark();
 
   static ThemeData light(AppThemeFamily family) => switch (family) {
     AppThemeFamily.classic => _classicLight,
     AppThemeFamily.neoBrutalism => _neoBrutalismLight,
+    AppThemeFamily.expressive => _expressiveLight,
   };
 
   static ThemeData dark(AppThemeFamily family) => switch (family) {
     AppThemeFamily.classic => _classicDark,
     AppThemeFamily.neoBrutalism => _neoBrutalismDark,
+    AppThemeFamily.expressive => _expressiveDark,
   };
 }

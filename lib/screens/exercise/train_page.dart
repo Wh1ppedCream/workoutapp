@@ -248,6 +248,8 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _createManualPresetImpl(SelectedProfile sel) async {
+    await sel.ready;
+    if (!mounted) return;
     final profileId = sel.currentProfile?.id;
     final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
     final nextNum = existing.length + 1;

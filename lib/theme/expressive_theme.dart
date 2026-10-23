@@ -20,10 +20,10 @@ import 'tokens/app_surface_decoration_tokens.dart';
 import 'tokens/app_surface_tokens.dart';
 import 'tokens/app_tutorial_tokens.dart';
 
-/// Review-only palette candidates for the non-persisted Expressive preview.
+/// The approved curated palette and its historical generated comparison.
 enum ExpressivePaletteTreatment { generated, curated }
 
-/// Cached paired Material recipes for the non-persisted Expressive preview.
+/// Cached paired Material recipes for the Tonos Expressive theme.
 ///
 /// The palette starts from Tonos's existing Deep Purple seed using the SDK's
 /// ordinary generated scheme. The Expressive variant name is intentionally not

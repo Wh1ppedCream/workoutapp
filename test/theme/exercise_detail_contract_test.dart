@@ -129,8 +129,11 @@ void main() {
       expect(historyCard, contains('recordForeground'));
       expect(
         historySet,
-        contains('surfaces.exerciseDetailRecordSetFillOpacity'),
+        contains('theme.surfaceTokens.exerciseDetailRecordSetFillOpacity'),
       );
+      expect(historySet, contains('exercise-detail-record-set-details'));
+      expect(historySet, contains('softWrap: false'));
+      expect(historySet, contains('fit: BoxFit.scaleDown'));
       expect(metricCard, contains('surfaces.exerciseDetailMetricFillOpacity'));
       expect(metricCard, contains('shapes.exerciseDetailMetric'));
       expect(metricList, contains('surfaces.exerciseDetailMetricList'));

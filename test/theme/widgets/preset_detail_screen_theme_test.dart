@@ -12,7 +12,6 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/expressive_theme.dart';
-import 'package:env_test/theme/widgets/tonos_expressive_motion.dart';
 import 'package:env_test/theme/widgets/tonos_expressive_workout_shapes.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/add_exercise_fab.dart';
@@ -25,6 +24,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../tools/theme_style_inventory.dart';
+import '../theme_inventory_assertions.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,23 +48,9 @@ void main() {
       unorderedEquals(<String>['decoration', 'geometry', 'text_style']),
     );
     final findings = report.findings.where((f) => f.ruleId == rule.id).toList();
-    expect(findings, hasLength(12));
+    expect(findings, hasLength(14));
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
-    final pending = report.findings
-        .where(
-          (finding) =>
-              finding.file == rule.pattern && finding.status == 'pending',
-        )
-        .toList();
-    expect(
-      pending,
-      isEmpty,
-      reason: pending
-          .map(
-            (finding) => '${finding.line} ${finding.kind}: ${finding.snippet}',
-          )
-          .join('\n'),
-    );
+    expectPendingStyleBacklog(report, file: rule.pattern);
   });
 
   for (final family in AppThemeFamily.values) {
@@ -115,7 +101,13 @@ void main() {
           expect(field.style?.fontSize, 20);
           expect(field.style?.fontWeight, FontWeight.bold);
           final border = field.decoration!.border! as UnderlineInputBorder;
-          expect(border.borderSide.color, theme.colorScheme.primary);
+          final fieldPlanning = AppExpressivePlanningTokens.maybeOf(
+            tester.element(find.byKey(AppTestKeys.planName)),
+          );
+          expect(
+            border.borderSide.color,
+            fieldPlanning?.actionPrimary ?? theme.colorScheme.primary,
+          );
           expect(border.borderSide.width, 2);
           expect(tester.takeException(), isNull);
         },
@@ -199,7 +191,9 @@ void main() {
       (tester) async {
         await tester.binding.setSurfaceSize(const Size(320, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
-        SharedPreferences.setMockInitialValues(<String, Object>{});
+        SharedPreferences.setMockInitialValues(<String, Object>{
+          'guided_tutorial_completed.${TutorialIds.planDetail}': true,
+        });
 
         final repository = _PresetRepository(withExercise: true);
         final units = UnitPreferenceProvider();
@@ -250,25 +244,28 @@ void main() {
           planning.planFocalForeground,
         );
 
-        final saveButton = tester.widget<ElevatedButton>(
-          find.byKey(AppTestKeys.planSave),
-        );
-        expect(
-          saveButton.style?.backgroundColor?.resolve(const <WidgetState>{}),
-          planning.actionPrimary,
-        );
-        expect(
-          saveButton.style?.foregroundColor?.resolve(const <WidgetState>{}),
-          planning.actionPrimaryForeground,
-        );
         final saveAction = find.byKey(AppTestKeys.planSave);
         expect(
-          find.ancestor(
-            of: saveAction,
-            matching: find.byType(TonosExpressivePressResponse),
-          ),
-          findsOneWidget,
+          saveAction,
+          findsNothing,
+          reason: 'An unchanged preset has no Save Changes action.',
         );
+        expect(pageScaffold.bottomNavigationBar, isNull);
+        await tester.enterText(
+          find.byKey(AppTestKeys.planName),
+          'Changed plan',
+        );
+        await tester.pumpAndSettle();
+        final saveButton = tester.widget<FloatingActionButton>(saveAction);
+        expect(saveButton.backgroundColor, planning.actionPrimary);
+        expect(saveButton.foregroundColor, planning.actionPrimaryForeground);
+        expect(
+          saveButton.tooltip,
+          AppLocalizations.of(pageContext).planSaveChanges,
+        );
+        await pageContext.read<PresetSession>().discardChanges();
+        await tester.pumpAndSettle();
+        expect(saveAction, findsNothing);
         final addExerciseFab = tester.widget<AddExerciseFab>(
           find.byType(AddExerciseFab),
         );
@@ -515,6 +512,11 @@ void _expectExpressivePresetExerciseCard(
     outerCard.shape,
     RoundedRectangleBorder(
       borderRadius: TonosExpressiveWorkoutShapes.exerciseCard,
+      side: BorderSide(
+        color: planning.planFocalSurface,
+        width: 3,
+        strokeAlign: BorderSide.strokeAlignOutside,
+      ),
     ),
   );
 

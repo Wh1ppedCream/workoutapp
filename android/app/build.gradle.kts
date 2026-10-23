@@ -92,7 +92,7 @@ val candidateApplicationId =
     }
 val applicationLabel =
     when {
-        isExpressivePreviewBuild -> "Tonos Expressive Preview"
+        isExpressivePreviewBuild -> "Tonos"
         isInternalBuild -> "Tonos (Internal)"
         else -> "Tonos - Health and Fitness"
     }

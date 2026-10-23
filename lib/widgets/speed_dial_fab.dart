@@ -2,8 +2,10 @@
 // for logging food intake and measurements
 
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../providers/nutrition_profile.dart';
 import '../screens/nutrition/food_logging_page.dart';
 import '../screens/nutrition/measured_items_page.dart';
 import '../theme/theme_extensions.dart';
@@ -50,8 +52,15 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
               label: Text(strings.speedDialLogFood),
               onPressed: () async {
                 _toggle();
+                final profile = context.read<NutritionProfile>();
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const FoodLoggingPage()),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ChangeNotifierProvider<NutritionProfile>.value(
+                          value: profile,
+                          child: const FoodLoggingPage(),
+                        ),
+                  ),
                 );
                 if (!mounted) return;
                 if (changed == true) {
@@ -66,8 +75,15 @@ class _SpeedDialFabState extends State<SpeedDialFab> {
               label: Text(strings.speedDialLogMeasurement),
               onPressed: () async {
                 _toggle();
+                final profile = context.read<NutritionProfile>();
                 final changed = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const MeasuredItemsPage()),
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        ChangeNotifierProvider<NutritionProfile>.value(
+                          value: profile,
+                          child: const MeasuredItemsPage(),
+                        ),
+                  ),
                 );
                 if (!mounted) return;
                 if (changed == true) {

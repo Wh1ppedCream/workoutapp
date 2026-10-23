@@ -470,6 +470,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
       switch (family) {
         AppThemeFamily.classic => strings.themeFamilyClassic,
         AppThemeFamily.neoBrutalism => strings.themeFamilyNeoBrutalism,
+        AppThemeFamily.expressive => strings.themeFamilyExpressive,
       };
 
   String _themeFamilyDescription(
@@ -478,6 +479,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
   ) => switch (family) {
     AppThemeFamily.classic => strings.themeFamilyClassicDescription,
     AppThemeFamily.neoBrutalism => strings.themeFamilyNeoBrutalismDescription,
+    AppThemeFamily.expressive => strings.themeFamilyExpressiveDescription,
   };
 
   String _languageLabel(
@@ -805,9 +807,18 @@ class _ThemeFamilyPreview extends StatelessWidget {
         : AppThemeFactory.light(family);
     final scheme = theme.colorScheme;
     final isNeo = family == AppThemeFamily.neoBrutalism;
-    final panel = isNeo ? scheme.primary : scheme.surfaceContainerHighest;
-    final foreground = isNeo ? scheme.onPrimary : scheme.onSurface;
-    final accent = isNeo ? scheme.secondary : scheme.primary;
+    final isExpressive = family == AppThemeFamily.expressive;
+    final panel = isNeo || isExpressive
+        ? scheme.primary
+        : scheme.surfaceContainerHighest;
+    final foreground = isNeo || isExpressive
+        ? scheme.onPrimary
+        : scheme.onSurface;
+    final accent = isNeo
+        ? scheme.secondary
+        : isExpressive
+        ? scheme.tertiaryContainer
+        : scheme.primary;
 
     return ExcludeSemantics(
       child: SizedBox(
@@ -817,7 +828,16 @@ class _ThemeFamilyPreview extends StatelessWidget {
           decoration: BoxDecoration(
             color: panel,
             border: Border.all(color: foreground, width: isNeo ? 1.5 : 1),
-            borderRadius: isNeo ? BorderRadius.zero : BorderRadius.circular(6),
+            borderRadius: isNeo
+                ? BorderRadius.zero
+                : isExpressive
+                ? const BorderRadius.only(
+                    topLeft: Radius.circular(14),
+                    topRight: Radius.circular(6),
+                    bottomLeft: Radius.circular(6),
+                    bottomRight: Radius.circular(14),
+                  )
+                : BorderRadius.circular(6),
             boxShadow: isNeo
                 ? const [BoxShadow(color: Colors.black, offset: Offset(2, 2))]
                 : null,

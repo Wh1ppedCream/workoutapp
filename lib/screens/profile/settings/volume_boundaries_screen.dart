@@ -46,6 +46,8 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   bool _isLoadingMuscle = false;
   bool _isSavingBodyPart = false;
   bool _isSavingMuscle = false;
+  int _bodyPartRequest = 0;
+  int _muscleRequest = 0;
 
   @override
   void initState() {
@@ -103,6 +105,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   Future<void> _loadBodyPartBounds(int id) async {
+    final request = ++_bodyPartRequest;
     setState(() {
       _isLoadingBodyPart = true;
       for (var controller in _bodyPartCtrls) {
@@ -111,12 +114,16 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     });
     try {
       final bounds = await _repo.fetchBodyPartVolumeBounds(id);
-      if (!mounted) return;
+      if (!mounted ||
+          request != _bodyPartRequest ||
+          _selectedBodyPart?.id != id) {
+        return;
+      }
       if (bounds != null) {
         setState(() => _setControllerText(_bodyPartCtrls, bounds));
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _bodyPartRequest) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -127,13 +134,14 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         ),
       );
     } finally {
-      if (mounted) {
+      if (mounted && request == _bodyPartRequest) {
         setState(() => _isLoadingBodyPart = false);
       }
     }
   }
 
   Future<void> _loadMuscleBounds(int id) async {
+    final request = ++_muscleRequest;
     setState(() {
       _isLoadingMuscle = true;
       for (var controller in _muscleCtrls) {
@@ -142,12 +150,14 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     });
     try {
       final bounds = await _repo.fetchMuscleVolumeBounds(id);
-      if (!mounted) return;
+      if (!mounted || request != _muscleRequest || _selectedMuscle?.id != id) {
+        return;
+      }
       if (bounds != null) {
         setState(() => _setControllerText(_muscleCtrls, bounds));
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || request != _muscleRequest) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -158,7 +168,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
         ),
       );
     } finally {
-      if (mounted) {
+      if (mounted && request == _muscleRequest) {
         setState(() => _isLoadingMuscle = false);
       }
     }
@@ -178,11 +188,20 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
     final values = controllers.map((controller) {
       return double.tryParse(controller.text.trim());
     }).toList();
-    return values.any((value) => value == null) ? null : values.cast<double>();
+    if (values.any((value) => value == null || !value.isFinite || value < 0)) {
+      return null;
+    }
+    final parsed = values.cast<double>();
+    for (var index = 1; index < parsed.length; index++) {
+      if (parsed[index] < parsed[index - 1]) return null;
+    }
+    return parsed;
   }
 
   Future<void> _saveBodyPart() async {
-    if (_selectedBodyPart == null) return;
+    if (_selectedBodyPart == null || _isLoadingBodyPart || _isSavingBodyPart) {
+      return;
+    }
     final values = _parseBounds(_bodyPartCtrls);
     if (values == null) {
       _showInvalidNumbers();
@@ -224,7 +243,7 @@ class _VolumeBoundariesScreenState extends State<VolumeBoundariesScreen>
   }
 
   Future<void> _saveMuscle() async {
-    if (_selectedMuscle == null) return;
+    if (_selectedMuscle == null || _isLoadingMuscle || _isSavingMuscle) return;
     final values = _parseBounds(_muscleCtrls);
     if (values == null) {
       _showInvalidNumbers();

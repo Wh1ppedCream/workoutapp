@@ -66,12 +66,12 @@ Push-Location $repoRoot
 try {
     $buildArguments = @(
         'build', 'apk', "--$BuildMode", '--no-pub',
-        '--target', 'lib/expressive_preview_main.dart',
+        '--target', 'lib/expressive_review_main.dart',
         '--dart-define=TONOS_EXPRESSIVE_PREVIEW=true',
         '--dart-define=TONOS_ANDROID_EXPRESSIVE_PREVIEW_BUILD=true',
         '--dart-define=TONOS_ANDROID_INTERNAL_BUILD=false',
         "--dart-define=TONOS_DATABASE_NAME=$databaseName",
-        '--dart-define=TONOS_PREVIEW_SHOW_CONTROLS=true'
+        '--dart-define=TONOS_PREVIEW_SHOW_CONTROLS=false'
     )
     & $flutterExecutable @buildArguments
     if ($LASTEXITCODE -ne 0) {

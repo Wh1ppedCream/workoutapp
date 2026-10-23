@@ -405,6 +405,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeFamilyNeoBrutalismDescription => '鲜明色彩、墨线轮廓和硬朗阴影。';
 
   @override
+  String get themeFamilyExpressive => '灵动';
+
+  @override
+  String get themeFamilyExpressiveDescription => '多彩卡片、灵动造型与柔和表面。';
+
+  @override
   String get displaySettingsTitle => '显示';
 
   @override

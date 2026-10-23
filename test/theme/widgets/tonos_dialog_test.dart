@@ -622,10 +622,12 @@ void main() {
             find.byType(DropdownButton<String>),
           );
           final usesOutlinedDialog = family == AppThemeFamily.neoBrutalism;
+          final stylesMenu =
+              usesOutlinedDialog || family == AppThemeFamily.expressive;
           final dialogSurface =
               theme.dialogTheme.backgroundColor ??
               dialogContext.surfaceTokens.dialog;
-          final foreground = usesOutlinedDialog
+          final foreground = stylesMenu
               ? tonosForegroundForSurface(dialogContext, dialogSurface)
               : null;
           final popupForeground =
@@ -634,10 +636,7 @@ void main() {
 
           expect(button.style?.color, foreground);
           expect(button.iconEnabledColor, foreground);
-          expect(
-            button.dropdownColor,
-            usesOutlinedDialog ? dialogSurface : null,
-          );
+          expect(button.dropdownColor, stylesMenu ? dialogSurface : null);
 
           await tester.tap(find.byType(DropdownButton<String>));
           await tester.pumpAndSettle();

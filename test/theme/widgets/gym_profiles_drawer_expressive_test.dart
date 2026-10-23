@@ -91,7 +91,7 @@ void main() {
       expect(menuButton.constraints?.minWidth, greaterThanOrEqualTo(48));
       expect(menuButton.constraints?.minHeight, greaterThanOrEqualTo(48));
       expect(menuButton.position, isNull);
-      expect(menuButton.offset, isNull);
+      expect(menuButton.offset, Offset.zero);
       expect(menuButton.onSelected, isNotNull);
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();

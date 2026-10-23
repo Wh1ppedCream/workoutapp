@@ -950,22 +950,49 @@ class NutritionGoal {
     this.sodiumMg,
   });
 
+  void validateTargets() {
+    for (final value in [
+      kcalTarget,
+      proteinG,
+      fatG,
+      carbsG,
+      fiberG,
+      sugarG,
+      satFatG,
+      sodiumMg,
+    ]) {
+      if (value != null && (!value.isFinite || value < 0)) {
+        throw ArgumentError.value(
+          value,
+          'target',
+          'Must be finite and nonnegative',
+        );
+      }
+    }
+  }
+
+  // Old imports may contain invalid REAL values. Treat those targets as unset
+  // without rewriting the stored row or preventing valid targets from loading.
+  static double? _readTarget(Object? value) {
+    if (value is! num || !value.isFinite || value < 0) return null;
+    return value.toDouble();
+  }
+
   factory NutritionGoal.fromMap(Map<String, dynamic> m) => NutritionGoal(
     id: m['id'] as int?,
     profileId: m['profile_id'] as int,
     startDate: _parseYMD(m['start_date'] as String),
-    endDate:
-        (m['end_date'] as String?) != null
-            ? _parseYMD(m['end_date'] as String)
-            : null,
-    kcalTarget: (m['kcal_target'] as num?)?.toDouble(),
-    proteinG: (m['protein_g'] as num?)?.toDouble(),
-    fatG: (m['fat_g'] as num?)?.toDouble(),
-    carbsG: (m['carbs_g'] as num?)?.toDouble(),
-    fiberG: (m['fiber_g'] as num?)?.toDouble(),
-    sugarG: (m['sugar_g'] as num?)?.toDouble(),
-    satFatG: (m['sat_fat_g'] as num?)?.toDouble(),
-    sodiumMg: (m['sodium_mg'] as num?)?.toDouble(),
+    endDate: (m['end_date'] as String?) != null
+        ? _parseYMD(m['end_date'] as String)
+        : null,
+    kcalTarget: _readTarget(m['kcal_target']),
+    proteinG: _readTarget(m['protein_g']),
+    fatG: _readTarget(m['fat_g']),
+    carbsG: _readTarget(m['carbs_g']),
+    fiberG: _readTarget(m['fiber_g']),
+    sugarG: _readTarget(m['sugar_g']),
+    satFatG: _readTarget(m['sat_fat_g']),
+    sodiumMg: _readTarget(m['sodium_mg']),
   );
 
   Map<String, dynamic> toMap() => {

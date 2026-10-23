@@ -254,20 +254,47 @@ class NavBarConfig extends ChangeNotifier {
   }) async {
     final availableOrder = _availableTabs(newOrder);
     final unavailableOrder = _order.where((tab) => !_buildPolicy.allows(tab));
-    _order = _completeOrder([...availableOrder, ...unavailableOrder]);
-    _enabled =
-        newEnabled.where(_buildPolicy.allows).toSet()..add(TabItem.profile);
-    notifyListeners();
+    final nextOrder = _completeOrder([...availableOrder, ...unavailableOrder]);
+    final nextEnabled = newEnabled.where(_buildPolicy.allows).toSet()
+      ..add(TabItem.profile);
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _keyOrder,
-      _order.map((e) => e.storageKey).toList(),
-    );
-    await prefs.setStringList(
-      _keyEnabled,
-      _enabled.map((e) => e.storageKey).toList(),
-    );
+    final previousOrder = prefs.getStringList(_keyOrder);
+    final previousEnabled = prefs.getStringList(_keyEnabled);
+    try {
+      final orderSaved = await prefs.setStringList(
+        _keyOrder,
+        nextOrder.map((e) => e.storageKey).toList(),
+      );
+      final enabledSaved = await prefs.setStringList(
+        _keyEnabled,
+        nextEnabled.map((e) => e.storageKey).toList(),
+      );
+      if (!orderSaved || !enabledSaved) {
+        throw StateError('Navigation preferences were not saved');
+      }
+    } catch (_) {
+      // SharedPreferences stores these as separate keys. Restore the previous
+      // snapshot if either write fails; leave the editor dirty for a retry.
+      try {
+        if (previousOrder == null) {
+          await prefs.remove(_keyOrder);
+        } else {
+          await prefs.setStringList(_keyOrder, previousOrder);
+        }
+        if (previousEnabled == null) {
+          await prefs.remove(_keyEnabled);
+        } else {
+          await prefs.setStringList(_keyEnabled, previousEnabled);
+        }
+      } catch (_) {
+        /* The original failure still reaches the editor. */
+      }
+      rethrow;
+    }
+    _order = nextOrder;
+    _enabled = nextEnabled;
+    notifyListeners();
   }
 
   List<TabItem> _availableTabs(Iterable<TabItem> tabs) =>

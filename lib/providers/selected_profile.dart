@@ -1,6 +1,7 @@
 // File: lib/models/selected_profile.dart
 
 import 'package:flutter/foundation.dart';
+
 import '../models/gym_models.dart';
 import '../repositories/app_repository.dart';
 
@@ -8,6 +9,7 @@ import '../repositories/app_repository.dart';
 class SelectedProfile extends ChangeNotifier {
   static const String _selectedProfileStateKey = 'selected_gym_profile_id';
   final AppRepository _repo;
+  late final Future<void> ready;
   bool _disposed = false;
 
   List<GymProfile> profiles = [];
@@ -15,7 +17,7 @@ class SelectedProfile extends ChangeNotifier {
   List<Map<String, dynamic>> equipment = [];
 
   SelectedProfile({required AppRepository repository}) : _repo = repository {
-    _init();
+    ready = _init();
   }
 
   Future<void> _init() async {

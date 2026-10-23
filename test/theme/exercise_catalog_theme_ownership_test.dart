@@ -7,6 +7,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 
 import '../../tools/theme_style_inventory.dart';
+import 'theme_inventory_assertions.dart';
 
 void main() {
   test('exercise catalog geometry preserves its family recipes', () {
@@ -60,7 +61,7 @@ void main() {
       hasLength(4),
     );
     expect(filterDialog, contains('final filterMenuSurface = usesExpressive'));
-    expect(filterDialog, contains('expressiveTokens.surfaceAccent'));
+    expect(filterDialog, contains('expressiveTokens.surfaceSelected'));
     expect(
       filterDialog,
       contains(
@@ -127,21 +128,21 @@ void main() {
       final findings = report.findings
           .where((finding) => finding.ruleId == rule!.id)
           .toList();
-      expect(findings, hasLength(43));
+      expect(findings, hasLength(61));
       expect(report.hasUnassignedFindings, isFalse);
       expect(
         findings.where((finding) => finding.kind == 'color'),
-        hasLength(0),
+        hasLength(1),
       );
       expect(
         findings.where((finding) => finding.kind == 'decoration'),
-        hasLength(4),
+        hasLength(5),
       );
       // The Expressive row and its neutral media well each add one
       // intentionally page-owned geometry candidate.
       expect(
         findings.where((finding) => finding.kind == 'geometry'),
-        hasLength(34),
+        hasLength(46),
       );
       expect(
         findings.where((finding) => finding.kind == 'shadow'),
@@ -149,22 +150,17 @@ void main() {
       );
       expect(
         findings.where((finding) => finding.kind == 'text_style'),
-        hasLength(3),
+        hasLength(4),
       );
       expect(
         findings.where((finding) => finding.kind == 'color_transform'),
-        hasLength(1),
+        hasLength(4),
       );
       expect(
         findings.map((finding) => finding.status),
         everyElement('migrated'),
       );
-      expect(
-        report.findings.where(
-          (finding) => finding.file == path && finding.status == 'pending',
-        ),
-        isEmpty,
-      );
+      expectPendingStyleBacklog(report, file: path);
 
       final source = File(path).readAsStringSync();
       final rowStart = source.indexOf('class _ExerciseCatalogBar');

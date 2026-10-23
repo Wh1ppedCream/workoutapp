@@ -2,6 +2,8 @@
 
 Review date: 2026-10-22. Snapshot: the existing working tree, including its uncommitted Expressive refinements.
 
+> **Implementation follow-up:** This report preserves the pre-fix audit snapshot saved in checkpoint `6afd311`. The eight confirmed issues and three source risks were subsequently addressed; see [review fixes and validation](tonos-expressive-review-fixes-20261022.md). The results and limitations below describe the original review, not the repaired state.
+
 ## Result
 
 **Eight issues reproduced.** The most consequential problems concern dates and unsaved edits. One clear responsive layout regression was reproduced in Premade Plans. The findings below concern correctness and qualification; the existing personal visual approvals remain unchanged.

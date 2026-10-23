@@ -81,93 +81,93 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets(
-    'Expressive preview frames theme-family options without adding a family',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({
-        'guided_tutorial_completed.ui_appearance_settings_v1': true,
-      });
-      final themeProvider = ThemeProvider(
-        capabilities: const AppThemeCapabilities(
-          experimentalThemesEnabled: true,
-          isReleaseMode: false,
-        ),
-      );
-      final harness = _AppearanceHarness(themeProvider);
-      addTearDown(harness.dispose);
-      await harness.pump(
-        tester,
-        themeOverride: ExpressiveThemeDefinition.light(),
-      );
+  testWidgets('Expressive styling frames the registered theme-family options', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'guided_tutorial_completed.ui_appearance_settings_v1': true,
+    });
+    final themeProvider = ThemeProvider(
+      capabilities: const AppThemeCapabilities(
+        experimentalThemesEnabled: true,
+        isReleaseMode: false,
+      ),
+    );
+    final harness = _AppearanceHarness(themeProvider);
+    addTearDown(harness.dispose);
+    await harness.pump(
+      tester,
+      themeOverride: ExpressiveThemeDefinition.light(),
+    );
 
-      final strings = await AppLocalizations.delegate.load(const Locale('en'));
-      final pageContext = tester.element(find.byType(UIAppearanceSettingsPage));
-      expect(pageContext.usesExpressivePresentation, isTrue);
-      expect(themeProvider.availableFamilies, <AppThemeFamily>[
-        AppThemeFamily.classic,
-        AppThemeFamily.neoBrutalism,
-      ]);
-      expect(themeProvider.family, AppThemeFamily.classic);
-      expect(find.text(strings.themeFamilyClassic), findsOneWidget);
+    final strings = await AppLocalizations.delegate.load(const Locale('en'));
+    final pageContext = tester.element(find.byType(UIAppearanceSettingsPage));
+    expect(pageContext.usesExpressivePresentation, isTrue);
+    expect(themeProvider.availableFamilies, <AppThemeFamily>[
+      AppThemeFamily.classic,
+      AppThemeFamily.neoBrutalism,
+      AppThemeFamily.expressive,
+    ]);
+    expect(themeProvider.family, AppThemeFamily.classic);
+    expect(find.text(strings.themeFamilyClassic), findsOneWidget);
 
-      await tester.tap(find.byKey(AppTestKeys.uiAppearanceThemeFamily));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(AppTestKeys.uiAppearanceThemeFamily));
+    await tester.pumpAndSettle();
 
-      final profile = AppExpressiveDestinationTokens.forFamily(
-        AppExpressiveDestinationFamily.profile,
-        Brightness.light,
-      );
-      final selectedOption = find.byKey(
-        AppTestKeys.uiAppearanceThemeFamilyOption(AppThemeFamily.classic.code),
-      );
-      final selectedRadio = tester.widget<RadioListTile<AppThemeFamily>>(
-        selectedOption,
-      );
-      expect(selectedRadio.selected, isTrue);
-      expect(
-        selectedRadio.tileColor,
-        Color.lerp(profile.surfacePrimary, profile.surfaceAccent, 0.14),
-      );
-      expect(selectedRadio.selectedTileColor, profile.surfaceSelected);
-      final selectedShape = selectedRadio.shape! as RoundedRectangleBorder;
-      expect(selectedShape.side.color, profile.outlineAccent);
-      expect(selectedShape.side.width, 2);
-      expect(selectedRadio.secondary, isNotNull);
-      expect(
-        tester
-            .widget<Text>(
-              find.descendant(
-                of: selectedOption,
-                matching: find.text(strings.themeFamilyClassic),
-              ),
-            )
-            .style
-            ?.fontWeight,
-        FontWeight.w800,
-      );
+    final profile = AppExpressiveDestinationTokens.forFamily(
+      AppExpressiveDestinationFamily.profile,
+      Brightness.light,
+    );
+    final selectedOption = find.byKey(
+      AppTestKeys.uiAppearanceThemeFamilyOption(AppThemeFamily.classic.code),
+    );
+    final selectedRadio = tester.widget<RadioListTile<AppThemeFamily>>(
+      selectedOption,
+    );
+    expect(selectedRadio.selected, isTrue);
+    expect(
+      selectedRadio.tileColor,
+      Color.lerp(profile.surfacePrimary, profile.surfaceAccent, 0.14),
+    );
+    expect(selectedRadio.selectedTileColor, profile.surfaceSelected);
+    final selectedShape = selectedRadio.shape! as RoundedRectangleBorder;
+    expect(selectedShape.side.color, profile.outlineAccent);
+    expect(selectedShape.side.width, 2);
+    expect(selectedRadio.secondary, isNotNull);
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(
+              of: selectedOption,
+              matching: find.text(strings.themeFamilyClassic),
+            ),
+          )
+          .style
+          ?.fontWeight,
+      FontWeight.w800,
+    );
 
-      final neoOption = find.byKey(
-        AppTestKeys.uiAppearanceThemeFamilyOption(
-          AppThemeFamily.neoBrutalism.code,
-        ),
-      );
-      final neoRadio = tester.widget<RadioListTile<AppThemeFamily>>(neoOption);
-      expect(neoRadio.selected, isFalse);
-      final neoShape = neoRadio.shape! as RoundedRectangleBorder;
-      expect(neoShape.side.width, 1);
-      expect(neoRadio.secondary, isNotNull);
+    final neoOption = find.byKey(
+      AppTestKeys.uiAppearanceThemeFamilyOption(
+        AppThemeFamily.neoBrutalism.code,
+      ),
+    );
+    final neoRadio = tester.widget<RadioListTile<AppThemeFamily>>(neoOption);
+    expect(neoRadio.selected, isFalse);
+    final neoShape = neoRadio.shape! as RoundedRectangleBorder;
+    expect(neoShape.side.width, 1);
+    expect(neoRadio.secondary, isNotNull);
 
-      await tester.tap(neoOption);
-      await tester.pumpAndSettle();
-      expect(themeProvider.family, AppThemeFamily.neoBrutalism);
-      expect(
-        Theme.of(tester.element(find.byType(UIAppearanceSettingsPage)))
-            .usesExpressivePresentation,
-        isTrue,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+    await tester.tap(neoOption);
+    await tester.pumpAndSettle();
+    expect(themeProvider.family, AppThemeFamily.neoBrutalism);
+    expect(
+      Theme.of(tester.element(find.byType(UIAppearanceSettingsPage)))
+          .usesExpressivePresentation,
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   for (final mode in [ThemeMode.light, ThemeMode.dark]) {
     testWidgets(
@@ -341,9 +341,7 @@ void main() {
     },
   );
 
-  testWidgets('hides the selector when a release build exposes only Classic', (
-    tester,
-  ) async {
+  testWidgets('release settings expose Classic and Expressive', (tester) async {
     SharedPreferences.setMockInitialValues({
       'guided_tutorial_completed.ui_appearance_settings_v1': true,
     });
@@ -359,8 +357,9 @@ void main() {
 
     expect(themeProvider.availableFamilies, <AppThemeFamily>[
       AppThemeFamily.classic,
+      AppThemeFamily.expressive,
     ]);
-    expect(find.byKey(AppTestKeys.uiAppearanceThemeFamily), findsNothing);
+    expect(find.byKey(AppTestKeys.uiAppearanceThemeFamily), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

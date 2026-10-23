@@ -526,3 +526,26 @@ fill fingerprint was removed; the exact manifest and CLI contract now require
 six approvals/seven occurrences for this file. Overall enforcement remains at
 17 scopes, 116 approvals, 114 unique fingerprints, and 127 occurrences. Human
 visual review of the updated Neo fills remains open.
+
+## Expressive test stabilization — 2026-10-22
+
+The user authorized reconciling stale tests and reviewed fingerprints after the
+Expressive visual approvals. Source review refreshed seven existing scopes:
+WorkoutRecordBadges, TonosBottomNavigationBar, TonosTrainTabs,
+ExerciseDefinitionInfoTile, BodyPartFocusChips, PresetInfoCard, and DataRecordsSection.
+The other eleven scopes are unchanged. The manifest now contains **18 scopes,
+199 approval records, and 227 occurrences**. Each replacement fingerprint has
+an implementation-specific reason and the corresponding fixed CLI expectations;
+the mutation/rejection fixtures remain enforced.
+
+This records current source ownership, without changing application UI or visual
+approval classifications. It does not qualify responsive behavior, accessibility,
+physical-device performance, or a release by itself.
+
+The separate report-only inventory now keeps its existing unqualified findings
+in `docs/theme-style-pending-baseline.json`. Counts and normalized snippet digests
+are pinned per file. They remain **pending technical debt**, with queue ownership,
+rather than being reclassified as migrated to obtain a green test result. The
+Exercise Editor transparent-divider rule and Current Metrics category-marker
+allowlist are now expression-limited; obsolete anatomy-header literal rules were
+removed, and the two approved Swap comparison decorations received narrow owners.

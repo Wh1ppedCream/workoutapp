@@ -1,14 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:provider/provider.dart';
 
-import 'dev/expressive_preview_fixtures.dart';
-import 'dev/expressive_preview_safety.dart';
-import 'main.dart' show MainScreen, runTonosApp;
-import 'providers/active_session.dart';
-import 'providers/selected_profile.dart';
-import 'repositories/app_repository.dart';
-import 'services/active_plan_store.dart';
-import 'theme/tonos_preview_presentation.dart';
+import 'expressive_review_main.dart' as regular_app;
 
 @visibleForTesting
 Future<bool> resetExpressivePreviewFixturesSafely({
@@ -41,65 +33,6 @@ Future<bool> resetExpressivePreviewFixturesSafely({
   return true;
 }
 
-Future<void> main() async {
-  ExpressivePreviewFixtures? fixtures;
-  AppRepository? previewRepository;
-  final presentation = TonosPreviewPresentation(
-    fixtureReset: (navigator) async {
-      final currentFixtures = fixtures;
-      final repository = previewRepository;
-      if (currentFixtures == null || repository == null) return;
-      final appContext = navigator.context;
-      final activeSession = appContext.read<ActiveSession>();
-      final selectedProfile = appContext.read<SelectedProfile>();
-      final activePlanStore = appContext.read<ActivePlanStore>();
-      await resetExpressivePreviewFixturesSafely(
-        sessionIsFinishing: () => activeSession.isFinishing,
-        hasPendingProgressions: () async =>
-            (await repository.loadPendingWorkoutProgressions()).isNotEmpty,
-        discardSession: activeSession.discard,
-        onBusy: () {
-          ScaffoldMessenger.of(appContext).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Wait for the workout and plan updates to finish, then reset the preview.',
-              ),
-            ),
-          );
-        },
-        resetFixtures: () async {
-          final nextFixtures = await currentFixtures.resetAndSeed();
-          fixtures = nextFixtures;
-          await selectedProfile.loadProfiles(
-            preferredProfileId: nextFixtures.profileId,
-          );
-          await activePlanStore.load(nextFixtures.profileId);
-          navigator.pushAndRemoveUntil<void>(
-            MaterialPageRoute<void>(builder: (_) => const MainScreen()),
-            (_) => false,
-          );
-        },
-      );
-    },
-    missingProfileFixture: (navigator) {
-      final selectedProfile = navigator.context.read<SelectedProfile>();
-      selectedProfile
-        ..currentProfile = null
-        ..equipment = <Map<String, dynamic>>[];
-      navigator.pushAndRemoveUntil<void>(
-        MaterialPageRoute<void>(builder: (_) => const MainScreen()),
-        (_) => false,
-      );
-      return Future<void>.value();
-    },
-  );
-
-  await runTonosApp(
-    previewPresentation: presentation,
-    beforeDataAccess: ExpressivePreviewSafety.verifyBeforeDataAccess,
-    beforeRunApp: (repository) async {
-      previewRepository = repository;
-      fixtures = await ExpressivePreviewFixtures.prepare(repository);
-    },
-  );
-}
+/// Compatibility entrypoint: the former preview now opens the regular app UI.
+/// Existing data is retained; launching this entrypoint never reseeds fixtures.
+Future<void> main() => regular_app.main();

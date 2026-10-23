@@ -18,6 +18,7 @@ import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/utils/localized_body_part_name.dart';
 import 'package:env_test/widgets/body_heatmap.dart';
 import 'package:env_test/widgets/exercise_detail_sheet.dart';
+import 'package:env_test/widgets/exercise_media_thumbnail.dart';
 import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 import 'package:env_test/widgets/shared_entity_media_thumbnail.dart';
 import 'package:material_ui/material_ui.dart';
@@ -27,6 +28,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../tools/theme_style_inventory.dart';
+import '../theme_inventory_assertions.dart';
 
 void main() {
   final themes = <AppThemeFamily, Map<Brightness, ThemeData>>{
@@ -48,16 +50,10 @@ void main() {
 
     const expectedRules = <String, (int, String, String, List<String>)>{
       'anatomy-bodypart-detail-recipes': (
-        7,
+        6,
         'structural_theme',
         'migrated',
         ['color', 'text_style'],
-      ),
-      'anatomy-bodypart-expressive-header-shape': (
-        2,
-        'structural_theme',
-        'migrated',
-        ['geometry'],
       ),
       'anatomy-bodypart-responsive-metric-bay': (
         6,
@@ -70,12 +66,6 @@ void main() {
         'structural_theme',
         'migrated',
         ['color', 'text_style'],
-      ),
-      'anatomy-muscle-expressive-header-shape': (
-        2,
-        'structural_theme',
-        'migrated',
-        ['geometry'],
       ),
       'anatomy-muscle-responsive-metric-bay': (
         6,
@@ -144,13 +134,7 @@ void main() {
       'lib/screens/exercise/definitions_by_muscle_page.dart',
       'lib/screens/exercise/muscle_filter_page.dart',
     ]) {
-      expect(
-        report.findings.where(
-          (finding) => finding.file == path && finding.status == 'pending',
-        ),
-        isEmpty,
-        reason: '$path should have no pending anatomy-route candidates.',
-      );
+      expectPendingStyleBacklog(report, file: path);
     }
   });
 
@@ -1141,10 +1125,7 @@ void main() {
       await tester.tap(find.text(strings.commonCancel));
       await tester.pumpAndSettle();
 
-      final detailInfoButton = find.widgetWithIcon(
-        IconButton,
-        Icons.info_outline,
-      );
+      final detailInfoButton = find.byType(ExerciseMediaThumbnail);
       expect(detailInfoButton, findsOneWidget);
       await tester.tap(detailInfoButton);
       await tester.pumpAndSettle();

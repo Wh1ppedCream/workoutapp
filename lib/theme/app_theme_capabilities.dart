@@ -20,7 +20,7 @@ class AppThemeCapabilitiesException implements Exception {
 
 /// Controls which theme families may be selected by the current build.
 ///
-/// Classic is always available. Internal Neo release candidates require an
+/// Classic and Expressive are always available. Neo release candidates require an
 /// explicit build opt-in, separate from the development theme switch.
 class AppThemeCapabilities {
   const AppThemeCapabilities({
@@ -58,6 +58,7 @@ class AppThemeCapabilities {
   /// Returns true only when the family may be selected in this build.
   bool isAvailable(AppThemeFamily family) => switch (family) {
     AppThemeFamily.classic => true,
+    AppThemeFamily.expressive => true,
     AppThemeFamily.neoBrutalism =>
       isReleaseMode ? neoReleaseEnabled : experimentalThemesEnabled,
   };

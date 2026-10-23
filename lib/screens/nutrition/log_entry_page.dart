@@ -16,15 +16,28 @@ import '../../theme/widgets/tonos_sheet.dart';
 import '../../widgets/safe_error_view.dart';
 import '../../widgets/speed_dial_fab.dart';
 
-class LogEntryPage extends StatefulWidget {
+class LogEntryPage extends StatelessWidget {
   final DateTime date;
   const LogEntryPage({super.key, required this.date});
 
   @override
-  State<LogEntryPage> createState() => _LogEntryPageState();
+  Widget build(BuildContext context) =>
+      ChangeNotifierProvider<NutritionProfile>(
+        key: ValueKey(date),
+        create: (_) => context.read<NutritionProfile>().createDayScope(date),
+        child: _LogEntryDayView(date: date),
+      );
 }
 
-class _LogEntryPageState extends State<LogEntryPage> {
+class _LogEntryDayView extends StatefulWidget {
+  const _LogEntryDayView({required this.date});
+  final DateTime date;
+
+  @override
+  State<_LogEntryDayView> createState() => _LogEntryPageState();
+}
+
+class _LogEntryPageState extends State<_LogEntryDayView> {
   final _scroll = ScrollController();
   bool _didSyncDay = false;
 

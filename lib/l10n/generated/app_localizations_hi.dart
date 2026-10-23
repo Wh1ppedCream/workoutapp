@@ -426,6 +426,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'चटकीले रंग, इंक आउटलाइन और स्पष्ट छायाएँ।';
 
   @override
+  String get themeFamilyExpressive => 'एक्सप्रेसिव';
+
+  @override
+  String get themeFamilyExpressiveDescription =>
+      'रंगीन कार्ड, अभिव्यंजक आकार और सौम्य सतहें।';
+
+  @override
   String get displaySettingsTitle => 'डिस्प्ले';
 
   @override

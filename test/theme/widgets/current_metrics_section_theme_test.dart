@@ -5,6 +5,8 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
+import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/widgets/current_metrics_section.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,6 +14,72 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive ${brightness.name} Nutrition metrics show only label and current value',
+      (tester) async {
+        final theme = brightness == Brightness.light
+            ? AppThemeFactory.light(AppThemeFamily.expressive)
+            : AppThemeFactory.dark(AppThemeFamily.expressive);
+        final repository = _MetricsRepository(
+          definitions: [
+            MeasurementDefinition(
+              id: 1,
+              name: 'Weight',
+              type: MeasurementType.BodyWeight,
+            ),
+          ],
+          entriesByDefinition: {
+            1: [
+              Measurement(
+                id: 1,
+                defId: 1,
+                timestamp: DateTime(2026, 10, 15),
+                value: 82,
+                unit: 'lbs',
+              ),
+            ],
+          },
+        );
+        await tester.pumpWidget(
+          _testApp(
+            theme: theme,
+            repository: repository,
+            expressiveNutrition: true,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MetricItem), findsNothing);
+        final quickCard = find.byWidgetPredicate(
+          (widget) => widget is SizedBox && widget.width == 140,
+        );
+        expect(quickCard, findsOneWidget);
+        final labels = tester
+            .widgetList<Text>(
+              find.descendant(of: quickCard, matching: find.byType(Text)),
+            )
+            .toList();
+        expect(
+          labels,
+          hasLength(2),
+          reason: 'The approved quick view omits the date and trend details.',
+        );
+        expect(labels.last.data, '82 lbs');
+        final card = tester.widget<DecoratedBox>(
+          find.descendant(of: quickCard, matching: find.byType(DecoratedBox)),
+        );
+        final destination = AppExpressiveDestinationTokens.forFamily(
+          AppExpressiveDestinationFamily.nutrition,
+          brightness,
+        );
+        expect(
+          (card.decoration as BoxDecoration).color,
+          destination.surfaceSelected,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   const types = <MeasurementType>[
     MeasurementType.BodyWeight,
     MeasurementType.Height,
@@ -25,10 +93,9 @@ void main() {
       testWidgets(
         '${family.code} ${brightness.name} preserves measurement category colors',
         (tester) async {
-          final theme =
-              brightness == Brightness.light
-                  ? AppThemeFactory.light(family)
-                  : AppThemeFactory.dark(family);
+          final theme = brightness == Brightness.light
+              ? AppThemeFactory.light(family)
+              : AppThemeFactory.dark(family);
           final definitions = [
             for (var index = 0; index < types.length; index++)
               MeasurementDefinition(
@@ -68,28 +135,26 @@ void main() {
           });
           expect(dots, findsNWidgets(types.length));
 
-          final actualColors =
-              tester
-                  .widgetList<Container>(dots)
-                  .map((dot) => (dot.decoration! as BoxDecoration).color)
-                  .toList();
+          final actualColors = tester
+              .widgetList<Container>(dots)
+              .map((dot) => (dot.decoration! as BoxDecoration).color)
+              .toList();
           final data = theme.dataVisualizationTokens;
-          final expectedColors =
-              family == AppThemeFamily.classic
-                  ? <Color>[
-                    Colors.green,
-                    Colors.blue,
-                    Colors.purple,
-                    Colors.orange,
-                    Colors.teal,
-                  ]
-                  : <Color>[
-                    data.positive,
-                    data.secondarySeries,
-                    data.primarySeries,
-                    data.tertiarySeries,
-                    data.neutral,
-                  ];
+          final expectedColors = family != AppThemeFamily.neoBrutalism
+              ? <Color>[
+                  Colors.green,
+                  Colors.blue,
+                  Colors.purple,
+                  Colors.orange,
+                  Colors.teal,
+                ]
+              : <Color>[
+                  data.positive,
+                  data.secondarySeries,
+                  data.primarySeries,
+                  data.tertiarySeries,
+                  data.neutral,
+                ];
 
           expect(actualColors, unorderedEquals(expectedColors));
         },
@@ -102,10 +167,9 @@ void main() {
       testWidgets(
         '${family.code} ${brightness.name} empty message uses the panel recipe',
         (tester) async {
-          final theme =
-              brightness == Brightness.light
-                  ? AppThemeFactory.light(family)
-                  : AppThemeFactory.dark(family);
+          final theme = brightness == Brightness.light
+              ? AppThemeFactory.light(family)
+              : AppThemeFactory.dark(family);
           final repository = _MetricsRepository(
             definitions: const <MeasurementDefinition>[],
             entriesByDefinition: const <int, List<Measurement>>{},
@@ -122,8 +186,9 @@ void main() {
           expect(surface.variant, TonosSurfaceVariant.panelRaised);
           expect(surface.padding, const EdgeInsets.all(16));
 
-          final material =
-              find.descendant(of: panel, matching: find.byType(Material)).first;
+          final material = find
+              .descendant(of: panel, matching: find.byType(Material))
+              .first;
           final renderedSurface = tester.widget<Material>(material);
           expect(renderedSurface.color, theme.surfaceTokens.panelRaised);
           expect(
@@ -146,11 +211,11 @@ void main() {
           final scopedTheme = Theme.of(titleContext);
           final expectedForeground =
               theme.surfaceDecorationTokens.panel.outlined
-                  ? tonosForegroundForSurface(
-                    titleContext,
-                    theme.surfaceTokens.panelRaised,
-                  )
-                  : null;
+              ? tonosForegroundForSurface(
+                  titleContext,
+                  theme.surfaceTokens.panelRaised,
+                )
+              : null;
           final expectedTitleColor =
               expectedForeground ?? theme.textTheme.titleSmall?.color;
           final expectedBodyColor =
@@ -187,14 +252,23 @@ void main() {
   }
 }
 
-Widget _testApp({required ThemeData theme, required AppRepository repository}) {
+Widget _testApp({
+  required ThemeData theme,
+  required AppRepository repository,
+  bool expressiveNutrition = false,
+}) {
   return Provider<AppRepository>.value(
     value: repository,
     child: MaterialApp(
       theme: theme,
       localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(body: CurrentMetricsSection()),
+      home: expressiveNutrition
+          ? const AppExpressiveDestinationTheme(
+              family: AppExpressiveDestinationFamily.nutrition,
+              child: Scaffold(body: CurrentMetricsSection()),
+            )
+          : const Scaffold(body: CurrentMetricsSection()),
     ),
   );
 }
