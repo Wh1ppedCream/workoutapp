@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -412,7 +415,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Future<void> _deleteSession() async {
     final strings = AppLocalizations.of(context);
     final expressiveLogbook = _usesExpressiveLogbookPresentation(context);
-    final confirm = await showDialog<bool>(
+    final confirm = await showTonosDialog<bool>(
       context: context,
       builder: (context) {
         if (expressiveLogbook) {
@@ -582,7 +585,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     final defaultName = _defaultPresetName();
     var planName = defaultName;
     final expressiveLogbook = _usesExpressiveLogbookPresentation(context);
-    final name = await showDialog<String>(
+    final name = await showTonosDialog<String>(
       context: context,
       builder: (context) {
         if (expressiveLogbook) {
@@ -791,7 +794,7 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
     final strings = AppLocalizations.of(context);
-    final discard = await showDialog<bool>(
+    final discard = await showTonosDialog<bool>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(

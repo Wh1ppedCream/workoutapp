@@ -20,6 +20,9 @@ Future<void> showMediaImageViewer({
   Future<File?>? detailResolution,
 }) => showDialog<void>(
   context: context,
+  animationStyle: expressiveFullscreen && context.usesExpressivePresentation
+      ? AnimationStyle.noAnimation
+      : null,
   useSafeArea: !expressiveFullscreen,
   barrierDismissible: !expressiveFullscreen,
   barrierColor: expressiveFullscreen

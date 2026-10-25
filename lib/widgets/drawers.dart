@@ -3,6 +3,8 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../screens/exercise/gym_profile_screen.dart';
 import '../theme/theme_extensions.dart';
@@ -326,6 +328,7 @@ class ProfileTile extends StatelessWidget {
                 ),
               ),
               PopupMenuButton<String>(
+                popUpAnimationStyle: tonosOverlayMotion(context),
                 icon: Icon(
                   Icons.more_vert,
                   color: scheme.onSurfaceVariant,

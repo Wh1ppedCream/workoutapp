@@ -14,6 +14,228 @@ const _weightKey = ValueKey('weight-card-first-weight');
 const _repsKey = ValueKey('weight-card-first-reps');
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive expansion keeps fields mounted and height monotonic ${brightness.name}',
+      (tester) async {
+        final exercise = _exercise();
+        await tester.pumpWidget(
+          _host(
+            exercise,
+            family: AppThemeFamily.expressive,
+            brightness: brightness,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(WeightCard)),
+        );
+        final fieldState = tester.state(find.byKey(_weightKey));
+        final card = find.byType(Card).first;
+        final expandedHeight = tester.getSize(card).height;
+
+        await tester.tap(find.byTooltip(strings.weightCollapseSets));
+        await tester.pump();
+        var previousHeight = expandedHeight;
+        for (var frame = 0; frame < 24; frame++) {
+          await tester.pump(const Duration(milliseconds: 16));
+          final height = tester.getSize(card).height;
+          expect(height, lessThanOrEqualTo(previousHeight + .01));
+          previousHeight = height;
+        }
+        expect(find.byKey(_weightKey), findsNothing);
+        expect(
+          tester.state(find.byKey(_weightKey, skipOffstage: false)),
+          same(fieldState),
+        );
+        final collapsedHeight = tester.getSize(card).height;
+        await tester.tap(find.byTooltip(strings.weightExpandSets));
+        await tester.pump();
+        expect(tester.getSize(card).height, closeTo(collapsedHeight, .01));
+        previousHeight = collapsedHeight;
+        for (var frame = 0; frame < 24; frame++) {
+          await tester.pump(const Duration(milliseconds: 16));
+          final height = tester.getSize(card).height;
+          expect(height, greaterThanOrEqualTo(previousHeight - .01));
+          previousHeight = height;
+        }
+        expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+        expect(tester.state(find.byKey(_weightKey)), same(fieldState));
+
+        // Reversing midway must continue from the currently painted height.
+        await tester.tap(find.byTooltip(strings.weightCollapseSets));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 80));
+        final interruptedHeight = tester.getSize(card).height;
+        await tester.tap(find.byTooltip(strings.weightExpandSets));
+        await tester.pump();
+        expect(tester.getSize(card).height, closeTo(interruptedHeight, .01));
+        await tester.pumpAndSettle();
+        expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'Expressive repeated completion survives parent refresh ${brightness.name}',
+      (tester) async {
+        final exercise = _exercise();
+        await tester.pumpWidget(
+          StatefulBuilder(
+            builder: (context, refresh) => _host(
+              exercise,
+              family: AppThemeFamily.expressive,
+              brightness: brightness,
+              onValueChanged: () => refresh(() {}),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final checkbox = find.byType(Checkbox).first;
+        final originalState = tester.state(checkbox);
+        final resting = tester.getRect(checkbox);
+        Color? rowColor() {
+          final row = find
+              .ancestor(of: checkbox, matching: find.byType(Container))
+              .first;
+          return (tester.widget<Container>(row).decoration as BoxDecoration)
+              .color;
+        }
+
+        for (var tap = 0; tap < 4; tap++) {
+          final previousColor = rowColor();
+          await tester.tap(checkbox);
+          await tester.pump();
+          expect(tester.state(checkbox), same(originalState));
+          expect(rowColor(), previousColor);
+          expect(exercise.completedParents.contains(0), tap.isEven);
+          await tester.pump(const Duration(milliseconds: 44));
+          expect(tester.getRect(checkbox).width, greaterThan(resting.width));
+          final intermediateColor = rowColor();
+          expect(intermediateColor, isNot(previousColor));
+          await tester.pumpAndSettle();
+          expect(rowColor(), isNot(intermediateColor));
+          expect(tester.getRect(checkbox), resting);
+        }
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'Expressive completion stays visible before collapse ${brightness.name}',
+      (tester) async {
+        final exercise = _exercise(setCount: 1);
+        await tester.pumpWidget(
+          _host(
+            exercise,
+            family: AppThemeFamily.expressive,
+            brightness: brightness,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(WeightCard)),
+        );
+        final header = find
+            .ancestor(of: find.text('Squat'), matching: find.byType(Container))
+            .first;
+        Color? headerColor() =>
+            (tester.widget<Container>(header).decoration as BoxDecoration)
+                .color;
+        final restingColor = headerColor();
+
+        await tester.tap(find.byType(Checkbox));
+        await tester.pump();
+        expect(exercise.completedParents, {0});
+        expect(headerColor(), restingColor);
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(headerColor(), isNot(restingColor));
+        expect(find.byType(Checkbox).hitTestable(), findsOneWidget);
+        expect(find.byTooltip(strings.weightCollapseSets), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 99));
+        expect(find.byTooltip(strings.weightCollapseSets), findsOneWidget);
+        await tester.pump(const Duration(milliseconds: 1));
+        expect(find.byTooltip(strings.weightExpandSets), findsOneWidget);
+        await tester.pumpAndSettle();
+        expect(find.byTooltip(strings.weightExpandSets), findsOneWidget);
+        expect(find.byType(Checkbox), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'Expressive undo cancels pending collapse and keeps feedback ${brightness.name}',
+      (tester) async {
+        final exercise = _exercise(setCount: 1);
+        await tester.pumpWidget(
+          _host(
+            exercise,
+            family: AppThemeFamily.expressive,
+            brightness: brightness,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final checkbox = find.byType(Checkbox);
+        final resting = tester.getRect(checkbox);
+        await tester.tap(checkbox);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 44));
+        final enlarged = tester.getRect(checkbox);
+        expect(enlarged.width, greaterThan(resting.width));
+        await tester.tap(checkbox);
+        await tester.pump();
+        expect(exercise.completedParents, isEmpty);
+        expect(tester.getRect(checkbox).width, closeTo(enlarged.width, .001));
+        await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 1));
+        expect(checkbox.hitTestable(), findsOneWidget);
+        expect(tester.getRect(checkbox), resting);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('Expressive manual expansion cancels completion collapse', (
+    tester,
+  ) async {
+    final exercise = _exercise(setCount: 1);
+    await tester.pumpWidget(_host(exercise, family: AppThemeFamily.expressive));
+    await tester.pumpAndSettle();
+    final strings = AppLocalizations.of(
+      tester.element(find.byType(WeightCard)),
+    );
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 44));
+    await tester.tap(find.byTooltip(strings.weightCollapseSets));
+    await tester.pump();
+    await tester.tap(find.byTooltip(strings.weightExpandSets));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(Checkbox).hitTestable(), findsOneWidget);
+    expect(exercise.completedParents, {0});
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Expressive reduced motion collapses immediately', (
+    tester,
+  ) async {
+    final exercise = _exercise(setCount: 1);
+    await tester.pumpWidget(
+      _host(
+        exercise,
+        family: AppThemeFamily.expressive,
+        disableAnimations: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+    expect(exercise.completedParents, {0});
+    expect(find.byType(Checkbox), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'WeightCard starts open, toggles semantically, retargets, and unfocuses on collapse',
     (tester) async {
@@ -66,8 +288,9 @@ void main() {
 
         // Retarget while the size transition is still in progress. Assert only
         // the final state, so the contract does not depend on animation frames.
-        final expansionButton =
-            find.descendant(of: card, matching: find.byType(IconButton)).first;
+        final expansionButton = find
+            .descendant(of: card, matching: find.byType(IconButton))
+            .first;
         for (var index = 0; index < 3; index++) {
           await tester.tap(expansionButton);
           await tester.pump();
@@ -98,8 +321,9 @@ void main() {
         final checkboxes = find.byType(Checkbox);
         expect(checkboxes, findsNWidgets(2));
 
-        var firstSetSemantics =
-            tester.getSemantics(checkboxes.first).getSemanticsData();
+        var firstSetSemantics = tester
+            .getSemantics(checkboxes.first)
+            .getSemanticsData();
         expect(firstSetSemantics.label, strings.weightSetLabel(1));
         expect(
           firstSetSemantics.flagsCollection.isChecked,
@@ -113,8 +337,9 @@ void main() {
         expect(find.byType(TextFormField), findsNWidgets(4));
         expect(find.byTooltip(strings.weightCollapseSets), findsOneWidget);
 
-        firstSetSemantics =
-            tester.getSemantics(find.byType(Checkbox).first).getSemanticsData();
+        firstSetSemantics = tester
+            .getSemantics(find.byType(Checkbox).first)
+            .getSemanticsData();
         expect(
           firstSetSemantics.flagsCollection.isChecked,
           CheckedState.isTrue,
@@ -136,10 +361,9 @@ void main() {
           everyElement(isTrue),
         );
         for (var index = 0; index < 2; index++) {
-          final data =
-              tester
-                  .getSemantics(find.byType(Checkbox).at(index))
-                  .getSemanticsData();
+          final data = tester
+              .getSemantics(find.byType(Checkbox).at(index))
+              .getSemanticsData();
           expect(data.flagsCollection.isChecked, CheckedState.isTrue);
           expect(data.hasAction(SemanticsAction.tap), isTrue);
         }
@@ -326,12 +550,16 @@ WeightExercise _exercise({int setCount = 2}) => WeightExercise(
 
 Widget _host(
   WeightExercise exercise, {
+  AppThemeFamily family = AppThemeFamily.classic,
+  Brightness brightness = Brightness.light,
   bool disableAnimations = false,
   double textScale = 1,
   FocusNode? firstSetWeightFocusNode,
   void Function()? onValueChanged,
 }) => MaterialApp(
-  theme: AppThemeFactory.light(AppThemeFamily.classic),
+  theme: brightness == Brightness.light
+      ? AppThemeFactory.light(family)
+      : AppThemeFactory.dark(family),
   themeAnimationDuration: Duration.zero,
   locale: const Locale('en'),
   localizationsDelegates: tonosLocalizationDelegates,
@@ -350,6 +578,8 @@ Widget _host(
               key: const ValueKey('weight-card'),
               exercise: exercise,
               previewWeightUnit: WeightUnit.pounds,
+              expressiveWorkoutPresentation:
+                  family == AppThemeFamily.expressive,
               animateExpansion: true,
               firstSetWeightKey: _weightKey,
               firstSetRepsKey: _repsKey,

@@ -1,7 +1,11 @@
 // file: lib/widgets/ongoing_session_fab.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../l10n/safe_failure_localizations.dart';
 import '../providers/active_session.dart';
@@ -53,9 +57,8 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
           label: Text(strings.sessionResume),
           onPressed: () {
             setState(() => _open = false);
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
           },
         ),
         FloatingActionButton.extended(
@@ -63,10 +66,9 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
           backgroundColor: semantic.ongoingSessionExit,
           icon: const Icon(Icons.exit_to_app),
           label: Text(strings.sessionExit),
-          onPressed:
-              activeSession.isFinishing
-                  ? null
-                  : () => _handleExit(activeSession),
+          onPressed: activeSession.isFinishing
+              ? null
+              : () => _handleExit(activeSession),
         ),
       ],
     );
@@ -126,177 +128,167 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
 
   Future<bool?> _showDiscardConfirmation() {
     final strings = AppLocalizations.of(context);
-    return showDialog<bool>(
+    return showTonosDialog<bool>(
       context: context,
-      builder:
-          (dialogContext) => TonosDialogFrame(
-            child: AlertDialog(
-              title: Text(strings.sessionCancelQuestion),
-              content: Text(strings.sessionCancelBody),
-              actions: [
-                TextButton(
-                  key: AppTestKeys.ongoingSessionKeep,
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text(strings.sessionKeepWorkout),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  child: Text(strings.sessionCancelWorkout),
-                ),
-              ],
+      builder: (dialogContext) => TonosDialogFrame(
+        child: AlertDialog(
+          title: Text(strings.sessionCancelQuestion),
+          content: Text(strings.sessionCancelBody),
+          actions: [
+            TextButton(
+              key: AppTestKeys.ongoingSessionKeep,
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(strings.sessionKeepWorkout),
             ),
-          ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(strings.sessionCancelWorkout),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Future<_WorkoutExitDecision?> _showCompletedWorkDialog() {
     var remember = false;
     final strings = AppLocalizations.of(context);
-    return showDialog<_WorkoutExitDecision>(
+    return showTonosDialog<_WorkoutExitDecision>(
       context: context,
-      builder:
-          (dialogContext) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              return TonosDialogFrame(
-                child: Builder(
-                  builder: (dialogThemeContext) {
-                    final theme = Theme.of(dialogThemeContext);
-                    final colors = theme.colorScheme;
-                    final textTheme = theme.textTheme;
-                    final shapes = dialogThemeContext.shapeTokens;
-                    final surfaces = dialogThemeContext.surfaceTokens;
-                    final neo = dialogThemeContext.usesNeoPresentation;
-                    final choiceForeground =
-                        neo
-                            ? tonosForegroundForSurface(
-                              dialogThemeContext,
-                              surfaces.dialogChoice,
-                            )
-                            : null;
-                    final choiceSecondary =
-                        neo
-                            ? tonosSecondaryForegroundForSurface(
-                              dialogThemeContext,
-                              surfaces.dialogChoice,
-                            )
-                            : colors.onSurfaceVariant;
-                    return Dialog(
-                      insetPadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 24,
-                      ),
-                      shape: RoundedRectangleBorder(borderRadius: shapes.sheet),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: 380,
-                          maxHeight:
-                              MediaQuery.sizeOf(dialogThemeContext).height - 48,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: SingleChildScrollView(
-                            primary: false,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return TonosDialogFrame(
+            child: Builder(
+              builder: (dialogThemeContext) {
+                final theme = Theme.of(dialogThemeContext);
+                final colors = theme.colorScheme;
+                final textTheme = theme.textTheme;
+                final shapes = dialogThemeContext.shapeTokens;
+                final surfaces = dialogThemeContext.surfaceTokens;
+                final neo = dialogThemeContext.usesNeoPresentation;
+                final choiceForeground = neo
+                    ? tonosForegroundForSurface(
+                        dialogThemeContext,
+                        surfaces.dialogChoice,
+                      )
+                    : null;
+                final choiceSecondary = neo
+                    ? tonosSecondaryForegroundForSurface(
+                        dialogThemeContext,
+                        surfaces.dialogChoice,
+                      )
+                    : colors.onSurfaceVariant;
+                return Dialog(
+                  insetPadding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 24,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: shapes.sheet),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: 380,
+                      maxHeight:
+                          MediaQuery.sizeOf(dialogThemeContext).height - 48,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                        primary: false,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
                               children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: BoxDecoration(
-                                        color: colors.primaryContainer,
-                                        borderRadius: shapes.control,
-                                      ),
-                                      child: Icon(
-                                        Icons.flag_outlined,
-                                        color: colors.onPrimaryContainer,
-                                        size: 21,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        strings.sessionEndQuestion,
-                                        style: textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: colors.primaryContainer,
+                                    borderRadius: shapes.control,
+                                  ),
+                                  child: Icon(
+                                    Icons.flag_outlined,
+                                    color: colors.onPrimaryContainer,
+                                    size: 21,
+                                  ),
                                 ),
-                                const SizedBox(height: 18),
-                                WorkoutExitAction(
-                                  discard: true,
-                                  label: strings.sessionCancelDelete,
-                                  onPressed:
-                                      () => Navigator.pop(
-                                        dialogContext,
-                                        _WorkoutExitDecision(
-                                          behavior:
-                                              WorkoutExitBehavior.discard,
-                                          remember: remember,
-                                        ),
-                                      ),
-                                ),
-                                const SizedBox(height: 10),
-                                WorkoutExitAction(
-                                  label: strings.sessionEndSave,
-                                  onPressed:
-                                      () => Navigator.pop(
-                                        dialogContext,
-                                        _WorkoutExitDecision(
-                                          behavior:
-                                              WorkoutExitBehavior.saveCompleted,
-                                          remember: remember,
-                                        ),
-                                      ),
-                                ),
-                                const SizedBox(height: 12),
-                                Material(
-                                  color: surfaces.dialogChoice,
-                                  borderRadius: shapes.dialogChoice,
-                                  child: CheckboxListTile(
-                                    value: remember,
-                                    dense: true,
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    strings.sessionEndQuestion,
+                                    style: textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
                                     ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    title: Text(
-                                      strings.sessionRememberChoice,
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: choiceForeground,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      strings.sessionRememberChoiceBody,
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: choiceSecondary,
-                                      ),
-                                    ),
-                                    onChanged:
-                                        (value) => setDialogState(
-                                          () => remember = value ?? false,
-                                        ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 18),
+                            WorkoutExitAction(
+                              discard: true,
+                              label: strings.sessionCancelDelete,
+                              onPressed: () => Navigator.pop(
+                                dialogContext,
+                                _WorkoutExitDecision(
+                                  behavior: WorkoutExitBehavior.discard,
+                                  remember: remember,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            WorkoutExitAction(
+                              label: strings.sessionEndSave,
+                              onPressed: () => Navigator.pop(
+                                dialogContext,
+                                _WorkoutExitDecision(
+                                  behavior: WorkoutExitBehavior.saveCompleted,
+                                  remember: remember,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Material(
+                              color: surfaces.dialogChoice,
+                              borderRadius: shapes.dialogChoice,
+                              child: CheckboxListTile(
+                                value: remember,
+                                dense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                title: Text(
+                                  strings.sessionRememberChoice,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: choiceForeground,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  strings.sessionRememberChoiceBody,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: choiceSecondary,
+                                  ),
+                                ),
+                                onChanged: (value) => setDialogState(
+                                  () => remember = value ?? false,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -1,6 +1,9 @@
 // File: lib/widgets/preset_bar.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -16,8 +19,6 @@ import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
 import '../theme/widgets/tonos_dialog.dart';
 import '../theme/widgets/workout_thumbnail_frame.dart';
-
-const _expressivePlanMenuDismissDuration = Duration(milliseconds: 300);
 
 /// A colored bar that *knows* how to open, rename, & delete its own preset.
 class PresetBar extends StatelessWidget {
@@ -89,6 +90,7 @@ class PresetBar extends StatelessWidget {
         children: [
           if (isAutomatic) _AutomaticBadge(scale: scale),
           PopupMenuButton<String>(
+            popUpAnimationStyle: tonosOverlayMotion(context),
             icon: Icon(
               Icons.more_vert,
               color: trailingColor,
@@ -230,9 +232,7 @@ class PresetBar extends StatelessWidget {
                         maxWidth: 296,
                       ),
                       menuPadding: const EdgeInsets.symmetric(vertical: 6),
-                      popUpAnimationStyle: const AnimationStyle(
-                        duration: _expressivePlanMenuDismissDuration,
-                      ),
+                      popUpAnimationStyle: tonosOverlayMotion(context),
                       clipBehavior: Clip.antiAlias,
                       elevation: 6,
                       shadowColor: theme.colorScheme.shadow.withValues(
@@ -332,10 +332,11 @@ class PresetBar extends StatelessWidget {
       if (expressive) {
         // PopupMenuButton reports its selection as the reverse transition
         // begins. Let its route finish before opening another overlay.
-        await Future<void>.delayed(_expressivePlanMenuDismissDuration);
+        final duration = tonosOverlayMotion(context)?.duration ?? Duration.zero;
+        if (duration > Duration.zero) await Future<void>.delayed(duration);
         if (!context.mounted || parentRoute?.isCurrent == false) return;
       }
-      final confirm = await showDialog<bool>(
+      final confirm = await showTonosDialog<bool>(
         context: context,
         builder: (dCtx) => expressive
             ? _ExpressivePlanDeleteDialog(planName: planName, strings: strings)
@@ -363,7 +364,7 @@ class PresetBar extends StatelessWidget {
       }
     } else if (action == 'rename') {
       final repo = context.read<AppRepository>();
-      final newName = await showDialog<String>(
+      final newName = await showTonosDialog<String>(
         context: context,
         builder: (_) => TonosDialogFrame(
           styleFormControls: true,

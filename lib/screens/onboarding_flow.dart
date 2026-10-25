@@ -1,6 +1,11 @@
 // File: lib/screens/onboarding_flow.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_expressive_navigation_motion.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -30,6 +35,14 @@ import 'exercise/gym_profile_screen.dart';
 import 'exercise/premade_plans_page.dart';
 import 'exercise/preset_detail_screen.dart';
 import 'exercise/preset_generation_qa.dart';
+
+Duration _onboardingSelectionMotion(BuildContext context) =>
+    context.usesExpressivePresentation
+    ? TonosExpressiveStateMotion.duration(
+        context,
+        TonosExpressiveStateMotion.fast,
+      )
+    : tutorialMotion(context, context.tutorialTokens.selectionDuration);
 
 InputDecoration _onboardingInputDecoration(
   BuildContext context, {
@@ -248,6 +261,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   bool _gymEquipmentLoadFailed = false;
   bool _isFinishing = false;
   bool _advancing = false;
+  bool _pageTransitionInFlight = false;
   bool _showAllEquipment = false;
   String? _gender;
   DateTime? _dob;
@@ -677,7 +691,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     // The confirmation route can outlive this page during an app teardown.
     // Capture localized copy now instead of reading from a disposed context.
     final strings = _strings;
-    final result = await showDialog<bool>(
+    final result = await showTonosDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return _OnboardingSkipSetupDialog(
@@ -724,7 +738,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   Future<void> _nextAction() async {
-    if (_advancing || _isFinishing) return;
+    if (_advancing || _isFinishing || _pageTransitionInFlight) return;
     setState(() => _advancing = true);
     try {
       await _advanceToNextStep();
@@ -930,29 +944,48 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _previousAction() {
-    if (_advancing || _isFinishing) return;
+    if (_advancing || _isFinishing || _pageTransitionInFlight) return;
     if (_currentPage <= 0) return;
     _goToPage(_currentPage - 1);
   }
 
-  void _goToPage(int page) {
-    final duration = tutorialMotion(
-      context,
-      context.tutorialTokens.pageDuration,
-    );
+  Future<void> _goToPage(int page) async {
+    if (_pageTransitionInFlight || !_controller.hasClients) return;
+    final expressive = context.usesExpressivePresentation;
+    final duration = expressive
+        ? TonosExpressiveStateMotion.duration(
+            context,
+            TonosExpressiveStateMotion.standard,
+          )
+        : tutorialMotion(context, context.tutorialTokens.pageDuration);
     if (duration == Duration.zero) {
       _controller.jumpToPage(page);
       return;
     }
-    _controller.animateToPage(
-      page,
-      duration: duration,
-      curve: Curves.easeOutCubic,
-    );
+    if (!expressive) {
+      await _controller.animateToPage(
+        page,
+        duration: duration,
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    // Keep navigation controls stable until the current slide settles. The
+    // page index changes halfway through a slide, before it is safe to advance.
+    setState(() => _pageTransitionInFlight = true);
+    try {
+      await _controller.animateToPage(
+        page,
+        duration: duration,
+        curve: TonosExpressiveStateMotion.spatial,
+      );
+    } finally {
+      if (mounted) setState(() => _pageTransitionInFlight = false);
+    }
   }
 
   Future<void> _skipOrFinish() async {
-    if (_advancing || _isFinishing) return;
+    if (_advancing || _isFinishing || _pageTransitionInFlight) return;
     final pages = _pages;
     final lastPageIndex = pages.length - 1;
     if (_currentPage == lastPageIndex) {
@@ -985,7 +1018,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         : safePage == lastPageIndex
         ? strings.onboardingFinishSetup
         : strings.onboardingNext;
-    final VoidCallback? onAdvance = canAdvance && !_isFinishing && !_advancing
+    final VoidCallback? onAdvance =
+        canAdvance && !_isFinishing && !_advancing && !_pageTransitionInFlight
         ? () {
             _nextAction();
           }
@@ -1017,37 +1051,43 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     return Scaffold(
       backgroundColor: expressiveTokens?.pageCanvas ?? scheme.surface,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton:
-          expressiveTokens == null || safePage != lastPageIndex
+      floatingActionButton: expressiveTokens == null
           ? null
-          : FloatingActionButton.extended(
-              heroTag: 'onboardingAdvance',
-              tooltip: actionLabel,
-              onPressed: onAdvance,
-              backgroundColor: canAdvance
-                  ? expressiveTokens.actionPrimary
-                  : Color.alphaBlend(
-                      scheme.onSurface.withValues(alpha: 0.12),
-                      expressiveTokens.pageCanvas,
-                    ),
-              foregroundColor: canAdvance
-                  ? expressiveTokens.actionPrimaryForeground
-                  : scheme.onSurface.withValues(alpha: 0.38),
-              shape: RoundedRectangleBorder(
-                borderRadius: expressiveTokens.rowShape,
-              ),
-              elevation: 3,
-              disabledElevation: 0,
-              icon: _isFinishing
-                  ? SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: expressiveTokens.actionPrimaryForeground,
+          : TonosExpressiveActionVisibility(
+              visible: safePage == lastPageIndex,
+              child: FloatingActionButton.extended(
+                heroTag: 'onboardingAdvance',
+                tooltip: actionLabel,
+                onPressed: onAdvance,
+                backgroundColor: canAdvance
+                    ? expressiveTokens.actionPrimary
+                    : Color.alphaBlend(
+                        scheme.onSurface.withValues(alpha: 0.12),
+                        expressiveTokens.pageCanvas,
                       ),
-                    )
-                  : const Icon(Icons.check),
-              label: Text(actionLabel),
+                foregroundColor: canAdvance
+                    ? expressiveTokens.actionPrimaryForeground
+                    : scheme.onSurface.withValues(alpha: 0.38),
+                shape: RoundedRectangleBorder(
+                  borderRadius: expressiveTokens.rowShape,
+                ),
+                elevation: 3,
+                disabledElevation: 0,
+                icon: TonosExpressiveContentTransition(
+                  value: _isFinishing,
+                  direction: 0,
+                  child: _isFinishing
+                      ? SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: expressiveTokens.actionPrimaryForeground,
+                          ),
+                        )
+                      : const Icon(Icons.check),
+                ),
+                label: Text(actionLabel),
+              ),
             ),
       body: SafeArea(
         child: Column(
@@ -1058,12 +1098,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 currentPage: safePage,
                 pageCount: pages.length,
                 title: pages[safePage].label,
-                onBack: safePage == 0 || _advancing || _isFinishing
+                onBack:
+                    safePage == 0 ||
+                        _advancing ||
+                        _isFinishing ||
+                        _pageTransitionInFlight
                     ? null
                     : _previousAction,
                 onSkip:
                     _advancing ||
                         _isFinishing ||
+                        _pageTransitionInFlight ||
                         (expressiveTokens != null && safePage == lastPageIndex)
                     ? null
                     : () {
@@ -1079,12 +1124,14 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                 fit: StackFit.expand,
                 children: [
                   IgnorePointer(
-                    ignoring: _advancing || _isFinishing,
+                    ignoring:
+                        _advancing || _isFinishing || _pageTransitionInFlight,
                     child: PageView.builder(
                       controller: _controller,
                       physics: const NeverScrollableScrollPhysics(),
-                      onPageChanged: (index) =>
-                          setState(() => _currentPage = index),
+                      onPageChanged: (index) => setState(() {
+                        _currentPage = index;
+                      }),
                       itemCount: pages.length,
                       itemBuilder: (_, index) {
                         return Padding(
@@ -2325,13 +2372,23 @@ class _OnboardingHeader extends StatelessWidget {
         const SizedBox(height: 8),
         ClipRRect(
           borderRadius: context.tutorialTokens.pillShape,
-          child: LinearProgressIndicator(
+          child: TonosExpressiveAnimatedValue(
             value: progress,
-            minHeight: 8,
-            backgroundColor: progressSurface,
-            valueColor: neo || expressiveTokens != null
-                ? AlwaysStoppedAnimation<Color>(progressValue)
-                : null,
+            duration: TonosExpressiveStateMotion.standard,
+            builder: (context, animatedProgress) => LinearProgressIndicator(
+              value: animatedProgress,
+              // Progress-bar roles require a numeric value; step copy is its label.
+              semanticsLabel: strings.onboardingStepProgress(
+                currentPage + 1,
+                pageCount,
+              ),
+              semanticsValue: '${(progress * 100).round()}%',
+              minHeight: 8,
+              backgroundColor: progressSurface,
+              valueColor: neo || expressiveTokens != null
+                  ? AlwaysStoppedAnimation<Color>(progressValue)
+                  : null,
+            ),
           ),
         ),
         const SizedBox(height: 6),
@@ -2630,10 +2687,10 @@ class _IntentTile extends StatelessWidget {
           (neo ? shapes.settingsInput : context.tutorialTokens.tileShape),
       onTap: enabled ? () => onChanged(!value) : null,
       child: AnimatedContainer(
-        duration: tutorialMotion(
-          context,
-          context.tutorialTokens.selectionDuration,
-        ),
+        duration: _onboardingSelectionMotion(context),
+        curve: context.usesExpressivePresentation
+            ? TonosExpressiveStateMotion.effects
+            : Curves.linear,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: backgroundColor,
@@ -2947,10 +3004,10 @@ class _BodyFatTile extends StatelessWidget {
       borderRadius: context.tutorialTokens.inputShape,
       onTap: onTap,
       child: AnimatedContainer(
-        duration: tutorialMotion(
-          context,
-          context.tutorialTokens.selectionDuration,
-        ),
+        duration: _onboardingSelectionMotion(context),
+        curve: context.usesExpressivePresentation
+            ? TonosExpressiveStateMotion.effects
+            : Curves.linear,
         decoration: BoxDecoration(
           borderRadius: context.tutorialTokens.inputShape,
           border: Border.all(
@@ -3535,10 +3592,10 @@ class _PageDots extends StatelessWidget {
       children: List.generate(count, (index) {
         final active = index == activeIndex;
         return AnimatedContainer(
-          duration: tutorialMotion(
-            context,
-            context.tutorialTokens.selectionDuration,
-          ),
+          duration: _onboardingSelectionMotion(context),
+          curve: context.usesExpressivePresentation
+              ? TonosExpressiveStateMotion.effects
+              : Curves.linear,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: active ? 20 : 7,
           height: 7,
@@ -3951,10 +4008,10 @@ class _GymSpaceTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: tileShape,
       child: AnimatedContainer(
-        duration: tutorialMotion(
-          context,
-          context.tutorialTokens.selectionDuration,
-        ),
+        duration: _onboardingSelectionMotion(context),
+        curve: context.usesExpressivePresentation
+            ? TonosExpressiveStateMotion.effects
+            : Curves.linear,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: tileBackground,
@@ -4151,10 +4208,10 @@ class _WorkoutPlanSetupTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: tileShape,
       child: AnimatedContainer(
-        duration: tutorialMotion(
-          context,
-          context.tutorialTokens.selectionDuration,
-        ),
+        duration: _onboardingSelectionMotion(context),
+        curve: context.usesExpressivePresentation
+            ? TonosExpressiveStateMotion.effects
+            : Curves.linear,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: tileBackground,

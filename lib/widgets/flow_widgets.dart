@@ -1,6 +1,9 @@
 // lib/widgets/flow_widgets.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -46,11 +49,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
 
   List<String> get _targetableNodes =>
       _nodes.keys.where((n) => n != '1st attempt').toList();
-  List<String> get _leafSelectableNodes =>
-      _nodes.keys.where((name) {
-        final d = _nodeData[name]!;
-        return (d.successCount + d.failureCount) <= 1;
-      }).toList();
+  List<String> get _leafSelectableNodes => _nodes.keys.where((name) {
+    final d = _nodeData[name]!;
+    return (d.successCount + d.failureCount) <= 1;
+  }).toList();
 
   @override
   void initState() {
@@ -157,46 +159,43 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
     final keyCtrl = TextEditingController();
     final labelCtrl = TextEditingController();
     try {
-      final key = await showDialog<String>(
+      final key = await showTonosDialog<String>(
         context: context,
-        builder:
-            (ctx) => TonosDialogFrame(
-              styleFormControls: true,
-              child: AlertDialog(
-                title: Text(_strings.flowNewEvent),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: keyCtrl,
-                      decoration: InputDecoration(
-                        labelText: _strings.flowEventKey,
-                      ),
-                    ),
-                    TextField(
-                      controller: labelCtrl,
-                      decoration: InputDecoration(
-                        labelText: _strings.flowEventDisplayLabel,
-                      ),
-                    ),
-                  ],
+        builder: (ctx) => TonosDialogFrame(
+          styleFormControls: true,
+          child: AlertDialog(
+            title: Text(_strings.flowNewEvent),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: keyCtrl,
+                  decoration: InputDecoration(labelText: _strings.flowEventKey),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(null),
-                    child: Text(_strings.commonCancel),
+                TextField(
+                  controller: labelCtrl,
+                  decoration: InputDecoration(
+                    labelText: _strings.flowEventDisplayLabel,
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      final k = keyCtrl.text.trim();
-                      if (k.isEmpty) return;
-                      Navigator.of(ctx).pop(k);
-                    },
-                    child: Text(_strings.commonAdd),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(_strings.commonCancel),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final k = keyCtrl.text.trim();
+                  if (k.isEmpty) return;
+                  Navigator.of(ctx).pop(k);
+                },
+                child: Text(_strings.commonAdd),
+              ),
+            ],
+          ),
+        ),
       );
       if (key == null || !mounted) return;
       _onAddEvent(key, labelCtrl.text.trim());
@@ -293,15 +292,12 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 ),
                 onPressed:
                     (_selectedNode == null ||
-                            _nodeData[_selectedNode!]!.successCount >= 1)
-                        ? null
-                        : () {
-                          _addChild(
-                            parentName: _selectedNode!,
-                            isSuccess: true,
-                          );
-                          setState(() {});
-                        },
+                        _nodeData[_selectedNode!]!.successCount >= 1)
+                    ? null
+                    : () {
+                        _addChild(parentName: _selectedNode!, isSuccess: true);
+                        setState(() {});
+                      },
                 child: Text(strings.flowAddSuccessNode),
               ),
               ElevatedButton(
@@ -311,15 +307,12 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 ),
                 onPressed:
                     (_selectedNode == null ||
-                            _nodeData[_selectedNode!]!.failureCount >= 1)
-                        ? null
-                        : () {
-                          _addChild(
-                            parentName: _selectedNode!,
-                            isSuccess: false,
-                          );
-                          setState(() {});
-                        },
+                        _nodeData[_selectedNode!]!.failureCount >= 1)
+                    ? null
+                    : () {
+                        _addChild(parentName: _selectedNode!, isSuccess: false);
+                        setState(() {});
+                      },
                 child: Text(strings.flowAddFailureNode),
               ),
             ],
@@ -334,11 +327,10 @@ class FlowChartWidgetState extends State<FlowChartWidget> {
                 nodes: _targetableNodes,
                 selected: _selectedTargetNode,
                 hint: strings.flowSelectNode,
-                onChanged:
-                    (v) => setState(() {
-                      _selectedTargetNode = v;
-                      _selectedEvent = null;
-                    }),
+                onChanged: (v) => setState(() {
+                  _selectedTargetNode = v;
+                  _selectedEvent = null;
+                }),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
@@ -420,10 +412,9 @@ class NodeSelector extends StatelessWidget {
         isExpanded: true,
         hint: Text(hint),
         value: selected,
-        items:
-            nodes
-                .map((n) => DropdownMenuItem(value: n, child: Text(n)))
-                .toList(),
+        items: nodes
+            .map((n) => DropdownMenuItem(value: n, child: Text(n)))
+            .toList(),
         onChanged: onChanged,
       ),
     );

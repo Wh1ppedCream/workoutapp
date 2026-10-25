@@ -4,6 +4,11 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_expressive_motion.dart';
+import '../../../theme/widgets/tonos_expressive_state_motion.dart';
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
@@ -302,7 +307,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         : '-1';
     final copyIndexCtl = TextEditingController(text: copyIndex);
 
-    final saved = await showDialog<bool>(
+    final saved = await showTonosDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) {
@@ -552,7 +557,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     final destinationLabel = isAppDefault
         ? strings.rulesProfilesLowercase
         : strings.rulesPlansLowercase;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTonosDialog<bool>(
       context: context,
       builder: (dialogContext) => TonosDialogFrame(
         child: AlertDialog(
@@ -614,7 +619,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     required int presetId,
     FlowMethod? existing,
   }) async {
-    final updated = await showDialog<FlowMethod>(
+    final updated = await showTonosDialog<FlowMethod>(
       context: context,
       builder: (_) => TonosDialogFrame(
         styleFormControls: true,
@@ -684,6 +689,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         style: theme.textTheme.bodySmall?.copyWith(color: tileSecondary),
       ),
       trailing: PopupMenuButton<_RuleAction>(
+        popUpAnimationStyle: tonosOverlayMotion(context),
         tooltip: strings.rulesOptionsTooltip,
         shape: expressive
             ? RoundedRectangleBorder(borderRadius: ExpressiveTrainShapes.menu)
@@ -1923,8 +1929,18 @@ class _FlowMethodsChoiceFieldState<T>
         maximumSize: WidgetStatePropertyAll(Size(width, menuMaxHeight)),
       ),
       menuChildren: [
-        for (var index = 0; index < widget.values.length; index++)
-          _menuItem(context, tokens, index),
+        TonosExpressiveReveal(
+          enabled: TonosExpressiveStateMotion.enabled(context),
+          duration: const Duration(milliseconds: 160),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var index = 0; index < widget.values.length; index++)
+                _menuItem(context, tokens, index),
+            ],
+          ),
+        ),
       ],
       builder: (context, controller, child) => PopScope(
         canPop: !controller.isOpen,
@@ -1955,21 +1971,32 @@ class _FlowMethodsChoiceFieldState<T>
                     decoration: InputDecoration(
                       labelText: widget.planRuleStyle ? null : widget.title,
                       enabled: enabled,
-                      suffixIcon: Icon(
-                        widget.planRuleStyle && _menuOpen
-                            ? Icons.arrow_drop_up
-                            : Icons.arrow_drop_down,
-                        color: tokens.supportingForeground,
+                      suffixIcon: AnimatedRotation(
+                        turns: widget.planRuleStyle && _menuOpen ? 0.5 : 0,
+                        duration: TonosExpressiveStateMotion.duration(
+                          context,
+                          TonosExpressiveStateMotion.fast,
+                        ),
+                        curve: TonosExpressiveStateMotion.spatial,
+                        child: Icon(
+                          Icons.arrow_drop_down,
+                          color: tokens.supportingForeground,
+                        ),
                       ),
                     ),
                     isFocused: _focusNode.hasFocus || _menuOpen,
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        valueLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyLarge,
+                      child: TonosExpressiveChangePulse(
+                        value: widget.value,
+                        scale: 1.015,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          valueLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge,
+                        ),
                       ),
                     ),
                   ),

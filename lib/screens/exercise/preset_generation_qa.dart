@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../profile/settings/bodypart_ranking_screen.dart';
@@ -21,6 +24,7 @@ import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/tokens/app_generation_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_expansion_tile_scope.dart';
+import '../../theme/widgets/tonos_expressive_state_motion.dart';
 import '../../widgets/bodypart_focus_chips.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -585,6 +589,9 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
           );
     Widget buildExpansionTile(double headerInset) {
       final expansionTile = ExpansionTile(
+        expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
+          context,
+        ),
         onExpansionChanged: expressive == null
             ? null
             : (expanded) => setState(() {
@@ -674,11 +681,11 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                     begin: 0,
                     end: _expandedSettingsSections.contains(sectionId) ? 10 : 0,
                   ),
-                  duration: appMotionDuration(
+                  duration: TonosExpressiveStateMotion.duration(
                     context,
-                    context.motionTokens.standard,
+                    TonosExpressiveStateMotion.standard,
                   ),
-                  curve: context.motionTokens.standardCurve,
+                  curve: TonosExpressiveStateMotion.spatial,
                   builder: (context, headerInset, child) =>
                       buildExpansionTile(headerInset),
                 ),
@@ -1063,7 +1070,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       ],
     ].join('\n');
 
-    return showDialog<void>(
+    return showTonosDialog<void>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(

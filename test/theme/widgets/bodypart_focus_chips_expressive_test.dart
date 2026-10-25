@@ -50,7 +50,7 @@ void main() {
       preferred.labelStyle?.color,
       AppExpressivePlanningTokens.light.actionPrimaryForeground,
     );
-    expect((preferred.avatar as Icon).icon, Icons.check_circle);
+    expect(_avatarIcon(tester, preferred).icon, Icons.check_circle);
     expect(
       find.bySemanticsLabel(
         _localizedLabel(tester, 'Shoulders', (s) => s.generateFocusPreferred),
@@ -59,7 +59,7 @@ void main() {
     );
 
     final avoided = _chip(tester, 'Chest');
-    expect((avoided.avatar as Icon).icon, Icons.block);
+    expect(_avatarIcon(tester, avoided).icon, Icons.block);
     expect(
       find.bySemanticsLabel(
         _localizedLabel(tester, 'Chest', (s) => s.generateFocusAvoided),
@@ -69,7 +69,7 @@ void main() {
 
     final neutral = _chip(tester, 'Quads');
     expect(neutral.backgroundColor, expectedChipSurface);
-    expect((neutral.avatar as Icon).icon, Icons.radio_button_unchecked);
+    expect(_avatarIcon(tester, neutral).icon, Icons.radio_button_unchecked);
     expect(neutral.selected, isFalse);
     expect(
       find.bySemanticsLabel(
@@ -123,7 +123,7 @@ void main() {
     expect(preferredIds, {1});
     expect(avoidedIds, isEmpty);
     expect(
-      (_chip(tester, 'Shoulders').avatar as Icon).icon,
+      _avatarIcon(tester, _chip(tester, 'Shoulders')).icon,
       Icons.check_circle,
     );
     expect(
@@ -137,7 +137,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(preferredIds, isEmpty);
     expect(avoidedIds, {1});
-    expect((_chip(tester, 'Shoulders').avatar as Icon).icon, Icons.block);
+    expect(_avatarIcon(tester, _chip(tester, 'Shoulders')).icon, Icons.block);
     expect(
       find.bySemanticsLabel(
         _localizedLabel(tester, 'Shoulders', (s) => s.generateFocusAvoided),
@@ -150,7 +150,7 @@ void main() {
     expect(preferredIds, isEmpty);
     expect(avoidedIds, isEmpty);
     expect(
-      (_chip(tester, 'Shoulders').avatar as Icon).icon,
+      _avatarIcon(tester, _chip(tester, 'Shoulders')).icon,
       Icons.radio_button_unchecked,
     );
     expect(
@@ -190,10 +190,10 @@ void main() {
         );
 
         expect(
-          (_chip(tester, 'Shoulders').avatar as Icon).icon,
+          _avatarIcon(tester, _chip(tester, 'Shoulders')).icon,
           Icons.check_circle,
         );
-        expect((_chip(tester, 'Chest').avatar as Icon).icon, Icons.block);
+        expect(_avatarIcon(tester, _chip(tester, 'Chest')).icon, Icons.block);
         expect(
           find.bySemanticsLabel(
             _localizedLabel(
@@ -218,6 +218,14 @@ void main() {
 
 RawChip _chip(WidgetTester tester, String label) =>
     tester.widget<RawChip>(find.widgetWithText(RawChip, label));
+
+Icon _avatarIcon(WidgetTester tester, RawChip chip) => tester.widget<Icon>(
+  find.descendant(
+    of: find.byWidget(chip.avatar!),
+    matching: find.byType(Icon),
+    matchRoot: true,
+  ),
+);
 
 String _localizedLabel(
   WidgetTester tester,

@@ -1,0 +1,138 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../theme_extensions.dart';
+import 'tonos_expressive_state_motion.dart';
+
+/// Shared route recipes. Caller-owned colors, shapes, focus, dismissal and
+/// geometry are forwarded unchanged; Classic and Neo retain SDK motion.
+AnimationStyle? tonosOverlayMotion(BuildContext context) =>
+    !context.usesExpressivePresentation
+    ? null
+    : AnimationStyle(
+        duration: TonosExpressiveStateMotion.duration(
+          context,
+          const Duration(milliseconds: 220),
+        ),
+        reverseDuration: TonosExpressiveStateMotion.duration(
+          context,
+          const Duration(milliseconds: 160),
+        ),
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+
+Future<T?> showTonosDialog<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool barrierDismissible = true,
+  Color? barrierColor,
+  String? barrierLabel,
+  bool useSafeArea = true,
+  bool useRootNavigator = true,
+  RouteSettings? routeSettings,
+  Offset? anchorPoint,
+  TraversalEdgeBehavior? traversalEdgeBehavior,
+  bool fullscreenDialog = false,
+  bool? requestFocus,
+  AnimationStyle? animationStyle,
+}) => showDialog<T>(
+  context: context,
+  builder: builder,
+  barrierDismissible: barrierDismissible,
+  barrierColor: barrierColor,
+  barrierLabel: barrierLabel,
+  useSafeArea: useSafeArea,
+  useRootNavigator: useRootNavigator,
+  routeSettings: routeSettings,
+  anchorPoint: anchorPoint,
+  traversalEdgeBehavior: traversalEdgeBehavior,
+  fullscreenDialog: fullscreenDialog,
+  requestFocus: requestFocus,
+  animationStyle: animationStyle ?? tonosOverlayMotion(context),
+);
+
+Future<T?> showTonosModalBottomSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  Color? backgroundColor,
+  String? barrierLabel,
+  double? elevation,
+  ShapeBorder? shape,
+  Clip? clipBehavior,
+  BoxConstraints? constraints,
+  Color? barrierColor,
+  bool isScrollControlled = false,
+  double scrollControlDisabledMaxHeightRatio = 9 / 16,
+  bool useRootNavigator = false,
+  bool isDismissible = true,
+  bool enableDrag = true,
+  bool? showDragHandle,
+  bool useSafeArea = false,
+  RouteSettings? routeSettings,
+  AnimationController? transitionAnimationController,
+  Offset? anchorPoint,
+  AnimationStyle? sheetAnimationStyle,
+  bool? requestFocus,
+}) => showModalBottomSheet<T>(
+  context: context,
+  builder: builder,
+  backgroundColor: backgroundColor,
+  barrierLabel: barrierLabel,
+  elevation: elevation,
+  shape: shape,
+  clipBehavior: clipBehavior,
+  constraints: constraints,
+  barrierColor: barrierColor,
+  isScrollControlled: isScrollControlled,
+  scrollControlDisabledMaxHeightRatio: scrollControlDisabledMaxHeightRatio,
+  useRootNavigator: useRootNavigator,
+  isDismissible: isDismissible,
+  enableDrag: enableDrag,
+  showDragHandle: showDragHandle,
+  useSafeArea: useSafeArea,
+  routeSettings: routeSettings,
+  transitionAnimationController: transitionAnimationController,
+  anchorPoint: anchorPoint,
+  sheetAnimationStyle: sheetAnimationStyle ?? tonosOverlayMotion(context),
+  requestFocus: requestFocus,
+);
+
+Future<T?> showTonosMenu<T>({
+  required BuildContext context,
+  RelativeRect? position,
+  PopupMenuPositionBuilder? positionBuilder,
+  required List<PopupMenuEntry<T>> items,
+  T? initialValue,
+  double? elevation,
+  Color? shadowColor,
+  Color? surfaceTintColor,
+  String? semanticLabel,
+  ShapeBorder? shape,
+  EdgeInsetsGeometry? menuPadding,
+  Color? color,
+  bool useRootNavigator = false,
+  BoxConstraints? constraints,
+  Clip clipBehavior = Clip.none,
+  RouteSettings? routeSettings,
+  AnimationStyle? popUpAnimationStyle,
+  bool? requestFocus,
+}) => showMenu<T>(
+  context: context,
+  position: position,
+  positionBuilder: positionBuilder,
+  items: items,
+  initialValue: initialValue,
+  elevation: elevation,
+  shadowColor: shadowColor,
+  surfaceTintColor: surfaceTintColor,
+  semanticLabel: semanticLabel,
+  shape: shape,
+  menuPadding: menuPadding,
+  color: color,
+  useRootNavigator: useRootNavigator,
+  constraints: constraints,
+  clipBehavior: clipBehavior,
+  routeSettings: routeSettings,
+  popUpAnimationStyle: popUpAnimationStyle ?? tonosOverlayMotion(context),
+  requestFocus: requestFocus,
+);

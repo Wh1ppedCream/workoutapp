@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import '../../theme/theme_extensions.dart';
 
 import 'package:provider/provider.dart';
@@ -727,7 +729,7 @@ class _LogEntryPageState extends State<_LogEntryDayView> {
           ),
       ],
     );
-    showModalBottomSheet(
+    showTonosModalBottomSheet(
       context: context,
       backgroundColor: expressive ? Colors.transparent : null,
       builder: (_) => expressive

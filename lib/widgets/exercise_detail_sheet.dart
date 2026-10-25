@@ -5,6 +5,9 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 
@@ -242,7 +245,7 @@ class ExerciseDetailSheet extends StatefulWidget {
     final useCatalogPresentation = expressive || expressiveCatalogPresentation;
     final useApprovedDetails = expressive || catalogBrowserDetailRefinement;
     final neoSheet = context.surfaceDecorationTokens.sheet.outlined;
-    return showModalBottomSheet<T>(
+    return showTonosModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       backgroundColor: neoSheet ? Colors.transparent : null,
@@ -1352,7 +1355,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     required Color lowColor,
     required Color highColor,
   }) {
-    return showDialog<void>(
+    return showTonosDialog<void>(
       context: context,
       barrierColor: MediaViewingColors.barrier,
       builder: (dialogContext) => Material(

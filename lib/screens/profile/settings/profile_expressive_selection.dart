@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/theme_extensions.dart';
@@ -40,7 +42,7 @@ Future<T?> showProfileExpressiveChoiceDialog<T>({
   Widget Function(BuildContext context, T value)? labelWidget,
   Key Function(T value)? choiceKey,
 }) {
-  return showDialog<T>(
+  return showTonosDialog<T>(
     context: context,
     builder: (dialogContext) => AppExpressiveDestinationTheme(
       family: AppExpressiveDestinationFamily.profile,

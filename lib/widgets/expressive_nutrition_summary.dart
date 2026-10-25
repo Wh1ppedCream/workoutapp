@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
 import 'meal_plan_add_bar.dart';
 import 'rounded_progress_indicator.dart';
 
@@ -48,10 +49,115 @@ class ExpressiveNutritionSummary extends StatefulWidget {
       _ExpressiveNutritionSummaryState();
 }
 
-class _ExpressiveNutritionSummaryState
-    extends State<ExpressiveNutritionSummary> {
+class _ExpressiveNutritionSummaryState extends State<ExpressiveNutritionSummary>
+    with TickerProviderStateMixin {
   final _pages = PageController();
   int _view = 0;
+  late final AnimationController _nutritionMotion;
+  late final AnimationController _ringEntranceMotion;
+  bool _wasActive = false;
+  late List<double> _fromValues;
+  late List<double> _targetValues;
+  late List<double> _fromProgress;
+  late List<double> _targetProgress;
+
+  List<double> get _values => [
+    widget.caloriesConsumed.toDouble(),
+    widget.proteinConsumed.toDouble(),
+    widget.carbConsumed.toDouble(),
+    widget.fatConsumed.toDouble(),
+  ];
+
+  List<double> get _progressValues {
+    final values = _values;
+    final goals = [
+      widget.calorieGoal,
+      widget.proteinTarget,
+      widget.carbTarget,
+      widget.fatTarget,
+    ];
+    return [
+      for (var i = 0; i < values.length; i++)
+        goals[i] > 0 ? (values[i] / goals[i]).clamp(0.0, 1.0) : 0,
+    ];
+  }
+
+  double _interpolate(List<double> from, List<double> to, int index) {
+    final t = TonosExpressiveStateMotion.effects.transform(
+      _nutritionMotion.value,
+    );
+    return from[index] + (to[index] - from[index]) * t;
+  }
+
+  int _metricIndex(String id) => switch (id) {
+    'Calories' => 0,
+    'Protein' => 1,
+    'Carbs' => 2,
+    _ => 3,
+  };
+
+  int _displayedValue(int index) =>
+      _interpolate(_fromValues, _targetValues, index).round();
+
+  @override
+  void initState() {
+    super.initState();
+    _fromValues = _targetValues = _values;
+    _fromProgress = _targetProgress = _progressValues;
+    _nutritionMotion = AnimationController(
+      vsync: this,
+      duration: TonosExpressiveStateMotion.data,
+      value: 1,
+    );
+    _ringEntranceMotion = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 630),
+      value: 1,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final active = TickerMode.valuesOf(context).enabled;
+    if (!TonosExpressiveStateMotion.enabled(context)) {
+      _nutritionMotion.value = 1;
+      _ringEntranceMotion.value = 1;
+    } else if (active && !_wasActive) {
+      // Cached tabs and covered routes keep this State. Replay only when their
+      // tickers become active again, not on ordinary data or theme rebuilds.
+      _ringEntranceMotion.forward(from: 0);
+    }
+    _wasActive = active;
+  }
+
+  @override
+  void didUpdateWidget(covariant ExpressiveNutritionSummary oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final values = _values;
+    final progress = _progressValues;
+    if (List.generate(4, (i) => i).every(
+      (i) => values[i] == _targetValues[i] && progress[i] == _targetProgress[i],
+    )) {
+      return;
+    }
+    // Retarget the visible values instead of restarting from zero. One clock
+    // keeps every mode's numbers, arcs and bars in sync, including mid-update.
+    _fromValues = [
+      for (var i = 0; i < 4; i++) _interpolate(_fromValues, _targetValues, i),
+    ];
+    _fromProgress = [
+      for (var i = 0; i < 4; i++)
+        _interpolate(_fromProgress, _targetProgress, i),
+    ];
+    _targetValues = values;
+    _targetProgress = progress;
+    if (TonosExpressiveStateMotion.enabled(context)) {
+      _nutritionMotion.forward(from: 0);
+    } else {
+      _nutritionMotion.value = 1;
+    }
+  }
 
   static const _outerShape = BorderRadius.only(
     topLeft: Radius.circular(30),
@@ -74,12 +180,14 @@ class _ExpressiveNutritionSummaryState
 
   @override
   void dispose() {
+    _nutritionMotion.dispose();
+    _ringEntranceMotion.dispose();
     _pages.dispose();
     super.dispose();
   }
 
   double _progress(_NutritionMetric metric) =>
-      metric.target > 0 ? (metric.consumed / metric.target).clamp(0.0, 1.0) : 0;
+      _interpolate(_fromProgress, _targetProgress, _metricIndex(metric.id));
 
   String _goal(BuildContext context, _NutritionMetric metric) {
     final strings = AppLocalizations.of(context);
@@ -205,7 +313,12 @@ class _ExpressiveNutritionSummaryState
       );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: Listenable.merge([_nutritionMotion, _ringEntranceMotion]),
+    builder: _buildSummary,
+  );
+
+  Widget _buildSummary(BuildContext context, Widget? child) {
     final theme = Theme.of(context);
     final tokens = theme.extension<AppExpressiveDestinationTokens>()!;
     final dark = theme.brightness == Brightness.dark;
@@ -215,7 +328,7 @@ class _ExpressiveNutritionSummaryState
       (
         id: 'Calories',
         label: strings.nutritionCaloriesLabel,
-        consumed: widget.caloriesConsumed,
+        consumed: _displayedValue(0),
         target: widget.calorieGoal,
         unit: strings.nutritionUnitCalories,
         surface: tokens.surfacePrimary,
@@ -225,7 +338,7 @@ class _ExpressiveNutritionSummaryState
       (
         id: 'Protein',
         label: strings.nutritionProteinLabel,
-        consumed: widget.proteinConsumed,
+        consumed: _displayedValue(1),
         target: widget.proteinTarget,
         unit: strings.nutritionUnitGrams,
         surface: tokens.surfaceSecondary,
@@ -235,7 +348,7 @@ class _ExpressiveNutritionSummaryState
       (
         id: 'Carbs',
         label: strings.nutritionCarbsLabel,
-        consumed: widget.carbConsumed,
+        consumed: _displayedValue(2),
         target: widget.carbTarget,
         unit: strings.nutritionUnitGrams,
         surface: tokens.surfaceAccent,
@@ -245,7 +358,7 @@ class _ExpressiveNutritionSummaryState
       (
         id: 'Fat',
         label: strings.nutritionFatLabel,
-        consumed: widget.fatConsumed,
+        consumed: _displayedValue(3),
         target: widget.fatTarget,
         unit: strings.nutritionUnitGrams,
         surface: tokens.surfaceSelected,
@@ -342,32 +455,33 @@ class _ExpressiveNutritionSummaryState
                       Icons.format_list_bulleted_rounded,
                     ),
                   ])
-                    Semantics(
-                      label: label,
-                      selected: _view == index,
-                      child: IconButton(
-                        key: ValueKey('nutrition-display-mode-$index'),
-                        tooltip: label,
-                        style: IconButton.styleFrom(
-                          backgroundColor: _view == index
-                              ? tokens.actionPrimary
-                              : Colors.transparent,
-                          foregroundColor: _view == index
-                              ? tokens.onActionPrimary
-                              : tokens.supportingForeground,
-                          minimumSize: Size(48 * s, 48 * s),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14 * s),
+                    MergeSemantics(
+                      child: Semantics(
+                        selected: _view == index,
+                        child: IconButton(
+                          key: ValueKey('nutrition-display-mode-$index'),
+                          tooltip: label,
+                          style: IconButton.styleFrom(
+                            backgroundColor: _view == index
+                                ? tokens.actionPrimary
+                                : Colors.transparent,
+                            foregroundColor: _view == index
+                                ? tokens.onActionPrimary
+                                : tokens.supportingForeground,
+                            minimumSize: Size(48 * s, 48 * s),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14 * s),
+                            ),
                           ),
+                          onPressed: () => _pages.animateToPage(
+                            index,
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 220),
+                            curve: Curves.easeOutCubic,
+                          ),
+                          icon: Icon(icon, size: 22 * s),
                         ),
-                        onPressed: () => _pages.animateToPage(
-                          index,
-                          duration: MediaQuery.disableAnimationsOf(context)
-                              ? Duration.zero
-                              : const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                        ),
-                        icon: Icon(icon, size: 22 * s),
                       ),
                     ),
                 ],
@@ -511,7 +625,9 @@ class _ExpressiveNutritionSummaryState
             alignment: Alignment.center,
             children: [
               RoundedProgressIndicator(
-                progress: _progress(metric),
+                progress:
+                    _progress(metric) *
+                    Curves.easeOutCubic.transform(_ringEntranceMotion.value),
                 size: diameter,
                 strokeWidth: _stroke(metric),
                 progressColor: metric.accent,
@@ -561,13 +677,13 @@ class _ExpressiveNutritionSummaryState
       label: metric.target > 0
           ? strings.nutritionGoalSemantics(
               metric.label,
-              metric.consumed,
+              _targetValues[_metricIndex(metric.id)].round(),
               metric.target,
               metric.unit,
             )
           : strings.nutritionUnsetGoalSemantics(
               metric.label,
-              metric.consumed,
+              _targetValues[_metricIndex(metric.id)].round(),
               metric.unit,
             ),
       child: ExcludeSemantics(

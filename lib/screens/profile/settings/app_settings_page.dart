@@ -1,8 +1,12 @@
 // File: lib/screens/profile/settings/app_settings_page.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import '../../../repositories/app_repository.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
@@ -25,37 +29,36 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
       if (!mounted) return; // guard context after async
 
-      await showDialog<void>(
+      await showTonosDialog<void>(
         context: context,
-        builder:
-            (ctx) => TonosDialogFrame(
-              child: AlertDialog(
-                title: Text(AppLocalizations.of(context).databaseExportTitle),
-                content: SizedBox(
-                  width: double.maxFinite,
-                  child: SingleChildScrollView(child: SelectableText(jsonStr)),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: jsonStr));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            AppLocalizations.of(context).databaseCopied,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(AppLocalizations.of(context).commonCopy),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: Text(AppLocalizations.of(context).commonClose),
-                  ),
-                ],
-              ),
+        builder: (ctx) => TonosDialogFrame(
+          child: AlertDialog(
+            title: Text(AppLocalizations.of(context).databaseExportTitle),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(child: SelectableText(jsonStr)),
             ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: jsonStr));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(context).databaseCopied,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(AppLocalizations.of(context).commonCopy),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(AppLocalizations.of(context).commonClose),
+              ),
+            ],
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return; // guard context
@@ -76,34 +79,33 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
     String? result;
     try {
       if (!mounted) return; // guard before dialog
-      result = await showDialog<String?>(
+      result = await showTonosDialog<String?>(
         context: context,
-        builder:
-            (ctx) => TonosDialogFrame(
-              styleFormControls: true,
-              child: AlertDialog(
-                title: Text(AppLocalizations.of(context).databaseImportTitle),
-                content: SizedBox(
-                  width: double.maxFinite,
-                  child: TonosField(
-                    controller: controller,
-                    maxLines: 10,
-                    hintText: AppLocalizations.of(context).databasePasteJson,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(null),
-                    child: Text(AppLocalizations.of(context).commonCancel),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(ctx).pop(controller.text),
-                    child: Text(AppLocalizations.of(context).commonImport),
-                  ),
-                ],
+        builder: (ctx) => TonosDialogFrame(
+          styleFormControls: true,
+          child: AlertDialog(
+            title: Text(AppLocalizations.of(context).databaseImportTitle),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: TonosField(
+                controller: controller,
+                maxLines: 10,
+                hintText: AppLocalizations.of(context).databasePasteJson,
+                border: const OutlineInputBorder(),
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(null),
+                child: Text(AppLocalizations.of(context).commonCancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(controller.text),
+                child: Text(AppLocalizations.of(context).commonImport),
+              ),
+            ],
+          ),
+        ),
       );
     } finally {
       controller.dispose();

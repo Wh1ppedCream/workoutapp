@@ -1,7 +1,11 @@
 // File: lib/widgets/stretch_search_dialog.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
+
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../theme/widgets/tonos_dialog.dart';
@@ -14,7 +18,7 @@ class StretchSearchDialog {
     final repo = context.read<AppRepository>();
     final bodyPartsFuture = repo.fetchAllBodyParts();
 
-    return showDialog<StretchDefinition>(
+    return showTonosDialog<StretchDefinition>(
       context: context,
       builder: (dialogCtx) {
         int? selectedBodyPartId;
@@ -49,13 +53,12 @@ class StretchSearchDialog {
                             labelText: 'Body Part',
                           ),
                           initialValue: selectedBodyPartId,
-                          items:
-                              parts.map((bp) {
-                                return DropdownMenuItem<int>(
-                                  value: bp.id,
-                                  child: Text(bp.name),
-                                );
-                              }).toList(),
+                          items: parts.map((bp) {
+                            return DropdownMenuItem<int>(
+                              value: bp.id,
+                              child: Text(bp.name),
+                            );
+                          }).toList(),
                           onChanged: (newBpId) {
                             final loadGeneration = ++stretchLoadGeneration;
                             setState(() {
@@ -88,13 +91,12 @@ class StretchSearchDialog {
                         isExpanded: true,
                         decoration: const InputDecoration(labelText: 'Stretch'),
                         initialValue: selectedStretchId,
-                        items:
-                            currentStretches.map((st) {
-                              return DropdownMenuItem<int>(
-                                value: st.id,
-                                child: Text(st.name),
-                              );
-                            }).toList(),
+                        items: currentStretches.map((st) {
+                          return DropdownMenuItem<int>(
+                            value: st.id,
+                            child: Text(st.name),
+                          );
+                        }).toList(),
                         onChanged: (newStId) {
                           setState(() {
                             selectedStretchId = newStId;
@@ -109,15 +111,14 @@ class StretchSearchDialog {
                     child: const Text('Cancel'),
                   ),
                   ElevatedButton(
-                    onPressed:
-                        selectedStretchId != null
-                            ? () {
-                              final chosen = currentStretches.firstWhere(
-                                (st) => st.id == selectedStretchId,
-                              );
-                              Navigator.of(dialogCtx).pop(chosen);
-                            }
-                            : null,
+                    onPressed: selectedStretchId != null
+                        ? () {
+                            final chosen = currentStretches.firstWhere(
+                              (st) => st.id == selectedStretchId,
+                            );
+                            Navigator.of(dialogCtx).pop(chosen);
+                          }
+                        : null,
                     child: const Text('Add'),
                   ),
                 ],

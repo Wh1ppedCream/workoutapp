@@ -122,32 +122,46 @@ class TonosSurface extends StatelessWidget {
       ),
       AppSurfaceDepth.none || AppSurfaceDepth.materialElevation => null,
     };
-    final visibleShadow =
-        shadow != null && _hasVisibleShadow(shadow) ? shadow : null;
-    final outlineColor =
-        variant == TonosSurfaceVariant.input
-            ? surfaces.neutralOutline
-            : tonosOutlineForSurface(context, backgroundColor);
+    final visibleShadow = shadow != null && _hasVisibleShadow(shadow)
+        ? shadow
+        : null;
+    final outlineColor = variant == TonosSurfaceVariant.input
+        ? surfaces.neutralOutline
+        : tonosOutlineForSurface(context, backgroundColor);
 
     final shape = RoundedRectangleBorder(
       borderRadius: resolvedBorderRadius,
-      side:
-          (outlined ?? decoration.outlined)
-              ? BorderSide(color: outlineColor, width: shapes.outlineWidth)
-              : BorderSide.none,
+      side: (outlined ?? decoration.outlined)
+          ? BorderSide(color: outlineColor, width: shapes.outlineWidth)
+          : BorderSide.none,
     );
     final resolvedShape = _resolveSurfaceShape(
       customShape: this.shape,
       fallback: shape,
       outline: shape.side,
     );
-    final shadowBorderRadius =
-        resolvedShape is RoundedRectangleBorder
-            ? resolvedShape.borderRadius
-            : resolvedBorderRadius;
-    final effectiveClipBehavior = clipBehavior ?? defaultClipBehavior;
+    final shadowBorderRadius = resolvedShape is RoundedRectangleBorder
+        ? resolvedShape.borderRadius
+        : resolvedBorderRadius;
+    // Child ListTiles and InkWells paint their state layers on this Material.
+    // Keep that ink inside the same silhouette as the Expressive surface.
+    final effectiveClipBehavior =
+        clipBehavior ??
+        (context.usesExpressivePresentation
+            ? Clip.antiAlias
+            : defaultClipBehavior);
 
-    Widget contents = Padding(padding: padding, child: child);
+    Widget contents = Padding(
+      padding: padding,
+      child: context.usesExpressivePresentation
+          ? TonosSurfaceInkShape(
+              shape: resolvedShape is OutlinedBorder
+                  ? resolvedShape.copyWith(side: BorderSide.none)
+                  : resolvedShape,
+              child: child,
+            )
+          : child,
+    );
     if (onTap != null) {
       contents = InkWell(
         onTap: onTap,
@@ -183,6 +197,24 @@ class TonosSurface extends StatelessWidget {
 
     return Container(margin: margin, child: surface);
   }
+}
+
+/// Shares the surface's silhouette with inset controls without changing layout.
+class TonosSurfaceInkShape extends InheritedWidget {
+  const TonosSurfaceInkShape({
+    super.key,
+    required this.shape,
+    required super.child,
+  });
+
+  final ShapeBorder shape;
+
+  static ShapeBorder? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<TonosSurfaceInkShape>()?.shape;
+
+  @override
+  bool updateShouldNotify(TonosSurfaceInkShape oldWidget) =>
+      shape != oldWidget.shape;
 }
 
 /// Scopes inherited foreground roles to the actual surface beneath content.

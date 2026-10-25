@@ -40,6 +40,59 @@ class _Repository extends AppRepository {
 
 void main() {
   testWidgets(
+    'Expressive onboarding rejects queued navigation during a slide',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final repository = _Repository();
+      final selected = SelectedProfile(repository: repository);
+      final units = UnitPreferenceProvider();
+      final locale = LocalePreferenceProvider();
+      await units.ready;
+      await locale.ready;
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<AppRepository>.value(value: repository),
+            ChangeNotifierProvider<SelectedProfile>(create: (_) => selected),
+            ChangeNotifierProvider<UnitPreferenceProvider>(
+              create: (_) => units,
+            ),
+            ChangeNotifierProvider<LocalePreferenceProvider>(
+              create: (_) => locale,
+            ),
+          ],
+          child: MaterialApp(
+            theme: ExpressiveThemeDefinition.light(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const OnboardingFlow(reviewMode: true),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(OnboardingFlow)),
+      );
+      final next = find.widgetWithText(FilledButton, strings.onboardingNext);
+      final queuedTap = tester.widget<FilledButton>(next).onPressed!;
+      queuedTap();
+      await tester.pump();
+      expect(tester.widget<FilledButton>(next).onPressed, isNull);
+      await tester.pump(const Duration(milliseconds: 180));
+      queuedTap();
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<PageView>(find.byType(PageView)).controller!.page,
+        1,
+      );
+      expect(tester.widget<FilledButton>(next).onPressed, isNotNull);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'onboarding guards repeated handoffs and recovers from a failed load',
     (tester) async {
       SharedPreferences.setMockInitialValues({});

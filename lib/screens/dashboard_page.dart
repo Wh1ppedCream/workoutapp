@@ -1,6 +1,9 @@
 // File: lib/screens/dashboard_page.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -14,6 +17,8 @@ import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_dialog.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
+import '../theme/widgets/tonos_expressive_navigation_motion.dart';
 import '../widgets/data_records_section.dart';
 import '../widgets/dashboard_sections.dart';
 import '../widgets/dashboard_section_palette.dart';
@@ -35,6 +40,13 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isEditing = false;
   int _historyRefreshToken = 0;
   int? _seenCompletedSessionVersion;
+  final Set<String> _arrivingWidgets = {};
+  final Map<String, int> _reorderEpochs = {};
+
+  void _toggleWidget(String id) {
+    _arrivingWidgets.add(id);
+    context.read<DashboardConfig>().toggleVisibility(id);
+  }
 
   void _refreshHistoryWidgets() {
     if (!mounted) return;
@@ -182,9 +194,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 key: const ValueKey('dashboard-drag-proxy'),
                 color: Colors.transparent,
                 borderRadius: context.shapeTokens.dashboardEditor,
-                elevation: MediaQuery.disableAnimationsOf(context)
-                    ? 3
-                    : 3 * Curves.easeOut.transform(animation.value),
+                elevation: TonosExpressiveStateMotion.enabled(context)
+                    ? 3 * Curves.easeOut.transform(animation.value)
+                    : 3,
                 shadowColor: Theme.of(context).colorScheme.shadow
                     .withValues(alpha: 0.35),
                 child: child,
@@ -233,31 +245,39 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       footer: Padding(
         padding: const EdgeInsets.only(top: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (expressive && hiddenIds.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildEditorGroupHeading(
-                strings.dashboardHiddenWidgets,
-                hiddenIds.length,
-                key: const ValueKey('dashboard-hidden-group'),
-              ),
-              Text(
-                strings.dashboardHiddenWidgetsHelp,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: TonosExpressiveResize(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (expressive && hiddenIds.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildEditorGroupHeading(
+                  strings.dashboardHiddenWidgets,
+                  hiddenIds.length,
+                  key: const ValueKey('dashboard-hidden-group'),
                 ),
-              ),
-              const SizedBox(height: 12),
-              for (final id in hiddenIds) _buildEditableTile(id, null),
-              const SizedBox(height: 12),
+                Text(
+                  strings.dashboardHiddenWidgetsHelp,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                for (final id in hiddenIds) _buildEditableTile(id, null),
+                const SizedBox(height: 12),
+              ],
+              _buildDashboardEditorFooter(),
             ],
-            _buildDashboardEditorFooter(),
-          ],
+          ),
         ),
       ),
       onReorderItem: (oldIndex, newIndex) {
+        if (expressive &&
+            oldIndex != newIndex &&
+            oldIndex < visibleIds.length) {
+          final id = visibleIds[oldIndex];
+          _reorderEpochs[id] = (_reorderEpochs[id] ?? 0) + 1;
+        }
         config.reorder(oldIndex, newIndex);
       },
       children: [
@@ -286,10 +306,14 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            MaterialLocalizations.of(context).formatDecimal(count),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          TonosExpressiveChangePulse(
+            value: count,
+            scale: 1.045,
+            child: Text(
+              MaterialLocalizations.of(context).formatDecimal(count),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -362,9 +386,9 @@ class _DashboardPageState extends State<DashboardPage> {
         hidden ? Icons.add_rounded : Icons.visibility_off_outlined,
         color: hidden ? scheme.onSecondaryContainer : scheme.error,
       ),
-      onPressed: () => context.read<DashboardConfig>().toggleVisibility(id),
+      onPressed: () => _toggleWidget(id),
     );
-    return Container(
+    final tile = Container(
       key: ValueKey(id),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -429,7 +453,7 @@ class _DashboardPageState extends State<DashboardPage> {
               label: visibilityAction,
               button: true,
               toggled: visible,
-              onTap: () => context.read<DashboardConfig>().toggleVisibility(id),
+              onTap: () => _toggleWidget(id),
               excludeSemantics: true,
               child: visibilityButton,
             )
@@ -439,6 +463,16 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
     );
+    return !expressive
+        ? tile
+        : TonosExpressiveChangePulse(
+            key: ValueKey('dashboard-feedback-$id'),
+            value: _reorderEpochs[id] ?? 0,
+            animateOnMount: _arrivingWidgets.remove(id),
+            scale: 1,
+            offset: const Offset(0, 3),
+            child: tile,
+          );
   }
 
   Widget _buildDashboardEditorFooter() {
@@ -550,7 +584,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _confirmRestoreDashboardDefaults() async {
     final strings = AppLocalizations.of(context);
     final config = context.read<DashboardConfig>();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTonosDialog<bool>(
       context: context,
       builder: (_) => AppExpressiveDestinationTheme(
         family: AppExpressiveDestinationFamily.dashboard,
@@ -639,7 +673,7 @@ class _DashboardPageState extends State<DashboardPage> {
         .toList();
     if (hiddenIds.isEmpty) return;
     final strings = AppLocalizations.of(context);
-    await showDialog(
+    await showTonosDialog(
       context: context,
       builder: (_) => TonosDialogFrame(
         child: AlertDialog(

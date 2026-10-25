@@ -148,6 +148,11 @@ void main() {
       );
       final categorySurface =
           (categoryContainer.decoration! as BoxDecoration).color;
+      final categoryInk = tester.widget<Material>(
+        find.ancestor(of: categoryLabel, matching: find.byType(Material)).first,
+      );
+      expect(categoryInk.type, MaterialType.transparency);
+      expect(categoryContainer.clipBehavior, Clip.antiAlias);
       expect(
         categorySurface,
         Color.alphaBlend(

@@ -3,6 +3,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_expressive_navigation_motion.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -1415,12 +1419,47 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
 }
 
 class _InteractiveWorkoutLineChartState
-    extends State<_InteractiveWorkoutLineChart> {
+    extends State<_InteractiveWorkoutLineChart>
+    with SingleTickerProviderStateMixin {
   int? _selectedIndex;
+  late final _dataMotion = AnimationController(
+    vsync: this,
+    duration: TonosExpressiveStateMotion.data,
+    value: 1,
+  );
+  late List<double> _fromValues;
+  late List<double> _targetValues;
+  late List<DateTime> _valueDates;
+
+  List<double> get _paintedValues {
+    if (_dataMotion.isCompleted) return _targetValues;
+    final t = TonosExpressiveStateMotion.effects.transform(_dataMotion.value);
+    return [
+      for (var i = 0; i < _targetValues.length; i++)
+        _fromValues[i] + (_targetValues[i] - _fromValues[i]) * t,
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fromValues = _targetValues = [
+      for (final bucket in widget.buckets) bucket.valueFor(widget.metric),
+    ];
+    _valueDates = [for (final bucket in widget.buckets) bucket.start];
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!TonosExpressiveStateMotion.enabled(context)) _dataMotion.value = 1;
+  }
+
   final FocusNode _focusNode = FocusNode(debugLabel: 'workout-report-chart');
 
   @override
   void dispose() {
+    _dataMotion.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -1428,6 +1467,40 @@ class _InteractiveWorkoutLineChartState
   @override
   void didUpdateWidget(covariant _InteractiveWorkoutLineChart oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final next = [
+      for (final bucket in widget.buckets) bucket.valueFor(widget.metric),
+    ];
+    final dates = [for (final bucket in widget.buckets) bucket.start];
+    final changed =
+        next.length != _targetValues.length ||
+        List.generate(
+          next.length,
+          (i) => i,
+        ).any((i) => next[i] != _targetValues[i] || dates[i] != _valueDates[i]);
+    if (changed) {
+      final painted = _paintedValues;
+      final byDate = {
+        for (var i = 0; i < _valueDates.length; i++) _valueDates[i]: painted[i],
+      };
+      _fromValues = [
+        for (var i = 0; i < next.length; i++)
+          oldWidget.metric != widget.metric ||
+                  oldWidget.interval != widget.interval
+              ? next[i]
+              : byDate[dates[i]] ?? next[i],
+      ];
+      _targetValues = next;
+      _valueDates = dates;
+      final hasTransition = List.generate(
+        next.length,
+        (i) => i,
+      ).any((i) => _fromValues[i] != next[i]);
+      if (hasTransition && TonosExpressiveStateMotion.enabled(context)) {
+        _dataMotion.forward(from: 0);
+      } else {
+        _dataMotion.value = 1;
+      }
+    }
     if (oldWidget.buckets != widget.buckets ||
         oldWidget.metric != widget.metric ||
         oldWidget.interval != widget.interval) {
@@ -1480,29 +1553,41 @@ class _InteractiveWorkoutLineChartState
           );
         }
 
-        final chart = CustomPaint(
-          key: const ValueKey('workout-report-chart-canvas'),
-          size: size,
-          painter: _WorkoutLineChartPainter(
-            buckets: widget.buckets,
-            metric: widget.metric,
-            interval: widget.interval,
-            strings: strings,
-            accent: tonosPrimarySeriesForSurface(
-              context,
-              _workoutReportChartSurface(context),
+        final chart = TonosExpressiveAnimatedValue(
+          value: (_selectedIndex ?? latestIndex ?? 0).toDouble(),
+          builder: (context, selectionPosition) => AnimatedBuilder(
+            animation: _dataMotion,
+            builder: (context, _) => CustomPaint(
+              key: const ValueKey('workout-report-chart-canvas'),
+              size: size,
+              painter: _WorkoutLineChartPainter(
+                buckets: widget.buckets,
+                metric: widget.metric,
+                interval: widget.interval,
+                strings: strings,
+                accent: tonosPrimarySeriesForSurface(
+                  context,
+                  _workoutReportChartSurface(context),
+                ),
+                grid: progressColors.grid,
+                labelColor: progressColors.label,
+                tooltipBackground: surfaces.workoutMetricTooltip,
+                tooltipTextColor: context.cs.onSurface,
+                tooltipBorderRadius: shapes.workoutMetricTooltip,
+                showValueLabels: widget.showValueLabels,
+                selectedIndex: _selectedIndex,
+                selectionPosition: _selectedIndex == null
+                    ? null
+                    : selectionPosition,
+                seriesValues: context.usesExpressivePresentation
+                    ? _paintedValues
+                    : null,
+                weightUnit: widget.weightUnit,
+                locale: locale,
+                textScaler: textScaler,
+                textDirection: textDirection,
+              ),
             ),
-            grid: progressColors.grid,
-            labelColor: progressColors.label,
-            tooltipBackground: surfaces.workoutMetricTooltip,
-            tooltipTextColor: context.cs.onSurface,
-            tooltipBorderRadius: shapes.workoutMetricTooltip,
-            showValueLabels: widget.showValueLabels,
-            selectedIndex: _selectedIndex,
-            weightUnit: widget.weightUnit,
-            locale: locale,
-            textScaler: textScaler,
-            textDirection: textDirection,
           ),
         );
 
@@ -2417,6 +2502,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final BorderRadius tooltipBorderRadius;
   final bool showValueLabels;
   final int? selectedIndex;
+  final double? selectionPosition;
+  final List<double>? seriesValues;
   final WeightUnit weightUnit;
   final Locale locale;
   final TextScaler textScaler;
@@ -2435,6 +2522,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
     required this.tooltipBorderRadius,
     this.showValueLabels = false,
     this.selectedIndex,
+    this.selectionPosition,
+    this.seriesValues,
     required this.weightUnit,
     required this.locale,
     required this.textScaler,
@@ -2505,7 +2594,14 @@ class _WorkoutLineChartPainter extends CustomPainter {
       (plotRect.width / textScaler.scale(56)).floor(),
     );
     final labelEvery = math.max(1, (pointCount / maxDateLabels).ceil());
-    final points = geometry.points;
+    // Axes, labels, hit testing and semantics use the actual target dataset.
+    // Only the painted series interpolates, keeping the scale stable.
+    final points = seriesValues == null
+        ? geometry.points
+        : [
+            for (var i = 0; i < buckets.length; i++)
+              Offset(geometry.xFor(i), geometry.yFor(seriesValues![i])),
+          ];
     final dateStyle = labelStyle.copyWith(fontSize: 10);
     final dateLabelWidths = List<double>.filled(buckets.length, 0);
     for (var index = 0; index < buckets.length; index++) {
@@ -2613,7 +2709,14 @@ class _WorkoutLineChartPainter extends CustomPainter {
     }
 
     if (selectedIndex != null) {
-      _drawSelectedBucket(canvas, size, geometry, selectedIndex!, labelStyle);
+      _drawSelectedBucket(
+        canvas,
+        size,
+        geometry,
+        selectedIndex!,
+        labelStyle,
+        points,
+      );
     }
   }
 
@@ -2623,10 +2726,19 @@ class _WorkoutLineChartPainter extends CustomPainter {
     _WorkoutLineChartGeometry geometry,
     int index,
     TextStyle labelStyle,
+    List<Offset> points,
   ) {
     if (index < 0 || index >= buckets.length) return;
 
-    final point = geometry.points[index];
+    final position = (selectionPosition ?? index.toDouble()).clamp(
+      0.0,
+      points.length - 1.0,
+    );
+    final point = Offset.lerp(
+      points[position.floor()],
+      points[position.ceil()],
+      position - position.floor(),
+    )!;
     final bucket = buckets[index];
     final value = bucket.valueFor(metric);
     final guidePaint = Paint()
@@ -2731,6 +2843,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.tooltipBorderRadius != tooltipBorderRadius ||
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
+        oldDelegate.selectionPosition != selectionPosition ||
+        oldDelegate.seriesValues != seriesValues ||
         oldDelegate.weightUnit != weightUnit ||
         oldDelegate.locale != locale ||
         oldDelegate.textScaler != textScaler ||

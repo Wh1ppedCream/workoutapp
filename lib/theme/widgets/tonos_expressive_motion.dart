@@ -2,6 +2,9 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/gestures.dart' show kPrimaryButton, kTouchSlop;
+
+import '../theme_extensions.dart';
 
 const double _indicatorSlotHeightFraction = 0.82;
 const double _indicatorTravelWidthFraction = 0.78;
@@ -320,6 +323,7 @@ class _TonosExpressivePressResponseState
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   int? _activePointer;
+  Offset? _pointerDownPosition;
 
   @override
   void initState() {
@@ -333,6 +337,7 @@ class _TonosExpressivePressResponseState
     super.didChangeDependencies();
     if (!_canAnimate(context)) {
       _activePointer = null;
+      _pointerDownPosition = null;
       _snapToRest();
     }
   }
@@ -342,27 +347,45 @@ class _TonosExpressivePressResponseState
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled && !widget.enabled) {
       _activePointer = null;
+      _pointerDownPosition = null;
       _snapToRest();
     }
   }
 
   static bool _canAnimate(BuildContext context) {
-    return TickerMode.valuesOf(context).enabled &&
+    return context.motionTokens.standard > Duration.zero &&
+        TickerMode.valuesOf(context).enabled &&
         !MediaQuery.disableAnimationsOf(context);
   }
 
   void _handlePointerDown(PointerDownEvent event) {
-    if (!widget.enabled || !_canAnimate(context) || _activePointer != null) {
+    if (event.buttons != kPrimaryButton ||
+        !widget.enabled ||
+        !_canAnimate(context) ||
+        _activePointer != null) {
       return;
     }
     _controller.stop(canceled: true);
     _activePointer = event.pointer;
+    _pointerDownPosition = event.position;
     _controller.value = 1;
+  }
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (_activePointer != event.pointer) return;
+    final origin = _pointerDownPosition;
+    if (origin != null &&
+        (event.position - origin).distanceSquared > kTouchSlop * kTouchSlop) {
+      // The child/scrollable still owns the gesture; release only the paint
+      // feedback once this is a drag rather than a tap.
+      _handlePointerUp(event);
+    }
   }
 
   void _handlePointerUp(PointerEvent event) {
     if (_activePointer != event.pointer) return;
     _activePointer = null;
+    _pointerDownPosition = null;
     if (_canAnimate(context)) {
       _animateToRest();
     } else {
@@ -418,6 +441,7 @@ class _TonosExpressivePressResponseState
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: _handlePointerDown,
+      onPointerMove: _handlePointerMove,
       onPointerUp: _handlePointerUp,
       onPointerCancel: _handlePointerUp,
       child: AnimatedBuilder(

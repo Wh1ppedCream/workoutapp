@@ -4,6 +4,9 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -180,7 +183,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     required String message,
   }) async {
     if (!mounted) return;
-    await showDialog<void>(
+    await showTonosDialog<void>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -314,7 +317,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   }
 
   Future<bool?> _confirmPlaintextExport() {
-    return showDialog<bool>(
+    return showTonosDialog<bool>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -340,7 +343,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     DatabaseImportPreview preview, {
     String? sourceName,
   }) {
-    return showDialog<bool>(
+    return showTonosDialog<bool>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -476,7 +479,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final selected = await _loadSelectedContentEnvironment();
     if (!mounted) return;
 
-    final result = await showDialog<String>(
+    final result = await showTonosDialog<String>(
       context: context,
       builder: (_) => TonosDialogFrame(
         child: _ContentEnvironmentDialog(
@@ -509,7 +512,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     final currentUrl = await _loadManifestUrl();
     if (!mounted) return;
 
-    final result = await showDialog<String>(
+    final result = await showTonosDialog<String>(
       context: context,
       builder: (_) =>
           TonosDialogFrame(child: _ManifestUrlDialog(initialUrl: currentUrl)),
@@ -664,7 +667,7 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
   Future<void> _clearContentCache() async {
     if (_contentActionRunning) return;
     final strings = _strings;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTonosDialog<bool>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(

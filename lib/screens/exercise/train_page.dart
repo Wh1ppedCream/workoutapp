@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -438,7 +441,7 @@ class _TrainPageState extends State<TrainPage> {
 
   Future<void> _showOptimizedWorkoutRestWarning() {
     final strings = AppLocalizations.of(context);
-    return showDialog<void>(
+    return showTonosDialog<void>(
       context: context,
       builder: (dialogContext) => TonosDialogFrame(
         child: AlertDialog(

@@ -7,6 +7,7 @@ import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/tokens/app_settings_presentation_tokens.dart';
 import '../theme/widgets/tonos_action_depth.dart';
 import '../theme/widgets/tonos_expansion_tile_scope.dart';
+import '../theme/widgets/tonos_surface.dart';
 
 /// Stable category accents for grouped settings content.
 ///
@@ -1300,6 +1301,9 @@ class SettingsActionTile extends StatelessWidget {
     final shapes = context.shapeTokens;
     final presentation = context.settingsPresentationTokens;
     final usesInkRecipe = context.usesNeoPresentation;
+    final inkShape = context.usesExpressivePresentation
+        ? TonosSurfaceInkShape.maybeOf(context)
+        : null;
     final destination = _profileDestinationTokens(context);
     final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.15;
     final controlForeground = scheme.onSurface;
@@ -1362,8 +1366,10 @@ class SettingsActionTile extends StatelessWidget {
             trailing: trailingContent,
             hasExplicitTrailing: hasExplicitTrailing,
             onTap: onTap,
+            inkShape: inkShape,
           )
         : ListTile(
+            shape: inkShape,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
               vertical: compact ? (compactVerticalPadding ?? 4) : 7,
@@ -1392,6 +1398,7 @@ Widget _buildLargeTextSettingsAction({
   required Widget trailing,
   required bool hasExplicitTrailing,
   required VoidCallback? onTap,
+  ShapeBorder? inkShape,
 }) {
   final content = Padding(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1421,7 +1428,7 @@ Widget _buildLargeTextSettingsAction({
     container: true,
     child: SizedBox(
       width: double.infinity,
-      child: InkWell(onTap: onTap, child: content),
+      child: InkWell(onTap: onTap, customBorder: inkShape, child: content),
     ),
   );
 }

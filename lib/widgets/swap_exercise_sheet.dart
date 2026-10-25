@@ -14,6 +14,7 @@ import '../theme/expressive_planning_tokens.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/widgets/tonos_expressive_motion.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
 import '../theme/widgets/workout_actions.dart';
 import '../utils/async_pool.dart';
 import 'body_heatmap.dart';
@@ -47,6 +48,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
 
   late Future<_SwapExerciseData> _dataFuture;
   int _selectedIndex = 0;
+  double _replacementDirection = 1;
   _ExerciseSwapEntry? _manualReplacement;
   bool _isLoadingManualReplacement = false;
   bool _filterForProfileEquipment = true;
@@ -315,6 +317,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   void _showPrevious(int count) {
     if (count == 0) return;
     setState(() {
+      _replacementDirection = -1;
       _manualReplacement = null;
       _selectedIndex = (_selectedIndex - 1 + count) % count;
     });
@@ -323,6 +326,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
   void _showNext(int count) {
     if (count == 0) return;
     setState(() {
+      _replacementDirection = 1;
       _manualReplacement = null;
       _selectedIndex = (_selectedIndex + 1) % count;
     });
@@ -369,6 +373,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
       if (!mounted) return;
 
       setState(() {
+        _replacementDirection = 0;
         _manualReplacement = entry.copyWith(score: score);
         _isLoadingManualReplacement = false;
       });
@@ -571,6 +576,7 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                 onChanged: (value) {
                   setState(() {
                     _filterForProfileEquipment = value;
+                    _replacementDirection = 0;
                     _manualReplacement = null;
                     _selectedIndex = 0;
                   });
@@ -596,12 +602,22 @@ class _SwapExerciseSheetState extends State<SwapExerciseSheet> {
                         onPressed: () => _showPrevious(candidates.length),
                       ),
                     Expanded(
-                      child: _ExerciseSwapBox(
-                        label: strings.swapReplacement,
-                        entry: selected,
-                        matchScore: selected.score,
-                        compact: planning != null,
-                      ),
+                      child: planning == null
+                          ? _ExerciseSwapBox(
+                              label: strings.swapReplacement,
+                              entry: selected,
+                              matchScore: selected.score,
+                            )
+                          : TonosExpressiveContentTransition(
+                              value: selected.definition.id,
+                              direction: _replacementDirection,
+                              child: _ExerciseSwapBox(
+                                label: strings.swapReplacement,
+                                entry: selected,
+                                matchScore: selected.score,
+                                compact: true,
+                              ),
+                            ),
                     ),
                     if (canCycleRecommendations)
                       _SwapArrowButton(
@@ -1195,7 +1211,7 @@ class _SwapArrowButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton.filledTonal(
+    final button = IconButton.filledTonal(
       style: context.usesExpressivePresentation
           ? IconButton.styleFrom(
               padding: EdgeInsets.zero,
@@ -1207,6 +1223,13 @@ class _SwapArrowButton extends StatelessWidget {
       icon: Icon(icon),
       onPressed: enabled ? onPressed : null,
     );
+    return context.usesExpressivePresentation
+        ? TonosExpressivePressResponse(
+            enabled: enabled,
+            pressedScale: TonosExpressiveMotionTiers.compactScale,
+            child: button,
+          )
+        : button;
   }
 }
 

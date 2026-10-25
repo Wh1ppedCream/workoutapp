@@ -1,6 +1,10 @@
 // File: lib/screens/profile/settings/muscle_ranking_screen.dart
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_expressive_navigation_motion.dart';
+import '../../../theme/widgets/tonos_expressive_state_motion.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
@@ -276,6 +280,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
     return ReorderableListView.builder(
       itemCount: _muscles.length,
       onReorder: _onReorder,
+      proxyDecorator: tonosExpressiveDragProxy,
       padding: const EdgeInsets.fromLTRB(
         16,
         14,
@@ -558,40 +563,49 @@ class _ExpressiveMuscleRankingRowState
             : (MediaQuery.sizeOf(context).width - 32)
                   .clamp(0.0, double.infinity)
                   .toDouble();
-        return SizedBox(
-          width: rowWidth,
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.fromLTRB(12, 2, 10, 2),
-            decoration: BoxDecoration(
-              color: analyticsSurfaceColor(tokens, role),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(22),
-                topRight: const Radius.circular(22),
-                bottomRight: const Radius.circular(22),
-                bottomLeft: Radius.circular(widgetData.index.isEven ? 8 : 22),
+        return TonosExpressiveChangePulse(
+          value: widgetData.rank,
+          scale: 1.012,
+          child: SizedBox(
+            width: rowWidth,
+            child: AnimatedContainer(
+              duration: TonosExpressiveStateMotion.duration(
+                context,
+                TonosExpressiveStateMotion.fast,
               ),
+              curve: TonosExpressiveStateMotion.effects,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.fromLTRB(12, 2, 10, 2),
+              decoration: BoxDecoration(
+                color: analyticsSurfaceColor(tokens, role),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(22),
+                  topRight: const Radius.circular(22),
+                  bottomRight: const Radius.circular(22),
+                  bottomLeft: Radius.circular(widgetData.index.isEven ? 8 : 22),
+                ),
+              ),
+              child: compactLayout
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        leadingContent,
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: rankField,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: leadingContent),
+                        const SizedBox(width: 8),
+                        rankField,
+                      ],
+                    ),
             ),
-            child: compactLayout
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      leadingContent,
-                      const SizedBox(height: 4),
-                      Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: rankField,
-                      ),
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(child: leadingContent),
-                      const SizedBox(width: 8),
-                      rankField,
-                    ],
-                  ),
           ),
         );
       },

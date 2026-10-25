@@ -3,6 +3,9 @@
 import 'dart:math';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:flutter_flow_chart/flutter_flow_chart.dart';
 import 'package:provider/provider.dart';
 
@@ -695,7 +698,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
   Future<void> _showManageMethodsDialog() async {
     final strings = AppLocalizations.of(context);
     final expressive = _usesExpressive;
-    final deleted = await showDialog<bool>(
+    final deleted = await showTonosDialog<bool>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -804,7 +807,7 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
     final repsCtl = TextEditingController(text: '0');
     final copyIndexCtl = TextEditingController(text: '-1');
 
-    final saved = await showDialog<bool>(
+    final saved = await showTonosDialog<bool>(
       context: context,
       builder: (ctx) => _DialogControllerOwner(
         controllers: [

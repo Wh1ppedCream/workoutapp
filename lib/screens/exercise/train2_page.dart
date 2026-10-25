@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -190,7 +193,7 @@ class _Train2PageState extends State<Train2Page> {
     final draftPreferred = {..._optimizedPreferredBodypartIds};
     final draftBlacklisted = {..._optimizedBlacklistedBodypartIds};
 
-    final settings = await showDialog<_OptimizedWorkoutSettingsResult>(
+    final settings = await showTonosDialog<_OptimizedWorkoutSettingsResult>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -344,7 +347,7 @@ class _Train2PageState extends State<Train2Page> {
   }
 
   Future<void> _showOptimizedWorkoutRestWarning() {
-    return showDialog<void>(
+    return showTonosDialog<void>(
       context: context,
       builder: (dialogContext) => TonosDialogFrame(
         child: AlertDialog(
@@ -561,7 +564,7 @@ class _Train2PageState extends State<Train2Page> {
 
   Future<void> _showAddPlanActions(SelectedProfile sel) async {
     final strings = AppLocalizations.of(context);
-    final action = await showDialog<_Train2PlanAction>(
+    final action = await showTonosDialog<_Train2PlanAction>(
       context: context,
       builder: (dialogContext) {
         final colors = Theme.of(dialogContext).colorScheme;

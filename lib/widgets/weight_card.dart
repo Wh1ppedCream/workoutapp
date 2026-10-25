@@ -1,6 +1,11 @@
 // File: lib/widgets/weight_card.dart
 
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -13,6 +18,7 @@ import '../theme/widgets/tonos_dialog.dart';
 import '../theme/widgets/tonos_action.dart';
 import '../theme/tokens/app_expressive_train_tokens.dart';
 import '../theme/widgets/tonos_expressive_workout_shapes.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
 import '../theme/widgets/workout_actions.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'exercise_media_thumbnail.dart';
@@ -90,6 +96,10 @@ class WeightCard extends StatefulWidget {
 }
 
 class _WeightCardState extends State<WeightCard> {
+  static const _exerciseExpansionDuration = Duration(milliseconds: 288);
+  static const _completionFeedbackDuration = Duration(milliseconds: 308);
+  static const _completionCollapseDelay = Duration(milliseconds: 200);
+
   /// Parent set controllers stay in index order with [widget.exercise.sets].
   List<TextEditingController> _weightControllers = [];
   List<TextEditingController> _repsControllers = [];
@@ -101,12 +111,14 @@ class _WeightCardState extends State<WeightCard> {
 
   bool _isChangeSetMode = false;
   bool _isCollapsed = false;
+  Timer? _completionCollapseTimer;
 
   /// Change sets are grouped by parent set index, matching the model shape.
   final Map<int, List<ExerciseSet>> _cSets = {};
 
   /// Completed parent set indexes for this card.
   final Set<int> _completedSets = {};
+  final Set<TextEditingController> _newSetControllers = {};
   WeightUnit _weightUnit = WeightUnit.pounds;
 
   @override
@@ -142,6 +154,11 @@ class _WeightCardState extends State<WeightCard> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_completionCollapseTimer != null &&
+        !TonosExpressiveStateMotion.enabled(context)) {
+      _cancelCompletionCollapse();
+      _isCollapsed = _allSetsComplete(widget.exercise.sets);
+    }
     _syncFieldFocusNodes(
       _usesExpressiveWorkout ? widget.exercise.sets.length : 0,
     );
@@ -162,6 +179,8 @@ class _WeightCardState extends State<WeightCard> {
   /// exercise instance. Old controllers are disposed after the frame so Flutter
   /// does not trip over a controller that is still attached during rebuild.
   void _syncFromExercise({required bool resetCollapsed}) {
+    _cancelCompletionCollapse();
+    _newSetControllers.clear();
     final oldWeightControllers = _weightControllers;
     final oldRepsControllers = _repsControllers;
     final sets = widget.exercise.sets;
@@ -200,6 +219,7 @@ class _WeightCardState extends State<WeightCard> {
 
   @override
   void dispose() {
+    _cancelCompletionCollapse();
     _exerciseMenuFocusNode.dispose();
     _disposeSetControllers();
     super.dispose();
@@ -289,6 +309,29 @@ class _WeightCardState extends State<WeightCard> {
     return sets.isNotEmpty && _completedSetCount(sets) >= sets.length;
   }
 
+  void _cancelCompletionCollapse() {
+    _completionCollapseTimer?.cancel();
+    _completionCollapseTimer = null;
+  }
+
+  void _collapseAfterCompletionFeedback() {
+    _cancelCompletionCollapse();
+    if (!_allSetsComplete(widget.exercise.sets)) return;
+    if (!_usesExpressiveWorkout ||
+        widget.expressivePresetDetail ||
+        !TonosExpressiveStateMotion.enabled(context)) {
+      _isCollapsed = true;
+      return;
+    }
+    // Briefly show the completed checkbox before the existing collapse motion.
+    // Undoing completion or using the header cancels this.
+    _completionCollapseTimer = Timer(_completionCollapseDelay, () {
+      _completionCollapseTimer = null;
+      if (!mounted || !_allSetsComplete(widget.exercise.sets)) return;
+      setState(() => _isCollapsed = true);
+    });
+  }
+
   void _removeCompletedSetIndex(int index) {
     final shifted = <int>{};
     for (final completedIndex in _completedSets) {
@@ -325,7 +368,7 @@ class _WeightCardState extends State<WeightCard> {
       final planning = widget.expressivePresetDetail && _usesExpressiveWorkout
           ? AppExpressivePlanningTokens.maybeOf(context)
           : null;
-      final confirm = await showDialog<bool>(
+      final confirm = await showTonosDialog<bool>(
         context: context,
         builder: (ctx) {
           if (planning == null) {
@@ -423,8 +466,7 @@ class _WeightCardState extends State<WeightCard> {
     final usesExpressiveWorkout =
         widget.expressiveWorkoutPresentation &&
         context.usesExpressivePresentation;
-    final presetDetail =
-        widget.expressivePresetDetail && usesExpressiveWorkout;
+    final presetDetail = widget.expressivePresetDetail && usesExpressiveWorkout;
     final compactPresetDetail =
         presetDetail && widget.compactExpressivePresetLayout;
     final expressiveTokens = usesExpressiveWorkout
@@ -435,13 +477,26 @@ class _WeightCardState extends State<WeightCard> {
     final readOnly = widget.readOnlyMode;
     final completedCount = _completedSetCount(sets);
     final allSetsComplete = _allSetsComplete(sets);
+    final completionFeedbackDuration = usesExpressiveWorkout && !presetDetail
+        ? TonosExpressiveStateMotion.duration(
+            context,
+            _completionFeedbackDuration,
+          )
+        : Duration.zero;
     final effectiveCollapsed = widget.forceCollapsed || _isCollapsed;
     final expansionDuration =
         widget.animateExpansion &&
             !widget.forceCollapsed &&
             (context.usesClassicPresentation ||
                 context.usesExpressivePresentation)
-        ? appMotionDuration(context, context.motionTokens.quick)
+        ? usesExpressiveWorkout
+              ? TonosExpressiveStateMotion.duration(
+                  context,
+                  presetDetail
+                      ? TonosExpressiveStateMotion.standard
+                      : _exerciseExpansionDuration,
+                )
+              : appMotionDuration(context, context.motionTokens.quick)
         : Duration.zero;
     final workoutFieldBorder = OutlineInputBorder(
       borderRadius: usesExpressiveWorkout
@@ -614,7 +669,13 @@ class _WeightCardState extends State<WeightCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Container(
+            AnimatedContainer(
+              duration: !presetDetail && expansionDuration > Duration.zero
+                  ? expansionDuration
+                  : completionFeedbackDuration,
+              curve: usesExpressiveWorkout
+                  ? TonosExpressiveStateMotion.spatial
+                  : TonosExpressiveStateMotion.effects,
               margin: usesExpressiveWorkout
                   ? compactPresetDetail
                         ? EdgeInsets.fromLTRB(
@@ -662,7 +723,10 @@ class _WeightCardState extends State<WeightCard> {
                         : strings.weightCollapseSets,
                     onPressed: widget.forceCollapsed
                         ? null
-                        : () => setState(() => _isCollapsed = !_isCollapsed),
+                        : () => setState(() {
+                            _cancelCompletionCollapse();
+                            _isCollapsed = !_isCollapsed;
+                          }),
                   );
                   final title = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,18 +755,27 @@ class _WeightCardState extends State<WeightCard> {
                             const SizedBox(width: 4),
                           ],
                           Flexible(
-                            child: Text(
-                              presetDetail
-                                  ? strings.presetExerciseSetCount(sets.length)
-                                  : strings.weightCardSetsDone(
-                                      completedCount,
-                                      sets.length,
-                                    ),
-                              style: theme.textTheme.bodySmall!.copyWith(
-                                color: doneColor,
-                                fontWeight: allSetsComplete
-                                    ? FontWeight.w700
-                                    : null,
+                            child: TonosExpressiveChangePulse(
+                              value: (completedCount, sets.length),
+                              enabled: usesExpressiveWorkout && !presetDetail,
+                              duration: _completionFeedbackDuration,
+                              scale: 1.025,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                presetDetail
+                                    ? strings.presetExerciseSetCount(
+                                        sets.length,
+                                      )
+                                    : strings.weightCardSetsDone(
+                                        completedCount,
+                                        sets.length,
+                                      ),
+                                style: theme.textTheme.bodySmall!.copyWith(
+                                  color: doneColor,
+                                  fontWeight: allSetsComplete
+                                      ? FontWeight.w700
+                                      : null,
+                                ),
                               ),
                             ),
                           ),
@@ -860,7 +933,11 @@ class _WeightCardState extends State<WeightCard> {
               key: ObjectKey(we),
               expanded: !effectiveCollapsed,
               duration: expansionDuration,
-              curve: context.motionTokens.standardCurve,
+              curve: usesExpressiveWorkout
+                  ? TonosExpressiveStateMotion.spatial
+                  : context.motionTokens.standardCurve,
+              animateContentSize: usesExpressiveWorkout,
+              retainClosedContent: usesExpressiveWorkout && !presetDetail,
               contentPadding: usesExpressiveWorkout
                   ? compactPresetDetail
                         ? const EdgeInsets.fromLTRB(12, 0, 12, 4)
@@ -954,7 +1031,9 @@ class _WeightCardState extends State<WeightCard> {
                         // Parent set row
                         children.add(
                           AnimatedContainer(
-                            duration: usesExpressiveWorkout
+                            duration: usesExpressiveWorkout && !presetDetail
+                                ? completionFeedbackDuration
+                                : usesExpressiveWorkout
                                 ? appMotionDuration(
                                     context,
                                     context.motionTokens.quick,
@@ -1249,46 +1328,54 @@ class _WeightCardState extends State<WeightCard> {
                                   width: checkboxWidth,
                                   child: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: Checkbox(
-                                      value: _completedSets.contains(index),
-                                      semanticLabel: strings.weightSetLabel(
-                                        index + 1,
+                                    child: TonosExpressiveChangePulse(
+                                      value: isSetComplete,
+                                      enabled:
+                                          usesExpressiveWorkout &&
+                                          !presetDetail,
+                                      duration: _completionFeedbackDuration,
+                                      scale: 1.12,
+                                      child: Checkbox(
+                                        value: _completedSets.contains(index),
+                                        semanticLabel: strings.weightSetLabel(
+                                          index + 1,
+                                        ),
+                                        activeColor: completedCheckboxColor,
+                                        side: usesExpressiveWorkout
+                                            ? BorderSide(
+                                                color: expressiveTokens!
+                                                    .actionPrimary,
+                                                width: 1.75,
+                                              )
+                                            : null,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.padded,
+                                        visualDensity: VisualDensity.standard,
+                                        onChanged: readOnly
+                                            ? null
+                                            : (ok) {
+                                                if (ok == null) return;
+                                                setState(() {
+                                                  if (ok) {
+                                                    _completedSets.add(index);
+                                                    widget
+                                                        .exercise
+                                                        .completedParents
+                                                        .add(index);
+                                                  } else {
+                                                    _completedSets.remove(
+                                                      index,
+                                                    );
+                                                    widget
+                                                        .exercise
+                                                        .completedParents
+                                                        .remove(index);
+                                                  }
+                                                  _collapseAfterCompletionFeedback();
+                                                });
+                                                widget.onValueChanged?.call();
+                                              },
                                       ),
-                                      activeColor: completedCheckboxColor,
-                                      side: usesExpressiveWorkout
-                                          ? BorderSide(
-                                              color: expressiveTokens!
-                                                  .actionPrimary,
-                                              width: 1.75,
-                                            )
-                                          : null,
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.padded,
-                                      visualDensity: VisualDensity.standard,
-                                      onChanged: readOnly
-                                          ? null
-                                          : (ok) {
-                                              if (ok == null) return;
-                                              setState(() {
-                                                if (ok) {
-                                                  _completedSets.add(index);
-                                                  widget
-                                                      .exercise
-                                                      .completedParents
-                                                      .add(index);
-                                                } else {
-                                                  _completedSets.remove(index);
-                                                  widget
-                                                      .exercise
-                                                      .completedParents
-                                                      .remove(index);
-                                                }
-                                                if (_allSetsComplete(sets)) {
-                                                  _isCollapsed = true;
-                                                }
-                                              });
-                                              widget.onValueChanged?.call();
-                                            },
                                     ),
                                   ),
                                 );
@@ -1339,42 +1426,46 @@ class _WeightCardState extends State<WeightCard> {
                                     onPressed: readOnly
                                         ? null
                                         : () async {
-                                            final confirm = await showDialog<bool>(
-                                              context: context,
-                                              builder: (ctx) => TonosDialogFrame(
-                                                child: AlertDialog(
-                                                  title: Text(
-                                                    strings
-                                                        .weightRemoveSetTitle,
-                                                  ),
-                                                  content: Text(
-                                                    strings.weightRemoveSetBody,
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            ctx,
-                                                            false,
-                                                          ),
-                                                      child: Text(
-                                                        strings.commonCancel,
+                                            final confirm =
+                                                await showTonosDialog<bool>(
+                                                  context: context,
+                                                  builder: (ctx) => TonosDialogFrame(
+                                                    child: AlertDialog(
+                                                      title: Text(
+                                                        strings
+                                                            .weightRemoveSetTitle,
                                                       ),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                            ctx,
-                                                            true,
-                                                          ),
-                                                      child: Text(
-                                                        strings.commonRemove,
+                                                      content: Text(
+                                                        strings
+                                                            .weightRemoveSetBody,
                                                       ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                ctx,
+                                                                false,
+                                                              ),
+                                                          child: Text(
+                                                            strings
+                                                                .commonCancel,
+                                                          ),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                ctx,
+                                                                true,
+                                                              ),
+                                                          child: Text(
+                                                            strings
+                                                                .commonRemove,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
+                                                  ),
+                                                );
                                             if (!mounted) return;
                                             if (confirm == true) {
                                               setState(() {
@@ -1384,12 +1475,19 @@ class _WeightCardState extends State<WeightCard> {
                                                       ? sets.length
                                                       : 0,
                                                 );
-                                                _weightControllers
-                                                    .removeAt(index)
-                                                    .dispose();
-                                                _repsControllers
-                                                    .removeAt(index)
-                                                    .dispose();
+                                                final removedWeightController =
+                                                    _weightControllers.removeAt(
+                                                      index,
+                                                    );
+                                                _newSetControllers.remove(
+                                                  removedWeightController,
+                                                );
+                                                _disposeControllersAfterFrame([
+                                                  removedWeightController,
+                                                  _repsControllers.removeAt(
+                                                    index,
+                                                  ),
+                                                ]);
                                                 _removeCompletedSetIndex(index);
                                                 _removeChangeSetsForParentIndex(
                                                   index,
@@ -1537,7 +1635,7 @@ class _WeightCardState extends State<WeightCard> {
                                           tooltip: strings
                                               .weightRemoveChangeSetTitle,
                                           onPressed: () async {
-                                            final confirm = await showDialog<bool>(
+                                            final confirm = await showTonosDialog<bool>(
                                               context: context,
                                               builder: (ctx) => TonosDialogFrame(
                                                 child: AlertDialog(
@@ -1634,7 +1732,17 @@ class _WeightCardState extends State<WeightCard> {
                           );
                         }
 
-                        return Column(children: children);
+                        final row = Column(children: children);
+                        if (!usesExpressiveWorkout) return row;
+                        final controller = _weightControllers[index];
+                        return TonosExpressiveChangePulse(
+                          key: ObjectKey(controller),
+                          value: controller,
+                          animateOnMount: _newSetControllers.remove(controller),
+                          scale: 0.985,
+                          offset: const Offset(0, 8),
+                          child: row,
+                        );
                       }),
 
                       // Add Set
@@ -1677,6 +1785,9 @@ class _WeightCardState extends State<WeightCard> {
                                         text: last.reps.toString(),
                                       ),
                                     );
+                                    _newSetControllers.add(
+                                      _weightControllers.last,
+                                    );
                                     _isCollapsed = false;
                                   });
                                   widget.onSetAdded?.call();
@@ -1711,8 +1822,12 @@ class _WeightCardState extends State<WeightCard> {
         begin: targetCardRadius,
         end: targetCardRadius,
       ),
-      duration: appMotionDuration(context, context.motionTokens.quick),
-      curve: context.motionTokens.standardCurve,
+      duration: presetDetail
+          ? appMotionDuration(context, context.motionTokens.quick)
+          : expansionDuration,
+      curve: presetDetail
+          ? context.motionTokens.standardCurve
+          : TonosExpressiveStateMotion.spatial,
       child: cardContent,
       builder: (context, borderRadius, child) => Card(
         margin: compactPresetDetail
@@ -1741,6 +1856,8 @@ class _WeightCardExpansionRegion extends StatefulWidget {
   final Curve curve;
   final WidgetBuilder contentBuilder;
   final EdgeInsets contentPadding;
+  final bool animateContentSize;
+  final bool retainClosedContent;
 
   const _WeightCardExpansionRegion({
     super.key,
@@ -1749,6 +1866,8 @@ class _WeightCardExpansionRegion extends StatefulWidget {
     required this.curve,
     required this.contentBuilder,
     this.contentPadding = EdgeInsets.zero,
+    this.animateContentSize = false,
+    this.retainClosedContent = false,
   });
 
   @override
@@ -1759,10 +1878,18 @@ class _WeightCardExpansionRegion extends StatefulWidget {
 class _WeightCardExpansionRegionState
     extends State<_WeightCardExpansionRegion> {
   bool _retainContentWhileClosing = false;
+  late bool _hasBuiltContent;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasBuiltContent = widget.expanded;
+  }
 
   @override
   void didUpdateWidget(covariant _WeightCardExpansionRegion oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.expanded) _hasBuiltContent = true;
     if (widget.duration == Duration.zero || widget.expanded) {
       _retainContentWhileClosing = false;
     } else if (oldWidget.expanded) {
@@ -1772,15 +1899,43 @@ class _WeightCardExpansionRegionState
 
   @override
   Widget build(BuildContext context) {
-    final shouldBuildContent = widget.expanded || _retainContentWhileClosing;
-    final content = shouldBuildContent
+    final shouldBuildContent =
+        widget.expanded ||
+        _retainContentWhileClosing ||
+        (widget.retainClosedContent && _hasBuiltContent);
+    final builtContent = shouldBuildContent
         ? Padding(
             padding: widget.contentPadding,
-            child: widget.contentBuilder(context),
+            child: widget.retainClosedContent
+                ? RepaintBoundary(child: widget.contentBuilder(context))
+                : widget.contentBuilder(context),
           )
         : null;
+    final content =
+        builtContent != null &&
+            widget.animateContentSize &&
+            TonosExpressiveStateMotion.enabled(context)
+        ? AnimatedSize(
+            duration: TonosExpressiveStateMotion.duration(
+              context,
+              TonosExpressiveStateMotion.standard,
+            ),
+            curve: TonosExpressiveStateMotion.spatial,
+            alignment: Alignment.topCenter,
+            child: builtContent,
+          )
+        : builtContent;
     if (widget.duration == Duration.zero) {
-      return content ?? const SizedBox.shrink();
+      if (!widget.retainClosedContent) {
+        return content ?? const SizedBox.shrink();
+      }
+      return Offstage(
+        offstage: !widget.expanded,
+        child: TickerMode(
+          enabled: widget.expanded,
+          child: content ?? const SizedBox.shrink(),
+        ),
+      );
     }
 
     return TweenAnimationBuilder<double>(
@@ -1809,12 +1964,19 @@ class _WeightCardExpansionRegionState
             ),
       builder: (context, heightFactor, child) {
         if (child == null) return const SizedBox.shrink();
-        return ClipRect(
+        final region = ClipRect(
           child: Align(
             alignment: Alignment.topCenter,
             heightFactor: heightFactor,
             child: child,
           ),
+        );
+        if (!widget.retainClosedContent) return region;
+        // Preserve the field elements after the first expansion. A closed
+        // card contributes no height, semantics, focus, input or active tickers.
+        return Offstage(
+          offstage: heightFactor == 0,
+          child: TickerMode(enabled: heightFactor > 0, child: region),
         );
       },
     );

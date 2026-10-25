@@ -4,6 +4,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -388,7 +391,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
                                       height: 48,
                                     ),
                                     icon: const Icon(Icons.info_outline),
-                                    onPressed: () => showDialog<void>(
+                                    onPressed: () => showTonosDialog<void>(
                                       context: context,
                                       builder: (dialogContext) => AlertDialog(
                                         title: Text(strings.allocationHowTitle),

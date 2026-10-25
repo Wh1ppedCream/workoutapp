@@ -14,6 +14,7 @@ import '../utils/weight_unit_formatter.dart';
 import '../utils/app_test_keys.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/widgets/tonos_surface.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
 import '../theme/widgets/workout_actions.dart';
 import '../theme/widgets/workout_sheet_handle.dart';
 import 'workout_record_badges.dart';
@@ -51,11 +52,25 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
     required this.exercise,
     required this.weightUnit,
     required this.badges,
+    this.celebrateRecords = false,
+    this.recordArrivalLedger,
   });
 
   final WeightExercise exercise;
   final WeightUnit weightUnit;
   final WorkoutExerciseRecordBadges badges;
+  final bool celebrateRecords;
+  final Set<Object>? recordArrivalLedger;
+
+  Widget _recordArrival(BuildContext context, Object identity, Widget child) {
+    if (!celebrateRecords || !context.usesExpressivePresentation) return child;
+    return TonosExpressiveChangePulse(
+      value: identity,
+      animateOnMount: recordArrivalLedger?.add(identity) ?? true,
+      scale: 1.025,
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: _buildCard);
@@ -67,36 +82,32 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
     final surfaces = context.surfaceTokens;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesClassicPresentation = context.usesClassicPresentation;
-    final panelForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(context, surfaces.card)
-            : colorScheme.onSurface;
-    final panelSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(context, surfaces.card)
-            : colorScheme.onSurfaceVariant;
-    final estimatedMaxTextStyle =
-        usesClassicPresentation
-            ? const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)
-            : theme.textTheme.bodySmall?.copyWith(
-              color: panelSecondaryForeground,
-              fontStyle: FontStyle.italic,
-              fontSize: 12,
-            );
+    final panelForeground = usesInkRecipe
+        ? tonosForegroundForSurface(context, surfaces.card)
+        : colorScheme.onSurface;
+    final panelSecondaryForeground = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, surfaces.card)
+        : colorScheme.onSurfaceVariant;
+    final estimatedMaxTextStyle = usesClassicPresentation
+        ? const TextStyle(fontStyle: FontStyle.italic, fontSize: 12)
+        : theme.textTheme.bodySmall?.copyWith(
+            color: panelSecondaryForeground,
+            fontStyle: FontStyle.italic,
+            fontSize: 12,
+          );
     final accentColor = _completionExerciseAccentColor(
       exercise.name,
       colorScheme,
     );
-    final exerciseFill =
-        usesInkRecipe
-            ? surfaces.card
-            : accentColor.withValues(alpha: surfaces.completionExerciseFill);
-    final exerciseBorder =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, surfaces.card)
-            : accentColor.withValues(alpha: surfaces.completionExerciseBorder);
-    final exerciseRadius =
-        usesInkRecipe ? shapes.compact : shapes.workoutSection;
+    final exerciseFill = usesInkRecipe
+        ? surfaces.card
+        : accentColor.withValues(alpha: surfaces.completionExerciseFill);
+    final exerciseBorder = usesInkRecipe
+        ? tonosOutlineForSurface(context, surfaces.card)
+        : accentColor.withValues(alpha: surfaces.completionExerciseBorder);
+    final exerciseRadius = usesInkRecipe
+        ? shapes.compact
+        : shapes.workoutSection;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final usesStackedRows = textScale > 1.15 || constraints.maxWidth < 360;
     final usesCompactNeoSpacing = usesInkRecipe && !usesStackedRows;
@@ -111,8 +122,9 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
               child: Text(
                 exercise.name,
                 style: theme.textTheme.titleSmall?.copyWith(
-                  color:
-                      usesClassicPresentation ? accentColor : panelForeground,
+                  color: usesClassicPresentation
+                      ? accentColor
+                      : panelForeground,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                 ),
@@ -120,15 +132,21 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
             ),
             if (badges.isFirstRecord && !usesStackedRows) ...[
               const SizedBox(width: 8),
-              const FirstRecordBadge(),
+              _recordArrival(context, (
+                exercise,
+                'first',
+              ), const FirstRecordBadge()),
             ],
           ],
         ),
       ),
       if (badges.isFirstRecord && usesStackedRows)
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 4),
-          child: FirstRecordBadge(),
+          child: _recordArrival(context, (
+            exercise,
+            'first',
+          ), const FirstRecordBadge()),
         ),
     ];
 
@@ -161,10 +179,9 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.only(bottom: usesCompactNeoSpacing ? 6 : 8),
-      padding:
-          usesCompactNeoSpacing
-              ? const EdgeInsets.fromLTRB(10, 4, 10, 5)
-              : const EdgeInsets.fromLTRB(12, 5, 12, 7),
+      padding: usesCompactNeoSpacing
+          ? const EdgeInsets.fromLTRB(10, 4, 10, 5)
+          : const EdgeInsets.fromLTRB(12, 5, 12, 7),
       decoration: BoxDecoration(
         color: exerciseFill,
         borderRadius: exerciseRadius,
@@ -205,14 +222,13 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
         locale: locale,
       ),
     );
-    final setForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              accentColor,
-              parentSurface: surfaces.card,
-            )
-            : (usesClassicPresentation ? accentColor : panelForeground);
+    final setForeground = usesInkRecipe
+        ? tonosForegroundForSurface(
+            context,
+            accentColor,
+            parentSurface: surfaces.card,
+          )
+        : (usesClassicPresentation ? accentColor : panelForeground);
     final rowGap = usesInkRecipe && !usesStackedRows ? 6.0 : 8.0;
     final rowTopPadding = usesInkRecipe && !usesStackedRows ? 2.0 : 4.0;
     final badgeTopPadding = usesInkRecipe && !usesStackedRows ? 2.0 : 4.0;
@@ -234,10 +250,8 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
       ),
       child: Text(
         '${index + 1}',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: setForeground,
-          fontWeight: FontWeight.w800,
-        ),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: setForeground, fontWeight: FontWeight.w800),
       ),
     );
     final estimatedMaxColumn = SizedBox(
@@ -260,9 +274,8 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
         Expanded(
           child: Text(
             setText,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: panelForeground),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: panelForeground),
           ),
         ),
         if (!usesStackedRows) ...[SizedBox(width: rowGap), estimatedMaxColumn],
@@ -298,7 +311,13 @@ class WorkoutCompletionExerciseCard extends StatelessWidget {
                 runSpacing: 4,
                 children: [
                   for (final badge in badges)
-                    WorkoutRecordBadgeChip(badge: badge),
+                    _recordArrival(context, (
+                      exercise,
+                      index,
+                      badge.tier,
+                      badge.type,
+                      badge.reps,
+                    ), WorkoutRecordBadgeChip(badge: badge)),
                 ],
               ),
             ),
@@ -343,14 +362,12 @@ class WorkoutCompletionSurface extends StatelessWidget {
     if (!context.surfaceDecorationTokens.sheet.outlined) return child;
 
     final effects = context.effectTokens;
-    final shadowRight =
-        effects.raisedPanelShadowOffset.dx > 0
-            ? effects.raisedPanelShadowOffset.dx
-            : 0.0;
-    final shadowBottom =
-        effects.raisedPanelShadowOffset.dy > 0
-            ? effects.raisedPanelShadowOffset.dy
-            : 0.0;
+    final shadowRight = effects.raisedPanelShadowOffset.dx > 0
+        ? effects.raisedPanelShadowOffset.dx
+        : 0.0;
+    final shadowBottom = effects.raisedPanelShadowOffset.dy > 0
+        ? effects.raisedPanelShadowOffset.dy
+        : 0.0;
     return Padding(
       padding: EdgeInsets.only(right: shadowRight, bottom: shadowBottom),
       child: TonosSurface(
@@ -390,32 +407,31 @@ class WorkoutCompletionStatus extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 152),
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child:
-              isLoading
-                  ? SizedBox(
-                    height: 152,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: neo ? foreground : null,
-                      ),
+          child: isLoading
+              ? SizedBox(
+                  height: 152,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: neo ? foreground : null,
                     ),
-                  )
-                  : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        strings.sessionCompleteLoadError,
-                        textAlign: TextAlign.center,
-                        style: neo ? TextStyle(color: foreground) : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton(
-                        onPressed: onClose,
-                        child: Text(strings.commonClose),
-                      ),
-                    ],
                   ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      strings.sessionCompleteLoadError,
+                      textAlign: TextAlign.center,
+                      style: neo ? TextStyle(color: foreground) : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: onClose,
+                      child: Text(strings.commonClose),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
@@ -457,6 +473,8 @@ class WorkoutCompletionPresentation extends StatelessWidget {
     this.doneButtonKey,
     this.scrollController,
     this.showHandle = true,
+    this.celebrate = false,
+    this.recordArrivalLedger,
   });
 
   final List<WorkoutCompletionExercise> exercises;
@@ -467,6 +485,12 @@ class WorkoutCompletionPresentation extends StatelessWidget {
   final Key? doneButtonKey;
   final ScrollController? scrollController;
   final bool showHandle;
+
+  /// Only the just-finished session opts in; history remains settled.
+  final bool celebrate;
+
+  /// Survives lazy result-card disposal so records celebrate once per opening.
+  final Set<Object>? recordArrivalLedger;
 
   @override
   Widget build(BuildContext context) {
@@ -494,6 +518,8 @@ class WorkoutCompletionPresentation extends StatelessWidget {
                 exercise: exercises[index].exercise,
                 weightUnit: exercises[index].weightUnit,
                 badges: exercises[index].badges,
+                celebrateRecords: celebrate,
+                recordArrivalLedger: recordArrivalLedger,
               ),
               childCount: exercises.length,
             ),
@@ -522,7 +548,12 @@ class WorkoutCompletionPresentation extends StatelessWidget {
       );
     }
 
-    final content = Column(children: [Expanded(child: scrollView), doneAction]);
+    final content = Column(
+      children: [
+        Expanded(child: scrollView),
+        doneAction,
+      ],
+    );
     return WorkoutCompletionSurface(padding: EdgeInsets.zero, child: content);
   }
 
@@ -542,6 +573,8 @@ class WorkoutCompletionPresentation extends StatelessWidget {
             exercise: completed.exercise,
             weightUnit: completed.weightUnit,
             badges: completed.badges,
+            celebrateRecords: celebrate,
+            recordArrivalLedger: recordArrivalLedger,
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -579,9 +612,8 @@ class WorkoutCompletionPresentation extends StatelessWidget {
     final completionColor = semantic.completionAccent;
     final usesInkRecipe = context.usesNeoPresentation;
     final shapes = context.shapeTokens;
-    final celebrationTextStyle = DefaultTextStyle.of(
-      context,
-    ).style.copyWith(fontSize: 25);
+    final celebrationTextStyle = DefaultTextStyle.of(context).style
+        .copyWith(fontSize: 25);
     final completionHeader = Center(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,10 +625,9 @@ class WorkoutCompletionPresentation extends StatelessWidget {
               AppLocalizations.of(context).sessionCompleteTitle,
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color:
-                    usesInkRecipe
-                        ? semantic.onWorkoutContainer
-                        : completionColor,
+                color: usesInkRecipe
+                    ? semantic.onWorkoutContainer
+                    : completionColor,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -606,21 +637,20 @@ class WorkoutCompletionPresentation extends StatelessWidget {
         ],
       ),
     );
-    final header =
-        usesInkRecipe
-            ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: completionColor,
-                border: Border.all(
-                  color: tonosOutlineForSurface(context, completionColor),
-                  width: shapes.outlineWidth,
-                ),
-                borderRadius: shapes.control,
+    final header = usesInkRecipe
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: completionColor,
+              border: Border.all(
+                color: tonosOutlineForSurface(context, completionColor),
+                width: shapes.outlineWidth,
               ),
-              child: completionHeader,
-            )
-            : completionHeader;
+              borderRadius: shapes.control,
+            ),
+            child: completionHeader,
+          )
+        : completionHeader;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -665,12 +695,11 @@ class WorkoutCompletionPresentation extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns =
-            textScale >= 1.8 || constraints.maxWidth < 300
-                ? 1
-                : textScale > 1.15 || constraints.maxWidth < 360
-                ? 2
-                : 4;
+        final columns = textScale >= 1.8 || constraints.maxWidth < 300
+            ? 1
+            : textScale > 1.15 || constraints.maxWidth < 360
+            ? 2
+            : 4;
         const gap = 6.0;
         final itemWidth =
             (constraints.maxWidth - gap * (columns - 1)) / columns;
@@ -678,15 +707,15 @@ class WorkoutCompletionPresentation extends StatelessWidget {
           spacing: gap,
           runSpacing: gap,
           children: [
-            for (final metric in metrics)
+            for (var index = 0; index < metrics.length; index++)
               SizedBox(
                 width: itemWidth,
                 child: _buildSummaryMetric(
                   context,
-                  icon: metric.icon,
-                  label: metric.label,
-                  value: metric.value,
-                  accentColor: metric.accent,
+                  icon: metrics[index].icon,
+                  label: metrics[index].label,
+                  value: metrics[index].value,
+                  accentColor: metrics[index].accent,
                 ),
               ),
           ],
@@ -712,26 +741,22 @@ class WorkoutCompletionPresentation extends StatelessWidget {
     final keepsNeoMetricLinesCompact =
         usesInkRecipe && MediaQuery.textScalerOf(context).scale(1) <= 1.15;
     final surfaces = context.surfaceTokens;
-    final metricFill =
-        usesInkRecipe
-            ? surfaces.card
-            : accentColor.withValues(alpha: surfaces.completionMetricFill);
-    final metricBorder =
-        usesInkRecipe
-            ? tonosOutlineForSurface(context, surfaces.card)
-            : accentColor.withValues(alpha: surfaces.completionMetricBorder);
-    final metricForeground =
-        usesInkRecipe
-            ? tonosForegroundForSurface(
-              context,
-              metricFill,
-              parentSurface: surfaces.sheet,
-            )
-            : colorScheme.onSurface;
-    final metricSecondaryForeground =
-        usesInkRecipe
-            ? tonosSecondaryForegroundForSurface(context, metricFill)
-            : colorScheme.onSurfaceVariant;
+    final metricFill = usesInkRecipe
+        ? surfaces.card
+        : accentColor.withValues(alpha: surfaces.completionMetricFill);
+    final metricBorder = usesInkRecipe
+        ? tonosOutlineForSurface(context, surfaces.card)
+        : accentColor.withValues(alpha: surfaces.completionMetricBorder);
+    final metricForeground = usesInkRecipe
+        ? tonosForegroundForSurface(
+            context,
+            metricFill,
+            parentSurface: surfaces.sheet,
+          )
+        : colorScheme.onSurface;
+    final metricSecondaryForeground = usesInkRecipe
+        ? tonosSecondaryForegroundForSurface(context, metricFill)
+        : colorScheme.onSurfaceVariant;
     Widget metricLine(String text, TextStyle? style) {
       final line = Text(
         text,
@@ -802,7 +827,12 @@ class WorkoutCompletionPresentation extends StatelessWidget {
 /// A bottom sheet showing session summary & details.
 class SessionCompleteSheet extends StatefulWidget {
   final int sessionId;
-  const SessionCompleteSheet({super.key, required this.sessionId});
+  final bool celebrate;
+  const SessionCompleteSheet({
+    super.key,
+    required this.sessionId,
+    this.celebrate = false,
+  });
 
   @override
   State<SessionCompleteSheet> createState() => _SessionCompleteSheetState();
@@ -810,6 +840,7 @@ class SessionCompleteSheet extends StatefulWidget {
 
 class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
   static const int _exerciseHydrationConcurrency = 6;
+  final Set<Object> _recordArrivalLedger = {};
 
   AppRepository get _repo => context.read<AppRepository>();
   late final Future<_SessionData> _dataFuture;
@@ -853,19 +884,18 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
     final loadedExercises = await _loadDetailedExercises(exRows);
     // TODO(cardio/stretch): include cardio and stretch rows here after those
     // cards are fixed, updated, and added back into the user flow.
-    final exs =
-        loadedExercises
-            .whereType<_CompletedWeightExercise>()
-            .map(
-              (completed) => _CompletedWeightExercise(
-                rowId: completed.rowId,
-                exercise: completed.exercise,
-                badges:
-                    badgesByExerciseId[completed.rowId] ??
-                    const WorkoutExerciseRecordBadges(isFirstRecord: false),
-              ),
-            )
-            .toList();
+    final exs = loadedExercises
+        .whereType<_CompletedWeightExercise>()
+        .map(
+          (completed) => _CompletedWeightExercise(
+            rowId: completed.rowId,
+            exercise: completed.exercise,
+            badges:
+                badgesByExerciseId[completed.rowId] ??
+                const WorkoutExerciseRecordBadges(isFirstRecord: false),
+          ),
+        )
+        .toList();
     return _SessionData(session, exs);
   }
 
@@ -933,6 +963,8 @@ class _SessionCompleteSheetState extends State<SessionCompleteSheet> {
       shouldCloseOnMinExtent: false,
       builder: (_, scrollCtrl) {
         return WorkoutCompletionPresentation(
+          celebrate: widget.celebrate,
+          recordArrivalLedger: _recordArrivalLedger,
           exercises: preparedExercises,
           totalSets: totalSets,
           duration: durationText,

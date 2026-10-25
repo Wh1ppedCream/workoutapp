@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../../models/models.dart';
@@ -387,7 +390,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             );
           }()
         : null;
-    final nextFamily = await showDialog<AppThemeFamily>(
+    final nextFamily = await showTonosDialog<AppThemeFamily>(
       context: context,
       builder: (dialogContext) => _withExpressiveProfileTheme(
         dialogContext,
@@ -445,7 +448,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             label: (unit) => _weightUnitLabel(strings, unit),
             subtitle: (unit) => unit.shortLabel,
           )
-        : await showDialog<WeightUnit>(
+        : await showTonosDialog<WeightUnit>(
             context: context,
             builder: (dialogContext) => _withExpressiveProfileTheme(
               dialogContext,
@@ -511,7 +514,7 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             selected: selectedLanguage,
             label: (language) => _languageLabel(strings, language),
           )
-        : await showDialog<AppLanguagePreference>(
+        : await showTonosDialog<AppLanguagePreference>(
             context: context,
             builder: (dialogContext) => TonosDialogFrame(
               child: AlertDialog(

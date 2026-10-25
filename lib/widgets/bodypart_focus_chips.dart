@@ -4,6 +4,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../models/definition_models.dart';
 import '../theme/expressive_planning_tokens.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/widgets/tonos_expressive_state_motion.dart';
 import '../utils/localized_body_part_name.dart';
 
 /// Immutable selection state returned by [BodypartFocusChips].
@@ -116,6 +117,15 @@ class BodypartFocusChips extends StatelessWidget {
         final statusOutline = color == null ? chipOutline : statusForeground;
 
         final chip = RawChip(
+          chipAnimationStyle: expressive == null
+              ? null
+              : ChipAnimationStyle(
+                  selectAnimation: TonosExpressiveStateMotion.expansionStyle(
+                    context,
+                  ),
+                  avatarDrawerAnimation:
+                      TonosExpressiveStateMotion.expansionStyle(context),
+                ),
           label: Text(localizedBodyPartName(context, bodyPart.name)),
           selected: isSelected,
           showCheckmark: !(expressiveAvoidedUsesProhibitionIcon && isAvoided),
@@ -138,20 +148,24 @@ class BodypartFocusChips extends StatelessWidget {
               ? null
               : TextStyle(color: color, fontWeight: FontWeight.w700),
           avatar: expressive != null
-              ? Icon(
-                  isPreferred
-                      ? showExpressiveStateIndicators
-                            ? Icons.add_circle_outline
-                            : Icons.check_circle
-                      : isAvoided
-                      ? expressiveAvoidedUsesProhibitionIcon
-                            ? Icons.block
-                            : showExpressiveStateIndicators
-                            ? Icons.remove_circle_outline
-                            : Icons.block
-                      : Icons.radio_button_unchecked,
-                  color: statusForeground,
-                  size: expressiveIndicatorSize,
+              ? TonosExpressiveChangePulse(
+                  value: (isPreferred, isAvoided),
+                  scale: 1.16,
+                  child: Icon(
+                    isPreferred
+                        ? showExpressiveStateIndicators
+                              ? Icons.add_circle_outline
+                              : Icons.check_circle
+                        : isAvoided
+                        ? expressiveAvoidedUsesProhibitionIcon
+                              ? Icons.block
+                              : showExpressiveStateIndicators
+                              ? Icons.remove_circle_outline
+                              : Icons.block
+                        : Icons.radio_button_unchecked,
+                    color: statusForeground,
+                    size: expressiveIndicatorSize,
+                  ),
                 )
               : color == null
               ? null

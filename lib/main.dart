@@ -4,6 +4,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'theme/widgets/tonos_expressive_navigation_motion.dart';
+
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +42,7 @@ import 'widgets/active_session_durability_banner.dart';
 import 'widgets/tonos_bottom_navigation_bar.dart';
 
 import 'theme/app_theme_factory.dart';
+import 'theme/theme_extensions.dart';
 import 'theme/debug_theme_family_control.dart';
 import 'theme/theme_lab_page.dart';
 import 'theme/tonos_preview_presentation.dart';
@@ -666,7 +670,13 @@ class _MainScreenState extends State<MainScreen> {
     );
 
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: pages),
+      body: context.usesExpressivePresentation
+          ? TonosExpressiveTabStack(
+              index: _selectedIndex,
+              identities: tabs,
+              children: pages,
+            )
+          : IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: Consumer<ActiveSession>(
         builder: (_, session, __) => session.isActive

@@ -3,6 +3,10 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../theme/widgets/tonos_expressive_state_motion.dart';
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -508,7 +512,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
 
   Future<void> _logEntry(_MeasurementTrend trend) async {
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
-    final input = await showDialog<_MeasurementEntryInput>(
+    final input = await showTonosDialog<_MeasurementEntryInput>(
       context: context,
       builder: (_) => TonosDialogFrame(
         styleFormControls: true,
@@ -543,7 +547,7 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
   }
 
   Future<void> _createCustomMetric() async {
-    final input = await showDialog<_MeasurementDefinitionInput>(
+    final input = await showTonosDialog<_MeasurementDefinitionInput>(
       context: context,
       builder: (_) => TonosDialogFrame(
         styleFormControls: true,
@@ -874,7 +878,7 @@ class _MeasurementTrendDetailPageState
 
   Future<void> _addEntry(List<Measurement> entries) async {
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
-    final input = await showDialog<_MeasurementEntryInput>(
+    final input = await showTonosDialog<_MeasurementEntryInput>(
       context: context,
       builder: (_) => TonosDialogFrame(
         styleFormControls: true,
@@ -904,7 +908,7 @@ class _MeasurementTrendDetailPageState
   }
 
   Future<void> _editEntry(Measurement entry) async {
-    final input = await showDialog<_MeasurementEntryInput>(
+    final input = await showTonosDialog<_MeasurementEntryInput>(
       context: context,
       builder: (_) => TonosDialogFrame(
         styleFormControls: true,
@@ -934,7 +938,7 @@ class _MeasurementTrendDetailPageState
 
   Future<void> _deleteEntry(Measurement entry) async {
     final expressive = _progressDetailTokens(context) != null;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTonosDialog<bool>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(
@@ -1658,11 +1662,15 @@ class _MeasurementSparkline extends StatelessWidget {
               ),
             ],
           ),
-          duration: appMotionDuration(
-            context,
-            const Duration(milliseconds: 150),
-          ),
-          curve: Curves.linear,
+          duration: context.usesExpressivePresentation
+              ? TonosExpressiveStateMotion.duration(
+                  context,
+                  TonosExpressiveStateMotion.standard,
+                )
+              : appMotionDuration(context, const Duration(milliseconds: 150)),
+          curve: context.usesExpressivePresentation
+              ? TonosExpressiveStateMotion.effects
+              : Curves.linear,
         ),
       ),
     );
@@ -2394,8 +2402,15 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
         lineBarsData: [chartLine],
         showingTooltipIndicators: showingTooltipIndicators,
       ),
-      duration: appMotionDuration(context, const Duration(milliseconds: 150)),
-      curve: Curves.linear,
+      duration: context.usesExpressivePresentation
+          ? TonosExpressiveStateMotion.duration(
+              context,
+              TonosExpressiveStateMotion.standard,
+            )
+          : appMotionDuration(context, const Duration(milliseconds: 150)),
+      curve: context.usesExpressivePresentation
+          ? TonosExpressiveStateMotion.effects
+          : Curves.linear,
     );
   }
 }
@@ -2508,6 +2523,7 @@ class _MeasurementEntryTile extends StatelessWidget {
                   : null,
             ),
             trailing: PopupMenuButton<String>(
+              popUpAnimationStyle: tonosOverlayMotion(context),
               key: ValueKey('measurement-trend-entry-actions-${entry.id}'),
               tooltip: strings.healthEntryActions,
               position: expressive ? PopupMenuPosition.over : null,

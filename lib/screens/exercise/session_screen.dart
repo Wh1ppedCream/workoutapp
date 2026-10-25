@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -285,7 +288,7 @@ class _SessionScreenState extends State<SessionScreen> {
                               );
                               return;
                             }
-                            await showModalBottomSheet(
+                            await showTonosModalBottomSheet(
                               context: context,
                               isScrollControlled: true,
                               enableDrag: false,
@@ -297,8 +300,10 @@ class _SessionScreenState extends State<SessionScreen> {
                                   context.surfaceDecorationTokens.sheet.outlined
                                   ? 0
                                   : null,
-                              builder: (_) =>
-                                  SessionCompleteSheet(sessionId: sid),
+                              builder: (_) => SessionCompleteSheet(
+                                sessionId: sid,
+                                celebrate: true,
+                              ),
                             );
                             if (!context.mounted) return;
                             Navigator.of(context).pop();

@@ -5,6 +5,10 @@ import 'dart:async';
 
 import 'package:env_test/providers/active_session.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_expressive_navigation_motion.dart';
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -147,7 +151,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   Future<bool> _onWillPop() async {
     if (!context.read<PresetSession>().hasChanges) return true;
     final strings = AppLocalizations.of(context);
-    final discard = await showDialog<bool>(
+    final discard = await showTonosDialog<bool>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -652,7 +656,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     final definition = await repo.fetchDefinitionById(defId);
     if (definition == null || !mounted) return;
 
-    final replacement = await showModalBottomSheet<ExerciseDefinition>(
+    final replacement = await showTonosModalBottomSheet<ExerciseDefinition>(
       context: context,
       isScrollControlled: true,
       builder: (_) => SwapExerciseSheet(
@@ -805,6 +809,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                 ),
                 // Overflow menu replacing delete icon
                 PopupMenuButton<String>(
+                  popUpAnimationStyle: tonosOverlayMotion(context),
                   icon: const Icon(Icons.more_vert),
                   color: planning?.planSupportSurface,
                   surfaceTintColor: Colors.transparent,
@@ -817,7 +822,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     if (action == 'delete') {
                       final repository = context.read<AppRepository>();
                       final navigator = Navigator.of(context);
-                      final confirm = await showDialog<bool>(
+                      final confirm = await showTonosDialog<bool>(
                         context: context,
                         builder: (ctx) => _buildDeletePresetDialog(
                           ctx,
@@ -846,7 +851,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                       setState(() {});
                     } else if (action == 'settings' && preset.isAutomatic) {
                       // Open Automatic Settings modal
-                      showModalBottomSheet(
+                      showTonosModalBottomSheet(
                         context: context,
                         isScrollControlled: true,
                         builder: (_) => AutomaticSettingsSheet(
@@ -1152,27 +1157,34 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               addExerciseFab,
-                              if (preset.hasChanges) ...[
-                                const SizedBox(height: 12),
-                                KeyedSubtree(
-                                  key: _actionTutorialKey,
-                                  child: FloatingActionButton.extended(
-                                    key: AppTestKeys.planSave,
-                                    heroTag: 'presetSaveChanges',
-                                    tooltip: strings.planSaveChanges,
-                                    onPressed: _savePlan,
-                                    backgroundColor: planning.actionPrimary,
-                                    foregroundColor:
-                                        planning.actionPrimaryForeground,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: planning.rowShape,
+                              TonosExpressiveActionVisibility(
+                                visible: preset.hasChanges,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    KeyedSubtree(
+                                      key: _actionTutorialKey,
+                                      child: FloatingActionButton.extended(
+                                        key: AppTestKeys.planSave,
+                                        heroTag: 'presetSaveChanges',
+                                        tooltip: strings.planSaveChanges,
+                                        onPressed: _savePlan,
+                                        backgroundColor: planning.actionPrimary,
+                                        foregroundColor:
+                                            planning.actionPrimaryForeground,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: planning.rowShape,
+                                        ),
+                                        elevation: 3,
+                                        icon: const Icon(Icons.save_outlined),
+                                        label: Text(strings.planSaveChanges),
+                                      ),
                                     ),
-                                    elevation: 3,
-                                    icon: const Icon(Icons.save_outlined),
-                                    label: Text(strings.planSaveChanges),
-                                  ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         )

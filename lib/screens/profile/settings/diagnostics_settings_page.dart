@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/diagnostics_service.dart';
 import '../../../theme/theme_extensions.dart';
@@ -83,7 +85,7 @@ class _DiagnosticsSettingsPageState extends State<DiagnosticsSettingsPage> {
   }) async {
     if (!context.usesExpressivePresentation) return true;
     final strings = AppLocalizations.of(context);
-    return await showDialog<bool>(
+    return await showTonosDialog<bool>(
           context: context,
           builder: (dialogContext) => TonosDialogFrame(
             child: AlertDialog(

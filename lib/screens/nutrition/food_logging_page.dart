@@ -4,6 +4,8 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
@@ -819,163 +821,172 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
           ),
           child: Column(
             children: [
-          // ─── Top stats row (live from provider) ────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final cards = <Widget>[
-                  _StatCard(
-                    label: 'Calories',
-                    value: '$kcal / $kcalTgt kcal',
-                    surface: destination?.surfaceTertiary,
-                    foreground: destination?.onSurfaceTertiary,
-                  ),
-                  _StatCard(
-                    label: 'Protein',
-                    value: '$pro / $proTgt g',
-                    surface: destination?.surfaceAccent,
-                    foreground: destination?.onSurfaceAccent,
-                  ),
-                  _StatCard(
-                    label: 'Carbs',
-                    value: '$carb / $carbTgt g',
-                    surface: destination?.surfaceSelected,
-                    foreground: destination?.onSurfaceSelected,
-                  ),
-                  _StatCard(
-                    label: 'Fat',
-                    value: '$fat / $fatTgt g',
-                    surface: destination?.surfaceSecondary,
-                    foreground: destination?.onSurfaceSecondary,
-                  ),
-                ];
-                if (destination?.family ==
-                    AppExpressiveDestinationFamily.nutrition) {
-                  final columns = constraints.maxWidth < 500 ? 2 : 4;
-                  final itemWidth =
-                      (constraints.maxWidth - 8 * (columns - 1)) / columns;
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: cards
-                        .map((card) => SizedBox(width: itemWidth, child: card))
-                        .toList(),
-                  );
-                }
-                return Row(
-                  children: [
-                    for (var index = 0; index < cards.length; index++) ...[
-                      if (index > 0) const SizedBox(width: 8),
-                      Expanded(child: cards[index]),
-                    ],
-                  ],
-                );
-              },
-            ),
-          ),
-
-          // ─── Tabs ──────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ToggleButtons(
-                isSelected: _tabs,
-                onPressed: (i) => setState(() {
-                  for (var idx = 0; idx < _tabs.length; idx++) {
-                    _tabs[idx] = idx == i;
-                  }
-                }),
-                borderRadius: context.nutritionTokens.compactShape,
-                selectedColor: selectedTabInk,
-                fillColor: selectedTabFill,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(AppLocalizations.of(context).foodTabScan),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(AppLocalizations.of(context).foodTabSearch),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(AppLocalizations.of(context).foodTabPlanned),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(AppLocalizations.of(context).foodTabCustom),
-                  ),
-                ],
+              // ─── Top stats row (live from provider) ────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cards = <Widget>[
+                      _StatCard(
+                        label: 'Calories',
+                        value: '$kcal / $kcalTgt kcal',
+                        surface: destination?.surfaceTertiary,
+                        foreground: destination?.onSurfaceTertiary,
+                      ),
+                      _StatCard(
+                        label: 'Protein',
+                        value: '$pro / $proTgt g',
+                        surface: destination?.surfaceAccent,
+                        foreground: destination?.onSurfaceAccent,
+                      ),
+                      _StatCard(
+                        label: 'Carbs',
+                        value: '$carb / $carbTgt g',
+                        surface: destination?.surfaceSelected,
+                        foreground: destination?.onSurfaceSelected,
+                      ),
+                      _StatCard(
+                        label: 'Fat',
+                        value: '$fat / $fatTgt g',
+                        surface: destination?.surfaceSecondary,
+                        foreground: destination?.onSurfaceSecondary,
+                      ),
+                    ];
+                    if (destination?.family ==
+                        AppExpressiveDestinationFamily.nutrition) {
+                      final columns = constraints.maxWidth < 500 ? 2 : 4;
+                      final itemWidth =
+                          (constraints.maxWidth - 8 * (columns - 1)) / columns;
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: cards
+                            .map(
+                              (card) => SizedBox(width: itemWidth, child: card),
+                            )
+                            .toList(),
+                      );
+                    }
+                    return Row(
+                      children: [
+                        for (var index = 0; index < cards.length; index++) ...[
+                          if (index > 0) const SizedBox(width: 8),
+                          Expanded(child: cards[index]),
+                        ],
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ),
 
-          const SizedBox(height: 8),
+              // ─── Tabs ──────────────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ToggleButtons(
+                    isSelected: _tabs,
+                    onPressed: (i) => setState(() {
+                      for (var idx = 0; idx < _tabs.length; idx++) {
+                        _tabs[idx] = idx == i;
+                      }
+                    }),
+                    borderRadius: context.nutritionTokens.compactShape,
+                    selectedColor: selectedTabInk,
+                    fillColor: selectedTabFill,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(AppLocalizations.of(context).foodTabScan),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(AppLocalizations.of(context).foodTabSearch),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          AppLocalizations.of(context).foodTabPlanned,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(AppLocalizations.of(context).foodTabCustom),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-          // ─── Content ───────────────────────────────────────────────────────
-          Expanded(
-            child: _tabs[0]
-                ? _buildScanTab(context)
-                : _tabs[1]
-                ? _buildSearchList(context)
-                : _tabs[2]
-                ? _buildPrePlanned(context)
-                : _buildCustomList(context),
-          ),
+              const SizedBox(height: 8),
 
-          // ─── Bottom search & add row (search filter + close) ──────────────
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TonosField(
-                    controller: _searchCtrl,
-                    variant: TonosFieldVariant.search,
-                    hintText: AppLocalizations.of(context).foodSearchHint,
-                    suffixIcon: (_searchCtrl.text.isEmpty)
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchCtrl.clear();
-                              _kickoffSearch('');
-                              FocusScope.of(context).unfocus();
-                              setState(() {}); // refresh suffixIcon state
-                            },
-                          ),
-                    border: OutlineInputBorder(
-                      borderRadius: context.nutritionTokens.compactShape,
+              // ─── Content ───────────────────────────────────────────────────────
+              Expanded(
+                child: _tabs[0]
+                    ? _buildScanTab(context)
+                    : _tabs[1]
+                    ? _buildSearchList(context)
+                    : _tabs[2]
+                    ? _buildPrePlanned(context)
+                    : _buildCustomList(context),
+              ),
+
+              // ─── Bottom search & add row (search filter + close) ──────────────
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TonosField(
+                        controller: _searchCtrl,
+                        variant: TonosFieldVariant.search,
+                        hintText: AppLocalizations.of(context).foodSearchHint,
+                        suffixIcon: (_searchCtrl.text.isEmpty)
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchCtrl.clear();
+                                  _kickoffSearch('');
+                                  FocusScope.of(context).unfocus();
+                                  setState(() {}); // refresh suffixIcon state
+                                },
+                              ),
+                        border: OutlineInputBorder(
+                          borderRadius: context.nutritionTokens.compactShape,
+                        ),
+                        onChanged: (s) {
+                          _kickoffSearch(s);
+                          setState(() {});
+                        },
+                        onSubmitted: (s) => _kickoffSearch(s),
+                      ),
                     ),
-                    onChanged: (s) {
-                      _kickoffSearch(s);
-                      setState(() {});
-                    },
-                    onSubmitted: (s) => _kickoffSearch(s),
-                  ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _logBusy
+                          ? null
+                          : (_plate.isEmpty
+                                ? () => Navigator.of(context).maybePop()
+                                : () => _logPlateAndClose(
+                                    context: context,
+                                    closeDrawerToo: false,
+                                    popPageAfter: false,
+                                  )),
+                      child: Text(
+                        _logBusy
+                            ? 'Logging…'
+                            : (_plate.isEmpty
+                                  ? 'Close'
+                                  : 'Log ${_plate.length}'),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _logBusy
-                      ? null
-                      : (_plate.isEmpty
-                            ? () => Navigator.of(context).maybePop()
-                            : () => _logPlateAndClose(
-                                context: context,
-                                closeDrawerToo: false,
-                                popPageAfter: false,
-                              )),
-                  child: Text(
-                    _logBusy
-                        ? 'Logging…'
-                        : (_plate.isEmpty ? 'Close' : 'Log ${_plate.length}'),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
             ],
           ),
         ),
@@ -1571,7 +1582,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     String? note;
     String tagsText = ''; // NEW: capture tags input
 
-    await showModalBottomSheet(
+    await showTonosModalBottomSheet(
       context: context, // ok to pass context here
       isScrollControlled: true,
       builder: (ctx) {

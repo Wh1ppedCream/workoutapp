@@ -3,6 +3,9 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -16,6 +19,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
+import '../../theme/widgets/tonos_expressive_state_motion.dart';
 import '../../utils/tutorial_launcher.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/localized_catalog_entity_name.dart';
@@ -267,7 +271,7 @@ class _GymProfileScreenState extends State<GymProfileScreen> {
     }
 
     final expressive = AppExpressivePlanningTokens.maybeOf(context) != null;
-    final action = await showDialog<_UnsavedGymProfileAction>(
+    final action = await showTonosDialog<_UnsavedGymProfileAction>(
       context: context,
       builder: (dialogContext) => TonosDialogFrame(
         child: AlertDialog(
@@ -1051,9 +1055,21 @@ class _EquipmentCategorySection extends StatelessWidget {
           : scheme.primary,
       size: 22,
     );
-    final expansionIcon = Icon(
-      isExpanded ? Icons.expand_less : Icons.expand_more,
-      color: sectionSecondary,
+    final expansionIcon = AnimatedRotation(
+      turns: planning != null && isExpanded ? 0.5 : 0,
+      duration: TonosExpressiveStateMotion.duration(
+        context,
+        TonosExpressiveStateMotion.standard,
+      ),
+      curve: TonosExpressiveStateMotion.spatial,
+      child: Icon(
+        planning != null
+            ? Icons.expand_more
+            : isExpanded
+            ? Icons.expand_less
+            : Icons.expand_more,
+        color: sectionSecondary,
+      ),
     );
 
     return Container(
@@ -1070,117 +1086,133 @@ class _EquipmentCategorySection extends StatelessWidget {
           width: neo ? shapes.outlineWidth : 1,
         ),
       ),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius:
-                planning?.supportShape ??
-                const BorderRadius.vertical(top: Radius.circular(22)),
-            onTap: onToggleExpanded,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-              child: planning != null
-                  ? LayoutBuilder(
-                      builder: (context, constraints) {
-                        final textScaler = MediaQuery.textScalerOf(context);
-                        final compact =
-                            constraints.maxWidth < 300 ||
-                            textScaler.scale(16) > 20;
-                        if (compact) {
-                          return Column(
+      child: _equipmentGroupInk(
+        context,
+        Column(
+          children: [
+            InkWell(
+              borderRadius:
+                  planning?.supportShape ??
+                  const BorderRadius.vertical(top: Radius.circular(22)),
+              onTap: onToggleExpanded,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                child: planning != null
+                    ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          final textScaler = MediaQuery.textScalerOf(context);
+                          final compact =
+                              constraints.maxWidth < 300 ||
+                              textScaler.scale(16) > 20;
+                          if (compact) {
+                            return Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    categoryIcon,
+                                    const SizedBox(width: 10),
+                                    Expanded(child: categoryHeading),
+                                    expansionIcon,
+                                  ],
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: categoryAction,
+                                ),
+                              ],
+                            );
+                          }
+                          return Row(
                             children: [
-                              Row(
-                                children: [
-                                  categoryIcon,
-                                  const SizedBox(width: 10),
-                                  Expanded(child: categoryHeading),
-                                  expansionIcon,
-                                ],
-                              ),
-                              Align(
-                                alignment: AlignmentDirectional.centerEnd,
-                                child: categoryAction,
-                              ),
+                              categoryIcon,
+                              const SizedBox(width: 10),
+                              Expanded(child: categoryHeading),
+                              categoryAction,
+                              expansionIcon,
                             ],
                           );
-                        }
-                        return Row(
-                          children: [
-                            categoryIcon,
-                            const SizedBox(width: 10),
-                            Expanded(child: categoryHeading),
-                            categoryAction,
-                            expansionIcon,
-                          ],
-                        );
-                      },
-                    )
-                  : Column(
-                      children: [
-                        Row(
-                          children: [
-                            categoryIcon,
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                group.category.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: neo ? sectionForeground : null,
+                        },
+                      )
+                    : Column(
+                        children: [
+                          Row(
+                            children: [
+                              categoryIcon,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  group.category.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: neo ? sectionForeground : null,
+                                  ),
                                 ),
                               ),
-                            ),
-                            expansionIcon,
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                selectedCountText,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: sectionSecondary,
+                              expansionIcon,
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  selectedCountText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: sectionSecondary,
+                                  ),
                                 ),
                               ),
-                            ),
-                            categoryAction,
-                          ],
-                        ),
-                      ],
+                              categoryAction,
+                            ],
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity),
+              secondChild: Column(
+                children: [
+                  Divider(height: 1, color: sectionOutline),
+                  ...group.items.map((item) {
+                    final selected = selectedEquipmentIds.contains(item.id);
+                    return _EquipmentTile(
+                      item: item,
+                      selected: selected,
+                      onChanged: (value) =>
+                          onToggleEquipment(item.id, value ?? false),
+                    );
+                  }),
+                ],
+              ),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: planning == null
+                  ? appMotionDuration(context, context.motionTokens.quick)
+                  : TonosExpressiveStateMotion.duration(
+                      context,
+                      TonosExpressiveStateMotion.standard,
                     ),
+              sizeCurve: planning == null
+                  ? Curves.linear
+                  : TonosExpressiveStateMotion.spatial,
             ),
-          ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox(width: double.infinity),
-            secondChild: Column(
-              children: [
-                Divider(height: 1, color: sectionOutline),
-                ...group.items.map((item) {
-                  final selected = selectedEquipmentIds.contains(item.id);
-                  return _EquipmentTile(
-                    item: item,
-                    selected: selected,
-                    onChanged: (value) =>
-                        onToggleEquipment(item.id, value ?? false),
-                  );
-                }),
-              ],
-            ),
-            crossFadeState: isExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: appMotionDuration(context, context.motionTokens.quick),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
+Widget _equipmentGroupInk(BuildContext context, Widget child) =>
+    context.usesExpressivePresentation
+    ? Material(type: MaterialType.transparency, child: child)
+    : child;
 
 class _EquipmentTile extends StatelessWidget {
   final _EquipmentOption item;

@@ -4,6 +4,9 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
@@ -478,7 +481,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
 
   Future<bool> _confirmDiscard() async {
     if (!_isEditing || !_hasPendingChanges) return true;
-    final result = await showDialog<bool>(
+    final result = await showTonosDialog<bool>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(
@@ -571,7 +574,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     final selectedCount = ValueNotifier<int>(0);
     var query = '';
 
-    final result = await showDialog<Set<int>>(
+    final result = await showTonosDialog<Set<int>>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -752,7 +755,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
 
     // 4) show dialog
     if (!mounted) return;
-    final result = await showDialog<Set<int>>(
+    final result = await showTonosDialog<Set<int>>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -937,7 +940,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     var query = '';
 
     if (!mounted) return;
-    final result = await showDialog<Set<int>>(
+    final result = await showTonosDialog<Set<int>>(
       context: context,
       builder: (ctx) => TonosDialogFrame(
         child: AlertDialog(
@@ -1533,7 +1536,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     var exerciseName = '';
     var selectedEquipmentId = 0;
     final formKey = GlobalKey<FormState>();
-    final draft = await showDialog<_CustomExerciseDraft>(
+    final draft = await showTonosDialog<_CustomExerciseDraft>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -2405,7 +2408,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
   }
 
   Future<bool> _confirmRemove(String itemName, String itemType) async {
-    final shouldRemove = await showDialog<bool>(
+    final shouldRemove = await showTonosDialog<bool>(
       context: context,
       builder: (context) => TonosDialogFrame(
         child: AlertDialog(
@@ -3015,7 +3018,7 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     var mediaType = initial?.mediaType ?? 'image';
     final formKey = GlobalKey<FormState>();
 
-    final result = await showDialog<ExerciseMediaItem>(
+    final result = await showTonosDialog<ExerciseMediaItem>(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(

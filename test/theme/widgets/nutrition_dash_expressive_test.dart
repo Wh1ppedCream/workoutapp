@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
@@ -10,6 +12,7 @@ import 'package:env_test/widgets/nutrition_circle_details.dart';
 import 'package:env_test/widgets/nutrition_dash.dart';
 import 'package:env_test/widgets/rounded_progress_indicator.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/semantics.dart';
 import 'package:material_ui/material_ui.dart';
 
 const _summary = NutritionDash(
@@ -27,6 +30,8 @@ Widget _host(
   ThemeData theme, {
   Widget summary = _summary,
   double textScale = 1,
+  bool tickerEnabled = true,
+  bool disableAnimations = false,
   Locale locale = const Locale('en'),
 }) => MaterialApp(
   theme: theme,
@@ -34,21 +39,147 @@ Widget _host(
   localizationsDelegates: tonosLocalizationDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(context)
-        .copyWith(textScaler: TextScaler.linear(textScale)),
+    data: MediaQuery.of(context).copyWith(
+      textScaler: TextScaler.linear(textScale),
+      disableAnimations: disableAnimations,
+    ),
     child: child!,
   ),
   home: AppExpressiveDestinationTheme(
     family: AppExpressiveDestinationFamily.nutrition,
     child: Scaffold(
       body: SingleChildScrollView(
-        child: Padding(padding: const EdgeInsets.all(16), child: summary),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: TickerMode(enabled: tickerEnabled, child: summary),
+        ),
       ),
     ),
   ),
 );
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Nutrition view buttons combine selection and action ${brightness.name}',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        try {
+          final theme = brightness == Brightness.light
+              ? ExpressiveThemeDefinition.light()
+              : ExpressiveThemeDefinition.dark();
+          await tester.pumpWidget(_host(theme));
+          await tester.pumpAndSettle();
+          SemanticsData buttonData(int index) {
+            final control = find.byKey(
+              ValueKey('nutrition-display-mode-$index'),
+            );
+            return tester
+                .getSemantics(
+                  find
+                      .ancestor(
+                        of: control,
+                        matching: find.byType(MergeSemantics),
+                      )
+                      .first,
+                )
+                .getSemanticsData();
+          }
+
+          expect(buttonData(0).tooltip, 'Ring view');
+          expect(buttonData(0).flagsCollection.isSelected, Tristate.isTrue);
+          expect(buttonData(0).hasAction(SemanticsAction.tap), isTrue);
+          expect(buttonData(1).flagsCollection.isSelected, Tristate.isFalse);
+          await tester.tap(
+            find.byKey(const ValueKey('nutrition-display-mode-1')),
+          );
+          await tester.pumpAndSettle();
+          expect(buttonData(0).flagsCollection.isSelected, Tristate.isFalse);
+          expect(buttonData(1).tooltip, 'Bar view');
+          expect(buttonData(1).flagsCollection.isSelected, Tristate.isTrue);
+          expect(buttonData(1).hasAction(SemanticsAction.tap), isTrue);
+          expect(tester.takeException(), isNull);
+        } finally {
+          handle.dispose();
+        }
+      },
+    );
+
+    testWidgets('Nutrition rings replay on page entry in ${brightness.name}', (
+      tester,
+    ) async {
+      final theme = brightness == Brightness.light
+          ? ExpressiveThemeDefinition.light()
+          : ExpressiveThemeDefinition.dark();
+      const targets = [1350 / 2200, 86 / 150, 142 / 250, 48 / 70];
+      List<double> progress() => tester
+          .widgetList<RoundedProgressIndicator>(
+            find.byType(RoundedProgressIndicator),
+          )
+          .map((ring) => ring.progress)
+          .toList();
+
+      await tester.pumpWidget(_host(theme));
+      expect(progress(), everyElement(0));
+      expect(find.text('1350'), findsOneWidget);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 450));
+      final midway = progress();
+      for (var i = 0; i < targets.length; i++) {
+        expect(midway[i], greaterThan(0));
+        expect(midway[i], lessThan(targets[i]));
+      }
+      // A normal dependency rebuild must not restart the entry animation.
+      await tester.pumpWidget(_host(theme, textScale: 1.05));
+      expect(progress(), orderedEquals(midway));
+      await tester.pumpAndSettle();
+      expect(progress(), orderedEquals(targets));
+
+      final originalState = tester.state(
+        find.byType(ExpressiveNutritionSummary),
+      );
+      await tester.pumpWidget(_host(theme, tickerEnabled: false));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpWidget(_host(theme));
+      expect(
+        tester.state(find.byType(ExpressiveNutritionSummary)),
+        originalState,
+      );
+      expect(progress(), everyElement(0));
+      await tester.pumpAndSettle();
+      expect(progress(), orderedEquals(targets));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'Nutrition rings respect reduced motion in ${brightness.name}',
+      (tester) async {
+        final theme = brightness == Brightness.light
+            ? ExpressiveThemeDefinition.light()
+            : ExpressiveThemeDefinition.dark();
+        await tester.pumpWidget(_host(theme, disableAnimations: true));
+        expect(
+          tester
+              .widgetList<RoundedProgressIndicator>(
+                find.byType(RoundedProgressIndicator),
+              )
+              .map((ring) => ring.progress),
+          orderedEquals([1350 / 2200, 86 / 150, 142 / 250, 48 / 70]),
+        );
+        await tester.pump(const Duration(milliseconds: 450));
+        expect(
+          tester
+              .widgetList<RoundedProgressIndicator>(
+                find.byType(RoundedProgressIndicator),
+              )
+              .map((ring) => ring.progress),
+          orderedEquals([1350 / 2200, 86 / 150, 142 / 250, 48 / 70]),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final brightness in Brightness.values) {
     testWidgets('Nutrition summary keeps views usable in ${brightness.name}', (
       tester,

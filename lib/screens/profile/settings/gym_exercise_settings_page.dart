@@ -2,6 +2,8 @@
 
 import 'package:material_ui/material_ui.dart';
 
+import '../../../theme/widgets/tonos_overlay_routes.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../services/workout_exit_preferences.dart';
 import '../../../theme/theme_extensions.dart';
@@ -196,7 +198,7 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
             label: (behavior) => _exitBehaviorTitle(behavior, strings),
             subtitle: (behavior) => _exitBehaviorLabel(behavior, strings),
           )
-        : await showDialog<WorkoutExitBehavior>(
+        : await showTonosDialog<WorkoutExitBehavior>(
             context: context,
             builder: (dialogContext) {
               final neo = context.usesNeoPresentation;

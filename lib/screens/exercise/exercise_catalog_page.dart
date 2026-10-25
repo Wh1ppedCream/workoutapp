@@ -4,6 +4,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+
+import '../../theme/widgets/tonos_overlay_routes.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -661,7 +664,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       );
     }
 
-    showDialog(
+    showTonosDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {

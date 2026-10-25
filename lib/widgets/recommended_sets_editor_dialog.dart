@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../theme/widgets/tonos_overlay_routes.dart';
+
 import '../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../theme/widgets/tonos_dialog.dart';
@@ -39,17 +41,16 @@ Future<VolumeBoundaries?> showRecommendedSetsEditorDialog(
   required int targetId,
   required VolumeBoundaries? currentBounds,
 }) {
-  return showDialog<VolumeBoundaries>(
+  return showTonosDialog<VolumeBoundaries>(
     context: context,
-    builder:
-        (_) => TonosDialogFrame(
-          styleFormControls: true,
-          child: _RecommendedSetsEditorDialog(
-            targetName: targetName,
-            targetId: targetId,
-            currentBounds: currentBounds,
-          ),
-        ),
+    builder: (_) => TonosDialogFrame(
+      styleFormControls: true,
+      child: _RecommendedSetsEditorDialog(
+        targetName: targetName,
+        targetId: targetId,
+        currentBounds: currentBounds,
+      ),
+    ),
   );
 }
 
@@ -151,16 +152,16 @@ class _RecommendedSetsEditorDialogState
     if (min == null || max == null) {
       setState(
         () =>
-            _errorText =
-                AppLocalizations.of(context).recommendedSetsValidNumbers,
+            _errorText = AppLocalizations.of(context)
+                .recommendedSetsValidNumbers,
       );
       return;
     }
     if (min < 0 || max < 0) {
       setState(
         () =>
-            _errorText =
-                AppLocalizations.of(context).recommendedSetsNonNegative,
+            _errorText = AppLocalizations.of(context)
+                .recommendedSetsNonNegative,
       );
       return;
     }
@@ -172,8 +173,9 @@ class _RecommendedSetsEditorDialogState
     }
 
     final current = widget.currentBounds;
-    final maxAdaptive =
-        (current?.maxAdaptive ?? ((min + max) / 2)).clamp(min, max).toDouble();
+    final maxAdaptive = (current?.maxAdaptive ?? ((min + max) / 2))
+        .clamp(min, max)
+        .toDouble();
 
     Navigator.of(context).pop(
       VolumeBoundaries(

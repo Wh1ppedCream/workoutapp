@@ -667,8 +667,13 @@ Future<void> _expectRestDialogSemantics(
     expect(dialog, findsOneWidget);
     final preFlushSnapshot = _restDialogSnapshot(tester, dialog);
     final preFlushNames = _restDialogSemanticCounts(strings);
-    expect(preFlushSnapshot, contains('routeStatus=forward'));
-    expect(preFlushNames['okay'], 0);
+    if (look == TonosPreviewLook.expressive && reducedMotion) {
+      expect(preFlushSnapshot, contains('routeStatus=completed'));
+      expect(preFlushNames['okay'], 1);
+    } else {
+      expect(preFlushSnapshot, contains('routeStatus=forward'));
+      expect(preFlushNames['okay'], 0);
+    }
 
     // The Optimize action keeps its progress indicator alive until this
     // dialog is dismissed, so settle the modal route itself rather than the
@@ -940,8 +945,11 @@ class _PreviewHarness {
   }
 }
 
-Future<void> _pumpTransientAnimations(WidgetTester tester) =>
-    tester.pump(const Duration(milliseconds: 750));
+Future<void> _pumpTransientAnimations(WidgetTester tester) async {
+  // Build the changed destination and start its ticker before advancing time.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 750));
+}
 
 Future<void> _pumpUntilDialogDismisses(WidgetTester tester) async {
   final dialog = find.byType(AlertDialog);

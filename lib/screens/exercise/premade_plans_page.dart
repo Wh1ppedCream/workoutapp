@@ -18,6 +18,7 @@ import '../../services/tutorial_state_store.dart';
 import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/widgets/tonos_expressive_motion.dart';
+import '../../theme/widgets/tonos_expressive_state_motion.dart';
 import '../../utils/async_pool.dart';
 import '../../utils/localized_formatters.dart';
 import '../../utils/tutorial_launcher.dart';
@@ -1680,6 +1681,9 @@ class _PremadeSourceSection extends StatelessWidget {
             ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
+        expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
+          context,
+        ),
         initiallyExpanded: initiallyExpanded,
         tilePadding: EdgeInsets.symmetric(
           horizontal: 16,
@@ -1724,14 +1728,7 @@ class _PremadeSourceSection extends StatelessWidget {
         ],
       ),
     );
-    return expressive == null || isFeatured
-        ? groupCard
-        : TonosExpressivePressResponse(
-            enabled: true,
-            pressedScale: TonosExpressiveMotionTiers.supportingScale,
-            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
-            child: groupCard,
-          );
+    return groupCard;
   }
 }
 
@@ -1838,6 +1835,9 @@ class _PremadePlanGroupTile extends StatelessWidget {
             ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
+        expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
+          context,
+        ),
         initiallyExpanded: false,
         tilePadding: EdgeInsets.symmetric(
           horizontal: expressive == null ? 14 : 8,
@@ -1923,14 +1923,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
         ],
       ),
     );
-    return expressive == null
-        ? planCard
-        : TonosExpressivePressResponse(
-            enabled: true,
-            pressedScale: TonosExpressiveMotionTiers.supportingScale,
-            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
-            child: planCard,
-          );
+    return planCard;
   }
 }
 
@@ -2091,7 +2084,7 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
         ),
       ],
     );
-    final addButton = FilledButton.tonalIcon(
+    final addControl = FilledButton.tonalIcon(
       style: expressive == null
           ? null
           : FilledButton.styleFrom(
@@ -2119,6 +2112,15 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
       ),
     );
 
+    final addButton = expressive == null
+        ? addControl
+        : TonosExpressivePressResponse(
+            enabled: !widget.isAdding && !widget.isPreparing,
+            pressedScale: TonosExpressiveMotionTiers.supportingScale,
+            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
+            child: addControl,
+          );
+
     final planCard = Card(
       color: planSurface,
       elevation: expressive == null ? null : 0,
@@ -2143,13 +2145,23 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
                   final titleWithIcon = Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        _isExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        color:
-                            expressive?.configurationForeground ??
-                            theme.colorScheme.onSurfaceVariant,
+                      AnimatedRotation(
+                        turns: expressive != null && _isExpanded ? 0.5 : 0,
+                        duration: TonosExpressiveStateMotion.duration(
+                          context,
+                          TonosExpressiveStateMotion.standard,
+                        ),
+                        curve: TonosExpressiveStateMotion.spatial,
+                        child: Icon(
+                          expressive != null
+                              ? Icons.keyboard_arrow_down
+                              : _isExpanded
+                              ? Icons.keyboard_arrow_up
+                              : Icons.keyboard_arrow_down,
+                          color:
+                              expressive?.configurationForeground ??
+                              theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: titleBlock),
@@ -2196,23 +2208,25 @@ class _PremadePlanCardState extends State<_PremadePlanCard> {
               crossFadeState: _isExpanded
                   ? CrossFadeState.showSecond
                   : CrossFadeState.showFirst,
-              duration: appMotionDuration(context, motion.quick),
+              duration: expressive == null
+                  ? appMotionDuration(context, motion.quick)
+                  : TonosExpressiveStateMotion.duration(
+                      context,
+                      TonosExpressiveStateMotion.standard,
+                    ),
               firstCurve: Curves.easeOutCubic,
               secondCurve: Curves.easeOutCubic,
-              sizeCurve: Curves.easeOutCubic,
+              sizeCurve: expressive == null
+                  ? Curves.easeOutCubic
+                  : TonosExpressiveStateMotion.spatial,
             ),
           ],
         ),
       ),
     );
-    return expressive == null
-        ? planCard
-        : TonosExpressivePressResponse(
-            enabled: true,
-            pressedScale: TonosExpressiveMotionTiers.supportingScale,
-            pressedOffset: TonosExpressiveMotionTiers.supportingOffset,
-            child: planCard,
-          );
+    // Inner actions own their feedback; adding a plan must not compress the
+    // enclosing accordion along with its button.
+    return planCard;
   }
 }
 
