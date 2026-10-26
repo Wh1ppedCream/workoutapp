@@ -978,6 +978,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                 readOnlyMode: false,
                                 expressiveWorkoutPresentation:
                                     context.usesExpressivePresentation,
+                                animateExpansion:
+                                    context.usesExpressivePresentation,
                                 expressivePresetDetail: planning != null,
                                 compactExpressivePresetLayout: false,
                                 expressivePresetOutlineColor:
@@ -1102,6 +1104,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         readOnlyMode: true,
                         expressiveWorkoutPresentation:
                             context.usesExpressivePresentation,
+                        animateExpansion: context.usesExpressivePresentation,
                         expressivePresetDetail: planning != null,
                         compactExpressivePresetLayout: false,
                         expressivePresetOutlineColor:
@@ -1128,14 +1131,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                           : _buildExpressiveExerciseTheme(
                               context,
                               planning,
-                              TonosExpressivePressResponse(
-                                enabled: true,
-                                pressedScale:
-                                    TonosExpressiveMotionTiers.supportingScale,
-                                pressedOffset:
-                                    TonosExpressiveMotionTiers.supportingOffset,
-                                child: exerciseCard,
-                              ),
+                              exerciseCard,
                             );
                       return KeyedSubtree(
                         key: exerciseIndex == 0 ? _exerciseTutorialKey : null,

@@ -15,6 +15,118 @@ const _repsKey = ValueKey('weight-card-first-reps');
 
 void main() {
   for (final brightness in Brightness.values) {
+    for (final readOnly in [false, true]) {
+      testWidgets(
+        'Expressive preset expansion settles without remounts ${brightness.name} readOnly=$readOnly',
+        (tester) async {
+          final exercise = _exercise();
+          await tester.pumpWidget(
+            _host(
+              exercise,
+              family: AppThemeFamily.expressive,
+              brightness: brightness,
+              presetDetail: true,
+              readOnly: readOnly,
+            ),
+          );
+          await tester.pumpAndSettle();
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(WeightCard)),
+          );
+          final fieldState = tester.state(find.byKey(_weightKey));
+          final card = find.byType(Card).first;
+          final expandedHeight = tester.getSize(card).height;
+          final expandedShape = tester.widget<Card>(card).shape;
+
+          await tester.tap(find.byTooltip(strings.weightCollapseSets));
+          await tester.pump();
+          expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+          await tester.pump(const Duration(milliseconds: 90));
+          final interruptedHeight = tester.getSize(card).height;
+          expect(interruptedHeight, lessThan(expandedHeight));
+          await tester.tap(find.byTooltip(strings.weightExpandSets));
+          await tester.pump();
+          expect(tester.getSize(card).height, closeTo(interruptedHeight, .01));
+          await tester.pumpAndSettle();
+          expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+
+          await tester.tap(find.byTooltip(strings.weightCollapseSets));
+          await tester.pump();
+          var previousHeight = expandedHeight;
+          for (var frame = 0; frame < 24; frame++) {
+            await tester.pump(const Duration(milliseconds: 16));
+            final height = tester.getSize(card).height;
+            expect(height, lessThanOrEqualTo(previousHeight + .01));
+            previousHeight = height;
+          }
+          expect(find.byKey(_weightKey), findsNothing);
+          expect(
+            tester.state(find.byKey(_weightKey, skipOffstage: false)),
+            same(fieldState),
+          );
+          expect(exercise.completedParents, isEmpty);
+          final collapsedHeight = tester.getSize(card).height;
+
+          await tester.tap(find.byTooltip(strings.weightExpandSets));
+          await tester.pump();
+          previousHeight = collapsedHeight;
+          for (var frame = 0; frame < 24; frame++) {
+            await tester.pump(const Duration(milliseconds: 16));
+            final height = tester.getSize(card).height;
+            expect(height, greaterThanOrEqualTo(previousHeight - .01));
+            previousHeight = height;
+          }
+          expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+          expect(tester.widget<Card>(card).shape, expandedShape);
+          expect(tester.state(find.byKey(_weightKey)), same(fieldState));
+          expect(
+            tester
+                .widget<TextFormField>(find.byKey(_weightKey))
+                .controller!
+                .text,
+            '100',
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
+
+      testWidgets(
+        'Expressive preset reduced motion is immediate ${brightness.name} readOnly=$readOnly',
+        (tester) async {
+          await tester.pumpWidget(
+            _host(
+              _exercise(),
+              family: AppThemeFamily.expressive,
+              brightness: brightness,
+              presetDetail: true,
+              readOnly: readOnly,
+              disableAnimations: true,
+            ),
+          );
+          await tester.pumpAndSettle();
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(WeightCard)),
+          );
+          final card = find.byType(Card).first;
+          final expandedHeight = tester.getSize(card).height;
+          await tester.tap(find.byTooltip(strings.weightCollapseSets));
+          await tester.pump();
+          expect(tester.getSize(card).height, lessThan(expandedHeight));
+          expect(find.byKey(_weightKey), findsNothing);
+          final collapsedHeight = tester.getSize(card).height;
+          await tester.pump(const Duration(milliseconds: 180));
+          expect(tester.getSize(card).height, closeTo(collapsedHeight, .01));
+          await tester.tap(find.byTooltip(strings.weightExpandSets));
+          await tester.pump();
+          expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+          expect(find.byKey(_weightKey), findsOneWidget);
+          await tester.pump(const Duration(milliseconds: 180));
+          expect(tester.getSize(card).height, closeTo(expandedHeight, .01));
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
     testWidgets(
       'Expressive expansion keeps fields mounted and height monotonic ${brightness.name}',
       (tester) async {
@@ -553,6 +665,8 @@ Widget _host(
   AppThemeFamily family = AppThemeFamily.classic,
   Brightness brightness = Brightness.light,
   bool disableAnimations = false,
+  bool presetDetail = false,
+  bool readOnly = false,
   double textScale = 1,
   FocusNode? firstSetWeightFocusNode,
   void Function()? onValueChanged,
@@ -580,6 +694,9 @@ Widget _host(
               previewWeightUnit: WeightUnit.pounds,
               expressiveWorkoutPresentation:
                   family == AppThemeFamily.expressive,
+              expressivePresetDetail: presetDetail,
+              compactExpressivePresetLayout: false,
+              readOnlyMode: readOnly,
               animateExpansion: true,
               firstSetWeightKey: _weightKey,
               firstSetRepsKey: _repsKey,

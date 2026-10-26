@@ -279,6 +279,7 @@ void main() {
         );
         expect((editIcon.icon as Icon).color, planning.actionPrimary);
         _expectExpressivePresetExerciseCard(tester, readOnly: false);
+        await _expectStableExerciseCardOnPress(tester);
 
         await tester.tap(find.byKey(AppTestKeys.planEdit));
         await tester.pump();
@@ -313,6 +314,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 350));
         _expectExpressivePresetExerciseCard(tester, readOnly: true);
+        await _expectStableExerciseCardOnPress(tester);
         expect(tester.takeException(), isNull);
       },
     );
@@ -415,7 +417,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text(strings.weightReps), findsOneWidget);
-    expect(find.text(strings.presetExerciseSetCount(1)), findsOneWidget);
+    expect(find.text(strings.presetExerciseSetCount(1)), findsNothing);
     final card = tester.widget<WeightCard>(find.byType(WeightCard));
     expect(card.expressivePresetDetail, isTrue);
     expect(tester.takeException(), isNull);
@@ -487,17 +489,57 @@ void main() {
   });
 }
 
+Future<void> _expectStableExerciseCardOnPress(WidgetTester tester) async {
+  final weightCard = find.byType(WeightCard);
+  final exerciseName = tester.widget<WeightCard>(weightCard).exercise.name;
+  final title = find.descendant(
+    of: weightCard,
+    matching: find.text(exerciseName),
+  );
+  final card = find.descendant(of: weightCard, matching: find.byType(Card));
+  final strings = AppLocalizations.of(tester.element(weightCard));
+  for (final collapsed in [false, true]) {
+    await tester.ensureVisible(title);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    final restingBounds = tester.getRect(card);
+    final gesture = await tester.startGesture(tester.getCenter(title));
+    for (final elapsed in [16, 120]) {
+      await tester.pump(Duration(milliseconds: elapsed));
+      expect(
+        tester.getRect(card),
+        restingBounds,
+        reason:
+            'Pressing the title must not move the whole card (collapsed=$collapsed).',
+      );
+    }
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 80));
+    expect(tester.getRect(card), restingBounds);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(
+      find.byTooltip(
+        collapsed ? strings.weightExpandSets : strings.weightCollapseSets,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+}
+
 void _expectExpressivePresetExerciseCard(
   WidgetTester tester, {
   required bool readOnly,
 }) {
   final exerciseCard = tester.widget<ExerciseCard>(find.byType(ExerciseCard));
   expect(exerciseCard.expressiveWorkoutPresentation, isTrue);
+  expect(exerciseCard.animateExpansion, isTrue);
   expect(exerciseCard.expressivePresetDetail, isTrue);
   expect(exerciseCard.readOnlyMode, readOnly);
 
   final weightCard = tester.widget<WeightCard>(find.byType(WeightCard));
   expect(weightCard.expressiveWorkoutPresentation, isTrue);
+  expect(weightCard.animateExpansion, isTrue);
   expect(weightCard.expressivePresetDetail, isTrue);
   expect(weightCard.readOnlyMode, readOnly);
 

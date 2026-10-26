@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tonos Expressive — Accordion before and after</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.55 system-ui, sans-serif; color: #27232d; background: #f5f3f7; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(1060px, 100% - 40px); margin: 42px auto 72px; }
+    h1 { font-size: clamp(25px, 4vw, 36px); line-height: 1.15; margin: 8px 0 16px; }
+    h2 { font-size: 24px; margin: 0 0 8px; }
+    p { margin: 8px 0 14px; }
+    a { color: #57258b; text-underline-offset: 3px; }
+    .eyebrow { font-size: 13px; font-weight: 750; color: #685774; letter-spacing: .08em; text-transform: uppercase; }
+    .intro { max-width: 790px; color: #5e5467; }
+    .toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 0; background: #f5f3f7f2; backdrop-filter: blur(8px); }
+    button { min-height: 44px; border: 1px solid #bba8cd; border-radius: 20px; background: white; color: #422258; font: inherit; padding: 7px 17px; cursor: pointer; }
+    button[aria-pressed="true"] { color: white; background: #562a77; border-color: #562a77; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #9676c4; outline-offset: 4px; }
+    .toolbar small { margin-left: 8px; color: #6b6272; }
+    section { margin: 24px 0 40px; padding: 26px; border: 1px solid #e0d8e8; border-radius: 24px; background: white; }
+    .description { color: #64576d; max-width: 850px; }
+    .note { padding: 12px 15px; border-left: 3px solid #c79859; background: #fbf4e9; border-radius: 0 12px 12px 0; font-size: 14px; }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; margin-top: 22px; }
+    figure { margin: 0; min-width: 0; }
+    .label { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin-bottom: 10px; }
+    .label strong { font-size: 18px; }
+    .label span { font-size: 12px; color: #74657e; }
+    .viewport { overflow: auto; width: 100%; max-width: 420px; margin: 0 auto; border: 1px solid #d7cfdf; border-radius: 16px; background: #19121f; scrollbar-width: thin; }
+    .viewport a { display: block; line-height: 0; }
+    .viewport img { display: block; width: 100%; height: auto; }
+    figcaption { font-size: 13px; color: #6c6175; margin: 10px 0 0; }
+    ul { margin: 20px 0 0; padding-left: 22px; }
+    li { margin: 7px 0; }
+    footer { color: #74667e; font-size: 13px; }
+    @media (max-width: 660px) {
+      main { width: min(100% - 24px, 520px); margin-top: 24px; }
+      section { padding: 18px; }
+      .pair { grid-template-columns: 1fr; gap: 28px; }
+      .toolbar small { width: 100%; margin-left: 0; }
+    }
+    @media print {
+      .toolbar { display: none; }
+      .viewport { height: auto !important; overflow: visible; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Tonos Expressive · 25 October 2026</div>
+  <h1>Accordion styling: archived comparison</h1>
+  <p class="intro"><strong>The previous styling has been restored.</strong> The left images show the preferred earlier treatment; the right images preserve the rejected inset-header experiment. These are historical dark-mode device captures. Original image files are unchanged.</p>
+  <div class="toolbar" role="group" aria-label="Screenshot view">
+    <button id="focus" type="button" aria-pressed="true">Compare cards</button>
+    <button id="full" type="button" aria-pressed="false">Full screens</button>
+    <small>Click a screenshot to open its full-resolution original.</small>
+  </div>
+
+  <section aria-labelledby="gym-title">
+    <h2 id="gym-title">Gym Profile / Equipment</h2>
+    <p class="description">An exact pre-update comparison: Home Gym, 8 of 40 equipment options selected, with Basics and Free Weights expanded in both captures.</p>
+    <div class="pair">
+      <figure>
+        <div class="label"><strong>Previous style · restored</strong><span>Pre-update capture</span></div>
+        <div class="viewport" data-start="1210"><a href="images/gym-before-dark.png" target="_blank" rel="noopener"><img src="images/gym-before-dark.png" alt="Before: Equipment categories have a continuous purple surface, plain category icons and a header divider." width="1080" height="2400"></a></div>
+        <figcaption>Original category headers belong to the main equipment container.</figcaption>
+      </figure>
+      <figure>
+        <div class="label"><strong>Inset experiment · reverted</strong><span>Experiment capture</span></div>
+        <div class="viewport" data-start="1210"><a href="images/gym-after-dark.png" target="_blank" rel="noopener"><img src="images/gym-after-dark.png" alt="Reverted experiment: Equipment categories have inset rounded headers with their own outlines and warm icon tiles." width="1080" height="2400"></a></div>
+        <figcaption>Outlined inset headers, a subtly different header tone and warm icon tiles.</figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>The experiment made the category header a smaller rounded shape inside the expanded card.</li>
+      <li>Its category icons used the same warm tile treatment as Generate Custom Plans.</li>
+      <li>The equipment rows, thumbnails, selection values and header actions remain.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="premade-title">
+    <h2 id="premade-title">Premade Plans</h2>
+    <p class="description">Both historical captures show Tonos Plans and Full Body expanded, with the three individual plan previews collapsed.</p>
+    <p class="note"><strong>Older archive:</strong> the Before image comes from the earlier visual-review campaign, not an exact capture of checkpoint <code>c9c95a7</code>. Its toolbar, spacing and Add placement include differences that predate this update. Use this pair to compare the accordion surfaces and header shapes.</p>
+    <div class="pair">
+      <figure>
+        <div class="label"><strong>Previous style · restored</strong><span>Older archive</span></div>
+        <div class="viewport" data-start="1010"><a href="images/premade-before-dark.png" target="_blank" rel="noopener"><img src="images/premade-before-dark.png" alt="Archived Premade Plans: source and Full Body group headers blend into the enclosing cards, with three collapsed plan previews." width="1080" height="2400"></a></div>
+        <figcaption>Original archive: campaign pages / 05-premade-plans / dark / 08-full-body-previews.png.</figcaption>
+      </figure>
+      <figure>
+        <div class="label"><strong>Inset experiment · reverted</strong><span>Experiment capture</span></div>
+        <div class="viewport" data-start="805"><a href="images/premade-after-dark.png" target="_blank" rel="noopener"><img src="images/premade-after-dark.png" alt="Reverted Premade Plans experiment: Tonos Plans and Full Body headers have separate rounded inset shapes and visible outlines." width="1080" height="2400"></a></div>
+        <figcaption>The source, category and individual plan cards share the Generate Plans surface recipe.</figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>The experiment gave expanded source and category headers their own inset shape, outline and subtle tint.</li>
+      <li>Its individual plan headers used the same treatment when opened.</li>
+      <li>The existing purple/lavender hierarchy and orange count badges remain.</li>
+    </ul>
+  </section>
+  <footer>
+    <p>The inset-header experiment was reverted on 25 October 2026. The previous source is preserved in commit <code>c9c95a7</code>. Static screenshots show appearance, not expansion timing. M07 remains pending approval.</p>
+    <p><a href="README.md">Screenshot provenance</a> · <a href="../tonos-expressive-animation-review-20261023/planning-accordion-followup-20261025.md">Implementation and validation notes</a></p>
+  </footer>
+</main>
+<script src="comparison.js"></script>
+</body>
+</html>

@@ -1,8 +1,10 @@
 # Tonos Expressive - Animation Review Checklist
 
-Updated: 2026-10-25.
+Updated: 2026-10-26.
 
-**Progress: 6 approved / 11 pending / 17 total.**
+**Progress: 7 approved / 10 pending / 17 original motion groups.**
+
+The new M07a plan/preset exercise-card trial is listed separately below and awaits the user's review.
 
 This checklist tracks the recent Expressive animation additions and refinements. A checked item means the user explicitly approved its current motion. An unchecked item remains available for review and refinement; implementing a fix alone does not check it off. These motion decisions are separate from existing page visual approvals and from technical, accessibility, performance, or release qualification.
 
@@ -21,9 +23,10 @@ The [2026-10-25 deeper interaction review](deeper-interaction-review-20261025.md
 
 - [x] **M06 - Workout completion records.** Approved by the user on 2026-10-25. Newly earned record badges receive a restrained, one-time pulse. Historical results remain settled. This approves the M06 animation item; other pending animation groups retain their existing status. **Try:** finish a workout that earns a record and view its completion sheet.
 
+- [x] **M07 - Expandable planning sections.** Approved by the user on 2026-10-25 after restoring the previous page-specific styling. Headers, chevrons and content use coordinated expansion/collapse motion. Approval covers Generate Custom Plans, Browse Premade Plans and Gym Profile / Equipment groups. **Try:** Train > Plans > Generate Custom Plans or Browse Premade Plans; also expand equipment groups in Gym Profile / Equipment. The new plan/preset exercise-card trial (M07a) remains separate and unapproved.
+
 ## Pending review
 
-- [ ] **M07 - Expandable planning sections.** Headers, chevrons and content use coordinated expansion/collapse motion. **Try:** Train > Plans > Generate Custom Plans or Browse Premade Plans. Also review the equipment groups in Gym Profile / Equipment.
 - [ ] **M08 - Workout Report charts.** Matching date buckets interpolate when their values change, and the selected-point indicator moves between points. New or differently grouped buckets show their actual values directly instead of borrowing unrelated old values; unchanged series do not run an empty data transition. **Try:** Progress > Workout Report; change the date range, switch metric views, and select graph points.
 - [ ] **M09 - Shared menus, dialogs and sheets.** Shared overlays use approximately 220ms opening / 160ms closing motion, without the removed extra dialog scale. **Try:** Catalog Filters, exercise overflow menus, and plan action dialogs/sheets. Review each overlay type before approving this group.
 - [ ] **M10 - Health Trends charts.** Mini charts and detail charts interpolate when measurement data changes. **Try:** Nutrition > Health Trends > Weight or another metric; add/edit an entry and observe the updated chart.
@@ -34,6 +37,18 @@ The [2026-10-25 deeper interaction review](deeper-interaction-review-20261025.md
 - [ ] **M15 - Workout Progress Rules dropdowns.** Options reveal together over 160ms instead of arriving in a staggered sequence. The applicable chevron rotates and changed selections receive a smooth small pulse. **Try:** Profile > Gym & Workout Settings > Workout Progress Rules > Add/Edit Rule; open and change choice fields.
 - [ ] **M16 - Plan Progression graph.** Graph edits keep the canvas steady; the extra whole-canvas nudge has been removed so it does not add displacement to graph editing. Native control feedback remains. **Try:** open an automatic plan > overflow menu > Plan Progression; make a structural graph edit and pan/select nodes.
 - [ ] **M17 - Onboarding.** Progress advances smoothly, pages move between steps, choices transition, and the Finish Setup floating action appears on the final step. Navigation controls wait for the current slide to settle, preventing queued taps from skipping another step. Titles remain steady. **Try:** Profile > UI & Appearance > Replay Onboarding, then fully close and reopen Tonos.
+
+## Follow-up awaiting review
+
+- [ ] **M07a - Plan/preset detail exercise-card expansion.** At the user's request, try the approved planning sections' 360ms settling motion on plan/preset exercise cards in both viewing and editing modes. Height, corners, header spacing and the chevron move together; reopened set fields retain their state. The card-wide press bounce was removed after user feedback; individual controls retain their local feedback. Existing colors and outline remain. The user also requested removal of the set-count subtitle and vertically centered exercise titles. Reduced motion changes immediately, and reorder-forced collapse remains immediate. **Try:** Train > Plans > open an existing plan; expand/collapse its exercises, then repeat in Edit. This new trial does not change M07's approval or count as one of the original 17 groups.
+
+Focused validation: **39 widget tests passed**, covering the plan-detail route and shared exercise cards, light/dark viewing/editing, interruption, field retention, reduced motion and existing active-workout behavior. Scoped analysis found no errors or warnings; the existing `onReorder` deprecation notice remains. Formatting and `git diff --check` passed. Subsequently rebuilt and installed the debug app on the Pixel 7 at the user's request, preserving its database/preferences. Opened the existing plan shown as **Quads, Hips**, exercised collapse/reopen, and left its exercise cards visible in dark mode. The bounded runtime log check found no Flutter errors or overflows. Device smoothness approval remains with the user; no new light-mode device comparison was performed.
+
+After removing the card-wide tap response, all **15 focused plan-detail page tests passed**. Scoped analysis still reports only the existing `onReorder` deprecation notice. The hot-reload tool reported success, but the user's subsequent report and inspection of the Pixel 7's live widget tree confirmed that its existing exercise cards still retained the old press wrappers.
+
+Rebuilt and reinstalled the app, preserving the existing database/preferences. Verified the actual device widget tree now has **zero whole-card press wrappers** around exercise cards. Held-press screenshot comparisons showed **zero changed pixels** in the settled card area, both expanded and collapsed; the old running version had visibly changed on press. Enhanced the focused page tests to check stable painted card bounds on press/release in both states, viewing/editing and light/dark modes; all **15 tests passed**. Left **Quads, Hips** open with collapsed and expanded exercise cards visible. The bounded runtime log check found no Flutter errors or overflows. This verification does not grant visual approval to M07a.
+
+**2026-10-26 header refinement:** Removed the set-count subtitle from Expressive plan/preset exercise headers and centered the title vertically beside the thumbnail and controls. Active-workout completion labels and Classic/Neo presentation remain unchanged. All **39 focused widget tests passed**, scoped analysis found no issues, and the debug rebuild succeeded. Installed over the existing Pixel 7 app, preserving its data/preferences, and visually confirmed the centered titles and absent subtitle on **Quads, Hips** in dark mode. Left its exercise cards open for the user's review; M07a remains pending.
 
 ## Removed effects
 
@@ -56,3 +71,6 @@ There is no separate remaining nutrition-tools animation beyond the nutrition fe
 - **2026-10-24:** User explicitly approved M05 following the set-feedback and exercise-card expansion/collapse refinements, including the 200ms final-set pause. M01-M05 checked; 5 approved / 12 pending / 17 total. M06-M17 remain pending; this is motion approval, separate from technical and release qualification.
 - **2026-10-24:** After approving M05, the user requested opening and closing to take 20% less time: 360ms to 288ms. The completion pulses/row tint (308ms), final-set pause (200ms), other interaction groups and approval totals are unchanged. The earlier visual approval preceded this explicitly requested timing adjustment.
 - **2026-10-25:** User explicitly approved M06 - Workout completion records. M01-M06 checked; 6 approved / 11 pending / 17 total. M07-M17 remain pending. This records animation approval only and does not grant additional technical or release qualification.
+- **2026-10-25:** Created pre-change checkpoint `c9c95a7` at the user's request, then reused Generate Custom Plans' accordion styling for Premade Plans and Gym Profile equipment. M07 remains pending visual/motion review; approval totals remain 6 approved / 11 pending / 17 total.
+- **2026-10-25:** User preferred the previous Premade Plans and Gym Profile equipment accordions. Restored their source/tests and Generate Plans' reference implementation exactly from `c9c95a7`, removing the experiment-only component and test. The [experiment record](planning-accordion-followup-20261025.md) and comparison captures remain archived. M07 is still pending; totals remain 6 approved / 11 pending / 17 total.
+- **2026-10-25:** User explicitly approved M07's expanding animations, then requested the same motion style on plan/preset detail exercise cards. M01-M07 are approved: **7 approved / 10 pending / 17 original groups**. The separate M07a exercise-card trial awaits review; existing page visual approvals and M05 active-workout motion are unchanged.

@@ -670,7 +670,7 @@ class _WeightCardState extends State<WeightCard> {
           children: [
             // Header
             AnimatedContainer(
-              duration: !presetDetail && expansionDuration > Duration.zero
+              duration: expansionDuration > Duration.zero
                   ? expansionDuration
                   : completionFeedbackDuration,
               curve: usesExpressiveWorkout
@@ -713,11 +713,18 @@ class _WeightCardState extends State<WeightCard> {
                       constraints.maxWidth < 330 &&
                       largeText;
                   final collapseButton = IconButton(
-                    icon: Icon(
-                      effectiveCollapsed
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_up,
-                    ),
+                    icon: presetDetail && widget.animateExpansion
+                        ? AnimatedRotation(
+                            turns: effectiveCollapsed ? 0 : 0.5,
+                            duration: expansionDuration,
+                            curve: TonosExpressiveStateMotion.spatial,
+                            child: const Icon(Icons.keyboard_arrow_down),
+                          )
+                        : Icon(
+                            effectiveCollapsed
+                                ? Icons.keyboard_arrow_down
+                                : Icons.keyboard_arrow_up,
+                          ),
                     tooltip: effectiveCollapsed
                         ? strings.weightExpandSets
                         : strings.weightCollapseSets,
@@ -728,61 +735,62 @@ class _WeightCardState extends State<WeightCard> {
                             _isCollapsed = !_isCollapsed;
                           }),
                   );
-                  final title = Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        we.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: usesExpressiveWorkout
-                              ? allSetsComplete
-                                    ? workoutCompletedHeaderForeground
-                                    : theme.colorScheme.onPrimaryContainer
-                              : surfaces.useSemanticWorkoutCardFill
-                              ? semantic.onWorkoutContainer
-                              : null,
-                        ),
-                      ),
-                      SizedBox(height: compactPresetDetail ? 2 : 4),
-                      Row(
-                        children: [
-                          if (allSetsComplete) ...[
-                            Icon(
-                              Icons.check_circle,
-                              color: doneColor,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          Flexible(
-                            child: TonosExpressiveChangePulse(
-                              value: (completedCount, sets.length),
-                              enabled: usesExpressiveWorkout && !presetDetail,
-                              duration: _completionFeedbackDuration,
-                              scale: 1.025,
-                              alignment: AlignmentDirectional.centerStart,
-                              child: Text(
-                                presetDetail
-                                    ? strings.presetExerciseSetCount(
-                                        sets.length,
-                                      )
-                                    : strings.weightCardSetsDone(
+                  final exerciseTitle = Text(
+                    we.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: usesExpressiveWorkout
+                          ? allSetsComplete
+                                ? workoutCompletedHeaderForeground
+                                : theme.colorScheme.onPrimaryContainer
+                          : surfaces.useSemanticWorkoutCardFill
+                          ? semantic.onWorkoutContainer
+                          : null,
+                    ),
+                  );
+                  final title = presetDetail
+                      ? exerciseTitle
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            exerciseTitle,
+                            SizedBox(height: compactPresetDetail ? 2 : 4),
+                            Row(
+                              children: [
+                                if (allSetsComplete) ...[
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: doneColor,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                ],
+                                Flexible(
+                                  child: TonosExpressiveChangePulse(
+                                    value: (completedCount, sets.length),
+                                    enabled:
+                                        usesExpressiveWorkout && !presetDetail,
+                                    duration: _completionFeedbackDuration,
+                                    scale: 1.025,
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: Text(
+                                      strings.weightCardSetsDone(
                                         completedCount,
                                         sets.length,
                                       ),
-                                style: theme.textTheme.bodySmall!.copyWith(
-                                  color: doneColor,
-                                  fontWeight: allSetsComplete
-                                      ? FontWeight.w700
-                                      : null,
+                                      style: theme.textTheme.bodySmall!
+                                          .copyWith(
+                                            color: doneColor,
+                                            fontWeight: allSetsComplete
+                                                ? FontWeight.w700
+                                                : null,
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
+                          ],
+                        );
                   final trailingActions = <Widget>[
                     if (widget.onDetails != null)
                       Semantics(
@@ -937,7 +945,9 @@ class _WeightCardState extends State<WeightCard> {
                   ? TonosExpressiveStateMotion.spatial
                   : context.motionTokens.standardCurve,
               animateContentSize: usesExpressiveWorkout,
-              retainClosedContent: usesExpressiveWorkout && !presetDetail,
+              retainClosedContent:
+                  usesExpressiveWorkout &&
+                  (!presetDetail || widget.animateExpansion),
               contentPadding: usesExpressiveWorkout
                   ? compactPresetDetail
                         ? const EdgeInsets.fromLTRB(12, 0, 12, 4)
@@ -1822,10 +1832,10 @@ class _WeightCardState extends State<WeightCard> {
         begin: targetCardRadius,
         end: targetCardRadius,
       ),
-      duration: presetDetail
+      duration: presetDetail && !widget.animateExpansion
           ? appMotionDuration(context, context.motionTokens.quick)
           : expansionDuration,
-      curve: presetDetail
+      curve: presetDetail && !widget.animateExpansion
           ? context.motionTokens.standardCurve
           : TonosExpressiveStateMotion.spatial,
       child: cardContent,
