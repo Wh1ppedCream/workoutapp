@@ -14,6 +14,8 @@ The [2026-10-25 deeper interaction review](deeper-interaction-review-20261025.md
 
 The [2026-10-26 expansion-motion audit](expansion-motion-audit-20261026.md) checks the other disclosures after the preset collapse-end fix. It corrects active-workout corner lag, custom accordion closing curves and the Generate Plans header-outline exit; approval totals remain unchanged.
 
+The [accordion-style baseline gallery](accordion-style-baseline-20261026/BASELINE_GALLERY.html) preserves the seven suggested migration areas in light/dark screenshots from checkpoint `a8dff3e`, before further styling changes. These reference captures do not reopen or change approvals.
+
 ## Approved
 
 - [x] **M01 - Bottom-tab page transitions.** Approved by the user on 2026-10-23. Outgoing content fades away and shrinks to 97% over 40ms. Incoming content starts at 30ms, producing a 10ms overlap; it scales from 95% to a 101.5% peak at about 80ms and settles at 100% by 150ms. **Try:** switch between bottom navigation tabs.

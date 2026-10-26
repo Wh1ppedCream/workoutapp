@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tonos Expressive - accordion style baseline</title>
+<style>
+:root{font:16px/1.5 system-ui,sans-serif;color:#292432;background:#f5f3f8}body{margin:0}header,main{max-width:1160px;margin:auto;padding:24px}h1{font-size:1.8rem;line-height:1.2}h2{margin-top:0}nav{display:flex;flex-wrap:wrap;gap:8px 20px}a{color:#563080}section{margin:26px 0 48px;padding:20px;background:white;border:1px solid #ded7e6;border-radius:16px}.route{color:#665e70}.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:30px}figure{margin:0;min-width:0}figcaption{padding:10px 0}figure img{display:block;max-width:100%;max-height:720px;width:auto;margin:auto;border:1px solid #d2cadb;border-radius:9px}.badge{font-weight:700;text-transform:capitalize}select{font:inherit;margin:12px;padding:5px}body[data-mode="light"] [data-theme="dark"],body[data-mode="dark"] [data-theme="light"]{display:none}body:not([data-mode="both"]) .pair{grid-template-columns:minmax(0,1fr)}.note{background:#ece7f1;padding:14px;border-radius:10px}@media(max-width:650px){.pair{grid-template-columns:1fr}header,main{padding:14px}section{padding:12px}}@media print{figure img{max-height:600px}section{break-before:page}select{display:none}}
+</style><body data-mode="both"><header>
+<h1>Tonos Expressive - accordion style baseline</h1>
+<p>Current styling before any further Generate Plans-style migration. Captured on the physical Pixel 7 on 2026-10-26 from source checkpoint <strong>a8dff3e</strong>.</p>
+<p class="note">These are before screenshots, not new designs or approvals. The shared progression editor is shown through its App Default caller; the food editor uses the existing Banana record without saving changes. The Exercise Details sheet is fully raised. Long sections have representative scrolled views, not every possible row or state.</p>
+<p>Existing food-editor Save/Cancel controls overlap the middle of the content in these captures. This is recorded as-is; no UI fix was made during this capture task.</p>
+<p><a href="CONTACT_SHEET_LIGHT.jpg">Light overview</a> | <a href="CONTACT_SHEET_DARK.jpg">Dark overview</a> | <a href="manifest.json">Capture manifest</a></p>
+<label>Show <select onchange="document.body.dataset.mode=this.value"><option value="both">Both themes</option><option value="light">Light</option><option value="dark">Dark</option></select></label><nav>
+<a href="#progression-editor">1. Plan Progression editor</a>
+<a href="#progress-rules">2. Workout Progress Rules / Flow Methods</a>
+<a href="#progress-flows">3. Workout Progress Flows</a>
+<a href="#tutorials">4. Guided tutorials</a>
+<a href="#food-editor">5. Customize Food / Edit Food</a>
+<a href="#exercise-details">6. Exercise Details sheet</a>
+<a href="#workout-report">7. Workout Report - Additional Details</a>
+</nav></header><main>
+<section id="progression-editor"><h2>1. Plan Progression editor</h2><p class="route">Profile &gt; Gym &amp; Workout Settings &gt; Workout Progress Flows &gt; App default flow</p>
+<h3>Collapsed</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - App Default Progression with both control panels collapsed</figcaption><a href="01-progression-editor-light-collapsed.png" target="_blank"><img src="01-progression-editor-light-collapsed.png" loading="lazy" alt="App Default Progression with both control panels collapsed, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - App Default Progression with both control panels collapsed</figcaption><a href="01-progression-editor-dark-collapsed.png" target="_blank"><img src="01-progression-editor-dark-collapsed.png" loading="lazy" alt="App Default Progression with both control panels collapsed, dark"></a></figure>
+</div>
+<h3>Branch expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Add a branch expanded</figcaption><a href="01-progression-editor-light-branch.png" target="_blank"><img src="01-progression-editor-light-branch.png" loading="lazy" alt="Add a branch expanded, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Add a branch expanded</figcaption><a href="01-progression-editor-dark-branch.png" target="_blank"><img src="01-progression-editor-dark-branch.png" loading="lazy" alt="Add a branch expanded, dark"></a></figure>
+</div>
+<h3>Action expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Attach a progression action expanded; no graph edits</figcaption><a href="01-progression-editor-light-action.png" target="_blank"><img src="01-progression-editor-light-action.png" loading="lazy" alt="Attach a progression action expanded; no graph edits, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Attach a progression action expanded; no graph edits</figcaption><a href="01-progression-editor-dark-action.png" target="_blank"><img src="01-progression-editor-dark-action.png" loading="lazy" alt="Attach a progression action expanded; no graph edits, dark"></a></figure>
+</div>
+</section>
+<section id="progress-rules"><h2>2. Workout Progress Rules / Flow Methods</h2><p class="route">Profile &gt; Gym &amp; Workout Settings &gt; Workout Progress Rules</p>
+<h3>App expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - App-wide defaults expanded; existing empty rule state</figcaption><a href="02-progress-rules-light-app.png" target="_blank"><img src="02-progress-rules-light-app.png" loading="lazy" alt="App-wide defaults expanded; existing empty rule state, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - App-wide defaults expanded; existing empty rule state</figcaption><a href="02-progress-rules-dark-app.png" target="_blank"><img src="02-progress-rules-dark-app.png" loading="lazy" alt="App-wide defaults expanded; existing empty rule state, dark"></a></figure>
+</div>
+<h3>Gym plan expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Home Gym, Profile defaults and plan-specific rule groups expanded</figcaption><a href="02-progress-rules-light-gym-plan.png" target="_blank"><img src="02-progress-rules-light-gym-plan.png" loading="lazy" alt="Home Gym, Profile defaults and plan-specific rule groups expanded, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Home Gym, Profile defaults and plan-specific rule groups expanded</figcaption><a href="02-progress-rules-dark-gym-plan.png" target="_blank"><img src="02-progress-rules-dark-gym-plan.png" loading="lazy" alt="Home Gym, Profile defaults and plan-specific rule groups expanded, dark"></a></figure>
+</div>
+</section>
+<section id="progress-flows"><h2>3. Workout Progress Flows</h2><p class="route">Profile &gt; Gym &amp; Workout Settings &gt; Workout Progress Flows</p>
+<h3>App expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Workout Progress Flows with App-wide defaults expanded</figcaption><a href="03-progress-flows-light-app.png" target="_blank"><img src="03-progress-flows-light-app.png" loading="lazy" alt="Workout Progress Flows with App-wide defaults expanded, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Workout Progress Flows with App-wide defaults expanded</figcaption><a href="03-progress-flows-dark-app.png" target="_blank"><img src="03-progress-flows-dark-app.png" loading="lazy" alt="Workout Progress Flows with App-wide defaults expanded, dark"></a></figure>
+</div>
+<h3>Gym expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Gym progression group and existing plan entry</figcaption><a href="03-progress-flows-light-gym.png" target="_blank"><img src="03-progress-flows-light-gym.png" loading="lazy" alt="Gym progression group and existing plan entry, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Gym progression group and existing plan entry</figcaption><a href="03-progress-flows-dark-gym-top.png" target="_blank"><img src="03-progress-flows-dark-gym-top.png" loading="lazy" alt="Gym progression group and existing plan entry, dark"></a></figure>
+</div>
+</section>
+<section id="tutorials"><h2>4. Guided tutorials</h2><p class="route">Profile &gt; Guided Tutorials</p>
+<h3>Collapsed</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Guided tutorials: current category headers</figcaption><a href="04-tutorials-light-collapsed.png" target="_blank"><img src="04-tutorials-light-collapsed.png" loading="lazy" alt="Guided tutorials: current category headers, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Guided tutorials: current category headers</figcaption><a href="04-tutorials-dark-collapsed.png" target="_blank"><img src="04-tutorials-dark-collapsed.png" loading="lazy" alt="Guided tutorials: current category headers, dark"></a></figure>
+</div>
+<h3>Main expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Main tabs expanded, with existing tutorial actions</figcaption><a href="04-tutorials-light-main-expanded.png" target="_blank"><img src="04-tutorials-light-main-expanded.png" loading="lazy" alt="Main tabs expanded, with existing tutorial actions, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Main tabs expanded, with existing tutorial actions</figcaption><a href="04-tutorials-dark-main-expanded.png" target="_blank"><img src="04-tutorials-dark-main-expanded.png" loading="lazy" alt="Main tabs expanded, with existing tutorial actions, dark"></a></figure>
+</div>
+<h3>Plans expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Plans and workouts expanded</figcaption><a href="04-tutorials-light-plans-expanded.png" target="_blank"><img src="04-tutorials-light-plans-expanded.png" loading="lazy" alt="Plans and workouts expanded, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Plans and workouts expanded</figcaption><a href="04-tutorials-dark-plans-expanded.png" target="_blank"><img src="04-tutorials-dark-plans-expanded.png" loading="lazy" alt="Plans and workouts expanded, dark"></a></figure>
+</div>
+</section>
+<section id="food-editor"><h2>5. Customize Food / Edit Food</h2><p class="route">Nutrition &gt; Add Meal &gt; recent Banana &gt; Customize food</p>
+<h3>Portions expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Edit Food: Portion Info and nutritional basis expanded for Banana</figcaption><a href="05-food-editor-light-portions.png" target="_blank"><img src="05-food-editor-light-portions.png" loading="lazy" alt="Edit Food: Portion Info and nutritional basis expanded for Banana, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Edit Food: Portion Info and nutritional basis expanded for Banana</figcaption><a href="05-food-editor-dark-portions.png" target="_blank"><img src="05-food-editor-dark-portions.png" loading="lazy" alt="Edit Food: Portion Info and nutritional basis expanded for Banana, dark"></a></figure>
+</div>
+<h3>Macros expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Macronutrients expanded, with nested component disclosures collapsed</figcaption><a href="05-food-editor-light-macros.png" target="_blank"><img src="05-food-editor-light-macros.png" loading="lazy" alt="Macronutrients expanded, with nested component disclosures collapsed, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Macronutrients expanded, with nested component disclosures collapsed</figcaption><a href="05-food-editor-dark-macros.png" target="_blank"><img src="05-food-editor-dark-macros.png" loading="lazy" alt="Macronutrients expanded, with nested component disclosures collapsed, dark"></a></figure>
+</div>
+<h3>Micros expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Micronutrients expanded with vitamin and mineral breakdown disclosures</figcaption><a href="05-food-editor-light-micros.png" target="_blank"><img src="05-food-editor-light-micros.png" loading="lazy" alt="Micronutrients expanded with vitamin and mineral breakdown disclosures, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Micronutrients expanded with vitamin and mineral breakdown disclosures</figcaption><a href="05-food-editor-dark-micros.png" target="_blank"><img src="05-food-editor-dark-micros.png" loading="lazy" alt="Micronutrients expanded with vitamin and mineral breakdown disclosures, dark"></a></figure>
+</div>
+<h3>Additional expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Additional Components expanded</figcaption><a href="05-food-editor-light-additional.png" target="_blank"><img src="05-food-editor-light-additional.png" loading="lazy" alt="Additional Components expanded, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Additional Components expanded</figcaption><a href="05-food-editor-dark-additional.png" target="_blank"><img src="05-food-editor-dark-additional.png" loading="lazy" alt="Additional Components expanded, dark"></a></figure>
+</div>
+</section>
+<section id="exercise-details"><h2>6. Exercise Details sheet</h2><p class="route">Catalog &gt; Exercise Catalog &gt; Ab Wheel thumbnail &gt; fully raise Details sheet</p>
+<h3>Fully raised top</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Catalog caller: Ab Wheel Details sheet fully raised, media and Form guide</figcaption><a href="06-exercise-details-light-top.png" target="_blank"><img src="06-exercise-details-light-top.png" loading="lazy" alt="Catalog caller: Ab Wheel Details sheet fully raised, media and Form guide, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Catalog caller: Ab Wheel Details sheet fully raised, media and Form guide</figcaption><a href="06-exercise-details-dark-top.png" target="_blank"><img src="06-exercise-details-dark-top.png" loading="lazy" alt="Catalog caller: Ab Wheel Details sheet fully raised, media and Form guide, dark"></a></figure>
+</div>
+<h3>Guide expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Full Set-up, Execution and Tips visible in the fully raised sheet</figcaption><a href="06-exercise-details-light-guide.png" target="_blank"><img src="06-exercise-details-light-guide.png" loading="lazy" alt="Full Set-up, Execution and Tips visible in the fully raised sheet, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Full Set-up, Execution and Tips visible in the fully raised sheet</figcaption><a href="06-exercise-details-dark-guide.png" target="_blank"><img src="06-exercise-details-dark-guide.png" loading="lazy" alt="Full Set-up, Execution and Tips visible in the fully raised sheet, dark"></a></figure>
+</div>
+<h3>Equipment anatomy expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Equipment and Target anatomy expanded in the fully raised sheet</figcaption><a href="06-exercise-details-light-anatomy.png" target="_blank"><img src="06-exercise-details-light-anatomy.png" loading="lazy" alt="Equipment and Target anatomy expanded in the fully raised sheet, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Equipment and Target anatomy expanded in the fully raised sheet</figcaption><a href="06-exercise-details-dark-anatomy.png" target="_blank"><img src="06-exercise-details-dark-anatomy.png" loading="lazy" alt="Equipment and Target anatomy expanded in the fully raised sheet, dark"></a></figure>
+</div>
+</section>
+<section id="workout-report"><h2>7. Workout Report - Additional Details</h2><p class="route">Progress &gt; Workout Report &gt; Additional Details</p>
+<h3>Collapsed</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Workout Report with Additional Details collapsed</figcaption><a href="07-workout-report-light-collapsed.png" target="_blank"><img src="07-workout-report-light-collapsed.png" loading="lazy" alt="Workout Report with Additional Details collapsed, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Workout Report with Additional Details collapsed</figcaption><a href="07-workout-report-dark-collapsed.png" target="_blank"><img src="07-workout-report-dark-collapsed.png" loading="lazy" alt="Workout Report with Additional Details collapsed, dark"></a></figure>
+</div>
+<h3>Expanded</h3><div class="pair">
+<figure data-theme="light"><figcaption><span class="badge">light</span> - Additional Details expanded with all four insight tiles visible</figcaption><a href="07-workout-report-light-expanded.png" target="_blank"><img src="07-workout-report-light-expanded.png" loading="lazy" alt="Additional Details expanded with all four insight tiles visible, light"></a></figure>
+<figure data-theme="dark"><figcaption><span class="badge">dark</span> - Additional Details expanded with all four insight tiles visible</figcaption><a href="07-workout-report-dark-expanded.png" target="_blank"><img src="07-workout-report-dark-expanded.png" loading="lazy" alt="Additional Details expanded with all four insight tiles visible, dark"></a></figure>
+</div>
+</section>
+<p>38 original screenshots across 7 areas. Click any image to open the full 1080 x 2400 capture.</p></main></body></html>
