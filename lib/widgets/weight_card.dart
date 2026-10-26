@@ -45,6 +45,7 @@ class WeightCard extends StatefulWidget {
   final bool forceCollapsed;
   final bool animateExpansion;
   final bool expressiveWorkoutPresentation;
+  final bool expressiveInsetExerciseHeader;
   final bool expressivePresetDetail;
   final bool compactExpressivePresetLayout;
   final Color? expressivePresetOutlineColor;
@@ -77,6 +78,7 @@ class WeightCard extends StatefulWidget {
     this.forceCollapsed = false,
     this.animateExpansion = false,
     this.expressiveWorkoutPresentation = false,
+    this.expressiveInsetExerciseHeader = false,
     this.expressivePresetDetail = false,
     this.compactExpressivePresetLayout = true,
     this.expressivePresetOutlineColor,
@@ -467,6 +469,8 @@ class _WeightCardState extends State<WeightCard> {
         widget.expressiveWorkoutPresentation &&
         context.usesExpressivePresentation;
     final presetDetail = widget.expressivePresetDetail && usesExpressiveWorkout;
+    final insetExerciseHeader =
+        usesExpressiveWorkout && widget.expressiveInsetExerciseHeader;
     final compactPresetDetail =
         presetDetail && widget.compactExpressivePresetLayout;
     final expressiveTokens = usesExpressiveWorkout
@@ -484,6 +488,7 @@ class _WeightCardState extends State<WeightCard> {
           )
         : Duration.zero;
     final effectiveCollapsed = widget.forceCollapsed || _isCollapsed;
+    final headerInset = insetExerciseHeader && !effectiveCollapsed ? 10.0 : 0.0;
     final expansionDuration =
         widget.animateExpansion &&
             !widget.forceCollapsed &&
@@ -677,7 +682,14 @@ class _WeightCardState extends State<WeightCard> {
                   ? TonosExpressiveStateMotion.spatial
                   : TonosExpressiveStateMotion.effects,
               margin: usesExpressiveWorkout
-                  ? compactPresetDetail
+                  ? insetExerciseHeader
+                        ? EdgeInsets.fromLTRB(
+                            headerInset,
+                            headerInset,
+                            headerInset,
+                            0,
+                          )
+                        : compactPresetDetail
                         ? EdgeInsets.fromLTRB(
                             6,
                             5,
@@ -696,13 +708,39 @@ class _WeightCardState extends State<WeightCard> {
                       color: allSetsComplete
                           ? semantic.workoutExerciseCompleted
                           : theme.colorScheme.primaryContainer,
-                      borderRadius: TonosExpressiveWorkoutShapes.exerciseHeader,
+                      borderRadius: insetExerciseHeader
+                          ? TonosExpressiveWorkoutShapes.exerciseCardCollapsed
+                          : TonosExpressiveWorkoutShapes.exerciseHeader,
+                      border: insetExerciseHeader
+                          ? Border.fromBorderSide(
+                              BorderSide(
+                                color:
+                                    (widget.expressivePresetOutlineColor ??
+                                            (allSetsComplete
+                                                ? workoutCompletedHeaderForeground
+                                                : theme
+                                                      .colorScheme
+                                                      .onPrimaryContainer))
+                                        .withValues(
+                                          alpha: effectiveCollapsed ? 0 : 0.28,
+                                        ),
+                                strokeAlign: BorderSide.strokeAlignOutside,
+                              ),
+                            )
+                          : null,
                     )
                   : null,
               padding: usesExpressiveWorkout
-                  ? EdgeInsets.symmetric(
-                      horizontal: compactPresetDetail ? 6 : 8,
-                    )
+                  ? insetExerciseHeader
+                        // Offset the inset so controls, title wrapping and the
+                        // set rows keep their existing alignment and height.
+                        ? EdgeInsets.symmetric(
+                            horizontal: 16 - headerInset,
+                            vertical: 8 - headerInset * 0.6,
+                          )
+                        : EdgeInsets.symmetric(
+                            horizontal: compactPresetDetail ? 6 : 8,
+                          )
                   : null,
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -713,7 +751,9 @@ class _WeightCardState extends State<WeightCard> {
                       constraints.maxWidth < 330 &&
                       largeText;
                   final collapseButton = IconButton(
-                    icon: presetDetail && widget.animateExpansion
+                    icon:
+                        (presetDetail || insetExerciseHeader) &&
+                            widget.animateExpansion
                         ? AnimatedRotation(
                             turns: effectiveCollapsed ? 0 : 0.5,
                             duration: expansionDuration,
@@ -972,14 +1012,17 @@ class _WeightCardState extends State<WeightCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Divider(
-                        height: usesExpressiveWorkout ? 1 : 16,
-                        color: usesExpressiveWorkout
-                            ? expressiveTokens!.focusSurface.withValues(
-                                alpha: 0.3,
-                              )
-                            : null,
-                      ),
+                      if (insetExerciseHeader)
+                        const SizedBox(height: 1)
+                      else
+                        Divider(
+                          height: usesExpressiveWorkout ? 1 : 16,
+                          color: usesExpressiveWorkout
+                              ? expressiveTokens!.focusSurface.withValues(
+                                  alpha: 0.3,
+                                )
+                              : null,
+                        ),
                       // Sets + ChangeSets
                       if (presetColumnLabels)
                         Padding(
@@ -1832,7 +1875,11 @@ class _WeightCardState extends State<WeightCard> {
         begin: targetCardRadius,
         end: targetCardRadius,
       ),
-      duration: presetDetail && !widget.animateExpansion
+      // Card's Material already animates its shape. Retargeting that animation
+      // on every expansion frame leaves a second corner/shadow tail.
+      duration: widget.animateExpansion
+          ? Duration.zero
+          : presetDetail
           ? appMotionDuration(context, context.motionTokens.quick)
           : expansionDuration,
       curve: presetDetail && !widget.animateExpansion
@@ -1900,7 +1947,10 @@ class _WeightCardExpansionRegionState
   void didUpdateWidget(covariant _WeightCardExpansionRegion oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.expanded) _hasBuiltContent = true;
-    if (widget.duration == Duration.zero || widget.expanded) {
+    // Retained fields already survive closure and need no final cleanup build.
+    if (widget.duration == Duration.zero ||
+        widget.expanded ||
+        widget.retainClosedContent) {
       _retainContentWhileClosing = false;
     } else if (oldWidget.expanded) {
       _retainContentWhileClosing = true;

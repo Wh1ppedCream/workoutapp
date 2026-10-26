@@ -190,6 +190,8 @@ class _SessionScreenState extends State<SessionScreen> {
                         cardType: type,
                         expressiveWorkoutPresentation:
                             context.usesExpressivePresentation,
+                        expressiveInsetExerciseHeader:
+                            context.usesExpressivePresentation,
                         animateExpansion:
                             ctx.usesClassicPresentation ||
                             ctx.usesExpressivePresentation,

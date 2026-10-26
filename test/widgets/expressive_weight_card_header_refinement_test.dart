@@ -10,12 +10,98 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_semantic_colors.dart';
 import 'package:env_test/theme/tokens/app_surface_tokens.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_workout_shapes.dart';
 import 'package:env_test/widgets/weight_card.dart';
 
 const _weightKey = ValueKey('expressive-weight-field');
 const _repsKey = ValueKey('expressive-reps-field');
 
 void main() {
+  for (final brightness in Brightness.values) {
+    for (final layout in [
+      (width: 320.0, scale: 1.0),
+      (width: 411.0, scale: 1.15),
+      (width: 320.0, scale: 2.0),
+    ]) {
+      testWidgets(
+        'Inset workout header preserves set geometry and controls ${brightness.name} $layout',
+        (tester) async {
+          await tester.binding.setSurfaceSize(Size(layout.width, 1100));
+          addTearDown(() => tester.binding.setSurfaceSize(null));
+          final theme = brightness == Brightness.light
+              ? ExpressiveThemeDefinition.light()
+              : ExpressiveThemeDefinition.dark();
+          final exercise = _exercise();
+          var detailsTapped = 0;
+          Widget host({required bool inset}) => _host(
+            exercise,
+            theme: theme,
+            textScale: layout.scale,
+            insetWorkoutHeader: inset,
+            onDetails: () => detailsTapped++,
+          );
+          await tester.pumpWidget(host(inset: false));
+          await tester.pumpAndSettle();
+          final card = find.descendant(
+            of: find.byType(WeightCard),
+            matching: find.byType(Card),
+          );
+          final originalCard = tester.widget<Card>(card);
+          final originalHeight = tester.getSize(card).height;
+          final originalField = tester.getRect(find.byKey(_weightKey));
+          final titleLeft = tester.getTopLeft(find.text('Back Squat')).dx;
+          Finder header() => find
+              .descendant(
+                of: find.byType(WeightCard),
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Container &&
+                      widget.decoration is BoxDecoration &&
+                      (widget.decoration! as BoxDecoration).borderRadius !=
+                          null,
+                ),
+              )
+              .first;
+          final originalHeaderColor =
+              (tester.widget<Container>(header()).decoration! as BoxDecoration)
+                  .color;
+
+          await tester.pumpWidget(host(inset: true));
+          await tester.pumpAndSettle();
+          final currentCard = tester.widget<Card>(card);
+          expect(currentCard.shape, originalCard.shape);
+          expect(currentCard.color, originalCard.color);
+          expect(currentCard.elevation, originalCard.elevation);
+          expect(tester.getSize(card).height, closeTo(originalHeight, .01));
+          expect(tester.getRect(find.byKey(_weightKey)), originalField);
+          expect(tester.getTopLeft(find.text('Back Squat')).dx, titleLeft);
+          final decoration =
+              tester.widget<Container>(header()).decoration! as BoxDecoration;
+          expect(decoration.color, originalHeaderColor);
+          expect(decoration.border!.top.color.a, greaterThan(0));
+
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(WeightCard)),
+          );
+          await tester.tap(find.byTooltip(strings.weightCollapseSets));
+          await tester.pumpAndSettle();
+          expect(find.byKey(_weightKey), findsNothing);
+          expect(find.text(strings.weightCardSetsDone(0, 3)), findsOneWidget);
+          await tester.tap(_detailsButton(strings.weightDetails));
+          await tester.pump();
+          expect(detailsTapped, 1);
+          expect(find.byKey(_weightKey), findsNothing);
+          await tester.tap(find.byTooltip(strings.weightExpandSets));
+          await tester.pumpAndSettle();
+          expect(tester.getRect(find.byKey(_weightKey)), originalField);
+          expect(exercise.completedParents, isEmpty);
+          expect(exercise.sets.first.weight, 100);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
+
   testWidgets(
     'Expressive header fits compact width and keeps field focus local',
     (tester) async {
@@ -81,7 +167,7 @@ void main() {
         tester.getRect(weightHitRegion).overlaps(tester.getRect(repsHitRegion)),
         isFalse,
       );
-      final firstRow = find.byType(AnimatedContainer).first;
+      final firstRow = _setRows().first;
       final firstRowSize = tester.getSize(firstRow);
       final firstRowWidget = tester.widget<AnimatedContainer>(firstRow);
       expect(firstRowWidget.margin, const EdgeInsets.symmetric(vertical: 6));
@@ -138,7 +224,7 @@ void main() {
         56,
       );
 
-      final details = find.bySemanticsLabel(localized.weightDetails);
+      final details = _detailsButton(localized.weightDetails);
       expect(details, findsOneWidget);
       await tester.tap(details);
       await tester.pump();
@@ -166,7 +252,9 @@ void main() {
 
     for (final theme in themes) {
       final exercise = _exercise(completed: true);
-      await tester.pumpWidget(_host(exercise, theme: theme));
+      await tester.pumpWidget(
+        _host(exercise, theme: theme, insetWorkoutHeader: true),
+      );
       await tester.pumpAndSettle();
 
       final semantic = theme.extension<AppSemanticColors>()!;
@@ -227,9 +315,7 @@ void main() {
       await tester.tap(find.byTooltip(localized.weightExpandSets));
       await tester.pumpAndSettle();
       expect(find.byType(Checkbox), findsNWidgets(3));
-      final rows = tester.widgetList<AnimatedContainer>(
-        find.byType(AnimatedContainer),
-      );
+      final rows = tester.widgetList<AnimatedContainer>(_setRows());
       expect(rows, hasLength(3));
       final completedRowColor =
           (rows.first.decoration! as BoxDecoration).color!;
@@ -265,9 +351,7 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pump();
     expect(exercise.completedParents, <int>{0});
-    final firstSetRow = tester.widget<AnimatedContainer>(
-      find.byType(AnimatedContainer).first,
-    );
+    final firstSetRow = tester.widget<AnimatedContainer>(_setRows().first);
     expect(firstSetRow.duration, Duration.zero);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -282,7 +366,7 @@ void main() {
     await tester.pumpWidget(_host(_exercise(), textScale: 2));
     await tester.pumpAndSettle();
 
-    final firstRow = find.byType(AnimatedContainer).first;
+    final firstRow = _setRows().first;
     expect(tester.getSize(firstRow).height, closeTo(224, 5));
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -300,7 +384,7 @@ void main() {
     final localized = AppLocalizations.of(
       tester.element(find.byType(WeightCard)),
     );
-    final firstRow = find.byType(AnimatedContainer).first;
+    final firstRow = _setRows().first;
     final firstRowRect = tester.getRect(firstRow);
     final weightHitRegion = find
         .ancestor(
@@ -367,7 +451,7 @@ void main() {
       final localized = AppLocalizations.of(
         tester.element(find.byType(WeightCard)),
       );
-      final firstRow = find.byType(AnimatedContainer).first;
+      final firstRow = _setRows().first;
       final originalRowSize = tester.getSize(firstRow);
       expect(
         find.byWidgetPredicate(
@@ -384,11 +468,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(added, isTrue);
-      expect(find.byType(AnimatedContainer), findsNWidgets(4));
-      expect(
-        tester.getSize(find.byType(AnimatedContainer).first),
-        originalRowSize,
-      );
+      expect(_setRows(), findsNWidgets(4));
+      expect(tester.getSize(_setRows().first), originalRowSize);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
@@ -402,6 +483,18 @@ double _contrastRatio(Color foreground, Color background) {
   final darker = first > second ? second : first;
   return (lighter + 0.05) / (darker + 0.05);
 }
+
+Finder _setRows() => find.byWidgetPredicate(
+  (widget) =>
+      widget is AnimatedContainer &&
+      widget.decoration is BoxDecoration &&
+      (widget.decoration! as BoxDecoration).borderRadius ==
+          TonosExpressiveWorkoutShapes.setRow,
+);
+
+Finder _detailsButton(String label) => find.byWidgetPredicate(
+  (widget) => widget is Semantics && widget.properties.label == label,
+);
 
 WeightExercise _exercise({bool completed = false}) => WeightExercise(
   name: 'Back Squat',
@@ -421,6 +514,7 @@ Widget _host(
   VoidCallback? onDetails,
   VoidCallback? onSetAdded,
   bool disableAnimations = false,
+  bool insetWorkoutHeader = false,
   double textScale = 1,
 }) => Provider<AppRepository>.value(
   value: _EmptyRepository(),
@@ -442,6 +536,7 @@ Widget _host(
               exercise: exercise,
               previewWeightUnit: WeightUnit.pounds,
               expressiveWorkoutPresentation: true,
+              expressiveInsetExerciseHeader: insetWorkoutHeader,
               animateExpansion: true,
               firstSetWeightKey: _weightKey,
               firstSetRepsKey: _repsKey,

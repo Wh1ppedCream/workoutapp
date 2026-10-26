@@ -978,6 +978,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                                 readOnlyMode: false,
                                 expressiveWorkoutPresentation:
                                     context.usesExpressivePresentation,
+                                expressiveInsetExerciseHeader:
+                                    context.usesExpressivePresentation,
                                 animateExpansion:
                                     context.usesExpressivePresentation,
                                 expressivePresetDetail: planning != null,
@@ -1103,6 +1105,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                         ),
                         readOnlyMode: true,
                         expressiveWorkoutPresentation:
+                            context.usesExpressivePresentation,
+                        expressiveInsetExerciseHeader:
                             context.usesExpressivePresentation,
                         animateExpansion: context.usesExpressivePresentation,
                         expressivePresetDetail: planning != null,

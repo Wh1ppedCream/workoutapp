@@ -11,6 +11,9 @@ abstract final class TonosExpressiveStateMotion {
   static const data = Duration(milliseconds: 480);
   static const effects = Cubic(0.2, 0, 0, 1);
   static const spatial = _ExpressiveSettlingCurve();
+  // ExpansionTile reverses its controller. Flip the curve once so closing
+  // decelerates too, and keep its identity stable across header rebuilds.
+  static final _collapseSpatial = spatial.flipped;
 
   static bool enabled(BuildContext context) =>
       context.usesExpressivePresentation &&
@@ -21,13 +24,15 @@ abstract final class TonosExpressiveStateMotion {
   static Duration duration(BuildContext context, Duration duration) =>
       enabled(context) ? duration : Duration.zero;
 
-  static AnimationStyle? expansionStyle(BuildContext context) =>
-      context.usesExpressivePresentation
+  static AnimationStyle? expansionStyle(
+    BuildContext context, {
+    bool settleOnCollapse = false,
+  }) => context.usesExpressivePresentation
       ? AnimationStyle(
           duration: duration(context, standard),
           reverseDuration: duration(context, standard),
           curve: spatial,
-          reverseCurve: spatial,
+          reverseCurve: settleOnCollapse ? _collapseSpatial : spatial,
         )
       : null;
 }

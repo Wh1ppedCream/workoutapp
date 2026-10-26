@@ -23,6 +23,7 @@ class ExerciseCard extends StatelessWidget {
   final bool forceCollapsed;
   final bool animateExpansion;
   final bool expressiveWorkoutPresentation;
+  final bool expressiveInsetExerciseHeader;
   final bool expressivePresetDetail;
   final bool compactExpressivePresetLayout;
   final Color? expressivePresetOutlineColor;
@@ -52,6 +53,7 @@ class ExerciseCard extends StatelessWidget {
     this.forceCollapsed = false,
     this.animateExpansion = false,
     this.expressiveWorkoutPresentation = false,
+    this.expressiveInsetExerciseHeader = false,
     this.expressivePresetDetail = false,
     this.compactExpressivePresetLayout = true,
     this.expressivePresetOutlineColor,
@@ -84,6 +86,7 @@ class ExerciseCard extends StatelessWidget {
           forceCollapsed: forceCollapsed,
           animateExpansion: animateExpansion,
           expressiveWorkoutPresentation: expressiveWorkoutPresentation,
+          expressiveInsetExerciseHeader: expressiveInsetExerciseHeader,
           expressivePresetDetail: expressivePresetDetail,
           compactExpressivePresetLayout: compactExpressivePresetLayout,
           expressivePresetOutlineColor: expressivePresetOutlineColor,

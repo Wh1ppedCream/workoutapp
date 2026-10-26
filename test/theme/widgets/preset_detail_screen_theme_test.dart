@@ -535,12 +535,14 @@ void _expectExpressivePresetExerciseCard(
   expect(exerciseCard.expressiveWorkoutPresentation, isTrue);
   expect(exerciseCard.animateExpansion, isTrue);
   expect(exerciseCard.expressivePresetDetail, isTrue);
+  expect(exerciseCard.expressiveInsetExerciseHeader, isTrue);
   expect(exerciseCard.readOnlyMode, readOnly);
 
   final weightCard = tester.widget<WeightCard>(find.byType(WeightCard));
   expect(weightCard.expressiveWorkoutPresentation, isTrue);
   expect(weightCard.animateExpansion, isTrue);
   expect(weightCard.expressivePresetDetail, isTrue);
+  expect(weightCard.expressiveInsetExerciseHeader, isTrue);
   expect(weightCard.readOnlyMode, readOnly);
 
   final outerCard = tester.widget<Card>(
@@ -570,7 +572,7 @@ void _expectExpressivePresetExerciseCard(
             widget is Container &&
             widget.decoration is BoxDecoration &&
             (widget.decoration! as BoxDecoration).borderRadius ==
-                TonosExpressiveWorkoutShapes.exerciseHeader,
+                TonosExpressiveWorkoutShapes.exerciseCardCollapsed,
       ),
     ),
   );

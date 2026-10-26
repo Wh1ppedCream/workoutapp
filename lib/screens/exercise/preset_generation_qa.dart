@@ -591,6 +591,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       final expansionTile = ExpansionTile(
         expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
           context,
+          settleOnCollapse: true,
         ),
         onExpansionChanged: expressive == null
             ? null
@@ -646,6 +647,7 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
       );
       if (expressive == null) return expansionTile;
 
+      final headerProgress = (headerInset / 10).clamp(0.0, 1.0);
       // Offset the existing inner padding so content keeps its current alignment.
       return Padding(
         padding: EdgeInsets.fromLTRB(headerInset, headerInset, headerInset, 0),
@@ -654,9 +656,12 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             tileColor: headerSurface,
             shape: RoundedRectangleBorder(
               borderRadius: generation.sectionShape,
-              side: headerInset > 0
-                  ? BorderSide(color: generation.sectionBorder)
-                  : BorderSide.none,
+              side: BorderSide(
+                color: generation.sectionBorder.withValues(
+                  alpha: generation.sectionBorder.a * headerProgress,
+                ),
+                width: headerProgress,
+              ),
             ),
           ),
           child: expansionTile,

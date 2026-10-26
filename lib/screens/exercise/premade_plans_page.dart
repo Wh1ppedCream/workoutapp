@@ -1683,6 +1683,7 @@ class _PremadeSourceSection extends StatelessWidget {
       child: ExpansionTile(
         expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
           context,
+          settleOnCollapse: true,
         ),
         initiallyExpanded: initiallyExpanded,
         tilePadding: EdgeInsets.symmetric(
@@ -1837,6 +1838,7 @@ class _PremadePlanGroupTile extends StatelessWidget {
       child: ExpansionTile(
         expansionAnimationStyle: TonosExpressiveStateMotion.expansionStyle(
           context,
+          settleOnCollapse: true,
         ),
         initiallyExpanded: false,
         tilePadding: EdgeInsets.symmetric(

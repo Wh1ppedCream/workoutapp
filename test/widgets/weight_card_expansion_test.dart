@@ -59,6 +59,13 @@ void main() {
             expect(height, lessThanOrEqualTo(previousHeight + .01));
             previousHeight = height;
           }
+          final closedPaintedShape = _paintedCardShape(tester, card);
+          await tester.pump(const Duration(milliseconds: 200));
+          expect(
+            _paintedCardShape(tester, card),
+            closedPaintedShape,
+            reason: 'The outline must settle with the collapse, without a second tail animation.',
+          );
           expect(find.byKey(_weightKey), findsNothing);
           expect(
             tester.state(find.byKey(_weightKey, skipOffstage: false)),
@@ -155,6 +162,13 @@ void main() {
           expect(height, lessThanOrEqualTo(previousHeight + .01));
           previousHeight = height;
         }
+        final closedPaintedShape = _paintedCardShape(tester, card);
+        await tester.pump(const Duration(milliseconds: 200));
+        expect(
+          _paintedCardShape(tester, card),
+          closedPaintedShape,
+          reason: 'Active-workout corners must not keep moving after closure.',
+        );
         expect(find.byKey(_weightKey), findsNothing);
         expect(
           tester.state(find.byKey(_weightKey, skipOffstage: false)),
@@ -648,6 +662,13 @@ void main() {
   );
 }
 
+ShapeBorder _paintedCardShape(WidgetTester tester, Finder card) {
+  final physicalShape = tester.widget<PhysicalShape>(
+    find.descendant(of: card, matching: find.byType(PhysicalShape)).first,
+  );
+  return (physicalShape.clipper as ShapeBorderClipper).shape;
+}
+
 WeightExercise _exercise({int setCount = 2}) => WeightExercise(
   name: 'Squat',
   equipment: 'Barbell',
@@ -693,6 +714,8 @@ Widget _host(
               exercise: exercise,
               previewWeightUnit: WeightUnit.pounds,
               expressiveWorkoutPresentation:
+                  family == AppThemeFamily.expressive,
+              expressiveInsetExerciseHeader:
                   family == AppThemeFamily.expressive,
               expressivePresetDetail: presetDetail,
               compactExpressivePresetLayout: false,

@@ -11,6 +11,51 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Generate header outline settles without an end pop ${brightness.name}',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'guided_tutorial_completed.${TutorialIds.generatePlans}': true,
+        });
+        await tester.pumpWidget(
+          Provider<AppRepository>.value(
+            value: _GenerationRepository(),
+            child: MaterialApp(
+              theme: brightness == Brightness.light
+                  ? ExpressiveThemeDefinition.light()
+                  : ExpressiveThemeDefinition.dark(),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PresetGenerationQaScreen(profileId: 1),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(PresetGenerationQaScreen)),
+        );
+        final title = find.text(strings.generateWorkoutSetupTitle);
+        await tester.ensureVisible(title);
+        await tester.tap(title);
+        await tester.pumpAndSettle();
+        BorderSide border() =>
+            (ListTileTheme.of(tester.element(title)).shape!
+                    as RoundedRectangleBorder)
+                .side;
+        expect(border().width, 1);
+        await tester.tap(title);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 344));
+        expect(border().width, lessThan(.05));
+        expect(border().color.a, lessThan(.05));
+        await tester.pumpAndSettle();
+        expect(border().width, 0);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('Generate Plans back button follows the pushed route', (
     tester,
   ) async {
