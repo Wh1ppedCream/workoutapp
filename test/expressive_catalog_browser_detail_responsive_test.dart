@@ -10,6 +10,7 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/exercise_catalog_page.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:env_test/widgets/exercise_detail_sheet.dart';
 import 'package:env_test/widgets/exercise_media_thumbnail.dart';
 import 'package:flutter/rendering.dart';
@@ -449,6 +450,33 @@ void main() {
         );
         expect(find.text(strings.exerciseDetailFormGuide), findsOneWidget);
         expect(find.text(strings.catalogEquipment), findsOneWidget);
+        expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(3));
+        final guideTitle = find.text(strings.exerciseDetailFormGuide);
+        final guideAccordion = find
+            .ancestor(
+              of: guideTitle,
+              matching: find.byType(TonosExpressiveInsetAccordion),
+            )
+            .first;
+        final guideHeader = find
+            .descendant(of: guideAccordion, matching: find.byType(ListTile))
+            .first;
+        final guideLeading = tester.widget<ListTile>(guideHeader).leading!;
+        expect(
+          tester.getTopLeft(find.byWidget(guideLeading)).dx -
+              tester.getRect(guideHeader).left,
+          closeTo(16, .01),
+        );
+        expect(
+          tester.getTopLeft(find.text(strings.exerciseDetailSetup)).dx,
+          closeTo(tester.getTopLeft(guideTitle).dx, .01),
+          reason: 'Guide content and inset header share their text column',
+        );
+        await tester.ensureVisible(guideTitle);
+        await _settle(tester);
+        await tester.tap(guideTitle);
+        await _settle(tester);
+        expect(find.text(strings.exerciseDetailSetup), findsNothing);
         expect(
           find.byKey(
             const ValueKey('exercise-detail-expressive-heatmap-overlay'),
@@ -468,6 +496,7 @@ void main() {
 
         final equipmentHeading = find.text(strings.catalogEquipment).last;
         await tester.ensureVisible(equipmentHeading);
+        await _settle(tester);
         await tester.tap(equipmentHeading);
         await _settle(tester);
         expect(
@@ -477,6 +506,13 @@ void main() {
           ),
           findsOneWidget,
         );
+        final anatomyHeading = find.text(strings.exerciseDetailTargetAnatomy);
+        await tester.ensureVisible(anatomyHeading);
+        await _settle(tester);
+        await tester.tap(anatomyHeading);
+        await _settle(tester);
+        expect(find.text(strings.exerciseDetailBodyParts), findsOneWidget);
+        expect(find.text(strings.exerciseDetailMuscles), findsOneWidget);
 
         await tester.tap(find.text(strings.exerciseDetailTabMetrics));
         await _settle(tester);
@@ -561,6 +597,16 @@ void main() {
         }
         await tester.tap(find.text(strings.exerciseDetailTabDetails));
         await _settle(tester);
+        expect(
+          find.descendant(
+            of: find.byType(ExerciseDetailSheet),
+            matching: find.text('Dumbbell'),
+          ),
+          findsOneWidget,
+          reason: 'Equipment stays expanded after changing tabs',
+        );
+        expect(find.text(strings.exerciseDetailSetup), findsNothing);
+        expect(find.text(strings.exerciseDetailBodyParts), findsOneWidget);
         expect(tester.takeException(), isNull);
 
         await tester.pumpWidget(const SizedBox.shrink());

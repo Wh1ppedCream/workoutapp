@@ -22,6 +22,7 @@ import 'package:env_test/theme/tokens/app_flow_tokens.dart';
 import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_dialog.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:env_test/widgets/flow_screen_widgets.dart';
 
 import '../../../tools/theme_style_inventory.dart';
@@ -167,7 +168,7 @@ void main() {
         final title = find.text(strings.flowAddBranchTitle);
         final tile = find.ancestor(
           of: title,
-          matching: find.byType(ExpansionTile),
+          matching: find.byType(TonosExpressiveInsetAccordion),
         );
         _expectFlowOutlineAboveTile(
           tester,
@@ -423,22 +424,15 @@ void main() {
         expect(find.byType(DropdownButtonFormField<String>), findsNothing);
         expect(find.byTooltip(strings.flowFitToViewTooltip), findsOneWidget);
 
-        final cards = tester.widgetList<ExpansionTile>(
-          find.byType(ExpansionTile),
+        final cards = tester.widgetList<TonosExpressiveInsetAccordion>(
+          find.byType(TonosExpressiveInsetAccordion),
         );
         final supportShape = AppExpressivePlanningTokens.maybeOf(
           tester.element(find.byType(AutoPresetFlowScreen)),
         )!.supportShape;
-        expect(cards, everyElement(isA<ExpansionTile>()));
+        expect(cards, hasLength(2));
         for (final card in cards) {
-          expect(
-            card.shape,
-            RoundedRectangleBorder(borderRadius: supportShape),
-          );
-          expect(
-            card.collapsedShape,
-            RoundedRectangleBorder(borderRadius: supportShape),
-          );
+          expect(card.borderRadius, supportShape);
           expect((card.subtitle! as Text).maxLines, 2);
           expect((card.subtitle! as Text).overflow, isNull);
         }
@@ -716,9 +710,10 @@ void main() {
       (rule) => rule.id == 'auto-preset-flow-control-recipes',
     );
     const kindCounts = <String, int>{
-      'color_transform': 16,
-      'decoration': 4,
-      // The Expressive card paints its outline above ExpansionTile's Material.
+      // The new Expressive header retains its own existing leading icon recipe.
+      'color_transform': 17,
+      'decoration': 5,
+      // The Expressive card paints its outline above the disclosure's Material.
       'geometry': 10,
       'text_style': 3,
     };
@@ -732,7 +727,7 @@ void main() {
     final findings = report.findings
         .where((finding) => finding.ruleId == rule.id)
         .toList();
-    expect(findings, hasLength(33));
+    expect(findings, hasLength(35));
     for (final entry in kindCounts.entries) {
       expect(
         findings.where((finding) => finding.kind == entry.key),
@@ -1284,8 +1279,8 @@ void _expectFlowOutlineAboveTile(
     }),
   );
   expect(outlineLayer, findsOneWidget);
-  final tileWidget = tester.widget<ExpansionTile>(tile);
-  expect(tileWidget.shape, RoundedRectangleBorder(borderRadius: radius));
+  final tileWidget = tester.widget<TonosExpressiveInsetAccordion>(tile);
+  expect(tileWidget.borderRadius, radius);
 
   final clippingCard = find.ancestor(
     of: tile,

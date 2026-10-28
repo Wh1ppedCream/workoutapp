@@ -26,6 +26,7 @@ import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/widgets/app_expressive_destination_theme.dart';
 import '../theme/tokens/app_media_tokens.dart';
 import '../theme/widgets/media_viewer_image.dart';
+import '../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
@@ -1025,6 +1026,61 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final shapes = theme.shapeTokens;
     final motion = theme.motionTokens;
     final isExpandable = onExpandedChanged != null;
+    if (expressive && isExpandable) {
+      final radius = expressiveShape ?? shapes.exerciseDetailCard;
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: expressiveContainer,
+          borderRadius: radius,
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: ListTileTheme(
+          data: ListTileTheme.of(context)
+              .copyWith(minLeadingWidth: 34, horizontalTitleGap: 10),
+          child: TonosExpressiveInsetAccordion(
+            key: ValueKey('exercise-detail-inset-${widget.defId}-$title'),
+            surface: expressiveContainer,
+            foreground: expressiveOnContainer,
+            outline: theme.colorScheme.outlineVariant,
+            borderRadius: radius,
+            initiallyExpanded: isExpanded,
+            onExpansionChanged: onExpandedChanged,
+            semanticLabel: _strings.exerciseDetailSectionLabel(title),
+            tilePadding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: catalogCompactLayout ? 2 : 6,
+            ),
+            headerBodySpacing: 8,
+            childrenPadding: const EdgeInsets.fromLTRB(26, 0, 26, 12),
+            leading: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.13),
+                borderRadius: const BorderRadius.all(Radius.circular(11)),
+              ),
+              child: Icon(icon, color: accent, size: 19),
+            ),
+            title: Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: expressiveOnContainer,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            children: [
+              DefaultTextStyle.merge(
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: expressiveOnContainer,
+                ),
+                child: child,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return AnimatedSize(
       duration: appMotionDuration(context, motion.quick),
       curve: Curves.easeOutCubic,

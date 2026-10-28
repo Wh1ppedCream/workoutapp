@@ -19,6 +19,7 @@ import '../../theme/flow_diagram_presentation.dart';
 import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/widgets/tonos_dialog.dart';
 import '../../theme/widgets/tonos_field.dart';
+import '../../theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'flow_editor_expressive_widgets.dart';
 
 enum AddSetMode { explicit, copy }
@@ -1706,14 +1707,14 @@ class _FlowControlDeck extends StatelessWidget {
           child: Column(
             children: [
               branchNodeField(),
-              SizedBox(height: expressive == null ? 10 : 8),
+              SizedBox(height: expressive == null ? 10 : 12),
               if (branchGuidance != null && expressive != null)
                 FlowEditorGuidance(
                   text: branchGuidance!,
                   foreground: expressive.planSupportForeground,
                 ),
               if (branchGuidance != null && expressive != null)
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -1744,7 +1745,7 @@ class _FlowControlDeck extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: expressive == null ? 10 : 8),
+        SizedBox(height: expressive == null ? 10 : 12),
         _FlowControlCard(
           color: scheme.primary,
           icon: Icons.tune_outlined,
@@ -1753,16 +1754,16 @@ class _FlowControlDeck extends StatelessWidget {
           child: Column(
             children: [
               methodNodeField(),
-              SizedBox(height: expressive == null ? 10 : 8),
+              SizedBox(height: expressive == null ? 10 : 12),
               methodField(),
-              SizedBox(height: expressive == null ? 10 : 8),
+              SizedBox(height: expressive == null ? 10 : 12),
               if (actionGuidance != null && expressive != null)
                 FlowEditorGuidance(
                   text: actionGuidance!,
                   foreground: expressive.configurationForeground,
                 ),
               if (actionGuidance != null && expressive != null)
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
@@ -1911,60 +1912,97 @@ class _FlowControlCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: expressiveSurface ?? surfaces.flowControl,
         borderRadius: supportRadius,
-        // ExpansionTile paints an opaque Material over its parent. Keep the
-        // legacy outline here, but paint the Expressive outline above the tile.
+        // The disclosure paints its own Material. Keep the legacy outline here,
+        // but paint the Expressive outline above the content.
         border: expressive == null ? outlineBorder : null,
       ),
-      child: ExpansionTile(
-        key: PageStorageKey(title),
-        shape: expressiveShape,
-        collapsedShape: expressiveShape,
-        tilePadding: EdgeInsets.symmetric(
-          horizontal: expressive == null ? 14 : 12,
-          vertical: expressive == null ? 2 : 0,
-        ),
-        childrenPadding: EdgeInsets.fromLTRB(
-          expressive == null ? 14 : 12,
-          0,
-          expressive == null ? 14 : 12,
-          expressive == null ? 14 : 10,
-        ),
-        collapsedBackgroundColor:
-            expressiveSurface ??
-            color.withValues(alpha: surfaces.flowControlCollapsedOpacity),
-        backgroundColor:
-            expressiveSurface ??
-            color.withValues(alpha: surfaces.flowControlExpandedOpacity),
-        textColor: neo ? foreground : null,
-        collapsedTextColor: neo ? foreground : null,
-        iconColor: neo ? foreground : null,
-        collapsedIconColor: neo ? foreground : null,
-        leading: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: surfaces.flowControlIconOpacity),
-            borderRadius: shapes.flowIcon,
-          ),
-          child: Icon(icon, color: neo ? foreground : color, size: 20),
-        ),
-        title: Text(
-          title,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: neo ? foreground : null,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: expressive == null ? 1 : 2,
-          overflow: expressive == null ? TextOverflow.ellipsis : null,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: secondaryForeground,
-          ),
-        ),
-        children: [child],
-      ),
+      child: expressive != null
+          ? TonosExpressiveInsetAccordion(
+              key: PageStorageKey(title),
+              surface: expressiveSurface!,
+              foreground: foreground,
+              outline: expressive.outline,
+              borderRadius: supportRadius,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+              childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+              leading: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: color.withValues(
+                    alpha: surfaces.flowControlIconOpacity,
+                  ),
+                  borderRadius: shapes.flowIcon,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              title: Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              subtitle: Text(
+                subtitle,
+                maxLines: 2,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: secondaryForeground,
+                ),
+              ),
+              children: [child],
+            )
+          : ExpansionTile(
+              key: PageStorageKey(title),
+              shape: expressiveShape,
+              collapsedShape: expressiveShape,
+              tilePadding: EdgeInsets.symmetric(
+                horizontal: expressive == null ? 14 : 12,
+                vertical: expressive == null ? 2 : 0,
+              ),
+              childrenPadding: EdgeInsets.fromLTRB(
+                expressive == null ? 14 : 12,
+                0,
+                expressive == null ? 14 : 12,
+                expressive == null ? 14 : 10,
+              ),
+              collapsedBackgroundColor:
+                  expressiveSurface ??
+                  color.withValues(alpha: surfaces.flowControlCollapsedOpacity),
+              backgroundColor:
+                  expressiveSurface ??
+                  color.withValues(alpha: surfaces.flowControlExpandedOpacity),
+              textColor: neo ? foreground : null,
+              collapsedTextColor: neo ? foreground : null,
+              iconColor: neo ? foreground : null,
+              collapsedIconColor: neo ? foreground : null,
+              leading: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: color.withValues(
+                    alpha: surfaces.flowControlIconOpacity,
+                  ),
+                  borderRadius: shapes.flowIcon,
+                ),
+                child: Icon(icon, color: neo ? foreground : color, size: 20),
+              ),
+              title: Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: neo ? foreground : null,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              subtitle: Text(
+                subtitle,
+                maxLines: expressive == null ? 1 : 2,
+                overflow: expressive == null ? TextOverflow.ellipsis : null,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: secondaryForeground,
+                ),
+              ),
+              children: [child],
+            ),
     );
 
     if (expressive == null || expressiveOutlineShape == null) return card;

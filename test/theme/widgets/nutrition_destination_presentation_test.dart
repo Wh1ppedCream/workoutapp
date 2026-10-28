@@ -158,6 +158,23 @@ void main() {
             lessThanOrEqualTo(900 - keyboardInset),
             reason: 'Save stays in view at $width dp and $scale x',
           );
+          final cancelButton = find.ancestor(
+            of: find.text(strings.commonCancel),
+            matching: find.byType(FloatingActionButton),
+          );
+          final actionBounds = tester
+              .getRect(saveButton)
+              .expandToInclude(tester.getRect(cancelButton));
+          expect(
+            actionBounds.bottom,
+            greaterThanOrEqualTo(900 - keyboardInset - 48),
+            reason: 'Actions stay at the bottom rather than midway up the form',
+          );
+          expect(
+            actionBounds.top,
+            greaterThanOrEqualTo(900 - keyboardInset - 240),
+            reason: 'Wrapped actions stay in the footer at large text scales',
+          );
           expect(tester.takeException(), isNull);
         }
       }
@@ -307,8 +324,7 @@ void main() {
 
         final labels = ['Calories', 'Protein', 'Carbs', 'Fat'];
         final labelRects = [
-          for (final label in labels)
-            tester.getRect(find.text(label).first),
+          for (final label in labels) tester.getRect(find.text(label).first),
         ];
         final observedColumns = labelRects
             .map((rect) => rect.center.dx.round())
@@ -329,9 +345,7 @@ void main() {
           reason: 'All four summary labels remain present.',
         );
         expect(
-          labelRects.every(
-            (rect) => rect.left >= 0 && rect.right <= width,
-          ),
+          labelRects.every((rect) => rect.left >= 0 && rect.right <= width),
           isTrue,
           reason: 'Summary labels remain within the $width dp viewport.',
         );
@@ -498,10 +512,9 @@ void _expectStatCardRole(
   expect(textFinder, findsOneWidget, reason: label);
   final text = tester.widget<Text>(textFinder);
   expect(text.style?.color, foreground, reason: label);
-  final cardFinder = find.ancestor(
-    of: textFinder,
-    matching: find.byType(Container),
-  ).first;
+  final cardFinder = find
+      .ancestor(of: textFinder, matching: find.byType(Container))
+      .first;
   final decoration = tester.widget<Container>(cardFinder).decoration;
   expect((decoration as BoxDecoration).color, surface, reason: label);
 }
@@ -525,14 +538,11 @@ class _ResponsiveNutritionRepository extends AppRepository {
   FoodCatalogRepository get foodCatalog => catalog;
 
   @override
-  Future<void> seedNutrientsIfEmpty() async {
-  }
+  Future<void> seedNutrientsIfEmpty() async {}
 
   @override
   Future<List<GymProfile>> fetchAllProfiles() async {
-    return [
-      GymProfile(id: 1, name: 'Test profile', createdAt: DateTime(2026)),
-    ];
+    return [GymProfile(id: 1, name: 'Test profile', createdAt: DateTime(2026))];
   }
 
   @override

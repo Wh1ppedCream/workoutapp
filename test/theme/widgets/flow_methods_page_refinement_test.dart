@@ -15,6 +15,7 @@ import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,10 +61,49 @@ void main() {
       final appCard = find
           .ancestor(
             of: find.text(strings.rulesAppDefaultsTitle),
-            matching: find.byType(ExpansionTile),
+            matching: find.byType(TonosExpressiveInsetAccordion),
           )
           .first;
       expect(appRuleCountFinder(appCard, strings, 1), findsOneWidget);
+      expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(2));
+      expect(
+        find.ancestor(
+          of: find.text(strings.rulesProfileDefaultsTitle),
+          matching: find.byType(ExpansionTile),
+        ),
+        findsOneWidget,
+      );
+      final gymCard = find.byType(TonosExpressiveInsetAccordion).last;
+      final gymHeader = find
+          .descendant(of: gymCard, matching: find.byType(ListTile))
+          .first;
+      final nestedDefaults = find
+          .ancestor(
+            of: find.text(strings.rulesProfileDefaultsTitle),
+            matching: find.byType(ExpansionTile),
+          )
+          .first;
+      final gymBounds = tester.getRect(gymCard);
+      final defaultsBounds = tester.getRect(nestedDefaults);
+      expect(defaultsBounds.left - gymBounds.left, closeTo(10, .01));
+      expect(gymBounds.right - defaultsBounds.right, closeTo(10, .01));
+      expect(
+        defaultsBounds.top - tester.getRect(gymHeader).bottom,
+        closeTo(12, .01),
+      );
+      final defaultsChevron = find.descendant(
+        of: nestedDefaults,
+        matching: find.byType(AnimatedRotation),
+      );
+      expect(tester.widget<AnimatedRotation>(defaultsChevron).turns, .5);
+      await tester.ensureVisible(find.text(strings.rulesProfileDefaultsTitle));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.rulesProfileDefaultsTitle));
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(defaultsChevron).turns, 0);
+      await tester.tap(find.text(strings.rulesProfileDefaultsTitle));
+      await tester.pumpAndSettle();
+      expect(tester.widget<AnimatedRotation>(defaultsChevron).turns, .5);
 
       final infoBody = tester.widget<Text>(
         find.text(strings.rulesHowDefaultsBodyExpressive),
@@ -205,7 +245,7 @@ void main() {
     final appCard = find
         .ancestor(
           of: find.text(strings.rulesAppDefaultsTitle),
-          matching: find.byType(ExpansionTile),
+          matching: find.byType(TonosExpressiveInsetAccordion),
         )
         .first;
     Finder appRuleCount(int count) =>
@@ -369,6 +409,16 @@ void main() {
       expect(find.text(strings.trainArchivedPlans), findsOneWidget);
       expect(find.text('Active plan'), findsOneWidget);
       expect(find.text('Archived plan'), findsOneWidget);
+      expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(2));
+      for (final title in ['Active plan', 'Archived plan']) {
+        expect(
+          find.ancestor(
+            of: find.text(title),
+            matching: find.byType(ExpansionTile),
+          ),
+          findsOneWidget,
+        );
+      }
       expect(
         tester.getTopLeft(find.text(strings.trainActivePlans)).dy,
         lessThan(tester.getTopLeft(find.text('Active plan')).dy),

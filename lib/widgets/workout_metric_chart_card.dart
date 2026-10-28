@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../theme/widgets/tonos_expressive_navigation_motion.dart';
 import '../theme/widgets/tonos_expressive_state_motion.dart';
 
@@ -2028,6 +2029,64 @@ class _AdditionalDetailsDropdown extends StatelessWidget {
         context.usesExpressivePresentation &&
         !TickerMode.valuesOf(context).enabled &&
         MediaQuery.disableAnimationsOf(context);
+    if (usesExpressiveRecipe && !usesStaticExpressiveDisclosure) {
+      final surface =
+          destinationTokens?.surfaceAccent ?? expressiveTokens!.selectorTrack;
+      final foreground =
+          destinationTokens?.onSurfaceAccent ?? expressiveTokens!.actionPrimary;
+      return Material(
+        key: isProgressDestination
+            ? const ValueKey('workout-report-expressive-details-module')
+            : null,
+        color: surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: shapes.workoutMetricDetails,
+          side: BorderSide(
+            color: destinationTokens?.outlineAccent ?? cs.outlineVariant,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ListTileTheme(
+          data: ListTileTheme.of(context).copyWith(
+            minTileHeight: 48,
+            minVerticalPadding: 4,
+            minLeadingWidth: 32,
+            horizontalTitleGap: 10,
+          ),
+          child: TonosExpressiveInsetAccordion(
+            surface: surface,
+            foreground: foreground,
+            outline: destinationTokens?.outlineAccent ?? cs.outlineVariant,
+            borderRadius: shapes.workoutMetricDetails,
+            initiallyExpanded: expanded,
+            onExpansionChanged: (value) {
+              if (value != expanded) onToggle();
+            },
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 2,
+            ),
+            headerBodySpacing: 8,
+            childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: foreground.withValues(alpha: .12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.insights_outlined, size: 19, color: foreground),
+            ),
+            title: Text(
+              AppLocalizations.of(context).workoutReportAdditionalDetails,
+              style: Theme.of(context).textTheme.titleSmall
+                  ?.copyWith(color: foreground, fontWeight: FontWeight.w800),
+            ),
+            children: [_ReportInsightGrid(insights: insights)],
+          ),
+        ),
+      );
+    }
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

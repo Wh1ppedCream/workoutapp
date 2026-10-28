@@ -7,6 +7,7 @@ import '../theme/tokens/app_expressive_destination_tokens.dart';
 import '../theme/tokens/app_settings_presentation_tokens.dart';
 import '../theme/widgets/tonos_action_depth.dart';
 import '../theme/widgets/tonos_expansion_tile_scope.dart';
+import '../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../theme/widgets/tonos_surface.dart';
 
 /// Stable category accents for grouped settings content.
@@ -1018,6 +1019,7 @@ class SettingsExpansionSection extends StatelessWidget {
   final bool compact;
   final double? compactHeaderVerticalPadding;
   final int subtitleMaxLines;
+  final bool expressiveInsetHeader;
 
   const SettingsExpansionSection({
     super.key,
@@ -1029,6 +1031,7 @@ class SettingsExpansionSection extends StatelessWidget {
     this.compact = false,
     this.compactHeaderVerticalPadding,
     this.subtitleMaxLines = 1,
+    this.expressiveInsetHeader = false,
   });
 
   @override
@@ -1045,6 +1048,41 @@ class SettingsExpansionSection extends StatelessWidget {
     final controlForeground =
         destinationRole?.$2 ??
         tonosForegroundForSurface(context, resolvedSurface);
+
+    final leading = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: usesInkRecipe || destination != null
+            ? accentColor.withValues(alpha: 0.28)
+            : accentColor.withValues(alpha: presentation.iconFillOpacity),
+        borderRadius: shapes.settingsAction,
+      ),
+      child: Icon(
+        icon,
+        color: usesInkRecipe || destination != null
+            ? controlForeground
+            : accentColor,
+        size: 22,
+      ),
+    );
+    final titleWidget = Text(
+      title,
+      style: theme.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w900,
+        color: usesInkRecipe || destination != null ? controlForeground : null,
+      ),
+    );
+    final subtitleWidget = Text(
+      subtitle,
+      maxLines: subtitleMaxLines,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: usesInkRecipe || destination != null
+            ? controlForeground.withValues(alpha: 0.72)
+            : scheme.onSurfaceVariant,
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1091,52 +1129,38 @@ class SettingsExpansionSection extends StatelessWidget {
                   : theme.textTheme,
             ),
             child: TonosExpansionTileScope(
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: compact ? (compactHeaderVerticalPadding ?? 1) : 4,
-                ),
-                childrenPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: usesInkRecipe || destination != null
-                        ? accentColor.withValues(alpha: 0.28)
-                        : accentColor.withValues(
-                            alpha: presentation.iconFillOpacity,
-                          ),
-                    borderRadius: shapes.settingsAction,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: usesInkRecipe || destination != null
-                        ? controlForeground
-                        : accentColor,
-                    size: 22,
-                  ),
-                ),
-                title: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: usesInkRecipe || destination != null
-                        ? controlForeground
-                        : null,
-                  ),
-                ),
-                subtitle: Text(
-                  subtitle,
-                  maxLines: subtitleMaxLines,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: usesInkRecipe || destination != null
-                        ? controlForeground.withValues(alpha: 0.72)
-                        : scheme.onSurfaceVariant,
-                  ),
-                ),
-                children: children,
-              ),
+              child: expressiveInsetHeader && context.usesExpressivePresentation
+                  ? TonosExpressiveInsetAccordion(
+                      surface: resolvedSurface,
+                      foreground: controlForeground,
+                      outline: accentColor.withValues(alpha: .55),
+                      borderRadius: shapes.sheet,
+                      headerBodySpacing: 8,
+                      childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+                      tilePadding: EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: compact
+                            ? (compactHeaderVerticalPadding ?? 1)
+                            : 4,
+                      ),
+                      leading: leading,
+                      title: titleWidget,
+                      subtitle: subtitleWidget,
+                      children: children,
+                    )
+                  : ExpansionTile(
+                      tilePadding: EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: compact
+                            ? (compactHeaderVerticalPadding ?? 1)
+                            : 4,
+                      ),
+                      childrenPadding: EdgeInsets.zero,
+                      leading: leading,
+                      title: titleWidget,
+                      subtitle: subtitleWidget,
+                      children: children,
+                    ),
             ),
           ),
         ),
@@ -1742,14 +1766,20 @@ SwitchThemeData _profileExpressiveSwitchTheme(
 
 List<Widget> settingsTilesWithDividers(
   BuildContext context,
-  List<Widget> tiles,
-) {
+  List<Widget> tiles, {
+  double endIndent = 0,
+}) {
   final dividerColor = context.cs.outlineVariant.withValues(alpha: 0.55);
   return [
     for (var i = 0; i < tiles.length; i++) ...[
       tiles[i],
       if (i != tiles.length - 1)
-        Divider(height: 1, indent: 70, color: dividerColor),
+        Divider(
+          height: 1,
+          indent: 70,
+          endIndent: endIndent,
+          color: dividerColor,
+        ),
     ],
   ];
 }

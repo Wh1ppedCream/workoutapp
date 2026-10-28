@@ -1,6 +1,6 @@
 # Tonos Expressive - Animation Review Checklist
 
-Updated: 2026-10-26.
+Updated: 2026-10-27.
 
 **Progress: 7 approved / 10 pending / 17 original motion groups.**
 
@@ -15,6 +15,18 @@ The [2026-10-25 deeper interaction review](deeper-interaction-review-20261025.md
 The [2026-10-26 expansion-motion audit](expansion-motion-audit-20261026.md) checks the other disclosures after the preset collapse-end fix. It corrects active-workout corner lag, custom accordion closing curves and the Generate Plans header-outline exit; approval totals remain unchanged.
 
 The [accordion-style baseline gallery](accordion-style-baseline-20261026/BASELINE_GALLERY.html) preserves the seven suggested migration areas in light/dark screenshots from checkpoint `a8dff3e`, before further styling changes. These reference captures do not reopen or change approvals.
+
+The [scoped inset-header trial](inset-accordion-migration-20261026.md) applies that treatment to the five areas requested by the user, with only the outermost Rules/Flows/Food groups included. It awaits visual review; approval totals remain unchanged.
+
+The [accordion before-and-after comparison](accordion-style-comparison-20261026/COMPARISON_GALLERY.html) pairs the baseline with the updated five areas in light and dark modes.
+
+The [latest accordion finishing-pass captures](accordion-final-polish-20261026/REVIEW.html) show the subsequent geometry, chevron, divider and Food-action corrections. The comparison above remains a snapshot from before those corrections.
+
+The [Exercise Details tab refinement](exercise-details-inset-20261027.md) applies the adapted treatment to its Form guide, Equipment and Target anatomy disclosures.
+
+The [combined accordion review](accordion-unified-review-20261027.html) brings together the baselines, current after captures, reverted experiments and remaining migration candidates. Its refreshed dark-mode Rules, Flows and Tutorials images and light/dark branch and Food images show the later spacing corrections. The subsequent Exercise Details density refinement and Workout Report treatment described below postdate those captures.
+
+Current inset-header styling trials also cover the outer Rules/Flows groups, progression editor, Tutorials, outer Food sections, Exercise Details and Workout Report Additional Details. These use the shared settling motion; no additional animation or page approval is inferred from their implementation. The original 17-group totals and the separate M07a/M07b review statuses remain unchanged.
 
 ## Approved
 
@@ -91,3 +103,5 @@ There is no separate remaining nutrition-tools animation beyond the nutrition fe
 - **2026-10-25:** User preferred the previous Premade Plans and Gym Profile equipment accordions. Restored their source/tests and Generate Plans' reference implementation exactly from `c9c95a7`, removing the experiment-only component and test. The [experiment record](planning-accordion-followup-20261025.md) and comparison captures remain archived. M07 is still pending; totals remain 6 approved / 11 pending / 17 total.
 - **2026-10-25:** User explicitly approved M07's expanding animations, then requested the same motion style on plan/preset detail exercise cards. M01-M07 are approved: **7 approved / 10 pending / 17 original groups**. The separate M07a exercise-card trial awaits review; existing page visual approvals and M05 active-workout motion are unchanged.
 - **2026-10-26:** Audited other expansion instances after the preset collapse-end fix. Corrected active-workout corner lag, Generate/Premade custom accordion closing curves and the Generate inset-outline exit. All **88 focused widget tests passed**; scoped analysis had only two existing deprecation infos. Rebuilt/installed on Pixel 7 with data/preferences preserved, exercised the changed disclosures in light mode and returned to **Quads, Hips** plan detail. See the [audit record](expansion-motion-audit-20261026.md) for coverage and limits. Approval statuses/totals are unchanged.
+- **2026-10-27:** Completed the shared inset-header finishing pass and Exercise Details adaptation, combined the comparison documents, and refreshed 11 outdated device captures. Subsequently reduced Exercise Details header height by 8dp and expanded section spacing by 16dp overall; **43 focused checks passed**, scoped analysis was clean, and the refreshed Pixel 7 showed the updated spacing.
+- **2026-10-27:** Adapted Workout Report Additional Details in Expressive to the shared inset accordion, with a compact icon/header, outer outline, padded statistics grid and coordinated 360ms expansion. Classic/Neo and the inactive reduced-motion compatibility path retain their existing rendering. **13 targeted widget checks passed** across responsive/data/theme and tab-state coverage; scoped analysis and `git diff --check` passed. The report has 60 inventory findings, all assigned to its existing migrated owner; its exact-count assertion was updated. The broader combined inventory test remains blocked earlier by the pre-existing Flow Methods count mismatch (55 expected, 56 actual), which was left untouched. Reviewed the report in light/dark on Pixel 7 and restored light mode, leaving Additional Details expanded. No workout, food, rule or progression values were edited or saved. This is a checkpoint of work awaiting the user's next motion review, not new approval or release qualification.

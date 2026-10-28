@@ -5,10 +5,107 @@ import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/nutrition/food_customization_page.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
+import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
+import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_theme_ready.dart';
 
 void main() {
+  for (final brightness in Brightness.values) {
+    testWidgets(
+      'Expressive food editor changes only outer sections ${brightness.name}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(390, 1100));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: brightness == Brightness.light
+                ? ExpressiveThemeDefinition.light()
+                : ExpressiveThemeDefinition.dark(),
+            localizationsDelegates: tonosLocalizationDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const FoodCustomizationPage(
+              initialName: 'Test oats',
+              initialProteinG: 12,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final strings = AppLocalizations.of(
+          tester.element(find.byType(FoodCustomizationPage)),
+        );
+        expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(4));
+        for (final accordion
+            in tester.widgetList<TonosExpressiveInsetAccordion>(
+              find.byType(TonosExpressiveInsetAccordion),
+            )) {
+          final outerCard = tester.widget<TonosThemeReadyCard>(
+            find
+                .ancestor(
+                  of: find.byWidget(accordion),
+                  matching: find.byType(TonosThemeReadyCard),
+                )
+                .first,
+          );
+          expect(
+            accordion.borderRadius,
+            (outerCard.shape! as RoundedRectangleBorder).borderRadius,
+          );
+        }
+        expect(find.byType(ExpansionTile), findsNWidgets(5));
+        final proteinTitle = find.text('Protein Components');
+        expect(
+          find.ancestor(of: proteinTitle, matching: find.byType(ExpansionTile)),
+          findsOneWidget,
+        );
+        final basisTitle = find.text(strings.foodCustomizationBasisPortion);
+        expect(
+          find.ancestor(of: basisTitle, matching: find.byType(ExpansionTile)),
+          findsOneWidget,
+        );
+        expect(
+          tester.getTopLeft(basisTitle).dx,
+          closeTo(
+            tester
+                .getTopLeft(find.text(strings.foodCustomizationPortionInfo))
+                .dx,
+            .01,
+          ),
+        );
+        await tester.ensureVisible(proteinTitle);
+        await tester.tap(proteinTitle);
+        await tester.pumpAndSettle();
+        expect(find.text('Alanine (g)'), findsOneWidget);
+        final macroTitle = find.text(strings.foodCustomizationMacronutrients);
+        final macroAccordion = find
+            .ancestor(
+              of: macroTitle,
+              matching: find.byType(TonosExpressiveInsetAccordion),
+            )
+            .first;
+        final macroHeader = find
+            .descendant(of: macroAccordion, matching: find.byType(ListTile))
+            .first;
+        final proteinField = find.byKey(
+          const PageStorageKey('field_Macronutrients > Protein (g)'),
+        );
+        expect(
+          tester.getRect(proteinField).top - tester.getRect(macroHeader).bottom,
+          greaterThanOrEqualTo(10),
+        );
+        await tester.ensureVisible(macroTitle);
+        await tester.tap(macroTitle);
+        await tester.pumpAndSettle();
+        await tester.tap(macroTitle);
+        await tester.pumpAndSettle();
+        final field = tester.widget<TonosFormField>(proteinField);
+        expect(field.controller!.text, '12');
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   final themes = <String, ThemeData>{
     'Classic light': ClassicThemeDefinition.light(),
     'Classic dark': ClassicThemeDefinition.dark(),
@@ -37,16 +134,14 @@ void main() {
       final pageContext = tester.element(find.byType(FoodCustomizationPage));
       final strings = AppLocalizations.of(pageContext);
       final nutrition = pageContext.nutritionTokens;
-      final cards =
-          tester
-              .widgetList<TonosThemeReadyCard>(find.byType(TonosThemeReadyCard))
-              .toList();
-      final sectionCards =
-          cards.where((card) {
-            final shape = card.shape;
-            return shape is RoundedRectangleBorder &&
-                shape.borderRadius == nutrition.sectionShape;
-          }).toList();
+      final cards = tester
+          .widgetList<TonosThemeReadyCard>(find.byType(TonosThemeReadyCard))
+          .toList();
+      final sectionCards = cards.where((card) {
+        final shape = card.shape;
+        return shape is RoundedRectangleBorder &&
+            shape.borderRadius == nutrition.sectionShape;
+      }).toList();
 
       expect(sectionCards, hasLength(4));
       for (final card in sectionCards) {
@@ -61,15 +156,14 @@ void main() {
       await tester.tap(usualPortionTitle);
       await tester.pumpAndSettle();
 
-      final portionCards =
-          tester
-              .widgetList<TonosThemeReadyCard>(find.byType(TonosThemeReadyCard))
-              .where((card) {
-                final shape = card.shape;
-                return shape is RoundedRectangleBorder &&
-                    shape.borderRadius == nutrition.portionShape;
-              })
-              .toList();
+      final portionCards = tester
+          .widgetList<TonosThemeReadyCard>(find.byType(TonosThemeReadyCard))
+          .where((card) {
+            final shape = card.shape;
+            return shape is RoundedRectangleBorder &&
+                shape.borderRadius == nutrition.portionShape;
+          })
+          .toList();
       expect(portionCards, hasLength(2));
 
       final densityHelp = tester.widget<Text>(

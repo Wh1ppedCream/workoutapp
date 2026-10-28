@@ -11,6 +11,7 @@ import '../../../theme/theme_extensions.dart';
 import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/widgets/app_expressive_destination_theme.dart';
+import '../../../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/safe_error_view.dart';
 import '../../../widgets/settings_tiles.dart';
@@ -406,6 +407,36 @@ class _FlowScopeCard extends StatelessWidget {
     final cardRadius = expressive
         ? ExpressiveTrainShapes.activePlans
         : shapes.settingsPanel;
+    final leading = Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .17),
+        borderRadius: expressive
+            ? ExpressiveTrainShapes.focusInset
+            : shapes.settingsScopeIcon,
+      ),
+      child: Icon(
+        icon,
+        color: neo || expressive ? cardForeground : color,
+        size: 22,
+      ),
+    );
+    final titleWidget = Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w900,
+        color: neo || expressive ? cardForeground : null,
+      ),
+    );
+    final subtitleWidget = Text(
+      subtitle,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
+    );
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -422,50 +453,43 @@ class _FlowScopeCard extends StatelessWidget {
       ),
       child: TonosSurfaceTheme(
         surface: cardSurface,
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          iconColor: cardForeground,
-          collapsedIconColor: cardForeground,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          collapsedBackgroundColor: neo || expressive
-              ? cardSurface
-              : color.withValues(alpha: .08),
-          backgroundColor: neo || expressive
-              ? cardSurface
-              : color.withValues(alpha: .04),
-          leading: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: .17),
-              borderRadius: expressive
-                  ? ExpressiveTrainShapes.focusInset
-                  : shapes.settingsScopeIcon,
-            ),
-            child: Icon(
-              icon,
-              color: neo || expressive ? cardForeground : color,
-              size: 22,
-            ),
-          ),
-          title: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: neo || expressive ? cardForeground : null,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(color: cardSecondary),
-          ),
-          children: [child],
-        ),
+        child: expressive
+            ? TonosExpressiveInsetAccordion(
+                surface: cardSurface,
+                foreground: cardForeground,
+                outline: cardForeground.withValues(alpha: .38),
+                borderRadius: cardRadius,
+                initiallyExpanded: initiallyExpanded,
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 3,
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                leading: leading,
+                title: titleWidget,
+                subtitle: subtitleWidget,
+                children: [child],
+              )
+            : ExpansionTile(
+                initiallyExpanded: initiallyExpanded,
+                iconColor: cardForeground,
+                collapsedIconColor: cardForeground,
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 3,
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                collapsedBackgroundColor: neo || expressive
+                    ? cardSurface
+                    : color.withValues(alpha: .08),
+                backgroundColor: neo || expressive
+                    ? cardSurface
+                    : color.withValues(alpha: .04),
+                leading: leading,
+                title: titleWidget,
+                subtitle: subtitleWidget,
+                children: [child],
+              ),
       ),
     );
   }
@@ -517,7 +541,7 @@ class _ProfileFlowCard extends StatelessWidget {
             summary: group.summary,
             onTap: onOpenProfile,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: expressive ? 14 : 10),
           Row(
             children: [
               Icon(Icons.event_note_outlined, color: planColor, size: 20),

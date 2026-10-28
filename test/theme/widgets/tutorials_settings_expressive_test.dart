@@ -6,6 +6,7 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/widgets/settings_tiles.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,13 +85,14 @@ void main() {
           isTrue,
         );
 
-        final mainTabsTile = tester.widget<ExpansionTile>(
-          find.byType(ExpansionTile).first,
+        final mainTabsTile = tester.widget<TonosExpressiveInsetAccordion>(
+          find.byType(TonosExpressiveInsetAccordion).first,
         );
-        expect(mainTabsTile.tilePadding!.resolve(TextDirection.ltr).top, 0);
+        expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(5));
+        expect(mainTabsTile.tilePadding.top, 0);
         final subtitle = tester.widget<Text>(
           find.descendant(
-            of: find.byType(ExpansionTile).first,
+            of: find.byType(TonosExpressiveInsetAccordion).first,
             matching: find.text(strings.tutorialsMainTabsSubtitle),
           ),
         );
@@ -109,6 +111,38 @@ void main() {
           ),
         );
         expect(replayTile.compact, isTrue);
+        final headerTile = find
+            .descendant(
+              of: find.byType(TonosExpressiveInsetAccordion).first,
+              matching: find.byType(ListTile),
+            )
+            .first;
+        final replayListTile = find
+            .ancestor(
+              of: find.text(trainReplay),
+              matching: find.byType(ListTile),
+            )
+            .first;
+        final headerLeading = tester.widget<ListTile>(headerTile).leading!;
+        final rowLeading = tester.widget<ListTile>(replayListTile).leading!;
+        expect(
+          tester.getTopLeft(find.byWidget(headerLeading)).dx,
+          closeTo(tester.getTopLeft(find.byWidget(rowLeading)).dx, .01),
+        );
+        final categoryDivider = find
+            .descendant(
+              of: find.byType(TonosExpressiveInsetAccordion).first,
+              matching: find.byType(Divider),
+            )
+            .first;
+        final divider = tester.widget<Divider>(categoryDivider);
+        expect(
+          tester.getRect(categoryDivider).right - divider.endIndent!,
+          closeTo(
+            tester.getRect(find.byWidget(replayTile.trailing!)).right,
+            .01,
+          ),
+        );
         expect(tester.takeException(), isNull);
       },
     );

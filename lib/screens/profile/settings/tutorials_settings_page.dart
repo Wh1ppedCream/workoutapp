@@ -19,6 +19,11 @@ class TutorialsSettingsPage extends StatelessWidget {
     final expressiveProfile =
         context.usesExpressivePresentation &&
         Theme.of(context).extension<AppExpressiveTrainTokens>() != null;
+    List<Widget> categoryRows(List<Widget> rows) => settingsTilesWithDividers(
+      context,
+      rows,
+      endIndent: expressiveProfile ? 14 : 0,
+    );
     return _withExpressiveProfileTheme(
       context,
       SettingsPageScaffold(
@@ -59,13 +64,14 @@ class TutorialsSettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           SettingsExpansionSection(
             title: strings.tutorialsMainTabsTitle,
+            expressiveInsetHeader: expressiveProfile,
             subtitle: strings.tutorialsMainTabsSubtitle,
             icon: Icons.school_outlined,
             accentColor: SettingsAccent.appearance,
             compact: expressiveProfile,
             compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
             subtitleMaxLines: expressiveProfile ? 2 : 1,
-            children: settingsTilesWithDividers(context, [
+            children: categoryRows([
               _tutorialResetTile(
                 context,
                 icon: Icons.fitness_center,
@@ -95,13 +101,14 @@ class TutorialsSettingsPage extends StatelessWidget {
           ),
           SettingsExpansionSection(
             title: strings.tutorialsWorkoutTitle,
+            expressiveInsetHeader: expressiveProfile,
             subtitle: strings.tutorialsWorkoutSubtitle,
             icon: Icons.fitness_center,
             accentColor: SettingsAccent.training,
             compact: expressiveProfile,
             compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
             subtitleMaxLines: expressiveProfile ? 2 : 1,
-            children: settingsTilesWithDividers(context, [
+            children: categoryRows([
               _tutorialResetTile(
                 context,
                 icon: Icons.play_circle_outline,
@@ -111,13 +118,14 @@ class TutorialsSettingsPage extends StatelessWidget {
           ),
           SettingsExpansionSection(
             title: strings.tutorialsPlansTitle,
+            expressiveInsetHeader: expressiveProfile,
             subtitle: strings.tutorialsPlansSubtitle,
             icon: Icons.auto_awesome_outlined,
             accentColor: SettingsAccent.training,
             compact: expressiveProfile,
             compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
             subtitleMaxLines: expressiveProfile ? 2 : 1,
-            children: settingsTilesWithDividers(context, [
+            children: categoryRows([
               _tutorialResetTile(
                 context,
                 icon: Icons.auto_awesome,
@@ -157,13 +165,14 @@ class TutorialsSettingsPage extends StatelessWidget {
           ),
           SettingsExpansionSection(
             title: strings.tutorialsCatalogTitle,
+            expressiveInsetHeader: expressiveProfile,
             subtitle: strings.tutorialsCatalogSubtitle,
             icon: Icons.menu_book_outlined,
             accentColor: SettingsAccent.advanced,
             compact: expressiveProfile,
             compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
             subtitleMaxLines: expressiveProfile ? 2 : 1,
-            children: settingsTilesWithDividers(context, [
+            children: categoryRows([
               _tutorialResetTile(
                 context,
                 icon: Icons.search,
@@ -198,13 +207,14 @@ class TutorialsSettingsPage extends StatelessWidget {
           ),
           SettingsExpansionSection(
             title: strings.tutorialsProgressTitle,
+            expressiveInsetHeader: expressiveProfile,
             subtitle: strings.tutorialsProgressSubtitle,
             icon: Icons.trending_up,
             accentColor: SettingsAccent.progress,
             compact: expressiveProfile,
             compactHeaderVerticalPadding: expressiveProfile ? 0 : null,
             subtitleMaxLines: expressiveProfile ? 2 : 1,
-            children: settingsTilesWithDividers(context, [
+            children: categoryRows([
               _tutorialResetTile(
                 context,
                 icon: Icons.show_chart,

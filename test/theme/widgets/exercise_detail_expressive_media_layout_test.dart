@@ -14,6 +14,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:env_test/widgets/exercise_definition_info_tile.dart';
 import 'package:env_test/widgets/exercise_detail_sheet.dart';
 import 'package:provider/provider.dart';
@@ -121,6 +122,7 @@ void main() {
           );
           expect(sheet.expressiveCatalogPresentation, isTrue);
           expect(sheet.catalogBrowserDetailRefinement, isTrue);
+          expect(find.byType(TonosExpressiveInsetAccordion), findsNWidgets(3));
           expect(
             Theme.of(tester.element(find.byType(ExerciseDetailSheet)))
                 .extension<AppExpressiveDestinationTokens>()
@@ -173,6 +175,14 @@ void main() {
           await _settle(tester);
           final viewer = find.byKey(const ValueKey('expressive-media-viewer'));
           expect(viewer, findsOneWidget);
+          expect(
+            find.descendant(
+              of: viewer,
+              matching: find.byType(TonosExpressiveInsetAccordion),
+            ),
+            findsNothing,
+            reason: 'The static image-viewer guide retains its existing layout',
+          );
           expect(tester.getSize(viewer), const Size(320, 780));
           final interactiveViewer = find.descendant(
             of: viewer,
@@ -433,6 +443,7 @@ void main() {
           );
           expect(sheet.expressiveCatalogPresentation, isFalse);
           expect(sheet.catalogBrowserDetailRefinement, isFalse);
+          expect(find.byType(TonosExpressiveInsetAccordion), findsNothing);
           expect(
             find.byKey(const ValueKey('exercise-detail-expressive-title-pill')),
             findsNothing,

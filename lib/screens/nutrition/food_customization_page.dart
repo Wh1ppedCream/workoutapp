@@ -8,6 +8,7 @@ import '../../theme/widgets/tonos_field.dart';
 import '../../theme/widgets/tonos_theme_ready.dart';
 import '../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../theme/widgets/app_expressive_destination_theme.dart';
+import '../../theme/widgets/tonos_expressive_inset_accordion.dart';
 
 import 'package:flutter/services.dart';
 
@@ -462,8 +463,10 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: SafeArea(
+        top: !expressiveNutrition,
         minimum: const EdgeInsets.symmetric(horizontal: 16),
         child: Center(
+          heightFactor: expressiveNutrition ? 1 : null,
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: expressiveNutrition ? 760 : double.infinity,
@@ -511,169 +514,175 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
               child: Form(
                 key: _formKey,
                 child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Name & Brand
-              _withExpressiveNutritionGroup(
-                context,
-                destination: destination,
-                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TonosFormField(
-                      controller: _nameController,
-                      labelText: strings.foodCustomizationName,
-                      border: const OutlineInputBorder(),
-                      validator: (v) => (v == null || v.isEmpty)
-                          ? strings.foodCustomizationEnterName
-                          : null,
-                      textInputAction: TextInputAction.next,
+                    // 1. Name & Brand
+                    _withExpressiveNutritionGroup(
+                      context,
+                      destination: destination,
+                      child: Column(
+                        children: [
+                          TonosFormField(
+                            controller: _nameController,
+                            labelText: strings.foodCustomizationName,
+                            border: const OutlineInputBorder(),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? strings.foodCustomizationEnterName
+                                : null,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
+                          TonosFormField(
+                            controller: _brandController,
+                            labelText: strings.foodCustomizationBrand,
+                            border: const OutlineInputBorder(),
+                            textInputAction: TextInputAction.next,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 2. Images
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 100,
+                                color: context.nutritionTokens.photoPlaceholder,
+                                child: _foodImagePath == null
+                                    ? Center(
+                                        child: Icon(
+                                          Icons.photo,
+                                          size: 40,
+                                          color: context
+                                              .nutritionTokens
+                                              .mutedAction,
+                                        ),
+                                      )
+                                    : Image.network(
+                                        _foodImagePath!,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                              const SizedBox(height: 4),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // TODO: pick a photo of the food (ImagePicker -> File -> setState)
+                                },
+                                child: Text(strings.foodCustomizationFoodPhoto),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 100,
+                                color: context.nutritionTokens.photoPlaceholder,
+                                child: _labelImagePath == null
+                                    ? Center(
+                                        child: Icon(
+                                          Icons.photo,
+                                          size: 40,
+                                          color: context
+                                              .nutritionTokens
+                                              .mutedAction,
+                                        ),
+                                      )
+                                    : Image.network(
+                                        _labelImagePath!,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                              const SizedBox(height: 4),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // TODO: pick a photo of the nutrition label
+                                },
+                                child: Text(
+                                  strings.foodCustomizationLabelPhoto,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 2. Portion Info
+                    // After the Images Row:
+                    const SizedBox(height: 20),
+                    _buildPortionCard(context, expressive: destination != null),
+                    const SizedBox(height: 12),
+
+                    //TODO: make this density bit properly fit in
+                    const SizedBox(height: 12),
+                    _buildNumberField(
+                      label: strings.foodCustomizationDensity,
+                      controller: _densityController,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 4,
+                        bottom: 8,
+                      ),
+                      child: Text(
+                        strings.foodCustomizationDensityHelp,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.nutritionTokens.densityHelp,
+                        ),
+                      ),
+                    ),
+
+                    // 3. Calories (kept separate)
+                    _buildNumberField(
+                      label: strings.foodCustomizationCalories,
+                      controller: _calController,
                     ),
                     const SizedBox(height: 12),
-                    TonosFormField(
-                      controller: _brandController,
-                      labelText: strings.foodCustomizationBrand,
-                      border: const OutlineInputBorder(),
-                      textInputAction: TextInputAction.next,
+
+                    // 4. Macronutrients (Protein, Carbs, Fats) unified in one card
+                    _buildGroupCard(
+                      context,
+                      strings.foodCustomizationMacronutrients,
+                      _macroNodes,
+                      groupKey: 'Macronutrients',
+                      controllerOverrides: {
+                        'Macronutrients > Protein (g)': _proteinController,
+                        'Macronutrients > Carbs (g)': _carbController,
+                        'Macronutrients > Fats (g)': _fatController,
+                      },
+                      initiallyExpanded: true,
                     ),
+                    const SizedBox(height: 12),
+
+                    // 5. Micronutrients & Additional Components
+                    _buildGroupCard(
+                      context,
+                      strings.foodCustomizationMicronutrients,
+                      _micronutrientNodes,
+                      groupKey: 'Micronutrients',
+                      initiallyExpanded: false,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildGroupCard(
+                      context,
+                      strings.foodCustomizationAdditionalComponents,
+                      _additionalNodes,
+                      groupKey: 'Additional Components',
+                      initiallyExpanded: false,
+                    ),
+                    const SizedBox(height: 20),
                   ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // 2. Images
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 100,
-                          color: context.nutritionTokens.photoPlaceholder,
-                          child: _foodImagePath == null
-                              ? Center(
-                                  child: Icon(
-                                    Icons.photo,
-                                    size: 40,
-                                    color: context.nutritionTokens.mutedAction,
-                                  ),
-                                )
-                              : Image.network(
-                                  _foodImagePath!,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                        const SizedBox(height: 4),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: pick a photo of the food (ImagePicker -> File -> setState)
-                          },
-                          child: Text(strings.foodCustomizationFoodPhoto),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 100,
-                          color: context.nutritionTokens.photoPlaceholder,
-                          child: _labelImagePath == null
-                              ? Center(
-                                  child: Icon(
-                                    Icons.photo,
-                                    size: 40,
-                                    color: context.nutritionTokens.mutedAction,
-                                  ),
-                                )
-                              : Image.network(
-                                  _labelImagePath!,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                        const SizedBox(height: 4),
-                        ElevatedButton(
-                          onPressed: () {
-                            // TODO: pick a photo of the nutrition label
-                          },
-                          child: Text(strings.foodCustomizationLabelPhoto),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // 2. Portion Info
-              // After the Images Row:
-              const SizedBox(height: 20),
-              _buildPortionCard(context, expressive: destination != null),
-              const SizedBox(height: 12),
-
-              //TODO: make this density bit properly fit in
-              const SizedBox(height: 12),
-              _buildNumberField(
-                label: strings.foodCustomizationDensity,
-                controller: _densityController,
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  left: 12,
-                  right: 12,
-                  top: 4,
-                  bottom: 8,
-                ),
-                child: Text(
-                  strings.foodCustomizationDensityHelp,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.nutritionTokens.densityHelp,
-                  ),
-                ),
-              ),
-
-              // 3. Calories (kept separate)
-              _buildNumberField(
-                label: strings.foodCustomizationCalories,
-                controller: _calController,
-              ),
-              const SizedBox(height: 12),
-
-              // 4. Macronutrients (Protein, Carbs, Fats) unified in one card
-              _buildGroupCard(
-                context,
-                strings.foodCustomizationMacronutrients,
-                _macroNodes,
-                groupKey: 'Macronutrients',
-                controllerOverrides: {
-                  'Macronutrients > Protein (g)': _proteinController,
-                  'Macronutrients > Carbs (g)': _carbController,
-                  'Macronutrients > Fats (g)': _fatController,
-                },
-                initiallyExpanded: true,
-              ),
-              const SizedBox(height: 12),
-
-              // 5. Micronutrients & Additional Components
-              _buildGroupCard(
-                context,
-                strings.foodCustomizationMicronutrients,
-                _micronutrientNodes,
-                groupKey: 'Micronutrients',
-                initiallyExpanded: false,
-              ),
-              const SizedBox(height: 12),
-              _buildGroupCard(
-                context,
-                strings.foodCustomizationAdditionalComponents,
-                _additionalNodes,
-                groupKey: 'Additional Components',
-                initiallyExpanded: false,
-              ),
-              const SizedBox(height: 20),
-            ],
                 ),
               ),
             ),
@@ -684,6 +693,41 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
   }
 
   // ---------- UI Builders ----------
+
+  Widget _buildSectionExpansion({
+    required BuildContext context,
+    required Key key,
+    required Widget title,
+    required List<Widget> children,
+    required Color? surface,
+    required Color? foreground,
+    required Color outline,
+    required bool initiallyExpanded,
+    required EdgeInsets childrenPadding,
+  }) {
+    if (context.usesExpressivePresentation && surface != null) {
+      return TonosExpressiveInsetAccordion(
+        key: key,
+        surface: surface,
+        foreground: foreground!,
+        outline: outline,
+        borderRadius: context.nutritionTokens.sectionShape,
+        initiallyExpanded: initiallyExpanded,
+        headerBodySpacing: 10,
+        childrenPadding: childrenPadding.add(const EdgeInsets.only(bottom: 4)),
+        title: title,
+        children: children,
+      );
+    }
+    return ExpansionTile(
+      key: key,
+      initiallyExpanded: initiallyExpanded,
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+      childrenPadding: childrenPadding,
+      title: title,
+      children: children,
+    );
+  }
 
   Widget _buildGroupCard(
     BuildContext context,
@@ -702,15 +746,22 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
       shape: RoundedRectangleBorder(
         borderRadius: context.nutritionTokens.sectionShape,
         side: BorderSide(
-          color: destination?.outlineAccent ?? context.nutritionTokens.foodBorder,
+          color:
+              destination?.outlineAccent ?? context.nutritionTokens.foodBorder,
         ),
       ),
       child: TonosExpansionTileScope(
-        child: ExpansionTile(
+        child: _buildSectionExpansion(
+          context: context,
           key: PageStorageKey('group_$groupKey'),
+          surface: destination?.surfaceSelected,
+          foreground: destination?.onSurfaceSelected,
+          outline:
+              destination?.outlineAccent ?? context.nutritionTokens.foodBorder,
           initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.only(bottom: 8),
+          childrenPadding: context.usesExpressivePresentation
+              ? const EdgeInsets.fromLTRB(4, 0, 4, 8)
+              : const EdgeInsets.only(bottom: 8),
           title: Text(
             title,
             style: TextStyle(
@@ -1016,10 +1067,13 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         side: BorderSide(color: context.nutritionTokens.foodBorder),
       ),
       child: TonosExpansionTileScope(
-        child: ExpansionTile(
+        child: _buildSectionExpansion(
+          context: context,
           key: const PageStorageKey('group_PortionInfo'),
+          surface: expressive ? destination?.surfaceTertiary : null,
+          foreground: destination?.onSurfaceTertiary,
+          outline: context.nutritionTokens.foodBorder,
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
           title: Text(
             strings.foodCustomizationPortionInfo,
@@ -1077,7 +1131,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         key: PageStorageKey('portion_list_$groupKey'),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         initiallyExpanded: initiallyExpanded,
-        tilePadding: EdgeInsets.zero,
+        tilePadding: expressive
+            ? const EdgeInsets.symmetric(horizontal: 14)
+            : EdgeInsets.zero,
         childrenPadding: const EdgeInsets.only(bottom: 4),
         children: [
           ...List.generate(list.length, (i) {

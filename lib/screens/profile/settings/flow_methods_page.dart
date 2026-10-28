@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../theme/widgets/tonos_expressive_motion.dart';
 import '../../../theme/widgets/tonos_expressive_state_motion.dart';
+import '../../../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../../../theme/widgets/tonos_overlay_routes.dart';
 
 import 'package:provider/provider.dart';
@@ -783,6 +784,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
           ],
           _RuleScopeCard(
             color: context.cs.primary,
+            insetHeader: true,
             expressiveSurface: expressiveTokens?.surfacePrimary,
             expressiveForeground: expressiveTokens?.onSurfacePrimary,
             icon: Icons.apps_outlined,
@@ -959,6 +961,9 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
 
                   return _RuleScopeCard(
                     color: profileColor,
+                    insetHeader: true,
+                    insetBodyPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                    headerBodySpacing: 12,
                     expressiveSurface: expressiveTokens?.surfaceSecondary,
                     expressiveForeground: expressiveTokens?.onSurfaceSecondary,
                     icon: Icons.fitness_center,
@@ -1135,6 +1140,9 @@ class _RuleScopeCard extends StatelessWidget {
   final int count;
   final bool initiallyExpanded;
   final bool compact;
+  final bool insetHeader;
+  final EdgeInsets insetBodyPadding;
+  final double headerBodySpacing;
   final List<Widget> children;
   final Color? expressiveSurface;
   final Color? expressiveForeground;
@@ -1148,6 +1156,9 @@ class _RuleScopeCard extends StatelessWidget {
     required this.count,
     this.initiallyExpanded = false,
     this.compact = false,
+    this.insetHeader = false,
+    this.insetBodyPadding = EdgeInsets.zero,
+    this.headerBodySpacing = 4,
     this.expressiveSurface,
     this.expressiveForeground,
     this.semanticCountLabel,
@@ -1206,6 +1217,28 @@ class _RuleScopeCard extends StatelessWidget {
                 AppLocalizations.of(context).rulesCountSemantics(count),
           )
         : SettingsCountBadge(count: count, color: color);
+    final leading = Container(
+      width: compact ? 38 : 42,
+      height: compact ? 38 : 42,
+      decoration: BoxDecoration(
+        color: leadingSurface,
+        borderRadius: expressive
+            ? ExpressiveTrainShapes.focusInset
+            : compact
+            ? shapes.control
+            : shapes.settingsScopeIcon,
+      ),
+      child: Icon(icon, color: leadingForeground, size: compact ? 20 : 22),
+    );
+    final expressiveTitle = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title, style: titleStyle),
+        const SizedBox(height: 2),
+        Text(subtitle, style: subtitleStyle),
+      ],
+    );
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -1223,69 +1256,100 @@ class _RuleScopeCard extends StatelessWidget {
       ),
       child: TonosSurfaceTheme(
         surface: cardSurface,
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          iconColor: cardForeground,
-          collapsedIconColor: cardForeground,
-          tilePadding: EdgeInsets.symmetric(horizontal: padding, vertical: 3),
-          childrenPadding: EdgeInsets.zero,
-          collapsedBackgroundColor: neo || expressive
-              ? cardSurface
-              : color.withValues(alpha: compact ? .05 : .08),
-          backgroundColor: neo || expressive
-              ? cardSurface
-              : color.withValues(alpha: .04),
-          leading: Container(
-            width: compact ? 38 : 42,
-            height: compact ? 38 : 42,
-            decoration: BoxDecoration(
-              color: leadingSurface,
-              borderRadius: expressive
-                  ? ExpressiveTrainShapes.focusInset
-                  : compact
-                  ? shapes.control
-                  : shapes.settingsScopeIcon,
-            ),
-            child: Icon(
-              icon,
-              color: leadingForeground,
-              size: compact ? 20 : 22,
-            ),
-          ),
-          title: expressive
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(title, style: titleStyle),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: subtitleStyle),
-                  ],
-                )
-              : Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: titleStyle,
+        child: expressive && insetHeader
+            ? TonosExpressiveInsetAccordion(
+                surface: cardSurface,
+                foreground: cardForeground,
+                outline: cardForeground.withValues(alpha: .38),
+                borderRadius: cardRadius,
+                initiallyExpanded: initiallyExpanded,
+                childrenPadding: insetBodyPadding,
+                headerBodySpacing: headerBodySpacing,
+                tilePadding: EdgeInsets.symmetric(
+                  horizontal: padding,
+                  vertical: 3,
                 ),
-          subtitle: expressive
-              ? null
-              : Text(
-                  subtitle,
-                  maxLines: compact ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: subtitleStyle,
+                leading: leading,
+                title: expressiveTitle,
+                trailingPrefix: badge,
+                iconColor: cardSecondary,
+                children: children,
+              )
+            : ExpansionTile(
+                initiallyExpanded: initiallyExpanded,
+                iconColor: cardForeground,
+                collapsedIconColor: cardForeground,
+                tilePadding: EdgeInsets.symmetric(
+                  horizontal: padding,
+                  vertical: 3,
                 ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              badge,
-              const SizedBox(width: 4),
-              Icon(Icons.expand_more, color: cardSecondary),
-            ],
+                childrenPadding: EdgeInsets.zero,
+                collapsedBackgroundColor: neo || expressive
+                    ? cardSurface
+                    : color.withValues(alpha: compact ? .05 : .08),
+                backgroundColor: neo || expressive
+                    ? cardSurface
+                    : color.withValues(alpha: .04),
+                leading: leading,
+                title: expressive
+                    ? expressiveTitle
+                    : Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: titleStyle,
+                      ),
+                subtitle: expressive
+                    ? null
+                    : Text(
+                        subtitle,
+                        maxLines: compact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: subtitleStyle,
+                      ),
+                trailing: expressive
+                    ? _RuleScopeTrailing(badge: badge, color: cardSecondary)
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          badge,
+                          const SizedBox(width: 4),
+                          Icon(Icons.expand_more, color: cardSecondary),
+                        ],
+                      ),
+                children: children,
+              ),
+      ),
+    );
+  }
+}
+
+class _RuleScopeTrailing extends StatelessWidget {
+  const _RuleScopeTrailing({required this.badge, required this.color});
+
+  final Widget badge;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = ExpansibleController.of(context);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          badge,
+          const SizedBox(width: 4),
+          AnimatedRotation(
+            turns: controller.isExpanded ? .5 : 0,
+            duration: TonosExpressiveStateMotion.duration(
+              context,
+              TonosExpressiveStateMotion.standard,
+            ),
+            curve: TonosExpressiveStateMotion.spatial,
+            child: Icon(Icons.expand_more, color: color),
           ),
-          children: children,
-        ),
+        ],
       ),
     );
   }

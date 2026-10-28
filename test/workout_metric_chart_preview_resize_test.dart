@@ -3,6 +3,7 @@ import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/unit_preference_provider.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/theme/expressive_theme.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,10 +39,10 @@ void main() {
       reduceMotion = false;
       await tester.pumpWidget(host());
       await tester.pumpAndSettle();
-      final inactiveNormalMotion = tester.widget<AnimatedCrossFade>(
-        find.byType(AnimatedCrossFade, skipOffstage: false),
+      final inactiveNormalMotion = tester.widget<Expansible>(
+        find.byType(Expansible, skipOffstage: false),
       );
-      expect(inactiveNormalMotion.duration, const Duration(milliseconds: 180));
+      expect(inactiveNormalMotion.animationStyle?.duration, Duration.zero);
       expect(tester.takeException(), isNull);
 
       progressIsActive = true;
@@ -58,10 +59,14 @@ void main() {
         find.byKey(const ValueKey('workout-report-insight-grid-one-column')),
         findsOneWidget,
       );
-      final expandedCrossFade = tester.widget<AnimatedCrossFade>(
-        find.byType(AnimatedCrossFade),
+      final expandedDisclosure = tester.widget<Expansible>(
+        find.byType(Expansible),
       );
-      expect(expandedCrossFade.duration, const Duration(milliseconds: 180));
+      expect(expandedDisclosure.controller.isExpanded, isTrue);
+      expect(
+        expandedDisclosure.animationStyle?.duration,
+        const Duration(milliseconds: 360),
+      );
       expect(tester.takeException(), isNull);
 
       progressIsActive = false;
@@ -71,6 +76,10 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.byType(AnimatedCrossFade, skipOffstage: false), findsNothing);
+      expect(
+        find.byType(TonosExpressiveInsetAccordion, skipOffstage: false),
+        findsNothing,
+      );
       expect(
         find.byKey(
           const ValueKey('workout-report-insight-grid-one-column'),
@@ -92,11 +101,10 @@ void main() {
       await tester.tap(additionalDetails);
       await tester.pump();
 
-      final collapsingCrossFade = tester.widget<AnimatedCrossFade>(
-        find.byType(AnimatedCrossFade),
+      final collapsingDisclosure = tester.widget<Expansible>(
+        find.byType(Expansible),
       );
-      expect(collapsingCrossFade.duration, const Duration(milliseconds: 180));
-      expect(collapsingCrossFade.crossFadeState, CrossFadeState.showFirst);
+      expect(collapsingDisclosure.controller.isExpanded, isFalse);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     },

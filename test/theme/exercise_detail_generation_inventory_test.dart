@@ -22,9 +22,10 @@ void main() {
       rationale: 'Catalog Expressive destination wrapping',
       kindCounts: const {
         'color': 12,
-        'color_transform': 29,
-        'decoration': 36,
-        'geometry': 57,
+        // The Expressive Details disclosure adds its owned frame and header icon.
+        'color_transform': 30,
+        'decoration': 38,
+        'geometry': 59,
         'text_style': 1,
       },
     );
@@ -36,9 +37,9 @@ void main() {
       rationale: 'Classic baseline',
       kindCounts: const {
         'color': 3,
-        'color_transform': 3,
+        'color_transform': 4,
         'decoration': 7,
-        'geometry': 15,
+        'geometry': 14,
         'gradient': 1,
         'text_style': 11,
       },

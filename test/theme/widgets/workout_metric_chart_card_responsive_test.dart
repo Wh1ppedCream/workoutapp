@@ -12,6 +12,7 @@ import 'package:env_test/theme/tokens/app_expressive_destination_tokens.dart';
 import 'package:env_test/theme/tokens/app_expressive_train_tokens.dart';
 import 'package:env_test/theme/tokens/app_progress_colors.dart';
 import 'package:env_test/theme/widgets/app_expressive_destination_theme.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_inset_accordion.dart';
 import 'package:env_test/widgets/workout_metric_chart_card.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -965,7 +966,9 @@ void main() {
               ),
             ],
             child: MaterialApp(
-              key: ValueKey('expressive-report-family-${family.name}'),
+              key: ValueKey(
+                'expressive-report-family-${family.name}-${brightness.name}',
+              ),
               theme: theme,
               locale: const Locale('en'),
               localizationsDelegates: tonosLocalizationDelegates,
@@ -1257,10 +1260,7 @@ void main() {
           final detailsDisclosureIcon = find.descendant(
             of: detailsModule,
             matching: find.byWidgetPredicate(
-              (widget) =>
-                  widget is Icon &&
-                  (widget.icon == Icons.keyboard_arrow_up ||
-                      widget.icon == Icons.keyboard_arrow_down),
+              (widget) => widget is Icon && widget.icon == Icons.expand_more,
             ),
           );
           expect(detailsDisclosureIcon, findsOneWidget);
@@ -1326,6 +1326,28 @@ void main() {
             ),
           );
           expect(insightGrid, findsOneWidget);
+          final accordion = find.descendant(
+            of: detailsModule,
+            matching: find.byType(TonosExpressiveInsetAccordion),
+          );
+          expect(accordion, findsOneWidget);
+          final header = find.descendant(
+            of: accordion,
+            matching: find.byType(ListTile),
+          );
+          final headerRect = tester.getRect(header);
+          final moduleRect = tester.getRect(detailsModule);
+          expect(headerRect.left - moduleRect.left, closeTo(10, .01));
+          expect(moduleRect.right - headerRect.right, closeTo(10, .01));
+          expect(headerRect.top - moduleRect.top, closeTo(10, .01));
+          expect(
+            tester.getRect(insightGrid).top - headerRect.bottom,
+            closeTo(8, .01),
+          );
+          expect(
+            tester.getRect(insightGrid).left - moduleRect.left,
+            closeTo(10, .01),
+          );
           expect(tester.takeException(), isNull);
         }
       }
