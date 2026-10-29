@@ -657,7 +657,10 @@ void main() {
           currentWeightField.decoration!.suffixText,
           units.weightUnit.shortLabel,
         );
-        expect(currentWeightField.keyboardType, TextInputType.number);
+        expect(
+          currentWeightField.keyboardType,
+          const TextInputType.numberWithOptions(decimal: true),
+        );
 
         await tester.enterText(
           find.byKey(AppTestKeys.userInformationName),

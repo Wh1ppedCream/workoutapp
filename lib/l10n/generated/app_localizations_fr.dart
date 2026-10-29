@@ -7535,6 +7535,19 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez une valeur positive plausible avec une unité prise en charge.';
 
   @override
+  String get healthUnitsNotComparable => 'Unités différentes';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'Le graphique compare les entrées en $unit. Les autres unités restent dans la liste.';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'Pour le poids corporel, saisissez une valeur entre $minimum et $maximum $unit.';
+  }
+
+  @override
   String get allocationSourceAutomatic => 'Calcul automatique';
 
   @override
@@ -15212,6 +15225,19 @@ class AppLocalizationsFrCa extends AppLocalizationsFr {
   @override
   String get healthMeasurementEntryInvalid =>
       'Saisissez une valeur positive plausible avec une unité prise en charge.';
+
+  @override
+  String get healthUnitsNotComparable => 'Unités différentes';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'Le graphique compare les entrées en $unit. Les autres unités restent dans la liste.';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'Pour le poids corporel, saisissez une valeur entre $minimum et $maximum $unit.';
+  }
 
   @override
   String get allocationSourceAutomatic => 'Calcul automatique';

@@ -7420,6 +7420,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a plausible positive value using a supported unit.';
 
   @override
+  String get healthUnitsNotComparable => 'Different units';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'Chart compares $unit entries. Other units remain in the list.';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'For body weight, enter $minimum–$maximum $unit.';
+  }
+
+  @override
   String get allocationSourceAutomatic => 'Automatic calculation';
 
   @override

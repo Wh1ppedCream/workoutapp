@@ -6950,6 +6950,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get healthMeasurementEntryInvalid => '请使用受支持的单位输入合理的正数值。';
 
   @override
+  String get healthUnitsNotComparable => '单位不同';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return '图表比较以 $unit 记录的数据。其他单位的记录保留在列表中。';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return '体重请输入 $minimum–$maximum $unit。';
+  }
+
+  @override
   String get allocationSourceAutomatic => '自动计算';
 
   @override

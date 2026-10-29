@@ -14,11 +14,11 @@ import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/nutrition_models.dart';
+import '../../utils/editable_number.dart';
 
 // File-level helper: pretty-print numbers like 100 → "100", 100.50 → "100.5"
 String _fmtNum(num v) {
-  final s = v.toStringAsFixed(2);
-  return s.replaceFirst(RegExp(r'\.?0+$'), '');
+  return editableNumber(v);
 }
 
 /// A page for adding or editing a food item.
@@ -203,7 +203,8 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     return s;
   }
 
-  void _loadInitialPortions(List<FoodPortion> parts) {
+  void _loadInitialPortions(List<FoodPortion> initialParts) {
+    final parts = List<FoodPortion>.of(initialParts);
     // clear existing default rows
     for (final p in _basisPortions) {
       p.dispose();
@@ -236,6 +237,8 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         amount: p.amount,
         grams: p.gramWeight,
         ml: p.mlVolume,
+        label: p.label,
+        measureName: p.measureName,
       );
       final isUsual = p.listKind == 'usual';
       final list = isUsual ? _usualPortions : _basisPortions;
@@ -270,11 +273,6 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     }
 
     if (mounted) setState(() {}); // instead of unconditional setState()
-  }
-
-  String _fmtNum(num v) {
-    final s = v.toStringAsFixed(2);
-    return s.replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
   @override
@@ -903,6 +901,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
 
   // Compose a clean "measure_name" from unit + amount, e.g. "100 g" or "1 cup"
   String _measureNameFrom(PortionEntry e) {
+    if (e.measureName != null && e.hasOriginalAmountAndUnit) {
+      return e.measureName!;
+    }
     double? a = double.tryParse(e.amountCtrl.text.trim());
     final unitShort = _shortUnit(e.unit);
     if (a == null) {
@@ -970,6 +971,9 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
           case 'mg':
             grams = amount / 1000.0;
             break;
+          case 'µg':
+            grams = amount / 1000000.0;
+            break;
           case 'kg':
             grams = amount * 1000.0;
             break;
@@ -1027,7 +1031,7 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
         'sort_order': r.index,
         'amount': amount,
         'unit': unitShort,
-        'label': null,
+        'label': r.row.label,
       });
     }
 
@@ -1709,7 +1713,11 @@ class PortionEntry {
     double? amount,
     double? grams,
     double? ml,
-  }) : amountCtrl = TextEditingController(
+    this.label,
+    this.measureName,
+  }) : _originalAmount = amount,
+       _originalUnit = unit,
+       amountCtrl = TextEditingController(
          text: amount == null ? '' : _fmtNum(amount),
        ),
        gramsCtrl = TextEditingController(
@@ -1718,6 +1726,13 @@ class PortionEntry {
        mlCtrl = TextEditingController(text: ml == null ? '' : _fmtNum(ml));
 
   String unit;
+  final String? label;
+  final String? measureName;
+  final double? _originalAmount;
+  final String _originalUnit;
+  bool get hasOriginalAmountAndUnit =>
+      unit == _originalUnit &&
+      double.tryParse(amountCtrl.text.trim()) == _originalAmount;
   final TextEditingController amountCtrl;
   final TextEditingController gramsCtrl;
   final TextEditingController mlCtrl;

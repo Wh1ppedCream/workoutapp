@@ -87,11 +87,10 @@ void main() {
         child: MaterialApp(
           localizationsDelegates: tonosLocalizationDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          builder:
-              (context, child) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(disableAnimations: true),
-                child: child!,
-              ),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
           home: const OnboardingFlow(),
         ),
       ),
@@ -143,13 +142,11 @@ void main() {
             locale: locale,
             localizationsDelegates: tonosLocalizationDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            builder:
-                (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(textScaler: const TextScaler.linear(1.3)),
-                  child: child!,
-                ),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(1.3)),
+              child: child!,
+            ),
             home: const OnboardingFlow(),
           ),
         ),
@@ -275,7 +272,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
-    expect(repository.savedInfo?.weight, '154');
+    expect(
+      double.parse(repository.savedInfo!.weight!),
+      closeTo(70 / 0.45359237, 1e-10),
+    );
     expect(repository.savedBodyWeightValue, 70);
     expect(repository.savedBodyWeightUnit, WeightUnit.kilograms);
     final preferences = await SharedPreferences.getInstance();
@@ -334,35 +334,29 @@ class _PlanTestApp extends StatelessWidget {
         localizationsDelegates: tonosLocalizationDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
-          builder:
-              (context) => Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final result = await Navigator.of(
-                        context,
-                      ).push<PresetDetailResult>(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  final result = await Navigator.of(context)
+                      .push<PresetDetailResult>(
                         MaterialPageRoute(
-                          builder:
-                              (_) => ChangeNotifierProvider(
-                                create:
-                                    (_) => PresetSession(
-                                      1,
-                                      repository: repository,
-                                    ),
-                                child: const PresetDetailScreen(
-                                  startInEditingMode: true,
-                                  closeAfterSave: true,
-                                ),
-                              ),
+                          builder: (_) => ChangeNotifierProvider(
+                            create: (_) =>
+                                PresetSession(1, repository: repository),
+                            child: const PresetDetailScreen(
+                              startInEditingMode: true,
+                              closeAfterSave: true,
+                            ),
+                          ),
                         ),
                       );
-                      onResult(result);
-                    },
-                    child: const Text('Open plan'),
-                  ),
-                ),
+                  onResult(result);
+                },
+                child: const Text('Open plan'),
               ),
+            ),
+          ),
         ),
       ),
     );

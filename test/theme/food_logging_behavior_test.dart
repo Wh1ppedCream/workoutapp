@@ -218,6 +218,66 @@ Future<void> _pumpPage(
 }
 
 void main() {
+  testWidgets(
+    'Expressive food quantity editing retains quarter portions after stepper updates',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 1500));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final food = _food();
+      final repo = _FakeRepository(food, [
+        FoodPortion(
+          id: 11,
+          foodId: food.id!,
+          measureName: 'bowl',
+          gramWeight: 200,
+          isDefault: true,
+        ),
+      ]);
+      final profile = NutritionProfile(repository: repo);
+      await _pumpPage(tester, repo, profile, ExpressiveThemeDefinition.light());
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(FoodLoggingPage)),
+      );
+      await tester.enterText(find.byType(TextField).last, 'Test oats');
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      await tester.tap(findTonosTooltip(strings.foodEditAndAdd));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, '0.25');
+      await tester.tap(find.text(strings.foodAddToPlate));
+      await tester.pumpAndSettle();
+      final summary = find.byWidgetPredicate(
+        (w) =>
+            w is Text &&
+            w.data != null &&
+            w.data!.endsWith(' kcal') &&
+            !w.data!.contains('/'),
+      );
+      await tester.tap(summary);
+      await tester.pumpAndSettle();
+      final quantity = find.byWidgetPredicate(
+        (w) => w is TextField && w.controller?.text == '0.25',
+      );
+      expect(quantity, findsOneWidget);
+      final row = find.ancestor(of: quantity, matching: find.byType(Row)).first;
+      await tester.tap(
+        find.descendant(of: row, matching: find.byIcon(Icons.add)),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.controller?.text == '1.25',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text(strings.foodAddAllToDiary));
+      await tester.pumpAndSettle();
+      expect(repo.logged.single['quantity'], 1.25);
+      expect(repo.logged.single['loggedGrams'], 250.0);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('food logging from historical records keeps its scoped day', (
     tester,
   ) async {

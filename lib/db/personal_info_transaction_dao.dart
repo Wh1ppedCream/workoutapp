@@ -60,15 +60,8 @@ class PersonalInfoTransactionDao {
             latestValue,
             latestUnit,
           );
-          final latestDisplay = WeightUnitFormatter.formatInputWeight(
-            latestLbs,
-            bodyWeightUnit,
-          );
-          final enteredDisplay = WeightUnitFormatter.formatInputWeight(
-            bodyWeightLbs,
-            bodyWeightUnit,
-          );
-          if (latestDisplay == enteredDisplay) return;
+          // Display rounding can hide real changes such as 70.1 -> 70.2 kg.
+          if ((latestLbs - bodyWeightLbs).abs() < 1e-7) return;
         }
       }
 
@@ -77,8 +70,8 @@ class PersonalInfoTransactionDao {
         'def_id': definitionId,
         'timestamp': TemporalSemantics.legacyUtcIso8601(recordedAt),
         'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(recordedAt),
-        'measured_on':
-            LocalCalendarDay.fromDateTime(recordedAt.toLocal()).storageKey,
+        'measured_on': LocalCalendarDay.fromDateTime(recordedAt.toLocal())
+            .storageKey,
         'value': bodyWeightValue,
         'unit': bodyWeightUnit.shortLabel,
         'note': measurementNote,

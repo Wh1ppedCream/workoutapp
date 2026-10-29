@@ -16,6 +16,7 @@ import '../../../widgets/settings_tiles.dart';
 import '../../../widgets/safe_error_view.dart';
 import 'analytics_destination_surfaces.dart';
 import '../../../utils/localized_body_part_name.dart';
+import '../../../utils/editable_number.dart';
 
 class ExerciseAnalyticsScreen extends StatefulWidget {
   final ExerciseDefinition? initialDefinition;
@@ -87,7 +88,7 @@ class _ExerciseAnalyticsScreenState extends State<ExerciseAnalyticsScreen>
     _disposeControllers(controllers);
     for (final entry in credits.entries) {
       controllers[entry.key] = TextEditingController(
-        text: entry.value.toStringAsFixed(2),
+        text: editableNumber(entry.value),
       );
     }
   }

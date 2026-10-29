@@ -7383,6 +7383,19 @@ class AppLocalizationsHi extends AppLocalizations {
       'समर्थित इकाई के साथ एक उचित धनात्मक मान दर्ज करें।';
 
   @override
+  String get healthUnitsNotComparable => 'अलग-अलग इकाइयाँ';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'ग्राफ़ में $unit वाली प्रविष्टियों की तुलना होती है। अन्य इकाइयाँ सूची में रहती हैं।';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'शरीर के वज़न के लिए, $minimum–$maximum $unit दर्ज करें।';
+  }
+
+  @override
   String get allocationSourceAutomatic => 'स्वचालित गणना';
 
   @override

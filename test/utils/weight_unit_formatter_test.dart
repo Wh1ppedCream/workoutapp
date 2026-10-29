@@ -4,6 +4,33 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('WeightUnitFormatter', () {
+    test('precise editors retain fractional pounds and kilograms', () {
+      expect(
+        WeightUnitFormatter.formatPreciseInputWeight(
+          152.625,
+          WeightUnit.pounds,
+        ),
+        '152.625',
+      );
+      expect(
+        WeightUnitFormatter.formatPreciseInputWeight(0.125, WeightUnit.pounds),
+        '0.125',
+      );
+      expect(
+        WeightUnitFormatter.formatPreciseInputWeight(
+          WeightUnitFormatter.toPounds(70.125, WeightUnit.kilograms),
+          WeightUnit.kilograms,
+        ),
+        '70.125',
+      );
+      expect(
+        WeightUnitFormatter.formatPreciseInputWeight(
+          WeightUnitFormatter.toPounds(0.125, WeightUnit.kilograms),
+          WeightUnit.kilograms,
+        ),
+        '0.125',
+      );
+    });
     test('converts pounds to rounded kilograms for display', () {
       expect(
         WeightUnitFormatter.formatInputWeight(150, WeightUnit.kilograms),

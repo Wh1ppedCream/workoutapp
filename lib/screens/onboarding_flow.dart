@@ -469,7 +469,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         height: _clean(_heightController.text),
         weight: bodyWeightLbs == null
             ? _clean(_weightController.text)
-            : WeightUnitFormatter.formatInputWeight(
+            : WeightUnitFormatter.formatPreciseInputWeight(
                 bodyWeightLbs,
                 WeightUnit.pounds,
               ),

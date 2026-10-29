@@ -123,7 +123,7 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
     // Global increment & skip-first
     _globalController = TextEditingController(
-      text: WeightUnitFormatter.formatInputWeight(
+      text: WeightUnitFormatter.formatPreciseInputWeight(
         preset.globalIncrement,
         _weightUnit,
       ),
@@ -162,14 +162,24 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
     try {
       final globalParsed =
-          _parseIncrement(_globalController.text) ?? preset.globalIncrement;
+          _parseIncrement(
+            _globalController.text,
+            original: preset.globalIncrement,
+          ) ??
+          preset.globalIncrement;
       final exerciseIncrements = <int, double?>{
         for (final exerciseId in preset.presetExerciseIds)
-          exerciseId: _parseIncrement(_exControllers[exerciseId]!.text),
+          exerciseId: _parseIncrement(
+            _exControllers[exerciseId]!.text,
+            original: preset.exerciseIncrementOverrides[exerciseId],
+          ),
       };
       final setIncrements = <int, double?>{
         for (final entry in _setControllers.entries)
-          entry.key: _parseIncrement(entry.value.text),
+          entry.key: _parseIncrement(
+            entry.value.text,
+            original: preset.setIncrementOverrides[entry.key],
+          ),
       };
 
       await preset.saveAutoConfiguration(
@@ -206,21 +216,24 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
 
   String _formatOptionalIncrement(double? pounds) {
     if (pounds == null) return '';
-    return WeightUnitFormatter.formatInputWeight(pounds, _weightUnit);
+    return WeightUnitFormatter.formatPreciseInputWeight(pounds, _weightUnit);
   }
 
   String _formatSetWeight(double pounds) {
     return LocalizedFormatters.number(
-      pounds,
+      WeightUnitFormatter.fromPounds(pounds, _weightUnit),
       Localizations.localeOf(context),
       minimumFractionDigits: 1,
       maximumFractionDigits: 15,
     );
   }
 
-  double? _parseIncrement(String text) {
+  double? _parseIncrement(String text, {double? original}) {
+    if (original != null && text.trim() == _formatOptionalIncrement(original)) {
+      return original;
+    }
     final value = double.tryParse(text);
-    if (value == null) return null;
+    if (value == null || !value.isFinite) return null;
     return WeightUnitFormatter.toPounds(value, _weightUnit);
   }
 

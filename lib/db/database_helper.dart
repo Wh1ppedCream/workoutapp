@@ -46,6 +46,7 @@ import 'workout_record_events_dao.dart';
 import 'exercise_allocation_dao.dart';
 import '../services/exercise_allocation_resolver.dart';
 import '../services/exercise_equipment_compatibility.dart';
+import '../utils/weight_unit_formatter.dart';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 
@@ -2875,7 +2876,7 @@ class DatabaseHelper {
         unit == 'kgs' ||
         unit == 'kilogram' ||
         unit == 'kilograms') {
-      return value * 2.2046226218;
+      return WeightUnitFormatter.toPounds(value, WeightUnit.kilograms);
     }
     if (unit == 'lb' || unit == 'lbs' || unit == 'pound' || unit == 'pounds') {
       return value;

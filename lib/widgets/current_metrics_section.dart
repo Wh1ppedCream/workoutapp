@@ -534,14 +534,10 @@ String _metricLabel(
 }
 
 String _formatMeasurement(Measurement measurement, Locale locale) {
-  final fractionDigits = measurement.value == measurement.value.roundToDouble()
-      ? 0
-      : 1;
   final value = LocalizedFormatters.number(
     measurement.value,
     locale,
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
+    maximumFractionDigits: 6,
   );
   return '$value ${measurement.unit}'.trim();
 }

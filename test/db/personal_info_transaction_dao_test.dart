@@ -1,5 +1,6 @@
 import 'package:env_test/db/personal_info_transaction_dao.dart';
 import 'package:env_test/models/models.dart';
+import 'package:env_test/utils/weight_unit_formatter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -79,11 +80,29 @@ void main() {
       await PersonalInfoTransactionDao.save(
         db,
         info: PersonalInfo(weight: '154'),
-        bodyWeightValue: 154,
+        bodyWeightValue: WeightUnitFormatter.toPounds(70, WeightUnit.kilograms),
         bodyWeightUnit: WeightUnit.pounds,
       );
 
       expect(await db.query('measurements'), hasLength(1));
+    },
+  );
+
+  test(
+    'keeps distinct readings even when their whole-number display matches',
+    () async {
+      for (final weight in [70.1, 70.2]) {
+        await PersonalInfoTransactionDao.save(
+          db,
+          info: PersonalInfo(weight: weight.toString()),
+          bodyWeightValue: weight,
+          bodyWeightUnit: WeightUnit.kilograms,
+        );
+      }
+      expect((await db.query('measurements')).map((r) => r['value']), [
+        70.1,
+        70.2,
+      ]);
     },
   );
 

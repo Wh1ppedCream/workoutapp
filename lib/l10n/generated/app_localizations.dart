@@ -12610,6 +12610,24 @@ abstract class AppLocalizations {
   /// **'Enter a plausible positive value using a supported unit.'**
   String get healthMeasurementEntryInvalid;
 
+  /// No description provided for @healthUnitsNotComparable.
+  ///
+  /// In en, this message translates to:
+  /// **'Different units'**
+  String get healthUnitsNotComparable;
+
+  /// No description provided for @healthChartUnitNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart compares {unit} entries. Other units remain in the list.'**
+  String healthChartUnitNote(String unit);
+
+  /// No description provided for @healthBodyWeightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'For body weight, enter {minimum}–{maximum} {unit}.'**
+  String healthBodyWeightRange(String minimum, String maximum, String unit);
+
   /// No description provided for @allocationSourceAutomatic.
   ///
   /// In en, this message translates to:

@@ -15,6 +15,8 @@ import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
 import '../services/tutorial_state_store.dart';
 import '../services/measurement_validation.dart';
+import '../services/height_unit.dart';
+import '../services/measurement_comparison.dart';
 import '../services/safe_failure.dart';
 import '../theme/tokens/app_data_visualization_tokens.dart';
 import '../theme/tokens/app_expressive_destination_tokens.dart';
@@ -490,20 +492,23 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     final destinationFamily = currentTheme
         .extension<AppExpressiveDestinationTokens>()
         ?.family;
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) {
-          final page = MeasurementTrendDetailPage(definition: trend.definition);
-          final pageTheme = expressivePageTheme;
-          if (pageTheme == null) return page;
-          final destination = destinationFamily;
-          final child = destination == null
-              ? page
-              : AppExpressiveDestinationTheme(family: destination, child: page);
-          return Theme(data: pageTheme, child: child);
-        },
-      ),
+    final route = MaterialPageRoute<bool>(
+      builder: (_) {
+        final page = MeasurementTrendDetailPage(definition: trend.definition);
+        final pageTheme = expressivePageTheme;
+        if (pageTheme == null) return page;
+        final destination = destinationFamily;
+        final child = destination == null
+            ? page
+            : AppExpressiveDestinationTheme(family: destination, child: page);
+        return Theme(data: pageTheme, child: child);
+      },
     );
+    final changed = await Navigator.of(context).push<bool>(route);
+    if (changed == true && mounted && context.usesExpressivePresentation) {
+      // The covered parent may still have its tickers disabled at this point.
+      await route.completed;
+    }
     if (changed == true && mounted) {
       _reload();
       _notifyChanged();
@@ -512,22 +517,17 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
 
   Future<void> _logEntry(_MeasurementTrend trend) async {
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
-    final input = await showTonosDialog<_MeasurementEntryInput>(
+    final input = await _showMeasurementEntryDialog(
       context: context,
-      builder: (_) => TonosDialogFrame(
-        styleFormControls: true,
-        styleDarkNeoPickerSurfaces: true,
-        child: _MeasurementEntryDialog(
-          title: _strings.healthLogMeasurement(
-            _measurementTitle(trend.definition, _strings),
-          ),
-          definition: trend.definition,
-          defaultUnit:
-              trend.latest?.unit ??
-              _defaultUnitFor(trend.definition, weightUnit),
-          measurementLibrary:
-              widget.fullPage && _profileMeasurementTokens(context) != null,
+      builder: (_) => _MeasurementEntryDialog(
+        title: _strings.healthLogMeasurement(
+          _measurementTitle(trend.definition, _strings),
         ),
+        definition: trend.definition,
+        defaultUnit:
+            trend.latest?.unit ?? _defaultUnitFor(trend.definition, weightUnit),
+        measurementLibrary:
+            widget.fullPage && _profileMeasurementTokens(context) != null,
       ),
     );
     if (input == null) return;
@@ -682,7 +682,8 @@ class HealthTrendsSectionState extends State<HealthTrendsSection>
     return FutureBuilder<List<_MeasurementTrend>>(
       future: _trendsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+        if (snapshot.connectionState != ConnectionState.done &&
+            !(context.usesExpressivePresentation && snapshot.hasData)) {
           if (widget.fullPage) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -878,20 +879,16 @@ class _MeasurementTrendDetailPageState
 
   Future<void> _addEntry(List<Measurement> entries) async {
     final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
-    final input = await showTonosDialog<_MeasurementEntryInput>(
+    final input = await _showMeasurementEntryDialog(
       context: context,
-      builder: (_) => TonosDialogFrame(
-        styleFormControls: true,
-        styleDarkNeoPickerSurfaces: true,
-        child: _MeasurementEntryDialog(
-          title: _strings.healthLogMeasurement(
-            _measurementTitle(widget.definition, _strings),
-          ),
-          definition: widget.definition,
-          defaultUnit: entries.isNotEmpty
-              ? entries.last.unit
-              : _defaultUnitFor(widget.definition, weightUnit),
+      builder: (_) => _MeasurementEntryDialog(
+        title: _strings.healthLogMeasurement(
+          _measurementTitle(widget.definition, _strings),
         ),
+        definition: widget.definition,
+        defaultUnit: entries.isNotEmpty
+            ? entries.last.unit
+            : _defaultUnitFor(widget.definition, weightUnit),
       ),
     );
     if (input == null) return;
@@ -908,19 +905,15 @@ class _MeasurementTrendDetailPageState
   }
 
   Future<void> _editEntry(Measurement entry) async {
-    final input = await showTonosDialog<_MeasurementEntryInput>(
+    final input = await _showMeasurementEntryDialog(
       context: context,
-      builder: (_) => TonosDialogFrame(
-        styleFormControls: true,
-        styleDarkNeoPickerSurfaces: true,
-        child: _MeasurementEntryDialog(
-          title: _strings.healthEditMeasurement(
-            _measurementTitle(widget.definition, _strings),
-          ),
-          definition: widget.definition,
-          defaultUnit: entry.unit,
-          entry: entry,
+      builder: (_) => _MeasurementEntryDialog(
+        title: _strings.healthEditMeasurement(
+          _measurementTitle(widget.definition, _strings),
         ),
+        definition: widget.definition,
+        defaultUnit: entry.unit,
+        entry: entry,
       ),
     );
     if (input == null) return;
@@ -1083,7 +1076,8 @@ class _MeasurementTrendDetailPageState
         body: FutureBuilder<List<Measurement>>(
           future: _entriesFuture,
           builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
+            if (snapshot.connectionState != ConnectionState.done &&
+                !(context.usesExpressivePresentation && snapshot.hasData)) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
@@ -1149,6 +1143,7 @@ class _MeasurementTrendDetailPageState
                         for (final entry in entries.reversed)
                           _MeasurementEntryTile(
                             entry: entry,
+                            type: widget.definition.type,
                             onTap: () => _editEntry(entry),
                             onDelete: () => _deleteEntry(entry),
                           ),
@@ -1225,6 +1220,8 @@ class _TrendTile extends StatelessWidget {
     final title = _measurementTitle(trend.definition, strings);
     final latest = trend.latest;
     final delta = trend.delta;
+    final incompatibleUnits =
+        latest != null && trend.previous != null && delta == null;
     final usesInkRecipe = context.usesNeoPresentation;
     final usesExpressive = context.usesExpressivePresentation;
     final destination = usesExpressive
@@ -1370,11 +1367,17 @@ class _TrendTile extends StatelessWidget {
               Text(
                 latest == null
                     ? strings.healthTapToLog
+                    : incompatibleUnits
+                    ? strings.healthUnitsNotComparable
                     : _formatDelta(
                         delta,
                         strings,
                         locale,
-                        unit: profileMeasurement ? latest.unit : null,
+                        unit:
+                            profileMeasurement ||
+                                trend.definition.type == MeasurementType.Height
+                            ? latest.unit
+                            : null,
                       ),
                 maxLines: usesInkRecipe ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
@@ -1545,6 +1548,10 @@ class _MeasurementSparkline extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
+    final entries = MeasurementComparison.chartEntries(
+      definition.type,
+      this.entries,
+    );
     if (entries.length < 2) {
       return Semantics(
         key: ValueKey('measurement-sparkline-${definition.id}-semantics'),
@@ -1626,8 +1633,8 @@ class _MeasurementSparkline extends StatelessWidget {
       );
     }
 
-    final spots = _spotsFor(entries);
-    final bounds = _chartBounds(entries.map((m) => m.value).toList());
+    final spots = _spotsFor(definition, entries);
+    final bounds = _chartBounds(spots.map((spot) => spot.y).toList());
     return Semantics(
       key: ValueKey('measurement-sparkline-${definition.id}-semantics'),
       container: true,
@@ -1665,7 +1672,7 @@ class _MeasurementSparkline extends StatelessWidget {
           duration: context.usesExpressivePresentation
               ? TonosExpressiveStateMotion.duration(
                   context,
-                  TonosExpressiveStateMotion.standard,
+                  TonosExpressiveStateMotion.data,
                 )
               : appMotionDuration(context, const Duration(milliseconds: 150)),
           curve: context.usesExpressivePresentation
@@ -1695,9 +1702,9 @@ class _MeasurementSummaryCard extends StatelessWidget {
     final weightUnit = context.watch<UnitPreferenceProvider>().weightUnit;
     final latest = entries.isEmpty ? null : entries.last;
     final previous = entries.length < 2 ? null : entries[entries.length - 2];
-    final delta = latest == null || previous == null
-        ? null
-        : latest.value - previous.value;
+    final delta = _measurementDelta(definition, latest, previous);
+    final incompatibleUnits =
+        latest != null && previous != null && delta == null;
     final surface = _measurementDetailSurface(
       context,
       role: _MeasurementDetailRole.focal,
@@ -1710,7 +1717,9 @@ class _MeasurementSummaryCard extends StatelessWidget {
         locale,
         maximumFractionDigits: 0,
       ),
-      detail: _defaultUnitFor(definition, weightUnit),
+      detail: latest != null
+          ? latest.unit
+          : _defaultUnitFor(definition, weightUnit),
     );
     final summaryStats = [
       _SummaryStat(
@@ -1729,9 +1738,11 @@ class _MeasurementSummaryCard extends StatelessWidget {
       _SummaryStat(
         valueKey: const ValueKey('measurement-trend-summary-change'),
         label: strings.healthChange,
-        value: delta == null
+        value: incompatibleUnits
+            ? strings.healthUnitsNotComparable
+            : delta == null
             ? strings.healthNoChange
-            : _formatDelta(delta, strings, locale),
+            : _formatDelta(delta, strings, locale, unit: latest?.unit),
         detail: entries.length < 2
             ? strings.healthNeedTwoEntries
             : strings.healthVersusPrevious,
@@ -1799,11 +1810,13 @@ class _MeasurementSummaryCard extends StatelessWidget {
     final expressiveChange = _SummaryStat(
       valueKey: const ValueKey('measurement-trend-summary-change'),
       label: strings.healthChange,
-      value: delta == null
+      value: incompatibleUnits
+          ? strings.healthUnitsNotComparable
+          : delta == null
           ? (entries.isEmpty ? '—' : strings.healthNoChange)
           : definition.type == MeasurementType.BodyWeight
           ? _formatSignedMeasurementDelta(delta, latest!.unit, locale)
-          : _formatDelta(delta, strings, locale),
+          : _formatDelta(delta, strings, locale, unit: latest?.unit),
       detail: entries.length < 2
           ? strings.healthNeedTwoEntries
           : strings.healthVersusPrevious,
@@ -2074,6 +2087,10 @@ class _MeasurementChartCard extends StatefulWidget {
 
 class _MeasurementChartCardState extends State<_MeasurementChartCard> {
   int? _selectedIndex;
+  List<Measurement> get _entries => MeasurementComparison.chartEntries(
+    widget.definition.type,
+    widget.entries,
+  );
 
   @override
   void didUpdateWidget(covariant _MeasurementChartCard oldWidget) {
@@ -2084,24 +2101,22 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
   }
 
   void _selectIndex(int index) {
-    if (index < 0 ||
-        index >= widget.entries.length ||
-        _selectedIndex == index) {
+    if (index < 0 || index >= _entries.length || _selectedIndex == index) {
       return;
     }
     setState(() => _selectedIndex = index);
   }
 
   void _selectNext() {
-    if (widget.entries.isEmpty) return;
-    final currentIndex = _selectedIndex ?? widget.entries.length - 1;
-    if (currentIndex + 1 >= widget.entries.length) return;
+    if (_entries.isEmpty) return;
+    final currentIndex = _selectedIndex ?? _entries.length - 1;
+    if (currentIndex + 1 >= _entries.length) return;
     _selectIndex(currentIndex + 1);
   }
 
   void _selectPrevious() {
-    if (widget.entries.isEmpty) return;
-    final currentIndex = _selectedIndex ?? widget.entries.length - 1;
+    if (_entries.isEmpty) return;
+    final currentIndex = _selectedIndex ?? _entries.length - 1;
     if (currentIndex <= 0) return;
     _selectIndex(currentIndex - 1);
   }
@@ -2112,9 +2127,9 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final dataVisualization = context.dataVisualizationTokens;
-    final entries = widget.entries;
-    final spots = _spotsFor(entries);
-    final bounds = _chartBounds(entries.map((m) => m.value).toList());
+    final entries = _entries;
+    final spots = _spotsFor(widget.definition, entries);
+    final bounds = _chartBounds(spots.map((spot) => spot.y).toList());
     final chartSemantics = _measurementTrendSemanticsLabel(
       widget.definition,
       entries,
@@ -2145,6 +2160,17 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
               .min(widget.height, 128 + math.max(0.0, (textScale - 1) * 64))
               .toDouble()
         : (widget.height + math.max(0.0, (textScale - 1) * 80)).toDouble();
+    final chart = _buildChart(
+      context: context,
+      strings: strings,
+      locale: locale,
+      dataVisualization: dataVisualization,
+      entries: entries,
+      spots: spots,
+      bounds: bounds,
+      selectedIndex: selectedIndex,
+    );
+    final hasOtherUnits = entries.length != widget.entries.length;
 
     return Semantics(
       key: const ValueKey('measurement-trend-chart-semantics'),
@@ -2166,7 +2192,7 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
         child: _withMeasurementTrendChartTheme(
           context,
           child: Container(
-            height: responsiveHeight,
+            height: hasOtherUnits ? null : responsiveHeight,
             padding: expressiveDetail
                 ? const EdgeInsets.fromLTRB(18, 13, 18, 16)
                 : const EdgeInsets.fromLTRB(14, 16, 14, 12),
@@ -2174,16 +2200,19 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
               color: _measurementTrendChartSurface(context),
               borderRadius: shapes.healthTrendCard,
             ),
-            child: _buildChart(
-              context: context,
-              strings: strings,
-              locale: locale,
-              dataVisualization: dataVisualization,
-              entries: entries,
-              spots: spots,
-              bounds: bounds,
-              selectedIndex: selectedIndex,
-            ),
+            child: !hasOtherUnits
+                ? chart
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: responsiveHeight, child: chart),
+                      const SizedBox(height: 8),
+                      Text(
+                        strings.healthChartUnitNote(entries.last.unit),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -2405,7 +2434,7 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
       duration: context.usesExpressivePresentation
           ? TonosExpressiveStateMotion.duration(
               context,
-              TonosExpressiveStateMotion.standard,
+              TonosExpressiveStateMotion.data,
             )
           : appMotionDuration(context, const Duration(milliseconds: 150)),
       curve: context.usesExpressivePresentation
@@ -2417,11 +2446,13 @@ class _MeasurementChartCardState extends State<_MeasurementChartCard> {
 
 class _MeasurementEntryTile extends StatelessWidget {
   final Measurement entry;
+  final MeasurementType type;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
   const _MeasurementEntryTile({
     required this.entry,
+    required this.type,
     required this.onTap,
     required this.onDelete,
   });
@@ -2461,8 +2492,8 @@ class _MeasurementEntryTile extends StatelessWidget {
             role: _MeasurementDetailRole.history,
           )
         : null;
-    final contextLabel = _measurementContextLabel(entry, strings);
-    final note = _measurementNote(entry);
+    final contextLabel = _measurementContextLabel(entry, strings, type);
+    final note = _measurementNote(entry, type);
     final details = <String>[
       _formatDateTime(entry.displayDateTime, locale),
       if (contextLabel != null) contextLabel,
@@ -2798,6 +2829,30 @@ class _HealthTrendMessageCard extends StatelessWidget {
   }
 }
 
+Future<_MeasurementEntryInput?> _showMeasurementEntryDialog({
+  required BuildContext context,
+  required WidgetBuilder builder,
+}) async {
+  ModalRoute<dynamic>? dialogRoute;
+  final input = await showTonosDialog<_MeasurementEntryInput>(
+    context: context,
+    builder: (dialogContext) {
+      dialogRoute = ModalRoute.of(dialogContext);
+      return TonosDialogFrame(
+        styleFormControls: true,
+        styleDarkNeoPickerSurfaces: true,
+        child: builder(dialogContext),
+      );
+    },
+  );
+  if (input != null && context.mounted && context.usesExpressivePresentation) {
+    // Let the overlay leave before updating the chart underneath it, so the
+    // user sees the complete data transition rather than its last few frames.
+    await dialogRoute?.completed;
+  }
+  return input;
+}
+
 class _MeasurementEntryDialog extends StatefulWidget {
   final String title;
   final MeasurementDefinition definition;
@@ -2818,15 +2873,29 @@ class _MeasurementEntryDialog extends StatefulWidget {
       _MeasurementEntryDialogState();
 }
 
+enum _HeightEntryMode {
+  feetAndInches(HeightUnit.inches),
+  feet(HeightUnit.feet),
+  inches(HeightUnit.inches),
+  centimeters(HeightUnit.centimeters);
+
+  const _HeightEntryMode(this.unit);
+  final HeightUnit unit;
+}
+
 class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   late DateTime _timestamp;
   late final TextEditingController _valueController;
   late final TextEditingController _heightInchesController;
   late final TextEditingController _unitController;
   late final TextEditingController _noteController;
-  bool _heightUsesFeetAndInches = false;
+  late _HeightEntryMode _heightMode;
+  double? _heightCentimeters;
+  bool get _heightUsesFeetAndInches =>
+      _isHeight && _heightMode == _HeightEntryMode.feetAndInches;
   String? _bodyWeightVariation;
   bool _withPump = false;
+  bool _pumpSelectionEdited = false;
 
   bool get _isHeight => widget.definition.type == MeasurementType.Height;
   bool get _isBodyWeight =>
@@ -2849,20 +2918,21 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
           note: entry?.note,
         );
     _timestamp = entry?.timestamp ?? DateTime.now();
-    _heightUsesFeetAndInches = _isHeight && unit == 'in';
-    if (_heightUsesFeetAndInches && entry != null) {
-      final totalInches = entry.value.round();
-      _valueController = TextEditingController(
-        text: (totalInches ~/ 12).toString(),
-      );
-      _heightInchesController = TextEditingController(
-        text: (totalInches % 12).toString(),
-      );
-    } else {
-      _valueController = TextEditingController(
-        text: entry == null ? '' : _cleanNumber(entry.value),
-      );
-      _heightInchesController = TextEditingController();
+    final heightUnit = HeightUnit.tryParse(unit);
+    _heightMode = switch (heightUnit) {
+      HeightUnit.feet => _HeightEntryMode.feet,
+      HeightUnit.inches => _HeightEntryMode.feetAndInches,
+      _ => _HeightEntryMode.centimeters,
+    };
+    _valueController = TextEditingController(
+      text: entry == null ? '' : _cleanNumber(entry.value),
+    );
+    _heightInchesController = TextEditingController();
+    if (_isHeight) {
+      _heightCentimeters = entry == null || heightUnit == null
+          ? null
+          : heightUnit.convert(entry.value, HeightUnit.centimeters);
+      _populateHeightInputs(_heightCentimeters);
     }
     _unitController = TextEditingController(text: unit);
     _bodyWeightVariation = switch (measurementContext) {
@@ -2875,7 +2945,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
         measurementContext == MeasurementContext.withPump ||
         (_isBodyPart && note == 'With pump');
     _noteController = TextEditingController(
-      text: _usesPresetNote(note) ? '' : note,
+      text: entry?.context == null && _usesPresetNote(note) ? '' : note,
     );
   }
 
@@ -2965,10 +3035,15 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   }
 
   void _save() {
-    final value = _heightUsesFeetAndInches
-        ? _heightInchesValue()
+    final height = _isHeight ? _heightValueInCentimeters() : null;
+    final value = _isHeight
+        ? height == null
+              ? null
+              : HeightUnit.centimeters.convert(height, _heightMode.unit)
         : double.tryParse(_valueController.text.trim());
-    final unit = _heightUsesFeetAndInches ? 'in' : _unitController.text.trim();
+    final unit = _isHeight
+        ? _heightMode.unit.symbol
+        : _unitController.text.trim();
     if (value == null || unit.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -2987,10 +3062,22 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
         context: _resolvedContext(),
       );
     } on MeasurementValidationException catch (error) {
+      final strings = AppLocalizations.of(context);
+      final range =
+          _isBodyWeight &&
+              error.error == MeasurementValidationError.implausibleValue
+          ? MeasurementValidation.bodyWeightRange(unit)
+          : null;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _measurementValidationMessage(AppLocalizations.of(context), error),
+            range == null
+                ? _measurementValidationMessage(strings, error)
+                : strings.healthBodyWeightRange(
+                    _cleanNumber(range.min),
+                    _cleanNumber(range.max),
+                    unit,
+                  ),
           ),
         ),
       );
@@ -3007,13 +3094,55 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
     );
   }
 
-  double? _heightInchesValue() {
-    final feet = int.tryParse(_valueController.text.trim());
-    final inches = int.tryParse(_heightInchesController.text.trim());
-    if (feet == null || inches == null || inches < 0 || inches >= 12) {
+  double? _heightValueInCentimeters() {
+    if (_heightCentimeters != null) return _heightCentimeters;
+    if (!_heightUsesFeetAndInches) {
+      final value = double.tryParse(_valueController.text.trim());
+      return value == null
+          ? null
+          : _heightMode.unit.convert(value, HeightUnit.centimeters);
+    }
+    final feetText = _valueController.text.trim();
+    final inchesText = _heightInchesController.text.trim();
+    if (feetText.isEmpty && inchesText.isEmpty) return null;
+    final feet = feetText.isEmpty ? 0.0 : double.tryParse(feetText);
+    final inches = inchesText.isEmpty ? 0.0 : double.tryParse(inchesText);
+    if (feet == null ||
+        inches == null ||
+        feet < 0 ||
+        inches < 0 ||
+        inches >= 12) {
       return null;
     }
-    return (feet * 12 + inches).toDouble();
+    return HeightUnit.inches.convert(
+      feet * 12 + inches,
+      HeightUnit.centimeters,
+    );
+  }
+
+  void _heightInputChanged(String _) => _heightCentimeters = null;
+
+  String _heightInputNumber(double value) =>
+      value.toStringAsFixed(6).replaceFirst(RegExp(r'\.?0+$'), '');
+
+  void _populateHeightInputs(double? centimeters) {
+    if (centimeters == null) {
+      _valueController.clear();
+      _heightInchesController.clear();
+    } else if (_heightUsesFeetAndInches) {
+      final inches = HeightUnit.centimeters.convert(
+        centimeters,
+        HeightUnit.inches,
+      );
+      final feet = (inches / 12).floor();
+      _valueController.text = feet.toString();
+      _heightInchesController.text = _heightInputNumber(inches - feet * 12);
+    } else {
+      _valueController.text = _heightInputNumber(
+        HeightUnit.centimeters.convert(centimeters, _heightMode.unit),
+      );
+      _heightInchesController.clear();
+    }
   }
 
   String? _resolvedNote() {
@@ -3032,6 +3161,14 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       };
     }
     if (_isBodyPart) {
+      final entry = widget.entry;
+      if (!_pumpSelectionEdited && entry != null) {
+        return entry.context ??
+            MeasurementValidation.legacyContextFor(
+              type: widget.definition.type,
+              note: entry.note,
+            );
+      }
       return _withPump
           ? MeasurementContext.withPump
           : MeasurementContext.withoutPump;
@@ -3040,36 +3177,25 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
   }
 
   bool _usesPresetNote(String note) {
-    return _isKnownBodyWeightVariation(note) ||
-        (_isBodyPart && (note == 'With pump' || note == 'Without pump'));
+    return MeasurementValidation.legacyContextFor(
+          type: widget.definition.type,
+          note: note,
+        ) !=
+        null;
   }
 
   bool _isKnownBodyWeightVariation(String note) {
     return note == 'WakeUp' || note == 'BedTime' || note == 'Overall';
   }
 
-  void _setHeightUnit(bool useFeetAndInches) {
-    if (_heightUsesFeetAndInches == useFeetAndInches) return;
-
-    if (useFeetAndInches) {
-      final centimeters = double.tryParse(_valueController.text.trim());
-      if (centimeters == null) {
-        _valueController.clear();
-        _heightInchesController.clear();
-      } else {
-        final totalInches = (centimeters / 2.54).round();
-        _valueController.text = (totalInches ~/ 12).toString();
-        _heightInchesController.text = (totalInches % 12).toString();
-      }
-    } else {
-      final totalInches = _heightInchesValue();
-      _valueController.text = totalInches == null
-          ? ''
-          : _cleanNumber(totalInches * 2.54);
-    }
+  void _setHeightUnit(_HeightEntryMode mode) {
+    if (_heightMode == mode) return;
+    final centimeters = _heightValueInCentimeters();
     setState(() {
-      _heightUsesFeetAndInches = useFeetAndInches;
-      _unitController.text = useFeetAndInches ? 'in' : 'cm';
+      _heightMode = mode;
+      _heightCentimeters = centimeters;
+      _unitController.text = mode.unit.symbol;
+      _populateHeightInputs(centimeters);
     });
   }
 
@@ -3149,13 +3275,15 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
       key: const ValueKey('measurement-entry-height-feet'),
       controller: _valueController,
       autofocus: true,
-      keyboardType: TextInputType.number,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: _heightInputChanged,
       decoration: InputDecoration(labelText: strings.measurementFeet),
     );
     final inchesField = TextField(
       key: const ValueKey('measurement-entry-height-inches'),
       controller: _heightInchesController,
-      keyboardType: TextInputType.number,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: _heightInputChanged,
       decoration: InputDecoration(labelText: strings.measurementInches),
     );
     final dialog = AlertDialog(
@@ -3202,52 +3330,27 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_isHeight) ...[
-              if (expressiveLibrary)
-                SegmentedButton<bool>(
-                  key: const ValueKey('measurement-height-unit-selector'),
-                  segments: [
-                    ButtonSegment<bool>(
-                      value: true,
-                      label: Text(
-                        '${strings.measurementFeet}/${strings.measurementInches}',
-                        maxLines: compactLibraryLayout ? 2 : 1,
-                        softWrap: true,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    ButtonSegment<bool>(
-                      value: false,
-                      label: Text(
-                        strings.measurementCentimeters,
-                        maxLines: compactLibraryLayout ? 2 : 1,
-                        softWrap: true,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                  selected: {_heightUsesFeetAndInches},
-                  showSelectedIcon: false,
-                  onSelectionChanged: (selection) =>
-                      _setHeightUnit(selection.single),
-                )
-              else
-                Wrap(
-                  spacing: 8,
-                  children: [
+              Wrap(
+                key: const ValueKey('measurement-height-unit-selector'),
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final mode in _HeightEntryMode.values)
                     ChoiceChip(
-                      label: Text(
-                        '${strings.measurementFeet}/${strings.measurementInches}',
-                      ),
-                      selected: _heightUsesFeetAndInches,
-                      onSelected: (_) => _setHeightUnit(true),
+                      key: ValueKey('measurement-height-unit-${mode.name}'),
+                      label: Text(switch (mode) {
+                        _HeightEntryMode.feetAndInches =>
+                          '${strings.measurementFeet}/${strings.measurementInches}',
+                        _HeightEntryMode.feet => strings.measurementFeet,
+                        _HeightEntryMode.inches => strings.measurementInches,
+                        _HeightEntryMode.centimeters =>
+                          strings.measurementCentimeters,
+                      }),
+                      selected: _heightMode == mode,
+                      onSelected: (_) => _setHeightUnit(mode),
                     ),
-                    ChoiceChip(
-                      label: Text(strings.measurementCentimeters),
-                      selected: !_heightUsesFeetAndInches,
-                      onSelected: (_) => _setHeightUnit(false),
-                    ),
-                  ],
-                ),
+                ],
+              ),
               const SizedBox(height: 10),
             ],
             if (_heightUsesFeetAndInches)
@@ -3277,6 +3380,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  onChanged: _isHeight ? _heightInputChanged : null,
                   style: expressiveBodyWeight
                       ? theme.textTheme.headlineSmall?.copyWith(
                           color: dialogForeground,
@@ -3295,6 +3399,13 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                         : null,
                     labelText: expressiveWeightDialog
                         ? null
+                        : _isHeight
+                        ? switch (_heightMode) {
+                            _HeightEntryMode.feet => strings.measurementFeet,
+                            _HeightEntryMode.inches =>
+                              strings.measurementInches,
+                            _ => strings.measurementCentimeters,
+                          }
                         : _measurementTitle(widget.definition, strings),
                     labelStyle: expressiveBodyWeight
                         ? theme.textTheme.bodySmall?.copyWith(
@@ -3310,7 +3421,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                 ),
               ),
             SizedBox(height: fieldGap),
-            if (!_heightUsesFeetAndInches)
+            if (!_isHeight)
               withWeightFieldLabel(
                 strings.healthUnit,
                 'unit',
@@ -3325,7 +3436,7 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
                   ),
                 ),
               ),
-            if (!_heightUsesFeetAndInches) SizedBox(height: fieldGap),
+            if (!_isHeight) SizedBox(height: fieldGap),
             if (_isBodyWeight) ...[
               withWeightFieldLabel(
                 strings.measurementVariation,
@@ -3387,8 +3498,10 @@ class _MeasurementEntryDialogState extends State<_MeasurementEntryDialog> {
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 value: _withPump,
-                onChanged: (value) =>
-                    setState(() => _withPump = value ?? false),
+                onChanged: (value) => setState(() {
+                  _withPump = value ?? false;
+                  _pumpSelectionEdited = true;
+                }),
                 title: Text(strings.measurementWithPump),
               ),
             withWeightFieldLabel(
@@ -3720,7 +3833,7 @@ class _MeasurementTrend {
     final last = latest;
     final prior = previous;
     if (last == null || prior == null) return null;
-    return last.value - prior.value;
+    return _measurementDelta(definition, last, prior);
   }
 }
 
@@ -3813,10 +3926,28 @@ class _ChartBounds {
   });
 }
 
-List<FlSpot> _spotsFor(List<Measurement> entries) {
+double? _measurementDelta(
+  MeasurementDefinition definition,
+  Measurement? latest,
+  Measurement? previous,
+) => MeasurementComparison.delta(definition.type, latest, previous);
+
+double _comparableValue(
+  MeasurementDefinition definition,
+  Measurement entry,
+  String targetUnit,
+) => MeasurementComparison.valueInUnit(definition.type, entry, targetUnit)!;
+
+List<FlSpot> _spotsFor(
+  MeasurementDefinition definition,
+  List<Measurement> entries,
+) {
   return List.generate(
     entries.length,
-    (index) => FlSpot(index.toDouble(), entries[index].value),
+    (index) => FlSpot(
+      index.toDouble(),
+      _comparableValue(definition, entries[index], entries.last.unit),
+    ),
   );
 }
 
@@ -4033,7 +4164,8 @@ String _defaultUnitFor(
 }
 
 String _formatMeasurement(Measurement entry, Locale locale) {
-  return '${_localizedNumber(entry.value, locale)} ${entry.unit}'.trim();
+  return '${_localizedNumber(entry.value, locale, maximumFractionDigits: 6)} ${entry.unit}'
+      .trim();
 }
 
 String _formatDelta(
@@ -4042,7 +4174,7 @@ String _formatDelta(
   Locale locale, {
   String? unit,
 }) {
-  if (delta == null || delta.abs() < 0.001) return strings.healthNoChange;
+  if (delta == null || delta == 0) return strings.healthNoChange;
   final prefix = delta > 0 ? '+' : '';
   return strings.healthChangeSinceLast(
     '$prefix${_localizedNumber(delta, locale)}${unit == null ? '' : ' $unit'}',
@@ -4054,18 +4186,32 @@ String _formatSignedMeasurementDelta(double delta, String unit, Locale locale) {
   return '$prefix${_localizedNumber(delta, locale)} $unit';
 }
 
-String _localizedNumber(double value, Locale locale) {
-  final maximumFractionDigits =
-      value.abs() >= 1000 || value == value.roundToDouble() ? 0 : 1;
+String _localizedNumber(
+  double value,
+  Locale locale, {
+  int? maximumFractionDigits,
+}) {
+  final magnitude = value.abs();
+  final digits =
+      maximumFractionDigits ??
+      (magnitude > 0 && magnitude < 0.05
+          ? ((-math.log(magnitude) / math.ln10).ceil() + 2).clamp(1, 12)
+          : 1);
   return LocalizedFormatters.number(
     value,
     locale,
-    maximumFractionDigits: maximumFractionDigits,
+    maximumFractionDigits: value == value.roundToDouble() ? 0 : digits,
   );
 }
 
-String? _measurementContextLabel(Measurement entry, AppLocalizations strings) {
-  final context = entry.context ?? _legacyMeasurementContext(entry.note);
+String? _measurementContextLabel(
+  Measurement entry,
+  AppLocalizations strings,
+  MeasurementType type,
+) {
+  final context =
+      entry.context ??
+      MeasurementValidation.legacyContextFor(type: type, note: entry.note);
   return switch (context) {
     MeasurementContext.wakeUp => strings.measurementWakeUp,
     MeasurementContext.bedtime => strings.measurementBedtime,
@@ -4076,25 +4222,17 @@ String? _measurementContextLabel(Measurement entry, AppLocalizations strings) {
   };
 }
 
-MeasurementContext? _legacyMeasurementContext(String? note) {
-  return switch (note?.trim()) {
-    'WakeUp' => MeasurementContext.wakeUp,
-    'BedTime' => MeasurementContext.bedtime,
-    'Overall' => MeasurementContext.overall,
-    'With pump' => MeasurementContext.withPump,
-    'Without pump' => MeasurementContext.withoutPump,
-    _ => null,
-  };
-}
-
-String? _measurementNote(Measurement entry) {
+String? _measurementNote(Measurement entry, MeasurementType type) {
   final note = entry.note?.trim();
   if (note == null || note.isEmpty) return null;
-  return _legacyMeasurementContext(note) == null ? note : null;
+  return entry.context != null ||
+          MeasurementValidation.legacyContextFor(type: type, note: note) == null
+      ? note
+      : null;
 }
 
 Color? _deltaColor(BuildContext context, double? delta) {
-  if (delta == null || delta.abs() < 0.001) {
+  if (delta == null || delta == 0) {
     return Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7);
   }
   final surface = _healthTrendCardSurface(context);
@@ -4104,13 +4242,8 @@ Color? _deltaColor(BuildContext context, double? delta) {
 }
 
 String _cleanNumber(double value) {
-  if (value.abs() >= 1000) {
-    return value.toStringAsFixed(0);
-  }
-  if (value == value.roundToDouble()) {
-    return value.toStringAsFixed(0);
-  }
-  return value.toStringAsFixed(1);
+  final text = value.toString();
+  return text.endsWith('.0') ? text.substring(0, text.length - 2) : text;
 }
 
 String _shortDate(DateTime value, Locale locale) {

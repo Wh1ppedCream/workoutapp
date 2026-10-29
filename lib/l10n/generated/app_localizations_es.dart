@@ -7502,6 +7502,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Introduce un valor positivo razonable con una unidad compatible.';
 
   @override
+  String get healthUnitsNotComparable => 'Unidades diferentes';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'El gráfico compara registros en $unit. Las otras unidades siguen en la lista.';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'Para el peso corporal, introduce entre $minimum y $maximum $unit.';
+  }
+
+  @override
   String get allocationSourceAutomatic => 'Cálculo automático';
 
   @override

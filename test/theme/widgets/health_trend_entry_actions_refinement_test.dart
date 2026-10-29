@@ -317,13 +317,20 @@ void main() {
     );
     expect(dialog.scrollable, isTrue);
     expect(dialog.backgroundColor, isNotNull);
-    expect(find.byKey(AppTestKeys.measurementEntryUnit), findsOneWidget);
+    expect(find.byKey(AppTestKeys.measurementEntryUnit), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('measurement-height-unit-selector')),
+        matching: find.byType(ChoiceChip),
+      ),
+      findsNWidgets(4),
+    );
     final dateButton = tester.widget<OutlinedButton>(
       find.byKey(const ValueKey('measurement-entry-date')),
     );
     expect(dateButton.child, isA<Row>());
     final fieldTheme = Theme.of(
-      tester.element(find.byKey(AppTestKeys.measurementEntryUnit)),
+      tester.element(find.byKey(AppTestKeys.measurementEntryValue)),
     );
     expect(fieldTheme.inputDecorationTheme.filled, isTrue);
     expect(tester.takeException(), isNull);

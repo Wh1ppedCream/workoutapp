@@ -435,11 +435,23 @@ void main() {
           await tester.tap(heightAdd);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull, reason: 'height dialog open');
-          final selector = tester.widget<SegmentedButton<bool>>(
-            find.byKey(const ValueKey('measurement-height-unit-selector')),
+          final selector = find.byKey(
+            const ValueKey('measurement-height-unit-selector'),
           );
-          expect(selector.segments, hasLength(2));
-          expect(selector.selected, {false});
+          expect(
+            find.descendant(of: selector, matching: find.byType(ChoiceChip)),
+            findsNWidgets(4),
+          );
+          expect(
+            tester
+                .widget<ChoiceChip>(
+                  find.byKey(
+                    const ValueKey('measurement-height-unit-centimeters'),
+                  ),
+                )
+                .selected,
+            isTrue,
+          );
           expect(
             tester
                 .widget<TextField>(
@@ -471,13 +483,17 @@ void main() {
             '5',
           );
           expect(
-            tester
-                .widget<TextField>(
-                  find.byKey(const ValueKey('measurement-entry-height-inches')),
-                )
-                .controller
-                ?.text,
-            '11',
+            double.parse(
+              tester
+                  .widget<TextField>(
+                    find.byKey(
+                      const ValueKey('measurement-entry-height-inches'),
+                    ),
+                  )
+                  .controller!
+                  .text,
+            ),
+            closeTo(10.866142, 1e-6),
           );
 
           final dateButton = find.byKey(

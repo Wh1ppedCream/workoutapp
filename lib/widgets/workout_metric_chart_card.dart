@@ -436,6 +436,8 @@ class _WorkoutMetricChartCardState extends State<WorkoutMetricChartCard> {
                 metric: metric,
                 interval: bucketSet.interval,
                 range: _range,
+                rangeDataReady:
+                    snapshot.connectionState == ConnectionState.done,
                 weightUnit: weightUnit,
               );
             },
@@ -1325,6 +1327,7 @@ class _MetricChartPage extends StatelessWidget {
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
   final WorkoutReportRange range;
+  final bool rangeDataReady;
   final WeightUnit weightUnit;
 
   const _MetricChartPage({
@@ -1332,6 +1335,7 @@ class _MetricChartPage extends StatelessWidget {
     required this.metric,
     required this.interval,
     required this.range,
+    required this.rangeDataReady,
     required this.weightUnit,
   });
 
@@ -1371,6 +1375,7 @@ class _MetricChartPage extends StatelessWidget {
                     metric: metric,
                     interval: interval,
                     range: range,
+                    rangeDataReady: rangeDataReady,
                     showValueLabels: buckets.length <= 6,
                     weightUnit: weightUnit,
                   )
@@ -1402,6 +1407,7 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
   final WorkoutReportMetric metric;
   final _ReportBucketInterval interval;
   final WorkoutReportRange range;
+  final bool rangeDataReady;
   final bool showValueLabels;
   final WeightUnit weightUnit;
 
@@ -1410,6 +1416,7 @@ class _InteractiveWorkoutLineChart extends StatefulWidget {
     required this.metric,
     required this.interval,
     required this.range,
+    required this.rangeDataReady,
     required this.showValueLabels,
     required this.weightUnit,
   });
@@ -1431,6 +1438,8 @@ class _InteractiveWorkoutLineChartState
   late List<double> _fromValues;
   late List<double> _targetValues;
   late List<DateTime> _valueDates;
+  bool _pendingRangeReveal = false;
+  bool _entryMotionStarted = false;
 
   List<double> get _paintedValues {
     if (_dataMotion.isCompleted) return _targetValues;
@@ -1448,12 +1457,19 @@ class _InteractiveWorkoutLineChartState
       for (final bucket in widget.buckets) bucket.valueFor(widget.metric),
     ];
     _valueDates = [for (final bucket in widget.buckets) bucket.start];
+    _pendingRangeReveal = !widget.rangeDataReady;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!TonosExpressiveStateMotion.enabled(context)) _dataMotion.value = 1;
+    if (!TonosExpressiveStateMotion.enabled(context)) {
+      _dataMotion.value = 1;
+    } else if (!_entryMotionStarted && widget.rangeDataReady) {
+      _fromValues = List.filled(_targetValues.length, 0);
+      _dataMotion.forward(from: 0);
+    }
+    _entryMotionStarted = true;
   }
 
   final FocusNode _focusNode = FocusNode(debugLabel: 'workout-report-chart');
@@ -1472,21 +1488,42 @@ class _InteractiveWorkoutLineChartState
       for (final bucket in widget.buckets) bucket.valueFor(widget.metric),
     ];
     final dates = [for (final bucket in widget.buckets) bucket.start];
+    final datesChanged =
+        dates.length != _valueDates.length ||
+        List.generate(
+          dates.length,
+          (i) => i,
+        ).any((i) => dates[i] != _valueDates[i]);
+    final rangeChanged = oldWidget.range != widget.range;
+    final rangeTransition = rangeChanged || _pendingRangeReveal;
+    if (rangeTransition) {
+      _pendingRangeReveal = !widget.rangeDataReady;
+    }
+    // Regrouped dates start at the baseline rather than borrowing values from
+    // unrelated buckets. Wait for the actual query result before moving them.
+    final revealRange = rangeTransition && widget.rangeDataReady;
+    final regrouped =
+        !rangeTransition &&
+        oldWidget.metric == widget.metric &&
+        (datesChanged || oldWidget.interval != widget.interval);
     final changed =
         next.length != _targetValues.length ||
         List.generate(
           next.length,
           (i) => i,
         ).any((i) => next[i] != _targetValues[i] || dates[i] != _valueDates[i]);
-    if (changed) {
+    if (changed || revealRange) {
       final painted = _paintedValues;
       final byDate = {
         for (var i = 0; i < _valueDates.length; i++) _valueDates[i]: painted[i],
       };
       _fromValues = [
         for (var i = 0; i < next.length; i++)
-          oldWidget.metric != widget.metric ||
-                  oldWidget.interval != widget.interval
+          revealRange || regrouped
+              ? 0.0
+              : rangeTransition ||
+                    oldWidget.metric != widget.metric ||
+                    oldWidget.interval != widget.interval
               ? next[i]
               : byDate[dates[i]] ?? next[i],
       ];
@@ -1496,13 +1533,16 @@ class _InteractiveWorkoutLineChartState
         next.length,
         (i) => i,
       ).any((i) => _fromValues[i] != next[i]);
-      if (hasTransition && TonosExpressiveStateMotion.enabled(context)) {
+      if (hasTransition &&
+          !_pendingRangeReveal &&
+          TonosExpressiveStateMotion.enabled(context)) {
         _dataMotion.forward(from: 0);
       } else {
         _dataMotion.value = 1;
       }
     }
-    if (oldWidget.buckets != widget.buckets ||
+    if (rangeChanged ||
+        oldWidget.buckets != widget.buckets ||
         oldWidget.metric != widget.metric ||
         oldWidget.interval != widget.interval) {
       _selectedIndex = null;
@@ -1516,6 +1556,10 @@ class _InteractiveWorkoutLineChartState
     final progressColors = context.progressColors;
     final surfaces = context.surfaceTokens;
     final shapes = context.shapeTokens;
+    final expressive = context.usesExpressivePresentation;
+    final destination = expressive
+        ? Theme.of(context).extension<AppExpressiveDestinationTokens>()
+        : null;
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
@@ -1572,8 +1616,17 @@ class _InteractiveWorkoutLineChartState
                 ),
                 grid: progressColors.grid,
                 labelColor: progressColors.label,
-                tooltipBackground: surfaces.workoutMetricTooltip,
-                tooltipTextColor: context.cs.onSurface,
+                tooltipBackground: expressive
+                    ? destination?.surfaceSelected ??
+                          context.cs.primaryContainer
+                    : surfaces.workoutMetricTooltip,
+                tooltipTextColor: expressive
+                    ? destination?.onSurfaceSelected ??
+                          context.cs.onPrimaryContainer
+                    : context.cs.onSurface,
+                tooltipOutline: expressive
+                    ? destination?.outlineAccent ?? context.cs.primary
+                    : null,
                 tooltipBorderRadius: shapes.workoutMetricTooltip,
                 showValueLabels: widget.showValueLabels,
                 selectedIndex: _selectedIndex,
@@ -1583,6 +1636,7 @@ class _InteractiveWorkoutLineChartState
                 seriesValues: context.usesExpressivePresentation
                     ? _paintedValues
                     : null,
+                seriesOpacity: expressive && _pendingRangeReveal ? 0 : 1,
                 weightUnit: widget.weightUnit,
                 locale: locale,
                 textScaler: textScaler,
@@ -2558,7 +2612,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
   final Color labelColor;
   final Color tooltipBackground;
   final Color tooltipTextColor;
+  final Color? tooltipOutline;
   final BorderRadius tooltipBorderRadius;
+  final double seriesOpacity;
   final bool showValueLabels;
   final int? selectedIndex;
   final double? selectionPosition;
@@ -2579,6 +2635,8 @@ class _WorkoutLineChartPainter extends CustomPainter {
     required this.tooltipBackground,
     required this.tooltipTextColor,
     required this.tooltipBorderRadius,
+    this.tooltipOutline,
+    this.seriesOpacity = 1,
     this.showValueLabels = false,
     this.selectedIndex,
     this.selectionPosition,
@@ -2702,6 +2760,14 @@ class _WorkoutLineChartPainter extends CustomPainter {
       ..lineTo(points.last.dx, plotRect.bottom)
       ..close();
 
+    // Hide retained previous-query data while a new range loads. Once ready,
+    // its points move from the baseline at full opacity; axes stay steady.
+    if (seriesOpacity < 1) {
+      canvas.saveLayer(
+        Offset.zero & size,
+        Paint()..color = Colors.white.withValues(alpha: seriesOpacity),
+      );
+    }
     canvas.drawPath(
       fillPath,
       Paint()
@@ -2753,7 +2819,10 @@ class _WorkoutLineChartPainter extends CustomPainter {
           align: TextAlign.center,
         );
       }
+    }
+    if (seriesOpacity < 1) canvas.restore();
 
+    for (var i = 0; i < buckets.length; i++) {
       final datePlacement = dateLabelPlacements[i];
       if (datePlacement != null) {
         _drawText(
@@ -2872,6 +2941,15 @@ class _WorkoutLineChartPainter extends CustomPainter {
         ..color = tooltipBackground.withValues(alpha: 0.97)
         ..style = PaintingStyle.fill,
     );
+    if (tooltipOutline != null) {
+      canvas.drawRRect(
+        tooltipBorderRadius.toRRect(rect),
+        Paint()
+          ..color = tooltipOutline!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2,
+      );
+    }
 
     var y = rect.top + textScaler.scale(8);
     for (final painter in painters) {
@@ -2899,7 +2977,9 @@ class _WorkoutLineChartPainter extends CustomPainter {
         oldDelegate.labelColor != labelColor ||
         oldDelegate.tooltipBackground != tooltipBackground ||
         oldDelegate.tooltipTextColor != tooltipTextColor ||
+        oldDelegate.tooltipOutline != tooltipOutline ||
         oldDelegate.tooltipBorderRadius != tooltipBorderRadius ||
+        oldDelegate.seriesOpacity != seriesOpacity ||
         oldDelegate.showValueLabels != showValueLabels ||
         oldDelegate.selectedIndex != selectedIndex ||
         oldDelegate.selectionPosition != selectionPosition ||

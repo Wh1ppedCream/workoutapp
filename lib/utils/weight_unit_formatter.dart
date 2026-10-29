@@ -1,8 +1,10 @@
 import '../models/unit_preference.dart';
+
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 import 'localized_digit_formatter.dart';
+import 'editable_number.dart';
 
 class WeightUnitFormatter {
   static const double kgPerLb = 0.45359237;
@@ -44,6 +46,17 @@ class WeightUnitFormatter {
   static String formatInputWeight(double pounds, WeightUnit unit) {
     final value = _displayWeightValue(pounds, unit);
     return _formatNumber(value, unit == WeightUnit.kilograms ? 1 : 0);
+  }
+
+  /// Profile weights and progression increments must retain fractional values.
+  /// Working-load displays continue to use [formatInputWeight].
+  static String formatPreciseInputWeight(double pounds, WeightUnit unit) {
+    final converted = fromPounds(pounds, unit);
+    // Suppress binary conversion noise, while keeping the original pounds exact.
+    final value = unit == WeightUnit.pounds || !converted.isFinite
+        ? converted
+        : double.parse(converted.toStringAsPrecision(15));
+    return editableNumber(value);
   }
 
   static double _displayWeightValue(double pounds, WeightUnit unit) {
@@ -102,17 +115,15 @@ class WeightUnitFormatter {
         (maxDecimals == 0 || value == value.roundToDouble())) {
       if (locale == null) return value.round().toString();
       return preserveWesternDigits(
-        NumberFormat.decimalPattern(
-          locale.toLanguageTag(),
-        ).format(value.round()),
+        NumberFormat.decimalPattern(locale.toLanguageTag())
+            .format(value.round()),
         locale,
       );
     }
     if (locale == null) return value.toStringAsFixed(maxDecimals);
-    final formatter =
-        NumberFormat.decimalPattern(locale.toLanguageTag())
-          ..minimumFractionDigits = maxDecimals
-          ..maximumFractionDigits = maxDecimals;
+    final formatter = NumberFormat.decimalPattern(locale.toLanguageTag())
+      ..minimumFractionDigits = maxDecimals
+      ..maximumFractionDigits = maxDecimals;
     return preserveWesternDigits(formatter.format(value), locale);
   }
 }

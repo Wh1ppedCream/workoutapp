@@ -40,6 +40,8 @@ class _UserInformationSettingsPageState
   DateTime? _dob;
   bool _dirty = false;
   bool _loading = true;
+  String _loadedWeightInput = '';
+  String? _loadedStoredWeight;
 
   @override
   void initState() {
@@ -77,6 +79,8 @@ class _UserInformationSettingsPageState
         weightUnit,
         latestBodyWeightLbs: latestBodyWeightLbs,
       );
+      _loadedWeightInput = _weightController.text;
+      _loadedStoredWeight = personalInfo?.weight;
       _bodyFatEstimate = personalInfo?.bodyFatEstimate;
       _weightTrend = personalInfo?.weightTrend;
       _activityLevel = personalInfo?.activityLevel;
@@ -121,26 +125,34 @@ class _UserInformationSettingsPageState
       final repo = context.read<AppRepository>();
       final weightUnit = context.read<UnitPreferenceProvider>().weightUnit;
       final enteredWeight = double.tryParse(_weightController.text.trim());
+      final weightChanged = _weightController.text.trim() != _loadedWeightInput;
       final info = PersonalInfo(
         name: _clean(_nameController.text),
         gender: _gender,
         dob: _dob,
         height: _clean(_heightController.text),
-        weight: _cleanWeightForStorage(_weightController.text, weightUnit),
+        weight: weightChanged
+            ? _cleanWeightForStorage(_weightController.text, weightUnit)
+            : _loadedStoredWeight,
         bodyFatEstimate: _bodyFatEstimate,
         weightTrend: _weightTrend,
         activityLevel: _activityLevel,
       );
       await repo.savePersonalInfoWithBodyWeight(
         info: info,
-        bodyWeightValue: enteredWeight != null && enteredWeight > 0
+        bodyWeightValue:
+            weightChanged && enteredWeight != null && enteredWeight > 0
             ? enteredWeight
             : null,
         bodyWeightUnit: weightUnit,
         measurementNote: strings.userInfoProfileUpdateNote,
       );
       if (!mounted) return;
-      setState(() => _dirty = false);
+      setState(() {
+        _dirty = false;
+        _loadedWeightInput = _weightController.text.trim();
+        _loadedStoredWeight = info.weight;
+      });
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(strings.userInfoChangesSaved)));
     } catch (error) {
@@ -161,13 +173,16 @@ class _UserInformationSettingsPageState
     double? latestBodyWeightLbs,
   }) {
     if (latestBodyWeightLbs != null && latestBodyWeightLbs > 0) {
-      return WeightUnitFormatter.formatInputWeight(latestBodyWeightLbs, unit);
+      return WeightUnitFormatter.formatPreciseInputWeight(
+        latestBodyWeightLbs,
+        unit,
+      );
     }
     final cleaned = _clean(storedWeight ?? '');
     if (cleaned == null) return '';
     final pounds = double.tryParse(cleaned);
     if (pounds == null) return cleaned;
-    return WeightUnitFormatter.formatInputWeight(pounds, unit);
+    return WeightUnitFormatter.formatPreciseInputWeight(pounds, unit);
   }
 
   String? _cleanWeightForStorage(String value, WeightUnit unit) {
@@ -176,7 +191,10 @@ class _UserInformationSettingsPageState
     final displayWeight = double.tryParse(cleaned);
     if (displayWeight == null) return cleaned;
     final pounds = WeightUnitFormatter.toPounds(displayWeight, unit);
-    return WeightUnitFormatter.formatInputWeight(pounds, WeightUnit.pounds);
+    return WeightUnitFormatter.formatPreciseInputWeight(
+      pounds,
+      WeightUnit.pounds,
+    );
   }
 
   void _markDirty() {
@@ -382,7 +400,9 @@ class _UserInformationSettingsPageState
                     suffixText: weightUnit.shortLabel,
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                   ),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
               _FieldPadding(

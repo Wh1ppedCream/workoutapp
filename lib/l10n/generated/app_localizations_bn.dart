@@ -7385,6 +7385,19 @@ class AppLocalizationsBn extends AppLocalizations {
       'সমর্থিত একক ব্যবহার করে একটি যুক্তিসঙ্গত ধনাত্মক মান লিখুন।';
 
   @override
+  String get healthUnitsNotComparable => 'একক আলাদা';
+
+  @override
+  String healthChartUnitNote(String unit) {
+    return 'গ্রাফে $unit এককের রেকর্ড তুলনা করা হচ্ছে। অন্য এককের রেকর্ড তালিকায় আছে।';
+  }
+
+  @override
+  String healthBodyWeightRange(String minimum, String maximum, String unit) {
+    return 'শরীরের ওজনের জন্য, $minimum–$maximum $unit লিখুন।';
+  }
+
+  @override
   String get allocationSourceAutomatic => 'স্বয়ংক্রিয় হিসাব';
 
   @override

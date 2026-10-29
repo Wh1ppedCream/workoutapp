@@ -1,4 +1,5 @@
 import '../models/measurement_models.dart';
+import 'height_unit.dart';
 
 /// Domain validation for measurements. Keep this independent of Flutter so the
 /// UI, repository, imports, and database boundary can share the same rules.
@@ -30,6 +31,11 @@ abstract final class MeasurementValidation {
       value.trim().replaceAll(RegExp(r'\s+'), ' ');
 
   static String normalizeUnit(String value) => value.trim().toLowerCase();
+
+  static ({double min, double max}) bodyWeightRange(String unit) =>
+      _isKilograms(normalizeUnit(unit))
+      ? (min: 20, max: 500)
+      : (min: 44, max: 1100);
 
   static void validateDefinition({required String name, required String unit}) {
     validateDefinitionName(name);
@@ -85,22 +91,26 @@ abstract final class MeasurementValidation {
           'pound',
           'pounds',
         });
-        _requireRange(
-          value,
-          _isKilograms(normalizedUnit) ? 20 : 44,
-          _isKilograms(normalizedUnit) ? 500 : 1100,
-        );
+        final range = bodyWeightRange(normalizedUnit);
+        _requireRange(value, range.min, range.max);
         _requireContext(context, const {
           MeasurementContext.wakeUp,
           MeasurementContext.bedtime,
           MeasurementContext.overall,
         });
       case MeasurementType.Height:
-        _requireUnit(normalizedUnit, const {'cm', 'in'});
+        final heightUnit = HeightUnit.tryParse(normalizedUnit);
+        if (heightUnit == null) {
+          throw const MeasurementValidationException(
+            MeasurementValidationError.unsupportedUnit,
+          );
+        }
+        // One physical range preserves heights accepted by the previous
+        // centimeter/inch limits, independent of the selected input unit.
         _requireRange(
-          value,
-          normalizedUnit == 'cm' ? 80 : 31,
-          normalizedUnit == 'cm' ? 272 : 107,
+          heightUnit.convert(value, HeightUnit.centimeters),
+          78.74 - 1e-7,
+          272 + 1e-7,
         );
         _requireContext(context, const {});
       case MeasurementType.Forearm:
@@ -112,11 +122,16 @@ abstract final class MeasurementValidation {
       case MeasurementType.Hip:
       case MeasurementType.Thigh:
       case MeasurementType.Calf:
-        _requireUnit(normalizedUnit, const {'cm', 'in'});
+        final lengthUnit = HeightUnit.tryParse(normalizedUnit);
+        if (lengthUnit == null || lengthUnit == HeightUnit.feet) {
+          throw const MeasurementValidationException(
+            MeasurementValidationError.unsupportedUnit,
+          );
+        }
         _requireRange(
-          value,
-          normalizedUnit == 'cm' ? 2 : 1,
-          normalizedUnit == 'cm' ? 254 : 100,
+          lengthUnit.convert(value, HeightUnit.centimeters),
+          2 - 1e-7,
+          254 + 1e-7,
         );
         _requireContext(context, const {
           MeasurementContext.withPump,
@@ -133,8 +148,9 @@ abstract final class MeasurementValidation {
     required MeasurementType type,
     required String? note,
   }) {
+    final normalizedNote = note?.trim();
     if (type == MeasurementType.BodyWeight) {
-      return switch (note) {
+      return switch (normalizedNote) {
         'WakeUp' => MeasurementContext.wakeUp,
         'BedTime' => MeasurementContext.bedtime,
         'Overall' => MeasurementContext.overall,
@@ -142,7 +158,7 @@ abstract final class MeasurementValidation {
       };
     }
     if (_bodyPartTypes.contains(type)) {
-      return switch (note) {
+      return switch (normalizedNote) {
         'With pump' => MeasurementContext.withPump,
         'Without pump' => MeasurementContext.withoutPump,
         _ => null,

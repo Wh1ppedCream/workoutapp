@@ -2745,6 +2745,17 @@
   "healthTapToLog": "Tap + to log",
   "healthMetricInvalid": "Use a unique metric name and a short unit without spaces.",
   "healthMeasurementEntryInvalid": "Enter a plausible positive value using a supported unit.",
+  "healthUnitsNotComparable": "Different units",
+  "healthChartUnitNote": "Chart compares {unit} entries. Other units remain in the list.",
+  "@healthChartUnitNote": {"placeholders": {"unit": {"type": "String"}}},
+  "healthBodyWeightRange": "For body weight, enter {minimum}–{maximum} {unit}.",
+  "@healthBodyWeightRange": {
+    "placeholders": {
+      "minimum": {"type": "String"},
+      "maximum": {"type": "String"},
+      "unit": {"type": "String"}
+    }
+  },
   "allocationSourceAutomatic": "Automatic calculation",
   "allocationSourceCreatorDefault": "Tonos default",
   "allocationSourcePersonalOverride": "Your custom allocation",

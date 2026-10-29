@@ -19,6 +19,7 @@ import '../../l10n/safe_failure_localizations.dart';
 import '../../models/nutrition_models.dart';
 import '../../repositories/app_repository.dart';
 import '../../providers/nutrition_profile.dart';
+import '../../utils/editable_number.dart';
 
 import 'food_customization_page.dart';
 
@@ -1663,7 +1664,7 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                       SizedBox(
                         width: 100,
                         child: TonosFormField(
-                          initialValue: qty.toStringAsFixed(1),
+                          initialValue: editableNumber(qty),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -2143,8 +2144,7 @@ class _QtyEditorState extends State<_QtyEditor> {
     }
   }
 
-  String _fmt(double v) =>
-      (v % 1 == 0) ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  String _fmt(double v) => editableNumber(v);
 
   @override
   void dispose() {

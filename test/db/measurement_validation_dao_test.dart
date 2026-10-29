@@ -83,15 +83,46 @@ void main() {
         'Morning check-in',
         null,
       );
-      final row =
-          (await db.query(
-            'measurements',
-            where: 'id = ?',
-            whereArgs: [measurementId],
-          )).single;
+      final row = (await db.query(
+        'measurements',
+        where: 'id = ?',
+        whereArgs: [measurementId],
+      )).single;
       expect(row['note'], 'Morning check-in');
     },
   );
+
+  test('height writes retain feet, inches and centimeters without rewriting history', () async {
+    final definitionId = await LookupDao.insertMeasurementDefinition(
+      db,
+      name: 'Height',
+      type: MeasurementType.Height,
+    );
+    for (final entry in [(6.0, 'ft'), (72.0, 'in'), (182.88, 'cm')]) {
+      await LookupDao.insertMeasurement(
+        db,
+        definitionId,
+        DateTime.utc(2026, 8, 14),
+        entry.$1,
+        entry.$2,
+        null,
+        null,
+      );
+    }
+    final rows = await db.query('measurements', orderBy: 'id');
+    expect(rows.map((row) => row['value']), [6.0, 72.0, 182.88]);
+    expect(rows.map((row) => row['unit']), ['ft', 'in', 'cm']);
+    await LookupDao.updateMeasurement(
+      db: db,
+      measurementId: rows.first['id'] as int,
+      timestamp: DateTime.utc(2026, 8, 14),
+      value: 5.5,
+      unit: 'ft',
+    );
+    final updated = await db.query('measurements', orderBy: 'id');
+    expect(updated.map((row) => row['value']), [5.5, 72.0, 182.88]);
+    expect(updated.map((row) => row['unit']), ['ft', 'in', 'cm']);
+  });
 
   test('migrates only recognized legacy context notes', () async {
     final bodyWeightId = await db.insert('measurement_definitions', {

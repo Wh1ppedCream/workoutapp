@@ -14,6 +14,32 @@ const _weightKey = ValueKey('weight-card-first-weight');
 const _repsKey = ValueKey('weight-card-first-reps');
 
 void main() {
+  for (final unit in WeightUnit.values) {
+    testWidgets(
+      'editing reps preserves untouched fractional load in ${unit.name}',
+      (tester) async {
+        final exercise = _exercise();
+        exercise.sets.first.weight = 152.625;
+        await tester.pumpWidget(
+          _host(exercise, family: AppThemeFamily.expressive, weightUnit: unit),
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byKey(_repsKey), '12');
+        expect(exercise.sets.first.reps, 12);
+        expect(exercise.sets.first.weight, 152.625);
+        // An incomplete number during typing must not erase the saved load.
+        await tester.enterText(find.byKey(_weightKey), '');
+        expect(exercise.sets.first.weight, 152.625);
+        await tester.enterText(find.byKey(_weightKey), '32.5');
+        expect(
+          exercise.sets.first.weight,
+          closeTo(unit == WeightUnit.pounds ? 32.5 : 32.5 / 0.45359237, 1e-10),
+        );
+        expect(exercise.sets.first.reps, 12);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   for (final brightness in Brightness.values) {
     for (final readOnly in [false, true]) {
       testWidgets(
@@ -691,6 +717,7 @@ Widget _host(
   double textScale = 1,
   FocusNode? firstSetWeightFocusNode,
   void Function()? onValueChanged,
+  WeightUnit weightUnit = WeightUnit.pounds,
 }) => MaterialApp(
   theme: brightness == Brightness.light
       ? AppThemeFactory.light(family)
@@ -712,7 +739,7 @@ Widget _host(
             child: WeightCard(
               key: const ValueKey('weight-card'),
               exercise: exercise,
-              previewWeightUnit: WeightUnit.pounds,
+              previewWeightUnit: weightUnit,
               expressiveWorkoutPresentation:
                   family == AppThemeFamily.expressive,
               expressiveInsetExerciseHeader:

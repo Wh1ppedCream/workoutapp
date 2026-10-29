@@ -292,11 +292,14 @@ class _WeightCardState extends State<WeightCard> {
     });
   }
 
-  void _updateWeightSet(int index) {
-    final displayedWeight =
-        double.tryParse(_weightControllers[index].text) ?? 0;
-    final w = WeightUnitFormatter.toPounds(displayedWeight, _weightUnit);
-    final r = int.tryParse(_repsControllers[index].text) ?? 0;
+  void _updateWeightSet(int index, {required bool weightChanged}) {
+    final current = widget.exercise.sets[index];
+    final displayedWeight = double.tryParse(_weightControllers[index].text);
+    final w =
+        weightChanged && displayedWeight != null && displayedWeight.isFinite
+        ? WeightUnitFormatter.toPounds(displayedWeight, _weightUnit)
+        : current.weight;
+    final r = int.tryParse(_repsControllers[index].text) ?? current.reps;
     widget.exercise.sets[index] = ExerciseSet(weight: w, reps: r);
     widget.onValueChanged?.call();
   }
@@ -1281,7 +1284,10 @@ class _WeightCardState extends State<WeightCard> {
                                         : null,
                                     controller: _weightControllers[index],
                                     readOnly: readOnly,
-                                    keyboardType: TextInputType.number,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge,
@@ -1293,7 +1299,10 @@ class _WeightCardState extends State<WeightCard> {
                                     ),
                                     onChanged: readOnly
                                         ? null
-                                        : (_) => _updateWeightSet(index),
+                                        : (_) => _updateWeightSet(
+                                            index,
+                                            weightChanged: true,
+                                          ),
                                     onFieldSubmitted: index == 0
                                         ? (_) => widget
                                               .onFirstSetWeightSubmitted
@@ -1344,7 +1353,10 @@ class _WeightCardState extends State<WeightCard> {
                                     ),
                                     onChanged: readOnly
                                         ? null
-                                        : (_) => _updateWeightSet(index),
+                                        : (_) => _updateWeightSet(
+                                            index,
+                                            weightChanged: false,
+                                          ),
                                     onFieldSubmitted: index == 0
                                         ? (_) => widget.onFirstSetRepsSubmitted
                                               ?.call()

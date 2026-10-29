@@ -15,8 +15,8 @@ void main() {
     expect(health, contains('TonosSurfaceTheme('));
     expect(
       RegExp(r'styleDarkNeoPickerSurfaces:\s*true').allMatches(health).length,
-      3,
-      reason: 'each Health Trends entry/edit dialog opts into picker surfaces',
+      1,
+      reason: 'the shared Health Trends entry dialog owns picker surfaces',
     );
 
     for (final role in [

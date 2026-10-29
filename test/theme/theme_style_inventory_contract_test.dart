@@ -1685,7 +1685,7 @@ void main() {
     final workoutMetricChartFindings = report.findings
         .where((finding) => finding.ruleId == 'workout-metric-chart-recipes')
         .toList();
-    expect(workoutMetricChartFindings, hasLength(60));
+    expect(workoutMetricChartFindings, hasLength(62));
     expect(
       workoutMetricChartFindings.every(
         (finding) => finding.status == 'migrated',
