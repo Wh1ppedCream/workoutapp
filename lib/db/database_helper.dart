@@ -5334,6 +5334,10 @@ class DatabaseHelper {
     await FoodCustomizationDao.update(await database, payload);
   }
 
+  Future<int> createFoodFromCustomizationPayload(Map payload) async {
+    return FoodCustomizationDao.create(await database, payload);
+  }
+
   // Normalized upsert using brand/source/category + barcodes
   Future<int> upsertFoodWithKeys({
     int? id,

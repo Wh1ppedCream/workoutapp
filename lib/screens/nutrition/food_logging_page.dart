@@ -1256,82 +1256,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     await _processBarcode(normalized);
   }
 
-  // CHANGE RETURN TYPE to int and return the created ID
-  Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) async {
-    final name = (payload['name'] as String?)?.trim();
-    if (name == null || name.isEmpty) {
-      throw StateError('Food must have a name');
-    }
-    final brand = (payload['brand'] as String?)?.trim();
-
-    // 1) Create the food shell
-    final foodId = await _repo.createCustomFood(name: name, brand: brand);
-
-    // persist density if provided
-    final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
-    if (dens != null) {
-      await _repo.upsertFoodWithKeys(
-        id: foodId,
-        name: name,
-        brandName: brand,
-        densityGPerMl: dens,
-      );
-    }
-
-    // 2) Per-100g nutrients from labels/codes/aliases
-    await _repo.saveExtendedPer100gFromPayload(
-      foodId,
-      Map<String, dynamic>.from(payload),
-    );
-
-    // 3) Portions (or default 100 g)
-    final List portionsJson = (payload['portions'] as List?) ?? [];
-    if (portionsJson.isEmpty) {
-      await _repo.replacePortions(foodId, [
-        FoodPortion(
-          id: null,
-          foodId: foodId,
-          measureName: '100 g',
-          gramWeight: 100,
-          mlVolume: null,
-          isDefault: true,
-          listKind: 'basis',
-          sortOrder: 0,
-          amount: 100,
-          unit: 'g',
-          label: null,
-        ),
-      ]);
-    } else {
-      final portions = <FoodPortion>[];
-      for (final p in portionsJson) {
-        final m = Map<String, dynamic>.from(p as Map);
-        final rawDefault = m['is_default'];
-        final isDefault = rawDefault is bool
-            ? rawDefault
-            : (rawDefault is num ? rawDefault.toInt() == 1 : false);
-
-        portions.add(
-          FoodPortion(
-            id: null,
-            foodId: foodId,
-            measureName: m['measure_name'] as String,
-            gramWeight: (m['gram_weight'] as num?)?.toDouble(),
-            mlVolume: (m['ml_volume'] as num?)?.toDouble(),
-            isDefault: isDefault,
-            listKind: m['list_kind'] as String?,
-            sortOrder: m['sort_order'] as int?,
-            amount: (m['amount'] as num?)?.toDouble(),
-            unit: m['unit'] as String?,
-            label: m['label'] as String?,
-          ),
-        );
-      }
-      await _repo.replacePortions(foodId, portions);
-    }
-
-    return foodId;
-  }
+  Future<int> _saveCustomFoodFromPayloadReturningId(Map payload) => _repo
+      .createFoodFromCustomizationPayload(Map<String, dynamic>.from(payload));
 
   Future<void> _handleScanAdd() async {
     final code = _digitsOnly(_barcodeCtrl.text.trim());
@@ -1812,63 +1738,8 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
     }
   }
 
-  Future<void> _updateExistingFoodFromPayload(
-    Map<String, dynamic> payload,
-  ) async {
-    final int foodId = payload['food_id'] as int;
-    final String? name = (payload['name'] as String?)?.trim();
-    final String? brand = (payload['brand'] as String?)?.trim();
-
-    // 1) Update basics (name/brand)
-    await _repo.updateFoodBasics(foodId, name: name, brand: brand);
-
-    // persist density on update as well
-    final dens = (payload['density_g_per_ml'] as num?)?.toDouble();
-    if (dens != null) {
-      final existing = await _repo.getFood(foodId);
-      final safeName = name ?? existing?.name ?? '';
-      final safeBrand = brand ?? existing?.brand;
-      await _repo.upsertFoodWithKeys(
-        id: foodId,
-        name: safeName, // don’t blank it out
-        brandName: safeBrand,
-        densityGPerMl: dens,
-      );
-    }
-
-    // 2) Replace per-100g nutrients
-    await _repo.saveExtendedPer100gFromPayload(foodId, payload);
-
-    // 3) Replace portions if present
-    final List portionsJson = (payload['portions'] as List?) ?? const [];
-    if (portionsJson.isNotEmpty) {
-      final portions = <FoodPortion>[];
-      for (final p in portionsJson) {
-        final m = Map<String, dynamic>.from(p as Map);
-        final rawDefault = m['is_default'];
-        final isDefault = rawDefault is bool
-            ? rawDefault
-            : (rawDefault is num ? rawDefault.toInt() == 1 : false);
-
-        portions.add(
-          FoodPortion(
-            id: null,
-            foodId: foodId,
-            measureName: m['measure_name'] as String,
-            gramWeight: (m['gram_weight'] as num?)?.toDouble(),
-            mlVolume: (m['ml_volume'] as num?)?.toDouble(),
-            isDefault: isDefault,
-            listKind: m['list_kind'] as String?,
-            sortOrder: m['sort_order'] as int?,
-            amount: (m['amount'] as num?)?.toDouble(),
-            unit: m['unit'] as String?,
-            label: m['label'] as String?,
-          ),
-        );
-      }
-      await _repo.replacePortions(foodId, portions);
-    }
-  }
+  Future<void> _updateExistingFoodFromPayload(Map<String, dynamic> payload) =>
+      _repo.updateFoodFromCustomizationPayload(payload);
 
   Future<_PlateSummary> _computePlateSummary() async {
     final lines = await Future.wait(_plate.map(_calcLine));

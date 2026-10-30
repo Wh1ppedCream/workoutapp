@@ -19,8 +19,20 @@ String _toYMD(DateTime d) => LocalCalendarDay.fromDateTime(d).storageKey;
 // Treat these labels as kilojoules and convert to kcal.
 
 class NutritionDao {
-  final Database db;
-  NutritionDao(this.db);
+  final DatabaseExecutor db;
+  final Database? _database;
+
+  NutritionDao(Database database) : db = database, _database = database;
+
+  /// Shares the caller's transaction, including dependent recipe-cache writes.
+  NutritionDao.inTransaction(Transaction transaction)
+    : db = transaction,
+      _database = null;
+
+  Future<T> _transaction<T>(Future<T> Function(DatabaseExecutor) action) {
+    final database = _database;
+    return database == null ? action(db) : database.transaction(action);
+  }
 
   // DB → friendly (what your code uses everywhere like ENERGY_KCAL/PROTEIN/CARB/FAT/SUGARS/FASAT/SODIUM)
   static const Map<String, String> _codeSynonyms = {
@@ -160,9 +172,9 @@ Future<bool> _foodExists(int foodId) async {
     if (!classic.contains(code.length)) return false;
 
     final digits = code.split('').map(int.parse).toList(growable: false);
-    final check = digits.removeLast();
+    final check = digits.last;
     int sum = 0;
-    for (int i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+    for (int i = digits.length - 2, pos = 0; i >= 0; i--, pos++) {
       sum += digits[i] * ((pos % 2 == 0) ? 3 : 1);
     }
     final expected = (10 - (sum % 10)) % 10;
@@ -346,7 +358,7 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<int> upsertFoodPortion(FoodPortion p) async {
-    final id = await db.transaction<int>((txn) async {
+    final id = await _transaction<int>((txn) async {
       // sanitize converters (0 → NULL)
       final gw =
           (p.gramWeight != null && p.gramWeight! > 0) ? p.gramWeight : null;
@@ -385,14 +397,14 @@ Future<bool> _foodExists(int foodId) async {
         'ml_volume': mv,
         'is_default': p.isDefault ? 1 : 0,
         'list_kind': p.listKind,
-        'sort_order': p.sortOrder,
+        'sort_order': p.sortOrder ?? 0,
         'amount': p.amount,
         'unit': p.unit,
         'label': p.label,
       };
 
       // 🔧 prune to actual table columns to avoid “no such column …”
-      final row = await _pruneToTable('food_portions', raw);
+      final row = await _pruneToTable(txn, 'food_portions', raw);
 
       int outId;
       if (p.id == null) {
@@ -443,7 +455,7 @@ Future<bool> _foodExists(int foodId) async {
       setFoodDefaultPortion(foodId, portionId);
 
   Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) async {
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       await txn.delete(
         'food_nutrients',
         where: 'food_id = ?',
@@ -553,7 +565,7 @@ Future<bool> _foodExists(int foodId) async {
     Recipe r,
     List<RecipeIngredient> ings,
   ) async {
-    final rid = await db.transaction<int>((txn) async {
+    final rid = await _transaction<int>((txn) async {
       int outId;
       final map = r.toMap();
       if (r.id == null) {
@@ -949,7 +961,7 @@ Future<bool> _foodExists(int foodId) async {
 
   Future<void> setGoals(NutritionGoal goal) async {
     goal.validateTargets();
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       // Close any open goal overlapping this start
       await txn.update(
         'nutrition_goals',
@@ -1194,7 +1206,7 @@ Future<bool> _foodExists(int foodId) async {
     final nowIso = DateTime.now().toIso8601String();
     final brandName = (brand?.trim().isEmpty ?? true) ? null : brand!.trim();
 
-    return await db.transaction<int>((txn) async {
+    return await _transaction<int>((txn) async {
       // Ensure 'user' source exists
       await txn.insert('sources', {
         'name': 'user',
@@ -1306,7 +1318,7 @@ Future<bool> _foodExists(int foodId) async {
     pre.forEach((k, v) => normalized[_canonCode(k)] = v);
 
     final c2i = await _codeToId(normalized.keys.toSet());
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       await txn.delete(
         'food_nutrient_values',
         where: 'food_id = ? AND basis = ?',
@@ -1346,7 +1358,7 @@ Future<bool> _foodExists(int foodId) async {
   ///  - nutrient_aliases.alias
   ///  - nutrients.name
   ///  - nutrients.code (so direct code matches work too)
-  Future<Map<String, String>> _buildAliasToCodeMap(Database db) async {
+  Future<Map<String, String>> _buildAliasToCodeMap(DatabaseExecutor db) async {
     final map = <String, String>{};
 
     // aliases
@@ -1407,7 +1419,7 @@ Future<bool> _foodExists(int foodId) async {
   /// Convert a “label → value” map (coming from FoodCustomizationPage payload)
   /// into “code → amount” using aliases/names/codes.
   Future<Map<String, double>> mapLabelsToCodes(
-    Database db,
+    DatabaseExecutor db,
     Map<String, dynamic> labelToValue,
   ) async {
     final aliasMap = await _buildAliasToCodeMap(db);
@@ -1532,7 +1544,7 @@ Future<bool> _foodExists(int foodId) async {
     Map<String, double> aliasToAmount,
   ) async {
     // Build alias -> (code, unit) map on the fly
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       for (final entry in aliasToAmount.entries) {
         final alias = entry.key.trim();
         final amount = entry.value;
@@ -1586,7 +1598,7 @@ Future<bool> _foodExists(int foodId) async {
     String? unit,
     String? label,
   }) async {
-    return await db.transaction((txn) async {
+    return await _transaction((txn) async {
       if (isDefault) {
         await txn.update(
           'food_portions',
@@ -1609,7 +1621,7 @@ Future<bool> _foodExists(int foodId) async {
         label: label,
       );
 
-      final row = await _pruneToTable('food_portions', rawRow); // ← prune here
+      final row = await _pruneToTable(txn, 'food_portions', rawRow);
       final newId = await txn.insert('food_portions', row);
 
       if (isDefault) {
@@ -1629,7 +1641,7 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<void> replacePortions(int foodId, List<FoodPortion> portions) async {
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       // Clear existing portions for this food.
       await txn.delete(
         'food_portions',
@@ -1733,7 +1745,7 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<void> updateFoodBasics(int id, {String? name, String? brand}) async {
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       final brandTrim = brand?.trim();
       final brandId = await _ensureBrandTx(txn, brandTrim);
 
@@ -1807,7 +1819,7 @@ Future<bool> _foodExists(int foodId) async {
     int? qualityScore, // ← NEW (optional)
     String? preparation, // ← NEW (optional)
   }) async {
-    final foodId = await db.transaction<int>((txn) async {
+    final foodId = await _transaction<int>((txn) async {
       final brandId = await _ensureBrandTx(txn, brandName);
       final sourceId = await _ensureSourceTx(txn, sourceName ?? dataSource);
       final categoryId = await _ensureCategoryTx(txn, categoryName);
@@ -1874,7 +1886,7 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<void> setFoodDefaultPortion(int foodId, int portionId) async {
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       await txn.update(
         'food_portions',
         {'is_default': 0},
@@ -2379,7 +2391,7 @@ Future<bool> _foodExists(int foodId) async {
     final est = 4.0 * ((p ?? 0) + (c ?? 0)) + 9.0 * (f ?? 0);
     if (est <= 0) return;
 
-    await db.transaction((txn) async {
+    await _transaction((txn) async {
       await txn.insert('food_nutrient_values', {
         'food_id': foodId,
         'nutrient_id': kcalId,
@@ -2429,7 +2441,7 @@ Future<bool> _foodExists(int foodId) async {
       'ml_volume': mv, // keep NULL, not 0
       'is_default': isDefault ? 1 : 0,
       'list_kind': listKind,
-      'sort_order': sortOrder,
+      'sort_order': sortOrder ?? 0,
       'amount': amount,
       'unit': unit,
       'label': label,
@@ -2437,10 +2449,11 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<Map<String, Object?>> _pruneToTable(
+    DatabaseExecutor executor,
     String table,
     Map<String, Object?> row,
   ) async {
-    final cols = await db.rawQuery('PRAGMA table_info($table)');
+    final cols = await executor.rawQuery('PRAGMA table_info($table)');
     final have = {for (final r in cols) (r['name'] as String)};
     final out = <String, Object?>{};
     row.forEach((k, v) {

@@ -6,12 +6,45 @@ import 'nutrition_dao.dart';
 /// Owns persistence orchestration for the existing food editor payload.
 abstract final class FoodCustomizationDao {
   static Future<void> update(Database db, Map payload) async {
-    final nutrition = NutritionDao(db);
-    // 1) ID is required for updates
     final foodId = (payload['food_id'] as num?)?.toInt();
     if (foodId == null) {
       throw ArgumentError('food_id is required for updates');
     }
+    await db.transaction((txn) => _update(txn, foodId, payload));
+  }
+
+  static Future<int> create(Database db, Map payload) async {
+    final name = (payload['name'] as String?)?.trim();
+    if (name == null || name.isEmpty) {
+      throw StateError('Food must have a name');
+    }
+    return db.transaction((txn) async {
+      final foodId = await NutritionDao.inTransaction(txn).insertCustomFood(
+        name: name,
+        brand: (payload['brand'] as String?)?.trim(),
+      );
+      final portions = (payload['portions'] as List?) ?? const [];
+      await _update(txn, foodId, {
+        ...payload,
+        if (portions.isEmpty)
+          'portions': [
+            {
+              'measure_name': '100 g',
+              'gram_weight': 100,
+              'is_default': true,
+              'list_kind': 'basis',
+              'sort_order': 0,
+              'amount': 100,
+              'unit': 'g',
+            },
+          ],
+      });
+      return foodId;
+    });
+  }
+
+  static Future<void> _update(Transaction db, int foodId, Map payload) async {
+    final nutrition = NutritionDao.inTransaction(db);
 
     // 2) Update basic shell (name/brand)
     final name = (payload['name'] as String?)?.trim();

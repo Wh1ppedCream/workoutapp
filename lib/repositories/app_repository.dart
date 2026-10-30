@@ -1823,6 +1823,10 @@ class AppRepository {
     Map<String, dynamic> payload,
   ) => _dbHelper.updateFoodFromCustomizationPayload(payload);
 
+  Future<int> createFoodFromCustomizationPayload(
+    Map<String, dynamic> payload,
+  ) => _dbHelper.createFoodFromCustomizationPayload(payload);
+
   Future<Food?> getFoodByBarcode(String code) =>
       foodCatalog.getFoodByBarcode(code);
   Future<void> addBarcode(int foodId, String code) =>
