@@ -1391,6 +1391,39 @@ class AppRepository {
   Future<void> deleteFlowMethod(int methodId) =>
       _dbHelper.deleteFlowMethod(methodId);
 
+  Future<FlowMethod> saveFlowMethodAtomic({
+    required int presetId,
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+    int? previousMethodId,
+    String? previousName,
+  }) async {
+    if (previousName == null || previousName == name) {
+      return upsertFlowMethod(
+        presetId: presetId,
+        name: name,
+        type: type,
+        params: params,
+      );
+    }
+    final id = await _dbHelper.saveFlowMethodAtomic(
+      presetId: presetId,
+      name: name,
+      type: type.toShortString(),
+      params: params,
+      previousMethodId: previousMethodId,
+      previousName: previousName,
+    );
+    return _flowMethodFromValues(
+      id: id,
+      presetId: presetId,
+      name: name,
+      type: type,
+      params: params,
+    );
+  }
+
   Future<bool> getUseManualBodyparts(int defId) =>
       _dbHelper.getUseManualBodyparts(defId);
   Future<void> setUseManualBodyparts(int defId, bool value) async {
@@ -1547,102 +1580,78 @@ class AppRepository {
     name: name,
   );
 
+  Future<FlowMethod> saveDefaultFlowMethodAtomic({
+    required String scope,
+    int? profileId,
+    required String name,
+    required MethodType type,
+    required Map<String, dynamic> params,
+    String? previousName,
+  }) async {
+    if (previousName == null || previousName == name) {
+      return upsertDefaultFlowMethod(
+        scope: scope,
+        profileId: profileId,
+        name: name,
+        type: type,
+        params: params,
+      );
+    }
+    final id = await _dbHelper.saveDefaultFlowMethodAtomic(
+      scope,
+      profileId: profileId,
+      name: name,
+      type: type.toShortString(),
+      params: params,
+      previousName: previousName,
+    );
+    return FlowMethod(
+      id: id,
+      presetId: profileId ?? -1,
+      name: name,
+      type: type,
+      params: params,
+    );
+  }
+
   Future<void> renameFlowMethodReferences({
     required int presetId,
     required String oldName,
     required String newName,
-  }) async {
-    final def = await fetchFlowDefinition(presetId);
-    final updated = _replaceMethodReferences(def, oldName, newName);
-    if (!identical(updated, def)) {
-      await upsertFlowDefinition(presetId, updated);
-    }
-  }
+  }) => _dbHelper.renameFlowMethodReferences(
+    presetId: presetId,
+    oldName: oldName,
+    newName: newName,
+  );
 
-  Future<void> deleteFlowMethodAndReferences(FlowMethod method) async {
-    final def = await fetchFlowDefinition(method.presetId);
-    final updated = _removeMethodReferences(def, method.name);
-    if (!identical(updated, def)) {
-      await upsertFlowDefinition(method.presetId, updated);
-    }
-    await deleteFlowMethod(method.id);
-  }
+  Future<void> deleteFlowMethodAndReferences(FlowMethod method) =>
+      _dbHelper.deleteFlowMethodAndReferences(
+        presetId: method.presetId,
+        methodId: method.id,
+        methodName: method.name,
+      );
 
   Future<void> renameDefaultFlowMethodReferences({
     required String scope,
     int? profileId,
     required String oldName,
     required String newName,
-  }) async {
-    final def = await fetchDefaultFlowDefinition(scope, profileId: profileId);
-    final updated = _replaceMethodReferences(def, oldName, newName);
-    if (!identical(updated, def)) {
-      await upsertDefaultFlow(
-        scope,
-        profileId: profileId,
-        flowJson: updated.toJson(),
-      );
-    }
-  }
+  }) => _dbHelper.renameDefaultFlowMethodReferences(
+    scope,
+    profileId: profileId,
+    oldName: oldName,
+    newName: newName,
+  );
 
   Future<void> deleteDefaultFlowMethodAndReferences({
     required String scope,
     int? profileId,
     required String name,
-  }) async {
-    final def = await fetchDefaultFlowDefinition(scope, profileId: profileId);
-    final updated = _removeMethodReferences(def, name);
-    if (!identical(updated, def)) {
-      await upsertDefaultFlow(
-        scope,
-        profileId: profileId,
-        flowJson: updated.toJson(),
-      );
-    }
-    await deleteDefaultFlowMethod(
-      scope: scope,
-      profileId: profileId,
-      name: name,
-    );
-  }
-
-  FlowDefinition _replaceMethodReferences(
-    FlowDefinition definition,
-    String oldName,
-    String newName,
-  ) {
-    var changed = false;
-    final edges =
-        definition.edges.map((edge) {
-          if (edge.outcome == 'method' && edge.to == oldName) {
-            changed = true;
-            return FlowEdge(
-              from: edge.from,
-              outcome: edge.outcome,
-              to: newName,
-            );
-          }
-          return edge;
-        }).toList();
-    return changed
-        ? FlowDefinition(nodes: definition.nodes, edges: edges)
-        : definition;
-  }
-
-  FlowDefinition _removeMethodReferences(
-    FlowDefinition definition,
-    String methodName,
-  ) {
-    final edges =
-        definition.edges
-            .where(
-              (edge) => !(edge.outcome == 'method' && edge.to == methodName),
-            )
-            .toList();
-    return edges.length == definition.edges.length
-        ? definition
-        : FlowDefinition(nodes: definition.nodes, edges: edges);
-  }
+  }) => _dbHelper.deleteDefaultFlowMethodAndReferences(
+    scope,
+    profileId: profileId,
+    name: name,
+  );
 
   Future<FlowDefinition> fetchDefaultFlowDefinition(
     String scope, {

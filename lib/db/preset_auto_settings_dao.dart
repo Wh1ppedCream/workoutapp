@@ -1,12 +1,13 @@
 // File: lib/db/preset_auto_settings_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import 'db_query_utils.dart';
 
 /// DAO for managing global automatic-preset settings.
 class PresetAutoSettingsDao {
   static Future<Map<String, dynamic>?> _getByPresetId(
-    Database db,
+    DatabaseExecutor db,
     int presetId, {
     List<String>? columns,
   }) async {
@@ -23,7 +24,7 @@ class PresetAutoSettingsDao {
   /// Reads the automatic settings for a given preset.
   /// Returns null if none exist.
   static Future<Map<String, dynamic>?> getAutoSettings(
-    Database db,
+    DatabaseExecutor db,
     int presetId,
   ) {
     return _getByPresetId(db, presetId);
@@ -31,7 +32,7 @@ class PresetAutoSettingsDao {
 
   /// Inserts or updates the automatic settings for a preset.
   static Future<void> upsertAutoSettings(
-    Database db, {
+    DatabaseExecutor db, {
     required int presetId,
     required bool isAutomatic,
     required double globalIncrement,
@@ -78,7 +79,7 @@ class PresetAutoSettingsDao {
   }
 
   /// Deletes the automatic settings for a preset (disables automatic).
-  static Future<int> deleteAutoSettings(Database db, int presetId) {
+  static Future<int> deleteAutoSettings(DatabaseExecutor db, int presetId) {
     return db.delete(
       'preset_auto_settings',
       where: 'preset_id = ?',
@@ -87,7 +88,10 @@ class PresetAutoSettingsDao {
   }
 
   /// Reads the saved flow-graph JSON for a preset.
-  static Future<String> getFlowDefinition(Database db, int presetId) async {
+  static Future<String> getFlowDefinition(
+    DatabaseExecutor db,
+    int presetId,
+  ) async {
     final row = await _getByPresetId(
       db,
       presetId,
@@ -98,7 +102,7 @@ class PresetAutoSettingsDao {
 
   /// Updates only the flow_definition column.
   static Future<void> upsertFlowDefinition(
-    Database db,
+    DatabaseExecutor db,
     int presetId,
     String flowJson,
   ) async {

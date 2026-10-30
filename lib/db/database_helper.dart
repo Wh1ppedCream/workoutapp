@@ -4722,6 +4722,58 @@ class DatabaseHelper {
     return PresetFlowMethodsDao.deleteMethod(db, methodId);
   }
 
+  /// Atomically upserts a preset flow method, retargeting graph edges and
+  /// deleting the old method row when renamed.
+  Future<int> saveFlowMethodAtomic({
+    required int presetId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+    int? previousMethodId,
+    String? previousName,
+  }) async {
+    final db = await database;
+    return PresetFlowMethodsDao.saveMethodAtomic(
+      db,
+      presetId: presetId,
+      name: name,
+      type: type,
+      paramsJson: jsonEncode(params),
+      previousMethodId: previousMethodId,
+      previousName: previousName,
+    );
+  }
+
+  /// Atomically renames `method` graph edges for a preset.
+  Future<void> renameFlowMethodReferences({
+    required int presetId,
+    required String oldName,
+    required String newName,
+  }) async {
+    final db = await database;
+    await PresetFlowMethodsDao.renameMethodReferences(
+      db,
+      presetId: presetId,
+      oldName: oldName,
+      newName: newName,
+    );
+  }
+
+  /// Atomically removes `method` graph edges and deletes the preset rule row.
+  Future<void> deleteFlowMethodAndReferences({
+    required int presetId,
+    required int methodId,
+    required String methodName,
+  }) async {
+    final db = await database;
+    await PresetFlowMethodsDao.deleteMethodAndReferences(
+      db,
+      presetId: presetId,
+      methodId: methodId,
+      methodName: methodName,
+    );
+  }
+
   Future<void> updatePresetSetReps(int presetSetId, int reps) async {
     final db = await database;
     await PresetDetailDao.updatePresetSetReps(
@@ -4949,6 +5001,60 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     return FlowDefaultsDao.deleteDefaultFlowMethod(
+      db,
+      scope,
+      profileId: profileId,
+      name: name,
+    );
+  }
+
+  /// Atomically upserts a default flow method, retargeting graph edges and
+  /// removing the previous rule row when renamed.
+  Future<int> saveDefaultFlowMethodAtomic(
+    String scope, {
+    int? profileId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+    String? previousName,
+  }) async {
+    final db = await database;
+    return FlowDefaultsDao.saveDefaultFlowMethodAtomic(
+      db,
+      scope,
+      profileId: profileId,
+      name: name,
+      type: type,
+      params: params,
+      previousName: previousName,
+    );
+  }
+
+  /// Atomically renames `method` graph edges on an app or profile default flow.
+  Future<void> renameDefaultFlowMethodReferences(
+    String scope, {
+    int? profileId,
+    required String oldName,
+    required String newName,
+  }) async {
+    final db = await database;
+    await FlowDefaultsDao.renameDefaultFlowMethodReferences(
+      db,
+      scope,
+      profileId: profileId,
+      oldName: oldName,
+      newName: newName,
+    );
+  }
+
+  /// Atomically removes `method` graph edges and deletes the default rule row.
+  Future<void> deleteDefaultFlowMethodAndReferences(
+    String scope, {
+    int? profileId,
+    required String name,
+  }) async {
+    final db = await database;
+    await FlowDefaultsDao.deleteDefaultFlowMethodAndReferences(
       db,
       scope,
       profileId: profileId,

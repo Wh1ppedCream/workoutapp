@@ -207,4 +207,32 @@ class FlowDefinition {
     'nodes': nodes,
     'edges': edges.map((e) => e.toMap()).toList(),
   });
+
+  /// Returns a copy with `method` edges pointing to [oldName] retargeted to
+  /// [newName], or `this` when no edge matches.
+  FlowDefinition renameMethodReferences(String oldName, String newName) {
+    if (oldName == newName) return this;
+    var changed = false;
+    final updatedEdges = edges.map((edge) {
+      if (edge.outcome == 'method' && edge.to == oldName) {
+        changed = true;
+        return FlowEdge(from: edge.from, outcome: edge.outcome, to: newName);
+      }
+      return edge;
+    }).toList();
+    return changed
+        ? FlowDefinition(nodes: nodes, edges: updatedEdges)
+        : this;
+  }
+
+  /// Returns a copy without `method` edges pointing to [methodName], or `this`
+  /// when no edge matches.
+  FlowDefinition removeMethodReferences(String methodName) {
+    final updatedEdges = edges
+        .where((edge) => !(edge.outcome == 'method' && edge.to == methodName))
+        .toList();
+    return updatedEdges.length == edges.length
+        ? this
+        : FlowDefinition(nodes: nodes, edges: updatedEdges);
+  }
 }

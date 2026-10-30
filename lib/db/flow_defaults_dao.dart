@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
 
+import '../models/preset_models.dart';
+
 /// Owns SQLite persistence for app-level and profile-level default progression
 /// flow graphs and rule definitions (`flow_defaults` and `flow_default_methods`).
 abstract final class FlowDefaultsDao {
@@ -91,7 +93,8 @@ abstract final class FlowDefaultsDao {
       ''', filter.arguments);
   }
 
-  /// Upsert one method into `flow_default_methods`.
+  /// Atomically ensures the owning `flow_defaults` row exists and upserts one
+  /// method into `flow_default_methods`.
   static Future<int> upsertDefaultFlowMethod(
     Database db,
     String scope, {
@@ -99,46 +102,104 @@ abstract final class FlowDefaultsDao {
     required String name,
     required String type,
     required Map<String, dynamic> params,
-  }) async {
-    final paramsJson = jsonEncode(params);
-    final filter = scopeFilter(scope, profileId);
-    final defaultRows = await db.query(
-      'flow_defaults',
-      columns: ['scope'],
-      where: filter.whereClause,
-      whereArgs: filter.arguments,
-      limit: 1,
-    );
-    if (defaultRows.isEmpty) {
-      await db.insert('flow_defaults', {
-        'scope': scope,
-        'profile_id': profileId,
-        'flow_json': '{}',
-      });
-    }
-    final values = <String, Object?>{
-      'scope': scope,
-      'profile_id': profileId,
-      'name': name,
-      'type': type,
-      'params': paramsJson,
-    };
-    final whereClause = '${filter.whereClause} AND name = ?';
-    final args = <Object?>[...filter.arguments, name];
-    final updated = await db.update(
-      'flow_default_methods',
-      values,
-      where: whereClause,
-      whereArgs: args,
-    );
-    if (updated == 0) {
-      await db.insert('flow_default_methods', values);
-    }
-    final rows = await db.rawQuery(
-      'SELECT rowid AS id FROM flow_default_methods WHERE $whereClause LIMIT 1',
-      args,
-    );
-    return rows.isEmpty ? 0 : rows.first['id'] as int;
+  }) {
+    return db.transaction((txn) {
+      return _upsertMethodInExecutor(
+        txn,
+        scope,
+        profileId: profileId,
+        name: name,
+        type: type,
+        params: params,
+      );
+    });
+  }
+
+  /// Atomically upserts a default flow method, retargeting graph edges and
+  /// deleting the old method row when [previousName] differs from [name].
+  static Future<int> saveDefaultFlowMethodAtomic(
+    Database db,
+    String scope, {
+    int? profileId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+    String? previousName,
+  }) {
+    return db.transaction((txn) async {
+      final id = await _upsertMethodInExecutor(
+        txn,
+        scope,
+        profileId: profileId,
+        name: name,
+        type: type,
+        params: params,
+      );
+      if (previousName != null && previousName != name) {
+        await _renameReferencesInExecutor(
+          txn,
+          scope,
+          profileId: profileId,
+          oldName: previousName,
+          newName: name,
+        );
+        await deleteDefaultFlowMethod(
+          txn,
+          scope,
+          profileId: profileId,
+          name: previousName,
+        );
+      }
+      return id;
+    });
+  }
+
+  /// Atomically renames `method` graph edges inside one transaction.
+  static Future<void> renameDefaultFlowMethodReferences(
+    Database db,
+    String scope, {
+    int? profileId,
+    required String oldName,
+    required String newName,
+  }) {
+    return db.transaction((txn) async {
+      await _renameReferencesInExecutor(
+        txn,
+        scope,
+        profileId: profileId,
+        oldName: oldName,
+        newName: newName,
+      );
+    });
+  }
+
+  /// Atomically removes `method` graph edges referencing [name] and deletes the
+  /// default rule row.
+  static Future<void> deleteDefaultFlowMethodAndReferences(
+    Database db,
+    String scope, {
+    int? profileId,
+    required String name,
+  }) {
+    return db.transaction((txn) async {
+      final rawFlow = await fetchDefaultFlow(txn, scope, profileId: profileId);
+      final def = FlowDefinition.fromJson(rawFlow);
+      final updated = def.removeMethodReferences(name);
+      if (!identical(updated, def)) {
+        await upsertDefaultFlow(
+          txn,
+          scope,
+          profileId: profileId,
+          flowJson: updated.toJson(),
+        );
+      }
+      await deleteDefaultFlowMethod(
+        txn,
+        scope,
+        profileId: profileId,
+        name: name,
+      );
+    });
   }
 
   /// Delete one default method by name.
@@ -156,5 +217,78 @@ abstract final class FlowDefaultsDao {
       where: whereClause,
       whereArgs: args,
     );
+  }
+
+  static Future<int> _upsertMethodInExecutor(
+    DatabaseExecutor executor,
+    String scope, {
+    int? profileId,
+    required String name,
+    required String type,
+    required Map<String, dynamic> params,
+  }) async {
+    final paramsJson = jsonEncode(params);
+    final filter = scopeFilter(scope, profileId);
+    final defaultRows = await executor.query(
+      'flow_defaults',
+      columns: ['scope'],
+      where: filter.whereClause,
+      whereArgs: filter.arguments,
+      limit: 1,
+    );
+    if (defaultRows.isEmpty) {
+      await executor.insert('flow_defaults', {
+        'scope': scope,
+        'profile_id': profileId,
+        'flow_json': '{}',
+      });
+    }
+    final values = <String, Object?>{
+      'scope': scope,
+      'profile_id': profileId,
+      'name': name,
+      'type': type,
+      'params': paramsJson,
+    };
+    final whereClause = '${filter.whereClause} AND name = ?';
+    final args = <Object?>[...filter.arguments, name];
+    final updated = await executor.update(
+      'flow_default_methods',
+      values,
+      where: whereClause,
+      whereArgs: args,
+    );
+    if (updated == 0) {
+      await executor.insert('flow_default_methods', values);
+    }
+    final rows = await executor.rawQuery(
+      'SELECT rowid AS id FROM flow_default_methods WHERE $whereClause LIMIT 1',
+      args,
+    );
+    return rows.isEmpty ? 0 : rows.first['id'] as int;
+  }
+
+  static Future<void> _renameReferencesInExecutor(
+    DatabaseExecutor executor,
+    String scope, {
+    int? profileId,
+    required String oldName,
+    required String newName,
+  }) async {
+    final rawFlow = await fetchDefaultFlow(
+      executor,
+      scope,
+      profileId: profileId,
+    );
+    final def = FlowDefinition.fromJson(rawFlow);
+    final updated = def.renameMethodReferences(oldName, newName);
+    if (!identical(updated, def)) {
+      await upsertDefaultFlow(
+        executor,
+        scope,
+        profileId: profileId,
+        flowJson: updated.toJson(),
+      );
+    }
   }
 }

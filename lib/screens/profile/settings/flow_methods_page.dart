@@ -506,26 +506,14 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       return;
     }
 
-    await _repo.upsertDefaultFlowMethod(
+    await _repo.saveDefaultFlowMethodAtomic(
       scope: scope,
       profileId: profileId,
       name: methodName,
       type: type,
       params: params,
+      previousName: existing?.name,
     );
-    if (existing != null && existing.name != methodName) {
-      await _repo.renameDefaultFlowMethodReferences(
-        scope: scope,
-        profileId: profileId,
-        oldName: existing.name,
-        newName: methodName,
-      );
-      await _repo.deleteDefaultFlowMethod(
-        scope: scope,
-        profileId: profileId,
-        name: existing.name,
-      );
-    }
     if (!isEdit && mounted) {
       await _offerRulePropagation(
         scope: scope,
@@ -628,14 +616,6 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       ),
     );
     if (updated == null) return;
-    if (existing != null && existing.name != updated.name) {
-      await _repo.renameFlowMethodReferences(
-        presetId: presetId,
-        oldName: existing.name,
-        newName: updated.name,
-      );
-      await _repo.deleteFlowMethod(existing.id);
-    }
     if (mounted) await _loadAll();
   }
 
@@ -2671,21 +2651,15 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
       case MethodType.delSet:
         break;
     }
-    await _repo.upsertFlowMethod(
+    final saved = await _repo.saveFlowMethodAtomic(
       presetId: widget.presetId,
       name: name,
       type: _type,
       params: params,
+      previousMethodId: widget.existing?.id,
+      previousName: widget.existing?.name,
     );
     if (!mounted) return;
-    navigator.pop(
-      FlowMethod(
-        id: -1,
-        presetId: widget.presetId,
-        name: name,
-        type: _type,
-        params: params,
-      ),
-    );
+    navigator.pop(saved);
   }
 }
