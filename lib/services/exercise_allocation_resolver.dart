@@ -28,7 +28,7 @@ class ExerciseAllocationResolver {
   }
 
   static Future<ResolvedExerciseAllocation> resolve(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefinitionId,
   ) async {
     final definition = await DefinitionDao.getExerciseDefinitionById(
@@ -122,8 +122,9 @@ class ExerciseAllocationResolver {
       exerciseDefinitionId: exerciseDefinitionId,
       dimension: ExerciseAllocationDimension.bodyPart,
     );
-    final definitionBodyPartIds =
-        definition.bodyParts.map((bodyPart) => bodyPart.id).toSet();
+    final definitionBodyPartIds = definition.bodyParts
+        .map((bodyPart) => bodyPart.id)
+        .toSet();
     final legacyBodyParts = <int, double>{
       for (final row in legacyBodyRows)
         if (definitionBodyPartIds.contains(row.bodyPartId))
@@ -142,24 +143,24 @@ class ExerciseAllocationResolver {
 
     final muscleHistoryCredits =
         muscleSource == ExerciseAllocationSource.personalOverride ||
-                muscleSource == ExerciseAllocationSource.creatorDefault
-            ? muscleCredits
-            : usesLegacyManualMuscles
-            ? <int, double>{
-              for (final ranked in definition.muscles) ranked.muscle.id: 1.0,
-              for (final row in legacyMuscleRows) row.muscleId: row.percent,
-            }
-            : muscleCredits;
+            muscleSource == ExerciseAllocationSource.creatorDefault
+        ? muscleCredits
+        : usesLegacyManualMuscles
+        ? <int, double>{
+            for (final ranked in definition.muscles) ranked.muscle.id: 1.0,
+            for (final row in legacyMuscleRows) row.muscleId: row.percent,
+          }
+        : muscleCredits;
     final bodyPartHistoryCredits =
         bodyPartSource == ExerciseAllocationSource.personalOverride ||
-                bodyPartSource == ExerciseAllocationSource.creatorDefault
-            ? bodyPartCredits
-            : usesLegacyManualBodyParts
-            ? <int, double>{
-              for (final bodyPart in definition.bodyParts) bodyPart.id: 1.0,
-              for (final row in legacyBodyRows) row.bodyPartId: row.percent,
-            }
-            : bodyPartCredits;
+            bodyPartSource == ExerciseAllocationSource.creatorDefault
+        ? bodyPartCredits
+        : usesLegacyManualBodyParts
+        ? <int, double>{
+            for (final bodyPart in definition.bodyParts) bodyPart.id: 1.0,
+            for (final row in legacyBodyRows) row.bodyPartId: row.percent,
+          }
+        : bodyPartCredits;
 
     return ResolvedExerciseAllocation(
       exerciseDefinitionId: exerciseDefinitionId,
@@ -203,12 +204,14 @@ class ExerciseAllocationResolver {
   }
 
   static Future<Map<int, double>> _deriveBodyPartCredits(
-    Database db,
+    DatabaseExecutor db,
     ExerciseDefinition definition,
     Map<int, double> muscleCredits,
   ) async {
-    final muscleIds =
-        definition.muscles.map((ranked) => ranked.muscle.id).toSet().toList();
+    final muscleIds = definition.muscles
+        .map((ranked) => ranked.muscle.id)
+        .toSet()
+        .toList();
     if (muscleIds.isEmpty) return <int, double>{};
 
     final rows = await db.rawQuery('''

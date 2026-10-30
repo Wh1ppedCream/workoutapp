@@ -271,9 +271,12 @@ void main() {
       final helper = File('lib/db/database_helper.dart').readAsStringSync();
 
       expect(helper, contains('Future<void> _dropFoodFtsTriggers'));
-      expect(helper, contains('DROP TRIGGER IF EXISTS foods_ai'));
-      expect(helper, contains('DROP TRIGGER IF EXISTS foods_ad'));
-      expect(helper, contains('DROP TRIGGER IF EXISTS foods_au'));
+      expect(helper, contains('FoodFtsMaintenanceDao.dropFoodFtsTriggers(db)'));
+      final maintenance = File('lib/db/food_fts_maintenance_dao.dart')
+          .readAsStringSync();
+      expect(maintenance, contains('DROP TRIGGER IF EXISTS foods_ai'));
+      expect(maintenance, contains('DROP TRIGGER IF EXISTS foods_ad'));
+      expect(maintenance, contains('DROP TRIGGER IF EXISTS foods_au'));
 
       final importStart = helper.indexOf('Future<void> importDatabase');
       expect(importStart, isNot(-1));

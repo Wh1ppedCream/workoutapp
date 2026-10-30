@@ -1,6 +1,7 @@
 // File: lib/db/lookup_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import '../models/models.dart';
 import '../services/measurement_validation.dart';
 import 'db_query_utils.dart';
@@ -34,17 +35,24 @@ class LookupDao {
     );
   }
 
-  static Future<List<String>> _getAllNames(Database db, String table) async {
+  static Future<List<String>> _getAllNames(
+    DatabaseExecutor db,
+    String table,
+  ) async {
     final rows = await db.query(table, columns: ['name'], orderBy: 'name');
     return rows.map(_nameFromRow).toList();
   }
 
-  static Future<int> _insertNamed(Database db, String table, String name) {
+  static Future<int> _insertNamed(
+    DatabaseExecutor db,
+    String table,
+    String name,
+  ) {
     return db.insert(table, {'name': name});
   }
 
   static Future<int> _updateNamed(
-    Database db,
+    DatabaseExecutor db,
     String table,
     int id,
     String name, {
@@ -62,7 +70,7 @@ class LookupDao {
     return db.update(table, {'name': name}, where: 'id = ?', whereArgs: [id]);
   }
 
-  static Future<int> _deleteById(Database db, String table, int id) {
+  static Future<int> _deleteById(DatabaseExecutor db, String table, int id) {
     return db.delete(table, where: 'id = ?', whereArgs: [id]);
   }
 
@@ -72,7 +80,7 @@ class LookupDao {
   ///
   /// Returns a list of maps containing keys: `id`, `name`, `type`.
   static Future<List<Map<String, dynamic>>> getMeasurementDefinitions(
-    Database db,
+    DatabaseExecutor db,
   ) {
     return db.query('measurement_definitions', orderBy: 'name');
   }
@@ -92,7 +100,9 @@ class LookupDao {
   ];
 
   /// Ensures the built-in measurement definitions exist for old and new DBs.
-  static Future<void> ensureDefaultMeasurementDefinitions(Database db) async {
+  static Future<void> ensureDefaultMeasurementDefinitions(
+    DatabaseExecutor db,
+  ) async {
     final batch = db.batch();
     for (final type in _defaultMeasurementTypes) {
       batch.insert('measurement_definitions', {
@@ -104,7 +114,7 @@ class LookupDao {
   }
 
   static Future<int> insertMeasurementDefinition(
-    Database db, {
+    DatabaseExecutor db, {
     required String name,
     required MeasurementType type,
   }) async {
@@ -140,7 +150,7 @@ class LookupDao {
   ///
   /// Returns the new measurement row ID.
   static Future<int> insertMeasurement(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     DateTime ts,
     double value,
@@ -175,7 +185,7 @@ class LookupDao {
   ///
   /// Returns a list of maps ordered by timestamp descending.
   static Future<List<Map<String, dynamic>>> getMeasurementsForDefinition(
-    Database db,
+    DatabaseExecutor db,
     int defId,
   ) {
     return db.query(
@@ -192,7 +202,7 @@ class LookupDao {
   ///
   /// Returns a list of maps containing keys: `id`, `name`, `type`.
   static Future<List<Map<String, dynamic>>> getUsedMeasurementDefinitions(
-    Database db,
+    DatabaseExecutor db,
   ) {
     return db.rawQuery('''
       SELECT md.id, md.name, md.type
@@ -208,7 +218,7 @@ class LookupDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of equipment name strings.
-  static Future<List<String>> getAllEquipmentNames(Database db) =>
+  static Future<List<String>> getAllEquipmentNames(DatabaseExecutor db) =>
       _getAllNames(db, 'equipment');
 
   /// Retrieves all body part lookup entries as [BodyPart] models.
@@ -216,7 +226,7 @@ class LookupDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of [BodyPart] objects.
-  static Future<List<BodyPart>> getAllBodyParts(Database db) async {
+  static Future<List<BodyPart>> getAllBodyParts(DatabaseExecutor db) async {
     final rows = await db.query('bodypart', orderBy: 'name');
     return rows.map(_bodyPartFromRow).toList();
   }
@@ -228,22 +238,21 @@ class LookupDao {
   ///
   /// Returns a list of [StretchDefinition] objects.
   static Future<List<StretchDefinition>> getStretches(
-    Database db, [
+    DatabaseExecutor db, [
     int? bodypartId,
   ]) async {
-    final stretchRows =
-        bodypartId == null
-            ? await db.query('stretch_definitions', orderBy: 'name')
-            : await db.rawQuery(
-              '''
+    final stretchRows = bodypartId == null
+        ? await db.query('stretch_definitions', orderBy: 'name')
+        : await db.rawQuery(
+            '''
             SELECT sd.id, sd.catalog_id, sd.name, sd.description
               FROM stretch_definitions sd
               JOIN stretch_bodypart sb ON sb.stretch_id = sd.id
              WHERE sb.bodypart_id = ?
              ORDER BY sd.name
           ''',
-              [bodypartId],
-            );
+            [bodypartId],
+          );
 
     if (stretchRows.isEmpty) return const <StretchDefinition>[];
 
@@ -284,7 +293,7 @@ class LookupDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of muscle name strings.
-  static Future<List<String>> getAllMuscleNames(Database db) =>
+  static Future<List<String>> getAllMuscleNames(DatabaseExecutor db) =>
       _getAllNames(db, 'muscles');
 
   /// Retrieves all muscles as [Muscle] models.
@@ -292,7 +301,7 @@ class LookupDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of [Muscle] objects.
-  static Future<List<Muscle>> getAllMuscles(Database db) async {
+  static Future<List<Muscle>> getAllMuscles(DatabaseExecutor db) async {
     final rows = await db.query('muscles', orderBy: 'name');
     return rows.map(_muscleFromRow).toList();
   }
@@ -304,7 +313,7 @@ class LookupDao {
   ///
   /// Returns the stretch name or null if not found.
   static Future<String?> getStretchDefinitionNameById(
-    Database db,
+    DatabaseExecutor db,
     int stretchId,
   ) async {
     final rows = await db.query(
@@ -325,7 +334,7 @@ class LookupDao {
   ///
   /// Returns the definition ID or null if none exists.
   static Future<int?> getMeasurementDefinitionId(
-    Database db,
+    DatabaseExecutor db,
     String name,
   ) async {
     final rows = await db.query(
@@ -346,7 +355,7 @@ class LookupDao {
   ///
   /// Returns a map of column values or null if not found.
   static Future<Map<String, dynamic>?> getMeasurementById(
-    Database db,
+    DatabaseExecutor db,
     int measurementId,
   ) async {
     final rows = await db.query(
@@ -369,7 +378,7 @@ class LookupDao {
   ///
   /// Returns number of rows affected.
   static Future<int> updateMeasurement({
-    required Database db,
+    required DatabaseExecutor db,
     required int measurementId,
     required DateTime timestamp,
     required double value,
@@ -406,8 +415,8 @@ class LookupDao {
       {
         'timestamp': TemporalSemantics.legacyUtcIso8601(timestamp),
         'measured_at_ms': TemporalSemantics.utcEpochMilliseconds(timestamp),
-        'measured_on':
-            LocalCalendarDay.fromDateTime(timestamp.toLocal()).storageKey,
+        'measured_on': LocalCalendarDay.fromDateTime(timestamp.toLocal())
+            .storageKey,
         'value': value,
         'unit': unit,
         'note': note,
@@ -424,7 +433,7 @@ class LookupDao {
   /// - [measurementId]: ID of the measurement to delete.
   ///
   /// Returns number of rows deleted.
-  static Future<int> deleteMeasurement(Database db, int measurementId) {
+  static Future<int> deleteMeasurement(DatabaseExecutor db, int measurementId) {
     return db.delete(
       'measurements',
       where: 'id = ?',
@@ -433,7 +442,7 @@ class LookupDao {
   }
 
   static Future<void> _validateEntryForDefinition({
-    required Database db,
+    required DatabaseExecutor db,
     required int definitionId,
     required double value,
     required String unit,
@@ -473,7 +482,7 @@ class LookupDao {
   /// - [name]: Equipment name to insert.
   ///
   /// Returns the new equipment row ID.
-  static Future<int> insertEquipment(Database db, String name) {
+  static Future<int> insertEquipment(DatabaseExecutor db, String name) {
     return _insertNamed(db, 'equipment', name);
   }
 
@@ -484,7 +493,7 @@ class LookupDao {
   /// - [name]: New equipment name.
   ///
   /// Returns number of rows affected.
-  static Future<int> updateEquipment(Database db, int id, String name) {
+  static Future<int> updateEquipment(DatabaseExecutor db, int id, String name) {
     return _updateNamed(db, 'equipment', id, name, clearCatalogIdentity: true);
   }
 
@@ -494,7 +503,7 @@ class LookupDao {
   /// - [id]: Equipment row ID to delete.
   ///
   /// Returns number of rows deleted.
-  static Future<int> deleteEquipment(Database db, int id) {
+  static Future<int> deleteEquipment(DatabaseExecutor db, int id) {
     return _deleteById(db, 'equipment', id);
   }
 
@@ -503,7 +512,7 @@ class LookupDao {
   /// - [db]: Open SQLite database instance.
   ///
   /// Returns a list of [Equipment] objects.
-  static Future<List<Equipment>> getAllEquipment(Database db) async {
+  static Future<List<Equipment>> getAllEquipment(DatabaseExecutor db) async {
     final rows = await db.query('equipment', orderBy: 'name');
     return rows.map(_equipmentFromRow).toList();
   }
@@ -514,7 +523,7 @@ class LookupDao {
   /// - [name]: Body part name to insert.
   ///
   /// Returns the new body part row ID.
-  static Future<int> insertBodyPart(Database db, String name) {
+  static Future<int> insertBodyPart(DatabaseExecutor db, String name) {
     return _insertNamed(db, 'bodypart', name);
   }
 
@@ -525,7 +534,7 @@ class LookupDao {
   /// - [name]: New body part name.
   ///
   /// Returns number of rows affected.
-  static Future<int> updateBodyPart(Database db, int id, String name) {
+  static Future<int> updateBodyPart(DatabaseExecutor db, int id, String name) {
     return _updateNamed(db, 'bodypart', id, name);
   }
 
@@ -535,7 +544,7 @@ class LookupDao {
   /// - [id]: Body part row ID to delete.
   ///
   /// Returns number of rows deleted.
-  static Future<int> deleteBodyPart(Database db, int id) {
+  static Future<int> deleteBodyPart(DatabaseExecutor db, int id) {
     return _deleteById(db, 'bodypart', id);
   }
 
@@ -545,7 +554,7 @@ class LookupDao {
   /// - [name]: Muscle name to insert.
   ///
   /// Returns the new muscle row ID.
-  static Future<int> insertMuscle(Database db, String name) {
+  static Future<int> insertMuscle(DatabaseExecutor db, String name) {
     return _insertNamed(db, 'muscles', name);
   }
 
@@ -556,7 +565,7 @@ class LookupDao {
   /// - [name]: New muscle name.
   ///
   /// Returns number of rows affected.
-  static Future<int> updateMuscle(Database db, int id, String name) {
+  static Future<int> updateMuscle(DatabaseExecutor db, int id, String name) {
     return _updateNamed(db, 'muscles', id, name, clearCatalogIdentity: true);
   }
 
@@ -566,7 +575,7 @@ class LookupDao {
   /// - [id]: Muscle row ID to delete.
   ///
   /// Returns number of rows deleted.
-  static Future<int> deleteMuscle(Database db, int id) {
+  static Future<int> deleteMuscle(DatabaseExecutor db, int id) {
     return _deleteById(db, 'muscles', id);
   }
 }

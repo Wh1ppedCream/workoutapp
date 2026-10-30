@@ -1,6 +1,7 @@
 // File: lib/db/definition_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import '../models/models.dart';
 import 'db_query_utils.dart';
 
@@ -27,7 +28,7 @@ class DefinitionDao {
   ///
   /// Returns a list of maps containing keys: `id`, `name`, `equipment_id`.
   static Future<List<Map<String, dynamic>>> getExerciseDefsByBodyPart(
-    Database db,
+    DatabaseExecutor db,
     int bodyPartId,
   ) {
     return db.rawQuery(
@@ -49,7 +50,7 @@ class DefinitionDao {
   ///
   /// Returns a list of [ExerciseDefinition] with all join lists populated.
   static Future<List<ExerciseDefinition>> getAllExerciseDefinitionsDetailed(
-    Database db,
+    DatabaseExecutor db,
   ) {
     return getAllExerciseDefinitionsDetailedBatched(db);
   }
@@ -59,7 +60,7 @@ class DefinitionDao {
   /// Reads each join table once, groups the rows in memory, and keeps the
   /// resulting model shape identical for callers.
   static Future<List<ExerciseDefinition>>
-  getAllExerciseDefinitionsDetailedBatched(Database db) async {
+  getAllExerciseDefinitionsDetailedBatched(DatabaseExecutor db) async {
     final defRows = await db.rawQuery('''
       SELECT
         ed.*,
@@ -255,7 +256,7 @@ class DefinitionDao {
   }
 
   static Future<List<int>> _equipmentIdsForNames(
-    Database db,
+    DatabaseExecutor db,
     List<String> equipmentNames,
   ) async {
     if (equipmentNames.isEmpty) return const <int>[];
@@ -271,7 +272,7 @@ class DefinitionDao {
 
   /// Batched detailed-definition lookup for a known subset of exercise IDs.
   static Future<List<ExerciseDefinition>> getExerciseDefinitionsDetailedByIds(
-    Database db,
+    DatabaseExecutor db,
     List<int> definitionIds,
   ) async {
     if (definitionIds.isEmpty) return const <ExerciseDefinition>[];
@@ -358,7 +359,9 @@ class DefinitionDao {
   /// - [db]: Open database instance.
   ///
   /// Returns list of maps with keys directly from the table (no joins).
-  static Future<List<Map<String, dynamic>>> getAllExercisesRaw(Database db) {
+  static Future<List<Map<String, dynamic>>> getAllExercisesRaw(
+    DatabaseExecutor db,
+  ) {
     return db.query('exercise_definitions', orderBy: 'name');
   }
 
@@ -369,7 +372,7 @@ class DefinitionDao {
   ///
   /// Returns definitions that have a primary equipment in [equipmentNames].
   static Future<List<ExerciseDefinition>> getExerciseDefsWithAnyEquipment(
-    Database db,
+    DatabaseExecutor db,
     List<String> equipmentNames,
   ) async {
     if (equipmentNames.isEmpty) return [];
@@ -392,7 +395,7 @@ class DefinitionDao {
   /// - [equipmentNames]: Names to include.
   /// - [includeNone]: Whether to include definitions without equipment.
   static Future<List<ExerciseDefinition>> getExerciseDefsOnlyWithEquipment(
-    Database db,
+    DatabaseExecutor db,
     List<String> equipmentNames, {
     bool includeNone = true,
   }) async {
@@ -429,7 +432,7 @@ class DefinitionDao {
   ///
   /// Returns distinct [ExerciseDefinition] objects matching all specified filters.
   static Future<List<ExerciseDefinition>> getExerciseDefinitionsFiltered(
-    Database db, {
+    DatabaseExecutor db, {
     List<String>? equipmentNames,
     List<int>? bodypartIds,
     List<int>? muscleIds,
@@ -462,9 +465,8 @@ class DefinitionDao {
       whereArgs.addAll(muscleIds);
     }
 
-    final sql =
-        StringBuffer()
-          ..write('''
+    final sql = StringBuffer()
+      ..write('''
         SELECT DISTINCT
           ed.id,
           ed.name,
@@ -486,22 +488,20 @@ class DefinitionDao {
           FROM exercise_definitions ed
           LEFT JOIN equipment primary_equipment ON primary_equipment.id = ed.equipment_id
       ''')
-          ..write(
-            bodypartIds != null && bodypartIds.isNotEmpty
-                ? 'JOIN exercise_bodypart eb ON eb.exercise_id = ed.id '
-                : '',
-          )
-          ..write(
-            muscleIds != null && muscleIds.isNotEmpty
-                ? 'JOIN exercise_muscle em ON em.exercise_id = ed.id '
-                : '',
-          )
-          ..write(
-            whereClauses.isNotEmpty
-                ? 'WHERE ${whereClauses.join(' AND ')} '
-                : '',
-          )
-          ..write('ORDER BY ed.name');
+      ..write(
+        bodypartIds != null && bodypartIds.isNotEmpty
+            ? 'JOIN exercise_bodypart eb ON eb.exercise_id = ed.id '
+            : '',
+      )
+      ..write(
+        muscleIds != null && muscleIds.isNotEmpty
+            ? 'JOIN exercise_muscle em ON em.exercise_id = ed.id '
+            : '',
+      )
+      ..write(
+        whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')} ' : '',
+      )
+      ..write('ORDER BY ed.name');
 
     final rows = await db.rawQuery(sql.toString(), whereArgs);
     return _shallowDefinitions(rows);
@@ -510,7 +510,7 @@ class DefinitionDao {
   /// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
   /// Returns the definition ID.
   static Future<int> findOrCreateExerciseDefinition(
-    Database db,
+    DatabaseExecutor db,
     String name,
     String equipmentName,
   ) async {
@@ -573,7 +573,7 @@ class DefinitionDao {
   ///
   /// Returns map {'name': String, 'equipmentName': String?}.
   static Future<Map<String, String?>> getDefinitionInfo(
-    Database db,
+    DatabaseExecutor db,
     int defId,
   ) async {
     final rows = await db.rawQuery(
@@ -605,7 +605,7 @@ class DefinitionDao {
   ///
   /// Returns number of rows affected.
   static Future<int> updateExerciseDefinition(
-    Database db,
+    DatabaseExecutor db,
     ExerciseDefinition def,
   ) {
     return db.update(
@@ -621,10 +621,9 @@ class DefinitionDao {
         'setup_notes': def.setupNotes,
         'execution_notes': def.executionNotes,
         'tips_notes': def.tipsNotes,
-        'starter_load_type':
-            def.starterLoadProfile == null
-                ? null
-                : starterLoadTypeToString(def.starterLoadProfile!.type),
+        'starter_load_type': def.starterLoadProfile == null
+            ? null
+            : starterLoadTypeToString(def.starterLoadProfile!.type),
         'starter_easy_value': def.starterLoadProfile?.easyValue,
         'starter_medium_value': def.starterLoadProfile?.mediumValue,
         'starter_hard_value': def.starterLoadProfile?.hardValue,
@@ -651,7 +650,7 @@ class DefinitionDao {
   /// - [defId]: Definition ID to delete.
   ///
   /// Returns number of rows removed.
-  static Future<int> deleteExerciseDefinition(Database db, int defId) {
+  static Future<int> deleteExerciseDefinition(DatabaseExecutor db, int defId) {
     return db.delete(
       'exercise_definitions',
       where: 'id = ?',
@@ -666,7 +665,7 @@ class DefinitionDao {
   ///
   /// Returns shallow [ExerciseDefinition] list.
   static Future<List<ExerciseDefinition>> searchExerciseDefinitions(
-    Database db,
+    DatabaseExecutor db,
     String query,
   ) async {
     final normalizedQuery = '%${query.toLowerCase()}%';
@@ -692,7 +691,7 @@ class DefinitionDao {
   ///
   /// Returns shallow [ExerciseDefinition] list.
   static Future<List<ExerciseDefinition>> fuzzsearchExerciseDefinitions(
-    Database db,
+    DatabaseExecutor db,
     String searchTerm,
   ) async {
     final likeArg = '%${searchTerm.replaceAll("'", "''")}%';
@@ -707,7 +706,7 @@ class DefinitionDao {
 
   /// Fetches a single ExerciseDefinition with all joins populated.
   static Future<ExerciseDefinition?> getExerciseDefinitionById(
-    Database db,
+    DatabaseExecutor db,
     int defId,
   ) async {
     final definitions = await getExerciseDefinitionsDetailedByIds(db, [defId]);
@@ -720,7 +719,7 @@ class DefinitionDao {
   /// rows. Built-in callers should prefer this lookup so catalog renames do not
   /// disconnect plans or other authored references from their definition.
   static Future<ExerciseDefinition?> getExerciseDefinitionByCatalogId(
-    Database db,
+    DatabaseExecutor db,
     String catalogId,
   ) async {
     final normalizedCatalogId = catalogId.trim();
@@ -739,7 +738,7 @@ class DefinitionDao {
 
   /// Inserts a muscle↔exercise link at a given rank.
   static Future<int> insertExerciseMuscleMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int muscleId,
     int rank,
@@ -753,7 +752,7 @@ class DefinitionDao {
 
   /// Deletes the association between an exercise definition and a muscle.
   static Future<int> deleteExerciseMuscleMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int muscleId,
   ) {
@@ -766,7 +765,7 @@ class DefinitionDao {
 
   /// Inserts a body-part↔exercise link.
   static Future<int> insertExerciseBodypartMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int bodypartId,
   ) {
@@ -778,7 +777,7 @@ class DefinitionDao {
 
   /// Deletes a body-part↔exercise link.
   static Future<int> deleteExerciseBodypartMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int bodypartId,
   ) {
@@ -791,7 +790,7 @@ class DefinitionDao {
 
   /// Inserts an equipment↔exercise link.
   static Future<int> insertExerciseEquipmentMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int equipmentId,
   ) {
@@ -803,7 +802,7 @@ class DefinitionDao {
 
   /// Deletes an equipment↔exercise link.
   static Future<int> deleteExerciseEquipmentMapping(
-    Database db,
+    DatabaseExecutor db,
     int exerciseId,
     int equipmentId,
   ) {
@@ -815,7 +814,10 @@ class DefinitionDao {
   }
 
   /// Reads the “multiply_by_rating” flag from the exercise_definitions row.
-  static Future<bool> getMultiplyByRating(Database db, int defId) async {
+  static Future<bool> getMultiplyByRating(
+    DatabaseExecutor db,
+    int defId,
+  ) async {
     final rows = await db.query(
       'exercise_definitions',
       columns: ['multiply_by_rating'],
@@ -828,7 +830,11 @@ class DefinitionDao {
   }
 
   /// Updates the “multiply_by_rating” flag for a definition.
-  static Future<int> setMultiplyByRating(Database db, int defId, bool enabled) {
+  static Future<int> setMultiplyByRating(
+    DatabaseExecutor db,
+    int defId,
+    bool enabled,
+  ) {
     return db.update(
       'exercise_definitions',
       {'multiply_by_rating': enabled ? 1 : 0},

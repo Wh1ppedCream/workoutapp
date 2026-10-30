@@ -16,7 +16,7 @@ class StatsDao {
   /// oneErm: estimated 1-rep max for the set
   /// isErm: true if rmValue is an ERM fallback
   static Future<void> upsertRepMax(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     int repCount,
     String timeframe,
@@ -54,7 +54,7 @@ class StatsDao {
 
   /// Inserts a volume-max entry only when it improves the stored max.
   static Future<void> upsertVolumeMax(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     String timeframe,
     double vmValue,
@@ -84,7 +84,7 @@ class StatsDao {
   /// Reads are calculated from completed set history so week/month/all are
   /// always current. The stored table remains as a fallback for older imports.
   static Future<List<Map<String, dynamic>>> getRepMaxes(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     String timeframe,
   ) async {
@@ -128,7 +128,7 @@ class StatsDao {
   /// Volume max is calculated as the highest total volume for one completed
   /// exercise instance inside the selected timeframe.
   static Future<Map<String, dynamic>?> getVolumeMax(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     String timeframe,
   ) async {
@@ -164,7 +164,7 @@ class StatsDao {
   }
 
   static Future<List<Map<String, dynamic>>> _getStoredRepMaxes(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     String timeframe,
   ) async {
@@ -178,7 +178,7 @@ class StatsDao {
   }
 
   static Future<Map<String, dynamic>?> _getStoredVolumeMax(
-    Database db,
+    DatabaseExecutor db,
     int defId,
     String timeframe,
   ) async {

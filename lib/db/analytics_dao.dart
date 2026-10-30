@@ -94,7 +94,7 @@ class AnalyticsDao {
 
   /// Link a muscle to a body part.
   static Future<int> insertMuscleBodyPart(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
     int bodypartId,
   ) {
@@ -106,7 +106,7 @@ class AnalyticsDao {
 
   /// Remove a link between a muscle and a body part.
   static Future<int> deleteMuscleBodyPart(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
     int bodypartId,
   ) {
@@ -119,7 +119,7 @@ class AnalyticsDao {
 
   /// Get all body-part links for a given muscle.
   static Future<List<MuscleBodyPart>> getBodyPartsForMuscle(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
   ) async {
     final rows = await db.query(
@@ -132,7 +132,7 @@ class AnalyticsDao {
 
   /// Get all muscle links for a given body part.
   static Future<List<MuscleBodyPart>> getMusclesForBodyPart(
-    Database db,
+    DatabaseExecutor db,
     int bodypartId,
   ) async {
     final rows = await db.query(
@@ -146,7 +146,11 @@ class AnalyticsDao {
   // ─── RANKING ─────────────────────────────────────────────
 
   /// Upsert a body-part ranking.
-  static Future<int> setBodyPartRanking(Database db, int bodypartId, int rank) {
+  static Future<int> setBodyPartRanking(
+    DatabaseExecutor db,
+    int bodypartId,
+    int rank,
+  ) {
     return db.insert('bodypart_ranking', {
       'bodypart_id': bodypartId,
       'rank': rank,
@@ -155,7 +159,7 @@ class AnalyticsDao {
 
   /// Fetch ranking for one body part.
   static Future<BodyPartRanking?> getBodyPartRanking(
-    Database db,
+    DatabaseExecutor db,
     int bodypartId,
   ) async {
     final rows = await db.query(
@@ -170,14 +174,17 @@ class AnalyticsDao {
 
   /// Fetch all body-part rankings.
   static Future<List<BodyPartRanking>> getAllBodyPartRankings(
-    Database db,
+    DatabaseExecutor db,
   ) async {
     final rows = await db.query('bodypart_ranking', orderBy: 'rank');
     return rows.map(_bodyPartRankingFromRow).toList();
   }
 
   /// Remove a body-part ranking.
-  static Future<int> deleteBodyPartRanking(Database db, int bodypartId) {
+  static Future<int> deleteBodyPartRanking(
+    DatabaseExecutor db,
+    int bodypartId,
+  ) {
     return db.delete(
       'bodypart_ranking',
       where: 'bodypart_id = ?',
@@ -186,7 +193,11 @@ class AnalyticsDao {
   }
 
   /// Upsert a muscle ranking.
-  static Future<int> setMuscleRanking(Database db, int muscleId, int rank) {
+  static Future<int> setMuscleRanking(
+    DatabaseExecutor db,
+    int muscleId,
+    int rank,
+  ) {
     return db.insert('muscle_ranking', {
       'muscle_id': muscleId,
       'rank': rank,
@@ -195,7 +206,7 @@ class AnalyticsDao {
 
   /// Fetch ranking for one muscle.
   static Future<MuscleRanking?> getMuscleRanking(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
   ) async {
     final rows = await db.query(
@@ -209,13 +220,15 @@ class AnalyticsDao {
   }
 
   /// Fetch all muscle rankings.
-  static Future<List<MuscleRanking>> getAllMuscleRankings(Database db) async {
+  static Future<List<MuscleRanking>> getAllMuscleRankings(
+    DatabaseExecutor db,
+  ) async {
     final rows = await db.query('muscle_ranking', orderBy: 'rank');
     return rows.map(_muscleRankingFromRow).toList();
   }
 
   /// Remove a muscle ranking.
-  static Future<int> deleteMuscleRanking(Database db, int muscleId) {
+  static Future<int> deleteMuscleRanking(DatabaseExecutor db, int muscleId) {
     return db.delete(
       'muscle_ranking',
       where: 'muscle_id = ?',
@@ -227,7 +240,7 @@ class AnalyticsDao {
 
   /// Upsert a %-hit for a muscle in an exercise definition.
   static Future<int> setExerciseMusclePercent(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
     int muscleId,
     double percent,
@@ -241,7 +254,7 @@ class AnalyticsDao {
 
   /// Fetch one %-hit entry.
   static Future<ExerciseMusclePercent?> getExerciseMusclePercent(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
     int muscleId,
   ) async {
@@ -257,7 +270,7 @@ class AnalyticsDao {
 
   /// Fetch all %-hits for an exercise.
   static Future<List<ExerciseMusclePercent>> getPercentsForExercise(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
   ) async {
     final rows = await db.query(
@@ -270,7 +283,7 @@ class AnalyticsDao {
 
   /// Remove one %-hit entry.
   static Future<int> deleteExerciseMusclePercent(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
     int muscleId,
   ) {
@@ -285,7 +298,7 @@ class AnalyticsDao {
 
   /// Upsert volume boundaries for a muscle.
   static Future<int> setMuscleVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
     VolumeBoundaries bounds,
   ) {
@@ -298,7 +311,7 @@ class AnalyticsDao {
 
   /// Fetch boundaries for one muscle.
   static Future<VolumeBoundaries?> getMuscleVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
     int muscleId,
   ) async {
     final rows = await db.query(
@@ -313,13 +326,16 @@ class AnalyticsDao {
 
   /// Fetch all muscle boundaries (raw map).
   static Future<List<Map<String, dynamic>>> getAllMuscleVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
   ) {
     return db.query('muscle_volume_boundaries', orderBy: 'muscle_id');
   }
 
   /// Remove muscle boundaries.
-  static Future<int> deleteMuscleVolumeBoundaries(Database db, int muscleId) {
+  static Future<int> deleteMuscleVolumeBoundaries(
+    DatabaseExecutor db,
+    int muscleId,
+  ) {
     return db.delete(
       'muscle_volume_boundaries',
       where: 'muscle_id = ?',
@@ -329,7 +345,7 @@ class AnalyticsDao {
 
   /// Upsert volume boundaries for a body part.
   static Future<int> setBodyPartVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
     int bodypartId,
     VolumeBoundaries bounds,
   ) {
@@ -342,7 +358,7 @@ class AnalyticsDao {
 
   /// Fetch boundaries for one body part.
   static Future<VolumeBoundaries?> getBodyPartVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
     int bodypartId,
   ) async {
     final rows = await db.query(
@@ -357,14 +373,14 @@ class AnalyticsDao {
 
   /// Fetch all body-part boundaries (raw map).
   static Future<List<Map<String, dynamic>>> getAllBodyPartVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
   ) {
     return db.query('bodypart_volume_boundaries', orderBy: 'bodypart_id');
   }
 
   /// Remove body-part boundaries.
   static Future<int> deleteBodyPartVolumeBoundaries(
-    Database db,
+    DatabaseExecutor db,
     int bodypartId,
   ) {
     return db.delete(
@@ -377,7 +393,7 @@ class AnalyticsDao {
   // ─── EXERCISE ↔ BODYPART % OVERRIDES ─────────────────────
 
   static Future<int> setExerciseBodyPartPercent(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
     int bodypartId,
     double percent,
@@ -390,7 +406,7 @@ class AnalyticsDao {
   }
 
   static Future<List<ExerciseBodyPartPercent>> getPercentsForExerciseBodyPart(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
   ) async {
     final rows = await db.query(
@@ -402,7 +418,7 @@ class AnalyticsDao {
   }
 
   static Future<int> deleteExerciseBodyPartPercent(
-    Database db,
+    DatabaseExecutor db,
     int exerciseDefId,
     int bodypartId,
   ) {
