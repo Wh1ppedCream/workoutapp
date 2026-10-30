@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/gym_models.dart';
 import '../repositories/app_repository.dart';
+import '../utils/serial_async_queue.dart';
 
 /// Manages the list of gym profiles and the currently selected profile.
 class SelectedProfile extends ChangeNotifier {
@@ -11,6 +12,10 @@ class SelectedProfile extends ChangeNotifier {
   final AppRepository _repo;
   late final Future<void> ready;
   bool _disposed = false;
+  int _selectionVersion = 0;
+  final _selectionWrites = SerialAsyncQueue();
+
+  bool _isCurrent(int version) => !_disposed && version == _selectionVersion;
 
   List<GymProfile> profiles = [];
   GymProfile? currentProfile;
@@ -26,27 +31,31 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Loads profiles while preserving the current or persisted selection.
   Future<void> loadProfiles({int? preferredProfileId}) async {
-    final previousProfileId = preferredProfileId ?? currentProfile?.id;
-    profiles = await _repo.fetchAllProfiles();
     if (_disposed) return;
+    final version = ++_selectionVersion;
+    final previousProfileId = preferredProfileId ?? currentProfile?.id;
+    final loadedProfiles = await _repo.fetchAllProfiles();
+    if (!_isCurrent(version)) return;
+    profiles = loadedProfiles;
     if (profiles.isEmpty) {
       final allEquip = await _repo.fetchAllEquipment();
-      if (_disposed) return;
+      if (!_isCurrent(version)) return;
       final defaultId = await _repo.saveGymProfileAtomic(
         existingProfile: null,
         name: 'General',
         equipmentIds: allEquip.map((item) => item.id).toSet(),
       );
-      if (_disposed) return;
-      profiles = await _repo.fetchAllProfiles();
-      if (_disposed) return;
+      if (!_isCurrent(version)) return;
+      final refreshedProfiles = await _repo.fetchAllProfiles();
+      if (!_isCurrent(version)) return;
+      profiles = refreshedProfiles;
       preferredProfileId = defaultId;
     }
 
     final storedProfileId = int.tryParse(
       await _repo.getAppState(_selectedProfileStateKey) ?? '',
     );
-    if (_disposed) return;
+    if (!_isCurrent(version)) return;
     final targetProfileId =
         preferredProfileId ?? previousProfileId ?? storedProfileId;
     currentProfile = profiles.firstWhere(
@@ -54,19 +63,21 @@ class SelectedProfile extends ChangeNotifier {
       orElse: () => profiles.first,
     );
     await _loadEquipment();
-    if (_disposed) return;
-    await _persistSelection();
-    if (_disposed) return;
+    if (!_isCurrent(version)) return;
+    await _persistSelection(version);
+    if (!_isCurrent(version)) return;
     notifyListeners();
   }
 
   /// Selects a different profile.
   Future<void> selectProfile(GymProfile profile) async {
+    if (_disposed) return;
+    final version = ++_selectionVersion;
     currentProfile = profile;
     await _loadEquipment();
-    if (_disposed) return;
-    await _persistSelection();
-    if (_disposed) return;
+    if (!_isCurrent(version)) return;
+    await _persistSelection(version);
+    if (!_isCurrent(version)) return;
     notifyListeners();
   }
 
@@ -90,12 +101,13 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Toggles equipment assignment for the current profile.
   Future<void> toggleEquipment(int equipmentId) async {
-    if (currentProfile == null) return;
+    final profileId = currentProfile?.id;
+    if (_disposed || profileId == null) return;
     final exists = equipment.any((e) => e['id'] == equipmentId);
     if (exists) {
-      await _repo.removeEquipmentFromProfile(currentProfile!.id!, equipmentId);
+      await _repo.removeEquipmentFromProfile(profileId, equipmentId);
     } else {
-      await _repo.addEquipmentToProfile(currentProfile!.id!, equipmentId);
+      await _repo.addEquipmentToProfile(profileId, equipmentId);
     }
     await _loadEquipment();
     if (_disposed) return;
@@ -104,18 +116,21 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Loads the equipment list for the selected profile.
   Future<void> _loadEquipment() async {
-    if (currentProfile == null) {
-      equipment = [];
-    } else {
-      equipment = await _repo.fetchEquipmentForProfile(currentProfile!.id!);
-    }
+    final version = _selectionVersion;
+    final profileId = currentProfile?.id;
+    final loaded = profileId == null
+        ? <Map<String, dynamic>>[]
+        : await _repo.fetchEquipmentForProfile(profileId);
+    if (_isCurrent(version) && currentProfile?.id == profileId)
+      equipment = loaded;
   }
 
-  Future<void> _persistSelection() async {
-    await _repo.setAppState(
-      _selectedProfileStateKey,
-      currentProfile?.id?.toString(),
-    );
+  Future<void> _persistSelection(int version) {
+    final profileId = currentProfile?.id;
+    return _selectionWrites.run(() async {
+      if (!_isCurrent(version)) return;
+      await _repo.setAppState(_selectedProfileStateKey, profileId?.toString());
+    });
   }
 
   @override
