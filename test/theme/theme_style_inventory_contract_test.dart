@@ -579,7 +579,7 @@ void main() {
         .toList();
     expect(
       findings,
-      hasLength(37),
+      hasLength(40),
       reason: 'The reviewed active/preset Expressive variants retain exact geometry ownership.',
     );
     final countsByKind = <String, int>{};
@@ -592,9 +592,9 @@ void main() {
     }
     expect(countsByKind, <String, int>{
       'color': 1,
-      'color_transform': 7,
+      'color_transform': 8,
       'decoration': 7,
-      'geometry': 21,
+      'geometry': 23,
       'shadow': 1,
     });
     expect(findings.map((finding) => finding.status), everyElement('migrated'));
@@ -1637,7 +1637,16 @@ void main() {
     final flowMethodsFindings = report.findings
         .where((finding) => finding.ruleId == 'flow-methods-recipes')
         .toList();
-    expect(flowMethodsFindings, hasLength(55));
+    expect(flowMethodsFindings, hasLength(56));
+    expect(
+      {
+        for (final kind in flowMethodsRule.kinds)
+          kind: flowMethodsFindings
+              .where((finding) => finding.kind == kind)
+              .length,
+      },
+      {'color_transform': 24, 'decoration': 8, 'geometry': 23, 'text_style': 1},
+    );
     expect(
       flowMethodsFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
@@ -1658,7 +1667,16 @@ void main() {
     final workoutFlowsFindings = report.findings
         .where((finding) => finding.ruleId == 'workout-progress-flows-recipes')
         .toList();
-    expect(workoutFlowsFindings, hasLength(18));
+    expect(workoutFlowsFindings, hasLength(19));
+    expect(
+      {
+        for (final kind in workoutFlowsRule.kinds)
+          kind: workoutFlowsFindings
+              .where((finding) => finding.kind == kind)
+              .length,
+      },
+      {'color_transform': 11, 'decoration': 5, 'geometry': 3},
+    );
     expect(
       workoutFlowsFindings.every((finding) => finding.status == 'migrated'),
       isTrue,
@@ -2478,7 +2496,7 @@ void main() {
     final settingsRecipeFindings = report.findings
         .where((finding) => finding.ruleId == 'settings-tiles-recipes')
         .toList();
-    expect(settingsRecipeFindings, hasLength(108));
+    expect(settingsRecipeFindings, hasLength(109));
     expect(
       settingsRecipeFindings.every((finding) => finding.status == 'migrated'),
       isTrue,

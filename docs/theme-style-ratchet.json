@@ -102,6 +102,11 @@
           "fingerprint": "cf3529f26722b1a59f40a8edb32069d8762cf0c8e0ba9c0df2eba901338652c5",
           "count": 1,
           "reason": "Reviewed the contrast-scoped Theme recipe for surface, onSurface, onSurfaceVariant, text, and icon inheritance; focused tests cover Neo application and Classic pass-through."
+        },
+        {
+          "fingerprint": "2d352bb2839e0c02b7315b21c35bf4c61915901c7dce20bb0c70243138a8a195",
+          "count": 1,
+          "reason": "Checkpoint 6331ccd Expressive ink clipping removes the duplicate outline from the inherited ink shape; the existing Material surface retains its border. Protected by expressive_pressed_shape_test.dart and tonos_surface_test.dart. Technical baseline only; no new visual approval."
         }
       ]
     },
@@ -850,10 +855,10 @@
     {
       "path": "lib/widgets/bodypart_focus_chips.dart",
       "owner": "theme-maintainers",
-      "evidence": "test/theme/widgets/bodypart_focus_chips_theme_test.dart renders all four modes, verifies the Neo positive/negative roles and unchanged Classic palette, checks selected/neutral RawChip ownership, exercises the complete tri-state cycle, and asserts compact empty-state typography. Reviewed 2026-10-22 with user authorization for test stabilization: Approved semantic chip palette and scoped avoided prohibition indicator; settings tests cover cycling and dimensions. Technical fingerprint reconciliation only; visual approval and release qualification remain separate.",
+      "evidence": "test/theme/widgets/bodypart_focus_chips_theme_test.dart renders all four modes, verifies the Neo positive/negative roles and unchanged Classic palette, checks selected/neutral RawChip ownership, exercises the complete tri-state cycle, and asserts compact empty-state typography. Reviewed 2026-10-22 with user authorization for test stabilization: Approved semantic chip palette and scoped avoided prohibition indicator; settings tests cover cycling and dimensions. Technical fingerprint reconciliation only; visual approval and release qualification remain separate. 2026-10-29: Reconciled enclosing-statement fingerprints to checkpoint 6331ccd after inspecting the existing Expressive pulse / shared overlay motion wrappers. Style values, non-Expressive branches, protected files and occurrence counts are unchanged; the existing rendered tests remain required.",
       "approvals": [
         {
-          "fingerprint": "11942bf03d4cb0526813b50527c8a6102d1529484a2b29258e0d746d7ecb9575",
+          "fingerprint": "1058023188374aa89725e3ab2c88be9f718460d69d2d776f6990e342f368c458",
           "count": 1,
           "reason": "2026-10-22 source review: Approved semantic chip palette and scoped avoided prohibition indicator; settings tests cover cycling and dimensions. Candidate: BorderSide."
         },
@@ -903,7 +908,7 @@
           "reason": "2026-10-22 source review: Approved semantic chip palette and scoped avoided prohibition indicator; settings tests cover cycling and dimensions. Candidate: Color."
         },
         {
-          "fingerprint": "cb6a1939f9881438641c968960ab2d9409144335415e368441d7b8a7e8594665",
+          "fingerprint": "cc18eb8e8bc39f1eb34b154cd442540e992cee6650b96b02119637ba8359fef9",
           "count": 2,
           "reason": "2026-10-22 source review: Approved semantic chip palette and scoped avoided prohibition indicator; settings tests cover cycling and dimensions. Candidate: TextStyle."
         },
@@ -1004,10 +1009,10 @@
     {
       "path": "lib/widgets/cardio_card.dart",
       "owner": "theme-maintainers",
-      "evidence": "The four-mode CardioCard contract checks its Classic Card/Neo TonosSurface boundary, inherited title/note/countdown typography in editable and read-only states, timer-state colors, and TonosFormField update behavior.",
+      "evidence": "The four-mode CardioCard contract checks its Classic Card/Neo TonosSurface boundary, inherited title/note/countdown typography in editable and read-only states, timer-state colors, and TonosFormField update behavior. 2026-10-29: Reconciled enclosing-statement fingerprints to checkpoint 6331ccd after inspecting the existing Expressive pulse / shared overlay motion wrappers. Style values, non-Expressive branches, protected files and occurrence counts are unchanged; the existing rendered tests remain required.",
       "approvals": [
         {
-          "fingerprint": "1c8b211f89463240eb3da68edfe41d3d6f7de3dd59ba0257f54af6ca4b818b6b",
+          "fingerprint": "c4d3801ad4eb6ea96d812fb5f0c16859043ea1cfe66d7e39c7b4c880a5518194",
           "count": 1,
           "reason": "Reviewed the CardioCard subtree's active Theme lookup for inherited title/body/countdown roles and card boundary; four-mode tests assert the rendered title, both note states, countdown, and Card/TonosSurface owner."
         },
@@ -1031,7 +1036,7 @@
     {
       "path": "lib/widgets/stretch_card.dart",
       "owner": "theme-maintainers",
-      "evidence": "The four-mode StretchCard contract checks its Classic Card/Neo TonosSurface boundary, inherited stretch-name/description typography, semantic add color, custom-entry callbacks, and read-only behavior.",
+      "evidence": "The four-mode StretchCard contract checks its Classic Card/Neo TonosSurface boundary, inherited stretch-name/description typography, semantic add color, custom-entry callbacks, and read-only behavior. 2026-10-29: Reconciled enclosing-statement fingerprints to checkpoint 6331ccd after inspecting the existing Expressive pulse / shared overlay motion wrappers. Style values, non-Expressive branches, protected files and occurrence counts are unchanged; the existing rendered tests remain required.",
       "approvals": [
         {
           "fingerprint": "29b8ffb5539032429fbe52493ecd7a014d796d5d7c29280313f72f8da6975651",
@@ -1044,7 +1049,7 @@
           "reason": "Reviewed the semantic info add action after switching family selection to explicit Neo identity; Classic retains its blue fallback, and the four-mode contract checks resolved color and read-only state."
         },
         {
-          "fingerprint": "90025390c0c0cc3ecefefcdf78526f85049363c82db21b48e1c7ee42500830c0",
+          "fingerprint": "6e7b27f534926226e405e6535ed2a524f0708e80b31c56a2f05b67977fdde23a",
           "count": 1,
           "reason": "Reviewed the StretchCard subtree's family-specific card boundary and inherited content typography; four-mode tests assert Classic Card/Neo TonosSurface ownership and rendered text styles."
         }

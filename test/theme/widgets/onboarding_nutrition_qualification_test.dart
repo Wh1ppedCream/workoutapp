@@ -5,6 +5,7 @@ import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_state_motion.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -207,7 +208,12 @@ void main() {
             final context = tester.element(secondFinder);
             expect(
               tester.widget<AnimatedContainer>(secondTile).duration,
-              context.tutorialTokens.selectionDuration,
+              context.usesExpressivePresentation
+                  ? TonosExpressiveStateMotion.duration(
+                      context,
+                      TonosExpressiveStateMotion.fast,
+                    )
+                  : context.tutorialTokens.selectionDuration,
             );
             await tester.ensureVisible(secondFinder);
             await tester.tap(secondFinder);

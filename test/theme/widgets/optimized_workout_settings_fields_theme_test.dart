@@ -10,8 +10,14 @@ import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/theme/expressive_planning_tokens.dart';
 import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
+import 'package:env_test/theme/widgets/tonos_expressive_state_motion.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+Icon _focusIndicator(RawChip chip) {
+  expect(chip.avatar, isA<TonosExpressiveChangePulse>());
+  return (chip.avatar! as TonosExpressiveChangePulse).child as Icon;
+}
 
 void main() {
   // These legacy recipe assertions cover Classic/Neo. The dedicated
@@ -309,7 +315,7 @@ void main() {
               : planning.outline,
         );
         expect(
-          focusChip.avatar,
+          _focusIndicator(focusChip),
           isA<Icon>()
               .having(
                 (icon) => icon.icon,
@@ -327,20 +333,20 @@ void main() {
         expect(updatedFocusChip.selectedColor, planning.actionPrimary);
         expect(updatedFocusChip.showCheckmark, isTrue);
         expect(
-          (updatedFocusChip.avatar! as Icon).icon,
+          _focusIndicator(updatedFocusChip).icon,
           Icons.add_circle_outline,
         );
-        expect((updatedFocusChip.avatar! as Icon).size, 16);
+        expect(_focusIndicator(updatedFocusChip).size, 16);
         await tester.tap(firstFocusChip);
         await tester.pumpAndSettle();
         updatedFocusChip = tester.widget<RawChip>(firstFocusChip);
         expect(updatedFocusChip.showCheckmark, isFalse);
-        expect((updatedFocusChip.avatar! as Icon).icon, Icons.block);
+        expect(_focusIndicator(updatedFocusChip).icon, Icons.block);
         final avoidedColor = pageContext.semanticColors.negative;
-        expect((updatedFocusChip.avatar! as Icon).color, avoidedColor);
+        expect(_focusIndicator(updatedFocusChip).color, avoidedColor);
         expect(updatedFocusChip.side?.color, avoidedColor);
         expect(updatedFocusChip.labelStyle?.color, avoidedColor);
-        expect((updatedFocusChip.avatar! as Icon).size, 16);
+        expect(_focusIndicator(updatedFocusChip).size, 16);
         expect(updatedFocusChip.selectedColor, isNot(planning.actionPrimary));
         await tester.tap(firstFocusChip);
         await tester.pumpAndSettle();

@@ -1791,7 +1791,8 @@
         "lib/screens/nutrition/**",
         "lib/widgets/meal_plan_add_bar.dart",
         "lib/widgets/nutrition_text_details.dart",
-        "lib/widgets/expressive_nutrition_summary.dart"
+        "lib/widgets/expressive_nutrition_summary.dart",
+        "lib/widgets/speed_dial_fab.dart"
       ],
       "target": "Tonos form/surface primitives and nutrition semantic roles",
       "rationale": "This disjoint route family groups nutrition entry, customization, and scanning findings for focused review. Queue membership is triage only and does not exempt or migrate findings."

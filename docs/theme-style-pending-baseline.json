@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "reviewedOn": "2026-10-22",
+  "reviewedOn": "2026-10-29",
   "purpose": "Regression baseline for existing report-only qualification debt. These findings remain pending, not migrated or visually unapproved. New or changed debt requires explicit review.",
-  "candidateCount": 641,
+  "candidateCount": 643,
   "files": {
     "lib/screens/dashboard_page.dart": {
       "countsByKind": {
@@ -376,6 +376,13 @@
         "component_style": 1
       },
       "snippetDigest": "5c582c74bade3621445c43119074613f7824c9dfe0b178eb5f198a25f9461b4c"
+    },
+    "lib/widgets/speed_dial_fab.dart": {
+      "countsByKind": {
+        "text_style": 1,
+        "local_theme": 1
+      },
+      "snippetDigest": "ff49c769e3f51a29c14c66e3f4b3e35c370766755462355617de12cb8591b206"
     },
     "lib/widgets/workout_history_calendar.dart": {
       "countsByKind": {

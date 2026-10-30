@@ -18,7 +18,7 @@ void main() {
       ],
       'lib/screens/profile/settings/ui_appearance_settings_page.dart': [
         'SettingsPageScaffold',
-        'showDialog',
+        'showTonosDialog',
         'TonosDialogFrame',
         'SnackBar',
       ],
@@ -35,7 +35,7 @@ void main() {
       ],
       'lib/screens/profile/settings/gym_exercise_settings_page.dart': [
         'SettingsPageScaffold',
-        'showDialog',
+        'showTonosDialog',
         'TonosDialogFrame',
       ],
       'lib/screens/profile/settings/analytics_setting_screen.dart': [
@@ -84,7 +84,7 @@ void main() {
         'TonosField',
         'TonosSurfaceTheme',
         'TonosDialogFrame',
-        'showDialog',
+        'showTonosDialog',
         'ExpansionTile',
         'rulesNameRequired',
       ],
@@ -112,7 +112,7 @@ void main() {
         'SettingsPageScaffold',
         'TonosDialogFrame',
         'TonosField',
-        'showDialog',
+        'showTonosDialog',
         'SnackBar',
         '_contentActionRunning',
       ],

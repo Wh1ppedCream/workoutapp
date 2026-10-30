@@ -35,13 +35,13 @@ void main() {
         );
       }
 
-      final checkoutCount =
-          uses.where((match) => match.group(1) == 'actions/checkout').length;
-      final disabledCredentialCount =
-          RegExp(
-            r'^\s*persist-credentials:\s*false\s*$',
-            multiLine: true,
-          ).allMatches(source).length;
+      final checkoutCount = uses
+          .where((match) => match.group(1) == 'actions/checkout')
+          .length;
+      final disabledCredentialCount = RegExp(
+        r'^\s*persist-credentials:\s*false\s*$',
+        multiLine: true,
+      ).allMatches(source).length;
       expect(
         disabledCredentialCount,
         checkoutCount,
@@ -62,6 +62,7 @@ void main() {
     );
     for (final prefix in [
       'feature',
+      'codex',
       'fix',
       'updates',
       'dependency',

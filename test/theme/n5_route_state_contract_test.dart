@@ -63,15 +63,15 @@ void main() {
       },
       'destructive': {
         'lib/screens/exercise/session_detail_screen.dart': [
-          'showDialog',
+          'showTonosDialog',
           '_deleteSession',
         ],
         'lib/widgets/health_trends_section.dart': [
-          'showDialog',
+          'showTonosDialog',
           '_deleteEntry',
         ],
         'lib/screens/profile/settings/database_settings_page.dart': [
-          'showDialog',
+          'showTonosDialog',
           'databaseImport',
         ],
       },
@@ -96,7 +96,7 @@ void main() {
         ],
         'lib/screens/exercise/session_screen.dart': [
           'finish()',
-          'showModalBottomSheet',
+          'showTonosModalBottomSheet',
         ],
       },
       'history': {
@@ -106,7 +106,7 @@ void main() {
         ],
         'lib/screens/exercise/session_detail_screen.dart': [
           'PopScope',
-          'showDialog',
+          'showTonosDialog',
         ],
       },
       'progress': {
@@ -132,7 +132,7 @@ void main() {
         ],
         'lib/screens/nutrition/log_entry_page.dart': [
           'NutritionProfile',
-          'showModalBottomSheet',
+          'showTonosModalBottomSheet',
         ],
       },
       'scanner': {
