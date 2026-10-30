@@ -8,12 +8,16 @@ import '../repositories/food_catalog_repository.dart';
 import '../models/gym_models.dart';
 import '../models/nutrition_models.dart';
 import '../services/safe_failure.dart';
+import 'selected_profile.dart';
 
 class NutritionProfile extends ChangeNotifier {
   final AppRepository _repo;
   late final FoodCatalogRepository _catalog;
   final int? initialProfileId;
   NutritionProfile? _parentScope;
+  SelectedProfile? _boundSelectedProfile;
+  VoidCallback? _selectedProfileListener;
+  Future<void>? _boundProfileSyncFuture;
   late final Future<void> ready;
 
   // Profile state (still backed by gym_profiles in DB)
@@ -81,10 +85,35 @@ class NutritionProfile extends ChangeNotifier {
     initialProfileId: profileId,
   ).._parentScope = this;
 
+  /// Binds this nutrition provider to the composition-root [SelectedProfile]
+  /// so profile selection, creation, renames, deletions, and empty-DB seeding
+  /// share one authoritative profile state.
+  void bindSelectedProfile(SelectedProfile selectedProfile) {
+    if (_disposed || identical(_boundSelectedProfile, selectedProfile)) return;
+    final previous = _boundSelectedProfile;
+    final previousListener = _selectedProfileListener;
+    if (previous != null && previousListener != null) {
+      previous.removeListener(previousListener);
+    }
+    _boundSelectedProfile = selectedProfile;
+    _selectedProfileListener = _handleSelectedProfileChanged;
+    selectedProfile.addListener(_selectedProfileListener!);
+    if (profiles.isNotEmpty || current != null) {
+      _handleSelectedProfileChanged();
+    }
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _reloadSeq++; // invalidate any in-flight reloads
+    final bound = _boundSelectedProfile;
+    final listener = _selectedProfileListener;
+    if (bound != null && listener != null) {
+      bound.removeListener(listener);
+    }
+    _boundSelectedProfile = null;
+    _selectedProfileListener = null;
     _midnightTimer?.cancel();
     _reloadDebounce?.cancel();
     super.dispose();
@@ -126,7 +155,55 @@ class NutritionProfile extends ChangeNotifier {
     _safeNotify();
   }
 
+  void _handleSelectedProfileChanged() {
+    final bound = _boundSelectedProfile;
+    if (_disposed || bound == null) return;
+    final previousId = current?.id;
+    final previousName = current?.name;
+    final previousCount = profiles.length;
+    profiles = List.of(bound.profiles);
+    current =
+        bound.currentProfile ?? (profiles.isEmpty ? null : profiles.first);
+    if (current?.id != previousId) {
+      _boundProfileSyncFuture = _reloadForSelectedProfileChange();
+    } else if (current?.name != previousName ||
+        profiles.length != previousCount) {
+      _safeNotify();
+    }
+  }
+
+  Future<void> _reloadForSelectedProfileChange() async {
+    if (_disposed) return;
+    if (current == null) {
+      totals = null;
+      activeGoal = null;
+      _meals = [];
+      favoriteFoodIds.clear();
+      _safeNotify();
+      return;
+    }
+    await _refreshFavoritesSafe();
+    if (_disposed) return;
+    await reloadDay();
+  }
+
   Future<void> _loadProfilesIfNeeded() async {
+    final bound = _boundSelectedProfile;
+    if (bound != null) {
+      await bound.ready;
+      if (_disposed) return;
+      profiles = List.of(bound.profiles);
+      if (initialProfileId != null && profiles.isNotEmpty) {
+        current = profiles.firstWhere(
+          (profile) => profile.id == initialProfileId,
+          orElse: () => bound.currentProfile ?? profiles.first,
+        );
+      } else {
+        current =
+            bound.currentProfile ?? (profiles.isEmpty ? null : profiles.first);
+      }
+      return;
+    }
     if (profiles.isNotEmpty && current != null) return;
 
     profiles = await _repo.fetchAllProfiles();
@@ -148,6 +225,15 @@ class NutritionProfile extends ChangeNotifier {
 
   /// Force refresh the profile list (e.g., after external edits).
   Future<void> refreshProfiles() async {
+    final bound = _boundSelectedProfile;
+    if (bound != null) {
+      await bound.loadProfiles();
+      final pending = _boundProfileSyncFuture;
+      if (pending != null) {
+        await pending;
+      }
+      return;
+    }
     final oldId = current?.id;
 
     profiles = await _repo.fetchAllProfiles();
@@ -172,7 +258,48 @@ class NutritionProfile extends ChangeNotifier {
     }
   }
 
+  /// Reloads profile, favorites, and day nutrition state after the underlying
+  /// SQLite database is replaced (for example, after backup import).
+  Future<void> reloadFromDatabase() async {
+    if (_disposed) return;
+    _boundProfileSyncFuture = null;
+    final bound = _boundSelectedProfile;
+    if (bound != null) {
+      profiles = List.of(bound.profiles);
+      current =
+          bound.currentProfile ?? (profiles.isEmpty ? null : profiles.first);
+    } else {
+      profiles = await _repo.fetchAllProfiles();
+      if (_disposed) return;
+      final oldId = current?.id ?? initialProfileId;
+      if (profiles.isEmpty) {
+        current = null;
+      } else if (oldId != null) {
+        current = profiles.firstWhere(
+          (p) => p.id == oldId,
+          orElse: () => profiles.first,
+        );
+      } else {
+        current = profiles.first;
+      }
+    }
+    await _reloadForSelectedProfileChange();
+  }
+
   Future<void> selectProfile(GymProfile profile) async {
+    final bound = _boundSelectedProfile;
+    if (bound != null) {
+      if (current?.id == profile.id &&
+          bound.currentProfile?.id == profile.id) {
+        return;
+      }
+      await bound.selectProfile(profile);
+      final pending = _boundProfileSyncFuture;
+      if (pending != null) {
+        await pending;
+      }
+      return;
+    }
     if (current?.id == profile.id) return;
     current = profile;
     await _refreshFavoritesSafe();
@@ -190,6 +317,15 @@ class NutritionProfile extends ChangeNotifier {
 
   /// Creates a profile and selects it.
   Future<void> createAndSelectProfile(String name) async {
+    final bound = _boundSelectedProfile;
+    if (bound != null) {
+      await bound.createProfile(name);
+      final pending = _boundProfileSyncFuture;
+      if (pending != null) {
+        await pending;
+      }
+      return;
+    }
     final id = await _repo.createProfile(name);
     await refreshProfiles();
     if (profiles.isNotEmpty) {

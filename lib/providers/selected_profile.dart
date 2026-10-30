@@ -14,6 +14,7 @@ class SelectedProfile extends ChangeNotifier {
   bool _disposed = false;
   int _selectionVersion = 0;
   final _selectionWrites = SerialAsyncQueue();
+  final _equipmentWrites = SerialAsyncQueue();
 
   bool _isCurrent(int version) => !_disposed && version == _selectionVersion;
 
@@ -100,18 +101,23 @@ class SelectedProfile extends ChangeNotifier {
   }
 
   /// Toggles equipment assignment for the current profile.
-  Future<void> toggleEquipment(int equipmentId) async {
-    final profileId = currentProfile?.id;
-    if (_disposed || profileId == null) return;
-    final exists = equipment.any((e) => e['id'] == equipmentId);
-    if (exists) {
-      await _repo.removeEquipmentFromProfile(profileId, equipmentId);
-    } else {
-      await _repo.addEquipmentToProfile(profileId, equipmentId);
-    }
-    await _loadEquipment();
-    if (_disposed) return;
-    notifyListeners();
+  Future<void> toggleEquipment(int equipmentId) {
+    return _equipmentWrites.run(() async {
+      final version = _selectionVersion;
+      final profileId = currentProfile?.id;
+      if (!_isCurrent(version) || profileId == null) return;
+      final exists = equipment.any((e) => e['id'] == equipmentId);
+      if (exists) {
+        await _repo.removeEquipmentFromProfile(profileId, equipmentId);
+      } else {
+        await _repo.addEquipmentToProfile(profileId, equipmentId);
+      }
+      if (!_isCurrent(version) || currentProfile?.id != profileId) return;
+      final loaded = await _repo.fetchEquipmentForProfile(profileId);
+      if (!_isCurrent(version) || currentProfile?.id != profileId) return;
+      equipment = loaded;
+      notifyListeners();
+    });
   }
 
   /// Loads the equipment list for the selected profile.

@@ -7,6 +7,9 @@ import '../../../theme/widgets/tonos_overlay_routes.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../providers/durable_active_session.dart';
+import '../../../providers/nutrition_profile.dart';
+import '../../../providers/selected_profile.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
@@ -74,7 +77,18 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
     }
   }
 
+  T? _readOptionalProvider<T>() {
+    try {
+      return Provider.of<T>(context, listen: false);
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
   Future<void> _importDatabase() async {
+    final activeSession = _readOptionalProvider<ActiveSession>();
+    final selectedProfile = _readOptionalProvider<SelectedProfile>();
+    final nutritionProfile = _readOptionalProvider<NutritionProfile>();
     final controller = TextEditingController();
     String? result;
     try {
@@ -113,7 +127,16 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
     if (result == null) return;
     try {
-      await _repo.importDatabase(result, clearFirst: true);
+      await activeSession?.prepareForDatabaseReplace();
+      try {
+        await _repo.importDatabase(result, clearFirst: true);
+      } catch (_) {
+        activeSession?.abortDatabaseReplace();
+        rethrow;
+      }
+      await activeSession?.reloadFromDatabase();
+      await selectedProfile?.loadProfiles();
+      await nutritionProfile?.reloadFromDatabase();
 
       if (!mounted) return; // guard before showing snackbar
       ScaffoldMessenger.of(context).showSnackBar(

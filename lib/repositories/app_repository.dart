@@ -745,8 +745,10 @@ class AppRepository {
       _dbHelper.exportVolumeBoundariesJson();
 
   /// Imports the database from a JSON string.
-  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) =>
-      _dbHelper.importDatabase(jsonStr, clearFirst: clearFirst);
+  Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
+    await _dbHelper.importDatabase(jsonStr, clearFirst: clearFirst);
+    clearExerciseAnalysisCache();
+  }
 
   /// Performs fuzzy search on exercise definition names.
   Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) =>

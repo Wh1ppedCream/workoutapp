@@ -54,6 +54,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   int _completedSessionVersion = 0;
   bool _isRestoring = true;
   bool _isFinishing = false;
+  bool _isReplacingDatabase = false;
   bool _isRetryingDurability = false;
   bool _restoreFailed = false;
   bool _draftSaveFailed = false;
@@ -117,7 +118,12 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   /// Returns false rather than replacing an existing workout.
   Future<bool> start({int? presetId}) async {
     await _restoreFuture;
-    if (_restoreFailed || _timer != null || _isFinishing) return false;
+    if (_restoreFailed ||
+        _timer != null ||
+        _isFinishing ||
+        _isReplacingDatabase) {
+      return false;
+    }
     _beginWorkout(presetId: presetId);
     await _persistDraft();
     return true;
@@ -133,7 +139,12 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
       throw ArgumentError('Exercise and card-type counts must match.');
     }
     await _restoreFuture;
-    if (_restoreFailed || _timer != null || _isFinishing) return false;
+    if (_restoreFailed ||
+        _timer != null ||
+        _isFinishing ||
+        _isReplacingDatabase) {
+      return false;
+    }
     exercises
       ..clear()
       ..addAll(workoutExercises);
@@ -234,6 +245,42 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   void markHistoryChanged() {
     _completedSessionVersion++;
     notifyListeners();
+  }
+
+  /// Pauses active draft persistence before replacing the SQLite database so a
+  /// background timer or app-lifecycle pause cannot overwrite imported tables.
+  Future<void> prepareForDatabaseReplace() async {
+    await _restoreFuture;
+    _isReplacingDatabase = true;
+    _draftSaveRequested = false;
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = null;
+    final inFlight = _draftSaveInFlight;
+    if (inFlight != null) {
+      await inFlight;
+    }
+  }
+
+  /// Re-enables draft persistence if a database replacement fails or aborts.
+  void abortDatabaseReplace() {
+    _isReplacingDatabase = false;
+  }
+
+  /// Reloads durable draft and pending progression state after database import,
+  /// and bumps [completedSessionVersion] so workout history consumers refresh.
+  Future<void> reloadFromDatabase() async {
+    await _restoreFuture;
+    _draftSaveRequested = false;
+    _resetActiveState();
+    _isRestoring = true;
+    _restoreFailed = false;
+    _progressionFailed = false;
+    _isReplacingDatabase = false;
+    await _restoreDraft();
+    if (!_restoreFailed) {
+      await _resumePendingProgressions();
+    }
+    markHistoryChanged();
   }
 
   List<WorkoutExerciseWrite> _completedExerciseWrites() {
@@ -466,7 +513,12 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _persistDraftSoon() {
-    if (_startedAt == null || _isRestoring || _isFinishing) return;
+    if (_startedAt == null ||
+        _isRestoring ||
+        _isFinishing ||
+        _isReplacingDatabase) {
+      return;
+    }
     _draftSaveTimer?.cancel();
     _draftSaveTimer = Timer(const Duration(milliseconds: 120), () {
       unawaited(_persistDraft());
@@ -474,6 +526,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> _persistDraft() {
+    if (_isReplacingDatabase) return Future<void>.value();
     final inFlight = _draftSaveInFlight;
     if (inFlight != null) {
       _draftSaveRequested = true;
@@ -493,12 +546,15 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     do {
       _draftSaveRequested = false;
       await _persistDraftOnce();
-    } while (_draftSaveRequested && _startedAt != null && !_isFinishing);
+    } while (_draftSaveRequested &&
+        _startedAt != null &&
+        !_isFinishing &&
+        !_isReplacingDatabase);
   }
 
   Future<void> _persistDraftOnce() async {
     final startedAt = _startedAt;
-    if (startedAt == null || _isFinishing) return;
+    if (startedAt == null || _isFinishing || _isReplacingDatabase) return;
     try {
       final autoPresetId = _autoPresetId;
       final payloadJson = jsonEncode({
@@ -509,7 +565,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
         ],
       });
       await _withRetries(() async {
-        if (_isFinishing || _startedAt != startedAt) return;
+        if (_isFinishing || _isReplacingDatabase || _startedAt != startedAt) {
+          return;
+        }
         await _repo.saveActiveWorkoutDraft(
           startedAt: startedAt,
           autoPresetId: autoPresetId,
@@ -698,7 +756,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      unawaited(_persistDraft());
+      if (!_isReplacingDatabase) {
+        unawaited(_persistDraft());
+      }
     } else if (state == AppLifecycleState.resumed) {
       _syncElapsed();
     }

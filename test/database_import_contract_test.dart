@@ -342,5 +342,26 @@ void main() {
       expect(canonicalizationIndex, greaterThan(foreignKeyIndex));
       expect(recordsRebuildIndex, greaterThan(canonicalizationIndex));
     });
+
+    test('hoists table column inspection outside the per-row import loop', () {
+      final helper = File('lib/db/database_helper.dart').readAsStringSync();
+      final importStart = helper.indexOf('Future<void> importDatabase');
+      final importEnd = helper.indexOf('// equipment.json', importStart);
+      final importBody = helper.substring(importStart, importEnd);
+
+      final tableLoopIndex = importBody.indexOf(
+        'for (final table in tablesToRestore)',
+      );
+      final columnInfoIndex = importBody.indexOf(
+        'final columnInfo = await _tableColumnInfo(txn, table);',
+      );
+      final rowLoopIndex = importBody.indexOf('for (final row in rows)');
+      final sanitizeCallIndex = importBody.indexOf('columnInfo: columnInfo');
+
+      expect(tableLoopIndex, isNot(-1));
+      expect(columnInfoIndex, greaterThan(tableLoopIndex));
+      expect(rowLoopIndex, greaterThan(columnInfoIndex));
+      expect(sanitizeCallIndex, greaterThan(rowLoopIndex));
+    });
   });
 }

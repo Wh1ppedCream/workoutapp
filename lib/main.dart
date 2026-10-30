@@ -320,10 +320,17 @@ Widget buildTonosApp({
       Provider<ActivePlanStore>(
         create: (_) => ActivePlanStore(repository: repo),
       ),
-      ChangeNotifierProvider(create: (_) => NutritionProfile(repository: repo)),
+      ChangeNotifierProvider(create: (_) => SelectedProfile(repository: repo)),
+      ChangeNotifierProxyProvider<SelectedProfile, NutritionProfile>(
+        create: (context) =>
+            NutritionProfile(repository: repo)
+              ..bindSelectedProfile(context.read<SelectedProfile>()),
+        update: (_, selectedProfile, nutritionProfile) =>
+            (nutritionProfile ?? NutritionProfile(repository: repo))
+              ..bindSelectedProfile(selectedProfile),
+      ),
       ChangeNotifierProvider(create: (_) => OnboardingConfig()..init()),
       ChangeNotifierProvider(create: (_) => ActiveSession(repository: repo)),
-      ChangeNotifierProvider(create: (_) => SelectedProfile(repository: repo)),
       ChangeNotifierProvider(create: (_) => DashboardConfig()),
       themeProviderNode,
       ChangeNotifierProvider(create: (_) => UnitPreferenceProvider()),

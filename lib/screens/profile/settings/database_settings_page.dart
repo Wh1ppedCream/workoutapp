@@ -14,6 +14,9 @@ import '../../../db/database_maintenance.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../models/models.dart';
+import '../../../providers/durable_active_session.dart';
+import '../../../providers/nutrition_profile.dart';
+import '../../../providers/selected_profile.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
@@ -263,7 +266,18 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
     }
   }
 
+  T? _readOptionalProvider<T>() {
+    try {
+      return Provider.of<T>(context, listen: false);
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
   Future<void> _importDatabase() async {
+    final activeSession = _readOptionalProvider<ActiveSession>();
+    final selectedProfile = _readOptionalProvider<SelectedProfile>();
+    final nutritionProfile = _readOptionalProvider<NutritionProfile>();
     try {
       final picked = await _pickJsonFile();
       if (picked == null) return;
@@ -294,7 +308,16 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         return;
       }
 
-      await _repo.importDatabase(picked.contents, clearFirst: true);
+      await activeSession?.prepareForDatabaseReplace();
+      try {
+        await _repo.importDatabase(picked.contents, clearFirst: true);
+      } catch (_) {
+        activeSession?.abortDatabaseReplace();
+        rethrow;
+      }
+      await activeSession?.reloadFromDatabase();
+      await selectedProfile?.loadProfiles();
+      await nutritionProfile?.reloadFromDatabase();
       if (!mounted) return;
       _refreshHealth();
       await _showSavedFileDialog(

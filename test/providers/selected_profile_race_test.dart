@@ -71,6 +71,55 @@ void main() {
       expect(repo.storedSelection, '3');
     },
   );
+
+  test('rapid toggleEquipment calls serialize instead of issuing duplicate removes', () async {
+    final repo = _ProfileRepository();
+    final selection = SelectedProfile(repository: repo);
+    await selection.ready;
+    addTearDown(selection.dispose);
+
+    repo.removeGate = Completer<void>();
+    final firstToggle = selection.toggleEquipment(10);
+    final secondToggle = selection.toggleEquipment(10);
+    await repo.removeStarted.future;
+
+    expect(repo.removeCalls, [10]);
+    expect(repo.addCalls, isEmpty);
+
+    repo.removeGate!.complete();
+    await Future.wait([firstToggle, secondToggle]);
+
+    expect(repo.removeCalls, [10]);
+    expect(repo.addCalls, [10]);
+    expect(selection.equipment.map((item) => item['id']), [10]);
+  });
+
+  test(
+    'an in-flight toggleEquipment cannot overwrite a newly selected profile',
+    () async {
+      final repo = _ProfileRepository();
+      final selection = SelectedProfile(repository: repo);
+      await selection.ready;
+      addTearDown(selection.dispose);
+
+      repo.removeGate = Completer<void>();
+      final toggle = selection.toggleEquipment(10);
+      await repo.removeStarted.future;
+
+      await selection.selectProfile(repo.profiles[1]);
+      expect(selection.currentProfile!.id, 2);
+      expect(selection.equipment.map((item) => item['id']), [20]);
+
+      var notificationsAfterSwitch = 0;
+      selection.addListener(() => notificationsAfterSwitch++);
+      repo.removeGate!.complete();
+      await toggle;
+
+      expect(selection.currentProfile!.id, 2);
+      expect(selection.equipment.map((item) => item['id']), [20]);
+      expect(notificationsAfterSwitch, 0);
+    },
+  );
 }
 
 class _ProfileRepository extends AppRepository {
@@ -78,9 +127,18 @@ class _ProfileRepository extends AppRepository {
     for (var id = 1; id <= 3; id++)
       GymProfile(id: id, name: 'Gym $id', createdAt: DateTime.utc(2026)),
   ];
+  final Map<int, Set<int>> _assignedEquipment = {
+    1: {10},
+    2: {20},
+    3: {30},
+  };
   final equipmentGates = <int, Completer<List<Map<String, dynamic>>>>{};
   Completer<void>? selectionWriteGate;
   final selectionWriteStarted = Completer<void>();
+  Completer<void>? removeGate;
+  final removeStarted = Completer<void>();
+  final List<int> addCalls = [];
+  final List<int> removeCalls = [];
   String? storedSelection;
 
   @override
@@ -92,15 +150,37 @@ class _ProfileRepository extends AppRepository {
   ) async =>
       equipmentGates[profileId]?.future ??
       Future.value([
-        {'id': profileId * 10},
+        for (final id in _assignedEquipment[profileId] ?? const <int>{})
+          {'id': id},
       ]);
+
+  @override
+  Future<void> addEquipmentToProfile(int profileId, int equipmentId) async {
+    addCalls.add(equipmentId);
+    (_assignedEquipment[profileId] ??= <int>{}).add(equipmentId);
+  }
+
+  @override
+  Future<void> removeEquipmentFromProfile(
+    int profileId,
+    int equipmentId,
+  ) async {
+    removeCalls.add(equipmentId);
+    if (removeGate != null && !removeStarted.isCompleted) {
+      removeStarted.complete();
+      await removeGate!.future;
+    }
+    _assignedEquipment[profileId]?.remove(equipmentId);
+  }
 
   @override
   Future<String?> getAppState(String key) async => storedSelection;
 
   @override
   Future<void> setAppState(String key, String? value) async {
-    if (value == '2' && selectionWriteGate != null) {
+    if (value == '2' &&
+        selectionWriteGate != null &&
+        !selectionWriteStarted.isCompleted) {
       selectionWriteStarted.complete();
       await selectionWriteGate!.future;
     }

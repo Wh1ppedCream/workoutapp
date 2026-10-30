@@ -74,12 +74,15 @@ class DatabaseHelper {
   static bool? _fts4Available;
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
-  DatabaseHelper._internal();
+  DatabaseHelper._internal() : _testDb = null;
+  DatabaseHelper.forTesting(Database db) : _testDb = db;
 
+  final Database? _testDb;
   static Database? _db;
   static Future<Database>? _dbFuture;
 
   Future<Database> get database {
+    if (_testDb != null) return Future.value(_testDb);
     if (_db != null) return Future.value(_db!);
     return _dbFuture ??= _initDatabase()
         .then((db) {
@@ -3265,8 +3268,15 @@ class DatabaseHelper {
           for (final table in tablesToRestore) {
             if (!existingTables.contains(table)) continue; // skip unknown
             final rows = List<Map<String, dynamic>>.from(data[table] as List);
+            if (rows.isEmpty) continue;
+            final columnInfo = await _tableColumnInfo(txn, table);
             for (final row in rows) {
-              final sane = await _sanitizeRowForTable(txn, table, row);
+              final sane = await _sanitizeRowForTable(
+                txn,
+                table,
+                row,
+                columnInfo: columnInfo,
+              );
               if (sane.isNotEmpty) {
                 await txn.insert(
                   table,
@@ -5711,17 +5721,25 @@ class DatabaseHelper {
     return up.contains('INT') || up.contains('REAL') || up.contains('NUM');
   }
 
+  Future<Map<String, Map<String, Object?>>> _tableColumnInfo(
+    DatabaseExecutor ex,
+    String table,
+  ) async {
+    final cols = await ex.rawQuery('PRAGMA table_info($table)');
+    return <String, Map<String, Object?>>{
+      for (final c in cols) (c['name'] as String): c,
+    };
+  }
+
   // Filter a row to existing columns for [table], coerce booleans → 0/1,
   // and turn empty strings into NULL for numeric columns.
   Future<Map<String, Object?>> _sanitizeRowForTable(
     DatabaseExecutor ex,
     String table,
-    Map row,
-  ) async {
-    final cols = await ex.rawQuery('PRAGMA table_info($table)');
-    final info = <String, Map<String, Object?>>{
-      for (final c in cols) (c['name'] as String): c,
-    };
+    Map row, {
+    Map<String, Map<String, Object?>>? columnInfo,
+  }) async {
+    final info = columnInfo ?? await _tableColumnInfo(ex, table);
 
     final out = <String, Object?>{};
     row.forEach((k, v) {
