@@ -10,10 +10,37 @@ import '../models/models.dart';
 import 'content_repository.dart';
 import 'food_catalog_repository.dart';
 
+part 'parts/workout_repository_part.dart';
+part 'parts/catalog_repository_part.dart';
+part 'parts/measurement_repository_part.dart';
+part 'parts/analytics_repository_part.dart';
+part 'parts/profile_settings_repository_part.dart';
+part 'parts/preset_repository_part.dart';
+part 'parts/nutrition_repository_part.dart';
+
+/// Shared collaborators; domain mixins never construct their own repository.
+abstract class _RepositoryDependencies {
+  DatabaseHelper get _dbHelper;
+  AppRepository get _repository;
+  ContentRepository get content;
+  FoodCatalogRepository get foodCatalog;
+}
+
 /// Central repository providing a unified interface for all
 /// database operations in the UI layer.
 /// Screens/widgets call into [AppRepository]; this forwards to DAOs via [DatabaseHelper].
-class AppRepository {
+class AppRepository extends _RepositoryDependencies
+    with
+        _WorkoutRepositoryMethods,
+        _CatalogRepositoryMethods,
+        _MeasurementRepositoryMethods,
+        _AnalyticsRepositoryMethods,
+        _ProfileSettingsRepositoryMethods,
+        _PresetRepositoryMethods,
+        _NutritionRepositoryMethods {
+  @override
+  AppRepository get _repository => this;
+
   // ✨ Allow DI in tests; default to the singleton helper.
   AppRepository({DatabaseHelper? db}) : _dbHelper = db ?? DatabaseHelper() {
     if (db != null) {
@@ -29,8 +56,11 @@ class AppRepository {
   static final Map<int, Future<ResolvedExerciseAllocation>>
   _exerciseAllocationCache = <int, Future<ResolvedExerciseAllocation>>{};
 
+  @override
   final DatabaseHelper _dbHelper;
+  @override
   late final ContentRepository content = ContentRepository(db: _dbHelper);
+  @override
   late final FoodCatalogRepository foodCatalog = FoodCatalogRepository(
     source: LocalFoodCatalogSource(_dbHelper),
   );
@@ -62,204 +92,9 @@ class AppRepository {
     }
   }
 
-  // ─── SESSIONS ───────────────────────────────────────────
-
   /// Creates a new workout session using DateTime for safety.
   Future<int> createSessionAt(DateTime date, int duration) =>
       _dbHelper.createSession(date, duration);
-
-  /// Fetches all sessions as raw maps ordered by completion instant descending.
-  Future<List<Map<String, dynamic>>> fetchAllSessions() =>
-      _dbHelper.getAllSessionsRaw();
-
-  Future<List<WorkoutReportSession>> fetchWorkoutReportSessions({
-    DateTime? start,
-    DateTime? end,
-  }) async {
-    final rows = await _dbHelper.fetchWorkoutReportSessionsRaw(
-      start: start,
-      end: end,
-    );
-    return rows
-        .map(
-          (row) => WorkoutReportSession(
-            id: row['session_id'] as int,
-            date: TemporalSemantics.readLocalDateTime(
-              epochMilliseconds: row['completed_at_ms'],
-              legacyIso: row['date'],
-            ),
-            calendarDayKey:
-                TemporalSemantics.readCalendarDay(
-                  calendarDay: row['training_day'],
-                  legacyIso: row['date'],
-                  epochMilliseconds: row['completed_at_ms'],
-                ).storageKey,
-            durationSeconds: (row['duration'] as num).toInt(),
-            totalVolume: ((row['total_volume'] as num?) ?? 0).toDouble(),
-            exerciseCount: ((row['exercise_count'] as num?) ?? 0).toInt(),
-            setCount: ((row['set_count'] as num?) ?? 0).toInt(),
-          ),
-        )
-        .toList();
-  }
-
-  /// Deletes a session by its ID, cascading to related exercises & sets.
-  Future<void> deleteSession(int id) => _dbHelper.deleteSession(id);
-
-  Future<int> completeWorkoutAtomic({
-    required DateTime completedAt,
-    required int durationSeconds,
-    required List<WorkoutExerciseWrite> exercises,
-    int? autoPresetId,
-  }) => _dbHelper.completeWorkoutAtomic(
-    completedAt: completedAt,
-    durationSeconds: durationSeconds,
-    exercises: exercises,
-    autoPresetId: autoPresetId,
-  );
-
-  Future<void> replaceSessionExercisesAtomic({
-    required int sessionId,
-    required List<WorkoutExerciseWrite> exercises,
-  }) => _dbHelper.replaceSessionExercisesAtomic(
-    sessionId: sessionId,
-    exercises: exercises,
-  );
-
-  Future<void> saveActiveWorkoutDraft({
-    required DateTime startedAt,
-    required int? autoPresetId,
-    required String payloadJson,
-  }) => _dbHelper.saveActiveWorkoutDraft(
-    startedAt: startedAt,
-    autoPresetId: autoPresetId,
-    payloadJson: payloadJson,
-  );
-
-  Future<Map<String, dynamic>?> loadActiveWorkoutDraft() =>
-      _dbHelper.loadActiveWorkoutDraft();
-
-  Future<void> clearActiveWorkoutDraft() => _dbHelper.clearActiveWorkoutDraft();
-
-  /// Fetches a single session by ID (or null).
-  Future<WorkoutSession?> fetchSessionById(int id) =>
-      _dbHelper.fetchSessionById(id);
-
-  /// Updates an existing session's completion instant and duration.
-  Future<void> updateSession(int id, DateTime d, int dur) =>
-      _dbHelper.updateSession(id, d, dur);
-
-  /// Retrieves sessions in the inclusive exact-instant range [start, end].
-  Future<List<WorkoutSession>> fetchSessionsInRange(DateTime s, DateTime e) =>
-      _dbHelper.fetchSessionsInRange(s, e);
-
-  // ─── EXERCISES ──────────────────────────────────────────
-
-  /// Adds a weight-based exercise to a session.
-  Future<int> addExercise(int sid, String name, String eq, int idx) =>
-      _dbHelper.addExercise(sid, name, eq, idx);
-
-  /// Fetches exercise rows for a session.
-  Future<List<Map<String, dynamic>>> fetchExercises(int sid) =>
-      _dbHelper.fetchExercisesRaw(sid);
-
-  /// Calculates record badges for the completed parent sets in a session.
-  Future<Map<int, WorkoutExerciseRecordBadges>> fetchSessionRecordBadges(
-    int sessionId,
-  ) => _dbHelper.fetchSessionRecordBadges(sessionId);
-
-  Future<Map<int, WorkoutExerciseRecordBadges>> fetchExerciseRecordBadges(
-    Iterable<int> exerciseIds,
-  ) => _dbHelper.fetchExerciseRecordBadges(exerciseIds);
-
-  /// Returns current all-time and calendar-month leaders for one exercise.
-  /// This powers leaderboard-style records, not historical award views.
-  Future<Map<int, WorkoutExerciseRecordBadges>>
-  fetchCurrentExerciseRecordBadges(int definitionId) =>
-      _dbHelper.fetchCurrentExerciseRecordBadges(definitionId);
-
-  Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
-    required int definitionId,
-    int? beforeCompletedAtMilliseconds,
-    int? beforeExerciseId,
-    int limit = 10,
-  }) => _dbHelper.fetchRecentWeightExerciseHistoryRows(
-    definitionId: definitionId,
-    beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
-    beforeExerciseId: beforeExerciseId,
-    limit: limit,
-  );
-
-  Future<List<Map<String, dynamic>>> fetchExerciseOneRmTrendRows({
-    required int definitionId,
-    int limit = 60,
-  }) => _dbHelper.fetchExerciseOneRmTrendRows(
-    definitionId: definitionId,
-    limit: limit,
-  );
-
-  /// Deletes all exercises (and related details) in a session.
-  Future<void> deleteExercises(int sid) => _dbHelper.deleteExercises(sid);
-
-  /// Inserts a generic exercise row of any type (weight, cardio, stretch).
-  Future<int> addExerciseRow({
-    int? exerciseDefId,
-    required String type,
-    required int orderIndex,
-    required int sessionId,
-    int? sourcePresetExerciseId,
-  }) => _dbHelper.addExerciseRow(
-    exerciseDefId: exerciseDefId,
-    type: type,
-    orderIndex: orderIndex,
-    sessionId: sessionId,
-    sourcePresetExerciseId: sourcePresetExerciseId,
-  );
-
-  /// Fetches a fully-detailed [WorkoutExercise] by its ID.
-  Future<WorkoutExercise?> fetchDetailedExercise(int id) =>
-      _dbHelper.fetchDetailedExercise(id);
-
-  /// Deletes an exercise instance by its ID.
-  Future<void> deleteExercise(int id) => _dbHelper.deleteExercise(id);
-
-  // ─── SETS ───────────────────────────────────────────────
-
-  /// Inserts a single set row for an exercise.
-  Future<int> addSet(int exerciseId, double weight, int reps, int orderIndex) =>
-      _dbHelper.addSet(exerciseId, weight, reps, orderIndex);
-
-  /// Inserts parent and child sets for a weight exercise.
-  Future<void> addWeightSets({
-    required int exerciseId,
-    required List<ExerciseSet> parentSets,
-    required Map<int, List<ExerciseSet>> childChangeSets,
-  }) => _dbHelper.addWeightSets(
-    exerciseId: exerciseId,
-    parentSets: parentSets,
-    childChangeSets: childChangeSets,
-  );
-
-  /// Fetches all sets for an exercise.
-  Future<List<Map<String, dynamic>>> fetchSets(int exerciseId) =>
-      _dbHelper.fetchSetsRaw(exerciseId);
-
-  /// Update a single weight set’s weight & reps.
-  Future<void> updateSet(int setId, double weight, int reps) =>
-      _dbHelper.updateSet(setId, weight, reps);
-
-  /// Delete a single set by its ID.
-  Future<void> deleteSet(int setId) => _dbHelper.deleteSet(setId);
-
-  /// Reorders sets within an exercise by their IDs.
-  Future<void> reorderSets(int exerciseId, List<int> setIds) =>
-      _dbHelper.reorderSets(exerciseId, setIds);
-
-  // ─── CARDIO ────────────────────────────────────────────
-
-  /// Canonical getter (matches DatabaseHelper).
-  Future<Map<String, dynamic>?> getCardioDetailsForExercise(int exerciseId) =>
-      _dbHelper.getCardioDetailsForExercise(exerciseId);
 
   /// Saves cardio details for an exercise (insert or replace).
   Future<void> saveCardioDetails({
@@ -274,136 +109,6 @@ class AppRepository {
     note: note,
     plannedMinutes: plannedMinutes,
     elapsedSeconds: elapsedSeconds,
-  );
-
-  /// Fetches cardio details by exercise ID.
-  Future<Map<String, dynamic>?> fetchCardioDetails(int exerciseId) =>
-      _dbHelper.fetchCardioDetails(exerciseId);
-
-  /// Update cardio details for an exercise.
-  Future<void> updateCardioDetails({
-    required int exerciseId,
-    required String cardioName,
-    String? note,
-    required int plannedMinutes,
-    required int elapsedSeconds,
-  }) => _dbHelper.updateCardioDetails(
-    exerciseId: exerciseId,
-    cardioName: cardioName,
-    note: note,
-    plannedMinutes: plannedMinutes,
-    elapsedSeconds: elapsedSeconds,
-  );
-
-  /// Delete cardio details for a specific exercise.
-  Future<void> deleteCardioDetails(int exerciseId) =>
-      _dbHelper.deleteCardioDetails(exerciseId);
-
-  // ─── STRETCH ────────────────────────────────────────────
-
-  /// Strongly-typed variant.
-  Future<void> saveClassStretchInstance({
-    required int exerciseId,
-    required List<StretchInstance> instances,
-  }) => _dbHelper.saveClassStretchInstance(
-    exerciseId: exerciseId,
-    instances: instances,
-  );
-
-  /// Saves a stretch instance and its items for an exercise.
-  Future<void> saveStretchInstance({
-    required int exerciseId,
-    required List<Map<String, dynamic>> items,
-  }) => _dbHelper.saveStretchInstance(exerciseId: exerciseId, items: items);
-
-  /// Fetches stretch items for an exercise.
-  Future<List<Map<String, dynamic>>> fetchStretchItems(int id) =>
-      _dbHelper.fetchStretchItemsRaw(id);
-
-  /// Updates a single stretch item’s fields.
-  Future<int> updateStretchItem({
-    required int itemId,
-    int? stretchId,
-    bool? isCustom,
-    String? customName,
-    String? customDesc,
-    bool? isChecked,
-    int? orderIndex,
-  }) => _dbHelper.updateStretchItem(
-    itemId: itemId,
-    stretchId: stretchId,
-    isCustom: isCustom,
-    customName: customName,
-    customDesc: customDesc,
-    isChecked: isChecked,
-    orderIndex: orderIndex,
-  );
-
-  /// Deletes a single stretch item by ID.
-  Future<void> deleteStretchItem(int itemId) =>
-      _dbHelper.deleteStretchItem(itemId);
-
-  /// Delete an entire stretch instance and its items.
-  Future<void> deleteStretchInstance(int exerciseId) =>
-      _dbHelper.deleteStretchInstance(exerciseId);
-
-  /// Reorders stretch items by their IDs.
-  Future<void> reorderStretchItems(int exerciseId, List<int> itemIds) =>
-      _dbHelper.reorderStretchItems(exerciseId, itemIds);
-
-  // ─── DEFINITIONS & FILTERS ─────────────────────────────
-
-  Future<List<Map<String, dynamic>>> lookupDefsByBodyPart(int id) =>
-      _dbHelper.lookupDefsByBodyPart(id);
-
-  Future<List<ExerciseDefinition>> lookupDefsDetailed() =>
-      _dbHelper.lookupDefsDetailed();
-
-  Future<List<ExerciseDefinition>> lookupDefsDetailedByIds(
-    List<int> definitionIds,
-  ) => _dbHelper.lookupDefsDetailedByIds(definitionIds);
-
-  Future<List<Map<String, dynamic>>> fetchMostUsedExerciseDefinitionsRaw({
-    int limit = 5,
-  }) => _dbHelper.fetchMostUsedExerciseDefinitionsRaw(limit: limit);
-
-  Future<List<Map<String, dynamic>>> fetchAllExercisesRaw() =>
-      _dbHelper.fetchAllExercisesRaw();
-
-  Future<List<ExerciseDefinition>> lookupDefsWithAnyEquipment(
-    List<String> equipmentNames,
-  ) => _dbHelper.lookupDefsWithAnyEquipment(equipmentNames);
-
-  Future<List<ExerciseDefinition>> lookupDefsOnlyWithEquipment(
-    List<String> equipmentNames, {
-    bool includeNone = true,
-  }) => _dbHelper.lookupDefsOnlyWithEquipment(
-    equipmentNames,
-    includeNone: includeNone,
-  );
-
-  Future<List<ExerciseDefinition>> lookupDefsFiltered({
-    List<String>? equipmentNames,
-    List<int>? bodypartIds,
-    List<int>? muscleIds,
-  }) => _dbHelper.lookupDefsFiltered(
-    equipmentNames: equipmentNames,
-    bodypartIds: bodypartIds,
-    muscleIds: muscleIds,
-  );
-
-  Future<List<ExerciseDefinition>> fetchCatalogDefinitions({
-    required bool useProfileFilter,
-    int? profileId,
-    String? equipmentFilter,
-    List<int>? bodypartIds,
-    List<int>? muscleIds,
-  }) => _dbHelper.fetchCatalogDefinitions(
-    useProfileFilter: useProfileFilter,
-    profileId: profileId,
-    equipmentFilter: equipmentFilter,
-    bodypartIds: bodypartIds,
-    muscleIds: muscleIds,
   );
 
   Future<int> addExerciseMuscleMapping(
@@ -438,19 +143,6 @@ class AppRepository {
     return id;
   }
 
-  Future<int> addExerciseEquipmentMapping(int defId, int eqId) =>
-      _dbHelper.insertExerciseEquipmentMapping(defId, eqId);
-  Future<int> deleteExerciseEquipmentMapping(int defId, int eqId) =>
-      _dbHelper.deleteExerciseEquipmentMapping(defId, eqId);
-
-  Future<int> findOrCreateExerciseDefinition(
-    String name,
-    String equipmentName,
-  ) => _dbHelper.findOrCreateExerciseDefinition(name, equipmentName);
-
-  Future<Map<String, String?>> fetchDefinitionInfo(int defId) =>
-      _dbHelper.fetchDefinitionInfo(defId);
-
   Future<void> updateExerciseDefinition(ExerciseDefinition def) async {
     await _dbHelper.updateExerciseDefinition(def);
     clearExerciseAnalysisCacheFor(def.id);
@@ -468,207 +160,6 @@ class AppRepository {
     clearExerciseAnalysisCacheFor(defId);
   }
 
-  Future<List<ExerciseDefinition>> searchExerciseDefinitions(String query) =>
-      _dbHelper.searchExerciseDefinitions(query);
-
-  Future<ExerciseDefinition?> fetchDefinitionById(int defId) =>
-      _dbHelper.getExerciseDefinitionById(defId);
-
-  Future<ExerciseDefinition?> fetchDefinitionByCatalogId(String catalogId) =>
-      _dbHelper.getExerciseDefinitionByCatalogId(catalogId);
-
-  Future<List<ExerciseMediaItem>> fetchExerciseMedia(int defId) =>
-      _dbHelper.getExerciseMedia(defId);
-
-  Future<ExerciseMediaItem?> fetchPrimaryExerciseMedia(int defId) =>
-      content.fetchPrimaryExerciseMedia(defId);
-
-  Future<ContentManifest> syncBundledExerciseMediaManifest() =>
-      content.syncBundledExerciseMediaManifest();
-
-  Future<void> ensureExerciseMediaManifestReady() =>
-      content.ensureExerciseMediaManifestReady();
-
-  Future<void> ensureSharedMediaManifestReady() =>
-      content.ensureSharedMediaManifestReady();
-
-  Future<void> refreshSelectedContentEnvironment() =>
-      content.refreshSelectedEnvironment();
-
-  Future<ContentEnvironmentConfig> loadContentEnvironments() =>
-      content.loadContentEnvironments();
-
-  Future<ContentManifest> syncRemoteExerciseMediaManifest(Uri manifestUri) =>
-      content.syncRemoteExerciseMediaManifest(manifestUri);
-
-  Future<SharedMediaManifest> syncRemoteSharedMediaManifest(Uri manifestUri) =>
-      content.syncRemoteSharedMediaManifest(manifestUri);
-
-  Future<File?> cachedExerciseMediaFile(
-    ExerciseMediaItem item, {
-    required bool thumbnail,
-  }) => content.cachedFileFor(item, thumbnail: thumbnail);
-
-  Future<File> cacheExerciseMedia(
-    ExerciseMediaItem item, {
-    required bool thumbnail,
-  }) => content.cacheMedia(item, thumbnail: thumbnail);
-
-  Stream<ContentMediaCacheChange> get mediaCacheChanges =>
-      content.mediaCacheChanges;
-
-  Future<void> markExerciseMediaAccessed(ExerciseMediaItem item) =>
-      content.markMediaAccessed(item);
-
-  Future<void> reconcileMediaCache() => content.reconcileMediaCache();
-
-  Future<SharedMediaItem?> fetchPrimarySharedMedia(
-    SharedMediaEntityType entityType,
-    int entityId,
-  ) => content.fetchPrimarySharedMedia(entityType, entityId);
-
-  Future<SharedMediaItem?> fetchPrimaryEquipmentMedia(int equipmentId) =>
-      fetchPrimarySharedMedia(SharedMediaEntityType.equipment, equipmentId);
-
-  Future<SharedMediaItem?> fetchPrimaryBodyPartMedia(int bodyPartId) =>
-      fetchPrimarySharedMedia(SharedMediaEntityType.bodypart, bodyPartId);
-
-  Future<SharedMediaItem?> fetchPrimaryMuscleMedia(int muscleId) =>
-      fetchPrimarySharedMedia(SharedMediaEntityType.muscle, muscleId);
-
-  Future<File?> cachedSharedMediaFile(
-    SharedMediaItem item, {
-    required bool thumbnail,
-  }) => content.cachedSharedMediaFile(item, thumbnail: thumbnail);
-
-  Future<File> cacheSharedMedia(
-    SharedMediaItem item, {
-    required bool thumbnail,
-  }) => content.cacheSharedMedia(item, thumbnail: thumbnail);
-
-  Future<void> markSharedMediaAccessed(SharedMediaItem item) =>
-      content.markSharedMediaAccessed(item);
-
-  Future<ContentCacheUsage> getContentCacheUsage() => content.getCacheUsage();
-
-  Future<ContentManifestStatus?> getContentManifestStatus(String namespace) =>
-      content.getManifestStatus(namespace);
-
-  Future<void> clearContentCache() => content.clearCache();
-
-  Future<bool> isWifiOnlyMediaDownloadEnabled() =>
-      content.isWifiOnlyMediaDownloadEnabled();
-
-  Future<void> setWifiOnlyMediaDownloadEnabled(bool value) =>
-      content.setWifiOnlyMediaDownloadEnabled(value);
-
-  Future<void> replaceExerciseMedia(int defId, List<ExerciseMediaItem> items) =>
-      _dbHelper.replaceExerciseMedia(defId, items);
-
-  // ─── MEASUREMENTS & LOOKUPS ────────────────────────────
-
-  Future<List<Map<String, dynamic>>> fetchMeasurementDefinitions() =>
-      _dbHelper.fetchMeasurementDefinitions();
-
-  Future<void> ensureDefaultMeasurementDefinitions() =>
-      _dbHelper.ensureDefaultMeasurementDefinitions();
-
-  Future<int> insertMeasurementDefinition({
-    required String name,
-    required MeasurementType type,
-  }) => _dbHelper.insertMeasurementDefinition(name: name, type: type);
-
-  Future<List<MeasurementDefinition>> fetchClassMeasurementDefinitions() =>
-      _dbHelper.fetchClassMeasurementDefinitions();
-
-  Future<int?> fetchMeasurementDefinitionId(String name) =>
-      _dbHelper.fetchMeasurementDefinitionId(name);
-
-  Future<int> insertMeasurement(
-    int defId,
-    DateTime timestamp,
-    double value,
-    String unit,
-    String? note,
-    MeasurementContext? context,
-  ) =>
-      _dbHelper.insertMeasurement(defId, timestamp, value, unit, note, context);
-
-  Future<List<Map<String, dynamic>>> fetchMeasurementsForDefinition(
-    int defId,
-  ) => _dbHelper.fetchMeasurementsRaw(defId);
-
-  Future<List<Measurement>> fetchClassMeasurementsForDefinition(int defId) =>
-      _dbHelper.fetchClassMeasurementsForDefinition(defId);
-
-  Future<double?> fetchLatestBodyWeightLbs() =>
-      _dbHelper.fetchLatestBodyWeightLbs();
-
-  Future<List<Map<String, dynamic>>> fetchUsedMeasurementDefinitions() =>
-      _dbHelper.fetchUsedMeasurementDefinitionsRaw();
-
-  Future<List<MeasurementDefinition>> fetchUsedClassMeasurementDefinitions() =>
-      _dbHelper.fetchUsedClassMeasurementDefinitions();
-
-  Future<Map<String, dynamic>?> fetchMeasurementById(int id) =>
-      _dbHelper.fetchMeasurementById(id);
-
-  Future<void> updateMeasurement({
-    required int measurementId,
-    required DateTime timestamp,
-    required double value,
-    required String unit,
-    String? note,
-    MeasurementContext? context,
-  }) => _dbHelper.updateMeasurement(
-    measurementId: measurementId,
-    timestamp: timestamp,
-    value: value,
-    unit: unit,
-    note: note,
-    context: context,
-  );
-
-  Future<void> deleteMeasurement(int measurementId) =>
-      _dbHelper.deleteMeasurement(measurementId);
-
-  Future<List<String>> fetchAllEquipmentNames() =>
-      _dbHelper.fetchAllEquipmentNames();
-
-  Future<List<BodyPart>> fetchAllBodyParts() => _dbHelper.fetchAllBodyParts();
-
-  Future<List<Muscle>> fetchAllMuscles() => _dbHelper.fetchAllMuscles();
-
-  Future<List<String>> fetchAllMuscleNames() => _dbHelper.fetchAllMuscleNames();
-
-  Future<List<StretchDefinition>> fetchStretches({int? bodypartId}) =>
-      _dbHelper.fetchStretches(bodypartId: bodypartId);
-
-  Future<String?> fetchStretchDefinitionNameById(int stretchId) =>
-      _dbHelper.fetchStretchDefinitionNameById(stretchId);
-
-  Future<List<ExerciseDefinition>> fetchExerciseDefinitionsFiltered({
-    List<String>? equipmentNames,
-    List<int>? bodypartIds,
-    List<int>? muscleIds,
-  }) => _dbHelper.lookupDefsFiltered(
-    equipmentNames: equipmentNames,
-    bodypartIds: bodypartIds,
-    muscleIds: muscleIds,
-  );
-
-  Future<List<Equipment>> fetchAllEquipment() => _dbHelper.fetchAllEquipment();
-
-  Future<int> createEquipment(String name) => _dbHelper.createEquipment(name);
-
-  Future<void> updateEquipment(int id, String name) =>
-      _dbHelper.updateEquipment(id, name);
-
-  Future<void> deleteEquipment(int id) => _dbHelper.deleteEquipment(id);
-
-  Future<List<BodyPart>> fetchAllBodyPartsFull() =>
-      _dbHelper.fetchAllBodyPartsFull();
-
   Future<int> createBodyPart(String name) async {
     final id = await _dbHelper.createBodyPart(name);
     clearExerciseAnalysisCache();
@@ -684,8 +175,6 @@ class AppRepository {
     await _dbHelper.deleteBodyPartEntry(id);
     clearExerciseAnalysisCache();
   }
-
-  Future<List<Muscle>> fetchAllMusclesFull() => _dbHelper.fetchAllMusclesFull();
 
   Future<int> createMuscle(String name) async {
     final id = await _dbHelper.createMuscle(name);
@@ -709,40 +198,6 @@ class AppRepository {
   }
 
   // Exporters
-  Future<DatabaseHealthSnapshot> getDatabaseHealthSnapshot() =>
-      _dbHelper.getDatabaseHealthSnapshot();
-
-  Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() =>
-      _dbHelper.runDatabaseIntegrityCheck();
-
-  Future<DatabaseMaintenanceResult> optimizeDatabase() =>
-      _dbHelper.optimizeDatabase();
-
-  Future<DatabaseMaintenanceResult> checkpointWal() =>
-      _dbHelper.checkpointWal();
-
-  Future<DatabaseMaintenanceResult> vacuumDatabase() =>
-      _dbHelper.vacuumDatabase();
-
-  DatabaseImportPreview previewDatabaseImport(String jsonStr) =>
-      _dbHelper.previewDatabaseImport(jsonStr);
-
-  Future<String> exportDatabase() => _dbHelper.exportDatabase();
-  Future<String> exportEquipmentJson() => _dbHelper.exportEquipmentJson();
-  Future<String> exportBodypartsJson() => _dbHelper.exportBodypartsJson();
-  Future<String> exportMusclesJson() => _dbHelper.exportMusclesJson();
-  Future<String> exportExercisesJson() => _dbHelper.exportExercisesJson();
-  Future<String> exportStretchesJson() => _dbHelper.exportStretchesJson();
-  Future<String> exportMuscleBodypartJson() =>
-      _dbHelper.exportMuscleBodypartJson();
-  Future<String> exportBodypartRankingJson() =>
-      _dbHelper.exportBodypartRankingJson();
-  Future<String> exportMuscleRankingJson() =>
-      _dbHelper.exportMuscleRankingJson();
-  Future<String> exportBodypartMuscleRankingsJson() =>
-      _dbHelper.exportBodypartMuscleRankingsJson();
-  Future<String> exportVolumeBoundariesJson() =>
-      _dbHelper.exportVolumeBoundariesJson();
 
   /// Imports the database from a JSON string.
   Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
@@ -755,46 +210,7 @@ class AppRepository {
     clearExerciseAnalysisCache();
   }
 
-  /// Performs fuzzy search on exercise definition names.
-  Future<List<ExerciseDefinition>> fuzzsearchExercises(String term) =>
-      _dbHelper.fuzzsearchExercises(term);
-
-  /// Returns all sessions as WorkoutSession objects, newest first.
-  Future<List<WorkoutSession>> fetchWorkoutSessions() =>
-      _dbHelper.fetchWorkoutSessions();
-
-  // ─── STATS ───────────────────────────────────────────────────────────────
-
-  Future<void> updateRepMax(
-    int defId,
-    int repCount,
-    String timeframe,
-    double rmValue,
-    double oneErm,
-    bool isErm,
-  ) => _dbHelper.upsertRepMax(
-    defId,
-    repCount,
-    timeframe,
-    rmValue,
-    oneErm,
-    isErm,
-  );
-
-  Future<void> updateVolumeMax(int defId, String timeframe, double vmValue) =>
-      _dbHelper.upsertVolumeMax(defId, timeframe, vmValue);
-
   // Stats queries
-  Future<List<RepMaxRow>> fetchRepMaxes(int defId, String timeframe) =>
-      _dbHelper.fetchRepMaxes(defId, timeframe);
-
-  Future<double?> fetchVolumeMax(int defId, String timeframe) =>
-      _dbHelper.fetchVolumeMax(defId, timeframe);
-
-  Future<double> calculateTotalVolumeForSessions(List<int> sessionIds) =>
-      _dbHelper.calculateTotalVolumeForSessions(sessionIds);
-
-  // ─── ANALYTICS ─────────────────────────────────────────────
 
   Future<int> linkMuscleToBodyPart(int muscleId, int bodypartId) async {
     final id = await _dbHelper.linkMuscleToBodyPart(muscleId, bodypartId);
@@ -807,36 +223,6 @@ class AppRepository {
     clearExerciseAnalysisCache();
     return id;
   }
-
-  Future<List<MuscleBodyPart>> fetchBodyPartsForMuscle(int muscleId) =>
-      _dbHelper.fetchBodyPartsForMuscle(muscleId);
-
-  Future<List<MuscleBodyPart>> fetchMusclesForBodyPart(int bodypartId) =>
-      _dbHelper.fetchMusclesForBodyPart(bodypartId);
-
-  Future<int> setBodyPartRank(int bodypartId, int rank) =>
-      _dbHelper.setBodyPartRank(bodypartId, rank);
-
-  Future<BodyPartRanking?> getBodyPartRank(int bodypartId) =>
-      _dbHelper.getBodyPartRank(bodypartId);
-
-  Future<List<BodyPartRanking>> getAllBodyPartRanks() =>
-      _dbHelper.getAllBodyPartRanks();
-
-  Future<int> deleteBodyPartRank(int bodypartId) =>
-      _dbHelper.deleteBodyPartRank(bodypartId);
-
-  Future<int> setMuscleRank(int muscleId, int rank) =>
-      _dbHelper.setMuscleRank(muscleId, rank);
-
-  Future<MuscleRanking?> getMuscleRank(int muscleId) =>
-      _dbHelper.getMuscleRank(muscleId);
-
-  Future<List<MuscleRanking>> getAllMuscleRanks() =>
-      _dbHelper.getAllMuscleRanks();
-
-  Future<int> deleteMuscleRank(int muscleId) =>
-      _dbHelper.deleteMuscleRank(muscleId);
 
   Future<int> setExerciseMuscleHitPercent(
     int defId,
@@ -852,49 +238,11 @@ class AppRepository {
     return id;
   }
 
-  Future<ExerciseMusclePercent?> fetchExerciseMusclePercent(
-    int defId,
-    int muscleId,
-  ) => _dbHelper.fetchExerciseMusclePercent(defId, muscleId);
-
   Future<int> removeExerciseMusclePercent(int defId, int muscleId) async {
     final id = await _dbHelper.removeExerciseMusclePercent(defId, muscleId);
     clearExerciseAnalysisCacheFor(defId);
     return id;
   }
-
-  Future<List<ExerciseMusclePercent>> fetchPercentsForExercise(int defId) =>
-      _dbHelper.fetchPercentsForExercise(defId);
-
-  Future<int> setMuscleVolumeBounds(int muscleId, VolumeBoundaries b) =>
-      _dbHelper.setMuscleVolumeBounds(muscleId, b);
-
-  Future<VolumeBoundaries?> fetchMuscleVolumeBounds(int muscleId) =>
-      _dbHelper.fetchMuscleVolumeBounds(muscleId);
-
-  Future<List<Map<String, dynamic>>> fetchAllMuscleVolumeBounds() =>
-      _dbHelper.fetchAllMuscleVolumeBounds();
-
-  Future<int> removeMuscleVolumeBounds(int muscleId) =>
-      _dbHelper.removeMuscleVolumeBounds(muscleId);
-
-  Future<int> setBodyPartVolumeBounds(
-    int bodyPartId,
-    VolumeBoundaries bounds,
-  ) => _dbHelper.setBodyPartVolumeBounds(bodyPartId, bounds);
-
-  Future<VolumeBoundaries?> fetchBodyPartVolumeBounds(int bodyPartId) =>
-      _dbHelper.fetchBodyPartVolumeBounds(bodyPartId);
-
-  Future<List<Map<String, dynamic>>> fetchAllBodyPartVolumeBounds() =>
-      _dbHelper.fetchAllBodyPartVolumeBounds();
-
-  Future<int> removeBodyPartVolumeBounds(int bodyPartId) =>
-      _dbHelper.removeBodyPartVolumeBounds(bodyPartId);
-
-  Future<List<ExerciseBodyPartPercent>> fetchBodyPartPercentsManual(
-    int defId,
-  ) => _dbHelper.fetchBodyPartPercentsManual(defId);
 
   Future<int> setExerciseBodyPartPercent(
     int defId,
@@ -911,10 +259,6 @@ class AppRepository {
     clearExerciseAnalysisCacheFor(defId);
     return id;
   }
-
-  Future<double> getFormulaStep() => _dbHelper.getFormulaStep();
-  Future<double> getFormulaMin() => _dbHelper.getFormulaMin();
-  Future<double> getFormulaMax() => _dbHelper.getFormulaMax();
 
   Future<void> setFormulaStep(double s) async {
     await _dbHelper.setFormulaStep(s);
@@ -1040,937 +384,46 @@ class AppRepository {
     return future;
   }
 
-  Future<Map<BodyPart, double>> estimateBodyPartSetDistribution(int defId) =>
-      _dbHelper.estimateBodyPartSetDistribution(defId);
-
-  Future<Map<BodyPart, double>> computeMuscleCalculatedBodyparts(int defId) =>
-      _dbHelper.computeMuscleCalculatedBodyparts(defId);
-
-  Future<Map<int, double>> fetchMuscleSetsForExerciseOverTimeRange({
-    required int defId,
-    required DateTime start,
-    required DateTime end,
-  }) => _dbHelper.fetchMuscleSetsForExerciseOverTimeRange(
-    defId: defId,
-    start: start,
-    end: end,
-  );
-
-  Future<Map<int, double>> fetchSetsPerMuscle({
-    required DateTime start,
-    required DateTime end,
-  }) => _dbHelper.fetchAllMuscleSetsOverTimeRange(start: start, end: end);
-
-  Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
-    required DateTime start,
-    required DateTime end,
-  }) => _dbHelper.fetchAllBodyPartSetsOverTimeRange(start: start, end: end);
-
-  Future<Map<BodyPart, double>> fetchBodyPartSetsForExerciseOverTimeRange({
-    required int defId,
-    required DateTime start,
-    required DateTime end,
-  }) => _dbHelper.fetchBodyPartSetsForExerciseOverTimeRange(
-    defId: defId,
-    start: start,
-    end: end,
-  );
-
-  Future<int> findExerciseDefinitionId(String name, String equipmentName) =>
-      _dbHelper.findExerciseDefinitionId(name, equipmentName);
-
-  // ─── GYM PROFILES ────────────────────────────────────────
-
-  Future<int> createProfile(String name) => _dbHelper.createProfile(name);
-
-  Future<int> saveGymProfileAtomic({
-    required GymProfile? existingProfile,
-    required String name,
-    required Set<int> equipmentIds,
-  }) => _dbHelper.saveGymProfileAtomic(
-    existingProfile: existingProfile,
-    name: name,
-    equipmentIds: equipmentIds,
-  );
-
-  Future<Set<int>> loadActivePlans(int profileId) =>
-      _dbHelper.loadActivePlans(profileId);
-
-  Future<void> replaceActivePlans(int profileId, Set<int> presetIds) =>
-      _dbHelper.replaceActivePlans(profileId, presetIds);
-
-  Future<void> addActivePlan(int profileId, int presetId) =>
-      _dbHelper.addActivePlan(profileId, presetId);
-
-  Future<void> removeActivePlan(int profileId, int presetId) =>
-      _dbHelper.removeActivePlan(profileId, presetId);
-
-  Future<String?> getAppState(String key) => _dbHelper.getAppState(key);
-
-  Future<void> setAppState(String key, String? value) =>
-      _dbHelper.setAppState(key, value);
-  Future<List<GymProfile>> fetchAllProfiles() => _dbHelper.fetchAllProfiles();
-  Future<int> updateProfile(GymProfile profile) =>
-      _dbHelper.updateProfile(profile);
-  Future<int> deleteProfile(int profileId) =>
-      _dbHelper.deleteProfile(profileId);
-  Future<void> addEquipmentToProfile(int profileId, int equipmentId) =>
-      _dbHelper.addEquipmentToProfile(profileId, equipmentId);
-  Future<void> removeEquipmentFromProfile(int profileId, int equipmentId) =>
-      _dbHelper.removeEquipmentFromProfile(profileId, equipmentId);
-  Future<List<Map<String, dynamic>>> fetchEquipmentForProfile(int profileId) =>
-      _dbHelper.fetchEquipmentForProfile(profileId);
-
-  // ─── PRESETS: Definition CRUD ─────────────────────────────
-
-  Future<int> createPreset(
-    String name, {
-    int? profileId,
-    bool isDraft = false,
-  }) => _dbHelper.createPreset(name, profileId: profileId, isDraft: isDraft);
-
-  Future<int> createPresetAtomic({
-    required String name,
-    required int? profileId,
-    required List<WorkoutExerciseWrite> exercises,
-    PresetAutoSettingsWrite? autoSettings,
-    bool activate = false,
-    bool uniqueName = false,
-    bool isDraft = false,
-  }) => _dbHelper.createPresetAtomic(
-    name: name,
-    profileId: profileId,
-    exercises: exercises,
-    autoSettings: autoSettings,
-    activate: activate,
-    uniqueName: uniqueName,
-    isDraft: isDraft,
-  );
-
-  Future<void> replacePresetAtomic({
-    required int presetId,
-    required String? name,
-    required List<WorkoutExerciseWrite> exercises,
-    PresetAutoSettingsWrite? autoSettings,
-    bool publishDraft = false,
-  }) => _dbHelper.replacePresetAtomic(
-    presetId: presetId,
-    name: name,
-    exercises: exercises,
-    autoSettings: autoSettings,
-    publishDraft: publishDraft,
-  );
-
-  Future<Map<String, dynamic>?> fetchDraftPresetForProfile(int profileId) =>
-      _dbHelper.fetchDraftPresetForProfile(profileId);
-
-  Future<void> deleteDraftPresetsForProfile(int profileId) =>
-      _dbHelper.deleteDraftPresetsForProfile(profileId);
-
-  Future<void> savePresetAutoConfigurationAtomic({
-    required int presetId,
-    required PresetAutoConfigurationWrite configuration,
-  }) => _dbHelper.savePresetAutoConfigurationAtomic(
-    presetId: presetId,
-    configuration: configuration,
-  );
-
-  Future<int> findOrCreatePreset(String name, {int? profileId}) =>
-      _dbHelper.findOrCreatePreset(name, profileId: profileId);
-
-  Future<List<Map<String, dynamic>>> fetchAllPresetsRaw({int? profileId}) =>
-      _dbHelper.fetchAllPresetsRaw(profileId: profileId);
-
-  Future<List<Map<String, dynamic>>> fetchPresetSummariesRaw({
-    int? profileId,
-  }) => _dbHelper.fetchPresetSummariesRaw(profileId: profileId);
-
-  Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw({
-    required List<int> presetIds,
-  }) => _dbHelper.fetchPresetFocusSetCountsRaw(presetIds: presetIds);
-
-  Future<PresetDefinition?> fetchPresetById(int presetId) =>
-      _dbHelper.fetchPresetById(presetId);
-
-  Future<void> updatePresetName(int presetId, String name) =>
-      _dbHelper.updatePresetName(presetId, name);
-
-  Future<void> deletePreset(int presetId) => _dbHelper.deletePreset(presetId);
-
-  // ─── PRESETS: Exercise CRUD ───────────────────────────────
-
-  Future<int> addExerciseToPreset(
-    int presetId,
-    int? exerciseDefId,
-    String type,
-    int orderIndex,
-  ) => _dbHelper.addExerciseToPreset(presetId, exerciseDefId, type, orderIndex);
-
-  Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) =>
-      _dbHelper.fetchPresetExercises(presetId);
-
-  Future<void> deletePresetExercises(int presetId) =>
-      _dbHelper.deletePresetExercises(presetId);
-
-  // ─── PRESETS: Detail CRUD ─────────────────────────────────
-
-  Future<void> savePresetWeightSets(
-    int presetExerciseId,
-    List<ExerciseSet> parents,
-    Map<int, List<ExerciseSet>> children,
-  ) => _dbHelper.savePresetWeightSets(presetExerciseId, parents, children);
-
-  Future<List<Map<String, dynamic>>> fetchPresetSets(int presetExerciseId) =>
-      _dbHelper.fetchPresetSets(presetExerciseId);
-
-  Future<void> savePresetCardio(
-    int presetExerciseId,
-    String cardioName,
-    String? note,
-    int plannedMinutes,
-    int elapsedSeconds,
-  ) => _dbHelper.savePresetCardio(
-    presetExerciseId,
-    cardioName,
-    note,
-    plannedMinutes,
-    elapsedSeconds,
-  );
-
-  Future<Map<String, dynamic>?> fetchPresetCardio(int presetExerciseId) =>
-      _dbHelper.fetchPresetCardio(presetExerciseId);
-
-  Future<void> savePresetStretch(
-    int presetExerciseId,
-    List<Map<String, dynamic>> items,
-  ) => _dbHelper.savePresetStretch(presetExerciseId, items);
-
-  Future<List<Map<String, dynamic>>> fetchPresetStretchItems(
-    int presetExerciseId,
-  ) => _dbHelper.fetchPresetStretchItems(presetExerciseId);
-
-  // ─── AUTOPRESET SETTINGS ───────────────────────────────────────────────
-
-  Future<Map<String, dynamic>?> fetchPresetAutoSettings(int presetId) =>
-      _dbHelper.fetchPresetAutoSettings(presetId);
-
-  Future<void> upsertPresetAutoSettings({
-    required int presetId,
-    required bool isAutomatic,
-    required double globalIncrement,
-    required bool skipFirstSet,
-    required bool weightCheck,
-    required bool repCheck,
-    required bool volumeCheck,
-    required bool adjustAllSets,
-    required bool useManualSelect,
-    String? manualSelectionJson,
-    String? successCountMode,
-  }) => _dbHelper.upsertPresetAutoSettings(
-    presetId: presetId,
-    isAutomatic: isAutomatic,
-    globalIncrement: globalIncrement,
-    skipFirstSet: skipFirstSet,
-    weightCheck: weightCheck,
-    repCheck: repCheck,
-    volumeCheck: volumeCheck,
-    adjustAllSets: adjustAllSets,
-    useManualSelect: useManualSelect,
-    manualSelectionJson: manualSelectionJson,
-    successCountMode: successCountMode,
-  );
-
-  Future<void> deletePresetAutoSettings(int presetId) =>
-      _dbHelper.deletePresetAutoSettings(presetId);
-
-  // ─── PER-EXERCISE OVERRIDES ───────────────────────────────────────────
-
-  Future<Map<String, dynamic>?> fetchPresetExerciseAuto(int presetExerciseId) =>
-      _dbHelper.fetchPresetExerciseAuto(presetExerciseId);
-
-  Future<void> upsertPresetExerciseAuto({
-    required int presetExerciseId,
-    double? incrementAmount,
-    required int lastSetIndex,
-    String? lastNode,
-  }) => _dbHelper.upsertPresetExerciseAuto(
-    presetExerciseId: presetExerciseId,
-    incrementAmount: incrementAmount,
-    lastSetIndex: lastSetIndex,
-    lastNode: lastNode,
-  );
-
-  Future<void> deletePresetExerciseAuto(int presetExerciseId) =>
-      _dbHelper.deletePresetExerciseAuto(presetExerciseId);
-
-  // ─── PER-SET OVERRIDES ─────────────────────────────────────────────────
-
-  Future<Map<String, dynamic>?> fetchPresetSetAuto(int presetSetId) =>
-      _dbHelper.fetchPresetSetAuto(presetSetId);
-
-  Future<void> upsertPresetSetAuto({
-    required int presetSetId,
-    double? incrementAmount,
-  }) => _dbHelper.upsertPresetSetAuto(
-    presetSetId: presetSetId,
-    incrementAmount: incrementAmount,
-  );
-
-  Future<void> deletePresetSetAuto(int presetSetId) =>
-      _dbHelper.deletePresetSetAuto(presetSetId);
-
-  Future<void> updatePresetSetWeight(int presetSetId, double weight) =>
-      _dbHelper.updatePresetSetWeight(presetSetId, weight);
-
-  Future<void> updatePresetSetReps(int presetSetId, int reps) =>
-      _dbHelper.updatePresetSetReps(presetSetId, reps);
-
-  Future<int> addPresetSet({
-    required int presetExerciseId,
-    required double weight,
-    required int reps,
-    required int orderIndex,
-    int? parentSetId,
-  }) => _dbHelper.addPresetSet(
-    presetExerciseId: presetExerciseId,
-    weight: weight,
-    reps: reps,
-    orderIndex: orderIndex,
-    parentSetId: parentSetId,
-  );
-
-  Future<int> deletePresetSet(int presetSetId) =>
-      _dbHelper.deletePresetSet(presetSetId);
-
-  Future<void> applyPresetProgressionBatch(
-    PresetProgressionBatch progression,
-  ) => _dbHelper.applyPresetProgressionBatch(progression);
-
-  Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() =>
-      _dbHelper.loadPendingWorkoutProgressions();
-
-  Future<void> recordPendingWorkoutProgressionFailure(int sessionId) =>
-      _dbHelper.recordPendingWorkoutProgressionFailure(sessionId);
-
-  Future<void> completePendingWorkoutProgression({
-    required int sessionId,
-    required PresetProgressionBatch progression,
-  }) => _dbHelper.completePendingWorkoutProgression(
-    sessionId: sessionId,
-    progression: progression,
-  );
-
-  /// Flow‐chart JSON for a preset.
-  Future<FlowDefinition> fetchFlowDefinition(int presetId) async {
-    final jsonStr = await _dbHelper.fetchFlowDefinition(presetId);
-    return FlowDefinition.fromJson(jsonStr);
-  }
-
-  Future<void> upsertFlowDefinition(int presetId, FlowDefinition def) =>
-      _dbHelper.upsertFlowDefinition(presetId, def.toJson());
-
-  Future<List<FlowMethod>> fetchFlowMethods(int presetId) async {
-    final rows = await _dbHelper.fetchFlowMethods(presetId);
-    return _flowMethodsFromRows(rows);
-  }
-
-  Future<FlowMethod> upsertFlowMethod({
-    required int presetId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-  }) async {
-    final id = await _dbHelper.upsertFlowMethod(
-      presetId: presetId,
-      name: name,
-      type: type.toShortString(),
-      params: params,
-    );
-    return _flowMethodFromValues(
-      id: id,
-      presetId: presetId,
-      name: name,
-      type: type,
-      params: params,
-    );
-  }
-
-  Future<void> deleteFlowMethod(int methodId) =>
-      _dbHelper.deleteFlowMethod(methodId);
-
-  Future<FlowMethod> saveFlowMethodAtomic({
-    required int presetId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-    int? previousMethodId,
-    String? previousName,
-  }) async {
-    if (previousName == null || previousName == name) {
-      return upsertFlowMethod(
-        presetId: presetId,
-        name: name,
-        type: type,
-        params: params,
-      );
-    }
-    final id = await _dbHelper.saveFlowMethodAtomic(
-      presetId: presetId,
-      name: name,
-      type: type.toShortString(),
-      params: params,
-      previousMethodId: previousMethodId,
-      previousName: previousName,
-    );
-    return _flowMethodFromValues(
-      id: id,
-      presetId: presetId,
-      name: name,
-      type: type,
-      params: params,
-    );
-  }
-
-  Future<bool> getUseManualBodyparts(int defId) =>
-      _dbHelper.getUseManualBodyparts(defId);
   Future<void> setUseManualBodyparts(int defId, bool value) async {
     await _dbHelper.setUseManualBodyparts(defId, value);
     clearExerciseAnalysisCacheFor(defId);
   }
 
-  Future<bool> getUseManualMuscles(int defId) =>
-      _dbHelper.getUseManualMuscles(defId);
   Future<void> setUseManualMuscles(int defId, bool value) async {
     await _dbHelper.setUseManualMuscles(defId, value);
     clearExerciseAnalysisCacheFor(defId);
   }
 
-  Future<bool> getMultiplyByRating(int defId) =>
-      _dbHelper.getMultiplyByRating(defId);
   Future<void> setMultiplyByRating(int defId, bool enabled) async {
     await _dbHelper.setMultiplyByRating(defId, enabled);
     clearExerciseAnalysisCacheFor(defId);
   }
 
-  // ─── FLOW‐CHART DEFAULTS WRAPPERS ─────────────────────────────────────
-
-  Future<String> fetchDefaultFlow(String scope, {int? profileId}) =>
-      _dbHelper.fetchDefaultFlow(scope, profileId: profileId);
-
-  Future<void> upsertDefaultFlow(
-    String scope, {
-    int? profileId,
-    required String flowJson,
-  }) => _dbHelper.upsertDefaultFlow(
-    scope,
-    profileId: profileId,
-    flowJson: flowJson,
-  );
-
-  Future<void> deleteDefaultFlow(String scope, {int? profileId}) =>
-      _dbHelper.deleteDefaultFlow(scope, profileId: profileId);
-
-  Future<List<FlowMethod>> fetchDefaultFlowMethods(
-    String scope, {
-    int? profileId,
-  }) async {
-    final rows = await _dbHelper.fetchDefaultFlowMethods(
-      scope,
-      profileId: profileId,
-    );
-    return _defaultFlowMethodsFromRows(rows, profileId: profileId);
-  }
-
-  /// Upsert one default flow‐method and return its real id.
-  Future<FlowMethod> upsertDefaultFlowMethod({
-    required String scope,
-    int? profileId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-  }) async {
-    final id = await _dbHelper.upsertDefaultFlowMethod(
-      scope,
-      profileId: profileId,
-      name: name,
-      type: type.toShortString(),
-      params: params,
-    );
-    return FlowMethod(
-      id: id, // ✅ real row id
-      // this model uses `presetId`; for defaults we stash the profileId or -1
-      presetId: profileId ?? -1,
-      name: name,
-      type: type,
-      params: params,
-    );
-  }
-
-  /// Copies a new app-wide rule into existing profile defaults. Existing
-  /// profile rules with the same name stay untouched.
-  Future<int> copyAppDefaultRuleToExistingProfiles({
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-  }) => _dbHelper.copyAppDefaultRuleToExistingProfiles(
-    name: name,
-    type: type.toShortString(),
-    params: params,
-  );
-
-  /// Copies a new profile-default rule into that profile's existing plans.
-  /// Existing plan rules with the same name stay untouched.
-  Future<int> copyProfileDefaultRuleToExistingPlans({
-    required int profileId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-  }) => _dbHelper.copyProfileDefaultRuleToExistingPlans(
-    profileId: profileId,
-    name: name,
-    type: type.toShortString(),
-    params: params,
-  );
-
-  List<FlowMethod> _flowMethodsFromRows(List<Map<String, dynamic>> rows) {
-    return rows.map(FlowMethod.fromMap).toList();
-  }
-
-  List<FlowMethod> _defaultFlowMethodsFromRows(
-    List<Map<String, dynamic>> rows, {
-    int? profileId,
-  }) {
-    return rows.map((row) {
-      return FlowMethod(
-        id: (row['id'] as int?) ?? row.hashCode,
-        presetId: profileId ?? -1,
-        name: row['name'] as String,
-        type: MethodTypeX.fromString(row['type'] as String),
-        params: _decodeFlowMethodParams(row['params']),
-      );
-    }).toList();
-  }
-
-  Map<String, dynamic> _decodeFlowMethodParams(Object? rawParams) {
-    if (rawParams is Map<String, dynamic>) {
-      return rawParams;
-    }
-    if (rawParams is String && rawParams.trim().isNotEmpty) {
-      return jsonDecode(rawParams) as Map<String, dynamic>;
-    }
-    return <String, dynamic>{};
-  }
-
-  FlowMethod _flowMethodFromValues({
-    required int id,
-    required int presetId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-  }) {
-    return FlowMethod(
-      id: id,
-      presetId: presetId,
-      name: name,
-      type: type,
-      params: params,
-    );
-  }
-
-  Future<void> deleteDefaultFlowMethod({
-    required String scope,
-    int? profileId,
-    required String name,
-  }) => _dbHelper.deleteDefaultFlowMethod(
-    scope,
-    profileId: profileId,
-    name: name,
-  );
-
-  Future<FlowMethod> saveDefaultFlowMethodAtomic({
-    required String scope,
-    int? profileId,
-    required String name,
-    required MethodType type,
-    required Map<String, dynamic> params,
-    String? previousName,
-  }) async {
-    if (previousName == null || previousName == name) {
-      return upsertDefaultFlowMethod(
-        scope: scope,
-        profileId: profileId,
-        name: name,
-        type: type,
-        params: params,
-      );
-    }
-    final id = await _dbHelper.saveDefaultFlowMethodAtomic(
-      scope,
-      profileId: profileId,
-      name: name,
-      type: type.toShortString(),
-      params: params,
-      previousName: previousName,
-    );
-    return FlowMethod(
-      id: id,
-      presetId: profileId ?? -1,
-      name: name,
-      type: type,
-      params: params,
-    );
-  }
-
-  Future<void> renameFlowMethodReferences({
-    required int presetId,
-    required String oldName,
-    required String newName,
-  }) => _dbHelper.renameFlowMethodReferences(
-    presetId: presetId,
-    oldName: oldName,
-    newName: newName,
-  );
-
-  Future<void> deleteFlowMethodAndReferences(FlowMethod method) =>
-      _dbHelper.deleteFlowMethodAndReferences(
-        presetId: method.presetId,
-        methodId: method.id,
-        methodName: method.name,
-      );
-
-  Future<void> renameDefaultFlowMethodReferences({
-    required String scope,
-    int? profileId,
-    required String oldName,
-    required String newName,
-  }) => _dbHelper.renameDefaultFlowMethodReferences(
-    scope,
-    profileId: profileId,
-    oldName: oldName,
-    newName: newName,
-  );
-
-  Future<void> deleteDefaultFlowMethodAndReferences({
-    required String scope,
-    int? profileId,
-    required String name,
-  }) => _dbHelper.deleteDefaultFlowMethodAndReferences(
-    scope,
-    profileId: profileId,
-    name: name,
-  );
-
-  Future<FlowDefinition> fetchDefaultFlowDefinition(
-    String scope, {
-    int? profileId,
-  }) => _dbHelper.fetchDefaultFlowDefinition(scope, profileId: profileId);
-
-  // ─── Personal info ─────────────────────────────────────
-
-  Future<PersonalInfo?> fetchPersonalInfo() => _dbHelper.getPersonalInfo();
-  Future<void> savePersonalInfo(PersonalInfo info) =>
-      _dbHelper.upsertPersonalInfo(info);
-
-  Future<void> savePersonalInfoWithBodyWeight({
-    required PersonalInfo info,
-    double? bodyWeightValue,
-    required WeightUnit bodyWeightUnit,
-    String? measurementNote,
-  }) => _dbHelper.savePersonalInfoWithBodyWeight(
-    info: info,
-    bodyWeightValue: bodyWeightValue,
-    bodyWeightUnit: bodyWeightUnit,
-    measurementNote: measurementNote,
-  );
-
-  // ─── NUTRITION ──────────────────────────────────────────────────────────
-
   // Day view
-  Future<DayTotals> getDayTotals(int profileId, DateTime date) =>
-      _dbHelper.getDayTotals(profileId, date);
-  Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) =>
-      _dbHelper.getActiveGoals(profileId, date);
-  Future<List<DiaryEntry>> getDiaryEntriesForDate(
-    int profileId,
-    DateTime date,
-  ) => _dbHelper.getDiaryEntriesForDate(profileId, date);
-
-  Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
-    int profileId,
-    DateTime day,
-  ) async => _dbHelper.getDiaryEntriesWithItemsForDate(profileId, day);
 
   // Logging
-  Future<int> addDiaryFood({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int foodId,
-    int? portionId,
-    double quantity = 1.0,
-    double? gramsOverride,
-    double? loggedGrams,
-    DateTime? loggedAt,
-    String? notes,
-  }) => _dbHelper.addDiaryFood(
-    profileId: profileId,
-    date: date,
-    mealType: mealType,
-    foodId: foodId,
-    portionId: portionId,
-    quantity: quantity,
-    gramsOverride: gramsOverride,
-    loggedGrams: loggedGrams,
-    loggedAt: loggedAt,
-    notes: notes,
-  );
-
-  Future<int> addDiaryRecipe({
-    required int profileId,
-    required DateTime date,
-    required MealType mealType,
-    required int recipeId,
-    double quantity = 1.0,
-    DateTime? loggedAt,
-    String? notes,
-  }) => _dbHelper.addDiaryRecipe(
-    profileId: profileId,
-    date: date,
-    mealType: mealType,
-    recipeId: recipeId,
-    quantity: quantity,
-    loggedAt: loggedAt,
-    notes: notes,
-  );
-
-  Future<void> updateDiaryEntry(DiaryEntry e) => _dbHelper.updateDiaryEntry(e);
-  Future<void> deleteDiaryEntry(
-    int id, {
-    required int profileId,
-    required DateTime date,
-  }) => _dbHelper.deleteDiaryEntry(id, profileId: profileId, date: date);
 
   // Foods & portions
-  Future<int> upsertFood(Food f) => _dbHelper.upsertFood(f);
-  Future<Food?> getFood(int id) => foodCatalog.getFood(id);
-  Future<List<Food>> searchFoods(String query, {int limit = 50}) =>
-      foodCatalog.searchFoods(query, limit: limit);
-
-  Future<int> upsertFoodPortion(FoodPortion p) =>
-      _dbHelper.upsertFoodPortion(p);
-  Future<List<FoodPortion>> getPortionsForFood(int foodId) =>
-      foodCatalog.getPortionsForFood(foodId);
-  Future<void> setDefaultPortion(int foodId, int portionId) =>
-      _dbHelper.setDefaultPortion(foodId, portionId);
-
-  Future<void> upsertFoodNutrients(int foodId, List<FoodNutrient> rows) =>
-      _dbHelper.upsertFoodNutrients(foodId, rows);
-  Future<Map<int, double>> getFoodNutrientsPer100g(int foodId) =>
-      _dbHelper.getFoodNutrientsPer100g(foodId);
-  Future<Map<String, double>> getFoodNutrientsPer100gByCode(int foodId) =>
-      _dbHelper.getFoodNutrientsPer100gByCode(foodId);
 
   // Recipes
-  Future<int> createOrUpdateRecipe(Recipe r, List<RecipeIngredient> ings) =>
-      _dbHelper.createOrUpdateRecipe(r, ings);
-  Future<Recipe?> getRecipe(int id) => _dbHelper.getRecipe(id);
-  Future<List<RecipeIngredient>> getRecipeIngredients(int recipeId) =>
-      _dbHelper.getRecipeIngredients(recipeId);
 
   // Goals & cache
-  Future<void> setGoals(NutritionGoal goal) => _dbHelper.setGoals(goal);
-  Future<void> recalcDayTotals(int profileId, DateTime date) =>
-      _dbHelper.recalcDayTotals(profileId, date);
-
-  Future<int> createCustomFood({required String name, String? brand}) =>
-      _dbHelper.createCustomFood(name: name, brand: brand);
-
-  Future<void> savePer100gByCode(
-    int foodId,
-    Map<String, double> codeToAmount,
-  ) => _dbHelper.savePer100gByCode(foodId, codeToAmount);
-
-  Future<void> savePer100gFromLabelPayload(
-    int foodId,
-    Map<String, dynamic> payload,
-  ) => _dbHelper.savePer100gFromLabelPayload(foodId, payload);
-
-  /// Returns a per-100g macro map using UI keys:
-  ///   'PROTEIN_G', 'CARB_G', 'FAT_G', 'KCAL'
-  Future<Map<String, double>> getMacroPer100gLegacySafe(int foodId) =>
-      foodCatalog.getMacroPer100gLegacySafe(foodId);
-
-  Future<void> saveExtendedPer100gFromPayload(
-    int foodId,
-    Map<String, dynamic> payload,
-  ) => _dbHelper.saveExtendedPer100gFromPayload(foodId, payload);
-
-  Future<int> addPortion(
-    int foodId, {
-    required String measureName,
-    double? gramWeight,
-    double? mlVolume,
-    bool isDefault = false,
-    String? listKind,
-    int? sortOrder,
-    double? amount,
-    String? unit,
-    String? label,
-  }) => _dbHelper.addPortion(
-    foodId,
-    measureName: measureName,
-    gramWeight: gramWeight,
-    mlVolume: mlVolume,
-    isDefault: isDefault,
-    listKind: listKind,
-    sortOrder: sortOrder,
-    amount: amount,
-    unit: unit,
-    label: label,
-  );
-
-  Future<void> replacePortions(int foodId, List<FoodPortion> portions) =>
-      _dbHelper.replacePortions(foodId, portions);
-
-  Future<void> updateFoodBasics(int id, {String? name, String? brand}) =>
-      _dbHelper.updateFoodBasics(id, name: name, brand: brand);
-
-  Future<void> updateFoodFromCustomizationPayload(
-    Map<String, dynamic> payload,
-  ) => _dbHelper.updateFoodFromCustomizationPayload(payload);
-
-  Future<int> createFoodFromCustomizationPayload(
-    Map<String, dynamic> payload,
-  ) => _dbHelper.createFoodFromCustomizationPayload(payload);
-
-  Future<Food?> getFoodByBarcode(String code) =>
-      foodCatalog.getFoodByBarcode(code);
-  Future<void> addBarcode(int foodId, String code) =>
-      _dbHelper.addBarcode(foodId, code);
-
-  Future<int> upsertFoodWithKeys({
-    int? id,
-    required String name,
-    String? brandName,
-    String? sourceName,
-    String? categoryName,
-    List<String> barcodes = const [],
-    double? densityGPerMl,
-    bool isCustom = false,
-    String? dataSource,
-    String? dataSourceId,
-  }) => _dbHelper.upsertFoodWithKeys(
-    id: id,
-    name: name,
-    brandName: brandName,
-    sourceName: sourceName,
-    categoryName: categoryName,
-    barcodes: barcodes,
-    densityGPerMl: densityGPerMl,
-    isCustom: isCustom,
-    dataSource: dataSource,
-    dataSourceId: dataSourceId,
-  );
-
-  Future<Map<String, double>> calcForPortion({
-    required int foodId,
-    required int portionId,
-    double quantity = 1.0,
-  }) => foodCatalog.calcForPortion(
-    foodId: foodId,
-    portionId: portionId,
-    quantity: quantity,
-  );
 
   // Diary (range)
-  Future<List<DiaryEntry>> getDiaryEntriesBetween(
-    int profileId,
-    DateTime start,
-    DateTime end, {
-    MealType? mealType,
-    int limit = 1000,
-  }) => _dbHelper.getDiaryEntriesBetween(
-    profileId,
-    start,
-    end,
-    mealType: mealType,
-    limit: limit,
-  );
 
   // Day micro aggregation
-  Future<Map<String, double>> getDayMicros(
-    int profileId,
-    DateTime date,
-    List<String> codes,
-  ) => _dbHelper.getDayMicros(profileId, date, codes);
 
   // Favorites
-  Future<void> addFavorite(int profileId, int foodId) =>
-      _dbHelper.addFavorite(profileId, foodId);
-  Future<void> removeFavorite(int profileId, int foodId) =>
-      _dbHelper.removeFavorite(profileId, foodId);
-  Future<List<Food>> listFavorites(int profileId, {int limit = 100}) =>
-      _dbHelper.listFavorites(profileId, limit: limit);
 
   // Recents
-  Future<List<Food>> getRecentFoods(int profileId, {int limit = 20}) =>
-      _dbHelper.getRecentFoods(profileId, limit: limit);
-  Future<List<Recipe>> getRecentRecipes(int profileId, {int limit = 20}) =>
-      _dbHelper.getRecentRecipes(profileId, limit: limit);
 
   // Tags
-  Future<void> addDiaryTag(int entryId, String tag) =>
-      _dbHelper.addDiaryTag(entryId, tag);
-  Future<void> removeDiaryTag(int entryId, String tag) =>
-      _dbHelper.removeDiaryTag(entryId, tag);
-  Future<List<String>> getTagsForEntry(int entryId) =>
-      _dbHelper.getTagsForEntry(entryId);
-  Future<List<DiaryEntry>> getEntriesByTag({
-    required int profileId,
-    required String tag,
-    DateTime? start,
-    DateTime? end,
-    int limit = 200,
-  }) => _dbHelper.getEntriesByTag(
-    profileId: profileId,
-    tag: tag,
-    start: start,
-    end: end,
-    limit: limit,
-  );
 
   // Recipe cache reads
-  Future<Map<String, double>> getRecipePer100gByCode(int recipeId) =>
-      _dbHelper.getRecipePer100gByCode(recipeId);
-  Future<void> rebuildRecipeNutrientCache(int recipeId) =>
-      _dbHelper.rebuildRecipeNutrientCache(recipeId);
 
   // FTS maintenance
-  Future<void> rebuildFoodFts() => _dbHelper.rebuildFoodFts();
 
   // DB lifecycle
-  Future<void> close() => _dbHelper.close();
 
   // Seed core nutrient catalog if the nutrients table is empty.
-  Future<void> seedNutrientsIfEmpty() => _dbHelper.seedNutrientsIfEmpty();
-
-  /// Opens the DB once so first-run copy/migrations happen before UI.
-  /// Optionally runs a quick integrity check.
-  Future<bool> warmUp({bool verify = false}) async {
-    final db = await _dbHelper.database;
-    await Future.wait<void>([
-      ensureExerciseMediaManifestReady(),
-      ensureSharedMediaManifestReady(),
-    ]);
-    await reconcileMediaCache();
-    if (!verify) return true;
-    try {
-      final rows = await db.rawQuery('PRAGMA quick_check');
-      return rows.length == 1 &&
-          rows.single.length == 1 &&
-          rows.single.values.single == 'ok';
-    } catch (_) {
-      return false;
-    }
-  }
 }
