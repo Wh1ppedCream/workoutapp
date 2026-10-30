@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/preference_writer.dart';
+import '../utils/serial_async_queue.dart';
+
 enum AppLanguagePreference {
   system,
   english,
@@ -17,6 +20,8 @@ class LocalePreferenceProvider extends ChangeNotifier {
   AppLanguagePreference _preference = AppLanguagePreference.system;
   bool _loaded = false;
   late final Future<void> ready;
+  bool _disposed = false;
+  final _mutations = SerialAsyncQueue();
 
   LocalePreferenceProvider() {
     ready = _load();
@@ -39,6 +44,7 @@ class LocalePreferenceProvider extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    if (_disposed) return;
     final stored = prefs.getString(preferenceKey);
     _preference = AppLanguagePreference.values.firstWhere(
       (value) => value.name == stored,
@@ -48,13 +54,23 @@ class LocalePreferenceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setPreference(AppLanguagePreference preference) async {
-    if (_preference == preference && _loaded) return;
-    _preference = preference;
-    _loaded = true;
-    notifyListeners();
+  Future<void> setPreference(AppLanguagePreference preference) =>
+      _mutations.run(() async {
+        if (_disposed) return;
+        await ready;
+        if (_disposed) return;
+        if (_preference == preference && _loaded) return;
+        final prefs = await SharedPreferences.getInstance();
+        await writePreferences(prefs, {preferenceKey: preference.name});
+        if (_disposed) return;
+        _preference = preference;
+        _loaded = true;
+        notifyListeners();
+      });
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(preferenceKey, preference.name);
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }

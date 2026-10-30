@@ -121,8 +121,9 @@ class SelectedProfile extends ChangeNotifier {
     final loaded = profileId == null
         ? <Map<String, dynamic>>[]
         : await _repo.fetchEquipmentForProfile(profileId);
-    if (_isCurrent(version) && currentProfile?.id == profileId)
+    if (_isCurrent(version) && currentProfile?.id == profileId) {
       equipment = loaded;
+    }
   }
 
   Future<void> _persistSelection(int version) {

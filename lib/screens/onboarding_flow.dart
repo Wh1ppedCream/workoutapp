@@ -1249,7 +1249,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
               .toList(),
           onChanged: (preference) {
             if (preference == null) return;
-            context.read<LocalePreferenceProvider>().setPreference(preference);
+            _changeLanguage(preference);
           },
         ),
         const SizedBox(height: 8),
@@ -1353,6 +1353,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
         ),
       ],
     );
+  }
+
+  Future<void> _changeLanguage(AppLanguagePreference preference) async {
+    try {
+      await context.read<LocalePreferenceProvider>().setPreference(preference);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_strings.safeFailureSaveTitle),
+          action: SnackBarAction(
+            label: _strings.commonRetry,
+            onPressed: () => _changeLanguage(preference),
+          ),
+        ),
+      );
+    }
   }
 
   void _changeWeightUnit(WeightUnit unit) {

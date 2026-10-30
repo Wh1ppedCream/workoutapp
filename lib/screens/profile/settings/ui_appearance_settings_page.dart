@@ -462,7 +462,9 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             ),
           );
     if (nextUnit == null || !context.mounted) return;
-    await context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit);
+    await _savePreference(
+      () => context.read<UnitPreferenceProvider>().setWeightUnit(nextUnit),
+    );
   }
 
   String _weightUnitLabel(AppLocalizations strings, WeightUnit unit) {
@@ -536,7 +538,23 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             ),
           );
     if (nextLanguage == null || !context.mounted) return;
-    await context.read<LocalePreferenceProvider>().setPreference(nextLanguage);
+    await _savePreference(
+      () =>
+          context.read<LocalePreferenceProvider>().setPreference(nextLanguage),
+    );
+  }
+
+  Future<void> _savePreference(Future<void> Function() change) async {
+    try {
+      await change();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).safeFailureSaveTitle),
+        ),
+      );
+    }
   }
 }
 

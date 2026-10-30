@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/preference_writer.dart';
+import '../utils/serial_async_queue.dart';
+
 const String _compileTimeExperimentalTabs = String.fromEnvironment(
   'TONOS_ENABLE_EXPERIMENTAL_TABS',
 );
@@ -196,10 +199,13 @@ class NavBarConfig extends ChangeNotifier {
   Set<TabItem> _enabled = Set.of(_defaultEnabled);
 
   bool _loaded = false;
+  bool _disposed = false;
+  late final Future<void> ready;
+  final _mutations = SerialAsyncQueue();
 
   NavBarConfig({NavigationBuildPolicy? buildPolicy})
     : _buildPolicy = buildPolicy ?? NavigationBuildPolicy.fromCompileTime() {
-    _load();
+    ready = _load();
   }
 
   final NavigationBuildPolicy _buildPolicy;
@@ -215,6 +221,7 @@ class NavBarConfig extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    if (_disposed) return;
 
     final savedOrder = prefs.getStringList(_keyOrder);
     if (savedOrder != null) {
@@ -251,50 +258,30 @@ class NavBarConfig extends ChangeNotifier {
   Future<void> update({
     required List<TabItem> newOrder,
     required Set<TabItem> newEnabled,
-  }) async {
+  }) => _mutations.run(() async {
+    if (_disposed) return;
+    await ready;
+    if (_disposed) return;
     final availableOrder = _availableTabs(newOrder);
     final unavailableOrder = _order.where((tab) => !_buildPolicy.allows(tab));
     final nextOrder = _completeOrder([...availableOrder, ...unavailableOrder]);
     final nextEnabled = newEnabled.where(_buildPolicy.allows).toSet()
       ..add(TabItem.profile);
-
     final prefs = await SharedPreferences.getInstance();
-    final previousOrder = prefs.getStringList(_keyOrder);
-    final previousEnabled = prefs.getStringList(_keyEnabled);
-    try {
-      final orderSaved = await prefs.setStringList(
-        _keyOrder,
-        nextOrder.map((e) => e.storageKey).toList(),
-      );
-      final enabledSaved = await prefs.setStringList(
-        _keyEnabled,
-        nextEnabled.map((e) => e.storageKey).toList(),
-      );
-      if (!orderSaved || !enabledSaved) {
-        throw StateError('Navigation preferences were not saved');
-      }
-    } catch (_) {
-      // SharedPreferences stores these as separate keys. Restore the previous
-      // snapshot if either write fails; leave the editor dirty for a retry.
-      try {
-        if (previousOrder == null) {
-          await prefs.remove(_keyOrder);
-        } else {
-          await prefs.setStringList(_keyOrder, previousOrder);
-        }
-        if (previousEnabled == null) {
-          await prefs.remove(_keyEnabled);
-        } else {
-          await prefs.setStringList(_keyEnabled, previousEnabled);
-        }
-      } catch (_) {
-        /* The original failure still reaches the editor. */
-      }
-      rethrow;
-    }
+    await writePreferences(prefs, {
+      _keyOrder: nextOrder.map((tab) => tab.storageKey).toList(),
+      _keyEnabled: nextEnabled.map((tab) => tab.storageKey).toList(),
+    });
+    if (_disposed) return;
     _order = nextOrder;
     _enabled = nextEnabled;
     notifyListeners();
+  });
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   List<TabItem> _availableTabs(Iterable<TabItem> tabs) =>

@@ -5,6 +5,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/preference_writer.dart';
+import '../utils/serial_async_queue.dart';
+
 class DashboardConfig extends ChangeNotifier {
   static const _prefsKey = 'dashboard_config';
 
@@ -47,9 +50,12 @@ class DashboardConfig extends ChangeNotifier {
 
   List<String> _widgetOrder = List<String>.from(defaultOrder);
   Set<String> _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
+  late final Future<void> ready;
+  bool _disposed = false;
+  final _mutations = SerialAsyncQueue();
 
   DashboardConfig() {
-    _load();
+    ready = _load();
   }
 
   List<String> get widgetOrder => List<String>.unmodifiable(_widgetOrder);
@@ -60,6 +66,7 @@ class DashboardConfig extends ChangeNotifier {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
+    if (_disposed) return;
     final jsonStr = prefs.getString(_prefsKey);
     if (jsonStr != null) {
       try {
@@ -72,17 +79,20 @@ class DashboardConfig extends ChangeNotifier {
         );
         _widgetOrder = normalized.order;
         _hiddenWidgets = normalized.hidden;
-
-        if (jsonStr != _encode()) {
-          await _save(prefs);
-        }
       } catch (_) {
         _widgetOrder = List<String>.from(defaultOrder);
         _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
       }
+      final layout = _snapshot();
+      if (jsonStr != _encode(layout)) {
+        try {
+          await writePreferences(prefs, {_prefsKey: _encode(layout)});
+        } catch (_) {
+          // Keep the valid loaded layout; the next explicit edit retries saving.
+        }
+      }
     }
-    // else: keep the initial defaults you set in the constructor
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   /// Makes stored layouts safe to use after dashboard sections change.
@@ -120,63 +130,72 @@ class DashboardConfig extends ChangeNotifier {
     return DashboardLayout(order: order, hidden: hidden);
   }
 
-  Future<void> _save([SharedPreferences? preferences]) async {
-    final prefs = preferences ?? await SharedPreferences.getInstance();
-    await prefs.setString(_prefsKey, _encode());
-  }
+  DashboardLayout _snapshot() => DashboardLayout(
+    order: List<String>.of(_widgetOrder),
+    hidden: Set<String>.of(_hiddenWidgets),
+  );
 
-  String _encode() => json.encode(<String, Object>{
-    'order': _widgetOrder,
-    'hidden': _hiddenWidgets.toList()..sort(),
+  String _encode(DashboardLayout layout) => json.encode(<String, Object>{
+    'order': layout.order,
+    'hidden': layout.hidden.toList()..sort(),
   });
 
-  Future<void> toggleVisibility(String id) async {
-    if (!isSupported(id)) return;
-    if (_hiddenWidgets.contains(id)) {
-      _hiddenWidgets.remove(id);
-    } else {
-      _hiddenWidgets.add(id);
-    }
-    await _save();
-    notifyListeners();
-  }
+  Future<void> _change(DashboardLayout? Function(DashboardLayout) update) =>
+      _mutations.run(() async {
+        if (_disposed) return;
+        await ready;
+        if (_disposed) return;
+        final next = update(_snapshot());
+        if (next == null) return;
+        final prefs = await SharedPreferences.getInstance();
+        await writePreferences(prefs, {_prefsKey: _encode(next)});
+        if (_disposed) return;
+        _widgetOrder = next.order;
+        _hiddenWidgets = next.hidden;
+        notifyListeners();
+      });
 
-  Future<void> restoreDefaults() async {
-    _widgetOrder = List<String>.from(defaultOrder);
-    _hiddenWidgets = Set<String>.from(defaultHiddenWidgets);
-    await _save();
-    notifyListeners();
-  }
+  Future<void> toggleVisibility(String id) => _change((layout) {
+    if (!isSupported(id)) return null;
+    if (!layout.hidden.remove(id)) layout.hidden.add(id);
+    return layout;
+  });
+
+  Future<void> restoreDefaults() => _change(
+    (_) => DashboardLayout(
+      order: List<String>.from(defaultOrder),
+      hidden: Set<String>.from(defaultHiddenWidgets),
+    ),
+  );
 
   Future<void> reorder(
     int oldVisibleIndex,
     int newVisibleIndex, {
     bool includeHidden = false,
-  }) async {
-    // Existing callers reorder visible sections; the Expressive editor also
-    // keeps hidden sections available in their saved positions.
+  }) => _change((layout) {
     final orderedIds = includeHidden
-        ? List<String>.of(_widgetOrder)
-        : _widgetOrder.where((id) => !_hiddenWidgets.contains(id)).toList();
+        ? List<String>.of(layout.order)
+        : layout.order.where((id) => !layout.hidden.contains(id)).toList();
     if (oldVisibleIndex < 0 ||
         oldVisibleIndex >= orderedIds.length ||
         newVisibleIndex < 0) {
-      return;
+      return null;
     }
-
     final movingId = orderedIds.removeAt(oldVisibleIndex);
-    _widgetOrder.remove(movingId);
-
-    final insertAt = newVisibleIndex.clamp(0, orderedIds.length).toInt();
+    layout.order.remove(movingId);
+    final insertAt = newVisibleIndex.clamp(0, orderedIds.length);
     if (insertAt >= orderedIds.length) {
-      _widgetOrder.add(movingId);
+      layout.order.add(movingId);
     } else {
-      final pivotId = orderedIds[insertAt];
-      _widgetOrder.insert(_widgetOrder.indexOf(pivotId), movingId);
+      layout.order.insert(layout.order.indexOf(orderedIds[insertAt]), movingId);
     }
+    return layout;
+  });
 
-    await _save();
-    notifyListeners();
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
 

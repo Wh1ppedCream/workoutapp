@@ -45,7 +45,22 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _toggleWidget(String id) {
     _arrivingWidgets.add(id);
-    context.read<DashboardConfig>().toggleVisibility(id);
+    _saveLayoutChange(
+      () => context.read<DashboardConfig>().toggleVisibility(id),
+    );
+  }
+
+  Future<void> _saveLayoutChange(Future<void> Function() change) async {
+    try {
+      await change();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).safeFailureSaveTitle),
+        ),
+      );
+    }
   }
 
   void _refreshHistoryWidgets() {
@@ -278,7 +293,7 @@ class _DashboardPageState extends State<DashboardPage> {
           final id = visibleIds[oldIndex];
           _reorderEpochs[id] = (_reorderEpochs[id] ?? 0) + 1;
         }
-        config.reorder(oldIndex, newIndex);
+        _saveLayoutChange(() => config.reorder(oldIndex, newIndex));
       },
       children: [
         for (var i = 0; i < visibleIds.length; i++)
@@ -572,7 +587,9 @@ class _DashboardPageState extends State<DashboardPage> {
             label: Text(strings.dashboardShowHiddenSections),
           ),
           TextButton.icon(
-            onPressed: () => context.read<DashboardConfig>().restoreDefaults(),
+            onPressed: () => _saveLayoutChange(
+              () => context.read<DashboardConfig>().restoreDefaults(),
+            ),
             icon: const Icon(Icons.restart_alt, size: 18),
             label: Text(strings.dashboardReset),
           ),
@@ -622,7 +639,9 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
     );
-    if (confirmed == true && mounted) await config.restoreDefaults();
+    if (confirmed == true && mounted) {
+      await _saveLayoutChange(config.restoreDefaults);
+    }
   }
 
   Widget _buildEmptyDashboard() {
@@ -694,7 +713,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       dashboardSectionDetails(strings, id).description,
                     ),
                     onTap: () {
-                      context.read<DashboardConfig>().toggleVisibility(id);
+                      _saveLayoutChange(
+                        () => context.read<DashboardConfig>().toggleVisibility(
+                          id,
+                        ),
+                      );
                       Navigator.of(context).pop();
                     },
                   ),
