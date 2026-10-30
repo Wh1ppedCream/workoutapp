@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../tools/theme_style_inventory.dart';
+import '../support/dart_source_library.dart';
 
 void main() {
   test('Exercise Detail and Preset Generation styles have exact owners', () {
@@ -56,7 +57,7 @@ void _expectMigratedRule({
   required Map<String, int> kindCounts,
 }) {
   final rule = inventory.pathRules.singleWhere((rule) => rule.id == id);
-  expect(rule.pattern, path);
+  expect(rule.pattern, sourceLibraryPattern(path));
   expect(rule.classification, 'structural_theme');
   expect(rule.status, 'migrated');
   expect(rule.kinds, unorderedEquals(kindCounts.keys));
@@ -81,7 +82,9 @@ void _expectMigratedRule({
   expect(findings.map((finding) => finding.status), everyElement('migrated'));
   expect(
     report.findings.where(
-      (finding) => finding.file == path && finding.status == 'pending',
+      (finding) =>
+          canonicalDartLibraryPath(finding.file) == path &&
+          finding.status == 'pending',
     ),
     isEmpty,
     reason: 'New style kinds in $path must receive explicit review.',

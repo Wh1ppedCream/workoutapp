@@ -1188,7 +1188,7 @@
     },
     {
       "id": "health-trends-recipes",
-      "pattern": "lib/widgets/health_trends_section.dart",
+      "pattern": "lib/widgets/health_trends**.dart",
       "kinds": [
         "color",
         "color_transform",
@@ -1204,7 +1204,7 @@
     },
     {
       "id": "workout-metric-chart-recipes",
-      "pattern": "lib/widgets/workout_metric_chart_card.dart",
+      "pattern": "lib/widgets/workout_metric_chart**.dart",
       "kinds": [
         "color",
         "color_transform",
@@ -1271,7 +1271,7 @@
     },
     {
       "id": "exercise-progress-chart-recipes",
-      "pattern": "lib/widgets/exercise_progress_section.dart",
+      "pattern": "lib/widgets/exercise_progress**.dart",
       "kinds": [
         "color",
         "color_transform",
@@ -1635,7 +1635,7 @@
     },
     {
       "id": "exercise-detail-sheet-theme-ownership",
-      "pattern": "lib/widgets/exercise_detail_sheet.dart",
+      "pattern": "lib/widgets/exercise_detail**.dart",
       "kinds": [
         "color",
         "color_transform",
@@ -1723,7 +1723,7 @@
       "patterns": [
         "lib/screens/exercise/exercise_catalog_page.dart",
         "lib/widgets/exercise_card.dart",
-        "lib/widgets/exercise_detail_sheet.dart",
+        "lib/widgets/exercise_detail**.dart",
         "lib/widgets/exercise_media_thumbnail.dart"
       ],
       "target": "Tonos surfaces/fields/sheets plus media and data-visualization contracts",
@@ -1735,9 +1735,9 @@
       "patterns": [
         "lib/widgets/dashboard_sections.dart",
         "lib/widgets/dashboard_section_palette.dart",
-        "lib/widgets/exercise_progress_section.dart",
-        "lib/widgets/health_trends_section.dart",
-        "lib/widgets/workout_metric_chart_card.dart",
+        "lib/widgets/exercise_progress**.dart",
+        "lib/widgets/health_trends**.dart",
+        "lib/widgets/workout_metric_chart**.dart",
         "lib/widgets/workout_history_calendar.dart"
       ],
       "target": "Tonos surfaces plus AppDataVisualizationTokens and semantic measurement roles",

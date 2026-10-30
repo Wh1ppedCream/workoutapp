@@ -42,5 +42,13 @@ String sourceLibraryPattern(String canonical) => switch (canonical) {
   'lib/screens/onboarding_flow.dart' => 'lib/screens/onboarding**.dart',
   'lib/screens/profile/settings/exercise_editor_screen.dart' =>
     'lib/screens/profile/settings/exercise_editor**.dart',
+  'lib/widgets/health_trends_section.dart' =>
+    'lib/widgets/health_trends**.dart',
+  'lib/widgets/exercise_progress_section.dart' =>
+    'lib/widgets/exercise_progress**.dart',
+  'lib/widgets/workout_metric_chart_card.dart' =>
+    'lib/widgets/workout_metric_chart**.dart',
+  'lib/widgets/exercise_detail_sheet.dart' =>
+    'lib/widgets/exercise_detail**.dart',
   _ => canonical,
 };
