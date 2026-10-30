@@ -398,32 +398,4 @@ class AppRepository extends _RepositoryDependencies
     await _dbHelper.setMultiplyByRating(defId, enabled);
     clearExerciseAnalysisCacheFor(defId);
   }
-
-  // Day view
-
-  // Logging
-
-  // Foods & portions
-
-  // Recipes
-
-  // Goals & cache
-
-  // Diary (range)
-
-  // Day micro aggregation
-
-  // Favorites
-
-  // Recents
-
-  // Tags
-
-  // Recipe cache reads
-
-  // FTS maintenance
-
-  // DB lifecycle
-
-  // Seed core nutrient catalog if the nutrients table is empty.
 }
