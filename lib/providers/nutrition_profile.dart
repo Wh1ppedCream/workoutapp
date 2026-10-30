@@ -44,6 +44,8 @@ class NutritionProfile extends ChangeNotifier {
 
   // Prevents out-of-order updates when multiple reloads race.
   int _reloadSeq = 0;
+  int _profileVersion = 0;
+  int _favoritesSeq = 0;
 
   // Prevent notifyListeners after dispose()
   bool _disposed = false;
@@ -54,7 +56,7 @@ class NutritionProfile extends ChangeNotifier {
   // Lightweight cache of favorites for snappy UI toggles
   final Set<int> favoriteFoodIds = {};
   // Prevent duplicate favorite ops racing
-  final Set<int> _favoriteOpsInFlight = {};
+  final Set<(int, int)> _favoriteOpsInFlight = {};
 
   // Auto-advance “today” at midnight
   Timer? _midnightTimer;
@@ -107,6 +109,7 @@ class NutritionProfile extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _reloadSeq++; // invalidate any in-flight reloads
+    _favoritesSeq++;
     final bound = _boundSelectedProfile;
     final listener = _selectedProfileListener;
     if (bound != null && listener != null) {
@@ -174,7 +177,10 @@ class NutritionProfile extends ChangeNotifier {
 
   Future<void> _reloadForSelectedProfileChange() async {
     if (_disposed) return;
+    _invalidateProfileReads();
+    final version = _profileVersion;
     if (current == null) {
+      isLoading = false;
       totals = null;
       activeGoal = null;
       _meals = [];
@@ -183,8 +189,19 @@ class NutritionProfile extends ChangeNotifier {
       return;
     }
     await _refreshFavoritesSafe();
-    if (_disposed) return;
+    if (_disposed || version != _profileVersion) return;
     await reloadDay();
+  }
+
+  void _invalidateProfileReads() {
+    _profileVersion++;
+    _reloadSeq++;
+    _favoritesSeq++;
+    favoriteFoodIds.clear();
+    totals = null;
+    activeGoal = null;
+    _meals = [];
+    error = null;
   }
 
   Future<void> _loadProfilesIfNeeded() async {
@@ -253,8 +270,7 @@ class NutritionProfile extends ChangeNotifier {
 
     // If the active profile changed, refresh related state.
     if (current?.id != oldId) {
-      await _refreshFavoritesSafe();
-      await reloadDay();
+      await _reloadForSelectedProfileChange();
     }
   }
 
@@ -262,6 +278,7 @@ class NutritionProfile extends ChangeNotifier {
   /// SQLite database is replaced (for example, after backup import).
   Future<void> reloadFromDatabase() async {
     if (_disposed) return;
+    _invalidateProfileReads();
     _boundProfileSyncFuture = null;
     final bound = _boundSelectedProfile;
     if (bound != null) {
@@ -289,8 +306,7 @@ class NutritionProfile extends ChangeNotifier {
   Future<void> selectProfile(GymProfile profile) async {
     final bound = _boundSelectedProfile;
     if (bound != null) {
-      if (current?.id == profile.id &&
-          bound.currentProfile?.id == profile.id) {
+      if (current?.id == profile.id && bound.currentProfile?.id == profile.id) {
         return;
       }
       await bound.selectProfile(profile);
@@ -302,8 +318,7 @@ class NutritionProfile extends ChangeNotifier {
     }
     if (current?.id == profile.id) return;
     current = profile;
-    await _refreshFavoritesSafe();
-    await reloadDay();
+    await _reloadForSelectedProfileChange();
   }
 
   Future<void> selectProfileById(int profileId) async {
@@ -675,10 +690,19 @@ class NutritionProfile extends ChangeNotifier {
   // ─────────────────────────────────────────────────────────────────────
 
   Future<void> _refreshFavoritesSafe() async {
-    if (profileId == null) return;
+    final requestedProfileId = profileId;
+    final version = _profileVersion;
+    final seq = ++_favoritesSeq;
+    if (_disposed || requestedProfileId == null) return;
     try {
       // Grab a reasonably large page; adjust if you expect more.
-      final favs = await _repo.listFavorites(profileId!, limit: 500);
+      final favs = await _repo.listFavorites(requestedProfileId, limit: 500);
+      if (_disposed ||
+          requestedProfileId != profileId ||
+          version != _profileVersion ||
+          seq != _favoritesSeq) {
+        return;
+      }
       favoriteFoodIds
         ..clear()
         ..addAll(favs.map((f) => f.id!));
@@ -694,9 +718,11 @@ class NutritionProfile extends ChangeNotifier {
   bool isFavorite(int foodId) => favoriteFoodIds.contains(foodId);
 
   Future<void> toggleFavorite(int foodId) async {
-    if (profileId == null) return;
-    if (_favoriteOpsInFlight.contains(foodId)) return;
-    _favoriteOpsInFlight.add(foodId);
+    final requestedProfileId = profileId;
+    final version = _profileVersion;
+    if (_disposed || requestedProfileId == null) return;
+    final operation = (requestedProfileId, foodId);
+    if (!_favoriteOpsInFlight.add(operation)) return;
 
     final wasFav = favoriteFoodIds.contains(foodId);
 
@@ -710,11 +736,16 @@ class NutritionProfile extends ChangeNotifier {
 
     try {
       if (wasFav) {
-        await _repo.removeFavorite(profileId!, foodId);
+        await _repo.removeFavorite(requestedProfileId, foodId);
       } else {
-        await _repo.addFavorite(profileId!, foodId);
+        await _repo.addFavorite(requestedProfileId, foodId);
       }
     } catch (e) {
+      if (_disposed ||
+          requestedProfileId != profileId ||
+          version != _profileVersion) {
+        return;
+      }
       // Roll back
       if (wasFav) {
         favoriteFoodIds.add(foodId);
@@ -724,7 +755,7 @@ class NutritionProfile extends ChangeNotifier {
       error = SafeFailure.classify(e);
       _safeNotify();
     } finally {
-      _favoriteOpsInFlight.remove(foodId);
+      _favoriteOpsInFlight.remove(operation);
     }
   }
 

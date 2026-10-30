@@ -457,31 +457,36 @@ class _TrainPageState extends State<TrainPage> {
       final presetId = generationResult.presetId;
       temporaryPresetId = presetId;
       final preset = PresetSession(presetId, repository: _repo);
-      await preset.ready;
-
-      if (!mounted) return;
-      if (preset.exercises.isEmpty) {
-        await _repo.deletePreset(presetId);
-        temporaryPresetId = null;
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).trainNoEligibleExercises,
-            ),
-          ),
-        );
-        return;
-      }
-
       final workoutExercises = <WorkoutExercise>[];
       final workoutCardTypes = <CardType>[];
-      for (var i = 0; i < preset.exercises.length; i++) {
-        // TODO(cardio/stretch): add cardio and stretch back to generated
-        // sessions after those cards are fixed and updated.
-        if (preset.cardTypes[i] != CardType.weight) continue;
-        workoutExercises.add(cloneWorkoutExercise(preset.exercises[i]));
-        workoutCardTypes.add(preset.cardTypes[i]);
+      try {
+        await preset.ready;
+        preset.requireLoaded();
+
+        if (!mounted) return;
+        if (preset.exercises.isEmpty) {
+          await _repo.deletePreset(presetId);
+          temporaryPresetId = null;
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).trainNoEligibleExercises,
+              ),
+            ),
+          );
+          return;
+        }
+
+        for (var i = 0; i < preset.exercises.length; i++) {
+          // TODO(cardio/stretch): add cardio and stretch back to generated
+          // sessions after those cards are fixed and updated.
+          if (preset.cardTypes[i] != CardType.weight) continue;
+          workoutExercises.add(cloneWorkoutExercise(preset.exercises[i]));
+          workoutCardTypes.add(preset.cardTypes[i]);
+        }
+      } finally {
+        preset.dispose();
       }
 
       final started = await active.startWithExercises(

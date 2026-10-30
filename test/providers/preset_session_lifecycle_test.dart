@@ -7,7 +7,58 @@ import 'package:env_test/services/safe_failure.dart';
 import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/preset_repository_fixture.dart';
+
 void main() {
+  test('failed initial loads reject editing, saving and starting until retry succeeds', () async {
+    final repo = _FailedInitialPresetRepository();
+    final session = PresetSession(1, repository: repo);
+    addTearDown(session.dispose);
+    await session.ready;
+    expect(session.hasLoaded, isFalse);
+    expect(session.isLoading, isFalse);
+    expect(session.requireLoaded, throwsA(isA<SafeFailure>()));
+    expect(
+      () => session.addExercise(
+        WeightExercise(name: 'Unsafe partial edit', equipment: '', sets: []),
+        CardType.weight,
+        defId: 21,
+      ),
+      throwsA(isA<SafeFailure>()),
+    );
+    await expectLater(session.saveChanges(), throwsA(isA<SafeFailure>()));
+    await expectLater(session.startSession(), throwsA(isA<SafeFailure>()));
+    expect(repo.replaceCalls, 0);
+    expect(session.exercises, isEmpty);
+
+    repo.failRead = false;
+    await session.retryLoad();
+    expect(session.hasLoaded, isTrue);
+    expect(session.loadFailure, isNull);
+    expect(session.isLoading, isFalse);
+    await session.saveChanges();
+    expect(repo.replaceCalls, 1);
+  });
+
+  test('editing before initial loading completes cannot cancel the persisted plan load', () async {
+    final repo = _ReloadRacePresetRepository();
+    final gate = Completer<PresetDefinition?>();
+    repo.fetchQueue.add(gate.future);
+    final session = PresetSession(1, repository: repo);
+    addTearDown(session.dispose);
+    expect(session.isLoading, isTrue);
+    expect(session.refresh, throwsA(isA<SafeFailure>()));
+    gate.complete(
+      PresetDefinition(
+        id: 1,
+        name: 'Original plan',
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+    await session.ready;
+    expect(session.hasLoaded, isTrue);
+    expect(session.presetName, 'Original plan');
+  });
   test('skips missing cardio details and unknown types without skewing exercise metadata', () async {
     final repo = _AlignedPresetRepository();
     final session = PresetSession(1, repository: repo);
@@ -160,6 +211,28 @@ void main() {
     expect(session.exercises.single.name, 'Bench Press');
     expect(session.hasChanges, isTrue);
   });
+}
+
+class _FailedInitialPresetRepository extends PresetRepositoryFixture {
+  bool failRead = true;
+  int replaceCalls = 0;
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) {
+    if (failRead) throw TimeoutException('Injected read failure');
+    return super.fetchPresetExercises(presetId);
+  }
+
+  @override
+  Future<void> replacePresetAtomic({
+    required int presetId,
+    required String? name,
+    required List<WorkoutExerciseWrite> exercises,
+    PresetAutoSettingsWrite? autoSettings,
+    bool publishDraft = false,
+  }) async {
+    replaceCalls++;
+  }
 }
 
 class _AlignedPresetRepository extends AppRepository {

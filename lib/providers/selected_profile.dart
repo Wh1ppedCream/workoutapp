@@ -102,9 +102,9 @@ class SelectedProfile extends ChangeNotifier {
 
   /// Toggles equipment assignment for the current profile.
   Future<void> toggleEquipment(int equipmentId) {
+    final version = _selectionVersion;
+    final profileId = currentProfile?.id;
     return _equipmentWrites.run(() async {
-      final version = _selectionVersion;
-      final profileId = currentProfile?.id;
       if (!_isCurrent(version) || profileId == null) return;
       final exists = equipment.any((e) => e['id'] == equipmentId);
       if (exists) {

@@ -10,6 +10,14 @@ const int kDatabaseImportMaxRows = 250000;
 const int kDatabaseImportMaxRowsPerTable = 100000;
 const int kDatabaseImportMaxTextFieldLength = 100000;
 
+/// Authoritative import rows committed, but maintenance or live-state recovery
+/// failed. Callers must reload the new database rather than resume old drafts.
+class DatabaseImportCommittedException implements Exception {
+  const DatabaseImportCommittedException(this.cause);
+
+  final Object cause;
+}
+
 class DatabaseHealthSnapshot {
   const DatabaseHealthSnapshot({
     required this.path,

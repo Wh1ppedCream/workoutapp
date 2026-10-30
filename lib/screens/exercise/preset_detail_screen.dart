@@ -22,6 +22,7 @@ import '../../widgets/add_exercise_fab.dart';
 import '../../widgets/automatic_settings_sheet.dart';
 import '../../widgets/exercise_detail_sheet.dart';
 import '../../widgets/preset_info_card.dart';
+import '../../widgets/safe_error_view.dart';
 import '../../widgets/swap_exercise_sheet.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
@@ -123,8 +124,11 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
 
   Future<void> _syncLoadedPresetName(PresetSession preset) async {
     await preset.ready;
-    if (!mounted || _nameController.text.trim().isNotEmpty) return;
-    _nameController.text = preset.presetName;
+    if (!mounted || !preset.hasLoaded) return;
+    if (_nameController.text.trim().isEmpty) {
+      _nameController.text = preset.presetName;
+    }
+    _queueTutorial();
   }
 
   Future<void> _loadOnboardingPlanGuideAvailability() async {
@@ -197,6 +201,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   void _queueTutorial() {
     if (widget.showOnboardingManualPlanTutorial) return;
     if (!mounted || _tutorialQueued) return;
+    if (!context.read<PresetSession>().hasLoaded) return;
     _tutorialQueued = true;
     unawaited(_showTutorial());
   }
@@ -673,12 +678,52 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
     );
   }
 
+  Future<void> _handlePopInvoked(
+    bool didPop,
+    PresetDetailResult? result,
+  ) async {
+    if (didPop) return;
+    final nav = Navigator.of(context);
+    final shouldPop = await _onWillPop();
+    if (!mounted) return;
+    if (shouldPop) {
+      nav.pop(widget.closeAfterSave ? PresetDetailResult.discarded : null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final preset = context.watch<PresetSession>();
     final strings = AppLocalizations.of(context);
     final semantic = context.semanticColors;
     final planning = AppExpressivePlanningTokens.maybeOf(context);
+    if (!preset.hasLoaded) {
+      final failure = preset.loadFailure;
+      return PopScope<PresetDetailResult>(
+        canPop: false,
+        onPopInvokedWithResult: _handlePopInvoked,
+        child: Scaffold(
+          backgroundColor: planning?.pageCanvas,
+          appBar: AppBar(
+            backgroundColor: planning?.planFocalSurface,
+            foregroundColor: planning?.planFocalForeground,
+            leading: const BackButton(),
+            title: Text(preset.presetName),
+            centerTitle: true,
+          ),
+          body: preset.isLoading || failure == null
+              ? const Center(child: CircularProgressIndicator())
+              : SafeErrorView(
+                  title: strings.safeFailureLoadTitle,
+                  failure: failure,
+                  onRetry: () async {
+                    await preset.retryLoad();
+                    await _syncLoadedPresetName(preset);
+                  },
+                ),
+        ),
+      );
+    }
     final keyboardInset = planning == null
         ? 0.0
         : MediaQuery.viewInsetsOf(context).bottom;
@@ -732,17 +777,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
       // Disable the system back gesture so we can intercept it
       canPop: false,
       // Called whenever a pop is attempted (back button or gesture)
-      onPopInvokedWithResult: (bool didPop, PresetDetailResult? result) async {
-        final nav = Navigator.of(context);
-        // If it actually popped (unlikely, since canPop is false), do nothing
-        if (didPop) return;
-        // Otherwise show our unsaved-changes dialog
-        final shouldPop = await _onWillPop();
-        if (!mounted) return;
-        if (shouldPop) {
-          nav.pop(widget.closeAfterSave ? PresetDetailResult.discarded : null);
-        }
-      },
+      onPopInvokedWithResult: _handlePopInvoked,
       child: Stack(
         children: [
           Scaffold(

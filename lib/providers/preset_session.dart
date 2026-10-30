@@ -68,9 +68,29 @@ class PresetSession extends ChangeNotifier {
   bool _disposed = false;
   int _loadVersion = 0;
   SafeFailure? _loadFailure;
+  bool _hasLoaded = false;
+  bool _isLoading = true;
 
   /// Latest classified load failure, or `null` when the latest load succeeded.
   SafeFailure? get loadFailure => _loadFailure;
+  bool get hasLoaded => _hasLoaded;
+  bool get isLoading => _isLoading;
+
+  /// Initial read failures are retained for recovery UI, but must never be
+  /// interpreted as a valid empty plan by editing or generation callers.
+  void requireLoaded() {
+    if (_disposed || !_hasLoaded) {
+      throw _loadFailure ??
+          const SafeFailure(kind: SafeFailureKind.temporary, retryable: true);
+    }
+  }
+
+  Future<void> retryLoad() => _loadPreset(rethrowErrors: false);
+
+  void _invalidateLoad() {
+    _loadVersion++;
+    _isLoading = false;
+  }
 
   /// Preset's current name, loaded from the definition.
   String presetName = '';
@@ -184,7 +204,10 @@ class PresetSession extends ChangeNotifier {
   /// structures before publishing them atomically if this load is still the
   /// newest active generation.
   Future<void> _loadPreset({required bool rethrowErrors}) async {
+    if (_disposed) return;
     final loadVersion = ++_loadVersion;
+    _isLoading = true;
+    _notifyIfActive();
     try {
       final def = await _repo.fetchPresetById(presetId);
       if (_disposed || loadVersion != _loadVersion) return;
@@ -408,6 +431,7 @@ class PresetSession extends ChangeNotifier {
       manualSelect = nextManualSelect;
       manualSelections = nextManualSelections;
       _loadFailure = null;
+      _hasLoaded = true;
       _hasChanges = false;
       _notifyIfActive();
     } catch (error) {
@@ -416,12 +440,18 @@ class PresetSession extends ChangeNotifier {
       debugPrint('PresetSession load failed: $error');
       _notifyIfActive();
       if (rethrowErrors) rethrow;
+    } finally {
+      if (!_disposed && loadVersion == _loadVersion) {
+        _isLoading = false;
+        _notifyIfActive();
+      }
     }
   }
 
   /// Mirrors ActiveSession.addExercise.
   void addExercise(WorkoutExercise ex, CardType type, {int? defId}) {
-    _loadVersion++;
+    requireLoaded();
+    _invalidateLoad();
     _entries.add(
       _PresetExerciseEntry(
         exercise: ex,
@@ -443,8 +473,9 @@ class PresetSession extends ChangeNotifier {
 
   /// Mirrors ActiveSession.removeExercise.
   void removeExercise(int index) {
+    requireLoaded();
     if (index < 0 || index >= _entries.length) return;
-    _loadVersion++;
+    _invalidateLoad();
     final removed = _entries.removeAt(index);
     final exerciseId = removed.presetExerciseId;
     final childIds = removed.childSetIds.values.expand((ids) => ids);
@@ -466,12 +497,13 @@ class PresetSession extends ChangeNotifier {
     int index,
     ExerciseDefinition replacement,
   ) {
+    requireLoaded();
     if (index < 0 || index >= _entries.length) return;
     final entry = _entries[index];
     final current = entry.exercise;
     if (current is! WeightExercise) return;
 
-    _loadVersion++;
+    _invalidateLoad();
     final equipment = replacement.equipmentList
         .map((equipment) => equipment.name)
         .where((name) => name.trim().isNotEmpty)
@@ -494,13 +526,14 @@ class PresetSession extends ChangeNotifier {
 
   /// Reorders a preset exercise and any aligned metadata that belongs to it.
   void reorderExercise(int oldIndex, int newIndex) {
+    requireLoaded();
     if (oldIndex < 0 || oldIndex >= _entries.length) return;
     if (newIndex > oldIndex) newIndex--;
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= _entries.length) newIndex = _entries.length - 1;
     if (oldIndex == newIndex) return;
 
-    _loadVersion++;
+    _invalidateLoad();
     final item = _entries.removeAt(oldIndex);
     _entries.insert(newIndex, item);
     _hasChanges = true;
@@ -509,13 +542,15 @@ class PresetSession extends ChangeNotifier {
 
   /// Marks in-memory state dirty without modifying lists.
   void refresh() {
-    _loadVersion++;
+    requireLoaded();
+    _invalidateLoad();
     _hasChanges = true;
     _notifyIfActive();
   }
 
   /// Updates the preset definition's name.
   Future<void> updateName(String newName) async {
+    requireLoaded();
     await _repo.updatePresetName(presetId, newName);
     if (_disposed) return;
     presetName = newName;
@@ -525,6 +560,7 @@ class PresetSession extends ChangeNotifier {
   /// Persists all in-memory exercises back to the preset tables,
   /// but preserves any existing per-exercise and per-set overrides.
   Future<void> saveChanges({String? newName, bool publishDraft = false}) async {
+    requireLoaded();
     final snapshot = List<_PresetExerciseEntry>.from(_entries);
     final writes = <WorkoutExerciseWrite>[];
     for (final entry in snapshot) {
@@ -591,6 +627,7 @@ class PresetSession extends ChangeNotifier {
 
   /// Starts a live session by writing this preset's exercises into the session tables.
   Future<int> startSession() async {
+    requireLoaded();
     final sessionId = await _repo.createSessionAt(DateTime.now(), 0);
     final snapshot = List<_PresetExerciseEntry>.from(_entries);
 
@@ -641,6 +678,7 @@ class PresetSession extends ChangeNotifier {
 
   /// Enables Automatic mode (creates default settings).
   Future<void> enableAutomatic() async {
+    requireLoaded();
     await _repo.upsertPresetAutoSettings(
       presetId: presetId,
       isAutomatic: true,
@@ -663,6 +701,7 @@ class PresetSession extends ChangeNotifier {
 
   /// Disables Automatic mode (removes settings).
   Future<void> disableAutomatic() async {
+    requireLoaded();
     await _repo.deletePresetAutoSettings(presetId);
     if (_disposed) return;
     isAutomatic = false;
@@ -684,6 +723,7 @@ class PresetSession extends ChangeNotifier {
     required Map<int, double?> newExerciseIncrements,
     required Map<int, double?> newSetIncrements,
   }) async {
+    requireLoaded();
     await _repo.savePresetAutoConfigurationAtomic(
       presetId: presetId,
       configuration: PresetAutoConfigurationWrite(
@@ -736,6 +776,7 @@ class PresetSession extends ChangeNotifier {
     required String newManualSelectionJson,
     required ProgressionSuccessScope newSuccessScope,
   }) async {
+    requireLoaded();
     await _repo.upsertPresetAutoSettings(
       presetId: presetId,
       isAutomatic: isAutomatic,
@@ -768,6 +809,7 @@ class PresetSession extends ChangeNotifier {
     int presetExerciseId,
     double? incrementAmount,
   ) async {
+    requireLoaded();
     if (presetExerciseId <= 0) return;
     final existing = await _repo.fetchPresetExerciseAuto(presetExerciseId);
     await _repo.upsertPresetExerciseAuto(
@@ -786,6 +828,7 @@ class PresetSession extends ChangeNotifier {
 
   /// Updates and saves a per-set increment override.
   Future<void> saveSetOverride(int presetSetId, double? incrementAmount) async {
+    requireLoaded();
     await _repo.upsertPresetSetAuto(
       presetSetId: presetSetId,
       incrementAmount: incrementAmount,

@@ -746,7 +746,12 @@ class AppRepository {
 
   /// Imports the database from a JSON string.
   Future<void> importDatabase(String jsonStr, {bool clearFirst = true}) async {
-    await _dbHelper.importDatabase(jsonStr, clearFirst: clearFirst);
+    try {
+      await _dbHelper.importDatabase(jsonStr, clearFirst: clearFirst);
+    } on DatabaseImportCommittedException {
+      clearExerciseAnalysisCache();
+      rethrow;
+    }
     clearExerciseAnalysisCache();
   }
 

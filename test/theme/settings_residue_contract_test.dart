@@ -91,7 +91,9 @@ void main() {
       'lib/screens/profile/settings/app_settings_page.dart': [
         'TonosDialogFrame',
         'TonosField',
-        'importDatabase(result',
+        'importDatabaseWithLiveState(',
+        'json: result',
+        'DatabaseImportCommittedException',
       ],
       'lib/screens/profile/settings/workout_progress_flows_page.dart': [
         'SettingsPageScaffold',
@@ -115,6 +117,17 @@ void main() {
         'showTonosDialog',
         'SnackBar',
         '_contentActionRunning',
+        'importDatabaseWithLiveState(',
+        'json: picked.contents',
+        'DatabaseImportCommittedException',
+      ],
+      'lib/services/database_import_coordinator.dart': [
+        'prepareForDatabaseReplace',
+        'repository.importDatabase(json, clearFirst: true)',
+        'abortDatabaseReplace',
+        'DatabaseImportCommittedException',
+        'selectedProfile?.loadProfiles',
+        'nutritionProfile?.reloadFromDatabase',
       ],
       'lib/screens/profile/settings/diagnostics_settings_page.dart': [
         'SettingsPageScaffold',

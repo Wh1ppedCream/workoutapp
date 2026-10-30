@@ -203,3 +203,82 @@ git diff --name-only c703947..HEAD -- lib/db/schema.dart lib/db/schema_latest.sq
    - Remaining raw `Map<String, dynamic>` query return shapes in `AppRepository` and the 79 baseline `info` notices (primarily Flutter 3.32–3.41 `RadioGroup`, `TickerMode.valuesOf`, `ReorderableListView.onReorderItem`, and `SemanticsData.flagsCollection` migrations) remain separate, focused follow-up candidates.
 4. **Device, Native Release, & Deployed Infrastructure Qualification**:
    - Consistent with Pass 1, no physical-device camera/navigation runs, native Android/iOS/desktop release builds, deployed Cloudflare Worker checks, or on-device frame-timing profiles were executed during this headless pass; those remain required before shipping a production release.
+
+## 7. Peer-review corrections — 2026-10-30
+
+The independent review of `76d1405` reproduced four gaps despite the earlier
+green suite. The following corrections supersede the relevant completion claims
+above; the earlier 2,486-test full-suite result remains historical.
+
+| Finding | Correction | Regression evidence |
+| --- | --- | --- |
+| R1: A post-commit maintenance error could resume the old workout and overwrite the imported draft. | `DatabaseImportCommittedException` marks failures after the authoritative transaction commits. Repository analysis caches are invalidated for that outcome. Both settings import entry points use `database_import_coordinator.dart` to reconcile live state before reporting the maintenance failure; only pre-commit failure resumes the old draft. Existing localized copy now distinguishes successful import from failed maintenance. | `test/services/database_import_coordinator_test.dart` injects a SQLite recipe-cache rebuild failure after commitment, verifies cache invalidation and restored live state, and confirms the imported draft survives app pause. A separate case checks pre-commit rejection resumes the original session. |
+| R2: Queued equipment actions captured the profile too late. | Capture profile ID/version before enqueueing; cancel a stale queued action before it can write. | `selected_profile_race_test.dart` queues two actions on A, switches to B while the first write is pending, then checks that B's equipment is unchanged. |
+| R3: A failed initial preset load still allowed a destructive partial save. | Explicit loaded/loading/failure state; guard editing, save and start APIs until a complete load succeeds. The detail route shows the existing safe error/retry component and hides editing while unloaded. Train and Train2 generation callers check the load outcome. Later failed reloads retain the known draft. | `preset_session_lifecycle_test.dart` checks failed/pending initial loading, zero writes, retry recovery and later draft preservation. `preset_detail_screen_theme_test.dart` verifies failure/retry across Classic, Expressive and Neo in light/dark modes. |
+| R4: Old favorites responses or failed optimistic writes could affect another profile. | Guard publication by profile identity, profile generation and request sequence; invalidate outstanding reads on switches/database reload. Scope pending favorite operations to the originating profile and reject stale rollback. | `profile_sync_and_import_reload_test.dart` covers reversed profile responses, same-ID database replacement, and a late failed favorite toggle after switching profiles. |
+
+Validation for these corrections:
+
+- Dedicated regression/import/privacy/DI/food-editor run: **74 passed**.
+- Compatibility run covering preset settings, manual plans, Train2, onboarding,
+  durable workouts, preset persistence and theme contracts: **120 passed**.
+  The runs overlap; their counts are not summed. The latter run also includes
+  the final late-favorite-write regression.
+- Repository/root-tool analysis passed with **0 errors, 0 warnings and the same
+  79 informational notices**. Inventory passed (319 Dart files, 4,382 candidates)
+  and ratchet enforcement passed for the same 18 protected source files.
+  `git diff --check` passed. Results are retained under
+  `.build/maintainability/review-fixes-*`.
+- Changed code is formatted with the pinned SDK; unrelated legacy formatting is
+  excluded from the large-file diffs. Normal approved page layouts and motion,
+  schema, localization catalogs and preview data are preserved. The new visible
+  states are the necessary initial-load/error/retry handling and accurate import
+  maintenance feedback.
+- The initial focused follow-up did not include a full-suite rerun or commit.
+  The additional review and requested checkpoint validation are recorded below.
+  Device builds/navigation, screenshots, preview-data resets, dependency upgrades
+  and pushes remain outside this follow-up.
+
+### Additional handoff review corrections
+
+- Updated `settings_residue_contract_test.dart` to enforce the shared import
+  coordinator, JSON argument ownership and committed-error handling in both
+  settings callers. The original contract failure was a stale direct-call marker;
+  the replacement retains explicit ownership checks.
+- Recovery steps now run independently, so a failed profile reload cannot skip
+  nutrition recovery. An existing maintenance failure remains the primary thrown
+  exception; secondary failures log only the owner and exception type. Tests
+  cover a mid-sequence reload failure and combined maintenance/reload failures.
+- Profile invalidation clears totals, goals, meals and prior errors together with
+  favorites. A listener-based regression holds the new profile's totals pending
+  and checks that every notification is free of the previous profile's data.
+- Both training hubs dispose their temporary `PresetSession` in `finally` after
+  cloning its workout snapshot, including failed loads and early returns.
+- Loaded and unloaded preset routes share the pop handler. Four widget cases
+  verify toolbar/system back and `closeAfterSave` true/false, preserving the
+  `PresetDetailResult.discarded` contract for the onboarding caller.
+
+The targeted handoff run passed **43 checks** and the separate contract sweep
+passed **172 checks across 43 contract test files**, including the previously
+failing settings residue contract.
+
+### Final checkpoint validation — 2026-10-30
+
+| Check | Final result |
+| --- | --- |
+| Complete Flutter unit/widget suite, `--no-pub --concurrency=4 --reporter expanded` | **2,507 passed, 0 failed**, 15m 33s. |
+| Separate contract sweep | **172 passed** across all 43 `*contract_test.dart` files. |
+| Targeted handoff regression checks | **43 passed**; overlaps with both suites above. |
+| Repository, test, integration/driver source and root-tool analysis | Exit 0, **0 errors, 0 warnings**, same 79 informational notices. |
+| Catalog-builder `bin` / `tool` analysis | No issues; existing dependencies used. |
+| Theme inventory / ratchet enforcement | Passed: 319 Dart files / 4,382 candidates; same 18 protected source files, none modified. |
+| Diagnostics relay Node tests | **8 passed**, 0 failed. |
+| Development and locked-production content-environment checks | Both passed. |
+| Working/staged diff whitespace checks | Passed; only explicitly selected follow-up files enter the checkpoint. |
+
+Logs are retained locally under `.build/maintainability/review-followup-*`.
+Production and test code did not change after the complete suite started; only
+this audit record was finalized afterward. Overlapping run counts are not summed.
+The checkpoint includes the original R1–R4 fixes and all additional handoff
+corrections above. Unrelated untracked artifacts remain preserved. No device or
+release build, preview-data reset, dependency fetch/upgrade or push was performed.

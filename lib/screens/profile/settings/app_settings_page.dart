@@ -7,10 +7,12 @@ import '../../../theme/widgets/tonos_overlay_routes.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../db/database_maintenance.dart';
 import '../../../providers/durable_active_session.dart';
 import '../../../providers/nutrition_profile.dart';
 import '../../../providers/selected_profile.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/database_import_coordinator.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../l10n/safe_failure_localizations.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
@@ -127,21 +129,29 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
 
     if (result == null) return;
     try {
-      await activeSession?.prepareForDatabaseReplace();
-      try {
-        await _repo.importDatabase(result, clearFirst: true);
-      } catch (_) {
-        activeSession?.abortDatabaseReplace();
-        rethrow;
-      }
-      await activeSession?.reloadFromDatabase();
-      await selectedProfile?.loadProfiles();
-      await nutritionProfile?.reloadFromDatabase();
+      await importDatabaseWithLiveState(
+        repository: _repo,
+        json: result,
+        activeSession: activeSession,
+        selectedProfile: selectedProfile,
+        nutritionProfile: nutritionProfile,
+      );
 
       if (!mounted) return; // guard before showing snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).databaseImportSucceeded),
+        ),
+      );
+    } on DatabaseImportCommittedException catch (error) {
+      if (!mounted) return;
+      final strings = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${strings.databaseImportSucceeded}\n'
+            '${strings.databaseMaintenanceFailed(safeFailureMessage(strings, error.cause))}',
+          ),
         ),
       );
     } catch (e) {

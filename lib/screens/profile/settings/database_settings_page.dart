@@ -18,6 +18,7 @@ import '../../../providers/durable_active_session.dart';
 import '../../../providers/nutrition_profile.dart';
 import '../../../providers/selected_profile.dart';
 import '../../../repositories/app_repository.dart';
+import '../../../services/database_import_coordinator.dart';
 import '../../../services/content_environment_policy.dart';
 import '../../../services/content_environment_preferences.dart';
 import '../../../services/tutorial_state_store.dart';
@@ -308,21 +309,29 @@ class _DatabaseSettingsPageState extends State<DatabaseSettingsPage> {
         return;
       }
 
-      await activeSession?.prepareForDatabaseReplace();
-      try {
-        await _repo.importDatabase(picked.contents, clearFirst: true);
-      } catch (_) {
-        activeSession?.abortDatabaseReplace();
-        rethrow;
-      }
-      await activeSession?.reloadFromDatabase();
-      await selectedProfile?.loadProfiles();
-      await nutritionProfile?.reloadFromDatabase();
+      await importDatabaseWithLiveState(
+        repository: _repo,
+        json: picked.contents,
+        activeSession: activeSession,
+        selectedProfile: selectedProfile,
+        nutritionProfile: nutritionProfile,
+      );
       if (!mounted) return;
       _refreshHealth();
       await _showSavedFileDialog(
         title: _strings.databaseImportSucceededTitle,
         message: _strings.databaseImportSucceededBody(picked.name),
+      );
+    } on DatabaseImportCommittedException catch (error) {
+      if (!mounted) return;
+      _refreshHealth();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${_strings.databaseImportSucceeded}\n'
+            '${_strings.databaseMaintenanceFailed(safeFailureMessage(_strings, error.cause))}',
+          ),
+        ),
       );
     } on FormatException catch (error) {
       if (!mounted) return;

@@ -3221,6 +3221,7 @@ class DatabaseHelper {
         .where(data.containsKey)
         .toList();
     final replaceSnapshot = clearFirst && preview.canReplace;
+    var committed = false;
 
     final suspendFoodFtsTriggers = await _hasFoodFtsTable(db);
     if (suspendFoodFtsTriggers) {
@@ -3305,6 +3306,7 @@ class DatabaseHelper {
             );
           }
         });
+        committed = true;
       } finally {
         if (foreignKeySetting == 1) {
           await db.execute('PRAGMA foreign_keys = ON;');
@@ -3332,6 +3334,14 @@ class DatabaseHelper {
       await _rebuildFoodFtsIfExists(db);
       await Schema.migrateV49(db);
       await _ensureIndexes(db);
+    } catch (error, stackTrace) {
+      if (committed) {
+        Error.throwWithStackTrace(
+          DatabaseImportCommittedException(error),
+          stackTrace,
+        );
+      }
+      rethrow;
     } finally {
       if (suspendFoodFtsTriggers) {
         try {

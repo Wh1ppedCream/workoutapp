@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:env_test/db/database_helper.dart';
@@ -7,6 +8,7 @@ import 'package:env_test/providers/durable_active_session.dart';
 import 'package:env_test/providers/nutrition_profile.dart';
 import 'package:env_test/providers/selected_profile.dart';
 import 'package:env_test/repositories/app_repository.dart';
+import 'package:env_test/services/safe_failure.dart';
 import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,173 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
+
+  test('profile-switch notifications never pair new favorites with old totals, goals or meals', () async {
+    final day = DateTime(2026, 10, 30);
+    final repo = _SyncProfileRepository(
+      initialProfiles: [
+        GymProfile(id: 1, name: 'Home', createdAt: day),
+        GymProfile(id: 2, name: 'Away', createdAt: day),
+      ],
+    );
+    for (final id in [1, 2]) {
+      repo.goalsByProfile[id] = NutritionGoal(
+        profileId: id,
+        startDate: day,
+        kcalTarget: 2000,
+      );
+      repo.mealsByProfile[id] = [
+        DiaryEntryWithItem(
+          entry: DiaryEntry(
+            profileId: id,
+            date: day,
+            mealType: MealType.breakfast,
+            foodId: 101,
+          ),
+          itemName: 'Profile $id meal',
+        ),
+      ];
+    }
+    final selected = SelectedProfile(repository: repo);
+    final nutrition = NutritionProfile(repository: repo)
+      ..bindSelectedProfile(selected);
+    addTearDown(() {
+      nutrition.dispose();
+      selected.dispose();
+    });
+    await Future.wait([selected.ready, nutrition.ready]);
+    expect(nutrition.totals?.profileId, 1);
+    expect(nutrition.activeGoal?.profileId, 1);
+    expect(nutrition.meals.single.profileId, 1);
+    nutrition.error = const SafeFailure(
+      kind: SafeFailureKind.offline,
+      retryable: true,
+    );
+    final gate = Completer<DayTotals>();
+    repo.totalsGates[2] = gate;
+    final staleNotifications = <bool>[];
+    nutrition.addListener(() {
+      if (nutrition.profileId == 2) {
+        staleNotifications.add(
+          nutrition.totals?.profileId == 1 ||
+              nutrition.activeGoal?.profileId == 1 ||
+              nutrition.meals.any((entry) => entry.profileId == 1) ||
+              nutrition.error != null,
+        );
+      }
+    });
+    final change = nutrition.selectProfile(repo.profiles[1]);
+    await Future<void>.delayed(Duration.zero);
+    expect(nutrition.favoriteFoodIds, {202});
+    expect(nutrition.totals, isNull);
+    expect(nutrition.activeGoal, isNull);
+    expect(nutrition.meals, isEmpty);
+    expect(nutrition.error, isNull);
+    expect(staleNotifications, isNotEmpty);
+    expect(staleNotifications, everyElement(isFalse));
+    gate.complete(DayTotals(profileId: 2, date: day, kcal: 2200));
+    await change;
+    expect(nutrition.totals?.profileId, 2);
+    expect(nutrition.activeGoal?.profileId, 2);
+    expect(nutrition.meals.single.profileId, 2);
+    expect(staleNotifications, everyElement(isFalse));
+  });
+
+  test(
+    'a failed favorite toggle cannot roll back into a newly selected profile',
+    () async {
+      final repo = _SyncProfileRepository(
+        initialProfiles: [
+          GymProfile(id: 1, name: 'Home', createdAt: DateTime.utc(2026)),
+          GymProfile(id: 2, name: 'Away', createdAt: DateTime.utc(2026)),
+        ],
+      );
+      final selected = SelectedProfile(repository: repo);
+      final nutrition = NutritionProfile(repository: repo)
+        ..bindSelectedProfile(selected);
+      addTearDown(() {
+        nutrition.dispose();
+        selected.dispose();
+      });
+      await Future.wait([selected.ready, nutrition.ready]);
+      repo.favoriteWriteGate = Completer<void>();
+      final change = nutrition.toggleFavorite(101);
+      await nutrition.selectProfile(repo.profiles[1]);
+      expect(nutrition.favoriteFoodIds, {202});
+      repo.favoriteWriteGate!.completeError(
+        TimeoutException('Injected write failure'),
+      );
+      await change;
+      expect(nutrition.favoriteFoodIds, {202});
+      expect(nutrition.error, isNull);
+    },
+  );
+
+  test(
+    'late favorites from a prior profile cannot overwrite the selected profile',
+    () async {
+      final repo = _SyncProfileRepository(
+        initialProfiles: [
+          GymProfile(id: 1, name: 'Home', createdAt: DateTime.utc(2026)),
+          GymProfile(id: 2, name: 'Away', createdAt: DateTime.utc(2026)),
+        ],
+      );
+      final selected = SelectedProfile(repository: repo);
+      final nutrition = NutritionProfile(repository: repo)
+        ..bindSelectedProfile(selected);
+      addTearDown(() {
+        nutrition.dispose();
+        selected.dispose();
+      });
+      await Future.wait([selected.ready, nutrition.ready]);
+      final gate = Completer<List<Food>>();
+      repo.favoritesGates[2] = gate;
+      await selected.selectProfile(repo.profiles[1]);
+      await selected.selectProfile(repo.profiles[0]);
+      await Future<void>.delayed(Duration.zero);
+      expect(nutrition.favoriteFoodIds, {101});
+      gate.complete([
+        Food(
+          id: 202,
+          name: 'Delayed',
+          isCustom: true,
+          createdAt: DateTime.utc(2026),
+          updatedAt: DateTime.utc(2026),
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+      expect(nutrition.profileId, 1);
+      expect(nutrition.favoriteFoodIds, {101});
+    },
+  );
+
+  test('database reload invalidates old favorites even when the profile ID is unchanged', () async {
+    final repo = _SyncProfileRepository(
+      initialProfiles: [
+        GymProfile(id: 1, name: 'Home', createdAt: DateTime.utc(2026)),
+      ],
+    );
+    final nutrition = NutritionProfile(repository: repo);
+    addTearDown(nutrition.dispose);
+    await nutrition.ready;
+    final gate = Completer<List<Food>>();
+    repo.favoritesGates[1] = gate;
+    final stale = nutrition.refreshFavorites();
+    repo.favoritesGates.remove(1);
+    repo.favoritesByProfile[1] = [909];
+    await nutrition.reloadFromDatabase();
+    gate.complete([
+      Food(
+        id: 101,
+        name: 'Old',
+        isCustom: true,
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      ),
+    ]);
+    await stale;
+    expect(nutrition.favoriteFoodIds, {909});
+  });
 
   test('bound NutritionProfile reuses SelectedProfile cold-start seeding without duplicate General profiles', () async {
     final repo = _SyncProfileRepository(initialProfiles: const []);
@@ -220,6 +389,18 @@ class _SyncProfileRepository extends AppRepository {
   int createProfileCalls = 0;
 
   final Map<int, double> kcalByProfile = {1: 1800, 2: 2200};
+  final totalsGates = <int, Completer<DayTotals>>{};
+  final goalsByProfile = <int, NutritionGoal>{};
+  final mealsByProfile = <int, List<DiaryEntryWithItem>>{};
+  final favoritesGates = <int, Completer<List<Food>>>{};
+  Completer<void>? favoriteWriteGate;
+
+  @override
+  Future<void> removeFavorite(int profileId, int foodId) async {
+    await favoriteWriteGate?.future;
+    favoritesByProfile[profileId]?.remove(foodId);
+  }
+
   final Map<int, List<int>> favoritesByProfile = {
     1: [101],
     2: [202],
@@ -299,6 +480,8 @@ class _SyncProfileRepository extends AppRepository {
     int limit = 100,
     int offset = 0,
   }) async {
+    final gate = favoritesGates[profileId];
+    if (gate != null) return gate.future;
     final ids = favoritesByProfile[profileId] ?? const <int>[];
     final now = DateTime.utc(2026, 10, 29);
     return [
@@ -314,22 +497,25 @@ class _SyncProfileRepository extends AppRepository {
   }
 
   @override
-  Future<DayTotals> getDayTotals(int profileId, DateTime date) async =>
-      DayTotals(
-        profileId: profileId,
-        date: date,
-        kcal: kcalByProfile[profileId] ?? 2000,
-      );
+  Future<DayTotals> getDayTotals(int profileId, DateTime date) async {
+    final gate = totalsGates[profileId];
+    if (gate != null) return gate.future;
+    return DayTotals(
+      profileId: profileId,
+      date: date,
+      kcal: kcalByProfile[profileId] ?? 2000,
+    );
+  }
 
   @override
   Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) async =>
-      null;
+      goalsByProfile[profileId];
 
   @override
   Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
     int profileId,
     DateTime date,
-  ) async => const [];
+  ) async => mealsByProfile[profileId] ?? const [];
 }
 
 class _ActiveSessionImportRepository extends AppRepository {

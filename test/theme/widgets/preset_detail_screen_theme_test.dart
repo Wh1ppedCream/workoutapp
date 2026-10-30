@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
@@ -18,6 +19,7 @@ import 'package:env_test/widgets/add_exercise_fab.dart';
 import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/widgets/weight_card.dart';
 import 'package:env_test/widgets/preset_info_card.dart';
+import 'package:env_test/widgets/safe_error_view.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +30,64 @@ import '../theme_inventory_assertions.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  for (final closeAfterSave in [false, true]) {
+    for (final systemBack in [false, true]) {
+      testWidgets(
+        'unloaded plan pop preserves caller result: closeAfterSave=$closeAfterSave systemBack=$systemBack',
+        (tester) async {
+          SharedPreferences.setMockInitialValues(<String, Object>{});
+          final repository = _PresetRepository()..failLoad = true;
+          final returned = Completer<PresetDetailResult?>();
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider(
+                  create: (_) => PresetSession(1, repository: repository),
+                ),
+              ],
+              child: MaterialApp(
+                theme: AppThemeFactory.light(AppThemeFamily.expressive),
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Builder(
+                  builder: (context) => TextButton(
+                    onPressed: () async {
+                      returned.complete(
+                        await Navigator.of(context).push<PresetDetailResult>(
+                          MaterialPageRoute(
+                            builder: (_) => PresetDetailScreen(
+                              closeAfterSave: closeAfterSave,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Open plan'),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.tap(find.text('Open plan'));
+          await tester.pumpAndSettle();
+          expect(find.byType(SafeErrorView), findsOneWidget);
+          if (systemBack) {
+            await tester.binding.handlePopRoute();
+          } else {
+            await tester.tap(find.byType(BackButton));
+          }
+          await tester.pumpAndSettle();
+          expect(returned.isCompleted, isTrue);
+          expect(
+            await returned.future,
+            closeAfterSave ? PresetDetailResult.discarded : null,
+          );
+        },
+      );
+    }
+  }
 
   test('preset plan-name styling has exact route ownership', () {
     final inventory = loadThemeStyleInventory(
@@ -58,6 +118,46 @@ void main() {
       final theme = brightness == Brightness.light
           ? AppThemeFactory.light(family)
           : AppThemeFactory.dark(family);
+
+      testWidgets(
+        '${family.code} ${brightness.name} failed plan load hides editing until retry succeeds',
+        (tester) async {
+          SharedPreferences.setMockInitialValues(<String, Object>{});
+          await const TutorialStateStore().skipAll();
+          final repository = _PresetRepository()..failLoad = true;
+          await tester.pumpWidget(
+            MultiProvider(
+              providers: [
+                Provider<AppRepository>.value(value: repository),
+                ChangeNotifierProvider(
+                  create: (_) => PresetSession(1, repository: repository),
+                ),
+              ],
+              child: MaterialApp(
+                theme: theme,
+                themeAnimationDuration: Duration.zero,
+                localizationsDelegates: tonosLocalizationDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: const PresetDetailScreen(startInEditingMode: true),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.byType(SafeErrorView), findsOneWidget);
+          expect(find.byType(AddExerciseFab), findsNothing);
+          expect(find.byKey(AppTestKeys.planName), findsNothing);
+          final strings = AppLocalizations.of(
+            tester.element(find.byType(SafeErrorView)),
+          );
+          repository.failLoad = false;
+          await tester.tap(find.text(strings.commonRetry));
+          await tester.pumpAndSettle();
+          await tester.pump(const Duration(milliseconds: 600));
+          await tester.pumpAndSettle();
+          expect(find.byType(SafeErrorView), findsNothing);
+          expect(find.byKey(AppTestKeys.planName), findsOneWidget);
+        },
+      );
 
       testWidgets(
         '${family.code} ${brightness.name} resolves the guided plan-name field',
@@ -602,6 +702,7 @@ class _PresetRepository extends AppRepository {
   _PresetRepository({this.withExercise = false});
 
   final bool withExercise;
+  bool failLoad = false;
   int deleteCalls = 0;
 
   @override
@@ -610,14 +711,15 @@ class _PresetRepository extends AppRepository {
   }
 
   @override
-  Future<PresetDefinition?> fetchPresetById(int presetId) async =>
-      PresetDefinition(
-        id: presetId,
-        name: 'New Plan',
-        createdAt: DateTime.utc(2026, 9, 1),
-        profileId: 1,
-        isDraft: true,
-      );
+  Future<PresetDefinition?> fetchPresetById(int presetId) async => failLoad
+      ? throw TimeoutException('Injected read failure')
+      : PresetDefinition(
+          id: presetId,
+          name: 'New Plan',
+          createdAt: DateTime.utc(2026, 9, 1),
+          profileId: 1,
+          isDraft: true,
+        );
 
   @override
   Future<List<Map<String, dynamic>>> fetchPresetExercises(int presetId) async =>

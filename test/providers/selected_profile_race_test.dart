@@ -6,6 +6,24 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('queued equipment changes are canceled after the originating profile changes', () async {
+    final repo = _ProfileRepository();
+    final selection = SelectedProfile(repository: repo);
+    addTearDown(selection.dispose);
+    await selection.ready;
+    repo.removeGate = Completer<void>();
+    final first = selection.toggleEquipment(10);
+    await repo.removeStarted.future;
+    final queued = selection.toggleEquipment(10);
+    await selection.selectProfile(repo.profiles[1]);
+    repo.removeGate!.complete();
+    await Future.wait([first, queued]);
+    expect(repo.addCalls, isEmpty);
+    expect((await repo.fetchEquipmentForProfile(2)).map((row) => row['id']), [
+      20,
+    ]);
+  });
+
   test(
     'disposing during an equipment request prevents late publication',
     () async {
