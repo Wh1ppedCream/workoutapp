@@ -4,8 +4,7 @@ import '../repositories/app_repository.dart';
 
 /// Persists which plans should appear in the Train overview and Active Plans.
 class ActivePlanStore {
-  const ActivePlanStore({required AppRepository repository})
-    : _repository = repository;
+  const ActivePlanStore({required this._repository});
 
   final AppRepository _repository;
 
@@ -15,8 +14,10 @@ class ActivePlanStore {
     final legacyKey = _key(profileId);
     final legacyIds = prefs.getStringList(legacyKey);
     if (legacyIds != null) {
-      final migrated =
-          legacyIds.map((id) => int.tryParse(id)).whereType<int>().toSet();
+      final migrated = legacyIds
+          .map((id) => int.tryParse(id))
+          .whereType<int>()
+          .toSet();
       await _repository.replaceActivePlans(profileId, migrated);
       await prefs.remove(legacyKey);
     }

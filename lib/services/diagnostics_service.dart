@@ -220,17 +220,16 @@ abstract final class DiagnosticsSanitizer {
 
 class DiagnosticsService {
   DiagnosticsService({
-    DiagnosticsPreferences preferences = const DiagnosticsPreferences(),
+    this._preferences = const DiagnosticsPreferences(),
     SyncDiagnosticsStore? syncStore,
     DiagnosticsRelayReceiptStore? receiptStore,
     DiagnosticsRelayClient? relayClient,
-    Future<AppVersionInfo> Function()? versionInfoLoader,
-    bool controlledTestMode = const bool.fromEnvironment(
+    this._versionInfoLoader,
+    this._controlledTestMode = const bool.fromEnvironment(
       'TONOS_DIAGNOSTICS_TEST_MODE',
       defaultValue: false,
     ),
-  }) : _preferences = preferences,
-       _syncStore = syncStore ?? SyncDiagnosticsStore(),
+  }) : _syncStore = syncStore ?? SyncDiagnosticsStore(),
        _receiptStore = receiptStore ?? DiagnosticsRelayReceiptStore(),
        _relayClient =
            relayClient ??
@@ -239,9 +238,7 @@ class DiagnosticsService {
                'TONOS_DIAGNOSTICS_RELAY_URL',
                defaultValue: '',
              ),
-           ),
-       _versionInfoLoader = versionInfoLoader,
-       _controlledTestMode = controlledTestMode;
+           );
 
   static final DiagnosticsService instance = DiagnosticsService();
 
