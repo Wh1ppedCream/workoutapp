@@ -15,10 +15,10 @@ import '../utils/weight_unit_formatter.dart';
 
 /// Bottom sheet for editing automatic preset progression settings.
 ///
-/// The UI writes directly back into [PresetSession], which then persists global
-/// settings, per-exercise overrides, per-set overrides, and manual set
-/// selection state. The sheet mirrors all set IDs up front so parent and child
-/// change sets can be edited consistently.
+/// Keeps an isolated draft until [PresetSession] commits global settings,
+/// per-exercise/set overrides and manual selections together. Dismissing the
+/// sheet or a failed save leaves the shared preset unchanged. All parent and
+/// child set IDs are mirrored up front so their overrides stay consistent.
 class AutomaticSettingsSheet extends StatefulWidget {
   final PresetSession preset;
 
@@ -31,6 +31,10 @@ class AutomaticSettingsSheet extends StatefulWidget {
 class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
   late TextEditingController _globalController;
   late bool _skipFirst;
+  late bool _weightCheck;
+  late bool _repCheck;
+  late bool _volumeCheck;
+  late bool _adjustAllSets;
 
   /// One controller per exercise override
   final Map<int, TextEditingController> _exControllers = {};
@@ -129,6 +133,10 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
       ),
     );
     _skipFirst = preset.skipFirstSet;
+    _weightCheck = preset.weightCheck;
+    _repCheck = preset.repCheck;
+    _volumeCheck = preset.volumeCheck;
+    _adjustAllSets = preset.adjustAllSets;
 
     // Per-exercise controllers
     for (var exId in preset.presetExerciseIds) {
@@ -185,10 +193,10 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
       await preset.saveAutoConfiguration(
         newGlobalIncrement: globalParsed,
         newSkipFirstSet: _skipFirst,
-        newWeightCheck: preset.weightCheck,
-        newRepCheck: preset.repCheck,
-        newVolumeCheck: preset.volumeCheck,
-        newAdjustAllSets: preset.adjustAllSets,
+        newWeightCheck: _weightCheck,
+        newRepCheck: _repCheck,
+        newVolumeCheck: _volumeCheck,
+        newAdjustAllSets: _adjustAllSets,
         newUseManualSelect: _manualSelect,
         newManualSelections: Map<int, bool>.from(_setSelections),
         newSuccessScope: _successCountMode,
@@ -571,26 +579,26 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                               Text(strings.automaticIncrementWhen),
                               CheckboxListTile(
                                 title: Text(strings.automaticWeightTarget),
-                                value: widget.preset.weightCheck,
+                                value: _weightCheck,
                                 onChanged:
                                     (b) => setState(
-                                      () => widget.preset.weightCheck = b!,
+                                      () => _weightCheck = b!,
                                     ),
                               ),
                               CheckboxListTile(
                                 title: Text(strings.automaticRepsTarget),
-                                value: widget.preset.repCheck,
+                                value: _repCheck,
                                 onChanged:
                                     (b) => setState(
-                                      () => widget.preset.repCheck = b!,
+                                      () => _repCheck = b!,
                                     ),
                               ),
                               CheckboxListTile(
                                 title: Text(strings.automaticVolumeTarget),
-                                value: widget.preset.volumeCheck,
+                                value: _volumeCheck,
                                 onChanged:
                                     (b) => setState(
-                                      () => widget.preset.volumeCheck = b!,
+                                      () => _volumeCheck = b!,
                                     ),
                               ),
                               const SizedBox(height: 16),
@@ -635,21 +643,21 @@ class _AutomaticSettingsSheetState extends State<AutomaticSettingsSheet> {
                               RadioListTile<bool>(
                                 title: Text(strings.automaticAdjustOneSet),
                                 value: false,
-                                groupValue: widget.preset.adjustAllSets,
+                                groupValue: _adjustAllSets,
                                 activeColor: cs.primary,
                                 onChanged:
                                     (b) => setState(
-                                      () => widget.preset.adjustAllSets = b!,
+                                      () => _adjustAllSets = b!,
                                     ),
                               ),
                               RadioListTile<bool>(
                                 title: Text(strings.automaticAdjustAllSets),
                                 value: true,
-                                groupValue: widget.preset.adjustAllSets,
+                                groupValue: _adjustAllSets,
                                 activeColor: cs.primary,
                                 onChanged:
                                     (b) => setState(
-                                      () => widget.preset.adjustAllSets = b!,
+                                      () => _adjustAllSets = b!,
                                     ),
                               ),
                               const SizedBox(height: 16),
