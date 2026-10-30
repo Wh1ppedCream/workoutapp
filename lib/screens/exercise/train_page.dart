@@ -6,7 +6,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../theme/widgets/tonos_overlay_routes.dart';
 
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/premade_training_plans.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -17,6 +16,7 @@ import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/active_plan_store.dart';
+import '../../services/optimized_workout_preferences.dart';
 import '../../services/preset_generation_service.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../utils/localized_formatters.dart';
@@ -52,13 +52,7 @@ class TrainPage extends StatefulWidget {
 }
 
 class _TrainPageState extends State<TrainPage> {
-  static const _optimizedSessionMinutesKey = 'train.optimized_session_minutes';
-  static const _optimizedMinSetsKey = 'train.optimized_min_sets_per_exercise';
-  static const _optimizedMaxSetsKey = 'train.optimized_max_sets_per_exercise';
-  static const _optimizedRepWeightModeKey = 'train.optimized_rep_weight_mode';
-  static const _optimizedTargetRepsKey = 'train.optimized_target_reps';
-  static const _optimizedStarterIntensityKey =
-      'train.optimized_starter_intensity';
+  static const _optimizedPreferences = OptimizedWorkoutPreferences();
 
   AppRepository get _repo => context.read<AppRepository>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -281,59 +275,16 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _loadOptimizedWorkoutSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedMinutes = prefs.getInt(_optimizedSessionMinutesKey);
-    final savedMinSets = prefs.getInt(_optimizedMinSetsKey);
-    final savedMaxSets = prefs.getInt(_optimizedMaxSetsKey);
-    final savedRepWeightMode = prefs.getString(_optimizedRepWeightModeKey);
-    final savedTargetReps = prefs.getInt(_optimizedTargetRepsKey);
-    final savedStarterIntensity = prefs.getString(
-      _optimizedStarterIntensityKey,
-    );
+    final loaded = await _optimizedPreferences.load();
     if (!mounted) return;
     setState(() {
-      if (savedMinutes != null && savedMinutes > 0) {
-        _optimizedSessionMinutes = savedMinutes;
-      }
-      if (savedMinSets != null &&
-          savedMinSets >= SessionSpec.defaultMinSetsPerExercise &&
-          savedMinSets <= SessionSpec.maxAllowedSetsPerExercise) {
-        _optimizedMinSetsPerExercise = savedMinSets;
-      }
-      if (savedMaxSets != null &&
-          savedMaxSets >= SessionSpec.defaultMinSetsPerExercise &&
-          savedMaxSets <= SessionSpec.maxAllowedSetsPerExercise) {
-        _optimizedMaxSetsPerExercise = savedMaxSets;
-      }
-      if (_optimizedMinSetsPerExercise > _optimizedMaxSetsPerExercise) {
-        _optimizedMinSetsPerExercise = _optimizedMaxSetsPerExercise;
-      }
-      _optimizedRepWeightMode =
-          _repWeightModeFromName(savedRepWeightMode) ??
-          RepWeightGenerationMode.mixed;
-      if (savedTargetReps != null && savedTargetReps > 0) {
-        _optimizedTargetRepCount = savedTargetReps;
-      }
-      _optimizedStarterWeightIntensity =
-          _starterIntensityFromName(savedStarterIntensity) ??
-          StarterWeightIntensity.medium;
+      _optimizedSessionMinutes = loaded.sessionMinutes;
+      _optimizedMinSetsPerExercise = loaded.minSetsPerExercise;
+      _optimizedMaxSetsPerExercise = loaded.maxSetsPerExercise;
+      _optimizedRepWeightMode = loaded.repWeightMode;
+      _optimizedTargetRepCount = loaded.targetRepCount;
+      _optimizedStarterWeightIntensity = loaded.starterWeightIntensity;
     });
-  }
-
-  RepWeightGenerationMode? _repWeightModeFromName(String? name) {
-    if (name == null) return null;
-    for (final mode in RepWeightGenerationMode.values) {
-      if (mode.name == name) return mode;
-    }
-    return null;
-  }
-
-  StarterWeightIntensity? _starterIntensityFromName(String? name) {
-    if (name == null) return null;
-    for (final intensity in StarterWeightIntensity.values) {
-      if (intensity.name == name) return intensity;
-    }
-    return null;
   }
 
   SessionSpec _buildOptimizedSpec(
@@ -413,27 +364,24 @@ class _TrainPageState extends State<TrainPage> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_optimizedSessionMinutesKey, settings.minutes);
-    await prefs.setInt(_optimizedMinSetsKey, settings.minSets);
-    await prefs.setInt(_optimizedMaxSetsKey, settings.maxSets);
-    await prefs.setString(
-      _optimizedRepWeightModeKey,
-      settings.repWeightMode.name,
-    );
-    await prefs.setInt(_optimizedTargetRepsKey, settings.targetRepCount);
-    await prefs.setString(
-      _optimizedStarterIntensityKey,
-      settings.starterWeightIntensity.name,
+    final persisted = await _optimizedPreferences.saveAll(
+      OptimizedWorkoutSettings(
+        sessionMinutes: settings.minutes,
+        minSetsPerExercise: settings.minSets,
+        maxSetsPerExercise: settings.maxSets,
+        repWeightMode: settings.repWeightMode,
+        targetRepCount: settings.targetRepCount,
+        starterWeightIntensity: settings.starterWeightIntensity,
+      ),
     );
     if (!mounted) return;
     setState(() {
-      _optimizedSessionMinutes = settings.minutes;
-      _optimizedMinSetsPerExercise = settings.minSets;
-      _optimizedMaxSetsPerExercise = settings.maxSets;
-      _optimizedRepWeightMode = settings.repWeightMode;
-      _optimizedTargetRepCount = settings.targetRepCount;
-      _optimizedStarterWeightIntensity = settings.starterWeightIntensity;
+      _optimizedSessionMinutes = persisted.sessionMinutes;
+      _optimizedMinSetsPerExercise = persisted.minSetsPerExercise;
+      _optimizedMaxSetsPerExercise = persisted.maxSetsPerExercise;
+      _optimizedRepWeightMode = persisted.repWeightMode;
+      _optimizedTargetRepCount = persisted.targetRepCount;
+      _optimizedStarterWeightIntensity = persisted.starterWeightIntensity;
       _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
       _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
     });

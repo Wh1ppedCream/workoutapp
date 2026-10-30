@@ -2,8 +2,10 @@
 
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/models.dart';
 import 'schema.dart';
 import 'seed.dart';
@@ -31,6 +33,7 @@ import 'personal_info_dao.dart';
 import 'personal_info_transaction_dao.dart';
 import 'nutrition_dao.dart';
 import 'food_customization_dao.dart';
+import 'flow_defaults_dao.dart';
 import 'content_dao.dart';
 import 'database_connection.dart';
 import 'database_backup_policy.dart';
@@ -1674,16 +1677,15 @@ class DatabaseHelper {
       'preset2',
     ];
     final placeholders = List.filled(legacyNames.length, '?').join(', ');
-    final emptyPresetGuard =
-        hasExercisesTable
-            ? '''
+    final emptyPresetGuard = hasExercisesTable
+        ? '''
               AND NOT EXISTS (
                 SELECT 1
                 FROM preset_exercises pe
                 WHERE pe.preset_id = preset_definitions.id
               )
             '''
-            : '';
+        : '';
 
     final deleted = await db.rawDelete('''
       DELETE FROM preset_definitions
@@ -1809,8 +1811,9 @@ class DatabaseHelper {
       args.add(TemporalSemantics.utcEpochMilliseconds(end));
     }
 
-    final whereSql =
-        whereClauses.isEmpty ? '' : 'WHERE ${whereClauses.join(' AND ')}';
+    final whereSql = whereClauses.isEmpty
+        ? ''
+        : 'WHERE ${whereClauses.join(' AND ')}';
 
     return db.rawQuery('''
       SELECT
@@ -1903,12 +1906,11 @@ class DatabaseHelper {
         epochMilliseconds: row['completed_at_ms'],
         legacyIso: row['date'],
       ),
-      calendarDayKey:
-          TemporalSemantics.readCalendarDay(
-            calendarDay: row['training_day'],
-            legacyIso: row['date'],
-            epochMilliseconds: row['completed_at_ms'],
-          ).storageKey,
+      calendarDayKey: TemporalSemantics.readCalendarDay(
+        calendarDay: row['training_day'],
+        legacyIso: row['date'],
+        epochMilliseconds: row['completed_at_ms'],
+      ).storageKey,
       duration: row['duration'] as int,
     );
   }
@@ -1954,12 +1956,11 @@ class DatabaseHelper {
               epochMilliseconds: row['completed_at_ms'],
               legacyIso: row['date'],
             ),
-            calendarDayKey:
-                TemporalSemantics.readCalendarDay(
-                  calendarDay: row['training_day'],
-                  legacyIso: row['date'],
-                  epochMilliseconds: row['completed_at_ms'],
-                ).storageKey,
+            calendarDayKey: TemporalSemantics.readCalendarDay(
+              calendarDay: row['training_day'],
+              legacyIso: row['date'],
+              epochMilliseconds: row['completed_at_ms'],
+            ).storageKey,
             duration: row['duration'] as int,
           ),
         )
@@ -2114,8 +2115,9 @@ class DatabaseHelper {
       final allSetRowsFuture = SetDao.getSetsForExercise(db, exerciseId);
       final defInfo = await defInfoFuture;
       final allSetRows = await allSetRowsFuture;
-      final parentRows =
-          allSetRows.where((row) => row['parent_set_id'] == null).toList();
+      final parentRows = allSetRows
+          .where((row) => row['parent_set_id'] == null)
+          .toList();
       final childRowsByParentId = <int, List<Map<String, dynamic>>>{};
       for (final row in allSetRows) {
         final parentId = row['parent_set_id'] as int?;
@@ -2144,16 +2146,15 @@ class DatabaseHelper {
             childRowsByParentId[p['id'] as int] ??
             const <Map<String, dynamic>>[];
         if (children.isNotEmpty) {
-          changeSets[i] =
-              children
-                  .map(
-                    (c) => ExerciseSet(
-                      sourcePresetSetId: c['source_preset_set_id'] as int?,
-                      weight: (c['weight'] as num).toDouble(),
-                      reps: c['reps'] as int,
-                    ),
-                  )
-                  .toList();
+          changeSets[i] = children
+              .map(
+                (c) => ExerciseSet(
+                  sourcePresetSetId: c['source_preset_set_id'] as int?,
+                  weight: (c['weight'] as num).toDouble(),
+                  reps: c['reps'] as int,
+                ),
+              )
+              .toList();
           completedChildren[i] = Set.from(
             List.generate(children.length, (j) => j),
           );
@@ -2682,56 +2683,51 @@ class DatabaseHelper {
         for (final row in profileEquipment)
           if (row['id'] is int) row['id'] as int,
       };
-      definitions =
-          definitions
-              .where(
-                (definition) => ExerciseEquipmentCompatibility.fitsProfileIds(
-                  definition,
-                  profileEquipmentIds,
-                ),
-              )
-              .toList();
+      definitions = definitions
+          .where(
+            (definition) => ExerciseEquipmentCompatibility.fitsProfileIds(
+              definition,
+              profileEquipmentIds,
+            ),
+          )
+          .toList();
     }
 
     final selectedEquipment = equipmentFilter?.trim();
     if (selectedEquipment != null &&
         selectedEquipment.isNotEmpty &&
         selectedEquipment != 'All') {
-      definitions =
-          definitions
-              .where(
-                (definition) =>
-                    ExerciseEquipmentCompatibility.usesEquipmentName(
-                      definition,
-                      selectedEquipment,
-                    ),
-              )
-              .toList();
+      definitions = definitions
+          .where(
+            (definition) => ExerciseEquipmentCompatibility.usesEquipmentName(
+              definition,
+              selectedEquipment,
+            ),
+          )
+          .toList();
     }
 
     // 4) Post‐filter by body/muscle
     if (bodypartIds != null && bodypartIds.isNotEmpty) {
       final selectedBodypartIds = bodypartIds.toSet();
-      definitions =
-          definitions
-              .where(
-                (definition) => definition.bodyParts.any(
-                  (bodyPart) => selectedBodypartIds.contains(bodyPart.id),
-                ),
-              )
-              .toList();
+      definitions = definitions
+          .where(
+            (definition) => definition.bodyParts.any(
+              (bodyPart) => selectedBodypartIds.contains(bodyPart.id),
+            ),
+          )
+          .toList();
     }
 
     if (muscleIds != null && muscleIds.isNotEmpty) {
       final selectedMuscleIds = muscleIds.toSet();
-      definitions =
-          definitions
-              .where(
-                (definition) => definition.muscles.any(
-                  (muscle) => selectedMuscleIds.contains(muscle.muscle.id),
-                ),
-              )
-              .toList();
+      definitions = definitions
+          .where(
+            (definition) => definition.muscles.any(
+              (muscle) => selectedMuscleIds.contains(muscle.muscle.id),
+            ),
+          )
+          .toList();
     }
 
     return definitions;
@@ -2838,12 +2834,11 @@ class DatabaseHelper {
               epochMilliseconds: r['measured_at_ms'],
               legacyIso: r['timestamp'],
             ),
-            calendarDayKey:
-                TemporalSemantics.readCalendarDay(
-                  calendarDay: r['measured_on'],
-                  legacyIso: r['timestamp'],
-                  epochMilliseconds: r['measured_at_ms'],
-                ).storageKey,
+            calendarDayKey: TemporalSemantics.readCalendarDay(
+              calendarDay: r['measured_on'],
+              legacyIso: r['timestamp'],
+              epochMilliseconds: r['measured_at_ms'],
+            ).storageKey,
             value: (r['value'] as num).toDouble(),
             unit: r['unit'] as String,
             note: r['note'] as String?,
@@ -2871,8 +2866,9 @@ class DatabaseHelper {
     final value = (rows.first['value'] as num?)?.toDouble();
     if (value == null || value <= 0) return null;
 
-    final unit =
-        ((rows.first['unit'] as String?) ?? 'lbs').trim().toLowerCase();
+    final unit = ((rows.first['unit'] as String?) ?? 'lbs')
+        .trim()
+        .toLowerCase();
     if (unit == 'kg' ||
         unit == 'kgs' ||
         unit == 'kilogram' ||
@@ -3136,11 +3132,10 @@ class DatabaseHelper {
   Future<DatabaseMaintenanceResult> runDatabaseIntegrityCheck() async {
     final db = await database;
     final rows = await db.rawQuery('PRAGMA integrity_check');
-    final messages =
-        rows
-            .map((row) => row.values.isEmpty ? '' : row.values.first.toString())
-            .where((message) => message.isNotEmpty)
-            .toList();
+    final messages = rows
+        .map((row) => row.values.isEmpty ? '' : row.values.first.toString())
+        .where((message) => message.isNotEmpty)
+        .toList();
     final ok = messages.length == 1 && messages.first.toLowerCase() == 'ok';
 
     return DatabaseMaintenanceResult(
@@ -3187,8 +3182,9 @@ class DatabaseHelper {
     final db = await database;
     final tables = kDatabaseExportTableNames;
     final existingTables = await _tableNames(db);
-    final missingRequiredTables =
-        tables.where((table) => !existingTables.contains(table)).toList();
+    final missingRequiredTables = tables
+        .where((table) => !existingTables.contains(table))
+        .toList();
     if (missingRequiredTables.isNotEmpty) {
       throw StateError(
         'Database backup cannot be created because required tables are missing.',
@@ -3218,8 +3214,9 @@ class DatabaseHelper {
       throw FormatException(preview.message);
     }
     final data = decodeDatabaseExportTables(jsonStr);
-    final tablesToRestore =
-        kDatabaseExportTableNames.where(data.containsKey).toList();
+    final tablesToRestore = kDatabaseExportTableNames
+        .where(data.containsKey)
+        .toList();
     final replaceSnapshot = clearFirst && preview.canReplace;
 
     final suspendFoodFtsTriggers = await _hasFoodFtsTable(db);
@@ -3235,10 +3232,9 @@ class DatabaseHelper {
         await db.transaction((txn) async {
           final existingTables = await _tableNames(txn);
           if (replaceSnapshot) {
-            final missingLocalTables =
-                kDatabaseExportTableNames
-                    .where((table) => !existingTables.contains(table))
-                    .toList();
+            final missingLocalTables = kDatabaseExportTableNames
+                .where((table) => !existingTables.contains(table))
+                .toList();
             if (missingLocalTables.isNotEmpty) {
               throw StateError(
                 'Current database cannot accept a complete backup because required tables are missing.',
@@ -3359,35 +3355,33 @@ class DatabaseHelper {
     final defs = await DefinitionDao.getAllExerciseDefinitionsDetailedBatched(
       db,
     );
-    final out =
-        defs.map((def) {
-          final map = <String, dynamic>{
-            'name': def.name,
-            'rating': def.rating,
-            'equipment': def.equipmentList.map((e) => e.name).toList(),
-            'bodyparts': def.bodyParts.map((bp) => bp.name).toList(),
-            'muscles':
-                def.muscles
-                    .map((rm) => {'name': rm.muscle.name, 'rank': rm.rank})
-                    .toList(),
-          };
-          if (def.useManualBodyparts) {
-            map['useManualBodyparts'] = true;
-          }
-          if (def.setupNotes.isNotEmpty) {
-            map['setupNotes'] = def.setupNotes;
-          }
-          if (def.executionNotes.isNotEmpty) {
-            map['executionNotes'] = def.executionNotes;
-          }
-          if (def.tipsNotes.isNotEmpty) {
-            map['tipsNotes'] = def.tipsNotes;
-          }
-          if (def.multiplyByRating) {
-            map['multiplyByRating'] = true;
-          }
-          return map;
-        }).toList();
+    final out = defs.map((def) {
+      final map = <String, dynamic>{
+        'name': def.name,
+        'rating': def.rating,
+        'equipment': def.equipmentList.map((e) => e.name).toList(),
+        'bodyparts': def.bodyParts.map((bp) => bp.name).toList(),
+        'muscles': def.muscles
+            .map((rm) => {'name': rm.muscle.name, 'rank': rm.rank})
+            .toList(),
+      };
+      if (def.useManualBodyparts) {
+        map['useManualBodyparts'] = true;
+      }
+      if (def.setupNotes.isNotEmpty) {
+        map['setupNotes'] = def.setupNotes;
+      }
+      if (def.executionNotes.isNotEmpty) {
+        map['executionNotes'] = def.executionNotes;
+      }
+      if (def.tipsNotes.isNotEmpty) {
+        map['tipsNotes'] = def.tipsNotes;
+      }
+      if (def.multiplyByRating) {
+        map['multiplyByRating'] = true;
+      }
+      return map;
+    }).toList();
     return jsonEncode(out);
   }
 
@@ -3395,16 +3389,15 @@ class DatabaseHelper {
   Future<String> exportStretchesJson() async {
     final db = await database;
     final defs = await LookupDao.getStretches(db, null);
-    final out =
-        defs
-            .map(
-              (s) => {
-                'name': s.name,
-                'bodyparts': s.bodyParts.map((bp) => bp.name).toList(),
-                'description': s.description,
-              },
-            )
-            .toList();
+    final out = defs
+        .map(
+          (s) => {
+            'name': s.name,
+            'bodyparts': s.bodyParts.map((bp) => bp.name).toList(),
+            'description': s.description,
+          },
+        )
+        .toList();
     return jsonEncode(out);
   }
 
@@ -3422,10 +3415,9 @@ class DatabaseHelper {
       final bp = r['bodypart'] as String;
       grouped.putIfAbsent(bp, () => []).add(r['muscle'] as String);
     }
-    final out =
-        grouped.entries
-            .map((e) => {'bodypart': e.key, 'muscles': e.value})
-            .toList();
+    final out = grouped.entries
+        .map((e) => {'bodypart': e.key, 'muscles': e.value})
+        .toList();
     return jsonEncode(out);
   }
 
@@ -3438,15 +3430,14 @@ class DatabaseHelper {
         FROM bodypart_ranking r
         JOIN bodypart bp ON r.bodypart_id = bp.id
     ''');
-    final out =
-        rows
-            .map(
-              (r) => {
-                'bodypart': r['bodypart'] as String,
-                'rank': r['rank'] as int,
-              },
-            )
-            .toList();
+    final out = rows
+        .map(
+          (r) => {
+            'bodypart': r['bodypart'] as String,
+            'rank': r['rank'] as int,
+          },
+        )
+        .toList();
     return jsonEncode(out);
   }
 
@@ -3459,15 +3450,9 @@ class DatabaseHelper {
         FROM muscle_ranking r
         JOIN muscles m ON r.muscle_id = m.id
     ''');
-    final out =
-        rows
-            .map(
-              (r) => {
-                'muscle': r['muscle'] as String,
-                'rank': r['rank'] as int,
-              },
-            )
-            .toList();
+    final out = rows
+        .map((r) => {'muscle': r['muscle'] as String, 'rank': r['rank'] as int})
+        .toList();
     return jsonEncode(out);
   }
 
@@ -3491,10 +3476,9 @@ class DatabaseHelper {
         'rank': row['rank'] as int,
       });
     }
-    final out =
-        grouped.entries
-            .map((e) => {'bodypart': e.key, 'muscleRanks': e.value})
-            .toList();
+    final out = grouped.entries
+        .map((e) => {'bodypart': e.key, 'muscleRanks': e.value})
+        .toList();
     return jsonEncode(out);
   }
 
@@ -4265,10 +4249,9 @@ class DatabaseHelper {
       );
       if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
     }
-    final whereClause =
-        eqId != null
-            ? 'name = ? AND equipment_id = ?'
-            : 'name = ? AND equipment_id IS NULL';
+    final whereClause = eqId != null
+        ? 'name = ? AND equipment_id = ?'
+        : 'name = ? AND equipment_id IS NULL';
     final args = eqId != null ? [name, eqId] : [name];
     final rows = await db.query(
       'exercise_definitions',
@@ -4295,12 +4278,11 @@ class DatabaseHelper {
               epochMilliseconds: row['completed_at_ms'],
               legacyIso: row['date'],
             ),
-            calendarDayKey:
-                TemporalSemantics.readCalendarDay(
-                  calendarDay: row['training_day'],
-                  legacyIso: row['date'],
-                  epochMilliseconds: row['completed_at_ms'],
-                ).storageKey,
+            calendarDayKey: TemporalSemantics.readCalendarDay(
+              calendarDay: row['training_day'],
+              legacyIso: row['date'],
+              epochMilliseconds: row['completed_at_ms'],
+            ).storageKey,
             duration: row['duration'] as int,
           ),
         )
@@ -4379,10 +4361,9 @@ class DatabaseHelper {
 
   Future<int> findOrCreatePreset(String name, {int? profileId}) async {
     final db = await database;
-    final whereClause =
-        profileId != null
-            ? 'name = ? AND profile_id = ? AND is_draft = 0'
-            : 'name = ? AND profile_id IS NULL AND is_draft = 0';
+    final whereClause = profileId != null
+        ? 'name = ? AND profile_id = ? AND is_draft = 0'
+        : 'name = ? AND profile_id IS NULL AND is_draft = 0';
     final whereArgs = profileId != null ? [name, profileId] : [name];
     final existing = await db.query(
       'preset_definitions',
@@ -4420,10 +4401,9 @@ class DatabaseHelper {
     int? profileId,
   }) async {
     final db = await database;
-    final where =
-        profileId != null
-            ? 'WHERE p.profile_id = ? AND p.is_draft = 0'
-            : 'WHERE p.is_draft = 0';
+    final where = profileId != null
+        ? 'WHERE p.profile_id = ? AND p.is_draft = 0'
+        : 'WHERE p.is_draft = 0';
     return db.rawQuery('''
       SELECT
         p.id AS id,
@@ -4868,34 +4848,10 @@ class DatabaseHelper {
 
   // ─── FLOW‐CHART DEFAULTS (v17 tables) ───────────────────────────────────
 
-  ({String whereClause, List<Object?> arguments}) _flowScopeFilter(
-    String scope,
-    int? profileId,
-  ) {
-    return profileId == null
-        ? (
-          whereClause: 'scope = ? AND profile_id IS NULL',
-          arguments: <Object?>[scope],
-        )
-        : (
-          whereClause: 'scope = ? AND profile_id = ?',
-          arguments: <Object?>[scope, profileId],
-        );
-  }
-
   /// Fetch the saved default flow JSON for either the whole app or a specific profile.
   Future<String> fetchDefaultFlow(String scope, {int? profileId}) async {
     final db = await database;
-    final filter = _flowScopeFilter(scope, profileId);
-    final rows = await db.query(
-      'flow_defaults',
-      columns: ['flow_json'],
-      where: filter.whereClause,
-      whereArgs: filter.arguments,
-      limit: 1,
-    );
-    if (rows.isEmpty) return '{}';
-    return rows.first['flow_json'] as String;
+    return FlowDefaultsDao.fetchDefaultFlow(db, scope, profileId: profileId);
   }
 
   /// Upsert default flow JSON for scope=('app' or 'profile') and optional profileId.
@@ -4905,32 +4861,18 @@ class DatabaseHelper {
     required String flowJson,
   }) async {
     final db = await database;
-    final values = {
-      'scope': scope,
-      'profile_id': profileId,
-      'flow_json': flowJson,
-    };
-    final filter = _flowScopeFilter(scope, profileId);
-    final updated = await db.update(
-      'flow_defaults',
-      values,
-      where: filter.whereClause,
-      whereArgs: filter.arguments,
+    await FlowDefaultsDao.upsertDefaultFlow(
+      db,
+      scope,
+      profileId: profileId,
+      flowJson: flowJson,
     );
-    if (updated == 0) {
-      await db.insert('flow_defaults', values);
-    }
   }
 
   /// Delete a default flow entry.
   Future<int> deleteDefaultFlow(String scope, {int? profileId}) async {
     final db = await database;
-    final filter = _flowScopeFilter(scope, profileId);
-    return db.delete(
-      'flow_defaults',
-      where: filter.whereClause,
-      whereArgs: filter.arguments,
-    );
+    return FlowDefaultsDao.deleteDefaultFlow(db, scope, profileId: profileId);
   }
 
   /// Fetch all the methods attached to an app/profile default.
@@ -4939,13 +4881,11 @@ class DatabaseHelper {
     int? profileId,
   }) async {
     final db = await database;
-    final filter = _flowScopeFilter(scope, profileId);
-    return db.rawQuery('''
-      SELECT rowid AS id, scope, profile_id, name, type, params
-      FROM flow_default_methods
-      WHERE ${filter.whereClause}
-      ORDER BY name
-      ''', filter.arguments);
+    return FlowDefaultsDao.fetchDefaultFlowMethods(
+      db,
+      scope,
+      profileId: profileId,
+    );
   }
 
   /// Upsert one method into the default‐methods table (conflict on PK(scope,profile_id,name)).
@@ -4954,48 +4894,17 @@ class DatabaseHelper {
     int? profileId,
     required String name,
     required String type,
-    required Map<String, dynamic> params, // <-- accept a Map
+    required Map<String, dynamic> params,
   }) async {
     final db = await database;
-    final paramsJson = jsonEncode(params); // <-- encode here
-    final scopeFilter = _flowScopeFilter(scope, profileId);
-    final defaultRows = await db.query(
-      'flow_defaults',
-      columns: ['scope'],
-      where: scopeFilter.whereClause,
-      whereArgs: scopeFilter.arguments,
-      limit: 1,
+    return FlowDefaultsDao.upsertDefaultFlowMethod(
+      db,
+      scope,
+      profileId: profileId,
+      name: name,
+      type: type,
+      params: params,
     );
-    if (defaultRows.isEmpty) {
-      await db.insert('flow_defaults', {
-        'scope': scope,
-        'profile_id': profileId,
-        'flow_json': '{}',
-      });
-    }
-    final values = {
-      'scope': scope,
-      'profile_id': profileId,
-      'name': name,
-      'type': type,
-      'params': paramsJson, // <-- store JSON string
-    };
-    final whereClause = '${scopeFilter.whereClause} AND name = ?';
-    final args = [...scopeFilter.arguments, name];
-    final updated = await db.update(
-      'flow_default_methods',
-      values,
-      where: whereClause,
-      whereArgs: args,
-    );
-    if (updated == 0) {
-      await db.insert('flow_default_methods', values);
-    }
-    final rows = await db.rawQuery(
-      'SELECT rowid AS id FROM flow_default_methods WHERE $whereClause LIMIT 1',
-      args,
-    );
-    return rows.isEmpty ? 0 : rows.first['id'] as int;
   }
 
   /// Adds a new app default rule to existing profiles without changing
@@ -5039,13 +4948,11 @@ class DatabaseHelper {
     required String name,
   }) async {
     final db = await database;
-    final scopeFilter = _flowScopeFilter(scope, profileId);
-    final whereClause = '${scopeFilter.whereClause} AND name = ?';
-    final args = [...scopeFilter.arguments, name];
-    return db.delete(
-      'flow_default_methods',
-      where: whereClause,
-      whereArgs: args,
+    return FlowDefaultsDao.deleteDefaultFlowMethod(
+      db,
+      scope,
+      profileId: profileId,
+      name: name,
     );
   }
 
@@ -5202,9 +5109,9 @@ class DatabaseHelper {
     int id, {
     required int profileId,
     required DateTime date,
-  }) async => NutritionDao(
-    await database,
-  ).deleteDiaryEntry(id, profileId: profileId, date: date);
+  }) async =>
+      NutritionDao(await database)
+          .deleteDiaryEntry(id, profileId: profileId, date: date);
 
   Future<List<DiaryEntry>> getDiaryEntriesForDate(
     int profileId,
@@ -5215,9 +5122,9 @@ class DatabaseHelper {
   Future<List<DiaryEntryWithItem>> getDiaryEntriesWithItemsForDate(
     int profileId,
     DateTime day,
-  ) async => NutritionDao(
-    await database,
-  ).getDiaryEntriesWithItemsForDate(profileId, day);
+  ) async =>
+      NutritionDao(await database)
+          .getDiaryEntriesWithItemsForDate(profileId, day);
 
   // Goals
   Future<void> setGoals(NutritionGoal goal) async =>
@@ -5234,27 +5141,24 @@ class DatabaseHelper {
       NutritionDao(await database).recalcDayTotals(profileId, date);
 
   Future<int> createCustomFood({required String name, String? brand}) async {
-    return NutritionDao(
-      await database,
-    ).insertCustomFood(name: name, brand: brand);
+    return NutritionDao(await database)
+        .insertCustomFood(name: name, brand: brand);
   }
 
   Future<void> savePer100gByCode(
     int foodId,
     Map<String, double> codeToAmount,
   ) async {
-    await NutritionDao(
-      await database,
-    ).replacePer100gByCode(foodId, codeToAmount);
+    await NutritionDao(await database)
+        .replacePer100gByCode(foodId, codeToAmount);
   }
 
   Future<void> savePer100gFromLabelPayload(
     int foodId,
     Map<String, dynamic> payload,
   ) async {
-    await NutritionDao(
-      await database,
-    ).savePer100gFromLabelPayload(foodId, payload);
+    await NutritionDao(await database)
+        .savePer100gFromLabelPayload(foodId, payload);
   }
 
   /// Extracts leaf labels from the customization payload and persists per-100g values
@@ -5280,8 +5184,9 @@ class DatabaseHelper {
       final rawVal = entry.value;
       if (rawVal == null) continue;
 
-      final val =
-          (rawVal is num) ? rawVal.toDouble() : double.tryParse('$rawVal');
+      final val = (rawVal is num)
+          ? rawVal.toDouble()
+          : double.tryParse('$rawVal');
       if (val == null) continue;
 
       final lastGt = key.lastIndexOf('>');
@@ -5325,9 +5230,8 @@ class DatabaseHelper {
   }
 
   Future<void> updateFoodBasics(int id, {String? name, String? brand}) async {
-    return NutritionDao(
-      await database,
-    ).updateFoodBasics(id, name: name, brand: brand);
+    return NutritionDao(await database)
+        .updateFoodBasics(id, name: name, brand: brand);
   }
 
   Future<void> updateFoodFromCustomizationPayload(Map payload) async {
@@ -5375,9 +5279,8 @@ class DatabaseHelper {
     required int foodId,
     required int portionId,
     double quantity = 1.0,
-  }) async => NutritionDao(
-    await database,
-  ).calcForPortion(foodId: foodId, portionId: portionId, quantity: quantity);
+  }) async => NutritionDao(await database)
+      .calcForPortion(foodId: foodId, portionId: portionId, quantity: quantity);
 
   // Optional: manual rebuild for FTS caller
   Future<void> rebuildFoodFts() async =>
