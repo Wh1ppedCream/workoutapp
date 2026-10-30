@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../support/dart_source_library.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,8 +15,9 @@ void main() {
   test(
     'Session history uses Logbook in Expressive and preserves other scopes',
     () {
-      final source = File('lib/widgets/exercise_detail_sheet.dart')
-          .readAsStringSync();
+      final source = readDartSourceLibrary(
+        'lib/widgets/exercise_detail_sheet.dart',
+      );
       final historyRoute = _section(
         source,
         'Future<void> _openHistorySession(',
@@ -44,8 +45,9 @@ void main() {
   );
 
   test('Approved detail styling is shared by every Expressive caller', () {
-    final source = File('lib/widgets/exercise_detail_sheet.dart')
-        .readAsStringSync();
+    final source = readDartSourceLibrary(
+      'lib/widgets/exercise_detail_sheet.dart',
+    );
     final sheetApi = _section(
       source,
       'class ExerciseDetailSheet extends StatefulWidget',

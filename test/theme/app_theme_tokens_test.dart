@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../support/dart_source_library.dart';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,31 +25,33 @@ void main() {
         'exercise_analytics_screen',
         'exercise_editor_screen',
       ]) {
-        final source = File('lib/screens/profile/settings/$name.dart')
-            .readAsStringSync();
+        final source = readDartSourceLibrary(
+          'lib/screens/profile/settings/$name.dart',
+        );
         expect(source, contains('borderRadius: shapes.settingsTabIndicator'));
         expect(source, isNot(contains('shapes.settingsInput')));
       }
       for (final name in ['flow_methods_page', 'workout_progress_flows_page']) {
-        final source = File('lib/screens/profile/settings/$name.dart')
-            .readAsStringSync();
+        final source = readDartSourceLibrary(
+          'lib/screens/profile/settings/$name.dart',
+        );
         expect(source, contains('shapes.settingsScopeIcon'));
         expect(source, isNot(contains('shapes.settingsInput')));
       }
     },
   );
   test('settings consumers resolve the new semantic ownership roles', () {
-    final databaseSource = File(
+    final databaseSource = readDartSourceLibrary(
       'lib/screens/profile/settings/database_settings_page.dart',
-    ).readAsStringSync();
+    );
     expect(databaseSource, contains('semantic.databaseHealthy'));
     expect(databaseSource, contains('semantic.databaseWarning'));
     expect(databaseSource, isNot(contains('Colors.green')));
     expect(databaseSource, isNot(contains('Colors.orange')));
 
-    final editorSource = File(
+    final editorSource = readDartSourceLibrary(
       'lib/screens/profile/settings/exercise_editor_screen.dart',
-    ).readAsStringSync();
+    );
     expect(editorSource, contains('shapes.settingsTitleCard'));
     expect(editorSource, contains('surfaces.settingsHero'));
     expect(editorSource, contains('SettingsInlineActionButton('));
@@ -64,8 +66,9 @@ void main() {
         'exercise_editor_screen',
         'goal_manual_entry_page',
       ]) {
-        final source = File('lib/screens/profile/settings/$name.dart')
-            .readAsStringSync();
+        final source = readDartSourceLibrary(
+          'lib/screens/profile/settings/$name.dart',
+        );
         expect(source, contains('SettingsSaveBar('), reason: name);
       }
 
@@ -75,15 +78,16 @@ void main() {
         'volume_boundaries_screen',
         'exercise_analytics_screen',
       ]) {
-        final source = File('lib/screens/profile/settings/$name.dart')
-            .readAsStringSync();
+        final source = readDartSourceLibrary(
+          'lib/screens/profile/settings/$name.dart',
+        );
         expect(source, contains('settingsFieldDecoration('), reason: name);
       }
     },
   );
   test('settings route slices retain shared ownership boundaries', () {
     String source(String name) =>
-        File('lib/screens/profile/settings/$name.dart').readAsStringSync();
+        readDartSourceLibrary('lib/screens/profile/settings/$name.dart');
 
     final appearanceSource = source('ui_appearance_settings_page');
     expect(appearanceSource, contains('SettingsPageScaffold('));
@@ -127,18 +131,18 @@ void main() {
     expect(editorSource, contains('AlertDialog('));
   });
   test('settings label consumers use shared pill and badge primitives', () {
-    final flowMethodsSource = File(
+    final flowMethodsSource = readDartSourceLibrary(
       'lib/screens/profile/settings/flow_methods_page.dart',
-    ).readAsStringSync();
-    final progressFlowsSource = File(
+    );
+    final progressFlowsSource = readDartSourceLibrary(
       'lib/screens/profile/settings/workout_progress_flows_page.dart',
-    ).readAsStringSync();
-    final tutorialsSource = File(
+    );
+    final tutorialsSource = readDartSourceLibrary(
       'lib/screens/profile/settings/tutorials_settings_page.dart',
-    ).readAsStringSync();
-    final analyticsSource = File(
+    );
+    final analyticsSource = readDartSourceLibrary(
       'lib/screens/profile/settings/exercise_analytics_screen.dart',
-    ).readAsStringSync();
+    );
 
     expect(flowMethodsSource, contains('SettingsLegendChip('));
     expect(flowMethodsSource, contains('SettingsCountBadge('));
@@ -156,8 +160,9 @@ void main() {
     expect(analyticsSource, contains('SettingsAccentPill('));
   });
   test('Train and workout completion consumers use focused theme roles', () {
-    final trainSource = File('lib/screens/exercise/train_page.dart')
-        .readAsStringSync();
+    final trainSource = readDartSourceLibrary(
+      'lib/screens/exercise/train_page.dart',
+    );
     expect(trainSource, contains('semantic.startWorkoutAction'));
     expect(trainSource, contains('semantic.onStartWorkoutAction'));
     expect(trainSource, contains('dataVisualization.tertiarySeries'));
@@ -170,8 +175,9 @@ void main() {
     expect(trainSource, isNot(contains('Colors.green.shade700')));
     expect(trainSource, isNot(contains('color: Colors.purple')));
 
-    final trainTabsSource = File('lib/widgets/tonos_train_tabs.dart')
-        .readAsStringSync();
+    final trainTabsSource = readDartSourceLibrary(
+      'lib/widgets/tonos_train_tabs.dart',
+    );
     expect(trainTabsSource, contains('surfaces.trainTabSurfaceOpacity'));
     expect(trainTabsSource, contains('shapes.trainTabButton'));
     expect(
@@ -199,8 +205,9 @@ void main() {
     );
     expect(trainSource, contains('TonosActionVariant.primary'));
 
-    final weightCardSource = File('lib/widgets/weight_card.dart')
-        .readAsStringSync();
+    final weightCardSource = readDartSourceLibrary(
+      'lib/widgets/weight_card.dart',
+    );
     expect(weightCardSource, contains('semantic.workoutCompleted'));
     expect(weightCardSource, contains('semantic.workoutExerciseCompleted'));
     expect(weightCardSource, contains('semantic.workoutSetCompleted'));
@@ -212,8 +219,9 @@ void main() {
     expect(weightCardSource, contains('context.shapeTokens.mediaThumbnail'));
     expect(weightCardSource, isNot(contains('Colors.green.withAlpha')));
 
-    final completionSource = File('lib/widgets/session_complete_sheet.dart')
-        .readAsStringSync();
+    final completionSource = readDartSourceLibrary(
+      'lib/widgets/session_complete_sheet.dart',
+    );
     expect(completionSource, contains('class WorkoutCompletionPresentation'));
     expect(completionSource, contains('WorkoutCompletionExerciseCard('));
     expect(completionSource, contains('semantic.completionAccent'));
@@ -228,53 +236,57 @@ void main() {
     expect(completionSource, contains('surfaces.completionExerciseFill'));
     expect(completionSource, contains('surfaces.completionExerciseBorder'));
 
-    final pilotSource = File('lib/theme/neo_brutalism_pilot_gallery.dart')
-        .readAsStringSync();
+    final pilotSource = readDartSourceLibrary(
+      'lib/theme/neo_brutalism_pilot_gallery.dart',
+    );
     expect(pilotSource, contains('WorkoutCompletionPresentation('));
 
-    final optimizedSource = File(
+    final optimizedSource = readDartSourceLibrary(
       'lib/screens/exercise/optimized_workout_settings_page.dart',
-    ).readAsStringSync();
+    );
     expect(optimizedSource, contains('semantic.startWorkoutAction'));
     expect(optimizedSource, contains('semantic.onStartWorkoutAction'));
     expect(optimizedSource, contains('surfaces.optimizedAction'));
     expect(optimizedSource, contains('shapes.pill'));
 
-    final presetDetailSource = File(
+    final presetDetailSource = readDartSourceLibrary(
       'lib/screens/exercise/preset_detail_screen.dart',
-    ).readAsStringSync();
+    );
     expect(presetDetailSource, contains('semantic.editingActive'));
     expect(presetDetailSource, contains('semantic.editingInactive'));
 
-    final planManagementSource = File(
+    final planManagementSource = readDartSourceLibrary(
       'lib/screens/exercise/plan_management_page.dart',
-    ).readAsStringSync();
+    );
     expect(planManagementSource, contains('surfaces.planCard'));
     expect(planManagementSource, contains('shapes.planCard'));
 
-    final presetsLoadedSource = File('lib/widgets/presets_loaded.dart')
-        .readAsStringSync();
+    final presetsLoadedSource = readDartSourceLibrary(
+      'lib/widgets/presets_loaded.dart',
+    );
     expect(presetsLoadedSource, contains('shapes.card'));
     expect(presetsLoadedSource, contains('PlanIdentityPalette.colors'));
     expect(presetsLoadedSource, contains('surfaces.planRevealBorderOpacity'));
     expect(presetsLoadedSource, isNot(contains('static const _palette')));
 
-    final detailSource = File('lib/screens/exercise/session_detail_screen.dart')
-        .readAsStringSync();
+    final detailSource = readDartSourceLibrary(
+      'lib/screens/exercise/session_detail_screen.dart',
+    );
     expect(detailSource, contains('semantic.editingActive'));
     expect(detailSource, contains('surfaces.sessionSummary'));
 
-    final badgesSource = File('lib/widgets/workout_record_badges.dart')
-        .readAsStringSync();
+    final badgesSource = readDartSourceLibrary(
+      'lib/widgets/workout_record_badges.dart',
+    );
     expect(badgesSource, contains('dataVisualization.recordMonthly'));
     expect(badgesSource, contains('dataVisualization.recordAllTime'));
     expect(badgesSource, contains('dataVisualization.firstRecord'));
     expect(badgesSource, contains('shapes.recordBadge'));
     expect(badgesSource, contains('shapes.recordBadgeCompact'));
 
-    final premadePlansSource = File(
+    final premadePlansSource = readDartSourceLibrary(
       'lib/screens/exercise/premade_plans_page.dart',
-    ).readAsStringSync();
+    );
     expect(premadePlansSource, contains('surfaces.planFilter'));
     expect(premadePlansSource, contains('surfaces.planDuration'));
     expect(premadePlansSource, contains('surfaces.planGroup'));
@@ -286,9 +298,9 @@ void main() {
     expect(premadePlansSource, isNot(contains('Duration(milliseconds: 180)')));
     expect(premadePlansSource, isNot(contains('withValues(alpha: 0.55)')));
 
-    final automaticFlowSource = File(
+    final automaticFlowSource = readDartSourceLibrary(
       'lib/screens/exercise/auto_preset_flow_screen.dart',
-    ).readAsStringSync();
+    );
     expect(automaticFlowSource, contains('surfaces.flowControl'));
     expect(
       automaticFlowSource,
@@ -322,51 +334,59 @@ void main() {
     expect(automaticFlowSource, isNot(contains('withValues(alpha: .04)')));
     expect(automaticFlowSource, isNot(contains('withValues(alpha: .16)')));
 
-    final flowWidgetsSource = File('lib/widgets/flow_widgets.dart')
-        .readAsStringSync();
+    final flowWidgetsSource = readDartSourceLibrary(
+      'lib/widgets/flow_widgets.dart',
+    );
     expect(flowWidgetsSource, contains('context.flowTokens'));
     expect(flowWidgetsSource, contains('context.surfaceTokens.dialog'));
     expect(flowWidgetsSource, isNot(contains('context.colors')));
 
-    final flowScreenWidgetsSource = File('lib/widgets/flow_screen_widgets.dart')
-        .readAsStringSync();
+    final flowScreenWidgetsSource = readDartSourceLibrary(
+      'lib/widgets/flow_screen_widgets.dart',
+    );
     expect(flowScreenWidgetsSource, contains('context.flowTokens'));
     expect(flowScreenWidgetsSource, contains('context.surfaceTokens.dialog'));
     expect(flowScreenWidgetsSource, isNot(contains('context.colors')));
 
-    final genericBarSource = File('lib/widgets/generic_bar.dart')
-        .readAsStringSync();
+    final genericBarSource = readDartSourceLibrary(
+      'lib/widgets/generic_bar.dart',
+    );
     expect(genericBarSource, contains('shapes.compact'));
 
-    final focusedSetsSource = File('lib/widgets/focused_sets_list.dart')
-        .readAsStringSync();
+    final focusedSetsSource = readDartSourceLibrary(
+      'lib/widgets/focused_sets_list.dart',
+    );
     expect(focusedSetsSource, contains('shapes.pill'));
 
-    final metricChipSource = File('lib/widgets/set_stat_chip.dart')
-        .readAsStringSync();
+    final metricChipSource = readDartSourceLibrary(
+      'lib/widgets/set_stat_chip.dart',
+    );
     expect(metricChipSource, contains('surfaces.metricChip'));
     expect(metricChipSource, contains('shapes.metric'));
 
-    final presetInfoSource = File('lib/widgets/preset_info_card.dart')
-        .readAsStringSync();
+    final presetInfoSource = readDartSourceLibrary(
+      'lib/widgets/preset_info_card.dart',
+    );
     expect(presetInfoSource, contains('shapes.metric'));
     expect(presetInfoSource, contains('tonosHeatmapLowForSurface'));
     expect(presetInfoSource, contains('surfaces.card'));
     expect(presetInfoSource, contains('semantic.strongContent'));
 
-    final presetBarSource = File('lib/widgets/preset_bar.dart')
-        .readAsStringSync();
+    final presetBarSource = readDartSourceLibrary(
+      'lib/widgets/preset_bar.dart',
+    );
     expect(presetBarSource, contains('WorkoutThumbnailFrame'));
     expect(presetBarSource, contains('tonosHeatmapLowForSurface'));
 
-    final swapSource = File('lib/widgets/swap_exercise_sheet.dart')
-        .readAsStringSync();
+    final swapSource = readDartSourceLibrary(
+      'lib/widgets/swap_exercise_sheet.dart',
+    );
     expect(swapSource, contains('swapSecondaryTextOpacity'));
 
     expect(detailSource, contains('shapes.metric'));
   });
   test('active-session consumers keep shared ownership boundaries', () {
-    String source(String path) => File(path).readAsStringSync();
+    String source(String path) => readDartSourceLibrary(path);
 
     final sessionSource = source('lib/screens/exercise/session_screen.dart');
     final compactSessionSource = sessionSource.replaceAll(RegExp(r'\s+'), '');
@@ -432,7 +452,7 @@ void main() {
     expect(actionsSource, contains('context.shapeTokens'));
   });
   test('B5 keeps completion and record meanings independent', () {
-    String source(String path) => File(path).readAsStringSync();
+    String source(String path) => readDartSourceLibrary(path);
 
     final completionSource = source('lib/widgets/session_complete_sheet.dart');
     expect(completionSource, contains('dataVisualization.sessionExercises'));

@@ -1,3 +1,5 @@
+import '../support/dart_source_library.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -146,7 +148,7 @@ void main() {
     for (final entry in routeMarkers.entries) {
       final path = entry.key;
       expect(File(path).existsSync(), isTrue, reason: path);
-      final source = _withoutCommentsAndImports(File(path).readAsStringSync());
+      final source = _withoutCommentsAndImports(readDartSourceLibrary(path));
       for (final marker in entry.value) {
         expect(
           source,
@@ -159,7 +161,7 @@ void main() {
 
   test('shared settings primitives cover the residue boundary', () {
     final source = _withoutCommentsAndImports(
-      File('lib/widgets/settings_tiles.dart').readAsStringSync(),
+      readDartSourceLibrary('lib/widgets/settings_tiles.dart'),
     );
     for (final marker in const [
       'SettingsValueText',
@@ -172,7 +174,7 @@ void main() {
     }
 
     final dialog = _withoutCommentsAndImports(
-      File('lib/theme/widgets/tonos_dialog.dart').readAsStringSync(),
+      readDartSourceLibrary('lib/theme/widgets/tonos_dialog.dart'),
     );
     expect(dialog, contains('TonosDialogFrame'));
     expect(dialog, contains('dialogButtonForeground'));
@@ -184,7 +186,7 @@ void main() {
       'lib/screens/profile/settings/app_settings_page.dart',
       'lib/screens/profile/settings/database_settings_page.dart',
     ]) {
-      final source = _withoutCommentsAndImports(File(path).readAsStringSync());
+      final source = _withoutCommentsAndImports(readDartSourceLibrary(path));
       expect(source, contains('TonosField'), reason: path);
       expect(source, isNot(contains('TextField(')), reason: path);
       if (path != 'lib/screens/profile/settings/flow_methods_page.dart') {
@@ -199,8 +201,9 @@ void main() {
 
   test('Auto Preset add-method dialog uses shared form controls', () {
     final source = _withoutCommentsAndImports(
-      File('lib/screens/exercise/auto_preset_flow_screen.dart')
-          .readAsStringSync(),
+      readDartSourceLibrary(
+        'lib/screens/exercise/auto_preset_flow_screen.dart',
+      ),
     );
     final start = source.indexOf('Future<void> _showAddMethodDialog()');
     final end = source.indexOf('Future<void> _saveFlow()', start);

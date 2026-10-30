@@ -1,19 +1,19 @@
+import '../support/dart_source_library.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('canonical E2.1 route ledger remains complete and schema-shaped', () {
-    final ledger = File('docs/theme-e2-route-ledger.md').readAsStringSync();
-    final rows =
-        ledger
-            .split(RegExp(r'\r?\n'))
-            .where((line) => RegExp(r'^\| R\d+ \|').hasMatch(line))
-            .toList();
-    final fields =
-        rows
-            .map((row) => row.split('|').map((field) => field.trim()).toList())
-            .toList();
+    final ledger = readDartSourceLibrary('docs/theme-e2-route-ledger.md');
+    final rows = ledger
+        .split(RegExp(r'\r?\n'))
+        .where((line) => RegExp(r'^\| R\d+ \|').hasMatch(line))
+        .toList();
+    final fields = rows
+        .map((row) => row.split('|').map((field) => field.trim()).toList())
+        .toList();
 
     const expectedDestinations = [
       'lib/main.dart: _StartupGate, OnboardingFlow, MainScreen',
@@ -93,9 +93,9 @@ void main() {
       expect(fields[index][11], isEmpty);
       expect(fields[index].join('|').contains('__'), isFalse);
 
-      final paths = RegExp(
-        r'lib/[^ ,;:]+\.dart',
-      ).allMatches(fields[index][3]).map((match) => match.group(0)!);
+      final paths = RegExp(r'lib/[^ ,;:]+\.dart')
+          .allMatches(fields[index][3])
+          .map((match) => match.group(0)!);
       expect(paths, isNotEmpty, reason: fields[index][3]);
       for (final path in paths) {
         expect(File(path).existsSync(), isTrue, reason: path);
@@ -198,7 +198,7 @@ void main() {
       };
 
       for (final entry in requiredEdges.entries) {
-        final source = _withoutComments(File(entry.key).readAsStringSync());
+        final source = _withoutComments(readDartSourceLibrary(entry.key));
         for (final destination in entry.value) {
           expect(
             _hasNavigationConstructor(source, destination),

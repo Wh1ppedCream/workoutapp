@@ -1,3 +1,5 @@
+import '../support/dart_source_library.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -163,7 +165,7 @@ void main() {
     };
 
     final fieldOwner = _withoutCommentsAndImports(
-      File('lib/theme/widgets/tonos_field.dart').readAsStringSync(),
+      readDartSourceLibrary('lib/theme/widgets/tonos_field.dart'),
     );
     expect(fieldOwner, contains('class TonosFormField'));
     expect(fieldOwner, contains('TextFormField('));
@@ -172,9 +174,7 @@ void main() {
       for (final route in category.value.entries) {
         final path = route.key;
         expect(File(path).existsSync(), isTrue, reason: path);
-        final source = _withoutCommentsAndImports(
-          File(path).readAsStringSync(),
-        );
+        final source = _withoutCommentsAndImports(readDartSourceLibrary(path));
         expect(
           route.value.every(source.contains),
           isTrue,

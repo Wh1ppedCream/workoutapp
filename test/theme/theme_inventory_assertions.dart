@@ -1,3 +1,5 @@
+import '../support/dart_source_library.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -22,10 +24,13 @@ void expectPendingStyleBacklog(
   };
   final groups = <String, List<ThemeStyleFinding>>{};
   for (final finding in report.findings) {
-    if (finding.status != 'pending' || (file != null && finding.file != file)) {
+    if (finding.status != 'pending' ||
+        (file != null && canonicalDartLibraryPath(finding.file) != file)) {
       continue;
     }
-    groups.putIfAbsent(finding.file, () => []).add(finding);
+    groups
+        .putIfAbsent(canonicalDartLibraryPath(finding.file), () => [])
+        .add(finding);
   }
   final actual = <String, dynamic>{};
   for (final entry in groups.entries) {

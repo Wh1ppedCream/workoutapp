@@ -1,3 +1,5 @@
+import '../support/dart_source_library.dart';
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -122,7 +124,7 @@ void main() {
         (rule) => rule.id == entry.key,
       );
       final path = entry.key.startsWith('onboarding-') ? onboarding : editor;
-      expect(rule.pattern, path);
+      expect(rule.pattern, sourceLibraryPattern(path));
       expect(rule.sourcePattern, isNotNull);
       expect(rule.kinds.toSet(), entry.value.keys.toSet());
       // A path and kind alone cannot qualify an unreviewed expression.
@@ -132,7 +134,7 @@ void main() {
       );
       final counts = <String, int>{for (final kind in rule.kinds) kind: 0};
       for (final finding in findings) {
-        expect(finding.file, path);
+        expect(canonicalDartLibraryPath(finding.file), path);
         expect(finding.status, 'migrated');
         counts.update(finding.kind, (count) => count + 1, ifAbsent: () => 1);
       }
@@ -155,10 +157,10 @@ void main() {
       (finding) => finalQualificationRules.contains(finding.ruleId),
     );
     expect(qualified, hasLength(28));
-    final lines = File(onboarding).readAsLinesSync();
     final ownerPattern = RegExp(r'^class\s+(\w+)\b');
     final qualifiedOwners = <String, int>{};
     for (final finding in qualified) {
+      final lines = File(finding.file).readAsLinesSync();
       final owner = lines
           .take(finding.line)
           .map(ownerPattern.firstMatch)
@@ -273,7 +275,10 @@ void main() {
       (rule) => rule.id == 'identity-color-palettes',
     );
 
-    expect(rule.pattern, 'lib/widgets/identity_color_palettes.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/identity_color_palettes.dart'),
+    );
     expect(rule.classification, 'intentional_one_off');
     expect(rule.status, 'allowlisted');
     expect(rule.target, contains('identity data colors'));
@@ -291,7 +296,10 @@ void main() {
       (rule) => rule.id == 'settings-category-accents',
     );
 
-    expect(rule.pattern, 'lib/widgets/settings_tiles.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/settings_tiles.dart'),
+    );
     expect(rule.classification, 'stable_category_data');
     expect(rule.status, 'allowlisted');
     expect(
@@ -349,7 +357,10 @@ void main() {
       (rule) => rule.id == 'dashboard-editor-category-accents',
     );
 
-    expect(surfaceRule.pattern, 'lib/screens/dashboard_page.dart');
+    expect(
+      surfaceRule.pattern,
+      sourceLibraryPattern('lib/screens/dashboard_page.dart'),
+    );
     expect(surfaceRule.classification, 'structural_theme');
     expect(surfaceRule.status, 'migrated');
     expect(
@@ -359,7 +370,10 @@ void main() {
     expect(surfaceRule.rationale, contains('dashboardEditor'));
     expect(surfaceRule.rationale, contains('manual/device review'));
 
-    expect(categoryRule.pattern, 'lib/screens/dashboard_page.dart');
+    expect(
+      categoryRule.pattern,
+      sourceLibraryPattern('lib/screens/dashboard_page.dart'),
+    );
     expect(categoryRule.classification, 'stable_category_data');
     expect(categoryRule.status, 'allowlisted');
     expect(categoryRule.kinds, unorderedEquals(<String>['color_transform']));
@@ -551,7 +565,10 @@ void main() {
     final recipeRule = inventory.pathRules.singleWhere(
       (rule) => rule.id == 'weight-card-recipes',
     );
-    expect(recipeRule.pattern, 'lib/widgets/weight_card.dart');
+    expect(
+      recipeRule.pattern,
+      sourceLibraryPattern('lib/widgets/weight_card.dart'),
+    );
     expect(recipeRule.classification, 'structural_theme');
     expect(recipeRule.status, 'migrated');
     expect(
@@ -618,7 +635,10 @@ void main() {
       final rule = inventory.pathRules.singleWhere(
         (rule) => rule.id == 'expressive-active-workout-add-fab-outline',
       );
-      expect(rule.pattern, 'lib/widgets/add_exercise_fab.dart');
+      expect(
+        rule.pattern,
+        sourceLibraryPattern('lib/widgets/add_exercise_fab.dart'),
+      );
       expect(rule.kinds, unorderedEquals(<String>['geometry']));
       expect(rule.classification, 'intentional_one_off');
       expect(rule.status, 'allowlisted');
@@ -701,7 +721,10 @@ void main() {
     final recipeRule = inventory.pathRules.singleWhere(
       (rule) => rule.id == 'train-action-bar-recipes',
     );
-    expect(recipeRule.pattern, 'lib/screens/exercise/train_page.dart');
+    expect(
+      recipeRule.pattern,
+      sourceLibraryPattern('lib/screens/exercise/train_page.dart'),
+    );
     expect(recipeRule.classification, 'structural_theme');
     expect(recipeRule.status, 'migrated');
     expect(
@@ -736,7 +759,10 @@ void main() {
         .where((finding) => finding.ruleId == rule.id)
         .toList();
 
-    expect(rule.pattern, 'lib/widgets/seven_day_focus_card.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/seven_day_focus_card.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -765,7 +791,10 @@ void main() {
       (rule) => rule.id == 'train2-tab-selector-recipe',
     );
 
-    expect(rule.pattern, 'lib/screens/exercise/train2_page.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/screens/exercise/train2_page.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(rule.kinds, unorderedEquals(<String>['color', 'decoration']));
@@ -832,7 +861,10 @@ void main() {
       (rule) => rule.id == 'workout-record-badges',
     );
 
-    expect(rule.pattern, 'lib/widgets/workout_record_badges.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/workout_record_badges.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -861,7 +893,10 @@ void main() {
       (rule) => rule.id == 'history-summary-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/history_summary_widget.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/history_summary_widget.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -897,7 +932,10 @@ void main() {
       (rule) => rule.id == 'workout-history-calendar-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/workout_history_calendar.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/workout_history_calendar.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -935,7 +973,10 @@ void main() {
       (rule) => rule.id == 'workout-dashboard-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/workout_dashboard.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/workout_dashboard.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -969,7 +1010,10 @@ void main() {
       (rule) => rule.id == 'data-records-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/data_records_section.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/data_records_section.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -1003,7 +1047,10 @@ void main() {
       (rule) => rule.id == 'presets-loaded-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/presets_loaded.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/presets_loaded.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -1343,7 +1390,10 @@ void main() {
       (rule) => rule.id == 'session-completion-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/session_complete_sheet.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/session_complete_sheet.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -1379,7 +1429,10 @@ void main() {
       (rule) => rule.id == 'flow-screen-dropdown-foreground',
     );
 
-    expect(rule.pattern, 'lib/widgets/flow_screen_widgets.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/flow_screen_widgets.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(rule.kinds, ['text_style']);
@@ -1408,7 +1461,10 @@ void main() {
       (rule) => rule.id == 'recommended-sets-dialog-controls',
     );
 
-    expect(rule.pattern, 'lib/widgets/recommended_sets_editor_dialog.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/recommended_sets_editor_dialog.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(rule.kinds, unorderedEquals(['decoration', 'text_style']));
@@ -1441,7 +1497,10 @@ void main() {
         (rule) => rule.id == 'current-metrics-category-colors',
       );
 
-      expect(rule.pattern, 'lib/widgets/current_metrics_section.dart');
+      expect(
+        rule.pattern,
+        sourceLibraryPattern('lib/widgets/current_metrics_section.dart'),
+      );
       expect(rule.classification, 'stable_category_data');
       expect(rule.status, 'allowlisted');
       expect(rule.kinds, unorderedEquals(<String>['color']));
@@ -1449,7 +1508,10 @@ void main() {
       final markerRule = inventory.pathRules.singleWhere(
         (rule) => rule.id == 'current-metrics-category-marker',
       );
-      expect(markerRule.pattern, 'lib/widgets/current_metrics_section.dart');
+      expect(
+        markerRule.pattern,
+        sourceLibraryPattern('lib/widgets/current_metrics_section.dart'),
+      );
       expect(markerRule.classification, 'stable_category_data');
       expect(markerRule.status, 'allowlisted');
       expect(markerRule.kinds, unorderedEquals(<String>['decoration']));
@@ -1496,7 +1558,10 @@ void main() {
         .where((finding) => finding.ruleId == 'tonos-bottom-navigation')
         .toList();
 
-    expect(rule.pattern, 'lib/widgets/tonos_bottom_navigation_bar.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/tonos_bottom_navigation_bar.dart'),
+    );
     expect(rule.classification, 'theme_system');
     expect(rule.status, 'migrated');
     expect(
@@ -1528,7 +1593,10 @@ void main() {
           .where((queue) => queue.matches('lib/widgets/tonos_train_tabs.dart'))
           .toList();
 
-      expect(rule.pattern, 'lib/widgets/tonos_train_tabs.dart');
+      expect(
+        rule.pattern,
+        sourceLibraryPattern('lib/widgets/tonos_train_tabs.dart'),
+      );
       expect(rule.classification, 'theme_system');
       expect(rule.status, 'migrated');
       expect(rule.kinds, unorderedEquals(<String>['geometry']));
@@ -1551,7 +1619,10 @@ void main() {
         .where((finding) => finding.ruleId == 'tonos-train-tabs-recipes')
         .toList();
 
-    expect(rule.pattern, 'lib/widgets/tonos_train_tabs.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/tonos_train_tabs.dart'),
+    );
     expect(rule.classification, 'theme_system');
     expect(rule.status, 'migrated');
     expect(
@@ -1588,7 +1659,10 @@ void main() {
       (rule) => rule.id == 'health-trends-recipes',
     );
 
-    expect(rule.pattern, 'lib/widgets/health_trends_section.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/health_trends_section.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -1621,7 +1695,9 @@ void main() {
     );
     expect(
       flowMethodsRule.pattern,
-      'lib/screens/profile/settings/flow_methods_page.dart',
+      sourceLibraryPattern(
+        'lib/screens/profile/settings/flow_methods_page.dart',
+      ),
     );
     expect(flowMethodsRule.status, 'migrated');
     expect(
@@ -1657,7 +1733,9 @@ void main() {
     );
     expect(
       workoutFlowsRule.pattern,
-      'lib/screens/profile/settings/workout_progress_flows_page.dart',
+      sourceLibraryPattern(
+        'lib/screens/profile/settings/workout_progress_flows_page.dart',
+      ),
     );
     expect(workoutFlowsRule.status, 'migrated');
     expect(
@@ -1687,7 +1765,7 @@ void main() {
     );
     expect(
       workoutMetricChartRule.pattern,
-      'lib/widgets/workout_metric_chart_card.dart',
+      sourceLibraryPattern('lib/widgets/workout_metric_chart_card.dart'),
     );
     expect(workoutMetricChartRule.status, 'migrated');
     expect(
@@ -1716,7 +1794,7 @@ void main() {
     );
     expect(
       exerciseProgressRule.pattern,
-      'lib/widgets/exercise_progress_section.dart',
+      sourceLibraryPattern('lib/widgets/exercise_progress_section.dart'),
     );
     expect(exerciseProgressRule.status, 'migrated');
     expect(
@@ -1742,7 +1820,8 @@ void main() {
     final localThemeFindings = report.findings
         .where(
           (finding) =>
-              finding.file == 'lib/widgets/exercise_progress_section.dart' &&
+              canonicalDartLibraryPath(finding.file) ==
+                  'lib/widgets/exercise_progress_section.dart' &&
               finding.kind == 'local_theme',
         )
         .toList();
@@ -2276,7 +2355,7 @@ void main() {
           .where((finding) => finding.ruleId == rule.id)
           .toList();
 
-      expect(rule.pattern, 'lib/widgets/preset_bar.dart');
+      expect(rule.pattern, sourceLibraryPattern('lib/widgets/preset_bar.dart'));
       expect(rule.classification, 'structural_theme');
       expect(rule.status, 'migrated');
       expect(rule.sourcePattern, contains('_buildExpressiveCard'));
@@ -2325,7 +2404,10 @@ void main() {
         .where((finding) => finding.ruleId == rule.id)
         .toList();
 
-    expect(rule.pattern, 'lib/widgets/expressive_train_focus_progress.dart');
+    expect(
+      rule.pattern,
+      sourceLibraryPattern('lib/widgets/expressive_train_focus_progress.dart'),
+    );
     expect(rule.classification, 'structural_theme');
     expect(rule.status, 'migrated');
     expect(
@@ -2415,7 +2497,7 @@ void main() {
     final exerciseEditorFindings = report.findings
         .where(
           (finding) =>
-              finding.file ==
+              canonicalDartLibraryPath(finding.file) ==
               'lib/screens/profile/settings/exercise_editor_screen.dart',
         )
         .toList();

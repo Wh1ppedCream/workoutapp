@@ -573,7 +573,7 @@
     },
     {
       "id": "exercise-editor-transparent-tab-divider",
-      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "pattern": "lib/screens/profile/settings/exercise_editor**.dart",
       "kinds": [
         "color"
       ],
@@ -585,7 +585,7 @@
     },
     {
       "id": "exercise-editor-dialog-label-ownership",
-      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "pattern": "lib/screens/profile/settings/exercise_editor**.dart",
       "kinds": [
         "decoration"
       ],
@@ -597,7 +597,7 @@
     },
     {
       "id": "exercise-editor-qualified-recipes",
-      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "pattern": "lib/screens/profile/settings/exercise_editor**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -613,7 +613,7 @@
     },
     {
       "id": "exercise-editor-hotspot",
-      "pattern": "lib/screens/profile/settings/exercise_editor_screen.dart",
+      "pattern": "lib/screens/profile/settings/exercise_editor**.dart",
       "classification": "structural_theme",
       "status": "pending",
       "target": "Tonos fields, sections, and component themes",
@@ -731,7 +731,7 @@
     },
     {
       "id": "onboarding-form-ownership",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "decoration"
       ],
@@ -743,7 +743,7 @@
     },
     {
       "id": "onboarding-qualified-route-recipes",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -758,7 +758,7 @@
     },
     {
       "id": "onboarding-equipment-summary-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -772,7 +772,7 @@
     },
     {
       "id": "onboarding-weight-history-switch-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -786,7 +786,7 @@
     },
     {
       "id": "onboarding-body-fat-frame-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "decoration",
         "geometry"
@@ -799,7 +799,7 @@
     },
     {
       "id": "onboarding-body-fat-media-overlay",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color",
         "color_transform",
@@ -813,7 +813,7 @@
     },
     {
       "id": "onboarding-goal-metric-preview-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -827,7 +827,7 @@
     },
     {
       "id": "onboarding-goal-slider-panel-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -841,7 +841,7 @@
     },
     {
       "id": "onboarding-goal-mini-stat-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -855,7 +855,7 @@
     },
     {
       "id": "onboarding-plan-overview-error-ink",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "text_style"
       ],
@@ -867,7 +867,7 @@
     },
     {
       "id": "onboarding-plan-overview-empty-ink",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "text_style"
       ],
@@ -879,7 +879,7 @@
     },
     {
       "id": "onboarding-post-plan-info-recipe",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "kinds": [
         "color_transform",
         "decoration",
@@ -893,7 +893,7 @@
     },
     {
       "id": "onboarding-hotspot",
-      "pattern": "lib/screens/onboarding_flow.dart",
+      "pattern": "lib/screens/onboarding**.dart",
       "classification": "structural_theme",
       "status": "pending",
       "target": "Tonos fields/sections/actions and shared Material component themes",
@@ -1747,7 +1747,7 @@
       "id": "onboarding-and-development",
       "title": "Onboarding and development-only routes",
       "patterns": [
-        "lib/screens/onboarding_flow.dart",
+        "lib/screens/onboarding**.dart",
         "lib/screens/exercise/preset_generation_qa.dart",
         "lib/widgets/guided_tutorial_overlay.dart"
       ],

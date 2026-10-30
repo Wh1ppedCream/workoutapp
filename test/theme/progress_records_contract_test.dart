@@ -1,8 +1,8 @@
-import 'dart:io';
+import '../support/dart_source_library.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
-String _read(String path) => File(path).readAsStringSync();
+String _read(String path) => readDartSourceLibrary(path);
 
 void main() {
   test(

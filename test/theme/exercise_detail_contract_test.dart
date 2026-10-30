@@ -1,4 +1,4 @@
-import 'dart:io';
+import '../support/dart_source_library.dart';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,8 +22,9 @@ void main() {
   test(
     'C2 detail sections use focused roles and preserve state boundaries',
     () {
-      final source = File('lib/widgets/exercise_detail_sheet.dart')
-          .readAsStringSync();
+      final source = readDartSourceLibrary(
+        'lib/widgets/exercise_detail_sheet.dart',
+      );
       final mediaPreview = _section(
         source,
         'class _ExerciseMediaPreviewCard',
