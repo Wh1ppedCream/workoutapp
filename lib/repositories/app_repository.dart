@@ -1945,8 +1945,10 @@ class AppRepository {
     await reconcileMediaCache();
     if (!verify) return true;
     try {
-      await db.rawQuery('PRAGMA quick_check');
-      return true;
+      final rows = await db.rawQuery('PRAGMA quick_check');
+      return rows.length == 1 &&
+          rows.single.length == 1 &&
+          rows.single.values.single == 'ok';
     } catch (_) {
       return false;
     }
