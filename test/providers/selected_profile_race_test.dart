@@ -7,6 +7,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'disposing during an equipment request prevents late publication',
+    () async {
+      final repo = _ProfileRepository();
+      final selection = SelectedProfile(repository: repo);
+      await selection.ready;
+      repo.equipmentGates[2] = Completer<List<Map<String, dynamic>>>();
+      final change = selection.selectProfile(repo.profiles[1]);
+      selection.dispose();
+      repo.equipmentGates[2]!.complete([
+        {'id': 20},
+      ]);
+      await expectLater(change, completes);
+      expect(selection.equipment.single['id'], 10);
+      expect(repo.storedSelection, '1');
+    },
+  );
+
+  test(
     'a stale equipment response cannot overwrite the latest profile',
     () async {
       final repo = _ProfileRepository();

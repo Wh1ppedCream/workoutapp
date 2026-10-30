@@ -62,11 +62,13 @@ APKs, generated sources, or other archives are deleted by this pass.
 | M01 | High | Automatic Settings changes several `PresetSession` flags directly before Save, despite an atomic provider save API. Dismissal or a failed save can leave shared state changed. | Keep a local draft for every editable flag; test dismiss, failed save/retry, and successful persistence without changing layout. |
 | M02 | High | Unit/language, Dashboard, navigation and onboarding preference providers have asynchronous load/mutation paths without consistent disposal, ordering or checked-write handling. | Reproduce initialization/disposal/write failures, serialize conflicting changes, retain last persisted state on failure, and reuse a small checked preference writer where appropriate. |
 | M03 | High | Selected-profile equipment requests can finish out of order and attach another profile's equipment to the current selection. | Guard stale results and selection persistence; test deliberately reversed responses and disposal. |
-| M04 | High | Food customization updates basics, density, barcodes, nutrients and portions in separate operations. A late failure can leave a partial save. | Establish a single transaction boundary, retain the public repository API and schema, and prove rollback with failure injection. |
+| M04 | High | Food customization updates basics, density, barcodes, nutrients and portions in separate operations. A late failure can leave a partial save. The food-logging UI duplicates this orchestration. | Establish a single transaction boundary for creating/editing foods, route the UI through it, retain existing public APIs and schema, and prove rollback with failure injection. |
 | M05 | Medium | `AppRepository.warmUp(verify: true)` treats a completed `PRAGMA quick_check` query as success without examining its result. | Return success only for an actual `ok` result; test corruption rows, empty results and query failures. |
 | M06 | Medium | Food portion conversion/default/name/payload logic lives in the large editor alongside widget construction and controllers. | Extract a pure mapper with conversion/default/precision tests and retain rendered editor contracts. |
 | M07 | Medium | CI push filters omit the branch namespace used for this work (`codex/**`). | Add that namespace and extend the workflow contract; do not change release/signing permissions or deploy anything. |
 | M08 | Low | `active_session.dart` still contains a 236-line commented legacy implementation after its live export. | Remove the inert historical block; preserve the stable export and all active-session consumers. Git retains the earlier implementation. |
+| M09 | High | Portion add/upsert looks up schema through the root database while its transaction is open, causing a lock. Optional sort order also writes null into a non-null column. | Use the transaction executor for schema reads and a valid default sort order; test standalone inserts/updates and supported schema variants. |
+| M10 | High | Barcode validation calls `removeLast` on a fixed-length list, throwing for supported barcode lengths before validation completes. | Read the check digit without mutating the list; test valid/invalid EAN-8, UPC-A, EAN-13 and ITF-14 codes and duplicate insertion. |
 
 ## Ordered batches
 
@@ -126,9 +128,9 @@ the audit. Preserve it unchanged and exclude it from this pass's commits.
 
 The focused guardrail and protected-component rerun passed **102 tests**; route,
 onboarding, optimized-settings and golden cases also passed in the preceding
-focused run. Full-suite revalidation remains the final milestone.
+focused run. The final full-suite milestone is recorded below.
 
-### Structural and safety batches in progress
+### Completed structural and safety batches
 
 - M06/M08: extracted the pure food-portion mapper and removed the commented legacy
   workout implementation. **47 focused tests passed**, including conversions,
@@ -139,13 +141,116 @@ focused run. Full-suite revalidation remains the final milestone.
   tests passed**, including dismiss, failed-save/retry and all three themes.
 - M03: stale equipment responses are ignored, and profile-selection writes are
   serialized. **31 focused tests passed**, including reversed responses, delayed
-  writes and existing Catalog caller behavior.
+  writes and existing Catalog caller behavior. The final three-case profile rerun
+  also verifies disposal during an outstanding equipment request.
 - M02: preference changes wait for loading, check backend success, compensate
   failed writes, and publish only after persistence; loading/mutations respect
   disposal. UI owners report save failures through existing localized feedback.
-  **58 focused tests passed** before adding additional compensation/disposal cases.
+  **58 focused tests passed** in the provider/navigation/editor run. An additional
+  **12 regression cases passed** for disposal, startup ordering, failed-write
+  compensation, supported preference types and retry.
   The helper documents the difference between best-effort preference compensation
   and real database transactions.
+- M04/M09/M10: extracted the food persistence owner first, then made create/edit
+  saves atomic and routed the food-logging editor through the owner. Nutrition
+  DAOs explicitly share the caller's transaction, including dependent recipe-cache
+  writes. Portion schema reads use the active executor; absent sort order uses
+  zero. Barcode validation no longer mutates a fixed-length digit list.
+  **28 focused tests passed**, including late SQLite-trigger rollback, malformed
+  creation rollback, nutrient/portion precision, custom-food identity, default
+  portions, four barcode lengths, compatibility and existing editor behavior.
+  These tests use isolated in-memory databases, not preview/user data.
+  A subsequent **12-case DAO rerun passed** with the success/rollback cases
+  strengthened to include dependent recipe-cache writes.
+
+### Checkpoints
+
+All checkpoints are local on `codex/codebase-maintainability`; the original
+theme checkpoint remains at `6331ccd`. Structural extraction and intentional
+behavior fixes are kept separate so each batch can be reviewed independently.
+
+| Commit | Purpose |
+| --- | --- |
+| `9bd2fa9` | Audit baseline, stale guardrail/reference repair and CI branch coverage. |
+| `3ae36d4` | Pure food-portion mapper and inactive workout-code removal. |
+| `04e5088` | Automatic Settings draft isolation. |
+| `d085364` | Selected-profile equipment/selection race protection. |
+| `34a9870` | Inspect actual SQLite integrity-check results. |
+| `622eb08` | Extract food customization persistence without changing behavior. |
+| `98dc7d9` | Serialize/check preference writes and handle save failures. |
+| `95cdfa0` | Atomic food saves, portion lock/default repair and barcode validation. |
+
+The closing documentation/validation commit also contains the strengthened
+recipe-cache assertions and the additional profile-disposal regression case.
+
+## Final verification - 2026-10-29
+
+| Check | Result |
+| --- | --- |
+| Full Flutter unit/widget suite, `--no-pub --concurrency=4 --reporter expanded` | **2,462 passed, zero failures**, 18m 23s. Baseline was 2,391 passed / 14 failed. |
+| Latest strengthened food/recipe integrity cases | **12 passed** after the full run started; no subsequent production-code changes. |
+| Latest selected-profile race/disposal cases | **3 passed**, including one additional case added after the full run started. |
+| Repository, tests, integration/driver source and root tools analysis | Exit 0, **79 informational diagnostics**, no warnings/errors. Diagnostic content matches the baseline after normalizing line numbers. |
+| Analysis of the final strengthened regression files | No issues. |
+| Catalog-builder `bin` / `tool` analysis | No issues; used existing local dependencies. |
+| Diagnostics relay Node suite | **8 passed**, zero failures. |
+| Theme inventory `--check` | Passed: 316 Dart files, 4,382 candidates; 643 pending, all assigned a review queue. |
+| Theme ratchet enforcement | Passed for the same 18 protected files. |
+| Development and locked production content-environment checks | Both passed. |
+| Locked development content policy, Neo release opt-in and malformed opt-in compile-time variants | Each focused variant passed. |
+| Diff whitespace check | This pass's changes pass. Whole-worktree check reports four Markdown hard-break/trailing-space lines in the independently modified `docs/CODEBASE_COMPREHENSIVE_REVIEW.md`; that file is preserved and excluded from these commits. |
+
+Counts from overlapping focused runs are not added together. The full run covers
+production checkpoint `95cdfa0`; only regression assertions/documentation changed
+after it started, and the final affected test files were rerun successfully.
+The 14 old failures were repaired as reference/contract drift against the original
+checkpoint, separately from the new production reliability fixes.
+
+Local logs are retained under `.build/maintainability/`, including
+`baseline-tests.log`, `final-tests.log`, `final-analysis.log`,
+`final-food-recipe-integrity-tests.log`, `final-profile-disposal-tests.log`,
+`final-inventory.log`, `final-ratchet.log` and `final-relay-tests.log`.
+These logs are ignored local artifacts; the durable results are recorded here.
+
+### Remaining qualification and debt
+
+No physical-device navigation, native/release builds, deployed Worker checks,
+dependency advisory scan or performance profiling was performed. Tests include
+existing responsive, accessibility and theme cases, but do not qualify every
+device/platform combination or eliminate the need for release qualification.
+The 79 informational analyzer findings and 643 queued style candidates remain
+separate technical debt, not failed visual approvals. The larger structural
+backlog below remains deliberate follow-up work.
+
+Approved visual classifications, layouts and motion were not redesigned. New
+save-failure feedback uses existing localized messages and visual components.
+No preview databases, preferences, fixtures, media archives or screenshot sources
+were reset or deleted. No dependency upgrades, schema migrations or pushes were
+performed. Unrelated worktree files and artifacts remain untouched.
+
+## Maintenance rules for subsequent batches
+
+- Move one cohesive responsibility at a time. Prefer pure calculation/payload
+  functions and domain DAOs over new generic frameworks or a second repository
+  layer. Keep public facades stable while moving their implementation.
+- Keep multi-table changes under one owner/transaction. Within a transaction,
+  use its executor for every read and write; do not call the root connection.
+  Prove rollback after a late failure, not only successful persistence.
+- Keep editor drafts local until Save succeeds. Exercise Cancel, dismiss,
+  failed-save/retry, and disposal as well as the happy path.
+- Guard asynchronous identity changes with the identity/version they started
+  against. Serialize mutations of the same persisted state. Preference writes
+  are not database transactions and compensation cannot guarantee recovery if
+  the storage backend remains unavailable.
+- Preserve the existing material-component/token ownership and approved motion.
+  A structural move must retain rendered, semantics, responsive and behavioral
+  checks relevant to that component. Lexical inventory tests alone cannot prove
+  appearance, and an updated reference is not new visual approval.
+- Format edited code without sweeping unrelated legacy formatting into a
+  functional change. Keep schema/dependency/API migrations in separate batches.
+- Run focused tests after each batch, then the complete unit/widget suite and
+  repository policies at a milestone. Keep known failures and release/device
+  qualification distinct from local test results.
 
 ## Follow-up structural backlog
 

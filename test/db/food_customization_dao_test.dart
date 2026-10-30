@@ -50,11 +50,25 @@ void main() {
       'food_nutrients',
       'food_nutrient_values',
       'food_portions',
+      'recipe_nutrients',
     ])
-      table: await db.query(table, orderBy: 'id'),
+      table: await db.query(
+        table,
+        orderBy: table == 'recipe_nutrients' ? 'recipe_id, code' : 'id',
+      ),
   };
 
+  Future<int> createDependentRecipe() => nutrition.createOrUpdateRecipe(
+    Recipe(
+      name: 'Dependent recipe',
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    ),
+    [RecipeIngredient(recipeId: 0, foodId: foodId, grams: 50)],
+  );
+
   test('a late portion failure rolls back every part of the edit', () async {
+    await createDependentRecipe();
     final original = await snapshot();
     await db.execute('''
       CREATE TRIGGER reject_portion BEFORE INSERT ON food_portions
@@ -130,6 +144,7 @@ void main() {
   );
 
   test('customization saves names, density, nutrient precision and portion metadata', () async {
+    final recipeId = await createDependentRecipe();
     await FoodCustomizationDao.update(db, {
       'food_id': foodId,
       'name': 'Updated food',
@@ -159,6 +174,9 @@ void main() {
     final nutrients = await nutrition.getFoodNutrientsPer100gByCode(foodId);
     expect(nutrients['ENERGY_KCAL'], 42.25);
     expect(nutrients['PROTEIN'], 2.125);
+    final cached = await nutrition.getRecipePer100gByCode(recipeId);
+    expect(cached['ENERGY_KCAL'], 42.25);
+    expect(cached['PROTEIN'], 2.125);
     final portions = await nutrition.getPortionsForFood(foodId);
     expect(portions, hasLength(1));
     expect(portions.single.gramWeight, 12.125);

@@ -1,5 +1,22 @@
 # Theme Style Ratchet
 
+## Current checkpoint - 2026-10-29
+
+Enforcement passes for the same 18 production scopes. The manifest currently
+contains 200 approval entries, 196 unique fingerprint hashes and 228 approved
+occurrences. The maintainability pass reconciled existing enclosing-statement
+fingerprints with checkpoint `6331ccd`; it did not enroll additional files or
+introduce new widget styling. See the
+[audit and verification record](maintenance/20261029-codebase-maintainability/README.md)
+for the exact repairs and validation scope.
+
+The regenerated inventory reports 316 Dart files and 4,382 style candidates:
+144 allowlisted, 3,595 migrated and 643 pending. All pending candidates have a
+review queue. Inventory ownership and ratchet enforcement are technical controls;
+neither implies responsive, accessibility, release or new visual approval.
+
+## Historical qualification snapshots
+
 Status: eighteen exact production scopes are listed for enforcement. The current
 manifest contains 158 approval entries (154 unique fingerprint hashes) and 180
 approved occurrences, all mapped in the manifest. The 2026-10-02 read-only
