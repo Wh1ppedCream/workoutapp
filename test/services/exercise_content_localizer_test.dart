@@ -147,9 +147,8 @@ void main() {
 
   test('bundled French content serves Canadian French', () async {
     final localizer = ExerciseContentLocalizer(
-      bundleLoader:
-          () =>
-              File('assets/exercise_content_localizations.json').readAsString(),
+      bundleLoader: () =>
+          File('assets/exercise_content_localizations.json').readAsString(),
     );
     final exercise = definition(catalogId: 'tonos.exercise.0007');
     final resolved = await localizer.resolve(
@@ -170,9 +169,8 @@ void main() {
 
   test('bundled Spanish names cover stable catalog identities', () async {
     final localizer = ExerciseContentLocalizer(
-      bundleLoader:
-          () =>
-              File('assets/exercise_content_localizations.json').readAsString(),
+      bundleLoader: () =>
+          File('assets/exercise_content_localizations.json').readAsString(),
     );
 
     final resolved = await localizer.resolveName(
@@ -185,9 +183,8 @@ void main() {
 
   test('bundled Bangla names cover stable catalog identities', () async {
     final localizer = ExerciseContentLocalizer(
-      bundleLoader:
-          () =>
-              File('assets/exercise_content_localizations.json').readAsString(),
+      bundleLoader: () =>
+          File('assets/exercise_content_localizations.json').readAsString(),
     );
 
     final resolved = await localizer.resolveName(
@@ -202,11 +199,8 @@ void main() {
     'bundled Simplified Chinese names cover stable catalog identities',
     () async {
       final localizer = ExerciseContentLocalizer(
-        bundleLoader:
-            () =>
-                File(
-                  'assets/exercise_content_localizations.json',
-                ).readAsString(),
+        bundleLoader: () =>
+            File('assets/exercise_content_localizations.json').readAsString(),
       );
 
       final resolved = await localizer.resolveName(
@@ -220,9 +214,8 @@ void main() {
 
   test('bundled Hindi names cover stable catalog identities', () async {
     final localizer = ExerciseContentLocalizer(
-      bundleLoader:
-          () =>
-              File('assets/exercise_content_localizations.json').readAsString(),
+      bundleLoader: () =>
+          File('assets/exercise_content_localizations.json').readAsString(),
     );
 
     final resolved = await localizer.resolveName(
@@ -301,4 +294,48 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test(
+    'evicts failed bundle future so subsequent lookups can recover',
+    () async {
+      var attempts = 0;
+      final localizer = ExerciseContentLocalizer(
+        bundleLoader: () async {
+          attempts++;
+          if (attempts == 1) {
+            throw const FileSystemException('Transient asset read error');
+          }
+          return jsonEncode({
+            'version': 1,
+            'names': {
+              'es': {'tonos.exercise.0007': 'Press de banca con barra'},
+            },
+            'locales': {
+              'es': {'tonos.exercise.0007': spanishContent},
+            },
+          });
+        },
+      );
+
+      await expectLater(
+        localizer.resolveName(
+          definition(catalogId: 'tonos.exercise.0007'),
+          const Locale('es'),
+        ),
+        throwsA(isA<FileSystemException>()),
+      );
+
+      final recoveredName = await localizer.resolveName(
+        definition(catalogId: 'tonos.exercise.0007'),
+        const Locale('es'),
+      );
+      final recoveredContent = await localizer.resolve(
+        definition(catalogId: 'tonos.exercise.0007'),
+        const Locale('es'),
+      );
+      expect(recoveredName, 'Press de banca con barra');
+      expect(recoveredContent.setupNotes, spanishContent['setupNotes']);
+      expect(attempts, 2);
+    },
+  );
 }

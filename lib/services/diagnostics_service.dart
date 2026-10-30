@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/serial_async_queue.dart';
 import 'diagnostics_relay_client.dart';
+import 'preference_writer.dart';
 
 enum SyncDiagnosticOutcome { succeeded, failed, skipped }
 
@@ -74,7 +76,9 @@ class DiagnosticsPreferences {
 
   Future<void> saveAnonymousDiagnosticsEnabled(bool enabled) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(anonymousDiagnosticsEnabledKey, enabled);
+    await writePreferences(preferences, <String, Object?>{
+      anonymousDiagnosticsEnabledKey: enabled,
+    });
   }
 }
 
@@ -82,7 +86,7 @@ class SyncDiagnosticsStore {
   static const String eventsKey = 'diagnostics.content_sync.events';
   static const int maxEvents = 30;
 
-  Future<void> _writeQueue = Future<void>.value();
+  final SerialAsyncQueue _writeQueue = SerialAsyncQueue();
 
   Future<List<SyncDiagnosticEvent>> load() async {
     final preferences = await SharedPreferences.getInstance();
@@ -110,25 +114,26 @@ class SyncDiagnosticsStore {
   }
 
   Future<void> record(SyncDiagnosticEvent event) {
-    _writeQueue = _writeQueue.then((_) async {
+    return _writeQueue.run(() async {
       final events = await load();
       final updated = <SyncDiagnosticEvent>[event, ...events];
       if (updated.length > maxEvents) {
         updated.removeRange(maxEvents, updated.length);
       }
       final preferences = await SharedPreferences.getInstance();
-      await preferences.setString(
-        eventsKey,
-        jsonEncode(updated.map((item) => item.toJson()).toList()),
-      );
+      await writePreferences(preferences, <String, Object?>{
+        eventsKey: jsonEncode(updated.map((item) => item.toJson()).toList()),
+      });
     });
-    return _writeQueue;
   }
 
-  Future<void> clear() async {
-    await _writeQueue;
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.remove(eventsKey);
+  Future<void> clear() {
+    return _writeQueue.run(() async {
+      final preferences = await SharedPreferences.getInstance();
+      await writePreferences(preferences, const <String, Object?>{
+        eventsKey: null,
+      });
+    });
   }
 }
 
@@ -136,7 +141,7 @@ class DiagnosticsRelayReceiptStore {
   static const String receiptsKey = 'diagnostics.relay.receipts.v1';
   static const int maxReceipts = 20;
 
-  Future<void> _writeQueue = Future<void>.value();
+  final SerialAsyncQueue _writeQueue = SerialAsyncQueue();
 
   Future<List<DiagnosticsRelayReceipt>> load() async {
     final preferences = await SharedPreferences.getInstance();
@@ -165,7 +170,7 @@ class DiagnosticsRelayReceiptStore {
   }
 
   Future<void> add(DiagnosticsRelayReceipt receipt) {
-    _writeQueue = _writeQueue.then((_) async {
+    return _writeQueue.run(() async {
       final receipts = await load();
       final updated = <DiagnosticsRelayReceipt>[receipt, ...receipts];
       if (updated.length > maxReceipts) {
@@ -173,24 +178,19 @@ class DiagnosticsRelayReceiptStore {
       }
       await _save(updated);
     });
-    return _writeQueue;
   }
 
   Future<void> replace(List<DiagnosticsRelayReceipt> receipts) {
-    _writeQueue = _writeQueue.then((_) => _save(receipts));
-    return _writeQueue;
+    return _writeQueue.run(() => _save(receipts));
   }
 
   Future<void> _save(List<DiagnosticsRelayReceipt> receipts) async {
     final preferences = await SharedPreferences.getInstance();
-    if (receipts.isEmpty) {
-      await preferences.remove(receiptsKey);
-      return;
-    }
-    await preferences.setString(
-      receiptsKey,
-      jsonEncode(receipts.map((receipt) => receipt.toJson()).toList()),
-    );
+    await writePreferences(preferences, <String, Object?>{
+      receiptsKey: receipts.isEmpty
+          ? null
+          : jsonEncode(receipts.map((receipt) => receipt.toJson()).toList()),
+    });
   }
 }
 
@@ -382,15 +382,13 @@ class DiagnosticsService {
     if (event.outcome == SyncDiagnosticOutcome.succeeded) return;
     await _submitRelayEvent(
       kind: DiagnosticsRelayKind.contentSync,
-      code:
-          event.outcome == SyncDiagnosticOutcome.skipped
-              ? DiagnosticsRelayCode.contentSyncSkipped
-              : DiagnosticsRelayCode.contentManifestFetchFailed,
+      code: event.outcome == SyncDiagnosticOutcome.skipped
+          ? DiagnosticsRelayCode.contentSyncSkipped
+          : DiagnosticsRelayCode.contentManifestFetchFailed,
       source: _sourceForSync(event.source),
-      outcome:
-          event.outcome == SyncDiagnosticOutcome.skipped
-              ? DiagnosticsRelayOutcome.skipped
-              : DiagnosticsRelayOutcome.failed,
+      outcome: event.outcome == SyncDiagnosticOutcome.skipped
+          ? DiagnosticsRelayOutcome.skipped
+          : DiagnosticsRelayOutcome.failed,
       durationBucket: diagnosticsDurationBucket(event.durationMilliseconds),
       itemCountBucket: diagnosticsItemCountBucket(event.itemCount),
       manifestVersion: event.manifestVersion,

@@ -15,6 +15,7 @@ class _Scanner extends BarcodeScannerSession {
   int starts = 0;
   int stops = 0;
   int disposals = 0;
+  bool failSwitchCamera = false;
   Completer<void>? torch;
   @override
   bool hasPermission = true;
@@ -33,7 +34,12 @@ class _Scanner extends BarcodeScannerSession {
   }
 
   @override
-  Future<void> switchCamera() async {}
+  Future<void> switchCamera() async {
+    if (failSwitchCamera) {
+      throw StateError('No alternate camera');
+    }
+  }
+
   @override
   Future<void> toggleTorch() async {
     await torch?.future;
@@ -58,21 +64,20 @@ Future<void> _open(
       localizationsDelegates: tonosLocalizationDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
-        builder:
-            (context) => Scaffold(
-              body: TextButton(
-                onPressed: () async {
-                  result(
-                    await Navigator.of(context).push<String>(
-                      MaterialPageRoute(
-                        builder: (_) => BarcodeScannerPage(session: scanner),
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Open scanner'),
-              ),
-            ),
+        builder: (context) => Scaffold(
+          body: TextButton(
+            onPressed: () async {
+              result(
+                await Navigator.of(context).push<String>(
+                  MaterialPageRoute(
+                    builder: (_) => BarcodeScannerPage(session: scanner),
+                  ),
+                ),
+              );
+            },
+            child: const Text('Open scanner'),
+          ),
+        ),
       ),
     ),
   );
@@ -237,5 +242,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(scanner.disposals, 1);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('unsupported camera switch does not throw an unhandled error', (
+    tester,
+  ) async {
+    final scanner = _Scanner()..failSwitchCamera = true;
+    final results = <String?>[];
+    await _open(tester, scanner, results.add);
+    await tester.tap(find.byIcon(Icons.cameraswitch));
+    await tester.pumpAndSettle();
+    expect(find.byType(BarcodeScannerPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(results, [null]);
+    expect(scanner.disposals, 1);
   });
 }

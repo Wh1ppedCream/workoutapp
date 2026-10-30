@@ -7,7 +7,6 @@ import 'package:material_ui/material_ui.dart';
 import '../../theme/widgets/tonos_overlay_routes.dart';
 
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/models.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -16,6 +15,7 @@ import '../../providers/active_session.dart';
 import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
+import '../../services/optimized_workout_preferences.dart';
 import '../../services/preset_generation_service.dart';
 import '../../utils/workout_exercise_clone.dart';
 import '../../theme/theme_extensions.dart';
@@ -80,8 +80,7 @@ class Train2Page extends StatefulWidget {
 }
 
 class _Train2PageState extends State<Train2Page> {
-  static const _optimizedSessionMinutesKey = 'train.optimized_session_minutes';
-  static const _optimizedMaxSetsKey = 'train.optimized_max_sets_per_exercise';
+  static const _optimizedPreferences = OptimizedWorkoutPreferences();
 
   AppRepository get _repo => context.read<AppRepository>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -91,7 +90,13 @@ class _Train2PageState extends State<Train2Page> {
   int? _seenCompletedSessionVersion;
   bool _isStartingOptimized = false;
   int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
+  int _optimizedMinSetsPerExercise = SessionSpec.preferredMinSetsPerExercise;
   int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
+  RepWeightGenerationMode _optimizedRepWeightMode =
+      RepWeightGenerationMode.mixed;
+  int _optimizedTargetRepCount = SessionSpec.defaultTargetRepCount;
+  StarterWeightIntensity _optimizedStarterWeightIntensity =
+      StarterWeightIntensity.medium;
   Set<int> _optimizedPreferredBodypartIds = <int>{};
   Set<int> _optimizedBlacklistedBodypartIds = <int>{};
 
@@ -104,24 +109,21 @@ class _Train2PageState extends State<Train2Page> {
   /// Loads durable optimized-workout defaults. Bodypart focus choices are not
   /// loaded here because they apply only to the next generated session.
   Future<void> _loadOptimizedWorkoutSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedMinutes = prefs.getInt(_optimizedSessionMinutesKey);
-    final savedMaxSets = prefs.getInt(_optimizedMaxSetsKey);
+    final loaded = await _optimizedPreferences.load();
     if (!mounted) return;
     setState(() {
-      if (savedMinutes != null && savedMinutes > 0) {
-        _optimizedSessionMinutes = savedMinutes;
-      }
-      if (savedMaxSets != null &&
-          savedMaxSets >= SessionSpec.defaultMinSetsPerExercise &&
-          savedMaxSets <= SessionSpec.maxAllowedSetsPerExercise) {
-        _optimizedMaxSetsPerExercise = savedMaxSets;
-      }
+      _optimizedSessionMinutes = loaded.sessionMinutes;
+      _optimizedMinSetsPerExercise = loaded.minSetsPerExercise;
+      _optimizedMaxSetsPerExercise = loaded.maxSetsPerExercise;
+      _optimizedRepWeightMode = loaded.repWeightMode;
+      _optimizedTargetRepCount = loaded.targetRepCount;
+      _optimizedStarterWeightIntensity = loaded.starterWeightIntensity;
     });
   }
 
-  Future<void> _openPreset(int presetId, {bool edit = false}) {
-    return Navigator.of(context).push(
+  Future<void> _openPreset(int presetId, {bool edit = false}) async {
+    if (!mounted) return;
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (outerCtx) => MultiProvider(
           providers: [
@@ -135,10 +137,12 @@ class _Train2PageState extends State<Train2Page> {
               ),
             ),
           ],
-          child: const PresetDetailScreen(),
+          child: PresetDetailScreen(startInEditingMode: edit),
         ),
       ),
     );
+    if (!mounted) return;
+    setState(() => _presetsRefreshToken++);
   }
 
   /// Builds the generation spec used by Start Optimized Workout.
@@ -154,7 +158,9 @@ class _Train2PageState extends State<Train2Page> {
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final time =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    const minSets = SessionSpec.defaultMinSetsPerExercise;
+    final minSets = _optimizedMinSetsPerExercise <= _optimizedMaxSetsPerExercise
+        ? _optimizedMinSetsPerExercise
+        : _optimizedMaxSetsPerExercise;
     return SessionSpec(
       profileId: profileId,
       name: 'Optimized workout $date $time',
@@ -169,9 +175,9 @@ class _Train2PageState extends State<Train2Page> {
       maxSetsPerExercise: _optimizedMaxSetsPerExercise,
       sessionDurationMinutes: sessionMinutes,
       useGeneratedRepWeights: true,
-      repWeightMode: RepWeightGenerationMode.mixed,
-      targetRepCount: SessionSpec.defaultTargetRepCount,
-      starterWeightIntensity: StarterWeightIntensity.medium,
+      repWeightMode: _optimizedRepWeightMode,
+      targetRepCount: _optimizedTargetRepCount,
+      starterWeightIntensity: _optimizedStarterWeightIntensity,
       historyWindow: const Duration(days: 7),
       avoidMostRecentBodyPart: true,
       now: now,
@@ -295,13 +301,18 @@ class _Train2PageState extends State<Train2Page> {
       ),
     );
     if (!mounted || settings == null) return;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_optimizedSessionMinutesKey, settings.minutes);
-    await prefs.setInt(_optimizedMaxSetsKey, settings.maxSets);
+    final persisted = await _optimizedPreferences.saveDurationAndMaxSets(
+      sessionMinutes: settings.minutes,
+      maxSetsPerExercise: settings.maxSets,
+    );
     if (!mounted) return;
     setState(() {
-      _optimizedSessionMinutes = settings.minutes;
-      _optimizedMaxSetsPerExercise = settings.maxSets;
+      _optimizedSessionMinutes = persisted.sessionMinutes;
+      _optimizedMinSetsPerExercise = persisted.minSetsPerExercise;
+      _optimizedMaxSetsPerExercise = persisted.maxSetsPerExercise;
+      _optimizedRepWeightMode = persisted.repWeightMode;
+      _optimizedTargetRepCount = persisted.targetRepCount;
+      _optimizedStarterWeightIntensity = persisted.starterWeightIntensity;
       _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
       _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
     });
@@ -895,9 +906,8 @@ class _Train2PageState extends State<Train2Page> {
               uniqueName: true,
             );
             if (!mounted) return;
-            _openPreset(newId, edit: true);
-            if (!mounted) return;
             setState(() => _presetsRefreshToken++);
+            await _openPreset(newId, edit: true);
           },
         ),
 

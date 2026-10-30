@@ -36,7 +36,23 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
     // Listen to barcode events from the controller (advanced lifecycle-friendly way)
     _sub = _controller.codes.listen(_handleCapture);
     // Start explicitly (safer across platforms)
-    unawaited(_controller.start());
+    unawaited(_startScanner());
+  }
+
+  Future<void> _startScanner() async {
+    try {
+      await _controller.start();
+    } catch (_) {
+      // Camera initialization or permission errors are handled by preview state.
+    }
+  }
+
+  Future<void> _stopScanner() async {
+    try {
+      await _controller.stop();
+    } catch (_) {
+      // Ignore stop failures when camera resources are already released.
+    }
   }
 
   @override
@@ -56,14 +72,14 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
     switch (state) {
       case AppLifecycleState.resumed:
         _sub ??= _controller.codes.listen(_handleCapture);
-        unawaited(_controller.start());
+        unawaited(_startScanner());
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
         unawaited(_sub?.cancel());
         _sub = null;
-        unawaited(_controller.stop());
+        unawaited(_stopScanner());
         break;
       case AppLifecycleState.detached:
         break;
@@ -106,9 +122,14 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
             tooltip: strings.barcodeSwitchCamera,
             icon: const Icon(Icons.cameraswitch),
             onPressed: () async {
-              await _controller.switchCamera();
-              if (!mounted) return;
-              setState(() {});
+              if (_locked) return;
+              try {
+                await _controller.switchCamera();
+                if (!mounted || _locked) return;
+                setState(() {});
+              } catch (_) {
+                // Single-camera or unsupported devices may reject camera switch.
+              }
             },
           ),
           IconButton(
@@ -117,14 +138,15 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage>
                 : strings.barcodeTorchOn,
             icon: Icon(_torchOn ? Icons.flash_on : Icons.flash_off),
             onPressed: () async {
+              if (_locked) return;
               try {
                 await _controller.toggleTorch();
-                if (!mounted) return;
+                if (!mounted || _locked) return;
                 // Optimistically flip our local UI state; if the device has no torch,
                 // toggleTorch() throws and we show a message instead.
                 setState(() => _torchOn = !_torchOn);
               } catch (_) {
-                if (!context.mounted) return;
+                if (!context.mounted || _locked) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(strings.barcodeTorchUnavailable)),
                 );

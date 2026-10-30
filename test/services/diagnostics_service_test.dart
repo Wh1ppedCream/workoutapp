@@ -4,6 +4,9 @@ import 'package:env_test/services/diagnostics_relay_client.dart';
 import 'package:env_test/services/diagnostics_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// Backend failure injection without reading device preferences.
+// ignore: depend_on_referenced_packages
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -160,9 +163,8 @@ void main() {
           relayUrl: 'https://relay.example.invalid/',
           transport: transport,
         ),
-        versionInfoLoader:
-            () async =>
-                const AppVersionInfo(version: '1.2.3', buildNumber: '45'),
+        versionInfoLoader: () async =>
+            const AppVersionInfo(version: '1.2.3', buildNumber: '45'),
         controlledTestMode: true,
       );
 
@@ -211,6 +213,97 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'sync diagnostics and relay receipt queues recover after failed writes',
+    () async {
+      final prefsBackend = _FailingDiagnosticsPreferencesStore();
+      SharedPreferencesStorePlatform.instance = prefsBackend;
+
+      final syncStore = SyncDiagnosticsStore();
+      final firstEvent = SyncDiagnosticEvent(
+        timestamp: DateTime.utc(2026, 8, 7, 12),
+        operation: 'exercise_media',
+        source: 'bundled',
+        outcome: SyncDiagnosticOutcome.succeeded,
+        durationMilliseconds: 10,
+      );
+      await syncStore.record(firstEvent);
+
+      prefsBackend.failNextWrite = true;
+      await expectLater(
+        syncStore.record(
+          SyncDiagnosticEvent(
+            timestamp: DateTime.utc(2026, 8, 7, 13),
+            operation: 'exercise_media',
+            source: 'remote',
+            outcome: SyncDiagnosticOutcome.failed,
+            durationMilliseconds: 25,
+          ),
+        ),
+        throwsStateError,
+      );
+      expect((await syncStore.load()).map((e) => e.durationMilliseconds), [10]);
+
+      await syncStore.record(
+        SyncDiagnosticEvent(
+          timestamp: DateTime.utc(2026, 8, 7, 14),
+          operation: 'exercise_media',
+          source: 'remote',
+          outcome: SyncDiagnosticOutcome.succeeded,
+          durationMilliseconds: 40,
+        ),
+      );
+      expect((await syncStore.load()).map((e) => e.durationMilliseconds), [
+        40,
+        10,
+      ]);
+      await syncStore.clear();
+      expect(await syncStore.load(), isEmpty);
+
+      final receiptStore = DiagnosticsRelayReceiptStore();
+      const firstReceipt = DiagnosticsRelayReceipt(
+        receiptId: 'receipt-0000000001',
+        deletionToken: '12345678901234567890123456789012',
+        endpoint: 'https://relay.example.invalid/diagnostics',
+      );
+      await receiptStore.add(firstReceipt);
+
+      prefsBackend.failNextWrite = true;
+      await expectLater(
+        receiptStore.add(
+          const DiagnosticsRelayReceipt(
+            receiptId: 'receipt-0000000002',
+            deletionToken: 'abcdefghijklmnopqrstuvwxyz123456',
+            endpoint: 'https://relay.example.invalid/diagnostics',
+          ),
+        ),
+        throwsStateError,
+      );
+      expect((await receiptStore.load()).map((r) => r.receiptId), [
+        'receipt-0000000001',
+      ]);
+
+      await receiptStore.replace(const []);
+      expect(await receiptStore.load(), isEmpty);
+    },
+  );
+}
+
+class _FailingDiagnosticsPreferencesStore
+    extends InMemorySharedPreferencesStore {
+  _FailingDiagnosticsPreferencesStore() : super.empty();
+
+  bool failNextWrite = false;
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (failNextWrite) {
+      failNextWrite = false;
+      return false;
+    }
+    return super.setValue(valueType, key, value);
+  }
 }
 
 class _RecordingRelayTransport implements DiagnosticsRelayTransport {
@@ -225,8 +318,7 @@ class _RecordingRelayTransport implements DiagnosticsRelayTransport {
     submittedPayloads.add(payload);
     return const DiagnosticsRelayResponse(
       statusCode: 202,
-      body:
-          '{"receipt_id":"receipt-0000000001","deletion_token":"12345678901234567890123456789012"}',
+      body: '{"receipt_id":"receipt-0000000001","deletion_token":"12345678901234567890123456789012"}',
     );
   }
 

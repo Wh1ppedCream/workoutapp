@@ -56,7 +56,7 @@ class ExerciseContentLocalizer {
       return fallback;
     }
 
-    final bundle = await (_bundleFuture ??= _loadBundle());
+    final bundle = await _ensureBundle();
     for (final localeKey in _localeKeys(locale)) {
       final localized = bundle.contentFor(localeKey, catalogId);
       if (localized != null) return localized;
@@ -89,12 +89,26 @@ class ExerciseContentLocalizer {
       return fallbackName;
     }
 
-    final bundle = await (_bundleFuture ??= _loadBundle());
+    final bundle = await _ensureBundle();
     for (final localeKey in _localeKeys(locale)) {
       final localized = bundle.nameFor(localeKey, catalogId);
       if (localized != null) return localized;
     }
     return fallbackName;
+  }
+
+  Future<_ExerciseContentBundle> _ensureBundle() {
+    final cached = _bundleFuture;
+    if (cached != null) return cached;
+    late final Future<_ExerciseContentBundle> loading;
+    loading = _loadBundle().catchError((Object error, StackTrace stackTrace) {
+      if (identical(_bundleFuture, loading)) {
+        _bundleFuture = null;
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    });
+    _bundleFuture = loading;
+    return loading;
   }
 
   Future<_ExerciseContentBundle> _loadBundle() async {
