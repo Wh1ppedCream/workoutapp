@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/nutrition_models.dart';
 import '../../utils/editable_number.dart';
+import '../../services/food_portion_payload.dart';
 
 // File-level helper: pretty-print numbers like 100 → "100", 100.50 → "100.5"
 String _fmtNum(num v) {
@@ -866,196 +867,26 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     );
   }
 
-  // Convert "gram (g)" -> "g", "milliliter (mL)" -> "mL", keep others as-is
-  String _shortUnit(String u) {
-    switch (u) {
-      case 'gram (g)':
-        return 'g';
-      case 'milligram (mg)':
-        return 'mg';
-      case 'microgram (µg)':
-        return 'µg';
-      case 'microgram (mcg)':
-        return 'µg';
-      case 'kilogram (kg)':
-        return 'kg';
-      case 'ounce (oz)':
-        return 'oz';
-      case 'pound (lb)':
-        return 'lb';
-      case 'milliliter (mL)':
-        return 'mL';
-      case 'liter (L)':
-        return 'L';
-      case 'teaspoon (tsp)':
-        return 'tsp';
-      case 'tablespoon (tbsp)':
-        return 'tbsp';
-      case 'cup':
-        return 'cup';
-      case 'fluid ounce (fl oz)':
-        return 'fl oz';
-    }
-    return u;
-  }
-
-  // Compose a clean "measure_name" from unit + amount, e.g. "100 g" or "1 cup"
-  String _measureNameFrom(PortionEntry e) {
-    if (e.measureName != null && e.hasOriginalAmountAndUnit) {
-      return e.measureName!;
-    }
-    double? a = double.tryParse(e.amountCtrl.text.trim());
-    final unitShort = _shortUnit(e.unit);
-    if (a == null) {
-      final g = double.tryParse(e.gramsCtrl.text.trim());
-      final ml = double.tryParse(e.mlCtrl.text.trim());
-      if (unitShort == 'g' && g != null) a = g;
-      if (unitShort == 'mL' && ml != null) a = ml;
-    }
-    if (a == null) return unitShort; // e.g. "cup"
-    return '${_fmtNum(a)} $unitShort'; // e.g. "100 g", "240 mL"
-  }
-
-  // Build JSON-ish payload for both lists, collapsing to what DB needs
   List<Map<String, dynamic>> _portionsPayload({
     required int basisDefaultIndex,
     required int usualDefaultIndex,
   }) {
-    final all = <({PortionEntry row, String list, int index})>[];
-
-    for (var i = 0; i < _basisPortions.length; i++) {
-      all.add((row: _basisPortions[i], list: 'basis', index: i));
-    }
-    for (var i = 0; i < _usualPortions.length; i++) {
-      all.add((row: _usualPortions[i], list: 'usual', index: i));
-    }
-
-    // Decide single global default based on the *last* group the user touched.
-    int? defaultGlobal;
-    final basisCount = _basisPortions.length;
-    final usualCount = _usualPortions.length;
-
-    int clampBasis(int idx) =>
-        basisCount == 0 ? 0 : (idx.clamp(0, basisCount - 1)).toInt();
-    int clampUsual(int idx) =>
-        usualCount == 0 ? 0 : (idx.clamp(0, usualCount - 1)).toInt();
-
-    if (_lastDefaultGroup == 'basis' && basisCount > 0) {
-      defaultGlobal = clampBasis(basisDefaultIndex);
-    } else if (_lastDefaultGroup == 'usual' && usualCount > 0) {
-      defaultGlobal = basisCount + clampUsual(usualDefaultIndex);
-    } else if (basisCount > 0) {
-      // fallback if last group is empty
-      defaultGlobal = clampBasis(basisDefaultIndex);
-    } else if (usualCount > 0) {
-      defaultGlobal = basisCount + clampUsual(usualDefaultIndex);
-    }
-
-    final out = <Map<String, dynamic>>[];
-
-    for (var i = 0; i < all.length; i++) {
-      final r = all[i];
-
-      // Parse current fields
-      final amount = double.tryParse(r.row.amountCtrl.text.trim());
-      final unitShort = _shortUnit(r.row.unit);
-      double? grams = double.tryParse(r.row.gramsCtrl.text.trim());
-      double? ml = double.tryParse(r.row.mlCtrl.text.trim());
-
-      // 1) Mass units → grams
-      if (grams == null && amount != null) {
-        switch (unitShort) {
-          case 'g':
-            grams = amount;
-            break;
-          case 'mg':
-            grams = amount / 1000.0;
-            break;
-          case 'µg':
-            grams = amount / 1000000.0;
-            break;
-          case 'kg':
-            grams = amount * 1000.0;
-            break;
-          case 'oz':
-            grams = amount * 28.349523125;
-            break;
-          case 'lb':
-            grams = amount * 453.59237;
-            break;
-        }
-      }
-
-      // 2) Volume units → milliliters
-      if (ml == null && amount != null) {
-        switch (unitShort) {
-          case 'mL':
-            ml = amount;
-            break;
-          case 'L':
-            ml = amount * 1000.0;
-            break;
-          case 'tsp':
-            ml = amount * 5.0;
-            break;
-          case 'tbsp':
-            ml = amount * 15.0;
-            break;
-          case 'cup':
-            ml = amount * 240.0;
-            break; // US cup
-          case 'fl oz':
-            ml = amount * 29.5735295625;
-            break; // US fl oz
-        }
-      }
-
-      // 3) If we have mL and a density, derive grams too for better downstream math
-      if (grams == null && ml != null) {
-        final dens = double.tryParse(_densityController.text.trim());
-        if (dens != null) grams = ml * dens;
-      }
-
-      // If we still can't physically map this row, skip it
-      if (grams == null && ml == null) continue;
-
-      final measureName = _measureNameFrom(r.row);
-
-      out.add({
-        'measure_name': measureName,
-        'gram_weight': grams,
-        'ml_volume': ml,
-        'is_default': (defaultGlobal != null && i == defaultGlobal),
-        // v23 extras:
-        'list_kind': r.list, // 'basis' | 'usual'
-        'sort_order': r.index,
-        'amount': amount,
-        'unit': unitShort,
-        'label': r.row.label,
-      });
-    }
-
-    // Ensure exactly one default if we have any rows left after filtering
-    if (out.isNotEmpty && !out.any((m) => m['is_default'] == true)) {
-      out.first['is_default'] = true;
-    }
-
-    // If nothing provided at all, inject a safe default "100 g"
-    if (out.isEmpty) {
-      out.add({
-        'measure_name': '100 g',
-        'gram_weight': 100.0,
-        'ml_volume': null,
-        'is_default': true,
-        'list_kind': 'basis',
-        'sort_order': 0,
-        'amount': 100.0,
-        'unit': 'g',
-        'label': null,
-      });
-    }
-
-    return out;
+    FoodPortionDraft draft(PortionEntry entry) => FoodPortionDraft(
+      unit: entry.unit,
+      amount: double.tryParse(entry.amountCtrl.text.trim()),
+      grams: double.tryParse(entry.gramsCtrl.text.trim()),
+      milliliters: double.tryParse(entry.mlCtrl.text.trim()),
+      measureName: entry.hasOriginalAmountAndUnit ? entry.measureName : null,
+      label: entry.label,
+    );
+    return buildFoodPortionPayload(
+      basis: _basisPortions.map(draft).toList(),
+      usual: _usualPortions.map(draft).toList(),
+      defaultGroup: _lastDefaultGroup,
+      basisDefaultIndex: basisDefaultIndex,
+      usualDefaultIndex: usualDefaultIndex,
+      densityGPerMl: double.tryParse(_densityController.text.trim()),
+    );
   }
 
   Widget _buildPortionCard(BuildContext context, {required bool expressive}) {
