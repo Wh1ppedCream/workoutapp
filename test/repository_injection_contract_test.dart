@@ -7,9 +7,10 @@ void main() {
     final mainSource = File('lib/main.dart').readAsStringSync();
 
     expect(
-      RegExp(r'AppRepository\s*\(\s*\)').allMatches(mainSource),
+      RegExp(r'\bAppRepository\s*\(').allMatches(mainSource),
       hasLength(1),
     );
+    expect(mainSource, contains('presetReadSource: SqlitePresetReadSource('));
     expect(mainSource, contains('Provider<AppRepository>.value(value: repo)'));
     expect(mainSource, contains('ActivePlanStore(repository: repo)'));
     expect(mainSource, contains('NutritionProfile(repository: repo)'));

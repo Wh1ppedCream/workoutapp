@@ -9,6 +9,7 @@ import '../db/database_maintenance.dart';
 import '../models/models.dart';
 import 'content_repository.dart';
 import 'food_catalog_repository.dart';
+import 'preset_read_source.dart';
 
 part 'parts/workout_repository_part.dart';
 part 'parts/catalog_repository_part.dart';
@@ -16,6 +17,7 @@ part 'parts/measurement_repository_part.dart';
 part 'parts/analytics_repository_part.dart';
 part 'parts/profile_settings_repository_part.dart';
 part 'parts/preset_repository_part.dart';
+part 'parts/preset_read_repository_part.dart';
 part 'parts/nutrition_repository_part.dart';
 
 /// Shared collaborators; domain mixins never construct their own repository.
@@ -42,7 +44,8 @@ class AppRepository extends _RepositoryDependencies
   AppRepository get _repository => this;
 
   // ✨ Allow DI in tests; default to the singleton helper.
-  AppRepository({DatabaseHelper? db}) : _dbHelper = db ?? DatabaseHelper() {
+  AppRepository({DatabaseHelper? db, this._presetReadSource})
+    : _dbHelper = db ?? DatabaseHelper() {
     if (db != null) {
       clearExerciseAnalysisCache();
     }
@@ -58,6 +61,11 @@ class AppRepository extends _RepositoryDependencies
 
   @override
   final DatabaseHelper _dbHelper;
+  final PresetReadSource? _presetReadSource;
+
+  PresetReadSession openPresetReadSession(int presetId) =>
+      _presetReadSource?.open(presetId) ??
+      _RepositoryPresetReadSession(this, presetId);
   @override
   late final ContentRepository content = ContentRepository(db: _dbHelper);
   @override

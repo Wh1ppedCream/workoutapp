@@ -20,6 +20,14 @@ class PresetDefinition {
     this.profileId,
     this.isDraft = false,
   });
+  factory PresetDefinition.fromRow(Map<String, Object?> row) =>
+      PresetDefinition(
+        id: row['id'] as int,
+        name: row['name'] as String,
+        createdAt: DateTime.parse(row['created_at'] as String),
+        profileId: row['profile_id'] as int?,
+        isDraft: (row['is_draft'] as int? ?? 0) == 1,
+      );
   Map<String, dynamic> toMap() => {
     'id': id,
     'name': name,
@@ -189,16 +197,16 @@ class FlowDefinition {
 
     // Safely handle missing or null 'nodes' and 'edges'
     final rawNodes = m['nodes'];
-    final nodes =
-        rawNodes != null ? List<String>.from(rawNodes as List) : <String>[];
+    final nodes = rawNodes != null
+        ? List<String>.from(rawNodes as List)
+        : <String>[];
 
     final rawEdges = m['edges'];
-    final edges =
-        rawEdges != null
-            ? (rawEdges as List).map((e) {
-              return FlowEdge.fromMap(e as Map<String, dynamic>);
-            }).toList()
-            : <FlowEdge>[];
+    final edges = rawEdges != null
+        ? (rawEdges as List).map((e) {
+            return FlowEdge.fromMap(e as Map<String, dynamic>);
+          }).toList()
+        : <FlowEdge>[];
 
     return FlowDefinition(nodes: nodes, edges: edges);
   }
@@ -220,9 +228,7 @@ class FlowDefinition {
       }
       return edge;
     }).toList();
-    return changed
-        ? FlowDefinition(nodes: nodes, edges: updatedEdges)
-        : this;
+    return changed ? FlowDefinition(nodes: nodes, edges: updatedEdges) : this;
   }
 
   /// Returns a copy without `method` edges pointing to [methodName], or `this`

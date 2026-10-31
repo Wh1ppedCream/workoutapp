@@ -48,6 +48,8 @@ import 'theme/theme_lab_page.dart';
 import 'theme/tonos_preview_presentation.dart';
 
 import 'repositories/app_repository.dart';
+import 'repositories/sqlite_preset_read_source.dart';
+import 'db/database_helper.dart';
 import 'services/active_plan_store.dart';
 import 'services/diagnostics_service.dart';
 import 'utils/app_test_keys.dart';
@@ -177,7 +179,9 @@ Future<void> runTonosApp({
         final themeProvider = previewPresentation == null
             ? await ThemeProvider.load()
             : await runPreviewStage('ThemeProvider.load', ThemeProvider.load);
-        final repo = AppRepository();
+        final repo = AppRepository(
+          presetReadSource: SqlitePresetReadSource(DatabaseHelper()),
+        );
         if (beforeRunApp != null) {
           await runPreviewStage(
             'beforeRunApp preview fixtures',

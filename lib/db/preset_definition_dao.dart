@@ -1,6 +1,7 @@
 // File: lib/db/preset_definition_dao.dart
 
 import 'package:sqflite/sqflite.dart';
+
 import 'db_query_utils.dart';
 
 /// DAO for accessing preset_definitions table, with optional profile filtering.
@@ -29,10 +30,9 @@ class PresetDefinitionDao {
     String name, {
     int? profileId,
   }) async {
-    final whereClause =
-        profileId != null
-            ? 'name = ? AND profile_id = ? AND is_draft = 0'
-            : 'name = ? AND profile_id IS NULL AND is_draft = 0';
+    final whereClause = profileId != null
+        ? 'name = ? AND profile_id = ? AND is_draft = 0'
+        : 'name = ? AND profile_id IS NULL AND is_draft = 0';
     final whereArgs = profileId != null ? [name, profileId] : [name];
     final rows = await db.query(
       'preset_definitions',
@@ -92,7 +92,7 @@ class PresetDefinitionDao {
 
   /// Retrieves a single preset definition by ID.
   static Future<Map<String, dynamic>?> getPresetById(
-    Database db,
+    DatabaseExecutor db,
     int presetId,
   ) async {
     final rows = await db.query(
@@ -125,5 +125,55 @@ class PresetDefinitionDao {
       where: 'id = ?',
       whereArgs: [presetId],
     );
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchPresetSummariesRaw(
+    DatabaseExecutor db, {
+    int? profileId,
+  }) async {
+    final where = profileId != null
+        ? 'WHERE p.profile_id = ? AND p.is_draft = 0'
+        : 'WHERE p.is_draft = 0';
+    return db.rawQuery('''
+      SELECT
+        p.id AS id,
+        p.name AS name,
+        p.created_at AS created_at,
+        p.profile_id AS profile_id,
+        COALESCE(a.is_automatic, 0) AS is_automatic
+      FROM preset_definitions p
+      LEFT JOIN preset_auto_settings a ON a.preset_id = p.id
+      $where
+      ORDER BY p.created_at
+      ''', profileId != null ? [profileId] : const <Object?>[]);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw(
+    DatabaseExecutor db, {
+    required List<int> presetIds,
+  }) async {
+    if (presetIds.isEmpty) return const <Map<String, dynamic>>[];
+
+    final rows = <Map<String, dynamic>>[];
+    final uniquePresetIds = presetIds.toSet().toList();
+    for (final chunk in sqliteChunks(uniquePresetIds)) {
+      final placeholders = sqlitePlaceholders(chunk.length);
+      rows.addAll(
+        await db.rawQuery('''
+          SELECT
+            pe.preset_id AS preset_id,
+            pe.exercise_def_id AS def_id,
+            COUNT(ps.id) AS set_count
+          FROM preset_exercises pe
+          LEFT JOIN preset_sets ps ON ps.preset_exercise_id = pe.id
+          WHERE pe.type = 'weight'
+            AND pe.exercise_def_id IS NOT NULL
+            AND pe.preset_id IN ($placeholders)
+          GROUP BY pe.preset_id, pe.exercise_def_id
+          ''', chunk),
+      );
+    }
+
+    return rows;
   }
 }

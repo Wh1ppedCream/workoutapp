@@ -39,7 +39,7 @@ class PresetExerciseDao {
 
   /// Retrieves all exercises for a given preset.
   static Future<List<Map<String, dynamic>>> getExercisesForPreset(
-    Database db,
+    DatabaseExecutor db,
     int presetId,
   ) {
     return db.query(

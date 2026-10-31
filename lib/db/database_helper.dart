@@ -36,7 +36,6 @@ import 'content_dao.dart';
 import 'database_connection.dart';
 import 'database_backup_policy.dart';
 import 'database_maintenance.dart';
-import 'db_query_utils.dart';
 import 'active_plan_dao.dart';
 import 'active_workout_dao.dart';
 import 'pending_workout_progression_dao.dart';
@@ -386,44 +385,7 @@ class DatabaseHelper {
     DateTime? end,
   }) async {
     final db = await database;
-    final whereClauses = <String>[];
-    final args = <Object?>[];
-
-    if (start != null) {
-      whereClauses.add('sess.completed_at_ms >= ?');
-      args.add(TemporalSemantics.utcEpochMilliseconds(start));
-    }
-    if (end != null) {
-      whereClauses.add('sess.completed_at_ms <= ?');
-      args.add(TemporalSemantics.utcEpochMilliseconds(end));
-    }
-
-    final whereSql = whereClauses.isEmpty
-        ? ''
-        : 'WHERE ${whereClauses.join(' AND ')}';
-
-    return db.rawQuery('''
-      SELECT
-        sess.id AS session_id,
-        sess.date AS date,
-        sess.completed_at_ms AS completed_at_ms,
-        sess.training_day AS training_day,
-        sess.duration AS duration,
-        COUNT(DISTINCT e.id) AS exercise_count,
-        COUNT(st.id) AS set_count,
-        COALESCE(SUM(
-          CASE
-            WHEN e.type = 'weight' THEN st.weight * st.reps
-            ELSE 0
-          END
-        ), 0) AS total_volume
-      FROM sessions sess
-      LEFT JOIN exercises e ON e.session_id = sess.id
-      LEFT JOIN sets st ON st.exercise_id = e.id
-      $whereSql
-      GROUP BY sess.id
-      ORDER BY sess.completed_at_ms ASC, sess.id ASC
-      ''', args);
+    return SessionDao.fetchWorkoutReportSessionsRaw(db, start: start, end: end);
   }
 
   Future<void> deleteSession(int sid) async {
@@ -504,28 +466,7 @@ class DatabaseHelper {
 
   Future<void> updateSession(int id, DateTime newDate, int newDuration) async {
     final db = await database;
-    await db.transaction((txn) async {
-      final definitionRows = await txn.rawQuery(
-        '''
-        SELECT DISTINCT exercise_def_id
-        FROM exercises
-        WHERE session_id = ?
-          AND type = 'weight'
-          AND exercise_def_id IS NOT NULL
-      ''',
-        [id],
-      );
-      await SessionDao.updateSession(
-        txn,
-        id,
-        completedAt: newDate,
-        duration: newDuration,
-      );
-      await WorkoutRecordEventsDao.rebuildForDefinitions(
-        txn,
-        definitionRows.map((row) => row['exercise_def_id'] as int),
-      );
-    });
+    await WorkoutTransactionDao.updateSession(db, id, newDate, newDuration);
   }
 
   // Fetch an inclusive exact-instant range and map it to sessions.
@@ -615,36 +556,10 @@ class DatabaseHelper {
     if (limit <= 0) return const <Map<String, dynamic>>[];
 
     final db = await database;
-    return db.rawQuery(
-      '''
-      SELECT *
-      FROM (
-        SELECT
-          sess.id AS session_id,
-          sess.date AS session_date,
-          sess.completed_at_ms AS completed_at_ms,
-          sess.training_day AS training_day,
-          MAX(CASE WHEN st.reps = 1 THEN st.weight ELSE NULL END)
-            AS actual_one_rm,
-          MAX(
-            CASE
-              WHEN st.reps <= 1 THEN st.weight
-              ELSE st.weight * (1 + 0.0333 * st.reps)
-            END
-          ) AS estimated_one_rm
-        FROM sets st
-        INNER JOIN exercises e ON e.id = st.exercise_id
-        INNER JOIN sessions sess ON sess.id = e.session_id
-        WHERE e.type = 'weight'
-          AND e.exercise_def_id = ?
-          AND st.parent_set_id IS NULL
-        GROUP BY sess.id
-        ORDER BY sess.completed_at_ms DESC, sess.id DESC
-        LIMIT ?
-      )
-      ORDER BY completed_at_ms ASC, session_id ASC
-      ''',
-      [definitionId, limit],
+    return ExerciseHistoryDao.fetchExerciseOneRmTrendRows(
+      db,
+      definitionId: definitionId,
+      limit: limit,
     );
   }
 
@@ -847,52 +762,13 @@ class DatabaseHelper {
   // Update a single set.
   Future<void> updateSet(int setId, double weight, int reps) async {
     final db = await database;
-    await db.transaction((txn) async {
-      final definitionRows = await txn.rawQuery(
-        '''
-        SELECT e.exercise_def_id
-        FROM sets st
-        INNER JOIN exercises e ON e.id = st.exercise_id
-        WHERE st.id = ? AND e.type = 'weight'
-      ''',
-        [setId],
-      );
-      await txn.update(
-        'sets',
-        {'weight': weight, 'reps': reps},
-        where: 'id = ?',
-        whereArgs: [setId],
-      );
-      await WorkoutRecordEventsDao.rebuildForDefinitions(
-        txn,
-        definitionRows
-            .map((row) => row['exercise_def_id'] as int?)
-            .whereType<int>(),
-      );
-    });
+    await WorkoutTransactionDao.updateSet(db, setId, weight, reps);
   }
 
   // Delete a single set.
   Future<void> deleteSet(int setId) async {
     final db = await database;
-    await db.transaction((txn) async {
-      final definitionRows = await txn.rawQuery(
-        '''
-        SELECT e.exercise_def_id
-        FROM sets st
-        INNER JOIN exercises e ON e.id = st.exercise_id
-        WHERE st.id = ? AND e.type = 'weight'
-      ''',
-        [setId],
-      );
-      await txn.delete('sets', where: 'id = ?', whereArgs: [setId]);
-      await WorkoutRecordEventsDao.rebuildForDefinitions(
-        txn,
-        definitionRows
-            .map((row) => row['exercise_def_id'] as int?)
-            .whereType<int>(),
-      );
-    });
+    await WorkoutTransactionDao.deleteSet(db, setId);
   }
 
   // Reorder sets.
@@ -1078,22 +954,7 @@ class DatabaseHelper {
     int limit = 5,
   }) async {
     final db = await database;
-    return db.rawQuery(
-      '''
-      SELECT
-        e.exercise_def_id AS definition_id,
-        COUNT(e.id) AS use_count,
-        MAX(sess.completed_at_ms) AS last_done
-      FROM exercises e
-      INNER JOIN sessions sess ON sess.id = e.session_id
-      WHERE e.type = 'weight'
-        AND e.exercise_def_id IS NOT NULL
-      GROUP BY e.exercise_def_id
-      ORDER BY use_count DESC, last_done DESC
-      LIMIT ?
-      ''',
-      [limit],
-    );
+    return DefinitionDao.fetchMostUsedExerciseDefinitionsRaw(db, limit: limit);
   }
 
   /// Fetch all exercise definitions (shallow, without join lists).
@@ -2538,21 +2399,10 @@ class DatabaseHelper {
     int? profileId,
   }) async {
     final db = await database;
-    final where = profileId != null
-        ? 'WHERE p.profile_id = ? AND p.is_draft = 0'
-        : 'WHERE p.is_draft = 0';
-    return db.rawQuery('''
-      SELECT
-        p.id AS id,
-        p.name AS name,
-        p.created_at AS created_at,
-        p.profile_id AS profile_id,
-        COALESCE(a.is_automatic, 0) AS is_automatic
-      FROM preset_definitions p
-      LEFT JOIN preset_auto_settings a ON a.preset_id = p.id
-      $where
-      ORDER BY p.created_at
-      ''', profileId != null ? [profileId] : const <Object?>[]);
+    return PresetDefinitionDao.fetchPresetSummariesRaw(
+      db,
+      profileId: profileId,
+    );
   }
 
   Future<List<Map<String, dynamic>>> fetchPresetFocusSetCountsRaw({
@@ -2561,40 +2411,17 @@ class DatabaseHelper {
     if (presetIds.isEmpty) return const <Map<String, dynamic>>[];
 
     final db = await database;
-    final rows = <Map<String, dynamic>>[];
-    final uniquePresetIds = presetIds.toSet().toList();
-    for (final chunk in sqliteChunks(uniquePresetIds)) {
-      final placeholders = sqlitePlaceholders(chunk.length);
-      rows.addAll(
-        await db.rawQuery('''
-          SELECT
-            pe.preset_id AS preset_id,
-            pe.exercise_def_id AS def_id,
-            COUNT(ps.id) AS set_count
-          FROM preset_exercises pe
-          LEFT JOIN preset_sets ps ON ps.preset_exercise_id = pe.id
-          WHERE pe.type = 'weight'
-            AND pe.exercise_def_id IS NOT NULL
-            AND pe.preset_id IN ($placeholders)
-          GROUP BY pe.preset_id, pe.exercise_def_id
-          ''', chunk),
-      );
-    }
-
-    return rows;
+    return PresetDefinitionDao.fetchPresetFocusSetCountsRaw(
+      db,
+      presetIds: presetIds,
+    );
   }
 
   Future<PresetDefinition?> fetchPresetById(int presetId) async {
     final db = await database;
     final row = await PresetDefinitionDao.getPresetById(db, presetId);
     if (row == null) return null;
-    return PresetDefinition(
-      id: row['id'] as int,
-      name: row['name'] as String,
-      createdAt: DateTime.parse(row['created_at'] as String),
-      profileId: row['profile_id'] as int?,
-      isDraft: (row['is_draft'] as int? ?? 0) == 1,
-    );
+    return PresetDefinition.fromRow(row);
   }
 
   Future<void> updatePresetName(int presetId, String name) async {

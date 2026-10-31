@@ -98,15 +98,14 @@ class WorkoutTransactionDao {
     for (var index = 0; index < exercises.length; index++) {
       final item = exercises[index];
       final exercise = item.exercise;
-      final definitionId =
-          item.type == 'weight'
-              ? item.definitionId ??
-                  await _resolveDefinitionId(
-                    txn,
-                    exercise.name,
-                    exercise.equipment,
-                  )
-              : item.definitionId;
+      final definitionId = item.type == 'weight'
+          ? item.definitionId ??
+                await _resolveDefinitionId(
+                  txn,
+                  exercise.name,
+                  exercise.equipment,
+                )
+          : item.definitionId;
       final exerciseId = await txn.insert('exercises', {
         'session_id': sessionId,
         'exercise_def_id': definitionId,
@@ -190,8 +189,9 @@ class WorkoutTransactionDao {
         whereArgs: [equipmentName],
         limit: 1,
       );
-      equipmentId =
-          equipmentRows.isEmpty ? null : equipmentRows.first['id'] as int;
+      equipmentId = equipmentRows.isEmpty
+          ? null
+          : equipmentRows.first['id'] as int;
     }
 
     final rows = await txn.rawQuery('''
@@ -288,5 +288,87 @@ class WorkoutTransactionDao {
         'vm_value': sessionVolumeMax,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
+  }
+
+  static Future<void> updateSession(
+    Database db,
+    int id,
+    DateTime newDate,
+    int newDuration,
+  ) async {
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT DISTINCT exercise_def_id
+        FROM exercises
+        WHERE session_id = ?
+          AND type = 'weight'
+          AND exercise_def_id IS NOT NULL
+      ''',
+        [id],
+      );
+      await SessionDao.updateSession(
+        txn,
+        id,
+        completedAt: newDate,
+        duration: newDuration,
+      );
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows.map((row) => row['exercise_def_id'] as int),
+      );
+    });
+  }
+
+  static Future<void> updateSet(
+    Database db,
+    int setId,
+    double weight,
+    int reps,
+  ) async {
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT e.exercise_def_id
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        WHERE st.id = ? AND e.type = 'weight'
+      ''',
+        [setId],
+      );
+      await txn.update(
+        'sets',
+        {'weight': weight, 'reps': reps},
+        where: 'id = ?',
+        whereArgs: [setId],
+      );
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows
+            .map((row) => row['exercise_def_id'] as int?)
+            .whereType<int>(),
+      );
+    });
+  }
+
+  static Future<void> deleteSet(Database db, int setId) async {
+    await db.transaction((txn) async {
+      final definitionRows = await txn.rawQuery(
+        '''
+        SELECT e.exercise_def_id
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        WHERE st.id = ? AND e.type = 'weight'
+      ''',
+        [setId],
+      );
+      await txn.delete('sets', where: 'id = ?', whereArgs: [setId]);
+      await WorkoutRecordEventsDao.rebuildForDefinitions(
+        txn,
+        definitionRows
+            .map((row) => row['exercise_def_id'] as int?)
+            .whereType<int>(),
+      );
+    });
   }
 }

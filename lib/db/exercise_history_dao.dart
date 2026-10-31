@@ -45,4 +45,44 @@ class ExerciseHistoryDao {
       ''', args);
     return dynamicRows(rows);
   }
+
+  static Future<List<Map<String, dynamic>>> fetchExerciseOneRmTrendRows(
+    DatabaseExecutor db, {
+    required int definitionId,
+    int limit = 60,
+  }) async {
+    if (limit <= 0) return const <Map<String, dynamic>>[];
+
+    return db.rawQuery(
+      '''
+      SELECT *
+      FROM (
+        SELECT
+          sess.id AS session_id,
+          sess.date AS session_date,
+          sess.completed_at_ms AS completed_at_ms,
+          sess.training_day AS training_day,
+          MAX(CASE WHEN st.reps = 1 THEN st.weight ELSE NULL END)
+            AS actual_one_rm,
+          MAX(
+            CASE
+              WHEN st.reps <= 1 THEN st.weight
+              ELSE st.weight * (1 + 0.0333 * st.reps)
+            END
+          ) AS estimated_one_rm
+        FROM sets st
+        INNER JOIN exercises e ON e.id = st.exercise_id
+        INNER JOIN sessions sess ON sess.id = e.session_id
+        WHERE e.type = 'weight'
+          AND e.exercise_def_id = ?
+          AND st.parent_set_id IS NULL
+        GROUP BY sess.id
+        ORDER BY sess.completed_at_ms DESC, sess.id DESC
+        LIMIT ?
+      )
+      ORDER BY completed_at_ms ASC, session_id ASC
+      ''',
+      [definitionId, limit],
+    );
+  }
 }

@@ -8,6 +8,11 @@
 - Scope: S1–S4, plus the four safe constructor changes from optional S6.
 - Final qualification: complete on 2026-10-30 — **2,515 full-suite tests and 172 contract checks passed**, with 0 analysis errors/warnings and 75 existing deprecation infos.
 
+Subsequent physical-device validation is recorded in the
+[Pixel 7 smoke-test report](pixel7-smoke.md), including one existing action-button
+collision and the limits of the device coverage. It does not change the
+automated qualification counts or grant release/visual approval.
+
 ## 1. Commit guide
 
 | Batch | Commit | Review focus |
@@ -213,10 +218,11 @@ git diff --check 6331ccd..HEAD
   identity, interaction or ratcheted styling and was not forced into this pass.
 - No SQLite schema/migration, ARB/generated localization, preference key,
   dependency/lockfile, route, approved layout or motion specification was changed.
-- No build, install, device navigation, screenshot capture, preview reset,
+- At the original code checkpoint: no build, install, device navigation, screenshot capture, preview reset,
   fixture reseed, staging of unrelated artifacts, destructive cleanup or push.
 - Existing untracked `android/build/`, `flutter_06.png`, `incoming/`,
   `test/theme/widgets/failures/` and `tmp/` remain outside these commits.
   `.build/` retains ignored scratch evidence and logs.
 - Unit/widget and static qualification are distinct from physical-device and
-  release qualification. This pass does not assert either of the latter.
+  release qualification. The later device smoke test is documented separately
+  above; neither report asserts full release qualification.

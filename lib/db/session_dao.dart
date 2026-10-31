@@ -145,4 +145,49 @@ class SessionDao {
       orderBy: 'training_day DESC, completed_at_ms DESC, id DESC',
     );
   }
+
+  static Future<List<Map<String, dynamic>>> fetchWorkoutReportSessionsRaw(
+    DatabaseExecutor db, {
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    final whereClauses = <String>[];
+    final args = <Object?>[];
+
+    if (start != null) {
+      whereClauses.add('sess.completed_at_ms >= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(start));
+    }
+    if (end != null) {
+      whereClauses.add('sess.completed_at_ms <= ?');
+      args.add(TemporalSemantics.utcEpochMilliseconds(end));
+    }
+
+    final whereSql = whereClauses.isEmpty
+        ? ''
+        : 'WHERE ${whereClauses.join(' AND ')}';
+
+    return db.rawQuery('''
+      SELECT
+        sess.id AS session_id,
+        sess.date AS date,
+        sess.completed_at_ms AS completed_at_ms,
+        sess.training_day AS training_day,
+        sess.duration AS duration,
+        COUNT(DISTINCT e.id) AS exercise_count,
+        COUNT(st.id) AS set_count,
+        COALESCE(SUM(
+          CASE
+            WHEN e.type = 'weight' THEN st.weight * st.reps
+            ELSE 0
+          END
+        ), 0) AS total_volume
+      FROM sessions sess
+      LEFT JOIN exercises e ON e.session_id = sess.id
+      LEFT JOIN sets st ON st.exercise_id = e.id
+      $whereSql
+      GROUP BY sess.id
+      ORDER BY sess.completed_at_ms ASC, sess.id ASC
+      ''', args);
+  }
 }

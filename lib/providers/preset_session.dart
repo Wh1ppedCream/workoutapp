@@ -209,30 +209,31 @@ class PresetSession extends ChangeNotifier {
     _isLoading = true;
     _notifyIfActive();
     try {
-      final def = await _repo.fetchPresetById(presetId);
+      final reads = _repo.openPresetReadSession(presetId);
+      final def = await reads.fetchPreset();
       if (_disposed || loadVersion != _loadVersion) return;
 
       final stagedEntries = <_PresetExerciseEntry>[];
-      final rawRows = await _repo.fetchPresetExercises(presetId);
+      final rawRows = await reads.fetchExercises();
       if (_disposed || loadVersion != _loadVersion) return;
 
       for (final row in rawRows) {
-        final exRowId = row['id'] as int;
-        final type = row['type'] as String?;
-        final defId = row['exercise_def_id'] as int?;
+        final exRowId = row.id;
+        final type = row.type;
+        final defId = row.definitionId;
 
         if (type == 'weight') {
           final info = defId != null
-              ? await _repo.fetchDefinitionInfo(defId)
-              : const <String, String?>{'name': '', 'equipmentName': ''};
+              ? await reads.fetchDefinitionInfo(defId)
+              : const ExerciseDefinitionInfo(name: '', equipmentName: '');
           if (_disposed || loadVersion != _loadVersion) return;
-          final name = info['name'] ?? '';
-          final equipment = info['equipmentName'] ?? '';
+          final name = info.name ?? '';
+          final equipment = info.equipmentName ?? '';
 
-          final rawSets = await _repo.fetchPresetSets(exRowId);
+          final rawSets = await reads.fetchSets(exRowId);
           if (_disposed || loadVersion != _loadVersion) return;
           final parentRows = rawSets
-              .where((r) => r['parent_set_id'] == null)
+              .where((r) => r.parentSetId == null)
               .toList();
           final parents = <ExerciseSet>[];
           final changeSets = <int, List<ExerciseSet>>{};
@@ -243,28 +244,27 @@ class PresetSession extends ChangeNotifier {
             final r = parentRows[i];
             parents.add(
               ExerciseSet(
-                sourcePresetSetId: r['id'] as int,
-                weight: (r['weight'] as num).toDouble(),
-                reps: r['reps'] as int,
+                sourcePresetSetId: r.id,
+                weight: r.weight,
+                reps: r.reps,
               ),
             );
-            parentIds.add(r['id'] as int);
+            parentIds.add(r.id);
           }
 
-          for (final r in rawSets.where((r) => r['parent_set_id'] != null)) {
-            final pid = r['parent_set_id'] as int;
-            final pIndex = parentRows.indexWhere((pr) => pr['id'] == pid);
+          for (final r in rawSets.where((r) => r.parentSetId != null)) {
+            final pid = r.parentSetId!;
+            final pIndex = parentRows.indexWhere((pr) => pr.id == pid);
             if (pIndex == -1) continue; // skip orphaned child
             changeSets[pIndex] ??= [];
             changeSets[pIndex]!.add(
               ExerciseSet(
-                sourcePresetSetId: r['id'] as int,
-                weight: (r['weight'] as num).toDouble(),
-                reps: r['reps'] as int,
+                sourcePresetSetId: r.id,
+                weight: r.weight,
+                reps: r.reps,
               ),
             );
-            childIdsMap[pIndex] = (childIdsMap[pIndex] ?? [])
-              ..add(r['id'] as int);
+            childIdsMap[pIndex] = (childIdsMap[pIndex] ?? [])..add(r.id);
           }
 
           stagedEntries.add(
@@ -284,18 +284,18 @@ class PresetSession extends ChangeNotifier {
             ),
           );
         } else if (type == 'cardio') {
-          final c = await _repo.fetchPresetCardio(exRowId);
+          final c = await reads.fetchCardio(exRowId);
           if (_disposed || loadVersion != _loadVersion) return;
           if (c == null) continue;
           stagedEntries.add(
             _PresetExerciseEntry(
               exercise: CardioExercise(
-                name: c['cardio_name'] as String,
+                name: c.name,
                 equipment: '',
-                cardioName: c['cardio_name'] as String,
-                cardioNote: c['note'] as String?,
-                plannedMinutes: (c['planned_minutes'] as num).toInt(),
-                elapsedSeconds: (c['elapsed_seconds'] as num).toInt(),
+                cardioName: c.name,
+                cardioNote: c.note,
+                plannedMinutes: c.plannedMinutes,
+                elapsedSeconds: c.elapsedSeconds,
               ),
               cardType: CardType.cardio,
               originalDefinitionId: null,
@@ -305,27 +305,16 @@ class PresetSession extends ChangeNotifier {
             ),
           );
         } else if (type == 'stretch') {
-          final rawItems = await _repo.fetchPresetStretchItems(exRowId);
+          final rawItems = await reads.fetchStretchItems(exRowId);
           if (_disposed || loadVersion != _loadVersion) return;
-          final instances = rawItems.map((r) {
-            return StretchInstance.fromMap(<String, dynamic>{
-              'stretch_id': r['stretch_id'] as int?,
-              'is_custom': r['is_custom'] as int,
-              'custom_name': r['custom_name'] as String?,
-              'custom_desc': r['custom_desc'] as String?,
-              'is_checked': 0,
-              'order_index': (r['order_index'] as num).toInt(),
-            });
-          }).toList();
+          final instances = rawItems.map((row) => row.toInstance()).toList();
           final completed = <int>{};
 
           var stretchName = 'Stretch';
           if (instances.isNotEmpty) {
             final first = instances.first;
             if (first.stretchId != null) {
-              final dn = await _repo.fetchStretchDefinitionNameById(
-                first.stretchId!,
-              );
+              final dn = await reads.fetchStretchName(first.stretchId!);
               if (_disposed || loadVersion != _loadVersion) return;
               if (dn != null) stretchName = dn;
             } else if (first.isCustom) {
@@ -350,14 +339,12 @@ class PresetSession extends ChangeNotifier {
         }
       }
 
-      final autoRow = await _repo.fetchPresetAutoSettings(presetId);
+      final autoRow = await reads.fetchAutoSettings();
       if (_disposed || loadVersion != _loadVersion) return;
 
-      final nextIsAutomatic = (autoRow?['is_automatic'] as int? ?? 0) == 1;
-      final nextGlobalIncrement = autoRow != null
-          ? (autoRow['global_increment'] as num).toDouble()
-          : 5.0;
-      final nextSkipFirstSet = (autoRow?['skip_first_set'] as int? ?? 1) == 1;
+      final nextIsAutomatic = autoRow?.isAutomatic ?? false;
+      final nextGlobalIncrement = autoRow?.globalIncrement ?? 5.0;
+      final nextSkipFirstSet = autoRow?.skipFirstSet ?? true;
 
       final stagedExerciseOverrides = <int, double?>{};
       final stagedLastSetIndices = <int, int>{};
@@ -365,44 +352,36 @@ class PresetSession extends ChangeNotifier {
 
       for (final entry in stagedEntries) {
         final exRowId = entry.presetExerciseId;
-        final exAuto = await _repo.fetchPresetExerciseAuto(exRowId);
+        final exAuto = await reads.fetchExerciseAuto(exRowId);
         if (_disposed || loadVersion != _loadVersion) return;
-        final inc = exAuto?['increment_amount'] == null
-            ? null
-            : (exAuto!['increment_amount'] as num).toDouble();
+        final inc = exAuto?.incrementAmount;
         stagedExerciseOverrides[exRowId] = inc;
         stagedLastSetIndices[exRowId] =
-            (exAuto?['last_set_index'] as int?) ?? (nextSkipFirstSet ? 2 : 1);
+            exAuto?.lastSetIndex ?? (nextSkipFirstSet ? 2 : 1);
 
         for (final pid in entry.parentSetIds) {
-          final setAuto = await _repo.fetchPresetSetAuto(pid);
+          final setAuto = await reads.fetchSetAuto(pid);
           if (_disposed || loadVersion != _loadVersion) return;
-          stagedSetOverrides[pid] = setAuto?['increment_amount'] == null
-              ? null
-              : (setAuto!['increment_amount'] as num).toDouble();
+          stagedSetOverrides[pid] = setAuto?.incrementAmount;
         }
         for (final childEntry in entry.childSetIds.entries) {
           for (final cid in childEntry.value) {
-            final setAuto = await _repo.fetchPresetSetAuto(cid);
+            final setAuto = await reads.fetchSetAuto(cid);
             if (_disposed || loadVersion != _loadVersion) return;
-            stagedSetOverrides[cid] = setAuto?['increment_amount'] == null
-                ? null
-                : (setAuto!['increment_amount'] as num).toDouble();
+            stagedSetOverrides[cid] = setAuto?.incrementAmount;
           }
         }
       }
 
-      final nextWeightCheck = (autoRow?['weight_check'] as int? ?? 1) == 1;
-      final nextRepCheck = (autoRow?['rep_check'] as int? ?? 1) == 1;
-      final nextVolumeCheck = (autoRow?['volume_check'] as int? ?? 0) == 1;
-      final nextAdjustAllSets = (autoRow?['adjust_all_sets'] as int? ?? 0) != 0;
-      final nextSuccessScope = ProgressionSuccessScopeX.fromStorage(
-        autoRow?['success_count_mode'],
-      );
-      final nextManualSelect =
-          (autoRow?['use_manual_select'] as int? ?? 0) == 1;
+      final nextWeightCheck = autoRow?.weightCheck ?? true;
+      final nextRepCheck = autoRow?.repCheck ?? true;
+      final nextVolumeCheck = autoRow?.volumeCheck ?? false;
+      final nextAdjustAllSets = autoRow?.adjustAllSets ?? false;
+      final nextSuccessScope =
+          autoRow?.successScope ?? ProgressionSuccessScope.set;
+      final nextManualSelect = autoRow?.manualSelect ?? false;
       final nextManualSelections = _decodeManualSelections(
-        autoRow?['manual_selection_json'] as String?,
+        autoRow?.manualSelectionJson,
       );
 
       presetName = def?.name ?? '';
