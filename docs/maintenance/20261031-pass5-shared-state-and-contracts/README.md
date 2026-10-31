@@ -129,6 +129,8 @@ independent-group assertions passed. These overlapping counts are not additive.
 All 18 theme-ratchet files pass with the original manifest unchanged. Format and
 whitespace checks pass. A full-suite run follows these focused checks.
 
+API-migration checkpoint: **6cb89b1**.
+
 ## Structural decision
 
 The shared launcher, isolated draft codec and typed analytics model are the
@@ -144,6 +146,42 @@ structural review, rather than treating file length as a reason to restructure.
 
 ## Final qualification
 
-Final full-suite and device results are recorded below when complete. Schema,
-data formats, preview databases and unrelated worktree files are preserved.
-Automated checks do not imply release qualification or new visual approval.
+| Check | Result |
+| --- | --- |
+| Full unit/widget run | **2,577 passed; one stale assertion failed** in `food_logging_behavior_test.dart`, which still expected a failed diary write to resolve. |
+| Corrected failure contract | The affected file then passed **12/12** tests, explicitly asserting `SafeFailure`, no logged entry and a retained provider error. No production code changed after the full run; there was no second whole-suite run. All 2,578 cases are covered across the full run and this focused recheck; overlapping passes are not added. |
+| Static analysis | Full source/tests/integration/tools and catalog-builder analysis: **zero errors, warnings and infos**. The corrected test also has clean scoped analysis. |
+| Theme inventory | **4,382 candidates**, 368 Dart files; 3,595 migrated, 144 allowlisted, 643 pending ownership candidates, zero unassigned. Inventory ownership is separate from visual approval. |
+| Theme ratchet | All **18** protected files pass with the original manifest. |
+| Content/relay | Development and locked-production content checks pass; **8/8** relay tests pass. |
+| Compile-time variants | **3/3 passed**: locked development content, Neo release opt-in, malformed opt-in rejection. |
+
+Schema, data formats, preview databases and unrelated worktree files are
+preserved. Automated checks do not imply release qualification or new visual
+approval. [Physical Pixel 7 validation](pixel7-validation.md) passed the focused
+restore/settings/preset/typed-chart smoke check. The app is left on Train →
+Overview, Home Gym, dark mode, with the ongoing workout retained. All user-data
+tables and settings matched the pre-install snapshot; documented startup
+metadata/diagnostic changes are separate.
+
+Re-run from the existing checkout with the pinned SDK:
+
+```powershell
+.\tools\tonos.ps1 check
+.\tools\tonos.ps1 dart analyze --fatal-infos lib test integration_test test_driver tools
+.\tools\tonos.ps1 flutter test --no-pub
+.\tools\tonos.ps1 dart run tools/theme_style_inventory.dart --check
+.\tools\tonos.ps1 dart run tools/theme_style_ratchet.dart docs/theme-style-ratchet.json
+git diff --check 1826ffc..HEAD
+```
+
+No push is part of this pass. The unrelated untracked paths (`android/build/`,
+`flutter_06.png`, `incoming/`, `test/theme/widgets/failures/`, and `tmp/`) are
+left untouched.
+
+Remaining boundaries: item 2 is explicitly deferred. Existing raw repository
+APIs remain for compatibility; this is not a mechanical conversion of all maps.
+Android builds still report future-support warnings for Gradle 8.14.5, AGP
+8.11.1 and Kotlin 2.2.21. Those upgrades need a separate compatibility pass;
+the build's validation was not bypassed. iOS/release qualification and device
+performance benchmarks are outside this pass.

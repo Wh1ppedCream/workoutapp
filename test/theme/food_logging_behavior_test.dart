@@ -7,6 +7,7 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/repositories/food_catalog_repository.dart';
 import 'package:env_test/screens/nutrition/food_logging_page.dart';
 import 'package:env_test/screens/nutrition/log_entry_page.dart';
+import 'package:env_test/services/safe_failure.dart';
 import 'package:env_test/theme/classic_theme.dart';
 import 'package:env_test/theme/neo_brutalism_theme.dart';
 import 'package:env_test/theme/expressive_theme.dart';
@@ -686,7 +687,7 @@ void main() {
   }
 
   test(
-    'nutrition profile rolls back failed favorites and records log errors',
+    'nutrition profile rolls back failed favorites and rejects failed logging',
     () async {
       final food = _food();
       final repository = _FakeRepository(
@@ -702,9 +703,12 @@ void main() {
       expect(profile.isFavorite(food.id!), isFalse);
       expect(profile.error, isNotNull);
 
-      await profile.addFood(meal: MealType.lunch, foodId: food.id!);
+      await expectLater(
+        profile.addFood(meal: MealType.lunch, foodId: food.id!),
+        throwsA(isA<SafeFailure>()),
+      );
       expect(repository.logged, isEmpty);
-      expect(profile.error, isNotNull);
+      expect(profile.error, isA<SafeFailure>());
       profile.dispose();
     },
   );
