@@ -80,12 +80,11 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
     }
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
+  void _onReorderItem(int oldIndex, int newIndex) {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _rankDrafts.clear();
       _editRevision++;
-      if (newIndex > oldIndex) newIndex -= 1;
       final part = _parts.removeAt(oldIndex);
       _parts.insert(newIndex, part);
       _applyRankOrder();
@@ -243,7 +242,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
           Expanded(
             child: ReorderableListView.builder(
               itemCount: _parts.length,
-              onReorder: _onReorder,
+              onReorderItem: _onReorderItem,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
               itemBuilder: (context, index) {
                 final part = _parts[index];
@@ -279,7 +278,7 @@ class _BodyPartRankingScreenState extends State<BodyPartRankingScreen> {
     return ReorderableListView.builder(
       proxyDecorator: tonosExpressiveDragProxy,
       itemCount: _parts.length,
-      onReorder: _onReorder,
+      onReorderItem: _onReorderItem,
       padding: const EdgeInsets.fromLTRB(
         16,
         14,

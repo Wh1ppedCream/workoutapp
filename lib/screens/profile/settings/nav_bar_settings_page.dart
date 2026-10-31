@@ -45,10 +45,9 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
     _savedInactiveTabs = List.of(_inactiveTabs);
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
+  void _onReorderItem(int oldIndex, int newIndex) {
     if (_saving) return;
     setState(() {
-      if (newIndex > oldIndex) newIndex--;
       final tab = _activeTabs.removeAt(oldIndex);
       _activeTabs.insert(newIndex, tab);
     });
@@ -176,7 +175,7 @@ class _NavBarSettingsPageState extends State<NavBarSettingsPage> {
             ReorderableListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              onReorder: _onReorder,
+              onReorderItem: _onReorderItem,
               itemCount: _activeTabs.length,
               buildDefaultDragHandles: false,
               proxyDecorator: (child, index, animation) {

@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
 import 'package:env_test/screens/onboarding_flow.dart';
@@ -11,16 +13,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-SemanticsData? _findSemanticsDataWithFlag(
-  SemanticsNode node,
-  SemanticsFlag flag,
-) {
+SemanticsData? _findSliderSemanticsData(SemanticsNode node) {
   final data = node.getSemanticsData();
-  if (data.hasFlag(flag)) return data;
+  if (data.flagsCollection.isSlider) return data;
 
   SemanticsData? match;
   node.visitChildren((child) {
-    match ??= _findSemanticsDataWithFlag(child, flag);
+    match ??= _findSliderSemanticsData(child);
     return true;
   });
   return match;
@@ -89,10 +88,13 @@ void main() {
 
             final switchSemantics = tester.getSemantics(switchFinder);
             expect(
-              switchSemantics.hasFlag(SemanticsFlag.hasToggledState),
+              switchSemantics.flagsCollection.isToggled != Tristate.none,
               isTrue,
             );
-            expect(switchSemantics.hasFlag(SemanticsFlag.isToggled), isFalse);
+            expect(
+              switchSemantics.flagsCollection.isToggled == Tristate.isTrue,
+              isFalse,
+            );
             expect(
               switchSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
               isTrue,
@@ -107,9 +109,8 @@ void main() {
             expect(changes, <bool>[true]);
             expect(tester.widget<Switch>(switchFinder).value, isTrue);
             expect(
-              tester
-                  .getSemantics(switchFinder)
-                  .hasFlag(SemanticsFlag.isToggled),
+              tester.getSemantics(switchFinder).flagsCollection.isToggled ==
+                  Tristate.isTrue,
               isTrue,
             );
             expect(tester.takeException(), isNull);
@@ -385,9 +386,8 @@ void main() {
         expect(tester.widget<Slider>(rateSliderFinder).onChanged, isNotNull);
         await tester.ensureVisible(rateSliderFinder);
         await tester.pumpAndSettle();
-        final rateSemantics = _findSemanticsDataWithFlag(
+        final rateSemantics = _findSliderSemanticsData(
           tester.getSemantics(rateSliderFinder),
-          SemanticsFlag.isSlider,
         );
         expect(rateSemantics, isNotNull);
         expect(rateSemantics!.hasAction(SemanticsAction.increase), isTrue);

@@ -102,6 +102,15 @@ void main() {
     expect(session.definitionIdForExercise(2), 50);
     expect(session.presetParentSetIds[2], [201, 202]);
 
+    // The new callback supplies final indices; legacy reorderExercise remains
+    // compatible for older callers. Neither direction may adjust twice.
+    session.moveExercise(2, 0);
+    expect(session.presetExerciseIds, [11, 13, 14]);
+    expect(session.presetParentSetIds[0], [201, 202]);
+    session.moveExercise(0, 2);
+    expect(session.presetExerciseIds, [13, 14, 11]);
+    expect(session.presetParentSetIds[2], [201, 202]);
+
     session.replaceWeightExerciseDefinition(
       2,
       ExerciseDefinition(

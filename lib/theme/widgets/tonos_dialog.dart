@@ -338,17 +338,28 @@ class TonosChoiceDialog<T> extends StatelessWidget {
       child: AlertDialog(
         title: Text(title),
         scrollable: true,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final value in values)
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: style?.compact == true ? 5 : 0,
+        content: RadioGroup<T>(
+          groupValue: selected,
+          onChanged: (value) => Navigator.of(context).pop(value),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final value in values)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: style?.compact == true ? 5 : 0,
+                  ),
+                  child: _buildChoice(
+                    context,
+                    value,
+                    neo,
+                    surfaces,
+                    shapes,
+                    ink,
+                  ),
                 ),
-                child: _buildChoice(context, value, neo, surfaces, shapes, ink),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -382,7 +393,6 @@ class TonosChoiceDialog<T> extends StatelessWidget {
     final tile = RadioListTile<T>(
       key: choiceKey?.call(value),
       value: value,
-      groupValue: selected,
       selected: style != null && isSelected,
       dense: style?.compact ?? false,
       visualDensity: style?.compact == true ? VisualDensity.compact : null,
@@ -443,7 +453,6 @@ class TonosChoiceDialog<T> extends StatelessWidget {
                   : TextStyle(color: foreground!.withValues(alpha: 0.78)),
             ),
       secondary: choicePreview?.call(value),
-      onChanged: (value) => Navigator.of(context).pop(value),
     );
     return style?.compact == true
         ? ConstrainedBox(

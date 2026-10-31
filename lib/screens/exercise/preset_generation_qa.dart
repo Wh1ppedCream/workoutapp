@@ -926,12 +926,12 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
         clipBehavior: Clip.antiAlias,
         child: RadioListTile<T>(
           value: value,
-          groupValue: groupValue,
+
           selected: selected,
           fillColor: coloredSelection
               ? WidgetStatePropertyAll<Color?>(selectedInk)
               : null,
-          onChanged: onChanged,
+
           dense: true,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 12,
@@ -1278,34 +1278,48 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   _starterWeightIntensityLabel(_starterWeightIntensity),
                 ),
                 children: [
-                  _buildChoiceTile<RepWeightGenerationMode>(
-                    title: strings.repModeMixed,
-                    subtitle: strings.generateMixedBody,
-                    value: RepWeightGenerationMode.mixed,
+                  RadioGroup<RepWeightGenerationMode>(
                     groupValue: _repWeightMode,
-                    onChanged: (value) => setState(
-                      () => _repWeightMode =
-                          value ?? RepWeightGenerationMode.mixed,
-                    ),
-                  ),
-                  _buildChoiceTile<RepWeightGenerationMode>(
-                    title: strings.repModePyramid,
-                    subtitle: strings.generatePyramidBody,
-                    value: RepWeightGenerationMode.pyramid,
-                    groupValue: _repWeightMode,
-                    onChanged: (value) => setState(
-                      () => _repWeightMode =
-                          value ?? RepWeightGenerationMode.pyramid,
-                    ),
-                  ),
-                  _buildChoiceTile<RepWeightGenerationMode>(
-                    title: strings.repModeConsistent,
-                    subtitle: strings.generateConsistentBody,
-                    value: RepWeightGenerationMode.consistent,
-                    groupValue: _repWeightMode,
-                    onChanged: (value) => setState(
-                      () => _repWeightMode =
-                          value ?? RepWeightGenerationMode.consistent,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _repWeightMode = value);
+                      }
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildChoiceTile<RepWeightGenerationMode>(
+                          title: strings.repModeMixed,
+                          subtitle: strings.generateMixedBody,
+                          value: RepWeightGenerationMode.mixed,
+                          groupValue: _repWeightMode,
+                          onChanged: (value) => setState(
+                            () => _repWeightMode =
+                                value ?? RepWeightGenerationMode.mixed,
+                          ),
+                        ),
+                        _buildChoiceTile<RepWeightGenerationMode>(
+                          title: strings.repModePyramid,
+                          subtitle: strings.generatePyramidBody,
+                          value: RepWeightGenerationMode.pyramid,
+                          groupValue: _repWeightMode,
+                          onChanged: (value) => setState(
+                            () => _repWeightMode =
+                                value ?? RepWeightGenerationMode.pyramid,
+                          ),
+                        ),
+                        _buildChoiceTile<RepWeightGenerationMode>(
+                          title: strings.repModeConsistent,
+                          subtitle: strings.generateConsistentBody,
+                          value: RepWeightGenerationMode.consistent,
+                          groupValue: _repWeightMode,
+                          onChanged: (value) => setState(
+                            () => _repWeightMode =
+                                value ?? RepWeightGenerationMode.consistent,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: expressive == null ? 8 : 6),
@@ -1319,34 +1333,48 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
                   SizedBox(height: expressive == null ? 14 : 6),
                   _buildSubsectionHeading(strings.optimizedWeightIntensity),
                   SizedBox(height: expressive == null ? 6 : 5),
-                  _buildChoiceTile<StarterWeightIntensity>(
-                    title: strings.intensityEasy,
-                    subtitle: strings.generateEasyBody,
-                    value: StarterWeightIntensity.easy,
+                  RadioGroup<StarterWeightIntensity>(
                     groupValue: _starterWeightIntensity,
-                    onChanged: (value) => setState(
-                      () => _starterWeightIntensity =
-                          value ?? StarterWeightIntensity.easy,
-                    ),
-                  ),
-                  _buildChoiceTile<StarterWeightIntensity>(
-                    title: strings.intensityMedium,
-                    subtitle: strings.generateMediumBody,
-                    value: StarterWeightIntensity.medium,
-                    groupValue: _starterWeightIntensity,
-                    onChanged: (value) => setState(
-                      () => _starterWeightIntensity =
-                          value ?? StarterWeightIntensity.medium,
-                    ),
-                  ),
-                  _buildChoiceTile<StarterWeightIntensity>(
-                    title: strings.intensityHard,
-                    subtitle: strings.generateHardBody,
-                    value: StarterWeightIntensity.hard,
-                    groupValue: _starterWeightIntensity,
-                    onChanged: (value) => setState(
-                      () => _starterWeightIntensity =
-                          value ?? StarterWeightIntensity.hard,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _starterWeightIntensity = value);
+                      }
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildChoiceTile<StarterWeightIntensity>(
+                          title: strings.intensityEasy,
+                          subtitle: strings.generateEasyBody,
+                          value: StarterWeightIntensity.easy,
+                          groupValue: _starterWeightIntensity,
+                          onChanged: (value) => setState(
+                            () => _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.easy,
+                          ),
+                        ),
+                        _buildChoiceTile<StarterWeightIntensity>(
+                          title: strings.intensityMedium,
+                          subtitle: strings.generateMediumBody,
+                          value: StarterWeightIntensity.medium,
+                          groupValue: _starterWeightIntensity,
+                          onChanged: (value) => setState(
+                            () => _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.medium,
+                          ),
+                        ),
+                        _buildChoiceTile<StarterWeightIntensity>(
+                          title: strings.intensityHard,
+                          subtitle: strings.generateHardBody,
+                          value: StarterWeightIntensity.hard,
+                          groupValue: _starterWeightIntensity,
+                          onChanged: (value) => setState(
+                            () => _starterWeightIntensity =
+                                value ?? StarterWeightIntensity.hard,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1354,56 +1382,62 @@ class _PresetGenerationQaScreenState extends State<PresetGenerationQaScreen> {
             ),
             KeyedSubtree(
               key: _allocationTutorialKey,
-              child: _buildSettingsSection(
-                sectionId: 'set-allocation',
-                icon: Icons.tune_outlined,
-                title: strings.generateSetAllocationTitle,
-                subtitle: _requirementSummary(),
-                children: [
-                  _buildChoiceTile<RequirementOption>(
-                    title: strings.generateEvenCoverageTitle,
-                    subtitle: strings.generateEvenCoverageBody,
-                    value: RequirementOption.equalSplitBodyPart,
-                    groupValue: _requirementOption,
-                    onChanged: (v) => setState(() => _requirementOption = v),
-                  ),
-                  _buildChoiceTile<RequirementOption>(
-                    title: strings.generateBodypartRankingsTitle,
-                    subtitle: strings.generateBodypartRankingsBody,
-                    value: RequirementOption.biasRankBodyPart,
-                    groupValue: _requirementOption,
-                    onChanged: (v) => setState(() => _requirementOption = v),
-                  ),
-                  if (_requirementOption == RequirementOption.biasRankBodyPart)
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const BodyPartRankingScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(strings.generateRankBodyparts),
+              child: RadioGroup<RequirementOption>(
+                groupValue: _requirementOption,
+                onChanged: (value) =>
+                    setState(() => _requirementOption = value),
+                child: _buildSettingsSection(
+                  sectionId: 'set-allocation',
+                  icon: Icons.tune_outlined,
+                  title: strings.generateSetAllocationTitle,
+                  subtitle: _requirementSummary(),
+                  children: [
+                    _buildChoiceTile<RequirementOption>(
+                      title: strings.generateEvenCoverageTitle,
+                      subtitle: strings.generateEvenCoverageBody,
+                      value: RequirementOption.equalSplitBodyPart,
+                      groupValue: _requirementOption,
+                      onChanged: (v) => setState(() => _requirementOption = v),
                     ),
-                  _buildChoiceTile<RequirementOption>(
-                    title: strings.generateMuscleRankingsTitle,
-                    subtitle: strings.generateMuscleRankingsBody,
-                    value: RequirementOption.biasRankMuscle,
-                    groupValue: _requirementOption,
-                    onChanged: (v) => setState(() => _requirementOption = v),
-                  ),
-                  if (_requirementOption == RequirementOption.biasRankMuscle)
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const MuscleRankingScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(strings.generateRankMuscles),
+                    _buildChoiceTile<RequirementOption>(
+                      title: strings.generateBodypartRankingsTitle,
+                      subtitle: strings.generateBodypartRankingsBody,
+                      value: RequirementOption.biasRankBodyPart,
+                      groupValue: _requirementOption,
+                      onChanged: (v) => setState(() => _requirementOption = v),
                     ),
-                ],
+                    if (_requirementOption ==
+                        RequirementOption.biasRankBodyPart)
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const BodyPartRankingScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(strings.generateRankBodyparts),
+                      ),
+                    _buildChoiceTile<RequirementOption>(
+                      title: strings.generateMuscleRankingsTitle,
+                      subtitle: strings.generateMuscleRankingsBody,
+                      value: RequirementOption.biasRankMuscle,
+                      groupValue: _requirementOption,
+                      onChanged: (v) => setState(() => _requirementOption = v),
+                    ),
+                    if (_requirementOption == RequirementOption.biasRankMuscle)
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const MuscleRankingScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(strings.generateRankMuscles),
+                      ),
+                  ],
+                ),
               ),
             ),
             if (expressive == null) const SizedBox(height: 88),

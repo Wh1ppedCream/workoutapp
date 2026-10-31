@@ -204,25 +204,27 @@ class _GymExerciseSettingsPageState extends State<GymExerciseSettingsPage> {
               final neo = context.usesNeoPresentation;
               final ink = context.cs.onPrimaryContainer;
               return TonosDialogFrame(
-                child: SimpleDialog(
-                  title: Text(strings.gymSettingsExitTitle),
-                  children: [
-                    for (final behavior in WorkoutExitBehavior.values)
-                      RadioListTile<WorkoutExitBehavior>(
-                        value: behavior,
-                        groupValue: current,
-                        title: Text(
-                          _exitBehaviorTitle(behavior, strings),
-                          style: neo ? TextStyle(color: ink) : null,
+                child: RadioGroup<WorkoutExitBehavior>(
+                  groupValue: current,
+                  onChanged: (value) => Navigator.pop(dialogContext, value),
+                  child: SimpleDialog(
+                    title: Text(strings.gymSettingsExitTitle),
+                    children: [
+                      for (final behavior in WorkoutExitBehavior.values)
+                        RadioListTile<WorkoutExitBehavior>(
+                          value: behavior,
+
+                          title: Text(
+                            _exitBehaviorTitle(behavior, strings),
+                            style: neo ? TextStyle(color: ink) : null,
+                          ),
+                          subtitle: Text(
+                            _exitBehaviorLabel(behavior, strings),
+                            style: neo ? TextStyle(color: ink) : null,
+                          ),
                         ),
-                        subtitle: Text(
-                          _exitBehaviorLabel(behavior, strings),
-                          style: neo ? TextStyle(color: ink) : null,
-                        ),
-                        onChanged: (value) =>
-                            Navigator.pop(dialogContext, value),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

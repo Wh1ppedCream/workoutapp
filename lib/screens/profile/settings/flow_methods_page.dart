@@ -112,13 +112,7 @@ Widget _addSetModeOptions(
     );
   }
 
-  Radio<AddSetMode> option(AddSetMode value) => Radio<AddSetMode>(
-    value: value,
-    groupValue: selected,
-    onChanged: (next) {
-      if (next != null) onChanged(next);
-    },
-  );
+  Radio<AddSetMode> option(AddSetMode value) => Radio<AddSetMode>(value: value);
 
   Widget choice(AddSetMode value, String label) => Row(
     mainAxisSize: MainAxisSize.min,
@@ -130,22 +124,34 @@ Widget _addSetModeOptions(
 
   final expressive = context.usesExpressivePresentation;
   if (expressive) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 2,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return RadioGroup<AddSetMode>(
+      groupValue: selected,
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 2,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          choice(AddSetMode.explicit, strings.flowExplicit),
+          choice(AddSetMode.copy, strings.rulesCopy),
+        ],
+      ),
+    );
+  }
+
+  return RadioGroup<AddSetMode>(
+    groupValue: selected,
+    onChanged: (value) {
+      if (value != null) onChanged(value);
+    },
+    child: OverflowBar(
       children: [
         choice(AddSetMode.explicit, strings.flowExplicit),
         choice(AddSetMode.copy, strings.rulesCopy),
       ],
-    );
-  }
-
-  return OverflowBar(
-    children: [
-      choice(AddSetMode.explicit, strings.flowExplicit),
-      choice(AddSetMode.copy, strings.rulesCopy),
-    ],
+    ),
   );
 }
 

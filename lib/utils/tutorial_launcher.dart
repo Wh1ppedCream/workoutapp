@@ -16,7 +16,7 @@ Future<void> showGuidedTutorialOnce(
 
   await Future<void>.delayed(delay);
   if (!context.mounted) return;
-  if (requireActiveTicker && !TickerMode.of(context)) return;
+  if (requireActiveTicker && !TickerMode.valuesOf(context).enabled) return;
 
   const store = TutorialStateStore();
   final completed = await store.isCompleted(tutorialId);

@@ -82,12 +82,11 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
     }
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
+  void _onReorderItem(int oldIndex, int newIndex) {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _rankDrafts.clear();
       _editRevision++;
-      if (newIndex > oldIndex) newIndex -= 1;
       final muscle = _muscles.removeAt(oldIndex);
       _muscles.insert(newIndex, muscle);
       _applyRankOrder();
@@ -242,7 +241,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
           Expanded(
             child: ReorderableListView.builder(
               itemCount: _muscles.length,
-              onReorder: _onReorder,
+              onReorderItem: _onReorderItem,
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
               itemBuilder: (context, index) {
                 final muscle = _muscles[index];
@@ -279,7 +278,7 @@ class _MuscleRankingScreenState extends State<MuscleRankingScreen> {
 
     return ReorderableListView.builder(
       itemCount: _muscles.length,
-      onReorder: _onReorder,
+      onReorderItem: _onReorderItem,
       proxyDecorator: tonosExpressiveDragProxy,
       padding: const EdgeInsets.fromLTRB(
         16,

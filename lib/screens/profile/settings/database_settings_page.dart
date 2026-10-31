@@ -1551,32 +1551,34 @@ class _ContentEnvironmentDialogState extends State<_ContentEnvironmentDialog> {
     return AlertDialog(
       title: Text(AppLocalizations.of(context).databaseContentEnvironment),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: widget.config.environments.map((environment) {
-            return RadioListTile<String>(
-              value: environment.id,
-              groupValue: _selectedEnvironmentId,
-              onChanged: (value) {
-                if (value == null) return;
-                setState(() => _selectedEnvironmentId = value);
-              },
-              title: Text(
-                environment.isProduction
-                    ? AppLocalizations.of(context)
-                          .databaseProductionEnvironment(environment.label)
-                    : environment.label,
-              ),
-              subtitle: Text(
-                [
-                  if (environment.description.isNotEmpty)
-                    environment.description,
-                  if (environment.exerciseMediaManifestUrl.isEmpty)
-                    AppLocalizations.of(context).databaseNoManifestConfigured,
-                ].join('\n'),
-              ),
-            );
-          }).toList(),
+        child: RadioGroup<String>(
+          groupValue: _selectedEnvironmentId,
+          onChanged: (value) {
+            if (value != null) setState(() => _selectedEnvironmentId = value);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: widget.config.environments.map((environment) {
+              return RadioListTile<String>(
+                value: environment.id,
+
+                title: Text(
+                  environment.isProduction
+                      ? AppLocalizations.of(context)
+                            .databaseProductionEnvironment(environment.label)
+                      : environment.label,
+                ),
+                subtitle: Text(
+                  [
+                    if (environment.description.isNotEmpty)
+                      environment.description,
+                    if (environment.exerciseMediaManifestUrl.isEmpty)
+                      AppLocalizations.of(context).databaseNoManifestConfigured,
+                  ].join('\n'),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
       actions: [

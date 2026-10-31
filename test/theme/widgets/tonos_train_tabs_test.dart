@@ -1,5 +1,6 @@
+import 'dart:ui' show Tristate;
+
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/app_theme_family.dart';
@@ -31,13 +32,13 @@ void main() {
       final overviewSemantics = find.bySemanticsLabel('Overview');
       final plansSemantics = find.bySemanticsLabel('Plans');
       expect(
-        tester
-            .getSemantics(overviewSemantics)
-            .hasFlag(SemanticsFlag.isSelected),
+        tester.getSemantics(overviewSemantics).flagsCollection.isSelected ==
+            Tristate.isTrue,
         isTrue,
       );
       expect(
-        tester.getSemantics(plansSemantics).hasFlag(SemanticsFlag.isSelected),
+        tester.getSemantics(plansSemantics).flagsCollection.isSelected ==
+            Tristate.isTrue,
         isFalse,
       );
 
@@ -169,8 +170,10 @@ void main() {
       expect(find.byKey(const ValueKey('plans-tab')), findsOneWidget);
       expect(
         tester
-            .getSemantics(find.bySemanticsLabel(RegExp(r'^Overview')))
-            .hasFlag(SemanticsFlag.isSelected),
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Overview')))
+                .flagsCollection
+                .isSelected ==
+            Tristate.isTrue,
         isTrue,
       );
 
@@ -179,8 +182,10 @@ void main() {
       expect(selectedIndex, 1);
       expect(
         tester
-            .getSemantics(find.bySemanticsLabel(RegExp(r'^Plans')))
-            .hasFlag(SemanticsFlag.isSelected),
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Plans')))
+                .flagsCollection
+                .isSelected ==
+            Tristate.isTrue,
         isTrue,
       );
       expect(tester.takeException(), isNull);

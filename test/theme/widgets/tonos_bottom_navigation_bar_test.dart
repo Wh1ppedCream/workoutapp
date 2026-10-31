@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,9 +48,12 @@ void main() {
                 .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
                 .getSemanticsData();
             expect(train.hasAction(SemanticsAction.tap), isTrue);
-            expect(train.hasFlag(SemanticsFlag.isSelected), isTrue);
+            expect(train.flagsCollection.isSelected == Tristate.isTrue, isTrue);
             expect(catalog.hasAction(SemanticsAction.tap), isTrue);
-            expect(catalog.hasFlag(SemanticsFlag.isSelected), isFalse);
+            expect(
+              catalog.flagsCollection.isSelected == Tristate.isTrue,
+              isFalse,
+            );
           } finally {
             semanticsHandle.dispose();
           }
@@ -262,8 +267,10 @@ void main() {
       expect(navigation.onTap, isNotNull);
       expect(
         tester
-            .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
-            .hasFlag(SemanticsFlag.isSelected),
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Train')))
+                .flagsCollection
+                .isSelected ==
+            Tristate.isTrue,
         isTrue,
       );
       for (final label in ['Train', 'Catalog', 'Logbook']) {
@@ -287,8 +294,10 @@ void main() {
       );
       expect(
         tester
-            .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
-            .hasFlag(SemanticsFlag.isSelected),
+                .getSemantics(find.bySemanticsLabel(RegExp(r'^Catalog')))
+                .flagsCollection
+                .isSelected ==
+            Tristate.isTrue,
         isTrue,
       );
       expect(tester.takeException(), isNull);

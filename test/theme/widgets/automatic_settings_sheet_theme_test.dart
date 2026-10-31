@@ -1,4 +1,4 @@
-import 'dart:ui' show SemanticsFlag;
+import 'dart:ui' show CheckedState, Tristate;
 
 import 'package:env_test/l10n/generated/app_localizations.dart';
 import 'package:env_test/l10n/tonos_localization_delegates.dart';
@@ -11,6 +11,7 @@ import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/widgets/tonos_field.dart';
 import 'package:env_test/widgets/automatic_settings_sheet.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -302,7 +303,12 @@ Future<void> _expectAutomaticControlStates(
     for (var index = 0; index < radios.evaluate().length; index++) {
       final control = radios.at(index);
       final widget = tester.widget<Radio<dynamic>>(control);
-      final selected = widget.value == widget.groupValue;
+      final radioContext = tester.element(control);
+      final groupValue = widget is Radio<bool>
+          ? RadioGroup.maybeOf<bool>(radioContext)?.groupValue
+          : RadioGroup.maybeOf<ProgressionSuccessScope>(radioContext)
+                ?.groupValue;
+      final selected = widget.value == groupValue;
       radioSelected.add(selected);
       expect(widget.activeColor, theme.colorScheme.primary);
       final inheritedRadioColor = _expectedControlColor(
@@ -360,6 +366,37 @@ Future<void> _expectAutomaticControlStates(
       selected: true,
       routeRadioPrimary: true,
       semanticsTarget: unselectedRadioTile,
+    );
+
+    final radioTileInk = find
+        .descendant(of: unselectedRadioTile, matching: find.byType(InkWell))
+        .first;
+    final radioFocus = tester.widget<InkWell>(radioTileInk).focusNode!;
+    radioFocus.requestFocus();
+    await tester.pumpAndSettle();
+    expect(radioFocus.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.pumpAndSettle();
+    expect(
+      RadioGroup.maybeOf<ProgressionSuccessScope>(tester.element(radios.at(1)))
+          ?.groupValue,
+      ProgressionSuccessScope.exercise,
+    );
+    expect(
+      RadioGroup.maybeOf<bool>(tester.element(radios.at(3)))?.groupValue,
+      isFalse,
+    );
+    await tester.ensureVisible(radios.at(4));
+    await tester.tap(radios.at(4));
+    await tester.pumpAndSettle();
+    expect(
+      RadioGroup.maybeOf<bool>(tester.element(radios.at(4)))?.groupValue,
+      isTrue,
+    );
+    expect(
+      RadioGroup.maybeOf<ProgressionSuccessScope>(tester.element(radios.at(1)))
+          ?.groupValue,
+      ProgressionSuccessScope.exercise,
     );
 
     expect(tester.takeException(), isNull);
@@ -452,9 +489,9 @@ void _expectResolvedControl(
   final semantics = tester
       .getSemantics(semanticsTarget ?? control)
       .getSemanticsData();
-  expect(semantics.hasFlag(SemanticsFlag.isEnabled), isTrue);
+  expect(semantics.flagsCollection.isEnabled == Tristate.isTrue, isTrue);
   expect(
-    semantics.hasFlag(SemanticsFlag.isChecked),
+    semantics.flagsCollection.isChecked == CheckedState.isTrue,
     selected,
     reason: semantics.toString(),
   );

@@ -533,12 +533,14 @@ class _ThemeLabPageState extends State<ThemeLabPage> {
             value: true,
             onChanged: _noopNullableBool,
           ),
-          RadioListTile<int>(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Selected option'),
-            value: 1,
+          RadioGroup<int>(
             groupValue: 1,
             onChanged: _noopNullableInt,
+            child: RadioListTile<int>(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Selected option'),
+              value: 1,
+            ),
           ),
           const Wrap(
             spacing: 8,

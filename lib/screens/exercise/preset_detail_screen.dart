@@ -991,8 +991,8 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
                     onReorderEnd: (_) {
                       setState(() => _collapseWeightCardsForReorder = false);
                     },
-                    onReorder: (oldIndex, newIndex) {
-                      context.read<PresetSession>().reorderExercise(
+                    onReorderItem: (oldIndex, newIndex) {
+                      context.read<PresetSession>().moveExercise(
                         oldIndex,
                         newIndex,
                       );

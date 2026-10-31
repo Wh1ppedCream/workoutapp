@@ -502,11 +502,16 @@ class PresetSession extends ChangeNotifier {
     _notifyIfActive();
   }
 
-  /// Reorders a preset exercise and any aligned metadata that belongs to it.
+  /// Compatibility API using the former pre-removal insertion index.
   void reorderExercise(int oldIndex, int newIndex) {
+    moveExercise(oldIndex, newIndex > oldIndex ? newIndex - 1 : newIndex);
+  }
+
+  /// Moves an entry to its final index, as supplied by onReorderItem.
+  /// Exercise models and all aligned metadata remain one entry.
+  void moveExercise(int oldIndex, int newIndex) {
     requireLoaded();
     if (oldIndex < 0 || oldIndex >= _entries.length) return;
-    if (newIndex > oldIndex) newIndex--;
     if (newIndex < 0) newIndex = 0;
     if (newIndex >= _entries.length) newIndex = _entries.length - 1;
     if (oldIndex == newIndex) return;

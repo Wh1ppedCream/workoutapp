@@ -56,7 +56,7 @@ class _CatalogPageState extends State<CatalogPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final isActiveTab = TickerMode.of(context);
+    final isActiveTab = TickerMode.valuesOf(context).enabled;
     final completedSessionVersion = Provider.of<ActiveSession>(context)
         .completedSessionVersion;
 
@@ -174,7 +174,11 @@ class _CatalogPageState extends State<CatalogPage> {
   }
 
   void _queueCatalogTutorial() {
-    if (!mounted || _catalogTutorialQueued || !TickerMode.of(context)) return;
+    if (!mounted ||
+        _catalogTutorialQueued ||
+        !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
     if (_exerciseCatalogTutorialKey.currentContext == null ||
         _targetAnatomyTutorialKey.currentContext == null) {
       return;
@@ -186,7 +190,7 @@ class _CatalogPageState extends State<CatalogPage> {
   Future<void> _showCatalogTutorialIfNeeded() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 550));
-      if (!mounted || !TickerMode.of(context)) return;
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
 
       final completed = await _tutorialStore.isCompleted(
         TutorialIds.catalogHome,

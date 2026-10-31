@@ -106,7 +106,44 @@ analysis is clean. Success-state appearance and all user data remain unchanged;
 only failure/concurrency paths change. No device data was used for failure
 injection.
 
-Progress and exact qualification results will be recorded as each batch completes.
-Preserve schema/data formats, preview databases and unrelated worktree files.
-No device installation, release qualification or visual reapproval is implied
-by automated checks.
+Recovery checkpoint: **829bf6d**.
+
+## Flutter API migration batch
+
+- Tutorial visibility checks use `TickerMode.valuesOf(context).enabled`.
+- Reorderable lists use `onReorderItem`, whose destination is already adjusted
+  for removal. Ranking/navigation handlers no longer adjust twice. Preset lists
+  use the new final-index `moveExercise`; the old `reorderExercise` method keeps
+  its original insertion-index contract for existing callers.
+- Radio choices use `RadioGroup` around each logical choice set. Independent
+  settings have separate accessibility groups; keyboard arrows change only the
+  focused group. Existing labels, tile geometry, colors and callbacks remain.
+- Semantics assertions use typed `flagsCollection`, retaining distinctions
+  between checked states, toggled states, selection and unavailable states.
+- CI explicitly treats analyzer infos as failures. Full source/test/tool analysis
+  has **zero errors, warnings and infos**, down from the 75 baseline infos.
+
+Qualification: **155 focused API/theme tests**, **37 reorder/preset/navigation
+tests**, and **6 automatic-settings theme cases** with additional keyboard and
+independent-group assertions passed. These overlapping counts are not additive.
+All 18 theme-ratchet files pass with the original manifest unchanged. Format and
+whitespace checks pass. A full-suite run follows these focused checks.
+
+## Structural decision
+
+The shared launcher, isolated draft codec and typed analytics model are the
+cohesive extractions needed here. Moving `CardType` to the workout model also
+removes widget-library imports from the domain code while preserving its public
+re-export. Each boundary now has focused failure/compatibility tests.
+
+Further UI splitting, a blanket ViewModel conversion and broad nutrition-DAO
+decomposition are deferred: no additional independent responsibility justifies
+their regression risk in this pass. Existing transaction ownership and both
+approved Train presentations remain intact. This completes the conditional
+structural review, rather than treating file length as a reason to restructure.
+
+## Final qualification
+
+Final full-suite and device results are recorded below when complete. Schema,
+data formats, preview databases and unrelated worktree files are preserved.
+Automated checks do not imply release qualification or new visual approval.

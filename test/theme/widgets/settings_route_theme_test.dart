@@ -240,7 +240,10 @@ void main() {
               AppExpressiveDestinationFamily.profile,
               theme.brightness,
             );
-            final ink = choice.value == choice.groupValue
+            final group = tester.widget<RadioGroup<WorkoutExitBehavior>>(
+              find.byType(RadioGroup<WorkoutExitBehavior>),
+            );
+            final ink = choice.value == group.groupValue
                 ? tokens.onSurfaceSelected
                 : tokens.onSurfacePrimary;
             expect((choice.title! as Text).style?.color, ink);
@@ -248,7 +251,7 @@ void main() {
               (choice.subtitle! as Text).style?.color,
               ink.withValues(alpha: 0.78),
             );
-            expect(choice.onChanged, isNotNull);
+            expect(choice.enabled, isNot(false));
           } else {
             expect((choice.title! as Text).style?.color, expectedInk);
             expect((choice.subtitle! as Text).style?.color, expectedInk);

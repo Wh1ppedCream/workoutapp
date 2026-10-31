@@ -82,7 +82,7 @@ void main() {
                 .getSemantics(muscleRanking ? editableText : field)
                 .getSemanticsData();
             expect(
-              semantics.hasFlag(SemanticsFlag.isTextField),
+              semantics.flagsCollection.isTextField,
               isTrue,
               reason: '$mode rank field remains editable to accessibility',
             );

@@ -889,48 +889,48 @@ class _AutoPresetFlowScreenState extends State<AutoPresetFlowScreen> {
                       ),
                     ] else if (type == MethodType.addSet) ...[
                       if (expressive)
-                        Column(
-                          children: [
-                            Row(
-                              children: [
-                                Radio<AddSetMode>(
-                                  value: AddSetMode.explicit,
-                                  groupValue: addMode,
-                                  onChanged: (v) =>
-                                      setState(() => addMode = v!),
-                                ),
-                                Expanded(child: Text(strings.flowExplicit)),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Radio<AddSetMode>(
-                                  value: AddSetMode.copy,
-                                  groupValue: addMode,
-                                  onChanged: (v) =>
-                                      setState(() => addMode = v!),
-                                ),
-                                Expanded(child: Text(strings.flowCopyFromSet)),
-                              ],
-                            ),
-                          ],
+                        RadioGroup<AddSetMode>(
+                          groupValue: addMode,
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => addMode = value);
+                            }
+                          },
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Radio<AddSetMode>(value: AddSetMode.explicit),
+                                  Expanded(child: Text(strings.flowExplicit)),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Radio<AddSetMode>(value: AddSetMode.copy),
+                                  Expanded(
+                                    child: Text(strings.flowCopyFromSet),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         )
                       else
-                        Row(
-                          children: [
-                            Radio<AddSetMode>(
-                              value: AddSetMode.explicit,
-                              groupValue: addMode,
-                              onChanged: (v) => setState(() => addMode = v!),
-                            ),
-                            Text(strings.flowExplicit),
-                            Radio<AddSetMode>(
-                              value: AddSetMode.copy,
-                              groupValue: addMode,
-                              onChanged: (v) => setState(() => addMode = v!),
-                            ),
-                            Text(strings.flowCopyFromSet),
-                          ],
+                        RadioGroup<AddSetMode>(
+                          groupValue: addMode,
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => addMode = value);
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Radio<AddSetMode>(value: AddSetMode.explicit),
+                              Text(strings.flowExplicit),
+                              Radio<AddSetMode>(value: AddSetMode.copy),
+                              Text(strings.flowCopyFromSet),
+                            ],
+                          ),
                         ),
                       const SizedBox(height: 8),
                       if (addMode == AddSetMode.explicit)

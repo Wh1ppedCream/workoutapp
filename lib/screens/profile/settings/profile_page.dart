@@ -53,7 +53,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (TickerMode.of(context)) {
+    if (TickerMode.valuesOf(context).enabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _queueProfileTutorial();
       });
@@ -61,7 +61,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _queueProfileTutorial() {
-    if (!mounted || _profileTutorialQueued || !TickerMode.of(context)) return;
+    if (!mounted ||
+        _profileTutorialQueued ||
+        !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
     _profileTutorialQueued = true;
     unawaited(_showProfileTutorialIfNeeded());
   }
@@ -69,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _showProfileTutorialIfNeeded() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 550));
-      if (!mounted || !TickerMode.of(context)) return;
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
 
       final completed = await _tutorialStore.isCompleted(
         TutorialIds.profileHome,

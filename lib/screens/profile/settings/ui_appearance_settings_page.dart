@@ -521,18 +521,20 @@ class _UIAppearanceSettingsPageState extends State<UIAppearanceSettingsPage> {
             builder: (dialogContext) => TonosDialogFrame(
               child: AlertDialog(
                 title: Text(strings.languageTitle),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final language in AppLanguagePreference.values)
-                      RadioListTile<AppLanguagePreference>(
-                        value: language,
-                        groupValue: selectedLanguage,
-                        title: Text(_languageLabel(strings, language)),
-                        onChanged: (value) =>
-                            Navigator.of(dialogContext).pop(value),
-                      ),
-                  ],
+                content: RadioGroup<AppLanguagePreference>(
+                  groupValue: selectedLanguage,
+                  onChanged: (value) => Navigator.of(dialogContext).pop(value),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final language in AppLanguagePreference.values)
+                        RadioListTile<AppLanguagePreference>(
+                          value: language,
+
+                          title: Text(_languageLabel(strings, language)),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

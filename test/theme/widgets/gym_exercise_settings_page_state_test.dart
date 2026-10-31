@@ -100,9 +100,12 @@ void main() {
         final tile = radioTiles[index];
         final radio = radios[index];
         final painter = _toggleablePainter(tester, radioFinder.at(index));
-        final selected = tile.value == tile.groupValue;
+        final group = RadioGroup.maybeOf<WorkoutExitBehavior>(
+          tester.element(radioFinder.at(index)),
+        );
+        final selected = tile.value == group?.groupValue;
         expect(tile.fillColor, isNull);
-        expect(tile.onChanged, isNotNull);
+        expect(group, isNotNull);
         expect(radio.value, tile.value);
         expect(painter.position.value, selected ? 1 : 0);
         expect(painter.activeColor, selectedColor);

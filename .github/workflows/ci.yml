@@ -77,11 +77,11 @@ jobs:
           test/widgets/workout_record_badges_test.dart
 
       - name: Analyze source and tests
-        run: dart analyze lib test integration_test test_driver
+        run: dart analyze --fatal-infos lib test integration_test test_driver
 
       - name: Analyze content-pipeline tools
         run: >-
-          dart analyze
+          dart analyze --fatal-infos
           tools/content_environment_check.dart
           tools/content_pipeline.dart
           tools/shared_media_pipeline.dart

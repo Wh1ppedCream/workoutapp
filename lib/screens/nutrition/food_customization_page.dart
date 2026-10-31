@@ -961,70 +961,77 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required ValueChanged<int> onDefaultChanged,
     bool initiallyExpanded = false, // ← new param
   }) {
-    return TonosExpansionTileScope.compact(
-      child: ExpansionTile(
-        key: PageStorageKey('portion_list_$groupKey'),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: expressive
-            ? const EdgeInsets.symmetric(horizontal: 14)
-            : EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 4),
-        children: [
-          ...List.generate(list.length, (i) {
-            return _portionRow(
-              context: context,
-              entry: list[i],
-              index: i,
-              groupKey: groupKey,
-              expressive: expressive,
-              onDefault: () =>
-                  onDefaultChanged(i), // (or switch to Radio<int> later)
-              onRemove: list.length > 1
-                  ? () => setState(() {
-                      final removedIndex = i;
-                      list.removeAt(i).dispose();
+    return RadioGroup<int>(
+      groupValue: defaultIndex,
+      onChanged: (value) {
+        if (value != null) onDefaultChanged(value);
+      },
+      child: TonosExpansionTileScope.compact(
+        child: ExpansionTile(
+          key: PageStorageKey('portion_list_$groupKey'),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: expressive
+              ? const EdgeInsets.symmetric(horizontal: 14)
+              : EdgeInsets.zero,
+          childrenPadding: const EdgeInsets.only(bottom: 4),
+          children: [
+            ...List.generate(list.length, (i) {
+              return _portionRow(
+                context: context,
+                entry: list[i],
+                index: i,
+                groupKey: groupKey,
+                expressive: expressive,
+                onRemove: list.length > 1
+                    ? () => setState(() {
+                        final removedIndex = i;
+                        list.removeAt(i).dispose();
 
-                      final isUsual = groupKey == 'usual';
-                      final currentDefault = isUsual
-                          ? _usualDefaultIndex
-                          : _basisDefaultIndex;
+                        final isUsual = groupKey == 'usual';
+                        final currentDefault = isUsual
+                            ? _usualDefaultIndex
+                            : _basisDefaultIndex;
 
-                      int nextDefault = currentDefault;
-                      if (currentDefault == removedIndex) {
-                        nextDefault = ((removedIndex - 1).clamp(
-                          0,
-                          list.length - 1,
-                        )).toInt();
-                      } else if (removedIndex < currentDefault) {
-                        nextDefault = ((currentDefault - 1).clamp(
-                          0,
-                          list.length - 1,
-                        )).toInt();
-                      }
+                        int nextDefault = currentDefault;
+                        if (currentDefault == removedIndex) {
+                          nextDefault = ((removedIndex - 1).clamp(
+                            0,
+                            list.length - 1,
+                          )).toInt();
+                        } else if (removedIndex < currentDefault) {
+                          nextDefault = ((currentDefault - 1).clamp(
+                            0,
+                            list.length - 1,
+                          )).toInt();
+                        }
 
-                      if (isUsual) {
-                        _usualDefaultIndex = nextDefault;
-                      } else {
-                        _basisDefaultIndex = nextDefault;
-                      }
-                      _lastDefaultGroup = groupKey;
-                    })
-                  : null,
-            );
-          }),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => setState(() => list.add(PortionEntry())),
-              icon: const Icon(Icons.add),
-              label: Text(
-                AppLocalizations.of(context).foodCustomizationAddPortion,
+                        if (isUsual) {
+                          _usualDefaultIndex = nextDefault;
+                        } else {
+                          _basisDefaultIndex = nextDefault;
+                        }
+                        _lastDefaultGroup = groupKey;
+                      })
+                    : null,
+              );
+            }),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => list.add(PortionEntry())),
+                icon: const Icon(Icons.add),
+                label: Text(
+                  AppLocalizations.of(context).foodCustomizationAddPortion,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1035,7 +1042,6 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     required int index,
     required String groupKey,
     required bool expressive,
-    required VoidCallback onDefault,
     VoidCallback? onRemove,
   }) {
     final destination = expressive
@@ -1046,17 +1052,12 @@ class _FoodCustomizationPageState extends State<FoodCustomizationPage> {
     final gramsKey = PageStorageKey('portion_${groupKey}_${index}_grams');
     final mlKey = PageStorageKey('portion_${groupKey}_${index}_ml');
 
-    final groupIsUsual = groupKey == 'usual';
-    final groupDefaultIndex = groupIsUsual
-        ? _usualDefaultIndex
-        : _basisDefaultIndex;
     final largeExpressiveText =
         expressive && MediaQuery.textScalerOf(context).scale(1) >= 1.5;
 
     final radio = Radio<int>(
       value: index,
-      groupValue: groupDefaultIndex,
-      onChanged: (_) => onDefault(),
+
       visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
     );
     final unitControl = Expanded(

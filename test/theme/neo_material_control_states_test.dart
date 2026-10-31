@@ -1,4 +1,4 @@
-import 'dart:ui' show SemanticsFlag;
+import 'dart:ui' show CheckedState, Tristate;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -27,10 +27,9 @@ void main() {
           testWidgets('$brightness $kind selected=$selected enabled=$enabled', (
             tester,
           ) async {
-            final theme =
-                brightness == Brightness.dark
-                    ? AppThemeFactory.dark(AppThemeFamily.neoBrutalism)
-                    : AppThemeFactory.light(AppThemeFamily.neoBrutalism);
+            final theme = brightness == Brightness.dark
+                ? AppThemeFactory.dark(AppThemeFamily.neoBrutalism)
+                : AppThemeFactory.light(AppThemeFamily.neoBrutalism);
             final semantics = tester.ensureSemantics();
             try {
               final focus = FocusNode();
@@ -62,16 +61,19 @@ void main() {
                               key: controlKey,
                               value: value,
                               focusNode: focus,
-                              onChanged:
-                                  enabled ? (next) => update(next!) : null,
+                              onChanged: enabled
+                                  ? (next) => update(next!)
+                                  : null,
                             ),
-                            _Control.radio => Radio<bool>(
-                              key: controlKey,
-                              value: true,
+                            _Control.radio => RadioGroup<bool>(
                               groupValue: value,
-                              focusNode: focus,
-                              onChanged:
-                                  enabled ? (next) => update(next!) : null,
+                              onChanged: (next) => update(next!),
+                              child: Radio<bool>(
+                                key: controlKey,
+                                value: true,
+                                enabled: enabled,
+                                focusNode: focus,
+                              ),
                             ),
                             _Control.toggle => Switch(
                               key: controlKey,
@@ -89,10 +91,9 @@ void main() {
               await tester.pumpAndSettle();
               final control = find.byKey(controlKey);
               final painter = _painter(tester, control);
-              final active =
-                  kind == _Control.radio
-                      ? theme.colorScheme.secondary
-                      : theme.colorScheme.primary;
+              final active = kind == _Control.radio
+                  ? theme.colorScheme.secondary
+                  : theme.colorScheme.primary;
               final inactive = switch (kind) {
                 _Control.checkbox => Colors.transparent,
                 _Control.radio => theme.colorScheme.onSurface,
@@ -105,17 +106,18 @@ void main() {
               expect(painter.inactiveColor, inactive);
               expect(painter.position.value, selected ? 1 : 0);
               expect(
-                tester.getSemantics(control).hasFlag(SemanticsFlag.isEnabled),
+                tester.getSemantics(control).flagsCollection.isEnabled ==
+                    Tristate.isTrue,
                 enabled,
               );
-              final selectionFlag =
-                  kind == _Control.toggle
-                      ? SemanticsFlag.isToggled
-                      : SemanticsFlag.isChecked;
-              expect(
-                tester.getSemantics(control).hasFlag(selectionFlag),
-                selected,
-              );
+              bool isSelected() {
+                final flags = tester.getSemantics(control).flagsCollection;
+                return kind == _Control.toggle
+                    ? flags.isToggled == Tristate.isTrue
+                    : flags.isChecked == CheckedState.isTrue;
+              }
+
+              expect(isSelected(), selected);
 
               focus.requestFocus();
               await tester.pumpAndSettle();
@@ -137,10 +139,7 @@ void main() {
                   enabled && (kind != _Control.radio || !selected);
               expect(activations, shouldActivate ? 1 : 0);
               expect(value, shouldActivate ? !selected : selected);
-              expect(
-                tester.getSemantics(control).hasFlag(selectionFlag),
-                value,
-              );
+              expect(isSelected(), value);
               expect(tester.takeException(), isNull);
             } finally {
               semantics.dispose();

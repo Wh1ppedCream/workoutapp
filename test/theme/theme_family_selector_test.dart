@@ -1,3 +1,5 @@
+import 'dart:ui' show CheckedState;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,7 +66,10 @@ void main() {
     expect(neoOption, findsOneWidget);
     final neoRadio = tester.widget<RadioListTile<AppThemeFamily>>(neoOption);
     expect(neoRadio.value, AppThemeFamily.neoBrutalism);
-    expect(neoRadio.groupValue, AppThemeFamily.classic);
+    expect(
+      RadioGroup.maybeOf<AppThemeFamily>(tester.element(neoOption))?.groupValue,
+      AppThemeFamily.classic,
+    );
     expect(neoRadio.secondary, isNotNull);
 
     await tester.tap(neoOption);
@@ -397,8 +402,8 @@ void main() {
     );
     final data = tester.getSemantics(classicOption).getSemanticsData();
     expect(data.label, contains(strings.themeFamilyClassic));
-    expect(data.hasFlag(SemanticsFlag.hasCheckedState), isTrue);
-    expect(data.hasFlag(SemanticsFlag.isChecked), isTrue);
+    expect(data.flagsCollection.isChecked != CheckedState.none, isTrue);
+    expect(data.flagsCollection.isChecked == CheckedState.isTrue, isTrue);
     expect(data.hasAction(SemanticsAction.tap), isTrue);
     expect(tester.takeException(), isNull);
   });
