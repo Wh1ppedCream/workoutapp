@@ -1042,11 +1042,25 @@ class _FoodLoggingPageState extends State<FoodLoggingPage> {
                     final messenger = ScaffoldMessenger.of(context);
                     final prof = context.read<NutritionProfile>();
 
-                    await prof.addRecipeWithDefaultTime(
-                      meal: _plannedMeal,
-                      recipeId: r.id!,
-                      quantity: 1.0,
-                    );
+                    try {
+                      await prof.addRecipeWithDefaultTime(
+                        meal: _plannedMeal,
+                        recipeId: r.id!,
+                        quantity: 1.0,
+                      );
+                    } catch (error) {
+                      if (!mounted) return;
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            strings.foodFailed(
+                              safeFailureMessage(strings, error),
+                            ),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
 
                     if (!mounted) return; // ✅ guard context use after await
                     messenger.showSnackBar(

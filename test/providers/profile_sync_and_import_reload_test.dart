@@ -17,6 +17,47 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
 
+  for (final mutation in ['food', 'recipe', 'delete']) {
+    test(
+      'failed nutrition $mutation writes reject instead of allowing false success',
+      () async {
+        final repo = _FailingNutritionWriteRepository();
+        final profile = NutritionProfile(repository: repo);
+        addTearDown(profile.dispose);
+        await profile.ready;
+        final Future<void> operation = switch (mutation) {
+          'food' => profile.addFood(meal: MealType.breakfast, foodId: 1),
+          'recipe' => profile.addRecipe(meal: MealType.breakfast, recipeId: 1),
+          _ => profile.deleteEntry(1),
+        };
+        var success = false;
+        await expectLater(
+          operation.then((_) => success = true),
+          throwsA(isA<SafeFailure>()),
+        );
+        expect(success, isFalse);
+        expect(profile.error, isA<SafeFailure>());
+        expect(repo.writeCalls, 1);
+      },
+    );
+  }
+
+  test(
+    'nutrition writes without a selected profile cannot report success',
+    () async {
+      final repo = _FailingNutritionWriteRepository();
+      final profile = NutritionProfile(repository: repo);
+      addTearDown(profile.dispose);
+      await profile.ready;
+      profile.current = null;
+      await expectLater(
+        profile.addFood(meal: MealType.breakfast, foodId: 1),
+        throwsA(isA<SafeFailure>()),
+      );
+      expect(repo.writeCalls, 0);
+    },
+  );
+
   test('profile-switch notifications never pair new favorites with old totals, goals or meals', () async {
     final day = DateTime(2026, 10, 30);
     final repo = _SyncProfileRepository(
@@ -372,6 +413,53 @@ void main() {
     expect(helper.musclePercentCalls, 2);
     expect(refreshedPercents.single.percent, 85);
   });
+}
+
+class _FailingNutritionWriteRepository extends _SyncProfileRepository {
+  _FailingNutritionWriteRepository()
+    : super(
+        initialProfiles: [
+          GymProfile(id: 1, name: 'Home', createdAt: DateTime(2026)),
+        ],
+      );
+
+  int writeCalls = 0;
+  Never _fail() {
+    writeCalls++;
+    throw StateError('Injected write failure');
+  }
+
+  @override
+  Future<int> addDiaryFood({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int foodId,
+    int? portionId,
+    double quantity = 1,
+    double? gramsOverride,
+    double? loggedGrams,
+    DateTime? loggedAt,
+    String? notes,
+  }) async => _fail();
+
+  @override
+  Future<int> addDiaryRecipe({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int recipeId,
+    double quantity = 1,
+    DateTime? loggedAt,
+    String? notes,
+  }) async => _fail();
+
+  @override
+  Future<void> deleteDiaryEntry(
+    int id, {
+    required int profileId,
+    required DateTime date,
+  }) async => _fail();
 }
 
 class _SyncProfileRepository extends AppRepository {

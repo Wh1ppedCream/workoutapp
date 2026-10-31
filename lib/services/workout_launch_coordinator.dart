@@ -39,6 +39,18 @@ class WorkoutLaunchCoordinator {
   final ActiveSession _activeSession;
   final PresetGenerationService _generator;
 
+  /// A successful return means callers may open the session screen. Failed
+  /// restoration/import/finishing must not masquerade as an empty workout.
+  Future<void> startOrResume() async {
+    await _activeSession.ready;
+    if (_activeSession.startBlock == WorkoutStartBlock.alreadyActive) return;
+    _requireAvailableSession();
+    if (!await _activeSession.start() &&
+        _activeSession.startBlock != WorkoutStartBlock.alreadyActive) {
+      _requireAvailableSession();
+    }
+  }
+
   Future<int?> createManualPreset({
     required int? profileId,
     required String Function(int number) nameForNumber,
@@ -65,6 +77,7 @@ class WorkoutLaunchCoordinator {
     required bool Function() canContinue,
   }) async {
     if (!_activeSession.tryBeginWorkoutPreparation()) {
+      _requireAvailableSession();
       return const OptimizedWorkoutLaunchResult(
         OptimizedWorkoutLaunchStatus.inProgress,
       );
@@ -103,12 +116,14 @@ class WorkoutLaunchCoordinator {
         OptimizedWorkoutLaunchStatus.restRecommended,
       );
     }
+    _requireAvailableSession();
 
     int? temporaryPresetId;
     try {
       final generation = await _generator.generatePresetWithDetails(spec);
       final presetId = generation.presetId;
       temporaryPresetId = presetId;
+      _requireAvailableSession();
       if (!canContinue()) {
         return const OptimizedWorkoutLaunchResult(
           OptimizedWorkoutLaunchStatus.cancelled,
@@ -172,7 +187,8 @@ class WorkoutLaunchCoordinator {
   }
 
   void _requireAvailableSession() {
-    if (_activeSession.startBlock != null) {
+    final block = _activeSession.startBlock;
+    if (block != null && block != WorkoutStartBlock.alreadyActive) {
       // The persistent durability notice supplies the restore-specific retry.
       // A blocked import/finish must never be presented as another workout.
       throw const SafeFailure(kind: SafeFailureKind.temporary, retryable: true);

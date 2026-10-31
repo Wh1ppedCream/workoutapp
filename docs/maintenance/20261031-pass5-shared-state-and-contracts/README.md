@@ -81,6 +81,31 @@ ratchet enforcement passes for all 18 protected files. Full-suite qualification
 will be repeated after the remaining batches; the earlier 2,552 count belongs
 to the checkpoint, not these later edits.
 
+Typed-boundary checkpoint: **1d4833c**.
+
+## Targeted recovery batch
+
+- Diary mutations now reject with `SafeFailure` instead of completing
+  successfully after failed writes. Barcode logging already catches failures;
+  recent-recipe logging and entry deletion now also show failure rather than
+  false success. Reconciliation still runs; writes are never automatically
+  replayed, including partially completed item-by-item batches.
+- Quick-start callers open the session screen only after `startOrResume`
+  succeeds. Restoration, finishing and database replacement failures remain
+  distinct from an already-active workout and expose existing retry feedback.
+- Failed optimization-settings saves keep the submitted values in their Retry
+  callback; the existing preference writer's rollback/serialization is retained.
+- Database replacement waits for in-flight preparation/temporary-plan cleanup
+  before replacing tables and potentially reusing IDs. New preparation is
+  rejected while replacement is reserved. This prevents cleanup touching an
+  imported preset that reused an old temporary ID.
+
+Qualification: **77 focused tests passed** for recovery, imports, sessions,
+training/nutrition presentation, settings and preference rollback. Scoped
+analysis is clean. Success-state appearance and all user data remain unchanged;
+only failure/concurrency paths change. No device data was used for failure
+injection.
+
 Progress and exact qualification results will be recorded as each batch completes.
 Preserve schema/data formats, preview databases and unrelated worktree files.
 No device installation, release qualification or visual reapproval is implied

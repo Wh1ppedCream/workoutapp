@@ -10,6 +10,9 @@ import '../models/nutrition_models.dart';
 import '../services/safe_failure.dart';
 import 'selected_profile.dart';
 
+/// Diary mutations reject with [SafeFailure]. Callers must await/catch them
+/// before showing success; the subsequent refresh is reconciliation, not a
+/// retry of the write.
 class NutritionProfile extends ChangeNotifier {
   final AppRepository _repo;
   late final FoodCatalogRepository _catalog;
@@ -430,16 +433,23 @@ class NutritionProfile extends ChangeNotifier {
     });
   }
 
-  // Small helper to run an action and then reload safely
+  // Preserve the mutation failure for its caller even when a later day reload
+  // succeeds. A failed write must never look like a successful Future<void>.
   Future<void> _runAndReload(Future<void> Function() action) async {
-    if (profileId == null) return;
+    if (profileId == null || _disposed) {
+      throw const SafeFailure(
+        kind: SafeFailureKind.validation,
+        retryable: false,
+      );
+    }
     try {
       error = null;
       await action();
-    } catch (e) {
-      if (_disposed) return;
-      error = SafeFailure.classify(e);
+    } catch (e, stack) {
+      final failure = SafeFailure.classify(e);
+      error = failure;
       _safeNotify();
+      Error.throwWithStackTrace(failure, stack);
     } finally {
       if (!_disposed) {
         _requestReload(); // debounced instead of immediate await reloadDay()
@@ -584,7 +594,8 @@ class NutritionProfile extends ChangeNotifier {
     );
   }
 
-  /// Batch-add multiple foods with a single reload.
+  /// Batch-add multiple foods with a single reload. Items commit individually;
+  /// on failure, callers must reconcile rather than blindly replay the batch.
   Future<void> addFoodsBatch(
     List<
       ({

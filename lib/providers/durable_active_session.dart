@@ -57,6 +57,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   bool _draftSaveFailed = false;
   bool _progressionFailed = false;
   bool _isPreparingWorkout = false;
+  Completer<void>? _preparationFinished;
   bool _disposed = false;
 
   ActiveSession({
@@ -96,8 +97,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   /// Reserves one preparation across all training callers, without replacing
   /// or holding a database transaction open for an existing workout.
   bool tryBeginWorkoutPreparation() {
-    if (_disposed || _isPreparingWorkout) return false;
+    if (_disposed || _isPreparingWorkout || _isReplacingDatabase) return false;
     _isPreparingWorkout = true;
+    _preparationFinished = Completer<void>();
     notifyListeners();
     return true;
   }
@@ -105,6 +107,8 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   void endWorkoutPreparation() {
     if (!_isPreparingWorkout) return;
     _isPreparingWorkout = false;
+    _preparationFinished?.complete();
+    _preparationFinished = null;
     if (!_disposed) notifyListeners();
   }
 
@@ -268,6 +272,10 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> prepareForDatabaseReplace() async {
     await _restoreFuture;
     _isReplacingDatabase = true;
+    // Temporary-plan cleanup must finish against the old database before the
+    // import can reuse any preset IDs in the replacement data.
+    final preparation = _preparationFinished?.future;
+    if (preparation != null) await preparation;
     _draftSaveRequested = false;
     _draftSaveTimer?.cancel();
     _draftSaveTimer = null;

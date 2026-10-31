@@ -37,6 +37,61 @@ void main() {
   Future<OptimizedWorkoutLaunchResult> launch() =>
       coordinator.startOptimized(spec: _spec(), canContinue: () => canContinue);
 
+  test(
+    'quick start resumes an existing workout without replacing its contents',
+    () async {
+      await session.startWithExercises(
+        workoutExercises: [
+          WeightExercise(name: 'Kept', equipment: '', sets: []),
+        ],
+        workoutCardTypes: [CardType.weight],
+      );
+      await coordinator.startOrResume();
+      expect(session.exercises.single.name, 'Kept');
+      expect(repository.savedPayloads, hasLength(1));
+    },
+  );
+
+  test(
+    'quick start rejects a blocked import without starting an empty session',
+    () async {
+      await session.prepareForDatabaseReplace();
+      await expectLater(
+        coordinator.startOrResume(),
+        throwsA(isA<SafeFailure>()),
+      );
+      expect(session.isActive, isFalse);
+      expect(repository.savedPayloads, isEmpty);
+      session.abortDatabaseReplace();
+    },
+  );
+
+  test(
+    'database replacement waits for temporary-plan cleanup before reusing IDs',
+    () async {
+      final gate = Completer<void>();
+      generator.beforeGeneration = () => gate.future;
+      final pending = launch();
+      await Future<void>.delayed(Duration.zero);
+      var replacementReady = false;
+      final preparation = session.prepareForDatabaseReplace().then(
+        (_) => replacementReady = true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(replacementReady, isFalse);
+      expect(session.startBlock, WorkoutStartBlock.databaseReplacement);
+      final rejected = expectLater(pending, throwsA(isA<SafeFailure>()));
+      gate.complete();
+      await rejected;
+      await preparation;
+      expect(replacementReady, isTrue);
+      expect(repository.deletedIds, [42]);
+      expect(session.isActive, isFalse);
+      expect(session.isPreparingWorkout, isFalse);
+      session.abortDatabaseReplace();
+    },
+  );
+
   test('different training callers share one in-flight preparation', () async {
     final gate = Completer<void>();
     generator.beforeGeneration = () => gate.future;

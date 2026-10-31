@@ -264,7 +264,25 @@ class _TrainPageState extends State<TrainPage> {
   }
 
   Future<void> _startWorkout() async {
-    await context.read<ActiveSession>().start();
+    try {
+      await WorkoutLaunchCoordinator(
+        repository: _repo,
+        activeSession: context.read<ActiveSession>(),
+      ).startOrResume();
+    } catch (error) {
+      if (!mounted) return;
+      final strings = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(safeFailureMessage(strings, error)),
+          action: SnackBarAction(
+            label: strings.commonRetry,
+            onPressed: _startWorkout,
+          ),
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
@@ -376,27 +394,47 @@ class _TrainPageState extends State<TrainPage> {
       return;
     }
 
-    final persisted = await _optimizedPreferences.saveAll(
-      OptimizedWorkoutSettings(
-        sessionMinutes: settings.minutes,
-        minSetsPerExercise: settings.minSets,
-        maxSetsPerExercise: settings.maxSets,
-        repWeightMode: settings.repWeightMode,
-        targetRepCount: settings.targetRepCount,
-        starterWeightIntensity: settings.starterWeightIntensity,
-      ),
-    );
-    if (!mounted) return;
-    setState(() {
-      _optimizedSessionMinutes = persisted.sessionMinutes;
-      _optimizedMinSetsPerExercise = persisted.minSetsPerExercise;
-      _optimizedMaxSetsPerExercise = persisted.maxSetsPerExercise;
-      _optimizedRepWeightMode = persisted.repWeightMode;
-      _optimizedTargetRepCount = persisted.targetRepCount;
-      _optimizedStarterWeightIntensity = persisted.starterWeightIntensity;
-      _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
-      _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
-    });
+    await _saveOptimizedWorkoutSettings(settings);
+  }
+
+  Future<void> _saveOptimizedWorkoutSettings(
+    OptimizedWorkoutSettingsResult settings,
+  ) async {
+    try {
+      final persisted = await _optimizedPreferences.saveAll(
+        OptimizedWorkoutSettings(
+          sessionMinutes: settings.minutes,
+          minSetsPerExercise: settings.minSets,
+          maxSetsPerExercise: settings.maxSets,
+          repWeightMode: settings.repWeightMode,
+          targetRepCount: settings.targetRepCount,
+          starterWeightIntensity: settings.starterWeightIntensity,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _optimizedSessionMinutes = persisted.sessionMinutes;
+        _optimizedMinSetsPerExercise = persisted.minSetsPerExercise;
+        _optimizedMaxSetsPerExercise = persisted.maxSetsPerExercise;
+        _optimizedRepWeightMode = persisted.repWeightMode;
+        _optimizedTargetRepCount = persisted.targetRepCount;
+        _optimizedStarterWeightIntensity = persisted.starterWeightIntensity;
+        _optimizedPreferredBodypartIds = settings.preferredBodypartIds;
+        _optimizedBlacklistedBodypartIds = settings.blacklistedBodypartIds;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      final strings = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(safeFailureMessage(strings, error)),
+          action: SnackBarAction(
+            label: strings.commonRetry,
+            onPressed: () => _saveOptimizedWorkoutSettings(settings),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _showOptimizedWorkoutRestWarning() {

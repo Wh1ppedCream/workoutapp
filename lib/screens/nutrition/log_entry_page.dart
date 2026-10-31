@@ -10,6 +10,7 @@ import '../../theme/theme_extensions.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../l10n/safe_failure_localizations.dart';
 import '../../providers/nutrition_profile.dart';
 import '../../models/nutrition_models.dart';
 import '../../theme/tokens/app_expressive_destination_tokens.dart';
@@ -710,7 +711,15 @@ class _LogEntryPageState extends State<_LogEntryDayView> {
           onTap: () async {
             Navigator.pop(context);
             if (e.id != null) {
-              await prof.deleteEntry(e.id!);
+              try {
+                await prof.deleteEntry(e.id!);
+              } catch (error) {
+                if (!mounted) return;
+                messenger.showSnackBar(
+                  SnackBar(content: Text(safeFailureMessage(strings, error))),
+                );
+                return;
+              }
               await prof.reloadIfToday();
               if (!mounted) return;
               messenger.showSnackBar(
