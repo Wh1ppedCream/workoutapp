@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../services/safe_failure.dart';
-import '../widgets/exercise_card.dart'; // for CardType
 
 class _PresetExerciseEntry {
   _PresetExerciseEntry({

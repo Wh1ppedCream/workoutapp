@@ -3,22 +3,46 @@ import 'dart:convert';
 import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/durable_active_session.dart';
 import 'package:env_test/repositories/app_repository.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'an unsupported draft stays intact and blocks replacement until recovery',
+    () async {
+      final original = _savedDraft('Preserved');
+      original['payload_json'] = jsonEncode({'version': 99, 'exercises': []});
+      final repository = _FakeAppRepository(draft: Map.from(original));
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
+      );
+      addTearDown(session.dispose);
+      await session.ready;
+      expect(session.durabilityIssue, ActiveSessionDurabilityIssue.restore);
+      expect(session.startBlock, WorkoutStartBlock.restoreFailed);
+      expect(await session.start(), isFalse);
+      session.didChangeAppLifecycleState(AppLifecycleState.paused);
+      await Future<void>.delayed(Duration.zero);
+      expect(repository.draft, original);
+      expect(repository.saveCount, 0);
+      repository.draft = _savedDraft('Recovered');
+      await session.retryDurability();
+      expect(session.durabilityIssue, isNull);
+      expect(session.exercises.single.name, 'Recovered');
+    },
+  );
 
   Future<void> noDelay(Duration _) async {}
 
   test('a restored workout cannot be overwritten by a new plan', () async {
     final repository = _FakeAppRepository(
       draft: {
-        'started_at':
-            DateTime.now()
-                .subtract(const Duration(minutes: 5))
-                .toUtc()
-                .toIso8601String(),
+        'started_at': DateTime.now()
+            .subtract(const Duration(minutes: 5))
+            .toUtc()
+            .toIso8601String(),
         'auto_preset_id': 12,
         'payload_json': jsonEncode({
           'version': 1,

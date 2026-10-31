@@ -18,7 +18,6 @@ import 'package:env_test/theme/tokens/app_shape_tokens.dart';
 import 'package:env_test/theme/widgets/tonos_segmented_action_bar.dart';
 import 'package:env_test/utils/app_test_keys.dart';
 import 'package:env_test/widgets/drawers.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/widgets/ongoing_session_fab.dart';
 import 'package:env_test/widgets/quick_bar.dart';
 import 'package:env_test/widgets/settings_tiles.dart';

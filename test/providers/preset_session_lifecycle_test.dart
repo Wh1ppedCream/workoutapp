@@ -4,7 +4,6 @@ import 'package:env_test/models/models.dart';
 import 'package:env_test/providers/preset_session.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/services/safe_failure.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/preset_repository_fixture.dart';

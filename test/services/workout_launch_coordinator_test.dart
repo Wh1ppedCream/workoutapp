@@ -6,7 +6,6 @@ import 'package:env_test/services/optimized_workout_preferences.dart';
 import 'package:env_test/services/preset_generation_service.dart';
 import 'package:env_test/services/safe_failure.dart';
 import 'package:env_test/services/workout_launch_coordinator.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

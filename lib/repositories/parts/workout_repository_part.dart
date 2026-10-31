@@ -121,6 +121,36 @@ mixin _WorkoutRepositoryMethods on _RepositoryDependencies {
     limit: limit,
   );
 
+  Future<List<ExerciseOneRmPoint>> fetchExerciseOneRmTrend({
+    required int definitionId,
+    int limit = 60,
+  }) async {
+    // Keep the raw virtual read as the compatibility seam for existing fakes
+    // and consumers; production SQL, ordering and limits are unchanged.
+    final rows = await fetchExerciseOneRmTrendRows(
+      definitionId: definitionId,
+      limit: limit,
+    );
+    return List<ExerciseOneRmPoint>.unmodifiable(
+      rows.map(
+        (row) => ExerciseOneRmPoint(
+          sessionId: row['session_id'] as int,
+          completedAt: TemporalSemantics.readLocalDateTime(
+            epochMilliseconds: row['completed_at_ms'],
+            legacyIso: row['session_date'],
+          ),
+          calendarDay: TemporalSemantics.readCalendarDay(
+            calendarDay: row['training_day'],
+            legacyIso: row['session_date'],
+            epochMilliseconds: row['completed_at_ms'],
+          ),
+          actualOneRm: (row['actual_one_rm'] as num?)?.toDouble(),
+          estimatedOneRm: ((row['estimated_one_rm'] as num?) ?? 0).toDouble(),
+        ),
+      ),
+    );
+  }
+
   Future<List<Map<String, dynamic>>> fetchExerciseOneRmTrendRows({
     required int definitionId,
     int limit = 60,

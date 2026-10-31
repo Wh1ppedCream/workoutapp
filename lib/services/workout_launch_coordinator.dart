@@ -5,7 +5,6 @@ import '../providers/active_session.dart';
 import '../providers/preset_session.dart';
 import '../repositories/app_repository.dart';
 import '../utils/workout_exercise_clone.dart';
-import '../widgets/exercise_card.dart';
 import 'active_plan_store.dart';
 import 'preset_generation_service.dart';
 import 'safe_failure.dart';

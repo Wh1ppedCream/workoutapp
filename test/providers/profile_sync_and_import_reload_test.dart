@@ -9,7 +9,6 @@ import 'package:env_test/providers/nutrition_profile.dart';
 import 'package:env_test/providers/selected_profile.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/services/safe_failure.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';

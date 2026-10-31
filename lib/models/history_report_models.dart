@@ -2,6 +2,25 @@ import 'temporal_semantics.dart';
 
 enum WorkoutReportMetric { workouts, minutes, volume }
 
+/// One session's actual/estimated 1RM, detached from SQL column names.
+class ExerciseOneRmPoint {
+  const ExerciseOneRmPoint({
+    required this.sessionId,
+    required this.completedAt,
+    required this.calendarDay,
+    required this.actualOneRm,
+    required this.estimatedOneRm,
+  });
+
+  final int sessionId;
+  final DateTime completedAt;
+  final LocalCalendarDay calendarDay;
+  final double? actualOneRm;
+  final double estimatedOneRm;
+
+  DateTime get displayDateTime => calendarDay.atLocalTime(completedAt);
+}
+
 class WorkoutReportSession {
   final int id;
   final DateTime date;

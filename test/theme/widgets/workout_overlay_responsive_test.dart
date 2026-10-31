@@ -11,7 +11,6 @@ import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/services/workout_exit_preferences.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 import 'package:env_test/utils/app_test_keys.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/widgets/ongoing_session_fab.dart';
 import 'package:env_test/widgets/session_complete_sheet.dart';
 

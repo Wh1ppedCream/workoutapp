@@ -12,7 +12,6 @@ import '../theme/widgets/tonos_surface.dart';
 import '../utils/async_pool.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
-import 'exercise_card.dart';
 import 'focused_sets_list.dart';
 
 /// Summary card shown at the top of preset detail screens when not editing.

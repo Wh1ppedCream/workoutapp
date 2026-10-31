@@ -3,6 +3,9 @@
 import 'definition_models.dart';
 import 'temporal_semantics.dart';
 
+/// Persisted exercise-card kinds; names and ordering are storage contracts.
+enum CardType { weight, cardio, stretch }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // STRETCH DEFINITIONS
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1352,8 +1352,8 @@ class _CompactDelta extends StatelessWidget {
 }
 
 double? _deltaFromPrevious(
-  List<_ExerciseProgressPoint> points, {
-  double? Function(_ExerciseProgressPoint point)? valueForPoint,
+  List<ExerciseOneRmPoint> points, {
+  double? Function(ExerciseOneRmPoint point)? valueForPoint,
 }) {
   final valid = _validPoints(points, valueForPoint: valueForPoint);
   if (valid.length < 2) return null;
@@ -1361,9 +1361,9 @@ double? _deltaFromPrevious(
   return valueFor(valid.last)! - valueFor(valid[valid.length - 2])!;
 }
 
-List<_ExerciseProgressPoint> _validPoints(
-  List<_ExerciseProgressPoint> points, {
-  double? Function(_ExerciseProgressPoint point)? valueForPoint,
+List<ExerciseOneRmPoint> _validPoints(
+  List<ExerciseOneRmPoint> points, {
+  double? Function(ExerciseOneRmPoint point)? valueForPoint,
 }) {
   final valueFor = valueForPoint ?? (point) => point.estimatedOneRm;
   return [

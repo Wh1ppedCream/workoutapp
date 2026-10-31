@@ -133,16 +133,11 @@ class _ExerciseProgressSectionState extends State<ExerciseProgressSection>
     for (final id in ids) {
       final definition = definitionById[id];
       if (definition == null) continue;
-      final rows = await _repo.fetchExerciseOneRmTrendRows(
+      final points = await _repo.fetchExerciseOneRmTrend(
         definitionId: id,
         limit: 60,
       );
-      tiles.add(
-        _ExerciseTrendTile(
-          definition: definition,
-          points: rows.map(_ExerciseProgressPoint.fromRow).toList(),
-        ),
-      );
+      tiles.add(_ExerciseTrendTile(definition: definition, points: points));
     }
 
     return _ExerciseProgressSectionData(tiles: tiles);

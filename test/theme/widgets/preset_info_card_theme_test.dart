@@ -14,7 +14,6 @@ import 'package:env_test/theme/theme_extensions.dart';
 import 'package:env_test/theme/widgets/tonos_surface.dart';
 import 'package:env_test/widgets/preset_info_card.dart';
 import 'package:env_test/widgets/focused_sets_list.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/utils/weight_unit_formatter.dart';
 
 void main() {

@@ -54,7 +54,7 @@ class _LegendItem extends StatelessWidget {
 }
 
 class _ExerciseProgressRecordingRow extends StatelessWidget {
-  final _ExerciseProgressPoint point;
+  final ExerciseOneRmPoint point;
   final VoidCallback onTap;
   final bool expressive;
 
@@ -192,7 +192,7 @@ class _ExerciseProgressRecordingRow extends StatelessWidget {
 }
 
 class _ExerciseProgressChart extends StatefulWidget {
-  final List<_ExerciseProgressPoint> points;
+  final List<ExerciseOneRmPoint> points;
   final bool showEmptyLabel;
   final bool showAxes;
   final bool interactive;
@@ -437,10 +437,7 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
     ].join(', ');
   }
 
-  String _pointSemanticValue(
-    BuildContext context,
-    _ExerciseProgressPoint point,
-  ) {
+  String _pointSemanticValue(BuildContext context, ExerciseOneRmPoint point) {
     final strings = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context);
     final actual = point.actualOneRm == null
@@ -484,7 +481,7 @@ class _ExerciseProgressChartState extends State<_ExerciseProgressChart> {
 }
 
 class _ExerciseProgressChartPainter extends CustomPainter {
-  final List<_ExerciseProgressPoint> points;
+  final List<ExerciseOneRmPoint> points;
   final Color actualColor;
   final Color estimatedColor;
   final Color gridColor;
@@ -669,7 +666,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
     Canvas canvas,
     Size size,
     _ExerciseProgressChartScale scale,
-    _ExerciseProgressPoint point,
+    ExerciseOneRmPoint point,
   ) {
     final titleStyle = TextStyle(
       color: tooltipTextColor,
@@ -814,7 +811,7 @@ class _ExerciseProgressChartPainter extends CustomPainter {
 }
 
 class _ExerciseProgressChartScale {
-  final List<_ExerciseProgressPoint> points;
+  final List<ExerciseOneRmPoint> points;
   final Size size;
   final bool showAxes;
   final TextScaler textScaler;

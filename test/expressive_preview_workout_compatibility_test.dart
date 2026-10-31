@@ -14,7 +14,6 @@ import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/app_theme_family.dart';
 import 'package:env_test/theme/app_theme_factory.dart';
 import 'package:env_test/theme/expressive_theme.dart';
-import 'package:env_test/widgets/exercise_card.dart';
 import 'package:env_test/widgets/weight_card.dart';
 
 void main() {

@@ -53,7 +53,33 @@ Checkpoint qualification before typed-boundary changes:
 | Compile-time variants | Locked content, explicit Neo opt-in and malformed Neo opt-in: **3/3 passed**. |
 
 These counts overlap focused checks and are not additive. The checkpoint commit
-is recorded in the next batch update.
+is **bf57e56**. It includes the earlier approved Train FAB refinements. No push
+was made. Git's automatic GC reported an existing malformed Codex checkpoint
+ref; the commit succeeded, the ref was not repaired, and subsequent commits
+use command-local `gc.auto=0`.
+
+## Typed analytics and draft batch
+
+- `ExerciseOneRmPoint` now crosses the repository/UI boundary. The raw virtual
+  method remains for compatibility with existing overrides. SQL, limits,
+  ordering, unit values and temporal fallbacks are unchanged.
+- `ActiveWorkoutDraftCodec` owns the existing version-1 JSON format. Weight,
+  cardio, stretch, source IDs, child sets and completion state round-trip.
+  Unversioned drafts and optional-field defaults remain supported.
+- Invalid object/list/value shapes and unsupported versions/types fail before
+  live-state assignment. Restoration failure blocks replacement and retains
+  the original stored draft for retry/recovery; no automatic reset or migration.
+- `CardType` is a workout model. The widget library re-exports it to preserve
+  existing imports; domain providers/services no longer depend on the widget
+  library solely to name an exercise type.
+
+Qualification: **65 focused tests passed**, covering codec compatibility and
+invalid data, provider recovery, typed queries, SQLite query ownership, chart
+layout/semantics, launches and preset lifecycle. Full analysis retains only the
+same **75 existing deprecation infos**; no errors, warnings or new infos. Theme
+ratchet enforcement passes for all 18 protected files. Full-suite qualification
+will be repeated after the remaining batches; the earlier 2,552 count belongs
+to the checkpoint, not these later edits.
 
 Progress and exact qualification results will be recorded as each batch completes.
 Preserve schema/data formats, preview databases and unrelated worktree files.

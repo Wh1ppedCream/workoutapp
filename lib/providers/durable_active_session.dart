@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 
 import '../models/models.dart';
 import '../repositories/app_repository.dart';
 import '../services/auto_increment_service.dart';
-import '../widgets/exercise_card.dart';
+import '../services/active_workout_draft_codec.dart';
 
 enum ActiveSessionDurabilityIssue { restore, draftSave, progression }
 
@@ -25,22 +24,9 @@ typedef PendingProgressionRunner = Future<void> Function(
   int presetId,
 );
 
-class _RestoredWorkoutDraft {
-  const _RestoredWorkoutDraft({
-    required this.exercises,
-    required this.cardTypes,
-    required this.autoPresetId,
-    required this.startedAt,
-  });
-
-  final List<WorkoutExercise> exercises;
-  final List<CardType> cardTypes;
-  final int? autoPresetId;
-  final DateTime startedAt;
-}
-
 /// Owns the durable state of the workout currently in progress.
 class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
+  static const _draftCodec = ActiveWorkoutDraftCodec();
   static const int _maxDurabilityAttempts = 3;
   static const List<Duration> _retryDelays = [
     Duration(milliseconds: 40),
@@ -427,29 +413,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<_RestoredWorkoutDraft?> _loadRestoredDraft() async {
+  Future<ActiveWorkoutDraft?> _loadRestoredDraft() async {
     final row = await _repo.loadActiveWorkoutDraft();
-    if (row == null) return null;
-    final payload =
-        jsonDecode(row['payload_json'] as String) as Map<String, dynamic>;
-    final rawExercises = payload['exercises'] as List? ?? const [];
-    final restoredExercises = <WorkoutExercise>[];
-    final restoredCardTypes = <CardType>[];
-    for (final raw in rawExercises.whereType<Map>()) {
-      final map = Map<String, dynamic>.from(raw);
-      final type = CardType.values.firstWhere(
-        (candidate) => candidate.name == map['type'],
-        orElse: () => CardType.weight,
-      );
-      restoredExercises.add(_exerciseFromJson(map, type));
-      restoredCardTypes.add(type);
-    }
-    return _RestoredWorkoutDraft(
-      exercises: restoredExercises,
-      cardTypes: restoredCardTypes,
-      autoPresetId: row['auto_preset_id'] as int?,
-      startedAt: DateTime.parse(row['started_at'] as String).toLocal(),
-    );
+    return row == null ? null : _draftCodec.decodeRow(row);
   }
 
   Future<void> retryDurability() async {
@@ -585,13 +551,10 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     if (startedAt == null || _isFinishing || _isReplacingDatabase) return;
     try {
       final autoPresetId = _autoPresetId;
-      final payloadJson = jsonEncode({
-        'version': 1,
-        'exercises': [
-          for (var index = 0; index < exercises.length; index++)
-            _exerciseToJson(exercises[index], cardTypes[index]),
-        ],
-      });
+      final payloadJson = _draftCodec.encode(
+        exercises: exercises,
+        cardTypes: cardTypes,
+      );
       await _withRetries(() async {
         if (_isFinishing || _isReplacingDatabase || _startedAt != startedAt) {
           return;
@@ -615,134 +578,6 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
       notifyListeners();
     }
   }
-
-  Map<String, dynamic> _exerciseToJson(
-    WorkoutExercise exercise,
-    CardType type,
-  ) {
-    final map = <String, dynamic>{
-      'type': type.name,
-      'name': exercise.name,
-      'equipment': exercise.equipment,
-    };
-    if (exercise is WeightExercise) {
-      map.addAll({
-        'sourcePresetExerciseId': exercise.sourcePresetExerciseId,
-        'sets': exercise.sets.map(_setToJson).toList(),
-        'changeSets': {
-          for (final entry in exercise.changeSets.entries)
-            entry.key.toString(): entry.value.map(_setToJson).toList(),
-        },
-        'completedParents': exercise.completedParents.toList(),
-        'completedChildren': {
-          for (final entry in exercise.completedChildren.entries)
-            entry.key.toString(): entry.value.toList(),
-        },
-      });
-    } else if (exercise is CardioExercise) {
-      map.addAll({
-        'cardioName': exercise.cardioName,
-        'cardioNote': exercise.cardioNote,
-        'plannedMinutes': exercise.plannedMinutes,
-        'elapsedSeconds': exercise.elapsedSeconds,
-      });
-    } else if (exercise is StretchExercise) {
-      map.addAll({
-        'stretchInstances': exercise.stretchInstances
-            .map((item) => item.toMap())
-            .toList(),
-        'completedStretchIndices': exercise.completedStretchIndices.toList(),
-      });
-    }
-    return map;
-  }
-
-  WorkoutExercise _exerciseFromJson(Map<String, dynamic> map, CardType type) {
-    final name = map['name'] as String? ?? '';
-    final equipment = map['equipment'] as String? ?? '';
-    if (type == CardType.weight) {
-      final sets = (map['sets'] as List? ?? const [])
-          .whereType<Map>()
-          .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      final changeSets = <int, List<ExerciseSet>>{};
-      final rawChangeSets = map['changeSets'];
-      if (rawChangeSets is Map) {
-        for (final entry in rawChangeSets.entries) {
-          final parentIndex = int.tryParse(entry.key.toString());
-          if (parentIndex == null || entry.value is! List) continue;
-          changeSets[parentIndex] = (entry.value as List)
-              .whereType<Map>()
-              .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
-              .toList();
-        }
-      }
-      return WeightExercise(
-        name: name,
-        equipment: equipment,
-        sourcePresetExerciseId: (map['sourcePresetExerciseId'] as num?)
-            ?.toInt(),
-        sets: sets,
-        changeSets: changeSets,
-        completedParents: (map['completedParents'] as List? ?? const [])
-            .whereType<num>()
-            .map((value) => value.toInt())
-            .toSet(),
-        completedChildren: _completedChildrenFromJson(map['completedChildren']),
-      );
-    }
-    if (type == CardType.cardio) {
-      return CardioExercise(
-        name: name,
-        equipment: equipment,
-        cardioName: map['cardioName'] as String?,
-        cardioNote: map['cardioNote'] as String?,
-        plannedMinutes: (map['plannedMinutes'] as num?)?.toInt(),
-        elapsedSeconds: (map['elapsedSeconds'] as num?)?.toInt(),
-      );
-    }
-    return StretchExercise(
-      name: name,
-      equipment: equipment,
-      stretchInstances: (map['stretchInstances'] as List? ?? const [])
-          .whereType<Map>()
-          .map(
-            (item) => StretchInstance.fromMap(Map<String, dynamic>.from(item)),
-          )
-          .toList(),
-      completedStretchIndices:
-          (map['completedStretchIndices'] as List? ?? const [])
-              .whereType<num>()
-              .map((value) => value.toInt())
-              .toSet(),
-    );
-  }
-
-  Map<int, Set<int>> _completedChildrenFromJson(Object? raw) {
-    if (raw is! Map) return <int, Set<int>>{};
-    final result = <int, Set<int>>{};
-    for (final entry in raw.entries) {
-      final parentIndex = int.tryParse(entry.key.toString());
-      if (parentIndex == null || entry.value is! List) continue;
-      result[parentIndex] = (entry.value as List)
-          .whereType<num>()
-          .map((value) => value.toInt())
-          .toSet();
-    }
-    return result;
-  }
-
-  Map<String, dynamic> _setToJson(ExerciseSet set) => {
-    'sourcePresetSetId': set.sourcePresetSetId,
-    'weight': set.weight,
-    'reps': set.reps,
-  };
-
-  ExerciseSet _setFromJson(Map<String, dynamic> map) => ExerciseSet(
-    sourcePresetSetId: (map['sourcePresetSetId'] as num?)?.toInt(),
-    weight: (map['weight'] as num?)?.toDouble() ?? 0,
-    reps: (map['reps'] as num?)?.toInt() ?? 10,
-  );
 
   ExerciseSet _copySet(ExerciseSet set) => ExerciseSet(
     sourcePresetSetId: set.sourcePresetSetId,

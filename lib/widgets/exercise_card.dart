@@ -5,7 +5,8 @@ import 'package:material_ui/material_ui.dart';
 import '../models/models.dart';
 import 'weight_card.dart';
 
-enum CardType { weight, cardio, stretch }
+// Preserve the existing widget-library import API for callers.
+export '../models/workout_models.dart' show CardType;
 
 class ExerciseCard extends StatelessWidget {
   final WorkoutExercise exercise;
