@@ -690,7 +690,10 @@ class _MainScreenState extends State<MainScreen> {
           : IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: Consumer<ActiveSession>(
-        builder: (_, session, __) => session.isActive
+        builder: (_, session, __) =>
+            session.isActive &&
+                !(context.usesExpressivePresentation &&
+                    tabs[_selectedIndex] == TabItem.train)
             ? const OngoingSessionFab()
             : const SizedBox.shrink(),
       ),

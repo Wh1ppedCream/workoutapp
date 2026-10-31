@@ -12,6 +12,8 @@ import 'package:env_test/providers/active_session.dart';
 import 'package:env_test/providers/selected_profile.dart';
 import 'package:env_test/repositories/app_repository.dart';
 import 'package:env_test/screens/exercise/train_page.dart';
+import 'package:env_test/screens/exercise/optimized_workout_settings_page.dart';
+import 'package:env_test/services/optimized_workout_preferences.dart';
 import 'package:env_test/services/active_plan_store.dart';
 import 'package:env_test/services/tutorial_state_store.dart';
 import 'package:env_test/theme/classic_theme.dart';
@@ -1193,6 +1195,42 @@ void main() {
       expect(find.text(missingStrings.trainNoActivePlans), findsOneWidget);
       expect(find.text('Plan 1'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Train settings refresh defaults saved by the other training tab',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await const TutorialStateStore().skipAll();
+      final repository = _ExpressiveTrainRepository();
+      final profile = _ExpressiveSelectedProfile(repository: repository);
+      final session = ActiveSession(
+        repository: repository,
+        retryDelay: (_) async {},
+      );
+      addTearDown(profile.dispose);
+      addTearDown(session.dispose);
+      await session.ready;
+      await _pumpExpressiveTrain(tester, repository, profile, session);
+      await _pumpExpressiveFrames(tester);
+      await const OptimizedWorkoutPreferences().saveAll(
+        const OptimizedWorkoutSettings(sessionMinutes: 75, targetRepCount: 12),
+      );
+      final strings = AppLocalizations.of(
+        tester.element(find.byType(TrainPage)),
+      );
+      await tester.tap(find.byTooltip(strings.trainOptimizedSettings));
+      await tester.pump();
+      await _pumpExpressiveFrames(tester);
+      final page = tester.widget<OptimizedWorkoutSettingsPage>(
+        find.byType(OptimizedWorkoutSettingsPage),
+      );
+      expect(page.initialMinutes, 75);
+      expect(page.initialTargetRepCount, 12);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _pumpExpressiveFrames(tester);
     },
   );
 

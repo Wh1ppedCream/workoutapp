@@ -9,6 +9,9 @@ A local-first Flutter app for logging workouts, tracking nutrition, monitoring b
 - Storage model: Local-first with SQLite
 - Focus areas: Training, nutrition, analytics, and customizable presets
 
+For Windows development, use the [checked Flutter/Dart commands](docs/development/toolchain.md)
+to select the same SDK as CI instead of an unrelated installation on PATH.
+
 ## Highlights
 
 - Log full workout sessions with exercises, sets, reps, and weights

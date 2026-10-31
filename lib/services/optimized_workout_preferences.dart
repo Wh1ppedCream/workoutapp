@@ -22,6 +22,37 @@ class OptimizedWorkoutSettings {
   final int targetRepCount;
   final StarterWeightIntensity starterWeightIntensity;
 
+  SessionSpec buildSessionSpec({
+    required int profileId,
+    required String name,
+    required DateTime now,
+    required Set<int> preferredBodypartIds,
+    required Set<int> blacklistedBodypartIds,
+  }) {
+    final normalized = copyWith();
+    return SessionSpec(
+      profileId: profileId,
+      name: name,
+      focusBodypartIds: const [],
+      preferredBodypartIds: preferredBodypartIds.toList(),
+      blacklistedBodypartIds: blacklistedBodypartIds.toList(),
+      maxExercises: SessionSpec.maxExercisesForDuration(
+        sessionDurationMinutes: normalized.sessionMinutes,
+        minSetsPerExercise: normalized.minSetsPerExercise,
+      ),
+      minSetsPerExercise: normalized.minSetsPerExercise,
+      maxSetsPerExercise: normalized.maxSetsPerExercise,
+      sessionDurationMinutes: normalized.sessionMinutes,
+      useGeneratedRepWeights: true,
+      repWeightMode: normalized.repWeightMode,
+      targetRepCount: normalized.targetRepCount,
+      starterWeightIntensity: normalized.starterWeightIntensity,
+      historyWindow: const Duration(days: 7),
+      avoidMostRecentBodyPart: true,
+      now: now,
+    );
+  }
+
   OptimizedWorkoutSettings copyWith({
     int? sessionMinutes,
     int? minSetsPerExercise,

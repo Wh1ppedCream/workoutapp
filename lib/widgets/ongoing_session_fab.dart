@@ -43,34 +43,38 @@ class _OngoingSessionFabState extends State<OngoingSessionFab> {
       );
     }
     final activeSession = context.read<ActiveSession>();
-    return OverflowBar(
-      alignment: MainAxisAlignment.end,
-      spacing: 8,
-      overflowAlignment: OverflowBarAlignment.end,
-      overflowDirection: VerticalDirection.up,
-      overflowSpacing: 8,
-      children: [
-        FloatingActionButton.extended(
-          key: AppTestKeys.ongoingSessionResume,
-          backgroundColor: semantic.ongoingSessionAction,
-          icon: const Icon(Icons.play_arrow),
-          label: Text(strings.sessionResume),
-          onPressed: () {
-            setState(() => _open = false);
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
-          },
-        ),
-        FloatingActionButton.extended(
-          key: AppTestKeys.ongoingSessionExit,
-          backgroundColor: semantic.ongoingSessionExit,
-          icon: const Icon(Icons.exit_to_app),
-          label: Text(strings.sessionExit),
-          onPressed: activeSession.isFinishing
-              ? null
-              : () => _handleExit(activeSession),
-        ),
-      ],
+    return TapRegion(
+      onTapOutside: (_) => setState(() => _open = false),
+      child: OverflowBar(
+        alignment: MainAxisAlignment.end,
+        spacing: 8,
+        overflowAlignment: OverflowBarAlignment.end,
+        overflowDirection: VerticalDirection.up,
+        overflowSpacing: 8,
+        children: [
+          FloatingActionButton.extended(
+            key: AppTestKeys.ongoingSessionResume,
+            backgroundColor: semantic.ongoingSessionAction,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(strings.sessionResume),
+            onPressed: () {
+              setState(() => _open = false);
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+            },
+          ),
+          FloatingActionButton.extended(
+            key: AppTestKeys.ongoingSessionExit,
+            backgroundColor: semantic.ongoingSessionExit,
+            icon: const Icon(Icons.exit_to_app),
+            label: Text(strings.sessionExit),
+            onPressed: activeSession.isFinishing
+                ? null
+                : () => _handleExit(activeSession),
+          ),
+        ],
+      ),
     );
   }
 

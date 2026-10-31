@@ -16,6 +16,72 @@ import 'package:env_test/widgets/ongoing_session_fab.dart';
 import 'package:env_test/widgets/session_complete_sheet.dart';
 
 void main() {
+  testWidgets(
+    'Ongoing workout actions dismiss on outside taps without blocking them',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final session = ActiveSession(
+        repository: _OverlayTestRepository(),
+        retryDelay: (_) async {},
+      );
+      addTearDown(session.dispose);
+      await session.ready;
+      var outsideActionCount = 0;
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ActiveSession>.value(
+          value: session,
+          child: _expressiveHost(
+            1,
+            Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => outsideActionCount++,
+                  child: const Text('Other action'),
+                ),
+              ),
+              floatingActionButton: const OngoingSessionFab(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Future<void> expand() async {
+        await tester.tap(find.byKey(AppTestKeys.ongoingSessionMenu));
+        await tester.pumpAndSettle();
+        expect(find.byKey(AppTestKeys.ongoingSessionResume), findsOneWidget);
+        expect(find.byKey(AppTestKeys.ongoingSessionExit), findsOneWidget);
+      }
+
+      await expand();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.byKey(AppTestKeys.ongoingSessionMenu), findsOneWidget);
+      expect(find.byKey(AppTestKeys.ongoingSessionResume), findsNothing);
+      expect(find.byKey(AppTestKeys.ongoingSessionExit), findsNothing);
+
+      await expand();
+      final resumeRect = tester.getRect(
+        find.byKey(AppTestKeys.ongoingSessionResume),
+      );
+      final exitRect = tester.getRect(
+        find.byKey(AppTestKeys.ongoingSessionExit),
+      );
+      await tester.tapAt(
+        Offset((resumeRect.right + exitRect.left) / 2, resumeRect.center.dy),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(AppTestKeys.ongoingSessionMenu), findsOneWidget);
+
+      await expand();
+      await tester.tap(find.text('Other action'));
+      await tester.pumpAndSettle();
+      expect(outsideActionCount, 1);
+      expect(find.byKey(AppTestKeys.ongoingSessionMenu), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Expressive completed-work exit dialog keeps actions reachable '
       'at compact sizes', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);

@@ -10,9 +10,20 @@ import '../widgets/exercise_card.dart';
 
 enum ActiveSessionDurabilityIssue { restore, draftSave, progression }
 
+enum WorkoutStartBlock {
+  disposed,
+  restoring,
+  restoreFailed,
+  finishing,
+  databaseReplacement,
+  alreadyActive,
+}
+
 typedef ActiveSessionRetryDelay = Future<void> Function(Duration duration);
-typedef PendingProgressionRunner =
-    Future<void> Function(int sessionId, int presetId);
+typedef PendingProgressionRunner = Future<void> Function(
+  int sessionId,
+  int presetId,
+);
 
 class _RestoredWorkoutDraft {
   const _RestoredWorkoutDraft({
@@ -59,6 +70,8 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   bool _restoreFailed = false;
   bool _draftSaveFailed = false;
   bool _progressionFailed = false;
+  bool _isPreparingWorkout = false;
+  bool _disposed = false;
 
   ActiveSession({
     required AppRepository repository,
@@ -68,9 +81,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
        _retryDelay = retryDelay ?? _defaultRetryDelay,
        _progressionRunner =
            progressionRunner ??
-           ((sessionId, presetId) => AutoIncrementService(
-             repository,
-           ).applyPending(sessionId: sessionId, presetId: presetId)) {
+           ((sessionId, presetId) =>
+               AutoIncrementService(repository)
+                   .applyPending(sessionId: sessionId, presetId: presetId)) {
     WidgetsBinding.instance.addObserver(this);
     _restoreFuture = _initializeDurability();
   }
@@ -82,6 +95,33 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   bool get isRestoring => _isRestoring;
   bool get isFinishing => _isFinishing;
   bool get isRetryingDurability => _isRetryingDurability;
+  bool get isPreparingWorkout => _isPreparingWorkout;
+
+  WorkoutStartBlock? get startBlock {
+    if (_disposed) return WorkoutStartBlock.disposed;
+    if (_isRestoring) return WorkoutStartBlock.restoring;
+    if (_restoreFailed) return WorkoutStartBlock.restoreFailed;
+    if (_isFinishing) return WorkoutStartBlock.finishing;
+    if (_isReplacingDatabase) return WorkoutStartBlock.databaseReplacement;
+    if (_timer != null) return WorkoutStartBlock.alreadyActive;
+    return null;
+  }
+
+  /// Reserves one preparation across all training callers, without replacing
+  /// or holding a database transaction open for an existing workout.
+  bool tryBeginWorkoutPreparation() {
+    if (_disposed || _isPreparingWorkout) return false;
+    _isPreparingWorkout = true;
+    notifyListeners();
+    return true;
+  }
+
+  void endWorkoutPreparation() {
+    if (!_isPreparingWorkout) return;
+    _isPreparingWorkout = false;
+    if (!_disposed) notifyListeners();
+  }
+
   ActiveSessionDurabilityIssue? get durabilityIssue {
     if (_restoreFailed) return ActiveSessionDurabilityIssue.restore;
     if (_draftSaveFailed) return ActiveSessionDurabilityIssue.draftSave;
@@ -118,12 +158,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   /// Returns false rather than replacing an existing workout.
   Future<bool> start({int? presetId}) async {
     await _restoreFuture;
-    if (_restoreFailed ||
-        _timer != null ||
-        _isFinishing ||
-        _isReplacingDatabase) {
-      return false;
-    }
+    if (startBlock != null) return false;
     _beginWorkout(presetId: presetId);
     await _persistDraft();
     return true;
@@ -139,12 +174,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
       throw ArgumentError('Exercise and card-type counts must match.');
     }
     await _restoreFuture;
-    if (_restoreFailed ||
-        _timer != null ||
-        _isFinishing ||
-        _isReplacingDatabase) {
-      return false;
-    }
+    if (startBlock != null) return false;
     exercises
       ..clear()
       ..addAll(workoutExercises);
@@ -356,10 +386,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
         WorkoutExerciseWrite(
           exercise: completedExercise,
           type: type.name,
-          sourcePresetExerciseId:
-              exercise is WeightExercise
-                  ? exercise.sourcePresetExerciseId
-                  : null,
+          sourcePresetExerciseId: exercise is WeightExercise
+              ? exercise.sourcePresetExerciseId
+              : null,
         ),
       );
     }
@@ -503,12 +532,11 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
   void _syncElapsed() {
     final startedAt = _startedAt;
     if (startedAt == null) return;
-    _elapsedSeconds =
-        DateTime.now()
-            .difference(startedAt)
-            .inSeconds
-            .clamp(0, 1 << 31)
-            .toInt();
+    _elapsedSeconds = DateTime.now()
+        .difference(startedAt)
+        .inSeconds
+        .clamp(0, 1 << 31)
+        .toInt();
     elapsedSecondsListenable.value = _elapsedSeconds;
   }
 
@@ -620,8 +648,9 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
       });
     } else if (exercise is StretchExercise) {
       map.addAll({
-        'stretchInstances':
-            exercise.stretchInstances.map((item) => item.toMap()).toList(),
+        'stretchInstances': exercise.stretchInstances
+            .map((item) => item.toMap())
+            .toList(),
         'completedStretchIndices': exercise.completedStretchIndices.toList(),
       });
     }
@@ -632,36 +661,33 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     final name = map['name'] as String? ?? '';
     final equipment = map['equipment'] as String? ?? '';
     if (type == CardType.weight) {
-      final sets =
-          (map['sets'] as List? ?? const [])
-              .whereType<Map>()
-              .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
-              .toList();
+      final sets = (map['sets'] as List? ?? const [])
+          .whereType<Map>()
+          .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
+          .toList();
       final changeSets = <int, List<ExerciseSet>>{};
       final rawChangeSets = map['changeSets'];
       if (rawChangeSets is Map) {
         for (final entry in rawChangeSets.entries) {
           final parentIndex = int.tryParse(entry.key.toString());
           if (parentIndex == null || entry.value is! List) continue;
-          changeSets[parentIndex] =
-              (entry.value as List)
-                  .whereType<Map>()
-                  .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
-                  .toList();
+          changeSets[parentIndex] = (entry.value as List)
+              .whereType<Map>()
+              .map((item) => _setFromJson(Map<String, dynamic>.from(item)))
+              .toList();
         }
       }
       return WeightExercise(
         name: name,
         equipment: equipment,
-        sourcePresetExerciseId:
-            (map['sourcePresetExerciseId'] as num?)?.toInt(),
+        sourcePresetExerciseId: (map['sourcePresetExerciseId'] as num?)
+            ?.toInt(),
         sets: sets,
         changeSets: changeSets,
-        completedParents:
-            (map['completedParents'] as List? ?? const [])
-                .whereType<num>()
-                .map((value) => value.toInt())
-                .toSet(),
+        completedParents: (map['completedParents'] as List? ?? const [])
+            .whereType<num>()
+            .map((value) => value.toInt())
+            .toSet(),
         completedChildren: _completedChildrenFromJson(map['completedChildren']),
       );
     }
@@ -678,14 +704,12 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     return StretchExercise(
       name: name,
       equipment: equipment,
-      stretchInstances:
-          (map['stretchInstances'] as List? ?? const [])
-              .whereType<Map>()
-              .map(
-                (item) =>
-                    StretchInstance.fromMap(Map<String, dynamic>.from(item)),
-              )
-              .toList(),
+      stretchInstances: (map['stretchInstances'] as List? ?? const [])
+          .whereType<Map>()
+          .map(
+            (item) => StretchInstance.fromMap(Map<String, dynamic>.from(item)),
+          )
+          .toList(),
       completedStretchIndices:
           (map['completedStretchIndices'] as List? ?? const [])
               .whereType<num>()
@@ -700,11 +724,10 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
     for (final entry in raw.entries) {
       final parentIndex = int.tryParse(entry.key.toString());
       if (parentIndex == null || entry.value is! List) continue;
-      result[parentIndex] =
-          (entry.value as List)
-              .whereType<num>()
-              .map((value) => value.toInt())
-              .toSet();
+      result[parentIndex] = (entry.value as List)
+          .whereType<num>()
+          .map((value) => value.toInt())
+          .toSet();
     }
     return result;
   }
@@ -766,6 +789,7 @@ class ActiveSession extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _disposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _draftSaveTimer?.cancel();

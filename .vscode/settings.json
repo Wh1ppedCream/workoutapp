@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "E:/projects/env_test/linux/runner"
+    "cmake.sourceDirectory": "E:/projects/env_test/linux/runner",
+    "dart.flutterSdkPath": "E:/tools/flutter_sdks/3.47.5/flutter"
 }

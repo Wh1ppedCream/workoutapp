@@ -37,6 +37,54 @@ const _profileName = 'Preview Space';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  for (final size in [const Size(393, 844), const Size(320, 800)]) {
+    testWidgets(
+      'Expressive Train ongoing workout clears its action bar at $size',
+      (tester) async {
+        await tester.binding.setSurfaceSize(size);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final harness = await _PreviewHarness.create(
+          tester,
+          textScaleOverride: size.width == 320 ? 1.8 : 1,
+        );
+        addTearDown(harness.dispose);
+        final trainContext = tester.element(find.byType(TrainPage));
+        final session = trainContext.read<ActiveSession>();
+        expect(await session.start(), isTrue);
+        await _pumpTransientAnimations(tester);
+
+        final bar = find.byType(TrainWorkoutActionBar);
+        final menu = find.byKey(AppTestKeys.ongoingSessionMenu);
+        expect(menu, findsOneWidget);
+        expect(
+          tester.getRect(menu).bottom,
+          lessThanOrEqualTo(tester.getRect(bar).top - 8),
+        );
+
+        await tester.tap(menu);
+        await _pumpTransientAnimations(tester);
+        for (final key in [
+          AppTestKeys.ongoingSessionResume,
+          AppTestKeys.ongoingSessionExit,
+        ]) {
+          final action = find.byKey(key);
+          expect(action, findsOneWidget);
+          expect(
+            tester.getRect(action).bottom,
+            lessThanOrEqualTo(tester.getRect(bar).top - 8),
+          );
+        }
+
+        await tester.tap(find.byKey(AppTestKeys.mainTab('catalog')));
+        await _pumpTransientAnimations(tester);
+        expect(find.byKey(AppTestKeys.ongoingSessionMenu), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(milliseconds: 750));
+      },
+    );
+  }
+
   testWidgets(
     'production five-destination shell keeps Train tab state and unique actions',
     (tester) async {
@@ -995,6 +1043,13 @@ class _QualificationRepository extends AppRepository {
 
   @override
   Future<Map<String, dynamic>?> loadActiveWorkoutDraft() async => null;
+
+  @override
+  Future<void> saveActiveWorkoutDraft({
+    required DateTime startedAt,
+    required int? autoPresetId,
+    required String payloadJson,
+  }) async {}
 
   @override
   Future<List<Map<String, dynamic>>> loadPendingWorkoutProgressions() async =>

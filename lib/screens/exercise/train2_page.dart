@@ -16,8 +16,7 @@ import '../../providers/preset_session.dart';
 import '../../providers/selected_profile.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/optimized_workout_preferences.dart';
-import '../../services/preset_generation_service.dart';
-import '../../utils/workout_exercise_clone.dart';
+import '../../services/workout_launch_coordinator.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../theme/tokens/app_expressive_destination_tokens.dart';
@@ -30,7 +29,6 @@ import '../../widgets/generic_bar.dart';
 import '../../widgets/presets_loaded.dart';
 import '../../widgets/drawers.dart';
 import '../../widgets/bodypart_focus_chips.dart';
-import '../../widgets/exercise_card.dart';
 import '../../widgets/tonos_train_tabs.dart';
 
 import 'gym_profile_screen.dart';
@@ -67,11 +65,11 @@ class _OptimizedWorkoutSettingsResult {
 
 enum _Train2PlanAction { premade, custom, manual }
 
-/// Legacy training hub.
+/// Compact training hub.
 ///
 /// This page owns the Train/History tab switch, preset list refreshes, and the
 /// "Start Optimized Workout" entry point. It delegates actual generation to
-/// [PresetGenerationService] and keeps only lightweight UI preferences locally.
+/// [WorkoutLaunchCoordinator] and keeps only lightweight UI preferences locally.
 class Train2Page extends StatefulWidget {
   const Train2Page({super.key});
 
@@ -88,7 +86,8 @@ class _Train2PageState extends State<Train2Page> {
   int _presetsRefreshToken = 0;
   int _historyRefreshToken = 0;
   int? _seenCompletedSessionVersion;
-  bool _isStartingOptimized = false;
+  bool get _isStartingOptimized =>
+      context.read<ActiveSession>().isPreparingWorkout;
   int _optimizedSessionMinutes = SessionSpec.defaultSessionDurationMinutes;
   int _optimizedMinSetsPerExercise = SessionSpec.preferredMinSetsPerExercise;
   int _optimizedMaxSetsPerExercise = SessionSpec.defaultMaxSetsPerExercise;
@@ -103,7 +102,7 @@ class _Train2PageState extends State<Train2Page> {
   @override
   void initState() {
     super.initState();
-    _loadOptimizedWorkoutSettings();
+    unawaited(_refreshOptimizedWorkoutSettings());
   }
 
   /// Loads durable optimized-workout defaults. Bodypart focus choices are not
@@ -158,33 +157,44 @@ class _Train2PageState extends State<Train2Page> {
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final time =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    final minSets = _optimizedMinSetsPerExercise <= _optimizedMaxSetsPerExercise
-        ? _optimizedMinSetsPerExercise
-        : _optimizedMaxSetsPerExercise;
-    return SessionSpec(
-      profileId: profileId,
-      name: 'Optimized workout $date $time',
-      focusBodypartIds: const [],
-      preferredBodypartIds: _optimizedPreferredBodypartIds.toList(),
-      blacklistedBodypartIds: _optimizedBlacklistedBodypartIds.toList(),
-      maxExercises: SessionSpec.maxExercisesForDuration(
-        sessionDurationMinutes: sessionMinutes,
-        minSetsPerExercise: minSets,
-      ),
-      minSetsPerExercise: minSets,
+    return OptimizedWorkoutSettings(
+      sessionMinutes: sessionMinutes,
+      minSetsPerExercise: _optimizedMinSetsPerExercise,
       maxSetsPerExercise: _optimizedMaxSetsPerExercise,
-      sessionDurationMinutes: sessionMinutes,
-      useGeneratedRepWeights: true,
       repWeightMode: _optimizedRepWeightMode,
       targetRepCount: _optimizedTargetRepCount,
       starterWeightIntensity: _optimizedStarterWeightIntensity,
-      historyWindow: const Duration(days: 7),
-      avoidMostRecentBodyPart: true,
+    ).buildSessionSpec(
+      profileId: profileId,
+      name: 'Optimized workout $date $time',
       now: now,
+      preferredBodypartIds: _optimizedPreferredBodypartIds,
+      blacklistedBodypartIds: _optimizedBlacklistedBodypartIds,
     );
   }
 
+  Future<bool> _refreshOptimizedWorkoutSettings() async {
+    try {
+      await _loadOptimizedWorkoutSettings();
+      return mounted;
+    } catch (error) {
+      if (!mounted) return false;
+      final strings = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(safeFailureMessage(strings, error)),
+          action: SnackBarAction(
+            label: strings.commonRetry,
+            onPressed: _openOptimizedWorkoutSettings,
+          ),
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<void> _openOptimizedWorkoutSettings() async {
+    if (!await _refreshOptimizedWorkoutSettings() || !mounted) return;
     final strings = AppLocalizations.of(context);
     List<BodyPart> bodyParts = const <BodyPart>[];
     try {
@@ -389,44 +399,30 @@ class _Train2PageState extends State<Train2Page> {
     }
 
     final active = context.read<ActiveSession>();
-    await active.ready;
-    if (!mounted) return;
-    if (active.isActive) {
-      await Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
-      return;
-    }
-
-    setState(() => _isStartingOptimized = true);
-    int? temporaryPresetId;
     try {
-      final generator = PresetGenerationService(_repo);
+      await _loadOptimizedWorkoutSettings();
+      if (!mounted) return;
       final spec = _buildOptimizedSpec(
         profileId,
         sessionMinutes: _optimizedSessionMinutes,
       );
-      final shouldRest = await generator.shouldRestBeforeOptimizedWorkout(spec);
-      if (shouldRest) {
-        if (!mounted) return;
-        await _showOptimizedWorkoutRestWarning();
-        return;
-      }
-
-      final generationResult = await generator.generatePresetWithDetails(spec);
-      final presetId = generationResult.presetId;
-      temporaryPresetId = presetId;
-      final preset = PresetSession(presetId, repository: _repo);
-      final workoutExercises = <WorkoutExercise>[];
-      final workoutCardTypes = <CardType>[];
-      try {
-        await preset.ready;
-        preset.requireLoaded();
-
-        if (!mounted) return;
-        if (preset.exercises.isEmpty) {
-          await _repo.deletePreset(presetId);
-          temporaryPresetId = null;
-          if (!mounted) return;
+      final result =
+          await WorkoutLaunchCoordinator(
+            repository: _repo,
+            activeSession: active,
+          ).startOptimized(
+            spec: spec,
+            canContinue: () => mounted && sel.currentProfile?.id == profileId,
+          );
+      if (!mounted) return;
+      switch (result.status) {
+        case OptimizedWorkoutLaunchStatus.cancelled:
+        case OptimizedWorkoutLaunchStatus.inProgress:
+          return;
+        case OptimizedWorkoutLaunchStatus.restRecommended:
+          await _showOptimizedWorkoutRestWarning();
+          return;
+        case OptimizedWorkoutLaunchStatus.noEligibleExercises:
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -435,46 +431,29 @@ class _Train2PageState extends State<Train2Page> {
             ),
           );
           return;
-        }
-
-        for (var i = 0; i < preset.exercises.length; i++) {
-          // TODO(cardio/stretch): add cardio and stretch back to legacy plan
-          // starts after those cards are fixed and updated.
-          if (preset.cardTypes[i] != CardType.weight) continue;
-          workoutExercises.add(cloneWorkoutExercise(preset.exercises[i]));
-          workoutCardTypes.add(preset.cardTypes[i]);
-        }
-      } finally {
-        preset.dispose();
+        case OptimizedWorkoutLaunchStatus.alreadyActive:
+          if (result.generationResult != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context).trainActiveWorkoutKept,
+                ),
+              ),
+            );
+          }
+          await Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+          return;
+        case OptimizedWorkoutLaunchStatus.started:
+          break;
       }
-
-      final started = await active.startWithExercises(
-        workoutExercises: workoutExercises,
-        workoutCardTypes: workoutCardTypes,
-      );
-      // Optimized workouts are one-off sessions, not saved presets.
-      await _repo.deletePreset(presetId);
-      temporaryPresetId = null;
-
-      if (!started) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).trainActiveWorkoutKept),
-          ),
-        );
-        await Navigator.of(context)
-            .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
-        return;
-      }
-
       if (!mounted) return;
       setState(() {
         _presetsRefreshToken++;
         _optimizedPreferredBodypartIds.clear();
         _optimizedBlacklistedBodypartIds.clear();
       });
-      _showOptimizedWeightEstimateNotice(generationResult);
+      _showOptimizedWeightEstimateNotice(result.generationResult!);
       await Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
       if (!mounted) return;
@@ -491,18 +470,10 @@ class _Train2PageState extends State<Train2Page> {
         ),
       );
     } finally {
-      if (temporaryPresetId != null) {
-        try {
-          await _repo.deletePreset(temporaryPresetId);
-          if (mounted) {
-            setState(() => _presetsRefreshToken++);
-          }
-        } catch (e) {
-          debugPrint('Failed to delete temporary optimized preset: $e');
-        }
-      }
       if (mounted) {
-        setState(() => _isStartingOptimized = false);
+        setState(() {
+          _presetsRefreshToken++;
+        });
       }
     }
   }
@@ -561,18 +532,16 @@ class _Train2PageState extends State<Train2Page> {
     await sel.ready;
     if (!mounted) return;
     final profileId = sel.currentProfile?.id;
-    final existing = await _repo.fetchAllPresetsRaw(profileId: profileId);
-    if (!mounted) return;
-    final name = AppLocalizations.of(context)
-        .trainNewPlanName(existing.length + 1);
-    await ActivePlanStore(repository: _repo).load(profileId);
-    final presetId = await _repo.createPresetAtomic(
-      name: name,
-      profileId: profileId,
-      exercises: const [],
-      activate: true,
-      uniqueName: true,
-    );
+    final presetId =
+        await WorkoutLaunchCoordinator(
+          repository: _repo,
+          activeSession: context.read<ActiveSession>(),
+        ).createManualPreset(
+          profileId: profileId,
+          nameForNumber: AppLocalizations.of(context).trainNewPlanName,
+          canContinue: () => mounted,
+        );
+    if (presetId == null) return;
     if (!mounted) return;
     setState(() => _presetsRefreshToken++);
     await _openPreset(presetId);
@@ -651,6 +620,9 @@ class _Train2PageState extends State<Train2Page> {
     final expressiveTokens = context.usesExpressivePresentation
         ? Theme.of(context).extension<AppExpressiveTrainTokens>()
         : null;
+    context.select<ActiveSession, bool>(
+      (session) => session.isPreparingWorkout,
+    );
     final completedSessionVersion = context.select<ActiveSession, int>(
       (session) => session.completedSessionVersion,
     );
@@ -895,21 +867,18 @@ class _Train2PageState extends State<Train2Page> {
             if (!mounted) return;
             final strings = AppLocalizations.of(context);
             final profileId = sel.currentProfile?.id;
-            final existing = await _repo.fetchAllPresetsRaw(
-              profileId: profileId,
-            );
-            final nextNum = existing.length + 1;
-            final name = nextNum == 1
-                ? strings.trainNewPlanFirst
-                : strings.trainNewPlan(nextNum);
-            await ActivePlanStore(repository: _repo).load(profileId);
-            final newId = await _repo.createPresetAtomic(
-              name: name,
-              profileId: profileId,
-              exercises: const [],
-              activate: true,
-              uniqueName: true,
-            );
+            final newId =
+                await WorkoutLaunchCoordinator(
+                  repository: _repo,
+                  activeSession: context.read<ActiveSession>(),
+                ).createManualPreset(
+                  profileId: profileId,
+                  nameForNumber: (number) => number == 1
+                      ? strings.trainNewPlanFirst
+                      : strings.trainNewPlan(number),
+                  canContinue: () => mounted,
+                );
+            if (newId == null) return;
             if (!mounted) return;
             setState(() => _presetsRefreshToken++);
             await _openPreset(newId, edit: true);
@@ -955,16 +924,7 @@ class _Train2PageState extends State<Train2Page> {
         Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await context.read<ActiveSession>().start();
-              if (!mounted) return;
-              await navigator.push(
-                MaterialPageRoute(builder: (_) => const SessionScreen()),
-              );
-              if (!mounted) return;
-              setState(() => _historyRefreshToken++);
-            },
+            onPressed: _startNewSession,
             child: Text(AppLocalizations.of(context).trainNewSession),
           ),
         ),

@@ -89,7 +89,7 @@ void main() {
   );
 
   testWidgets(
-    'Train2 optimized settings save preserves sibling preferences and clamps minSets',
+    'Train2 optimized settings refresh shared defaults, preserve siblings and clamp minSets',
     (tester) async {
       SharedPreferences.setMockInitialValues(<String, Object>{
         OptimizedWorkoutPreferences.sessionMinutesKey: 60,
@@ -145,6 +145,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Simulate defaults saved from the other mounted training tab.
+      await const OptimizedWorkoutPreferences().saveAll(
+        const OptimizedWorkoutSettings(
+          sessionMinutes: 75,
+          minSetsPerExercise: 4,
+          maxSetsPerExercise: 5,
+          repWeightMode: RepWeightGenerationMode.consistent,
+          targetRepCount: 12,
+          starterWeightIntensity: StarterWeightIntensity.hard,
+        ),
+      );
       final strings = AppLocalizations.of(
         tester.element(find.byType(Train2Page)),
       );
@@ -155,6 +166,7 @@ void main() {
         of: find.byType(AlertDialog),
         matching: find.byType(TextField),
       );
+      expect(tester.widget<TextField>(fields.first).controller!.text, '75');
       await tester.enterText(fields.at(0), '35');
       await tester.enterText(fields.at(1), '2');
       await tester.tap(find.widgetWithText(TextButton, strings.commonSave));
