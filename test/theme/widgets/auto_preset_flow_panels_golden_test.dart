@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,10 @@ import 'package:env_test/screens/exercise/auto_preset_flow_screen.dart';
 import 'package:env_test/theme/expressive_theme.dart';
 
 void main() {
+  // Ahem glyph edges rasterize differently on Linux and Windows. Keep exact
+  // comparisons against reviewed host references instead of adding tolerance.
+  final goldenDirectory =
+      '../../goldens/expressive_flow_editor/${Platform.isLinux ? 'linux/' : ''}';
   for (final brightness in Brightness.values) {
     testWidgets('Expressive flow control panels in ${brightness.name} mode', (
       tester,
@@ -42,7 +48,7 @@ void main() {
       await expectLater(
         panels,
         matchesGoldenFile(
-          '../../goldens/expressive_flow_editor/controls_${brightness.name}_collapsed.png',
+          '${goldenDirectory}controls_${brightness.name}_collapsed.png',
         ),
       );
 
@@ -55,7 +61,7 @@ void main() {
       await expectLater(
         panels,
         matchesGoldenFile(
-          '../../goldens/expressive_flow_editor/controls_${brightness.name}_expanded.png',
+          '${goldenDirectory}controls_${brightness.name}_expanded.png',
         ),
       );
       expect(tester.takeException(), isNull);

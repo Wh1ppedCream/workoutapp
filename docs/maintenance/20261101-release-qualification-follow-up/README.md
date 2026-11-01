@@ -8,7 +8,7 @@ files are preserved. This does not authorize a production deployment or merge.
 | Order | Work | State |
 | --- | --- | --- |
 | 1 | Match production app/content analyzer gates to strict CI policy; add a focused contract | Complete: 11 focused tests and clean scoped analysis |
-| 2 | Push local checkpoints and verify the existing Linux/Java 17 CI run | Queued |
+| 2 | Push local checkpoints and verify the existing Linux/Java 17 CI run | In progress: pushed; repairing host-specific test assumptions |
 | 3 | Smoke-test the signed arm64 release on Pixel 7 using isolated QA data | Queued |
 | 4 | Record native-plugin migration stages and retirement criteria for compatibility settings | Queued |
 
@@ -33,3 +33,29 @@ Validation: formatting and fatal-info analysis pass for the new contract;
 release/privacy contracts. Logs are in `.build/maintainability/` with prefix
 `followup-analyzer-gates-`. Focused counts overlap and are not added to the
 existing whole-suite count.
+
+## Remote CI and portable checks
+
+The initial 11 local checkpoints were pushed through `e2c17f9`. The first
+[Linux run](https://github.com/Wh1ppedCream/workoutapp/actions/runs/41340210855)
+passed analysis and inventory/ratchet gates, but its full suite reported
+**2,602 passed / 3 failed**, preventing the dependent release build.
+The failures were one scanner fixture and two golden cases, not analyzer errors.
+
+The fixture supplied an absolute temporary path while the scanner reports a
+repository-relative path. Different-drive Windows behavior had hidden the error.
+It now constructs the expected relative path using the same public path API and
+asserts the emitted file identifier as well as all three finding classifications.
+The scanner itself is unchanged.
+
+The next [diagnostic run](https://github.com/Wh1ppedCream/workoutapp/actions/runs/41341614065)
+confirmed the fixture repair and retained all four golden comparison outputs.
+Inspection showed host-specific Ahem glyph-edge differences, with matching card
+geometry and styling. Reviewed Linux references are added alongside the unchanged
+Windows originals; [reference provenance](../../../test/goldens/expressive_flow_editor/README.md)
+is recorded with the images. Both hosts retain exact comparison without skips or
+tolerance changes. A small CI preflight checks these cases before the full suite;
+failed comparisons are retained for seven days for diagnosis.
+
+The combined local focused run passes **17 tests**. Whole-suite and native CI
+results for the repaired checkpoint will be recorded below once complete.
