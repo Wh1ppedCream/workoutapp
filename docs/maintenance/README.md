@@ -12,7 +12,7 @@ reports; it does not replace their evidence or imply release qualification.
 | Device follow-up | In-place Pixel 7 smoke test, data comparison and existing FAB collision | [Pixel 7 evidence](20261030-pass3-structural-decomposition/pixel7-smoke.md) |
 | Pass 4 | Typed preset read boundary, residual DAO extraction, explicit chunked SQLite snapshot backend | [Combined overview](20261030-pass4-data-contracts/README.md), [technical report](20261030-pass4-data-contracts/technical-report.md), [Pixel 7 validation](20261030-pass4-data-contracts/pixel7-validation.md) |
 | Pass 5 | Shared training state, SDK safeguards, typed analytics/drafts, targeted recovery and deprecations; remaining FAB coordination deferred | [Progress and qualification](20261031-pass5-shared-state-and-contracts/README.md) |
-| Pass 6 | Clean baseline, focused Nutrition safety, shared rule editing and separate Android compatibility work | [Progress and qualification](20261031-pass6-nutrition-and-rule-editing/README.md) |
+| Pass 6 | Clean baseline, atomic Nutrition diary writes, typed rule editing/dialog extraction, tested Android compatibility and Pixel 7 preservation | [Combined report and qualification](20261031-pass6-nutrition-and-rule-editing/README.md) |
 
 The Pass 6 report owns the latest validation results. Earlier reports retain
 their checkpoint-specific counts. Static analysis, unit/widget checks, physical
@@ -22,5 +22,7 @@ The remaining roadmap includes the explicitly deferred floating-action
 coordination on Nutrition/Train2 and further typed boundaries or component
 extractions when evidence justifies them. Shared Train orchestration, targeted
 recovery and the existing deprecation backlog are addressed in Pass 5.
+Pass 6 retains a documented mixed Kotlin compatibility mode; the native plugin
+set still needs coordinated migration before AGP 10.
 This does not authorize changing frozen
 visuals, replacing state management, resetting user data, or removing live tabs.
