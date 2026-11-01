@@ -634,6 +634,34 @@
       "rationale": "A line-by-line audit of the 21 current candidates found flow/scope accents owned by AppFlowTokens or ColorScheme; Neo surfaces, text, outlines, and geometry resolve through AppSurfaceTokens, surface-aware foreground/outline helpers, AppShapeTokens, TonosSurfaceTheme, and Tonos dialog/field recipes. Classic retains its established ColorScheme/category mapping. The user accepted the current Flow Methods appearance after the Neo-dark dropdown contrast fix; route/residue contracts protect source behavior. This is presentation ownership only: nested persistence and editing-state review remains explicitly deferred. Keep this exact-file, kind-limited rule."
     },
     {
+      "id": "flow-rule-dialog-recipes",
+      "pattern": "lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Existing AppFlowTokens, ColorScheme and surface-aware Tonos dialog/field recipes",
+      "rationale": "Pass 6 moves preset-rule dialog recipes from flow_methods_page.dart without rendering changes. This exact-file, kind-limited rule preserves their existing ownership and migrated status. The original page and the two extractions retain the same 56 reviewed recipes in aggregate; this move does not grant new visual approval."
+    },
+    {
+      "id": "flow-rule-controls-recipes",
+      "pattern": "lib/screens/profile/settings/flow_methods/rule_editor_controls.dart",
+      "kinds": [
+        "color_transform",
+        "decoration",
+        "geometry",
+        "text_style"
+      ],
+      "classification": "structural_theme",
+      "status": "migrated",
+      "target": "Existing AppFlowTokens, ColorScheme and surface-aware Tonos choice/selection recipes",
+      "rationale": "Pass 6 moves anchored choice and add-set mode controls from flow_methods_page.dart without rendering changes. This exact-file, kind-limited rule preserves their existing ownership and migrated status. The original page and the two extractions retain the same 56 reviewed recipes in aggregate; this move does not grant new visual approval."
+    },
+    {
       "id": "workout-progress-flows-recipes",
       "pattern": "lib/screens/profile/settings/workout_progress_flows_page.dart",
       "kinds": [

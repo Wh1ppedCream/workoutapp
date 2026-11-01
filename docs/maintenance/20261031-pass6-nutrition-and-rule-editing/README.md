@@ -11,8 +11,8 @@ stored formats, preview/user data and unrelated files. No push is included.
 | 1 | Full pinned-SDK baseline and failure investigation before production edits | Complete: 2,578 tests pass; clean analysis |
 | 2 | Focused Nutrition transaction/failure tests; correct demonstrated single-entry failure risks while retaining item-by-item batches | Complete: 44 focused tests pass |
 | 3a | Shared typed Flow Methods editing parameters with compatibility tests | Complete: 36 focused tests pass |
-| 3b | Standalone preset-rule dialog and properly scoped shared controls, preserving rendering and public imports | Queued |
-| 4 | Reassess further extraction against demonstrated responsibility/testability benefits | Queued; conditional |
+| 3b | Standalone preset-rule dialog and properly scoped shared controls, preserving rendering and public imports | Complete: 125 focused checks pass |
+| 4 | Reassess further extraction against demonstrated responsibility/testability benefits | Complete: no additional split justified in this pass |
 | 5 | Independent Android compatibility review/change and build/native validation | Queued |
 
 Floating-action coordination on Nutrition/Train2 remains explicitly deferred.
@@ -100,6 +100,59 @@ Classic/Neo controls, Expressive light/dark styling, copy-source validation,
 large-text/keyboard layouts, saved values and scope/plan grouping. Scoped
 analysis and formatting pass. Logs: `pass6-rule-model-tests.log` and
 `pass6-rule-model-analysis.log` under `.build/maintainability/`.
+
+Typed model checkpoint: **a691b0e**.
+
+## Preset-rule dialog extraction
+
+The preset-rule dialog now lives in
+`lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart`.
+Its controllers, copy-source selection and save lifecycle remain local to the
+dialog. `rule_editor_controls.dart` owns the anchored choice menu, its animation
+and overlay lifecycle, and the shared add-set mode control. The page retains
+scope loading, default-rule editing and rule propagation. The original page
+re-exports `AddPresetMethodDialog`, its state and `AddSetMode`, preserving
+existing import paths. Neither extracted file imports the page.
+
+An AST-token comparison confirms **61 function/method/constructor bodies** are
+unchanged except the three necessary helper renames and formatting. A key
+parameter was added to the newly public choice widget; rendering, dimensions,
+text, colors, gestures and animation constants are unchanged.
+
+Source-reading contracts now inspect the actual standalone owners rather than
+following every import. Two exact-file inventory rules retain the moved
+recipes' existing status and kind restrictions. The **56 migrated Flow Methods
+recipes** retain their exact kind totals across the three files. Five pending
+findings move to their actual owners; their combined snippet digest is identical
+to the old page's digest. No debt was approved or removed: inventory remains
+**4,382 candidates: 3,595 migrated, 144 allowlisted, 643 pending**.
+
+Qualification: **125 focused checks passed**, including rule parsing, dialog
+behavior, large-text/keyboard layouts, existing import compatibility, field
+ownership and inventory contracts. Scoped analysis is clean; the inventory
+check and unchanged **18-file** style ratchet pass. Local logs:
+`pass6-rule-extraction-tests.log`, `pass6-rule-extraction-analysis.log`,
+`pass6-rule-extraction-parity.log`, `pass6-inventory.log`, `pass6-ratchet.log`.
+
+## Further-extraction decision
+
+The reassessment does not justify another mandatory controller, ViewModel or
+DAO layer in this pass. The pure editing model has independently testable data
+rules; the dialog owns its transient controllers and save lifecycle; the menu
+owns its overlay/animation lifecycle. The page's remaining scope loading and
+default-rule propagation still share page state and navigation. Moving them
+solely to reduce line counts would introduce interfaces without demonstrating
+a second caller or simpler testing seam.
+
+Likewise, Nutrition's scoped executor now supplies a small, explicit transaction
+boundary with failure-injection coverage. A wholesale DAO split would add
+delegation without resolving a demonstrated defect. Direct recipe/catalog
+atomicity remains a separately bounded future topic, not an implied guarantee
+from the diary fix. Reconsider a split when a specific responsibility gains a
+second consumer, independent lifecycle, or a failure that existing seams cannot
+test clearly. The two approved Train presentations and their existing shared
+launch services are retained. Nutrition/Train2 floating-action coordination is
+still deferred at the user's request.
 
 ## Preservation and qualification
 

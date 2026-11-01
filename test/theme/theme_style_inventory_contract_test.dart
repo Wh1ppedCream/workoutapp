@@ -1690,33 +1690,35 @@ void main() {
     );
     final report = _productionInventoryReport;
 
-    final flowMethodsRule = inventory.pathRules.singleWhere(
-      (rule) => rule.id == 'flow-methods-recipes',
-    );
-    expect(
-      flowMethodsRule.pattern,
-      sourceLibraryPattern(
-        'lib/screens/profile/settings/flow_methods_page.dart',
-      ),
-    );
-    expect(flowMethodsRule.status, 'migrated');
-    expect(
-      flowMethodsRule.kinds,
-      unorderedEquals(<String>[
-        'color_transform',
-        'decoration',
-        'geometry',
-        'text_style',
-      ]),
-    );
+    const flowRuleFiles = {
+      'flow-methods-recipes':
+          'lib/screens/profile/settings/flow_methods_page.dart',
+      'flow-rule-dialog-recipes': 'lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart',
+      'flow-rule-controls-recipes':
+          'lib/screens/profile/settings/flow_methods/rule_editor_controls.dart',
+    };
+    const flowKinds = <String>[
+      'color_transform',
+      'decoration',
+      'geometry',
+      'text_style',
+    ];
+    for (final entry in flowRuleFiles.entries) {
+      final rule = inventory.pathRules.singleWhere(
+        (rule) => rule.id == entry.key,
+      );
+      expect(rule.pattern, sourceLibraryPattern(entry.value));
+      expect(rule.status, 'migrated');
+      expect(rule.kinds, unorderedEquals(flowKinds));
+    }
 
     final flowMethodsFindings = report.findings
-        .where((finding) => finding.ruleId == 'flow-methods-recipes')
+        .where((finding) => flowRuleFiles.containsKey(finding.ruleId))
         .toList();
     expect(flowMethodsFindings, hasLength(56));
     expect(
       {
-        for (final kind in flowMethodsRule.kinds)
+        for (final kind in flowKinds)
           kind: flowMethodsFindings
               .where((finding) => finding.kind == kind)
               .length,

@@ -183,19 +183,33 @@ void main() {
   test('flow and database forms use the shared field primitive', () {
     for (final path in const [
       'lib/screens/profile/settings/flow_methods_page.dart',
+      'lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart',
       'lib/screens/profile/settings/app_settings_page.dart',
       'lib/screens/profile/settings/database_settings_page.dart',
     ]) {
       final source = _withoutCommentsAndImports(readDartSourceLibrary(path));
       expect(source, contains('TonosField'), reason: path);
       expect(source, isNot(contains('TextField(')), reason: path);
-      if (path != 'lib/screens/profile/settings/flow_methods_page.dart') {
-        expect(source, isNot(contains('InputDecoration(')), reason: path);
-      } else {
-        // Flow Methods uses InputDecorator only for its custom anchored
-        // choice field; its editable numeric inputs still use TonosField.
-        expect(source, contains('InputDecorator('), reason: path);
-      }
+      expect(source, isNot(contains('InputDecoration(')), reason: path);
+    }
+
+    // The standalone anchored choice control owns the non-editable decorator.
+    final controls = _withoutCommentsAndImports(
+      readDartSourceLibrary(
+        'lib/screens/profile/settings/flow_methods/rule_editor_controls.dart',
+      ),
+    );
+    expect(controls, contains('InputDecorator('));
+    expect(controls, isNot(contains('TextField(')));
+    for (final path in const [
+      'lib/screens/profile/settings/flow_methods_page.dart',
+      'lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart',
+    ]) {
+      expect(
+        _withoutCommentsAndImports(readDartSourceLibrary(path)),
+        contains('FlowMethodsChoiceField<'),
+        reason: path,
+      );
     }
   });
 

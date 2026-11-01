@@ -207,13 +207,18 @@
       },
       "snippetDigest": "c2db620d9c3f7edd50e09fec083ea57d7465baa521cfaa8c5f78752fce6b1467"
     },
-    "lib/screens/profile/settings/flow_methods_page.dart": {
+    "lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart": {
       "countsByKind": {
-        "color": 3,
-        "component_style": 1,
         "local_theme": 1
       },
-      "snippetDigest": "c54f13415842307677a00b510754568e46f567f153c81335fae43f91bad7a5de"
+      "snippetDigest": "7d581d6dfef85cb4229579d51aebb278d8802c0e99af43b169aac344653c8ccf"
+    },
+    "lib/screens/profile/settings/flow_methods/rule_editor_controls.dart": {
+      "countsByKind": {
+        "color": 3,
+        "component_style": 1
+      },
+      "snippetDigest": "9b6dcc8645bb014de17ee09af7716323c52b80d23c55fd06860c4123c037c12e"
     },
     "lib/screens/profile/settings/goal_manual_entry_page.dart": {
       "countsByKind": {
