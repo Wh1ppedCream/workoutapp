@@ -12,8 +12,9 @@ reports; it does not replace their evidence or imply release qualification.
 | Device follow-up | In-place Pixel 7 smoke test, data comparison and existing FAB collision | [Pixel 7 evidence](20261030-pass3-structural-decomposition/pixel7-smoke.md) |
 | Pass 4 | Typed preset read boundary, residual DAO extraction, explicit chunked SQLite snapshot backend | [Combined overview](20261030-pass4-data-contracts/README.md), [technical report](20261030-pass4-data-contracts/technical-report.md), [Pixel 7 validation](20261030-pass4-data-contracts/pixel7-validation.md) |
 | Pass 5 | Shared training state, SDK safeguards, typed analytics/drafts, targeted recovery and deprecations; remaining FAB coordination deferred | [Progress and qualification](20261031-pass5-shared-state-and-contracts/README.md) |
+| Pass 6 | Clean baseline, focused Nutrition safety, shared rule editing and separate Android compatibility work | [Progress and qualification](20261031-pass6-nutrition-and-rule-editing/README.md) |
 
-The Pass 5 report owns the latest validation results. Earlier reports retain
+The Pass 6 report owns the latest validation results. Earlier reports retain
 their checkpoint-specific counts. Static analysis, unit/widget checks, physical
 device testing, visual approval and release qualification are separate claims.
 
