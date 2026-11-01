@@ -88,6 +88,9 @@ jobs:
           tools/theme_style_inventory.dart
           tools/theme_style_ratchet.dart
 
+      - name: Test Android release artifact guard
+        run: python -m unittest discover -s tools/tests -p test_android_release_registrars.py
+
       - name: Report structural theme inventory
         run: dart run tools/theme_style_inventory.dart --check
 
@@ -216,6 +219,9 @@ jobs:
           --dart-define=TONOS_CONTENT_ENVIRONMENT=development
           --dart-define=TONOS_CONTENT_ALLOW_OVERRIDES=false
           --dart-define=TONOS_ENABLE_EXPERIMENTAL_TABS=false
+
+      - name: Verify minified ML Kit reflection entry points
+        run: python tools/verify_android_release_registrars.py
 
       - name: Upload release APK
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
