@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/preset_models.dart';
+import '../../../models/flow_method_draft.dart';
 import '../../../models/gym_models.dart';
 import '../../../repositories/app_repository.dart';
 import '../../../services/active_plan_store.dart';
@@ -459,12 +460,18 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       ),
     );
 
-    final methodName = nameCtl.text.trim();
-    final factor = double.tryParse(factorCtl.text) ?? 1.0;
-    final amount = int.tryParse(amountCtl.text) ?? 0;
-    final weight = double.tryParse(weightCtl.text) ?? 0.0;
-    final reps = int.tryParse(repsCtl.text) ?? 0;
-    final copyIndexValue = int.tryParse(copyIndexCtl.text) ?? -1;
+    final draft = FlowMethodDraft.fromEditor(
+      name: nameCtl.text,
+      type: type,
+      sign: sign,
+      factorText: factorCtl.text,
+      amountText: amountCtl.text,
+      weightText: weightCtl.text,
+      repsText: repsCtl.text,
+      copyExistingSet: addMode == AddSetMode.copy,
+      copyIndexText: copyIndexCtl.text,
+    );
+    final methodName = draft.name;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       for (final controller in [
         nameCtl,
@@ -483,28 +490,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
     }
     if (!mounted) return;
 
-    // build params
-    final params = <String, dynamic>{};
-    switch (type) {
-      case MethodType.weight:
-        params['sign'] = sign;
-        params['factor'] = factor;
-        break;
-      case MethodType.rep:
-        params['sign'] = sign;
-        params['amount'] = amount;
-        break;
-      case MethodType.addSet:
-        if (addMode == AddSetMode.explicit) {
-          params['weight'] = weight;
-          params['reps'] = reps;
-        } else {
-          params['copyFromSetIndex'] = copyIndexValue;
-        }
-        break;
-      case MethodType.delSet:
-        break;
-    }
+    final params = draft.toParameters();
     if (methodName.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -2630,38 +2616,29 @@ class AddPresetMethodDialogState extends State<AddPresetMethodDialog> {
       setState(() => _copyNumberEdited = true);
       return;
     }
-    final params = <String, dynamic>{};
-    switch (_type) {
-      case MethodType.weight:
-        params['sign'] = _sign;
-        params['factor'] = double.tryParse(_factorCtl.text) ?? 1.0;
-        break;
-      case MethodType.rep:
-        params['sign'] = _sign;
-        params['amount'] = int.tryParse(_amountCtl.text) ?? 0;
-        break;
-      case MethodType.addSet:
-        if (_addMode == AddSetMode.explicit) {
-          params['weight'] = double.tryParse(_weightCtl.text) ?? 0.0;
-          params['reps'] = int.tryParse(_repsCtl.text) ?? 0;
-        } else {
-          params['copyFromSetIndex'] = expressiveCopy
-              ? switch (_copySource) {
-                  _CopySetSource.last => -1,
-                  _CopySetSource.first => 0,
-                  _CopySetSource.specific => _copySetNumber! - 1,
-                }
-              : int.tryParse(_copyIndexCtl.text) ?? -1;
-        }
-        break;
-      case MethodType.delSet:
-        break;
-    }
+    final draft = FlowMethodDraft.fromEditor(
+      name: name,
+      type: _type,
+      sign: _sign,
+      factorText: _factorCtl.text,
+      amountText: _amountCtl.text,
+      weightText: _weightCtl.text,
+      repsText: _repsCtl.text,
+      copyExistingSet: _addMode == AddSetMode.copy,
+      copyIndexText: _copyIndexCtl.text,
+      copyIndexOverride: expressiveCopy
+          ? switch (_copySource) {
+              _CopySetSource.last => -1,
+              _CopySetSource.first => 0,
+              _CopySetSource.specific => _copySetNumber! - 1,
+            }
+          : null,
+    );
     final saved = await _repo.saveFlowMethodAtomic(
       presetId: widget.presetId,
       name: name,
       type: _type,
-      params: params,
+      params: draft.toParameters(),
       previousMethodId: widget.existing?.id,
       previousName: widget.existing?.name,
     );

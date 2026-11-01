@@ -10,7 +10,7 @@ stored formats, preview/user data and unrelated files. No push is included.
 | --- | --- | --- |
 | 1 | Full pinned-SDK baseline and failure investigation before production edits | Complete: 2,578 tests pass; clean analysis |
 | 2 | Focused Nutrition transaction/failure tests; correct demonstrated single-entry failure risks while retaining item-by-item batches | Complete: 44 focused tests pass |
-| 3a | Shared typed Flow Methods editing parameters with compatibility tests | Queued |
+| 3a | Shared typed Flow Methods editing parameters with compatibility tests | Complete: 36 focused tests pass |
 | 3b | Standalone preset-rule dialog and properly scoped shared controls, preserving rendering and public imports | Queued |
 | 4 | Reassess further extraction against demonstrated responsibility/testability benefits | Queued; conditional |
 | 5 | Independent Android compatibility review/change and build/native validation | Queued |
@@ -77,6 +77,29 @@ and optional trailing commas. Public signatures and schema are preserved.
 Local logs: `pass6-diary-red.log`, `pass6-diary-tests.log`,
 `pass6-diary-analysis.log` and `pass6-diary-body-parity.log`, under
 `.build/maintainability/`. No live or preview database was used.
+
+Nutrition checkpoint: **f02540f**.
+
+## Shared rule editing values
+
+`FlowMethodDraft` is an immutable, widget-independent editing model with typed
+weight, rep, explicit-set, copied-set and delete-set variants. Both default-rule
+and preset-rule save paths use its shared parser and legacy parameter encoder.
+Persisted `FlowMethod` decoding, repository APIs, save transactions and rule
+propagation are unchanged. There is no database-format migration.
+
+Compatibility tests protect JSON keys and numeric types, name trimming, blank
+and invalid-field fallbacks, ignored unrelated fields, negative legacy copy
+indices, Expressive copy-source overrides, delete-set encoding and detached
+parameter maps. Parsing retains existing non-finite handling; validation stays
+with the existing callers, preserving theme-specific behavior. Controllers,
+prefill text and every rendering method remain unchanged in this batch.
+
+Qualification: **36 focused model/dialog/flow-page tests passed**, including
+Classic/Neo controls, Expressive light/dark styling, copy-source validation,
+large-text/keyboard layouts, saved values and scope/plan grouping. Scoped
+analysis and formatting pass. Logs: `pass6-rule-model-tests.log` and
+`pass6-rule-model-analysis.log` under `.build/maintainability/`.
 
 ## Preservation and qualification
 
