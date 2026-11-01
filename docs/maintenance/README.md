@@ -13,9 +13,11 @@ reports; it does not replace their evidence or imply release qualification.
 | Pass 4 | Typed preset read boundary, residual DAO extraction, explicit chunked SQLite snapshot backend | [Combined overview](20261030-pass4-data-contracts/README.md), [technical report](20261030-pass4-data-contracts/technical-report.md), [Pixel 7 validation](20261030-pass4-data-contracts/pixel7-validation.md) |
 | Pass 5 | Shared training state, SDK safeguards, typed analytics/drafts, targeted recovery and deprecations; remaining FAB coordination deferred | [Progress and qualification](20261031-pass5-shared-state-and-contracts/README.md) |
 | Pass 6 | Clean baseline, atomic Nutrition diary writes, typed rule editing/dialog extraction, tested Android compatibility and Pixel 7 preservation | [Combined report and qualification](20261031-pass6-nutrition-and-rule-editing/README.md) |
+| Release follow-up | Strict release analysis, remote CI, isolated signed-release device checks and native migration plan | [Ordered follow-up](20261101-release-qualification-follow-up/README.md) |
 
-The Pass 6 report owns the latest validation results. Earlier reports retain
-their checkpoint-specific counts. Static analysis, unit/widget checks, physical
+The Pass 6 report owns its complete local qualification results. The release
+follow-up records subsequent CI and release-device evidence. Earlier reports
+retain their checkpoint-specific counts. Static analysis, unit/widget checks, physical
 device testing, visual approval and release qualification are separate claims.
 
 The remaining roadmap includes the explicitly deferred floating-action
