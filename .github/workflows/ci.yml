@@ -123,6 +123,21 @@ jobs:
           --dart-define=TONOS_EXPECTED_CONTENT_ENVIRONMENT=development
           --dart-define=TONOS_EXPECTED_CONTENT_OVERRIDES=false
 
+      - name: Verify cross-platform theme guardrails
+        run: >-
+          flutter test
+          test/theme/theme_style_inventory_source_rules_test.dart
+          test/theme/widgets/auto_preset_flow_panels_golden_test.dart
+
+      - name: Upload failed golden comparisons
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: golden-failures-${{ github.sha }}
+          path: test/theme/widgets/failures/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Run unit and widget tests
         run: flutter test
 

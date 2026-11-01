@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 import '../../tools/theme_style_inventory.dart';
 
@@ -105,14 +106,17 @@ void build() {
   final other = scheme.surface.withValues(alpha: 0.2); // scheme.error.withValues(alpha: 0.2)
 }
 ''');
+      final relativePath = p
+          .relative(file.path, from: Directory.current.path)
+          .replaceAll('\\', '/');
       final report = scanThemeStyleInventory(
         root: root,
-        inventory: _inventory(
-          file.path.replaceAll('\\', '/'),
-          sourcePattern: pattern,
-        ),
+        inventory: _inventory(relativePath, sourcePattern: pattern),
       );
       expect(report.findings, hasLength(3));
+      expect(report.findings.map((finding) => finding.file).toSet(), {
+        relativePath,
+      });
       expect(
         report.findings.where((finding) => finding.ruleId == 'error-role'),
         hasLength(1),
