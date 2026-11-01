@@ -4,7 +4,9 @@ import 'package:sqflite/sqflite.dart';
 
 import '../models/nutrition_models.dart';
 import '../models/temporal_semantics.dart';
+
 import 'dart:convert';
+
 import 'db_query_utils.dart';
 
 // Row used by the day view: a DiaryEntry plus its display name.
@@ -26,8 +28,9 @@ class NutritionDao {
 
   /// Shares the caller's transaction, including dependent recipe-cache writes.
   NutritionDao.inTransaction(Transaction transaction)
-    : db = transaction,
-      _database = null;
+    : this._usingExecutor(transaction);
+
+  NutritionDao._usingExecutor(this.db) : _database = null;
 
   Future<T> _transaction<T>(Future<T> Function(DatabaseExecutor) action) {
     final database = _database;
@@ -293,13 +296,12 @@ Future<bool> _foodExists(int foodId) async {
     try {
       // Build an FTS4-friendly query: each token gets a trailing '*'
       String fts4Match(String input) {
-        final tokens =
-            input
-                .trim()
-                .split(RegExp(r'\s+'))
-                .where((t) => t.isNotEmpty)
-                .map((t) => '${t.replaceAll('"', '').replaceAll("'", '')}*')
-                .toList();
+        final tokens = input
+            .trim()
+            .split(RegExp(r'\s+'))
+            .where((t) => t.isNotEmpty)
+            .map((t) => '${t.replaceAll('"', '').replaceAll("'", '')}*')
+            .toList();
         return tokens.isEmpty ? input : tokens.join(' ');
       }
 
@@ -360,8 +362,9 @@ Future<bool> _foodExists(int foodId) async {
   Future<int> upsertFoodPortion(FoodPortion p) async {
     final id = await _transaction<int>((txn) async {
       // sanitize converters (0 → NULL)
-      final gw =
-          (p.gramWeight != null && p.gramWeight! > 0) ? p.gramWeight : null;
+      final gw = (p.gramWeight != null && p.gramWeight! > 0)
+          ? p.gramWeight
+          : null;
       final mv = (p.mlVolume != null && p.mlVolume! > 0) ? p.mlVolume : null;
       if (gw == null && mv == null) {
         throw StateError('Portion requires gram_weight > 0 OR ml_volume > 0');
@@ -389,10 +392,9 @@ Future<bool> _foodExists(int foodId) async {
       // Build full row (may include columns not present on older DBs)
       final raw = {
         'food_id': p.foodId,
-        'measure_name':
-            (p.measureName.trim().isNotEmpty)
-                ? p.measureName.trim()
-                : 'Portion',
+        'measure_name': (p.measureName.trim().isNotEmpty)
+            ? p.measureName.trim()
+            : 'Portion',
         'gram_weight': gw,
         'ml_volume': mv,
         'is_default': p.isDefault ? 1 : 0,
@@ -445,8 +447,7 @@ Future<bool> _foodExists(int foodId) async {
       where: 'food_id = ?',
       whereArgs: [foodId],
       // default first, then group, then sort_order, then id
-      orderBy:
-          "is_default DESC, COALESCE(list_kind,''), COALESCE(sort_order, 999999), id ASC",
+      orderBy: "is_default DESC, COALESCE(list_kind,''), COALESCE(sort_order, 999999), id ASC",
     );
     return rows.map(FoodPortion.fromMap).toList();
   }
@@ -627,6 +628,38 @@ Future<bool> _foodExists(int foodId) async {
     required int foodId,
     int? portionId,
     double quantity = 1.0,
+    double? gramsOverride,
+    double? loggedGrams,
+    DateTime? loggedAt,
+    String? notes,
+  }) => _writeDiary(
+    (scoped) => scoped._addDiaryFood(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      foodId: foodId,
+      portionId: portionId,
+      quantity: quantity,
+      gramsOverride: gramsOverride,
+      loggedGrams: loggedGrams,
+      loggedAt: loggedAt,
+      notes: notes,
+    ),
+  );
+
+  // Root calls own one entry's write, totals and usage together. A caller's
+  // existing transaction remains caller-owned: errors must escape its callback
+  // for the outer transaction to roll back. Provider batches stay item-by-item.
+  Future<T> _writeDiary<T>(Future<T> Function(NutritionDao scoped) write) =>
+      _transaction((executor) => write(NutritionDao._usingExecutor(executor)));
+
+  Future<int> _addDiaryFood({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int foodId,
+    int? portionId,
+    double quantity = 1.0,
     double? gramsOverride, // legacy, still accepted
     double? loggedGrams, // NEW preferred override
     DateTime? loggedAt, // NEW precise timestamp
@@ -663,15 +696,14 @@ Future<bool> _foodExists(int foodId) async {
       'protein_g_snapshot': snap?['protein_g'],
       'carb_g_snapshot': snap?['carb_g'],
       'fat_g_snapshot': snap?['fat_g'],
-      'nutrient_snapshot_json':
-          (snap == null)
-              ? null
-              : jsonEncode({
-                'KCAL': snap['kcal'],
-                'PROTEIN_G': snap['protein_g'],
-                'CARB_G': snap['carb_g'],
-                'FAT_G': snap['fat_g'],
-              }),
+      'nutrient_snapshot_json': (snap == null)
+          ? null
+          : jsonEncode({
+              'KCAL': snap['kcal'],
+              'PROTEIN_G': snap['protein_g'],
+              'CARB_G': snap['carb_g'],
+              'FAT_G': snap['fat_g'],
+            }),
       'logged_at': loggedAt?.toUtc().millisecondsSinceEpoch,
     };
 
@@ -687,6 +719,26 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<int> addDiaryRecipe({
+    required int profileId,
+    required DateTime date,
+    required MealType mealType,
+    required int recipeId,
+    double quantity = 1.0,
+    DateTime? loggedAt,
+    String? notes,
+  }) => _writeDiary(
+    (scoped) => scoped._addDiaryRecipe(
+      profileId: profileId,
+      date: date,
+      mealType: mealType,
+      recipeId: recipeId,
+      quantity: quantity,
+      loggedAt: loggedAt,
+      notes: notes,
+    ),
+  );
+
+  Future<int> _addDiaryRecipe({
     required int profileId,
     required DateTime date,
     required MealType mealType,
@@ -731,12 +783,11 @@ Future<bool> _foodExists(int foodId) async {
         rF += _calcCode(per100, g, 'FAT');
         rC += _calcCode(per100, g, 'CARB');
         final kcalDirect = _calcCode(per100, g, 'ENERGY_KCAL');
-        rK +=
-            (kcalDirect > 0)
-                ? kcalDirect
-                : 4 * _calcCode(per100, g, 'PROTEIN') +
-                    4 * _calcCode(per100, g, 'CARB') +
-                    9 * _calcCode(per100, g, 'FAT');
+        rK += (kcalDirect > 0)
+            ? kcalDirect
+            : 4 * _calcCode(per100, g, 'PROTEIN') +
+                  4 * _calcCode(per100, g, 'CARB') +
+                  9 * _calcCode(per100, g, 'FAT');
       }
     }
 
@@ -776,7 +827,10 @@ Future<bool> _foodExists(int foodId) async {
     return id;
   }
 
-  Future<void> updateDiaryEntry(DiaryEntry e) async {
+  Future<void> updateDiaryEntry(DiaryEntry e) =>
+      _writeDiary((scoped) => scoped._updateDiaryEntry(e));
+
+  Future<void> _updateDiaryEntry(DiaryEntry e) async {
     // Read old entry to know prior date for recalc if the date changed.
     final oldRows = await db.query(
       'diary_entries',
@@ -784,8 +838,9 @@ Future<bool> _foodExists(int foodId) async {
       whereArgs: [e.id],
       limit: 1,
     );
-    DateTime? oldDate =
-        oldRows.isNotEmpty ? _parseYMD(oldRows.first['date'] as String) : null;
+    DateTime? oldDate = oldRows.isNotEmpty
+        ? _parseYMD(oldRows.first['date'] as String)
+        : null;
 
     final map = e.toMap();
 
@@ -830,12 +885,11 @@ Future<bool> _foodExists(int foodId) async {
           rF += _calcCode(per100, g, 'FAT');
           rC += _calcCode(per100, g, 'CARB');
           final kcalDirect = _calcCode(per100, g, 'ENERGY_KCAL');
-          rK +=
-              (kcalDirect > 0)
-                  ? kcalDirect
-                  : 4 * _calcCode(per100, g, 'PROTEIN') +
-                      4 * _calcCode(per100, g, 'CARB') +
-                      9 * _calcCode(per100, g, 'FAT');
+          rK += (kcalDirect > 0)
+              ? kcalDirect
+              : 4 * _calcCode(per100, g, 'PROTEIN') +
+                    4 * _calcCode(per100, g, 'CARB') +
+                    9 * _calcCode(per100, g, 'FAT');
         }
       }
       // Scale by quantity
@@ -872,6 +926,14 @@ Future<bool> _foodExists(int foodId) async {
   }
 
   Future<void> deleteDiaryEntry(
+    int id, {
+    required int profileId,
+    required DateTime date,
+  }) => _writeDiary(
+    (scoped) => scoped._deleteDiaryEntry(id, profileId: profileId, date: date),
+  );
+
+  Future<void> _deleteDiaryEntry(
     int id, {
     required int profileId,
     required DateTime date,
@@ -977,8 +1039,7 @@ Future<bool> _foodExists(int foodId) async {
   Future<NutritionGoal?> getActiveGoals(int profileId, DateTime date) async {
     final rows = await db.query(
       'nutrition_goals',
-      where:
-          'profile_id = ? AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)',
+      where: 'profile_id = ? AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)',
       whereArgs: [profileId, _toYMD(date), _toYMD(date)],
       orderBy: 'start_date DESC',
       limit: 1,
@@ -1053,17 +1114,16 @@ Future<bool> _foodExists(int foodId) async {
         sodium += _calcCode(per100, grams, 'SODIUM'); // (SODIUM_MG → SODIUM)
 
         final k = _calcCode(per100, grams, 'ENERGY_KCAL');
-        kcal +=
-            (k > 0)
-                ? k
-                : (4 * _calcCode(per100, grams, 'PROTEIN') +
-                    4 * _calcCode(per100, grams, 'CARB') +
-                    9 *
-                        _calcCode(
-                          per100,
-                          grams,
-                          'FAT',
-                        )); // fallback if KCAL missing
+        kcal += (k > 0)
+            ? k
+            : (4 * _calcCode(per100, grams, 'PROTEIN') +
+                  4 * _calcCode(per100, grams, 'CARB') +
+                  9 *
+                      _calcCode(
+                        per100,
+                        grams,
+                        'FAT',
+                      )); // fallback if KCAL missing
       } else if (e.recipeId != null) {
         final ings = await getRecipeIngredients(e.recipeId!);
         double rK = 0,
@@ -1092,12 +1152,11 @@ Future<bool> _foodExists(int foodId) async {
           rNa += _calcCode(per100, g, 'SODIUM');
 
           final k = _calcCode(per100, g, 'ENERGY_KCAL');
-          rK +=
-              (k > 0)
-                  ? k
-                  : (4 * _calcCode(per100, g, 'PROTEIN') +
-                      4 * _calcCode(per100, g, 'CARB') +
-                      9 * _calcCode(per100, g, 'FAT'));
+          rK += (k > 0)
+              ? k
+              : (4 * _calcCode(per100, g, 'PROTEIN') +
+                    4 * _calcCode(per100, g, 'CARB') +
+                    9 * _calcCode(per100, g, 'FAT'));
         }
 
         final q = e.quantity;
@@ -1490,14 +1549,13 @@ Future<bool> _foodExists(int foodId) async {
 
     // Step 2: convert the rest of the form fields via alias mapping
     // Strip out known meta keys so we only feed nutrient-ish keys into the mapper.
-    final copy =
-        Map<String, dynamic>.from(payload)
-          ..remove('name')
-          ..remove('brand')
-          ..remove('calories')
-          ..remove('protein_g')
-          ..remove('carbs_g')
-          ..remove('fats_g');
+    final copy = Map<String, dynamic>.from(payload)
+      ..remove('name')
+      ..remove('brand')
+      ..remove('calories')
+      ..remove('protein_g')
+      ..remove('carbs_g')
+      ..remove('fats_g');
 
     final mapped = await mapLabelsToCodes(db, copy);
 
@@ -1508,10 +1566,9 @@ Future<bool> _foodExists(int foodId) async {
     final baseNorm = {for (final e in base.entries) _canonCode(e.key): e.value};
 
     // Merge (explicit base wins if there’s conflict)
-    final codeToAmount =
-        <String, double>{}
-          ..addAll(mappedNorm)
-          ..addAll(baseNorm);
+    final codeToAmount = <String, double>{}
+      ..addAll(mappedNorm)
+      ..addAll(baseNorm);
 
     // Persist using your v22 table
     await replacePer100gByCode(foodId, codeToAmount);
@@ -1666,8 +1723,9 @@ Future<bool> _foodExists(int foodId) async {
       int? defaultId;
 
       for (final p in portions) {
-        final gw =
-            (p.gramWeight != null && p.gramWeight! > 0) ? p.gramWeight : null;
+        final gw = (p.gramWeight != null && p.gramWeight! > 0)
+            ? p.gramWeight
+            : null;
         final mv = (p.mlVolume != null && p.mlVolume! > 0) ? p.mlVolume : null;
         if (gw == null && mv == null) {
           continue; // skip invalid portion; don't advance order
@@ -1675,10 +1733,9 @@ Future<bool> _foodExists(int foodId) async {
 
         final isDef = anyDefault ? p.isDefault : !assignedDefault;
 
-        final measureName =
-            (p.measureName.trim().isNotEmpty)
-                ? p.measureName.trim()
-                : _composeMeasureName(p);
+        final measureName = (p.measureName.trim().isNotEmpty)
+            ? p.measureName.trim()
+            : _composeMeasureName(p);
 
         // Build full row with new columns…
         final raw = <String, Object?>{
@@ -1834,8 +1891,9 @@ Future<bool> _foodExists(int foodId) async {
         'data_source': dataSource,
         'data_source_id': dataSourceId,
         'source_id': sourceId,
-        'density_g_per_ml':
-            (densityGPerMl != null && densityGPerMl > 0) ? densityGPerMl : null,
+        'density_g_per_ml': (densityGPerMl != null && densityGPerMl > 0)
+            ? densityGPerMl
+            : null,
         'quality_score': qualityScore,
         'version': version,
         'preparation': preparation,
@@ -1928,10 +1986,9 @@ Future<bool> _foodExists(int foodId) async {
     final kcal = pick('ENERGY_KCAL');
 
     return {
-      'kcal':
-          (kcal > 0)
-              ? kcal
-              : (4 * pick('PROTEIN') + 4 * pick('CARB') + 9 * pick('FAT')),
+      'kcal': (kcal > 0)
+          ? kcal
+          : (4 * pick('PROTEIN') + 4 * pick('CARB') + 9 * pick('FAT')),
       'protein_g': pick('PROTEIN'),
       'fat_g': pick('FAT'),
       'carbs_g': pick('CARB'),
@@ -2040,8 +2097,9 @@ Future<bool> _foodExists(int foodId) async {
     final fat = pick('FAT');
 
     final kcalDirect = pick('ENERGY_KCAL');
-    final kcal =
-        (kcalDirect > 0) ? kcalDirect : 4 * protein + 4 * carbs + 9 * fat;
+    final kcal = (kcalDirect > 0)
+        ? kcalDirect
+        : 4 * protein + 4 * carbs + 9 * fat;
 
     return {'kcal': kcal, 'protein_g': protein, 'carb_g': carbs, 'fat_g': fat};
   }
@@ -2435,8 +2493,9 @@ Future<bool> _foodExists(int foodId) async {
 
     return {
       'food_id': foodId,
-      'measure_name':
-          measureName.trim().isEmpty ? 'Portion' : measureName.trim(),
+      'measure_name': measureName.trim().isEmpty
+          ? 'Portion'
+          : measureName.trim(),
       'gram_weight': gw, // keep NULL, not 0
       'ml_volume': mv, // keep NULL, not 0
       'is_default': isDefault ? 1 : 0,
@@ -2484,8 +2543,9 @@ Future<bool> _foodExists(int foodId) async {
       final title = (m['display_title'] as String?)?.trim();
       return DiaryEntryRow(
         entry: entry,
-        displayTitle:
-            (title == null || title.isEmpty) ? entry.defaultTitle : title,
+        displayTitle: (title == null || title.isEmpty)
+            ? entry.defaultTitle
+            : title,
       );
     }).toList();
   }
