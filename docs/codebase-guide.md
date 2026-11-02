@@ -41,6 +41,18 @@ Completed exercise history crosses AppRepository as ExerciseHistoryEntry values.
 The raw history-row method remains a compatibility seam for overrides; UI callers
 use the typed method. ExerciseOneRmPoint remains the existing typed trend boundary.
 
+### Exercise Records pager
+
+`lib/widgets/exercise_detail/exercise_history_controller.dart` owns the shared
+detail sheet's records, cursor, badges, refresh and paging request lifecycle. It
+uses the typed repository boundary above, retaining raw-method test overrides.
+`lib/models/exercise_history_record.dart` holds hydrated records; the sheet keeps
+its existing public re-export and owns rendering, session navigation and feedback.
+Dispose the controller with the sheet. Refresh after returning from a session so
+both history and current record badges are renewed. Failed older-page hydration
+must retain existing records and the cursor for retry; stale requests must not
+clear a newer request's loading state.
+
 ## Workout Generation
 
 - `lib/models/training_plan_models.dart` defines `SessionSpec`, the input object

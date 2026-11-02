@@ -1,6 +1,6 @@
 # Maintenance Backlog
 
-Last updated: 2026-09-22.
+Last updated: 2026-11-02 (engineering checkpoint and qualification pointers).
 
 This is Tonos's maintained, prioritized engineering backlog. Historical
 roadmap snapshots live in `docs/archive/roadmaps/`; do not use them to plan new
@@ -9,6 +9,26 @@ work. Cloud-media publishing state and commands live in
 `content-release-playbook.md`.
 
 ## Current Status
+
+Current maintainability work is on `codex/codebase-maintainability`, with source
+checkpoint `07c637f` and **2,667 passing Flutter tests** in its uninterrupted CI
+run. Use the [combined maintenance index](maintenance/README.md),
+[application boundaries](architecture.md), and
+[current Records-pager qualification/closeout](maintenance/20261102-records-pager-and-closeout/README.md)
+for implemented architecture, device evidence and explicit limits. Historical
+counts and branch descriptions below are not the current engineering baseline.
+
+Remaining bounded maintenance is the scheduled
+[native Android compatibility migration](maintenance/20261101-release-qualification-follow-up/android-migration-plan.md),
+closing recorded physical release-evidence gaps, and the explicitly deferred
+Nutrition/Train2 floating-action coordination. Further controller/DAO/DTO changes
+should address a demonstrated ownership, safety or testing problem; no global
+ViewModel conversion or file-size-driven decomposition is queued automatically.
+These engineering results do not certify production rollout or replace visual
+approval. Existing feature backlog entries below retain their historical context
+and need re-triage before being treated as current work.
+
+## Historical status — September 22, 2026
 
 `updates/backlog` contains the active release-preparation work based on
 `origin/master` at `f14eee0`. The latest recorded full-suite verification

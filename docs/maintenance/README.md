@@ -16,6 +16,7 @@ reports; it does not replace their evidence or imply release qualification.
 | Release follow-up | Strict release analysis, green Linux/Java 17 CI, signed Pixel 7 checks, native scanner correction and compatibility retirement plan | [Completed follow-up](20261101-release-qualification-follow-up/README.md), [native migration plan](20261101-release-qualification-follow-up/android-migration-plan.md) |
 | Architecture follow-up | Read-only display lookups, launch outcomes, ownership guide, typed history, default-rule dialog and exercise-editor controller pilot | [Combined report](20261101-architecture-boundary-follow-up/README.md) |
 | Architecture qualification | Edge-case review, scoped checkpoint, uninterrupted CI, protected Pixel 7 smoke and controller-pilot assessment | [Qualification report](20261102-architecture-qualification/README.md) |
+| Records pager / closeout | Bounded Records controller, shared-caller regression coverage, signed Pixel 7 checks and remaining qualification gaps | [Current checkpoint and closeout](20261102-records-pager-and-closeout/README.md) |
 
 The Pass 6 report owns its complete local qualification results. The release
 follow-up records subsequent CI and release-device evidence, including its
