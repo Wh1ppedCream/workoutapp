@@ -1,5 +1,10 @@
 # Architecture boundary follow-up
 
+Follow-up: the patch is checkpointed and pushed, the uninterrupted CI suite and
+release job are green, and the protected Pixel 7 smoke test is complete. See the
+[November 2 qualification and controller assessment](../20261102-architecture-qualification/README.md).
+The local-run evidence below retains its original scope and interrupted-run limit.
+
 Branch: `codex/codebase-maintainability`. Committed baseline: `ff24670`.
 The user authorized the five recommendations in sequence. The initial working
 tree already contained a partial launch/thumbnail/Catalog patch and its tests;
