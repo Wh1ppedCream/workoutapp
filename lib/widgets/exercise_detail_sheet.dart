@@ -12,6 +12,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../models/exercise_history_record.dart';
 import '../models/models.dart';
 import '../providers/unit_preference_provider.dart';
 import '../repositories/app_repository.dart';
@@ -30,46 +31,20 @@ import '../theme/widgets/tonos_expressive_inset_accordion.dart';
 import '../utils/tutorial_launcher.dart';
 import '../utils/weight_unit_formatter.dart';
 import 'body_heatmap.dart';
+import 'exercise_detail/exercise_history_controller.dart';
 import 'guided_tutorial_overlay.dart';
 import 'localized_catalog_entity_name.dart';
 import 'localized_exercise_name.dart';
 import 'workout_record_badges.dart';
+
+// Keep the existing public model import available to sheet consumers.
+export '../models/exercise_history_record.dart' show HistoryRecord;
 
 part 'exercise_detail/exercise_media_preview.dart';
 part 'exercise_detail/exercise_history_cards.dart';
 part 'exercise_detail/exercise_metric_cards.dart';
 part 'exercise_detail/exercise_record_chart.dart';
 part 'exercise_detail/exercise_record_formatters.dart';
-
-/// Simple record model for history tab
-class HistoryRecord {
-  final DateTime date;
-  final LocalCalendarDay calendarDay;
-  final int sessionId;
-  final int exerciseId;
-  final int sessionCompletedAtMilliseconds;
-  final List<ExerciseSet> sets;
-  final WorkoutExerciseRecordBadges badges;
-
-  HistoryRecord({
-    required this.date,
-    required this.calendarDay,
-    required this.sessionId,
-    required this.exerciseId,
-    required this.sessionCompletedAtMilliseconds,
-    required this.sets,
-    required this.badges,
-  });
-
-  DateTime get displayDateTime => calendarDay.atLocalTime(date);
-}
-
-class _ExerciseHistoryPage {
-  final List<HistoryRecord> records;
-  final bool hasMore;
-
-  const _ExerciseHistoryPage({required this.records, required this.hasMore});
-}
 
 class _LoadedExerciseMedia {
   final ExerciseMediaItem media;
@@ -137,7 +112,6 @@ class ExerciseDetailSheet extends StatefulWidget {
 }
 
 class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
-  static const _historyPageSize = 10;
   static const _sheetMinSize = 0.25;
   static const _sheetInitialSize = 0.7;
   static const _sheetMaxSize = 0.95;
@@ -155,9 +129,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _usesExpressiveCatalogSheet && widget.catalogBrowserDetailRefinement;
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
-  late Future<_ExerciseHistoryPage> _historyFuture;
-  late Future<Map<int, WorkoutExerciseRecordBadges>>
-  _currentHistoryBadgesFuture;
+  late final ExerciseHistoryController _history;
   late Future<_LoadedExerciseMedia?> _primaryMediaFuture;
   final Map<String, Future<List<RepMaxRow>>> _repMaxFutures = {};
   final Map<String, Future<double?>> _volumeMaxFutures = {};
@@ -166,7 +138,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   final Map<String, Future<ExerciseInstructionContent>>
   _localizedInstructionFutures = {};
   bool _hasRetriedMissingPreview = false;
-  final List<HistoryRecord> _olderHistory = [];
   final _headerTutorialKey = GlobalKey(debugLabel: 'exercise_detail_header');
   final _tabsTutorialKey = GlobalKey(debugLabel: 'exercise_detail_tabs');
   final _contentTutorialKey = GlobalKey(debugLabel: 'exercise_detail_content');
@@ -174,9 +145,6 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
   bool _equipmentExpanded = false;
   bool _targetAnatomyExpanded = false;
   bool _formGuideExpanded = true;
-  bool _isLoadingMoreHistory = false;
-  bool _hasMoreHistory = true;
-  int _historyRequestGeneration = 0;
 
   // Timeframe toggles
   final List<String> _timeframes = ['week', 'month', 'all'];
@@ -187,10 +155,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     super.initState();
     _tfSelected = [false, false, true]; // default to "all"
     unawaited(BodyHeatmap.preload());
-    _currentHistoryBadgesFuture = _repo.fetchCurrentExerciseRecordBadges(
-      widget.defId,
-    );
-    _historyFuture = _loadHistoryPage();
+    _history = ExerciseHistoryController(_repo, widget.defId);
+    unawaited(_history.refresh());
     _primaryMediaFuture = _loadPrimaryMedia();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _queueTutorial();
@@ -199,6 +165,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   @override
   void dispose() {
+    _history.dispose();
     _sheetController.dispose();
     super.dispose();
   }
@@ -216,14 +183,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
       _mediaDetailFutures.clear();
       _localizedInstructionFutures.clear();
       _hasRetriedMissingPreview = false;
-      _historyRequestGeneration++;
-      _olderHistory.clear();
-      _isLoadingMoreHistory = false;
-      _hasMoreHistory = true;
-      _currentHistoryBadgesFuture = _repo.fetchCurrentExerciseRecordBadges(
-        widget.defId,
-      );
-      _historyFuture = _loadHistoryPage();
+      unawaited(_history.refresh(definitionId: widget.defId));
       _primaryMediaFuture = _loadPrimaryMedia();
       _tutorialQueued = false;
       _equipmentExpanded = false;
@@ -299,67 +259,16 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     );
   }
 
-  /// Loads one cursor-based page of weight exercise history for this definition.
-  Future<_ExerciseHistoryPage> _loadHistoryPage({HistoryRecord? before}) async {
-    final historyRows = await _repo.fetchRecentWeightExerciseHistory(
-      definitionId: widget.defId,
-      beforeCompletedAtMilliseconds: before?.sessionCompletedAtMilliseconds,
-      beforeExerciseId: before?.exerciseId,
-      // Fetch one additional row to know whether the next page exists.
-      limit: _historyPageSize + 1,
+  Future<void> _loadMoreHistory() async {
+    final result = await _history.loadMore();
+    if (!mounted || result != ExerciseHistoryLoadResult.failed) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_strings.exerciseDetailHistoryLoadFailed)),
     );
-    final hasMore = historyRows.length > _historyPageSize;
-    final pageRows = historyRows.take(_historyPageSize).toList();
-    final exercises = await Future.wait(
-      pageRows.map((entry) => _repo.fetchDetailedExercise(entry.exerciseId)),
-    );
-    final badgesByExercise = await _currentHistoryBadgesFuture;
-
-    final records = <HistoryRecord>[];
-    for (var i = 0; i < pageRows.length; i++) {
-      final exercise = exercises[i];
-      if (exercise is! WeightExercise) continue;
-      final entry = pageRows[i];
-      records.add(
-        HistoryRecord(
-          date: entry.completedAt,
-          calendarDay: entry.calendarDay,
-          sessionId: entry.sessionId,
-          exerciseId: entry.exerciseId,
-          sessionCompletedAtMilliseconds: entry.completedAtMilliseconds,
-          sets: exercise.sets,
-          badges:
-              badgesByExercise[entry.exerciseId] ??
-              const WorkoutExerciseRecordBadges(isFirstRecord: false),
-        ),
-      );
-    }
-    return _ExerciseHistoryPage(records: records, hasMore: hasMore);
-  }
-
-  Future<void> _loadMoreHistory(List<HistoryRecord> loadedHistory) async {
-    if (_isLoadingMoreHistory || !_hasMoreHistory || loadedHistory.isEmpty) {
-      return;
-    }
-
-    setState(() => _isLoadingMoreHistory = true);
-    final requestGeneration = _historyRequestGeneration;
-    try {
-      final nextPage = await _loadHistoryPage(before: loadedHistory.last);
-      if (!mounted || requestGeneration != _historyRequestGeneration) return;
-
-      setState(() {
-        _olderHistory.addAll(nextPage.records);
-        _hasMoreHistory = nextPage.hasMore && nextPage.records.isNotEmpty;
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingMoreHistory = false);
-      }
-    }
   }
 
   Future<void> _openHistorySession(BuildContext context, int sessionId) async {
+    final historyDefinitionId = widget.defId;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final destinationFamily = context.usesExpressivePresentation
@@ -398,15 +307,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
         },
       ),
     );
-    if (!mounted) return;
-
-    setState(() {
-      _historyRequestGeneration++;
-      _olderHistory.clear();
-      _isLoadingMoreHistory = false;
-      _hasMoreHistory = true;
-      _historyFuture = _loadHistoryPage();
-    });
+    if (!mounted || widget.defId != historyDefinitionId) return;
+    unawaited(_history.refresh());
   }
 
   Future<_LoadedExerciseMedia?> _loadPrimaryMedia() async {
@@ -1723,20 +1625,16 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
             theme.brightness == Brightness.light
         ? catalogBrowserAllTimeBadgeAccent(context)
         : null;
-    return FutureBuilder<_ExerciseHistoryPage>(
-      future: _historyFuture,
-      builder: (ctx, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+    return ListenableBuilder(
+      listenable: _history,
+      builder: (ctx, _) {
+        if (_history.loading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snap.hasError) {
+        if (_history.failure != null && _history.records.isEmpty) {
           return Center(child: Text(_strings.exerciseDetailHistoryLoadFailed));
         }
-        final firstPage = snap.data;
-        final history = <HistoryRecord>[
-          ...?firstPage?.records,
-          ..._olderHistory,
-        ];
+        final history = _history.records;
         final expressive = _usesExpressiveCatalogSheet;
         if (history.isEmpty) {
           if (expressive) {
@@ -1760,9 +1658,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
           }
           return Center(child: Text(_strings.exerciseDetailNoHistory));
         }
-        final hasMoreHistory = _olderHistory.isEmpty
-            ? firstPage?.hasMore ?? false
-            : _hasMoreHistory;
+        final hasMoreHistory = _history.hasMore;
 
         final records = _buildRecordTrendPoints(
           history,
@@ -1879,10 +1775,8 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isLoadingMoreHistory
-                      ? null
-                      : () => _loadMoreHistory(history),
-                  icon: _isLoadingMoreHistory
+                  onPressed: _history.loadingMore ? null : _loadMoreHistory,
+                  icon: _history.loadingMore
                       ? SizedBox(
                           width: 17,
                           height: 17,
@@ -1893,7 +1787,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
                         )
                       : const Icon(Icons.expand_more_rounded),
                   label: Text(
-                    _isLoadingMoreHistory
+                    _history.loadingMore
                         ? _strings.exerciseDetailLoadingSessions
                         : _strings.exerciseDetailLoadMoreSessions,
                   ),

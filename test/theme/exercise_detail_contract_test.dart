@@ -172,7 +172,8 @@ void main() {
       expect(source, contains('DefaultTabController'));
       expect(source, contains('TabBarView'));
       expect(source, contains('NeverScrollableScrollPhysics'));
-      expect(source, contains('_olderHistory'));
+      expect(recordsTab, contains('listenable: _history'));
+      expect(source, isNot(contains('fetchRecentWeightExerciseHistory(')));
       expect(source, contains('exerciseDetailNoBestLifts'));
       final handle = _section(
         source,
