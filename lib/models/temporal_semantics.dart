@@ -21,9 +21,8 @@ class LocalCalendarDay implements Comparable<LocalCalendarDay> {
   /// timestamp. The prefix preserves the day people previously saw in history.
   static LocalCalendarDay? tryParse(Object? value) {
     if (value is! String) return null;
-    final match = RegExp(
-      r'^(\d{4})-(\d{2})-(\d{2})(?:$|T)',
-    ).firstMatch(value.trim());
+    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})(?:$|T)')
+        .firstMatch(value.trim());
     if (match == null) return null;
 
     final year = int.tryParse(match.group(1)!);
@@ -70,9 +69,7 @@ class LocalCalendarDay implements Comparable<LocalCalendarDay> {
   }
 
   LocalCalendarDay addDays(int days) {
-    return LocalCalendarDay.fromDateTime(
-      toLocalDateTime().add(Duration(days: days)),
-    );
+    return LocalCalendarDay.fromDateTime(DateTime(year, month, day + days));
   }
 
   @override

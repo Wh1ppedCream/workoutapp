@@ -301,7 +301,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
 
   /// Loads one cursor-based page of weight exercise history for this definition.
   Future<_ExerciseHistoryPage> _loadHistoryPage({HistoryRecord? before}) async {
-    final historyRows = await _repo.fetchRecentWeightExerciseHistoryRows(
+    final historyRows = await _repo.fetchRecentWeightExerciseHistory(
       definitionId: widget.defId,
       beforeCompletedAtMilliseconds: before?.sessionCompletedAtMilliseconds,
       beforeExerciseId: before?.exerciseId,
@@ -311,9 +311,7 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     final hasMore = historyRows.length > _historyPageSize;
     final pageRows = historyRows.take(_historyPageSize).toList();
     final exercises = await Future.wait(
-      pageRows.map(
-        (row) => _repo.fetchDetailedExercise(row['exercise_id'] as int),
-      ),
+      pageRows.map((entry) => _repo.fetchDetailedExercise(entry.exerciseId)),
     );
     final badgesByExercise = await _currentHistoryBadgesFuture;
 
@@ -321,24 +319,17 @@ class _ExerciseDetailSheetState extends State<ExerciseDetailSheet> {
     for (var i = 0; i < pageRows.length; i++) {
       final exercise = exercises[i];
       if (exercise is! WeightExercise) continue;
-      final row = pageRows[i];
+      final entry = pageRows[i];
       records.add(
         HistoryRecord(
-          date: TemporalSemantics.readLocalDateTime(
-            epochMilliseconds: row['session_completed_at_ms'],
-            legacyIso: row['session_date'],
-          ),
-          calendarDay: TemporalSemantics.readCalendarDay(
-            calendarDay: row['session_training_day'],
-            legacyIso: row['session_date'],
-            epochMilliseconds: row['session_completed_at_ms'],
-          ),
-          sessionId: row['session_id'] as int,
-          exerciseId: row['exercise_id'] as int,
-          sessionCompletedAtMilliseconds: row['session_completed_at_ms'] as int,
+          date: entry.completedAt,
+          calendarDay: entry.calendarDay,
+          sessionId: entry.sessionId,
+          exerciseId: entry.exerciseId,
+          sessionCompletedAtMilliseconds: entry.completedAtMilliseconds,
           sets: exercise.sets,
           badges:
-              badgesByExercise[row['exercise_id'] as int] ??
+              badgesByExercise[entry.exerciseId] ??
               const WorkoutExerciseRecordBadges(isFirstRecord: false),
         ),
       );

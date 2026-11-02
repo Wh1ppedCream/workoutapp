@@ -335,6 +335,172 @@ void main() {
       expect(repository.loadedActiveProfileId, isNull);
     },
   );
+
+  test('a departed caller cannot start a saved plan', () async {
+    final result = await coordinator.startPreset(
+      presetId: 5,
+      exercises: [WeightExercise(name: 'Bench', equipment: '', sets: [])],
+      cardTypes: [CardType.weight],
+      canContinue: () => false,
+    );
+    expect(result, PresetWorkoutLaunchStatus.cancelled);
+    expect(session.isActive, isFalse);
+    expect(repository.savedPayloads, isEmpty);
+  });
+
+  test('misaligned exercise metadata is rejected before starting', () async {
+    await expectLater(
+      coordinator.repeatSessionExercises(
+        exercises: [WeightExercise(name: 'Bench', equipment: '', sets: [])],
+        cardTypes: [],
+      ),
+      throwsArgumentError,
+    );
+    expect(session.isActive, isFalse);
+    expect(repository.savedPayloads, isEmpty);
+  });
+
+  test('startPreset launches eligible weight exercises with preset source preserved', () async {
+    final weightEx = WeightExercise(
+      name: 'Bench Press',
+      equipment: 'Barbell',
+      sourcePresetExerciseId: 101,
+      sets: [ExerciseSet(sourcePresetSetId: 501, weight: 100, reps: 5)],
+      changeSets: {
+        0: [ExerciseSet(sourcePresetSetId: 502, weight: 80, reps: 8)],
+      },
+    );
+    final cardioEx = CardioExercise(
+      name: 'Running',
+      equipment: 'Treadmill',
+      cardioName: 'Treadmill',
+      cardioNote: '',
+      plannedMinutes: 20,
+      elapsedSeconds: 0,
+    );
+
+    final status = await coordinator.startPreset(
+      presetId: 5,
+      exercises: [weightEx, cardioEx],
+      cardTypes: [CardType.weight, CardType.cardio],
+    );
+
+    expect(status, PresetWorkoutLaunchStatus.started);
+    expect(session.isActive, isTrue);
+    expect(session.exercises, hasLength(1));
+    expect(session.exercises.first.name, 'Bench Press');
+    expect(session.cardTypes, [CardType.weight]);
+    expect(
+      (session.exercises.first as WeightExercise).sourcePresetExerciseId,
+      101,
+    );
+    final launched = session.exercises.single as WeightExercise;
+    expect(launched.sets.single.sourcePresetSetId, 501);
+    expect(launched.changeSets[0]!.single.sourcePresetSetId, 502);
+    expect(identical(launched.sets, weightEx.sets), isFalse);
+    launched.sets.single.weight = 200;
+    expect(weightEx.sets.single.weight, 100);
+  });
+
+  test('startPreset returns alreadyActive if a workout is ongoing without modifying it', () async {
+    await session.startWithExercises(
+      workoutExercises: [WeightExercise(name: 'Kept', equipment: '', sets: [])],
+      workoutCardTypes: [CardType.weight],
+    );
+
+    final status = await coordinator.startPreset(
+      presetId: 5,
+      exercises: [WeightExercise(name: 'New', equipment: '', sets: [])],
+      cardTypes: [CardType.weight],
+    );
+
+    expect(status, PresetWorkoutLaunchStatus.alreadyActive);
+    expect(session.exercises.single.name, 'Kept');
+  });
+
+  test('startPreset returns noEligibleExercises if plan contains only unsupported cards', () async {
+    final cardioEx = CardioExercise(
+      name: 'Cycling',
+      equipment: 'Bike',
+      cardioName: 'Bike',
+      cardioNote: '',
+      plannedMinutes: 30,
+      elapsedSeconds: 0,
+    );
+
+    final status = await coordinator.startPreset(
+      presetId: 5,
+      exercises: [cardioEx],
+      cardTypes: [CardType.cardio],
+    );
+
+    expect(status, PresetWorkoutLaunchStatus.noEligibleExercises);
+    expect(session.isActive, isFalse);
+  });
+
+  test('startPreset blocks on database replacement instead of reporting alreadyActive', () async {
+    await session.prepareForDatabaseReplace();
+    await expectLater(
+      coordinator.startPreset(
+        presetId: 5,
+        exercises: [WeightExercise(name: 'Bench', equipment: '', sets: [])],
+        cardTypes: [CardType.weight],
+      ),
+      throwsA(isA<SafeFailure>()),
+    );
+    expect(session.isActive, isFalse);
+    session.abortDatabaseReplace();
+  });
+
+  test(
+    'repeatSessionExercises filters unsupported cards and clears preset source',
+    () async {
+      final weightEx = WeightExercise(
+        name: 'Squat',
+        equipment: 'Barbell',
+        sourcePresetExerciseId: 99,
+        sets: [ExerciseSet(weight: 120, reps: 5)],
+      );
+      final cardioEx = CardioExercise(
+        name: 'Rowing',
+        equipment: 'Rower',
+        cardioName: 'Rower',
+        cardioNote: '',
+        plannedMinutes: 15,
+        elapsedSeconds: 0,
+      );
+
+      final status = await coordinator.repeatSessionExercises(
+        exercises: [weightEx, cardioEx],
+        cardTypes: [CardType.weight, CardType.cardio],
+      );
+
+      expect(status, PresetWorkoutLaunchStatus.started);
+      expect(session.isActive, isTrue);
+      expect(session.exercises, hasLength(1));
+      expect(session.exercises.first.name, 'Squat');
+      expect(
+        (session.exercises.first as WeightExercise).sourcePresetExerciseId,
+        isNull,
+      );
+    },
+  );
+
+  test('repeatSessionExercises returns noEligibleExercises when all cards unsupported', () async {
+    final stretchEx = StretchExercise(
+      name: 'Hamstring Stretch',
+      equipment: '',
+      stretchInstances: [],
+    );
+
+    final status = await coordinator.repeatSessionExercises(
+      exercises: [stretchEx],
+      cardTypes: [CardType.stretch],
+    );
+
+    expect(status, PresetWorkoutLaunchStatus.noEligibleExercises);
+    expect(session.isActive, isFalse);
+  });
 }
 
 SessionSpec _spec() => const OptimizedWorkoutSettings().buildSessionSpec(

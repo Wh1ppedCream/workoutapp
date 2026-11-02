@@ -19,3 +19,4 @@ export 'temporal_semantics.dart';
 //new:
 export 'training_plan_models.dart';
 export 'history_report_models.dart';
+export 'exercise_history_entry.dart';

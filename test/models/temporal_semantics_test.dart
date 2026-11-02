@@ -4,6 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('LocalCalendarDay', () {
+    test('adds civil days across DST, leap days and year boundaries', () {
+      for (final (day, offset, expected) in [
+        (const LocalCalendarDay(2026, 11, 1), 1, '2026-11-02'),
+        (const LocalCalendarDay(2026, 11, 2), -1, '2026-11-01'),
+        (const LocalCalendarDay(2026, 3, 8), 1, '2026-03-09'),
+        (const LocalCalendarDay(2026, 3, 9), -1, '2026-03-08'),
+        (const LocalCalendarDay(2024, 2, 28), 1, '2024-02-29'),
+        (const LocalCalendarDay(2026, 12, 31), 1, '2027-01-01'),
+        (const LocalCalendarDay(2026, 1, 1), -1, '2025-12-31'),
+      ]) {
+        expect(day.addDays(offset).storageKey, expected);
+      }
+    });
     test('keeps calendar fields separate from an exact instant', () {
       final completion = DateTime(2026, 3, 8, 0, 30);
 
@@ -71,8 +84,13 @@ void main() {
       final day = TemporalSemantics.readCalendarDay(
         calendarDay: '2026-03-08',
         legacyIso: '2026-03-09T03:30:00.000Z',
-        epochMilliseconds:
-            DateTime.utc(2026, 3, 9, 3, 30).millisecondsSinceEpoch,
+        epochMilliseconds: DateTime.utc(
+          2026,
+          3,
+          9,
+          3,
+          30,
+        ).millisecondsSinceEpoch,
       );
 
       expect(day.storageKey, '2026-03-08');

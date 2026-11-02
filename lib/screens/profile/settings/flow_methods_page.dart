@@ -14,6 +14,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../models/preset_models.dart';
 import '../../../models/flow_method_draft.dart';
 import 'flow_methods/add_preset_method_dialog.dart';
+import 'flow_methods/default_flow_method_dialog.dart';
 import 'flow_methods/rule_editor_controls.dart';
 
 import '../../../models/gym_models.dart';
@@ -24,7 +25,6 @@ import '../../../theme/tokens/app_expressive_destination_tokens.dart';
 import '../../../theme/tokens/app_expressive_train_tokens.dart';
 import '../../../theme/widgets/app_expressive_destination_theme.dart';
 import '../../../theme/widgets/tonos_dialog.dart';
-import '../../../theme/widgets/tonos_field.dart';
 import '../../../theme/widgets/tonos_surface.dart';
 import '../../../widgets/settings_tiles.dart';
 
@@ -164,207 +164,13 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
               ? strings.rulesAddAppDefault
               : strings.rulesAddProfileDefault);
 
-    // Controllers
-    final nameCtl = TextEditingController(text: existing?.name);
-    MethodType type = existing?.type ?? MethodType.weight;
-    String sign = existing?.params['sign'] as String? ?? '+';
-    final factorCtl = TextEditingController(
-      text: existing?.params['factor']?.toString() ?? '1.0',
-    );
-    final amountCtl = TextEditingController(
-      text: existing?.params['amount']?.toString() ?? '0',
-    );
-    AddSetMode addMode =
-        existing?.params.containsKey('copyFromSetIndex') == true
-        ? AddSetMode.copy
-        : AddSetMode.explicit;
-    final weightCtl = TextEditingController(
-      text: existing?.params['weight']?.toString() ?? '0.0',
-    );
-    final repsCtl = TextEditingController(
-      text: existing?.params['reps']?.toString() ?? '0',
-    );
-
-    // Prepopulate copyIndex if editing an addSet method
-    final copyIndex = existing != null && existing.type == MethodType.addSet
-        ? (existing.params['copyFromSetIndex']?.toString() ?? '-1')
-        : '-1';
-    final copyIndexCtl = TextEditingController(text: copyIndex);
-
-    final saved = await showTonosDialog<bool>(
+    final draft = await showTonosDialog<FlowMethodDraft>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSt) {
-          final expressive = ctx.usesExpressivePresentation;
-          final fieldGap = expressive ? 8.0 : 12.0;
-          final formContent = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TonosField(controller: nameCtl, labelText: strings.commonName),
-              SizedBox(height: fieldGap),
-              FlowMethodsChoiceField<MethodType>(
-                title: strings.rulesRuleTypeLabel,
-                values: MethodType.values,
-                value: type,
-                label: (value) => flowMethodTypeLabel(value, strings),
-                onChanged: (value) {
-                  if (value != null) setSt(() => type = value);
-                },
-                nonExpressiveButton: () =>
-                    TonosDialogDropdownButton<MethodType>(
-                      value: type,
-                      onChanged: (value) => setSt(() => type = value!),
-                      items: MethodType.values
-                          .map(
-                            (t) => DropdownMenuItem(
-                              value: t,
-                              child: Text(flowMethodTypeLabel(t, strings)),
-                            ),
-                          )
-                          .toList(),
-                    ),
-              ),
-              if (type == MethodType.weight) ...[
-                SizedBox(height: fieldGap),
-                FlowMethodsChoiceField<String>(
-                  title: strings.rulesOperationLabel,
-                  values: const ['+', '-'],
-                  value: sign,
-                  label: (value) => value,
-                  onChanged: (value) {
-                    if (value != null) setSt(() => sign = value);
-                  },
-                  nonExpressiveButton: () => TonosDialogDropdownButton<String>(
-                    value: sign,
-                    onChanged: (value) => setSt(() => sign = value!),
-                    items: const [
-                      DropdownMenuItem(value: '+', child: Text('+')),
-                      DropdownMenuItem(value: '-', child: Text('-')),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TonosField(
-                  controller: factorCtl,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  labelText: strings.flowFactor,
-                ),
-              ] else if (type == MethodType.rep) ...[
-                SizedBox(height: fieldGap),
-                FlowMethodsChoiceField<String>(
-                  title: strings.rulesOperationLabel,
-                  values: const ['+', '-'],
-                  value: sign,
-                  label: (value) => value,
-                  onChanged: (value) {
-                    if (value != null) setSt(() => sign = value);
-                  },
-                  nonExpressiveButton: () => TonosDialogDropdownButton<String>(
-                    value: sign,
-                    onChanged: (value) => setSt(() => sign = value!),
-                    items: const [
-                      DropdownMenuItem(value: '+', child: Text('+')),
-                      DropdownMenuItem(value: '-', child: Text('-')),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TonosField(
-                  controller: amountCtl,
-                  keyboardType: TextInputType.number,
-                  labelText: strings.flowAmount,
-                ),
-              ] else if (type == MethodType.addSet) ...[
-                SizedBox(height: fieldGap),
-                buildRuleAddSetModeOptions(
-                  ctx,
-                  selected: addMode,
-                  onChanged: (value) => setSt(() => addMode = value),
-                ),
-                const SizedBox(height: 8),
-                if (addMode == AddSetMode.explicit) ...[
-                  TonosField(
-                    controller: weightCtl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    labelText: strings.flowWeight,
-                  ),
-                  const SizedBox(height: 8),
-                  TonosField(
-                    controller: repsCtl,
-                    keyboardType: TextInputType.number,
-                    labelText: strings.flowReps,
-                  ),
-                ] else ...[
-                  TonosField(
-                    controller: copyIndexCtl,
-                    keyboardType: TextInputType.number,
-                    labelText: strings.rulesCopyIndex,
-                  ),
-                ],
-              ] else if (type == MethodType.delSet) ...[
-                SizedBox(height: fieldGap),
-                Text(strings.rulesDeleteLastSetBody),
-              ],
-            ],
-          );
-
-          return TonosDialogFrame(
-            styleFormControls: true,
-            child: AlertDialog(
-              scrollable: expressive,
-              title: Text(dialogTitle),
-              content: expressive
-                  ? formContent
-                  : SingleChildScrollView(child: formContent),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(strings.commonCancel),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(strings.commonSave),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+      builder: (_) =>
+          DefaultFlowMethodDialog(title: dialogTitle, existing: existing),
     );
-
-    final draft = FlowMethodDraft.fromEditor(
-      name: nameCtl.text,
-      type: type,
-      sign: sign,
-      factorText: factorCtl.text,
-      amountText: amountCtl.text,
-      weightText: weightCtl.text,
-      repsText: repsCtl.text,
-      copyExistingSet: addMode == AddSetMode.copy,
-      copyIndexText: copyIndexCtl.text,
-    );
+    if (draft == null || !mounted) return;
     final methodName = draft.name;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (final controller in [
-        nameCtl,
-        factorCtl,
-        amountCtl,
-        weightCtl,
-        repsCtl,
-        copyIndexCtl,
-      ]) {
-        controller.dispose();
-      }
-    });
-
-    if (saved != true) {
-      return;
-    }
-    if (!mounted) return;
 
     final params = draft.toParameters();
     if (methodName.isEmpty) {
@@ -378,7 +184,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
       scope: scope,
       profileId: profileId,
       name: methodName,
-      type: type,
+      type: draft.type,
       params: params,
       previousName: existing?.name,
     );
@@ -387,7 +193,7 @@ class _FlowMethodsPageState extends State<FlowMethodsPage> {
         scope: scope,
         profileId: profileId,
         name: methodName,
-        type: type,
+        type: draft.type,
         params: params,
       );
     }

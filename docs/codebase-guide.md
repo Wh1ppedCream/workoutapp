@@ -3,6 +3,10 @@
 This guide is a quick orientation map for future work in the app. It focuses on
 where the important logic lives and how the major workout features fit together.
 
+For ownership rules, compatibility seams and incremental refactoring decisions, see
+[Application boundaries](architecture.md). Error presentation is specified in
+[Safe Error Handling](error-handling.md).
+
 ## App Layers
 
 - `lib/screens/` contains full pages and route-level flows. Screens should own
@@ -23,6 +27,19 @@ where the important logic lives and how the major workout features fit together.
   helpers. DAO files keep table-specific queries smaller.
 - `lib/models/` contains the typed objects passed between database, services,
   providers, and widgets.
+
+### Exercise editor pilot
+
+`exercise_editor/exercise_editor_controller.dart` owns catalog/detail request
+ordering, stale-result suppression, the selected definition and save/reload
+lifecycle for ExerciseEditorScreen. It receives the injected AppRepository and
+has no navigation, theme or field-controller dependencies. The screen owns its
+editable field draft, validation messages, dialogs and navigation; its presentation
+parts remain in the screen library. Dispose the controller with the route.
+
+Completed exercise history crosses AppRepository as ExerciseHistoryEntry values.
+The raw history-row method remains a compatibility seam for overrides; UI callers
+use the typed method. ExerciseOneRmPoint remains the existing typed trend boundary.
 
 ## Workout Generation
 

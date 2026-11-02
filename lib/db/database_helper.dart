@@ -2238,29 +2238,15 @@ class DatabaseHelper {
     String equipmentName,
   ) async {
     final db = await database;
-    int? eqId;
-    if (equipmentName.isNotEmpty) {
-      final eqRows = await db.query(
-        'equipment',
-        where: 'name = ?',
-        whereArgs: [equipmentName],
-      );
-      if (eqRows.isNotEmpty) eqId = eqRows.first['id'] as int;
-    }
-    final whereClause = eqId != null
-        ? 'name = ? AND equipment_id = ?'
-        : 'name = ? AND equipment_id IS NULL';
-    final args = eqId != null ? [name, eqId] : [name];
-    final rows = await db.query(
-      'exercise_definitions',
-      columns: ['id'],
-      where: whereClause,
-      whereArgs: args,
+    final id = await DefinitionDao.findExistingExerciseDefinitionId(
+      db,
+      name,
+      equipmentName,
     );
-    if (rows.isEmpty) {
+    if (id == null) {
       throw Exception('ExerciseDefinition("$name",$equipmentName) not found');
     }
-    return rows.first['id'] as int;
+    return id;
   }
 
   /// Returns all sessions as WorkoutSession objects, sorted by date desc.

@@ -307,7 +307,9 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       case _CalendarRangeMode.month:
         return _DateRange(
           start: _selectedDay,
-          endExclusive: _selectedDay.add(const Duration(days: 1)),
+          endExclusive: LocalCalendarDay.fromDateTime(_selectedDay)
+              .addDays(1)
+              .toLocalDateTime(),
         );
       case _CalendarRangeMode.threeMonth:
         return _DateRange(
@@ -381,8 +383,9 @@ class _WorkoutHistoryCalendarState extends State<WorkoutHistoryCalendar> {
       case _CalendarRangeMode.month:
         return LocalizedFormatters.weekdayShortDate(_selectedDay, locale);
       case _CalendarRangeMode.threeMonth:
-        final end = _monthWeekEndExclusive(_selectedWeekStart)
-            .subtract(const Duration(days: 1));
+        final end = LocalCalendarDay.fromDateTime(
+          _monthWeekEndExclusive(_selectedWeekStart),
+        ).addDays(-1).toLocalDateTime();
         return _formatDateRange(_selectedWeekStart, end, locale);
       case _CalendarRangeMode.year:
         return LocalizedFormatters.monthYear(_selectedMonth, locale);
@@ -516,7 +519,7 @@ DateTime _monthWeekEndExclusive(DateTime weekStart) {
   if (weekIndex == 3) {
     return DateTime(weekStart.year, weekStart.month + 1);
   }
-  return weekStart.add(const Duration(days: 7));
+  return LocalCalendarDay.fromDateTime(weekStart).addDays(7).toLocalDateTime();
 }
 
 String _workoutCountText(AppLocalizations strings, int count) {
@@ -1429,11 +1432,12 @@ class _WeekdayRow extends StatelessWidget {
     final destinationTokens = Theme.of(context)
         .extension<AppExpressiveDestinationTokens>();
     final locale = Localizations.localeOf(context);
-    final sunday = today.subtract(Duration(days: today.weekday % 7));
+    final sunday = LocalCalendarDay.fromDateTime(today)
+        .addDays(-(today.weekday % 7));
     final labels = List.generate(
       DateTime.daysPerWeek,
       (index) => LocalizedFormatters.weekdayNarrow(
-        sunday.add(Duration(days: index)),
+        sunday.addDays(index).toLocalDateTime(),
         locale,
       ),
     );
@@ -1509,14 +1513,33 @@ class _CalendarGrid extends StatelessWidget {
     final firstOfMonth = DateTime(visibleMonth.year, visibleMonth.month);
     final lastOfMonth = DateTime(visibleMonth.year, visibleMonth.month + 1, 0);
     final startOffset = firstOfMonth.weekday % DateTime.daysPerWeek;
-    final firstVisible = firstOfMonth.subtract(Duration(days: startOffset));
+    final firstVisible = LocalCalendarDay.fromDateTime(firstOfMonth)
+        .addDays(-startOffset)
+        .toLocalDateTime();
     final endOffset =
         DateTime.daysPerWeek - 1 - (lastOfMonth.weekday % DateTime.daysPerWeek);
-    final lastVisible = lastOfMonth.add(Duration(days: endOffset));
-    final visibleDayCount = lastVisible.difference(firstVisible).inDays + 1;
+    final lastVisible = LocalCalendarDay.fromDateTime(lastOfMonth)
+        .addDays(endOffset)
+        .toLocalDateTime();
+    // Count civil days, not 24-hour intervals: DST can repeat or skip a date.
+    final visibleDayCount =
+        DateTime.utc(lastVisible.year, lastVisible.month, lastVisible.day)
+            .difference(
+              DateTime.utc(
+                firstVisible.year,
+                firstVisible.month,
+                firstVisible.day,
+              ),
+            )
+            .inDays +
+        1;
     return List.generate(
       visibleDayCount,
-      (index) => DateUtils.dateOnly(firstVisible.add(Duration(days: index))),
+      (index) => DateTime(
+        firstVisible.year,
+        firstVisible.month,
+        firstVisible.day + index,
+      ),
     );
   }
 }

@@ -27,8 +27,8 @@ import '../../widgets/swap_exercise_sheet.dart';
 import '../../widgets/guided_tutorial_overlay.dart';
 import '../../widgets/onboarding_plan_builder_coach.dart';
 import '../../services/tutorial_state_store.dart';
+import '../../services/workout_launch_coordinator.dart';
 import '../../utils/tutorial_launcher.dart';
-import '../../utils/workout_exercise_clone.dart';
 import '../../utils/app_test_keys.dart';
 import '../../theme/expressive_planning_tokens.dart';
 import '../../theme/tokens/app_surface_tokens.dart';
@@ -92,6 +92,7 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   final _actionTutorialKey = GlobalKey(debugLabel: 'plan_detail_action');
   bool _isEditing = false;
   bool _changingEditMode = false;
+  bool _startingPlanSession = false;
   bool _collapseWeightCardsForReorder = false;
   bool _tutorialQueued = false;
   bool _onboardingPlanGuideSkipped = false;
@@ -441,37 +442,56 @@ class _PresetDetailScreenState extends State<PresetDetailScreen> {
   }
 
   Future<void> _startPlanSession() async {
+    if (_startingPlanSession) return;
+    _startingPlanSession = true;
+    var openingSession = false;
     final navigator = Navigator.of(context);
+    final strings = AppLocalizations.of(context);
     final preset = context.read<PresetSession>();
     final activeSession = context.read<ActiveSession>();
-    final workoutExercises = <WorkoutExercise>[];
-    final workoutCardTypes = <CardType>[];
-    for (var i = 0; i < preset.exercises.length; i++) {
-      // TODO(cardio/stretch): add cardio and stretch back to plan-start
-      // sessions after those cards are fixed and updated.
-      if (preset.cardTypes[i] != CardType.weight) continue;
-      workoutExercises.add(
-        cloneWorkoutExercise(preset.exercises[i], preservePresetSource: true),
-      );
-      workoutCardTypes.add(preset.cardTypes[i]);
-    }
-    final started = await activeSession.startWithExercises(
-      workoutExercises: workoutExercises,
-      workoutCardTypes: workoutCardTypes,
-      presetId: preset.presetId,
+    final repo = context.read<AppRepository>();
+    final coordinator = WorkoutLaunchCoordinator(
+      repository: repo,
+      activeSession: activeSession,
     );
-    if (!mounted) return;
-    if (!started) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).planOngoingWorkoutKept),
-        ),
-      );
-    }
 
-    navigator.pushReplacement(
-      MaterialPageRoute(builder: (_) => const SessionScreen()),
-    );
+    try {
+      final result = await coordinator.startPreset(
+        presetId: preset.presetId,
+        exercises: preset.exercises,
+        cardTypes: preset.cardTypes,
+        canContinue: () => mounted,
+      );
+      if (!mounted) return;
+
+      switch (result) {
+        case PresetWorkoutLaunchStatus.started:
+          openingSession = true;
+          navigator.pushReplacement(
+            MaterialPageRoute(builder: (_) => const SessionScreen()),
+          );
+        case PresetWorkoutLaunchStatus.alreadyActive:
+          openingSession = true;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(strings.planOngoingWorkoutKept)),
+          );
+          navigator.pushReplacement(
+            MaterialPageRoute(builder: (_) => const SessionScreen()),
+          );
+        case PresetWorkoutLaunchStatus.noEligibleExercises:
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(strings.planNoExercises)));
+        case PresetWorkoutLaunchStatus.cancelled:
+          return;
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(safeFailureSnackBar(context, error: error));
+    } finally {
+      // Keep duplicate taps excluded while the replacement route animates in.
+      if (!openingSession) _startingPlanSession = false;
+    }
   }
 
   Widget _buildPrimaryAction({

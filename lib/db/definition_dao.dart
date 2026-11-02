@@ -507,6 +507,42 @@ class DefinitionDao {
     return _shallowDefinitions(rows);
   }
 
+  /// Resolves primary or additional equipment without creating catalog data.
+  static Future<int?> findExistingExerciseDefinitionId(
+    DatabaseExecutor db,
+    String name,
+    String equipmentName,
+  ) async {
+    int? equipmentId;
+    if (equipmentName.isNotEmpty) {
+      final equipment = await db.query(
+        'equipment',
+        columns: ['id'],
+        where: 'name = ?',
+        whereArgs: [equipmentName],
+        limit: 1,
+      );
+      if (equipment.isEmpty) return null;
+      equipmentId = equipment.first['id'] as int;
+    }
+    final rows = await db.rawQuery(
+      '''
+      SELECT ed.id
+      FROM exercise_definitions ed
+      LEFT JOIN exercise_equipment ee ON ee.exercise_id = ed.id
+      WHERE ed.name = ? AND (
+        ${equipmentId == null ? 'ed.equipment_id IS NULL' : 'ed.equipment_id = ? OR ee.equipment_id = ?'}
+      )
+      LIMIT 1
+    ''',
+      [
+        name,
+        if (equipmentId != null) ...[equipmentId, equipmentId],
+      ],
+    );
+    return rows.isEmpty ? null : rows.first['id'] as int;
+  }
+
   /// Finds or creates an [ExerciseDefinition] by [name] and [equipmentName].
   /// Returns the definition ID.
   static Future<int> findOrCreateExerciseDefinition(

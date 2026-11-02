@@ -16,6 +16,7 @@ import '../../providers/unit_preference_provider.dart';
 import '../../repositories/app_repository.dart';
 import '../../services/catalog_entity_localizer.dart';
 import '../../services/safe_failure.dart';
+import '../../services/workout_launch_coordinator.dart';
 import '../../services/tutorial_state_store.dart';
 import '../../theme/theme_extensions.dart';
 import '../../theme/tokens/app_expressive_destination_tokens.dart';
@@ -546,38 +547,47 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
     }
 
     setState(() => _isStartingWorkout = true);
-    var started = false;
     try {
-      final workoutExercises = <WorkoutExercise>[];
-      final workoutCardTypes = <CardType>[];
-      for (final detail in _exerciseDetails) {
-        // TODO(cardio/stretch): repeat cardio and stretch once those cards are
-        // fixed, updated, and added back into active workout sessions.
-        if (detail.cardType != CardType.weight) continue;
-        workoutExercises.add(_cloneExercise(detail.exercise));
-        workoutCardTypes.add(detail.cardType);
-      }
-      started = await active.startWithExercises(
-        workoutExercises: workoutExercises,
-        workoutCardTypes: workoutCardTypes,
+      final coordinator = WorkoutLaunchCoordinator(
+        repository: _repo,
+        activeSession: active,
       );
-      if (!started && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(strings.workoutDetailOngoingWorkoutKept)),
-        );
+      final exercises = _exerciseDetails.map((d) => d.exercise).toList();
+      final cardTypes = _exerciseDetails.map((d) => d.cardType).toList();
+      final result = await coordinator.repeatSessionExercises(
+        exercises: exercises,
+        cardTypes: cardTypes,
+        canContinue: () => mounted,
+      );
+      if (!mounted) return;
+
+      switch (result) {
+        case PresetWorkoutLaunchStatus.started:
+          await Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
+        case PresetWorkoutLaunchStatus.alreadyActive:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(strings.workoutDetailOngoingWorkoutKept)),
+          );
+        case PresetWorkoutLaunchStatus.noEligibleExercises:
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(strings.workoutDetailRepeatFailed)),
+          );
+        case PresetWorkoutLaunchStatus.cancelled:
+          return;
       }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.workoutDetailRepeatFailed)),
+        safeFailureSnackBar(
+          context,
+          error: error,
+          summary: strings.workoutDetailRepeatFailed,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isStartingWorkout = false);
     }
-
-    if (!started || !mounted) return;
-    await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const SessionScreen()));
   }
 
   Future<void> _saveAsPreset() async {
@@ -2128,62 +2138,6 @@ class _SetDisplayRow {
     this.isChild = false,
     this.parentIndex,
   });
-}
-
-WorkoutExercise _cloneExercise(WorkoutExercise exercise) {
-  if (exercise is WeightExercise) {
-    return WeightExercise(
-      name: exercise.name,
-      equipment: exercise.equipment,
-      sets: _cloneSets(exercise.sets),
-      changeSets: _cloneChangeSets(exercise.changeSets),
-    );
-  }
-  if (exercise is CardioExercise) {
-    return CardioExercise(
-      name: exercise.name,
-      equipment: exercise.equipment,
-      cardioName: exercise.cardioName,
-      cardioNote: exercise.cardioNote,
-      plannedMinutes: exercise.plannedMinutes > 0
-          ? exercise.plannedMinutes
-          : (exercise.elapsedSeconds / 60).ceil(),
-      elapsedSeconds: 0,
-    );
-  }
-  if (exercise is StretchExercise) {
-    return StretchExercise(
-      name: exercise.name,
-      equipment: exercise.equipment,
-      stretchInstances: exercise.stretchInstances
-          .map(
-            (instance) => StretchInstance(
-              stretchId: instance.stretchId,
-              isCustom: instance.isCustom,
-              customName: instance.customName,
-              customDesc: instance.customDesc,
-              isChecked: false,
-              orderIndex: instance.orderIndex,
-            ),
-          )
-          .toList(),
-    );
-  }
-  return exercise;
-}
-
-List<ExerciseSet> _cloneSets(List<ExerciseSet> sets) {
-  return sets
-      .map((set) => ExerciseSet(weight: set.weight, reps: set.reps))
-      .toList();
-}
-
-Map<int, List<ExerciseSet>> _cloneChangeSets(
-  Map<int, List<ExerciseSet>> changeSets,
-) {
-  return {
-    for (final entry in changeSets.entries) entry.key: _cloneSets(entry.value),
-  };
 }
 
 List<ExerciseSet> _allWeightSets(WeightExercise exercise) {

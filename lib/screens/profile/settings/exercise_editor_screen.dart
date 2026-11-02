@@ -29,6 +29,7 @@ import '../../../widgets/safe_error_view.dart';
 import 'analytics_destination_surfaces.dart';
 import '../../exercise/exercise_catalog_page.dart';
 import 'exercise_analytics_screen.dart';
+import 'exercise_editor/exercise_editor_controller.dart';
 
 part 'exercise_editor/custom_exercise_draft.dart';
 part 'exercise_editor/selection_dialogs.dart';
@@ -121,15 +122,16 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
   late final TabController _tabController;
   int _activeTabIndex = 0;
   bool _isEditing = false;
-  bool _isSaving = false;
+  late final ExerciseEditorController _controller;
+  bool _isCreating = false;
+  bool get _isSaving => _isCreating || _controller.saving;
 
   // Definitions
-  List<Equipment> _allEquipment = [];
-  ExerciseDefinition? _selectedDef;
-  int _definitionLoadRequest = 0;
-  bool _isLoadingDefinitions = true;
-  bool _isLoadingDetails = false;
-  SafeFailure? _loadFailure;
+  List<Equipment> get _allEquipment => _controller.equipment;
+  ExerciseDefinition? get _selectedDef => _controller.definition;
+  bool get _isLoadingDefinitions => _controller.loadingCatalog;
+  bool get _isLoadingDetails => _controller.loadingDetails;
+  SafeFailure? get _loadFailure => _controller.catalogFailure;
   bool _hasPendingChanges = false;
 
   // Tab data
@@ -164,6 +166,8 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
   @override
   void initState() {
     super.initState();
+    _controller = ExerciseEditorController(_repo)
+      ..addListener(_onControllerChanged);
     _tabController = TabController(length: 4, vsync: this);
     _setupController = TextEditingController();
     _executionController = TextEditingController();
@@ -175,6 +179,8 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    _controller.dispose();
     _tabController.dispose();
     _setupController.dispose();
     _executionController.dispose();
@@ -184,148 +190,35 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     super.dispose();
   }
 
-  /// Load all definitions and select the first one
+  void _onControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _loadExerciseList() async {
-    setState(() {
-      _isLoadingDefinitions = true;
-      _loadFailure = null;
-    });
-    try {
-      final defsFuture = _repo.lookupDefsDetailed();
-      final equipmentFuture = _repo.fetchAllEquipment();
-      await defsFuture;
-      final equipment = await equipmentFuture;
-      if (!mounted) return;
+    if (await _controller.loadCatalog() && mounted) {
       setState(() {
-        _allEquipment = equipment;
-        _selectedDef = null;
         _isEditing = false;
         _hasPendingChanges = false;
-        _isLoadingDefinitions = false;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _isLoadingDefinitions = false;
-        _loadFailure = SafeFailure.classify(error);
       });
     }
   }
 
-  /// Handle selecting an exercise definition
   Future<void> _onExerciseSelected(ExerciseDefinition def) async {
     setState(() {
-      _selectedDef = def;
       _isEditing = false;
       _hasPendingChanges = false;
-      _isLoadingDetails = true;
       _activeTabIndex = 0;
     });
     _tabController.index = 0;
     await _loadDefinitionDetails(def);
   }
 
-  /// Populate muscles, bodyparts, equipment for the selected definition
   Future<void> _loadDefinitionDetails(ExerciseDefinition def) async {
-    final request = ++_definitionLoadRequest;
-    final defId = def.id;
-
     try {
-      // Start independent reads together so changing exercises does not wait on
-      // a long serial chain of database queries.
-      final results = await Future.wait<Object>([
-        _repo.computeMusclePercents(defId),
-        _repo.getUseManualMuscles(defId),
-        _repo.computeMuscleCalculatedBodyparts(defId),
-        _repo.fetchBodyPartPercentsManual(defId),
-        _repo.getUseManualBodyparts(defId),
-        _repo.fetchExerciseMedia(defId),
-        _repo.getMultiplyByRating(defId),
-      ]);
-
-      final musclePercents = results[0] as List<ExerciseMusclePercent>;
-      final useManualMuscles = results[1] as bool;
-      final autoBpMap = results[2] as Map<BodyPart, double>;
-      final manualList = results[3] as List<ExerciseBodyPartPercent>;
-      final useManualBody = results[4] as bool;
-      final mediaItems = results[5] as List<ExerciseMediaItem>;
-      final multiplyByRating = results[6] as bool;
-
-      final manualMap = {for (var e in manualList) e.bodyPartId: e.percent};
-
-      if (!mounted ||
-          request != _definitionLoadRequest ||
-          _selectedDef?.id != defId) {
-        return;
-      }
-
-      // Now update all UI state in one batch:
-      setState(() {
-        // — Toggles
-        _useManualBody = useManualBody;
-        _useManualMuscles = useManualMuscles;
-        _multiplyByRating = multiplyByRating;
-
-        // — Muscles Tab
-        _muscleEntries = def.muscles.map((rm) {
-          final override = musclePercents.firstWhere(
-            (e) => e.muscleId == rm.muscle.id,
-            orElse: () => ExerciseMusclePercent(
-              exerciseDefId: defId,
-              muscleId: rm.muscle.id,
-              percent: 0.0,
-            ),
-          );
-          return {
-            'id': rm.muscle.id,
-            'name': rm.muscle.name,
-            'catalogId': rm.muscle.catalogId,
-            'percent': override.percent,
-          };
-        }).toList();
-        // --- Muscle-Calculated Bodyparts ---
-        _bodyAutoEntries = autoBpMap.entries.map((e) {
-          return {'id': e.key.id, 'name': e.key.name, 'count': e.value};
-        }).toList();
-
-        // --- Manual-Assigned Bodyparts ---
-        _bodyManualEntries = def.bodyParts.map((bp) {
-          // seed with override if present, else default 1 set per set
-          final autoMap = {for (var e in autoBpMap.entries) e.key.id: e.value};
-          final count = manualMap[bp.id] ?? autoMap[bp.id] ?? 0.0;
-          return {'id': bp.id, 'name': bp.name, 'count': count};
-        }).toList();
-
-        // Keep the canonical name for saves while retaining the stable ID for
-        // localized display.
-        _equipmentEntries = def.equipmentList
-            .map(
-              (e) => <String, Object?>{
-                'id': e.id,
-                'name': e.name,
-                'catalogId': e.catalogId,
-              },
-            )
-            .toList();
-        _mediaItems = mediaItems;
-        _primaryEquipmentId = def.equipmentId;
-      });
-      // after your setState block…
-      _nameController.text = def.name;
-      _ratingController.text = def.rating.toString();
-      _setupController.text = def.setupNotes;
-      _executionController.text = def.executionNotes;
-      _tipsController.text = def.tipsNotes;
-      if (mounted && request == _definitionLoadRequest) {
-        setState(() => _isLoadingDetails = false);
-      }
+      final details = await _controller.loadDefinition(def);
+      if (details != null && mounted) _applyDefinitionDetails(details);
     } catch (error) {
-      if (!mounted ||
-          request != _definitionLoadRequest ||
-          _selectedDef?.id != defId) {
-        return;
-      }
-      setState(() => _isLoadingDetails = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         safeFailureSnackBar(
           context,
@@ -336,8 +229,75 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
     }
   }
 
+  void _applyDefinitionDetails(ExerciseEditorDetails details) {
+    final def = details.definition;
+    final manualMap = {
+      for (final entry in details.manualBodyparts)
+        entry.bodyPartId: entry.percent,
+    };
+    final automaticMap = {
+      for (final entry in details.automaticBodyparts.entries)
+        entry.key.id: entry.value,
+    };
+    setState(() {
+      _useManualBody = details.useManualBodyparts;
+      _useManualMuscles = details.useManualMuscles;
+      _multiplyByRating = details.multiplyByRating;
+      _muscleEntries = def.muscles.map((ranked) {
+        final percent = details.musclePercents.firstWhere(
+          (entry) => entry.muscleId == ranked.muscle.id,
+          orElse: () => ExerciseMusclePercent(
+            exerciseDefId: def.id,
+            muscleId: ranked.muscle.id,
+            percent: 0,
+          ),
+        );
+        return <String, Object?>{
+          'id': ranked.muscle.id,
+          'name': ranked.muscle.name,
+          'catalogId': ranked.muscle.catalogId,
+          'percent': percent.percent,
+        };
+      }).toList();
+      _bodyAutoEntries = details.automaticBodyparts.entries
+          .map(
+            (entry) => <String, Object>{
+              'id': entry.key.id,
+              'name': entry.key.name,
+              'count': entry.value,
+            },
+          )
+          .toList();
+      _bodyManualEntries = def.bodyParts
+          .map(
+            (part) => <String, Object>{
+              'id': part.id,
+              'name': part.name,
+              'count': manualMap[part.id] ?? automaticMap[part.id] ?? 0.0,
+            },
+          )
+          .toList();
+      _equipmentEntries = def.equipmentList
+          .map(
+            (equipment) => <String, Object?>{
+              'id': equipment.id,
+              'name': equipment.name,
+              'catalogId': equipment.catalogId,
+            },
+          )
+          .toList();
+      _mediaItems = details.media.toList();
+      _primaryEquipmentId = def.equipmentId;
+    });
+    _nameController.text = def.name;
+    _ratingController.text = def.rating.toString();
+    _setupController.text = def.setupNotes;
+    _executionController.text = def.executionNotes;
+    _tipsController.text = def.tipsNotes;
+  }
+
   void _startEditing() {
-    if (_selectedDef == null || _isSaving) return;
+    if (_selectedDef == null || _isSaving || _isLoadingDetails) return;
     setState(() {
       _isEditing = true;
       _hasPendingChanges = false;
@@ -387,9 +347,8 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
         equipmentById[id] ?? Equipment(id, 'Equipment $id'),
     ];
 
-    setState(() => _isSaving = true);
     try {
-      await _repo.saveExerciseDefinitionAtomic(
+      final details = await _controller.save(
         ExerciseDefinitionWrite(
           definition: ExerciseDefinition(
             id: def.id,
@@ -437,15 +396,12 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
         ),
       );
 
-      final refreshedDefinition = await _repo.fetchDefinitionById(def.id);
-      if (!mounted || refreshedDefinition == null) return;
+      if (!mounted || details == null) return;
       setState(() {
-        _selectedDef = refreshedDefinition;
         _isEditing = false;
         _hasPendingChanges = false;
-        _isLoadingDetails = true;
       });
-      await _loadDefinitionDetails(refreshedDefinition);
+      _applyDefinitionDetails(details);
       if (mounted) _showMessage('Exercise definition saved.');
     } catch (error) {
       if (mounted) {
@@ -457,25 +413,31 @@ class _ExerciseEditorScreenState extends State<_ExerciseEditorBody>
           ),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   Future<void> _cancelEditing() async {
-    final def = _selectedDef;
-    if (def == null) return;
+    if (_selectedDef == null || _isSaving) return;
     if (_hasPendingChanges && !await _confirmDiscard()) return;
-
-    final refreshedDefinition = await _repo.fetchDefinitionById(def.id);
-    if (!mounted || refreshedDefinition == null) return;
-    setState(() {
-      _selectedDef = refreshedDefinition;
-      _isEditing = false;
-      _hasPendingChanges = false;
-      _isLoadingDetails = true;
-    });
-    await _loadDefinitionDetails(refreshedDefinition);
+    if (!mounted) return;
+    try {
+      final details = await _controller.reloadSelection();
+      if (!mounted || details == null) return;
+      setState(() {
+        _isEditing = false;
+        _hasPendingChanges = false;
+      });
+      _applyDefinitionDetails(details);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        safeFailureSnackBar(
+          context,
+          error: error,
+          summary: _strings.exerciseEditorLoadFailed,
+        ),
+      );
+    }
   }
 
   Future<void> _handleBack() async {

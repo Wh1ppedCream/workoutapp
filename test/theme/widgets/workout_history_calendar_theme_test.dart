@@ -23,6 +23,99 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  for (final reference in [DateTime(2026, 3, 8), DateTime(2026, 11, 1)]) {
+    testWidgets(
+      'calendar has unique civil-day cells across DST in ${reference.month}',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final units = UnitPreferenceProvider();
+        await units.ready;
+        addTearDown(units.dispose);
+        await tester.binding.setSurfaceSize(const Size(390, 1000));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final repository = _CalendarRepository([
+          _session(
+            99,
+            DateTime(reference.year, reference.month, reference.day, 23, 30),
+          ),
+        ]);
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<AppRepository>.value(value: repository),
+              ChangeNotifierProvider<UnitPreferenceProvider>.value(
+                value: units,
+              ),
+            ],
+            child: MaterialApp(
+              theme: ExpressiveThemeDefinition.light(),
+              locale: const Locale('en'),
+              localizationsDelegates: tonosLocalizationDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: WorkoutHistoryCalendar(
+                    referenceDate: reference,
+                    onSessionTap: (_) {},
+                    onOpenFullHistory: () {},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final dateCells = tester
+            .widgetList<Semantics>(
+              find.descendant(
+                of: find.byType(GridView),
+                matching: find.byWidgetPredicate(
+                  (widget) =>
+                      widget is Semantics &&
+                      widget.properties.button == true &&
+                      widget.properties.label != null,
+                ),
+              ),
+            )
+            .toList();
+        expect(dateCells, hasLength(35));
+        final labels = dateCells.map((cell) => cell.properties.label).toSet();
+        expect(
+          labels,
+          hasLength(35),
+          reason: 'No repeated or skipped dates around a clock change.',
+        );
+        for (
+          var day = 1;
+          day <= DateTime(reference.year, reference.month + 1, 0).day;
+          day++
+        ) {
+          expect(
+            labels,
+            contains(
+              LocalizedFormatters.longDate(
+                DateTime(reference.year, reference.month, day),
+                const Locale('en'),
+              ),
+            ),
+          );
+        }
+        expect(
+          dateCells.where((cell) => cell.properties.selected == true),
+          hasLength(1),
+        );
+        // A 25-hour day must include its late workout; a 23-hour day must not
+        // extend into tomorrow. The repository's query end is inclusive.
+        final range = repository.requestedRanges.single;
+        expect(range.$1, reference);
+        expect(
+          range.$2.add(const Duration(microseconds: 1)),
+          DateTime(reference.year, reference.month, reference.day + 1),
+        );
+      },
+    );
+  }
+
   // Legacy calendar recipes; dedicated Expressive cases below verify its
   // selector, period summaries, semantics, responsive states and navigation.
   for (final family in const [
@@ -1776,6 +1869,7 @@ class _CalendarRepository extends AppRepository {
   _CalendarRepository(this.sessions);
 
   final List<WorkoutReportSession> sessions;
+  final requestedRanges = <(DateTime, DateTime)>[];
   bool failSessions = false;
 
   @override
@@ -1791,5 +1885,8 @@ class _CalendarRepository extends AppRepository {
   Future<Map<BodyPart, double>> fetchAllBodyPartSetsOverTimeRange({
     required DateTime start,
     required DateTime end,
-  }) async => const <BodyPart, double>{};
+  }) async {
+    requestedRanges.add((start, end));
+    return const <BodyPart, double>{};
+  }
 }

@@ -25,6 +25,13 @@ class OptimizedWorkoutLaunchResult {
   final PresetGenerationResult? generationResult;
 }
 
+enum PresetWorkoutLaunchStatus {
+  started,
+  alreadyActive,
+  noEligibleExercises,
+  cancelled,
+}
+
 /// Shared workout/plan operations for the two training presentations.
 /// Navigation, dialogs and page refreshes remain owned by their callers.
 class WorkoutLaunchCoordinator {
@@ -184,6 +191,94 @@ class WorkoutLaunchCoordinator {
         }
       }
     }
+  }
+
+  /// Starts a workout from a saved plan preset. Filters exercises to weight
+  /// cards until cardio/stretch cards support active workout sessions.
+  Future<PresetWorkoutLaunchStatus> startPreset({
+    required int presetId,
+    required List<WorkoutExercise> exercises,
+    required List<CardType> cardTypes,
+    bool Function()? canContinue,
+  }) {
+    return _startExercises(
+      presetId: presetId,
+      exercises: exercises,
+      cardTypes: cardTypes,
+      preservePresetSource: true,
+      canContinue: canContinue,
+    );
+  }
+
+  /// Repeats exercises from a previous workout session. Filters exercises to
+  /// weight cards until cardio/stretch cards support active workout sessions.
+  Future<PresetWorkoutLaunchStatus> repeatSessionExercises({
+    required List<WorkoutExercise> exercises,
+    required List<CardType> cardTypes,
+    bool Function()? canContinue,
+  }) {
+    return _startExercises(
+      presetId: null,
+      exercises: exercises,
+      cardTypes: cardTypes,
+      preservePresetSource: false,
+      canContinue: canContinue,
+    );
+  }
+
+  Future<PresetWorkoutLaunchStatus> _startExercises({
+    required int? presetId,
+    required List<WorkoutExercise> exercises,
+    required List<CardType> cardTypes,
+    required bool preservePresetSource,
+    bool Function()? canContinue,
+  }) async {
+    if (exercises.length != cardTypes.length) {
+      throw ArgumentError('Exercise and card-type counts must match.');
+    }
+    await _activeSession.ready;
+    if (canContinue != null && !canContinue()) {
+      return PresetWorkoutLaunchStatus.cancelled;
+    }
+    if (_activeSession.startBlock == WorkoutStartBlock.alreadyActive) {
+      return PresetWorkoutLaunchStatus.alreadyActive;
+    }
+    _requireAvailableSession();
+
+    final eligibleExercises = <WorkoutExercise>[];
+    final eligibleCardTypes = <CardType>[];
+    for (var i = 0; i < exercises.length; i++) {
+      // Keep sessions weight-only until cardio/stretch cards
+      // support the existing training launch flow.
+      if (cardTypes[i] != CardType.weight) continue;
+      eligibleExercises.add(
+        cloneWorkoutExercise(
+          exercises[i],
+          preservePresetSource: preservePresetSource,
+        ),
+      );
+      eligibleCardTypes.add(cardTypes[i]);
+    }
+
+    if (eligibleExercises.isEmpty) {
+      return PresetWorkoutLaunchStatus.noEligibleExercises;
+    }
+
+    final started = await _activeSession.startWithExercises(
+      workoutExercises: eligibleExercises,
+      workoutCardTypes: eligibleCardTypes,
+      presetId: presetId,
+    );
+
+    if (!started) {
+      if (_activeSession.startBlock == WorkoutStartBlock.alreadyActive) {
+        return PresetWorkoutLaunchStatus.alreadyActive;
+      }
+      _requireAvailableSession();
+      throw const SafeFailure(kind: SafeFailureKind.temporary, retryable: true);
+    }
+
+    return PresetWorkoutLaunchStatus.started;
   }
 
   void _requireAvailableSession() {

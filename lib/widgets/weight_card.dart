@@ -2098,7 +2098,7 @@ class _WeightExerciseThumbnailButtonState
     try {
       final definitionId =
           widget.definitionId ??
-          await _repo.findOrCreateExerciseDefinition(
+          await _repo.findExerciseDefinitionId(
             widget.exercise.name,
             widget.exercise.equipment,
           );

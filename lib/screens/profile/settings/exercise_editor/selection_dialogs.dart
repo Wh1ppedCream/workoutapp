@@ -699,7 +699,7 @@ extension _SelectionDialogs on _ExerciseEditorScreenState {
     );
     if (!mounted || draft == null) return;
 
-    _updateEditorState(() => _isSaving = true);
+    _updateEditorState(() => _isCreating = true);
     try {
       String equipmentName = '';
       for (final equipment in _allEquipment) {
@@ -728,7 +728,7 @@ extension _SelectionDialogs on _ExerciseEditorScreenState {
         ),
       );
     } finally {
-      if (mounted) _updateEditorState(() => _isSaving = false);
+      if (mounted) _updateEditorState(() => _isCreating = false);
     }
   }
 

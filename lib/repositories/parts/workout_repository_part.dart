@@ -109,6 +109,25 @@ mixin _WorkoutRepositoryMethods on _RepositoryDependencies {
   fetchCurrentExerciseRecordBadges(int definitionId) =>
       _dbHelper.fetchCurrentExerciseRecordBadges(definitionId);
 
+  /// Typed history boundary; dispatch through the raw virtual method so legacy
+  /// consumers and repository test doubles keep their existing override seam.
+  Future<List<ExerciseHistoryEntry>> fetchRecentWeightExerciseHistory({
+    required int definitionId,
+    int? beforeCompletedAtMilliseconds,
+    int? beforeExerciseId,
+    int limit = 10,
+  }) async {
+    final rows = await fetchRecentWeightExerciseHistoryRows(
+      definitionId: definitionId,
+      beforeCompletedAtMilliseconds: beforeCompletedAtMilliseconds,
+      beforeExerciseId: beforeExerciseId,
+      limit: limit,
+    );
+    return List<ExerciseHistoryEntry>.unmodifiable(
+      rows.map(ExerciseHistoryEntry.fromDatabaseRow),
+    );
+  }
+
   Future<List<Map<String, dynamic>>> fetchRecentWeightExerciseHistoryRows({
     required int definitionId,
     int? beforeCompletedAtMilliseconds,

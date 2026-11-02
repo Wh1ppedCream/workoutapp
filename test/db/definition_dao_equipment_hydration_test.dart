@@ -16,6 +16,70 @@ void main() {
   tearDown(() => db.close());
 
   test(
+    'unknown equipment cannot resolve a same-named equipment-free definition',
+    () async {
+      await db.insert('exercise_definitions', {
+        'id': 9,
+        'name': 'Press',
+        'rating': 0,
+      });
+      expect(
+        await DefinitionDao.findExistingExerciseDefinitionId(
+          db,
+          'Press',
+          'Unknown equipment',
+        ),
+        isNull,
+      );
+      expect(
+        await DefinitionDao.findExistingExerciseDefinitionId(db, 'Press', ''),
+        9,
+      );
+      expect(await db.query('exercise_definitions'), hasLength(1));
+    },
+  );
+
+  test('read-only lookup resolves extra equipment and never inserts missing definitions', () async {
+    await db.insert('equipment', {'id': 1, 'name': 'Barbell'});
+    await db.insert('equipment', {'id': 2, 'name': 'Bench'});
+    await db.insert('exercise_definitions', {
+      'id': 7,
+      'name': 'Press',
+      'equipment_id': 1,
+      'rating': 0,
+    });
+    await db.insert('exercise_equipment', {
+      'exercise_id': 7,
+      'equipment_id': 2,
+    });
+    expect(
+      await DefinitionDao.findExistingExerciseDefinitionId(
+        db,
+        'Press',
+        'Barbell',
+      ),
+      7,
+    );
+    expect(
+      await DefinitionDao.findExistingExerciseDefinitionId(
+        db,
+        'Press',
+        'Bench',
+      ),
+      7,
+    );
+    expect(
+      await DefinitionDao.findExistingExerciseDefinitionId(
+        db,
+        'Missing',
+        'Bench',
+      ),
+      isNull,
+    );
+    expect(await db.query('exercise_definitions'), hasLength(1));
+  });
+
+  test(
     'detailed definitions retain equipment and muscle catalog identities',
     () async {
       await db.insert('equipment', {

@@ -83,13 +83,15 @@ void main() {
         '_isSaving',
       ],
       'lib/screens/profile/settings/flow_methods_page.dart': [
-        'TonosField',
+        'DefaultFlowMethodDialog',
         'TonosSurfaceTheme',
         'TonosDialogFrame',
         'showTonosDialog',
         'ExpansionTile',
         'rulesNameRequired',
       ],
+      'lib/screens/profile/settings/flow_methods/default_flow_method_dialog.dart':
+          ['TonosField', 'TonosDialogFrame', 'FlowMethodDraft.fromEditor'],
       'lib/screens/profile/settings/app_settings_page.dart': [
         'TonosDialogFrame',
         'TonosField',
@@ -182,7 +184,7 @@ void main() {
 
   test('flow and database forms use the shared field primitive', () {
     for (final path in const [
-      'lib/screens/profile/settings/flow_methods_page.dart',
+      'lib/screens/profile/settings/flow_methods/default_flow_method_dialog.dart',
       'lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart',
       'lib/screens/profile/settings/app_settings_page.dart',
       'lib/screens/profile/settings/database_settings_page.dart',
@@ -202,7 +204,7 @@ void main() {
     expect(controls, contains('InputDecorator('));
     expect(controls, isNot(contains('TextField(')));
     for (final path in const [
-      'lib/screens/profile/settings/flow_methods_page.dart',
+      'lib/screens/profile/settings/flow_methods/default_flow_method_dialog.dart',
       'lib/screens/profile/settings/flow_methods/add_preset_method_dialog.dart',
     ]) {
       expect(

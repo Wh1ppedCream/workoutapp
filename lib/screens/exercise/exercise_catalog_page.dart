@@ -158,7 +158,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
       _isLoading = true;
     });
     final definitionsFuture = _repo.lookupDefsDetailed();
-    final profilesFuture = _repo.dbHelper.fetchAllProfiles();
+    final profilesFuture = _repo.fetchAllProfiles();
     final areasFuture = _repo.fetchAllBodyParts();
     final musclesFuture = _repo.fetchAllMuscles();
     final equipmentFuture = _useProfileFilter && initialProfileId != null
@@ -271,7 +271,7 @@ class _ExerciseCatalogPageState extends State<ExerciseCatalogPage> {
   Future<List<Equipment>> _equipmentForProfile(int profileId) async {
     final cached = _equipmentItemsByProfileId[profileId];
     if (cached != null) return cached;
-    final eqMaps = await _repo.dbHelper.fetchEquipmentForProfile(profileId);
+    final eqMaps = await _repo.fetchEquipmentForProfile(profileId);
     final equipment = eqMaps
         .map(
           (e) => Equipment(
